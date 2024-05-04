@@ -29,6 +29,7 @@ pre,
 code {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 body {
@@ -45,6 +46,7 @@ body {
   font-size: 16px;
   color: var(--Text);
   background-color: var(--Background);
+  scroll-behavior: smooth;
 }
 
 a {
@@ -63,6 +65,22 @@ main {
   align-items: center;
   justify-content: flex-start;
   padding-top: 7.25rem;
+}
+
+.learn-more-container, .learn-more {
+    border-radius: 0.5rem;
+}
+.learn-more-container {
+    padding: 1px;
+    background: linear-gradient(20deg, #0090FF 0%, #8DC8E8 70%);
+}
+.learn-more {
+  display: flex;
+  padding: 12px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--Background);
 }
 
 .main-subheader {
@@ -176,7 +194,7 @@ h3 {
   justify-content: center;
   gap: 3rem;
   width: 100%;
-  margin: 3rem 0;
+  padding: 6rem 0 0;
 }
 
 .multi-code {
@@ -192,7 +210,7 @@ h3 {
   flex-direction: column;
   align-items: flex-start;
   width: 82%;
-  margin: 3rem 0;
+  padding: 6rem 0;
 }
 
 .grid-container {
