@@ -67,12 +67,13 @@ main {
   padding-top: 7.25rem;
 }
 
-.learn-more-container, .learn-more {
-    border-radius: 0.5rem;
+.learn-more-container,
+.learn-more {
+  border-radius: 0.5rem;
 }
 .learn-more-container {
-    padding: 1px;
-    background: linear-gradient(20deg, #0090FF 0%, #8DC8E8 70%);
+  padding: 1px;
+  background: linear-gradient(20deg, #0090ff 0%, #8dc8e8 70%);
 }
 .learn-more {
   display: flex;
@@ -249,4 +250,28 @@ h3 {
 }
 .item5 {
   grid-area: 2 / 4 / 3 / 7;
+}
+.logo-container {
+  overflow: hidden;
+  position: relative;
+}
+.large-logo {
+  position: relative;
+  bottom: -600px; /* Start below the container */
+  animation: slideUp 3s forwards,
+    bobbing 3s infinite 3s cubic-bezier(0.42, 0, 0.58, 1);
+}
+@keyframes slideUp {
+  to {
+    bottom: 0;
+  }
+}
+@keyframes bobbing {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(15px);
+  }
 }
