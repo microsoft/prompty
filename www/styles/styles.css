@@ -254,15 +254,20 @@ h3 {
 .logo-container {
   overflow: hidden;
   position: relative;
+  height: 500px;
 }
 .large-logo {
+  width: 75%;
   position: relative;
   bottom: -600px; /* Start below the container */
-  animation: slideUp 3s forwards,
-    bobbing 3s infinite 3s cubic-bezier(0.42, 0, 0.58, 1);
+  opacity: 0;
+  transition: opacity 3s;
+  animation: slideUp 1.5s forwards,
+    bobbing 3s infinite 1.54s cubic-bezier(0.42, 0, 0.58, 1);
 }
 @keyframes slideUp {
   to {
+    opacity: 1;
     bottom: 0;
   }
 }
