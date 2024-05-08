@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';object-src 'none';require-trusted-types-for 'script';">
     <link rel="stylesheet" href="styles/styles.css" />
     <title>Prompty.ai</title>
   </head>
@@ -38,68 +39,162 @@
       </p>
       <nav id="mainNav">
         <ul>
+          <!-- <li><a href="#">Prompty.ai</a></li> -->
           <li><a href="#whatIsPrompty">What is Prompty?</a></li>
-          <li><a href="#howToUse">How to use it</a></li>
+          <li><a href="#spec">Spec</a></li>
+          <li><a href="#tooling">Tooling</a></li>
+          <li><a href="#runtime">Runtime</a></li>
+          <li><a href="#howToUseIt">How to use it</a></li>
           <li><a href="#benefits">Benefits</a></li>
         </ul>
       </nav>
-      <section class="info-block" id="whatIsPrompty">
-        <div class="faq">
-          <h3>What is Prompty?</h3>
-          <p>
-            Prompty is intended to be a language agnostic asset class for
-            creating prompts and managing the responses. The goal is to simply
-            your workflow by creating a standard that can be used by any
-            language, any framework, and any tool to create a prompt and manage
-            the response. The specification is intended to be simple, easy to
-            implement, and easy to use. It's also flexible enough to support a
-            wide range of use cases and scenarios as the industry & technology
-            evolves.
-          </p>
-        </div>
-        <div class="multi-code">
-          <pre>
-<code>
----
-<!-- inputs: -->
-firstName: Sally
-lastName: Doe
-question: What is the meaning of life?
 
-parameters:
-max_tokens: 45
-frequency_penalty: 2.0
+      <section class="doc-item" id="spec">
+        <article>
+            <h3>The specification</h2>
+            <p>Prompty is intended to be a language agnostic asset class for creating and managing prompts.</p>
+            <ul>
+                <li>Uses common markdown format</li>
+                <li>Modified front-matter to specify metadata, model settings, sample data (among other things)</li>
+                <li>Content in a standard template format</li>
+            </ul>
+        </article>
+        <div class="code-box">
+          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
+<pre>
+<code class="prompty code-content"><s class="c0">---</s>
+<s class="c3">inputs</s><s class="c0">:</s>
+  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
+  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
+  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
 
----
-system:
+<s class="c3">parameters</s><s class="c0">:</s>
+  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
+  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
+
+<s class="c0">---</s>
+<s class="c3">system</s><s class="c0">:</s>
+<s class="c0">
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to their questions.
+</s>
+<s class="c2"># Customer</s>
+You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
 Use their name to address them in your responses.
 
-user:
-{{question}}
+<s class="c3">user</s>:
+<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
 </code>
 </pre>
         </div>
-      </section>
+    </section>
 
-      <section class="info-block" id="howToUse">
-        <div class="faq">
-          <h3>How do I use this?</h3>
-          <ul></ul>
-          <p>
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Nam
-            possimus deserunt sint qui fugiat quae corrupti error accusantium
-            sequi dolorem repellendus ab laborum quidem fugit quo facere, minima
-            quibusdam perferendis.
-          </p>
+
+
+      <section class="doc-item" id="tooling">
+        <article>
+            <h3>The tooling</h2>
+            <p>Given the standard specification, there's a lot of nice things we can give developers in their environment.</p>
+
+            <ul>
+              <li>Front matter autocompletion</li>
+              <li>Colorization / syntax highlighting</li>
+              <li>Validation (with red squiggles for undefined variables)</li>
+              <li>Quick run</li>
+              <li>Code generation</li>
+              <li>Evaluation generation</li>
+            </ul>
+        </article>
+        <div class="code-box">
+          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
+<pre>
+<code class="prompty code-content"><s class="c0">---</s>
+<s class="c3">inputs</s><s class="c0">:</s>
+  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
+  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
+  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
+
+<s class="c3">parameters</s><s class="c0">:</s>
+  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
+  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
+
+<s class="c0">---</s>
+<s class="c3">system</s><s class="c0">:</s>
+<s class="c0">
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+</s>
+<s class="c2"># Customer</s>
+You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
+Use their name to address them in your responses.
+
+<s class="c3">user</s>:
+<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
+</code>
+</pre>
         </div>
-        <div class="multi-code">
+    </section>
+
+
+      <section class="doc-item" id="runtime">
+        <article>
+          <h3>The runtime</h3>
+          <p>Prompty runtime is the whatever engine that understands and can execute the format.</p>
+          <ul>
+            <li>Targeting LangChain, Semantic Kernel, and Prompt Flow as supporting runtimes</li>
+            <li>Works in Python (Prompt Flow and LangChain)</li>
+            <li>Works in C# (Semantic Kernel)</li>
+            <li>(Future Work) works in TypeScript/JavaScript</li>
+            <li>Understood in Azure AI Studio</li>
+          </ul>
+        </article>
+        <div class="code-box">
+          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
+<pre>
+<code class="prompty code-content"><s class="c0">---</s>
+<s class="c3">inputs</s><s class="c0">:</s>
+  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
+  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
+  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
+
+<s class="c3">parameters</s><s class="c0">:</s>
+  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
+  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
+
+<s class="c0">---</s>
+<s class="c3">system</s><s class="c0">:</s>
+<s class="c0">
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+</s>
+<s class="c2"># Customer</s>
+You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
+Use their name to address them in your responses.
+
+<s class="c3">user</s>:
+<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
+</code>
+</pre>
+        </div>
+    </section>
+
+
+      <section class="doc-item" id="howToUseIt">
+        <article>
+            <h3>How do I use this?</h2>
+            <h4>Execution engine:</h4>
+            <ul>
+                <li>CLI</li>
+                <li>SDK</li>
+            </ul>
+            <h4>The runtime:</h4>
+            <ul>
+              <li>The runtime interface is available for developers to implement it in the language of there choice when it is not already provided via SDK's and CLI's</li>
+            </ul>
+        </article>
+        <div class="code-box">
           <pre>
-<code>
+<code class="code-content">
 > python -m pip install prompty
 </code>
 </pre>
@@ -110,20 +205,22 @@ user:
 </code>
 </pre>
         </div>
-      </section>
+    </section>
+
 
       <section class="benefits" id="benefits">
         <h3>What are the benefits of Prompty?</h3>
         <div class="grid-container">
           <div class="cell item1">
+            <i class="bullet-number">1</i>
             <h4>Feel confident while building</h4>
             <p>
-              <i>1</i>
               Understand what's coming in and going out and how to manage it
               effectively.
             </p>
           </div>
           <div class="cell item2">
+            <i class="bullet-number">2</i>
             <h4>Flexible and simple</h4>
             <p>
               Integrate into whatever development environments or workflows you
@@ -131,6 +228,7 @@ user:
             </p>
           </div>
           <div class="cell item3">
+            <i class="bullet-number">3</i>
             <h4>Language agnostic</h4>
             <p>Use with any language or framework you are familiar with.</p>
           </div>
