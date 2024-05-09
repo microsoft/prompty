@@ -434,6 +434,15 @@ s {
     padding: 6rem 2rem 0 2rem;
   }
 
+  .what-is .diagram {
+    grid-template-columns: 100%;
+    grid-gap: 0rem;
+    padding: 0 2rem;
+  }
+  .diagram img{
+    max-width: 100%;
+  }
+
   nav li:not(.mobile) {
     display: none;
   }
