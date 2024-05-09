@@ -54,6 +54,14 @@ a {
   text-decoration: none;
 }
 
+header {
+  position: sticky;
+  display: block;
+  z-index: 10;
+  top: 0;
+  height: 6rem;
+}
+
 main {
   display: flex;
   flex-direction: column;
@@ -106,14 +114,15 @@ main {
   z-index: 100;
 }
 
-.share {
+.github {
   display: flex;
+  gap: 0.25rem;
+}
+
+.share {
   position: fixed;
   top: var(--FixedOffsetY);
   right: var(--FixedOffsetX);
-  padding: 0.5rem 1rem;
-  gap: 0.125rem;
-  z-index: 100;
 }
 
 .share a {
@@ -153,6 +162,9 @@ nav {
   position: sticky;
   top: 0.5rem;
   z-index: 100;
+}
+nav .mobile {
+  display: none;
 }
 
 pre {
@@ -259,12 +271,12 @@ h3 {
   height: 500px;
 }
 .logo-container::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px;  /* The height of the gradient overlay */
+  height: 50px; /* The height of the gradient overlay */
   background: linear-gradient(transparent, 50%, var(--Background));
 }
 .large-logo {
@@ -306,16 +318,34 @@ h3 {
 }
 
 /* Code theme colors */
-s {text-decoration: none;} 
-.prompty .c0{color: #D4D4D4}
-.prompty .c1{color: #CE9178}
-.prompty .c2{color: #6A9955}
-.prompty .c3{color: #569CD6}
+s {
+  text-decoration: none;
+}
+.prompty .c0 {
+  color: #d4d4d4;
+}
+.prompty .c1 {
+  color: #ce9178;
+}
+.prompty .c2 {
+  color: #6a9955;
+}
+.prompty .c3 {
+  color: #569cd6;
+}
 
-.py .c0{color: #C678DD;}
-.py .c1{color: #D86972;}
-.py .c2{color: #7F848E;}
-.py .c3{color: #61AEED;}
+.py .c0 {
+  color: #c678dd;
+}
+.py .c1 {
+  color: #d86972;
+}
+.py .c2 {
+  color: #7f848e;
+}
+.py .c3 {
+  color: #61aeed;
+}
 
 .doc-item {
   box-sizing: border-box;
@@ -324,40 +354,63 @@ s {text-decoration: none;}
   grid-template-columns: 35% 65%;
   grid-gap: 3rem;
   padding: 6rem 6rem 0 6rem;
-  /* border: 1px solid red; */
   width: 100%;
 }
-/* For smaller screens */
-@media (max-width: 768px) {
-  .doc-item {
-    grid-template-columns: 100%;
-    grid-gap: 1rem;
-    padding: 6rem 2rem 0 2rem;
-  }
-}
-.doc-item article{
+
+.doc-item article {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* border: 1px solid blue; */
 }
-.doc-item .code-box{
+.doc-item .code-box {
   position: relative;
-  max-width: 700px;
+  max-width: 100%;
   max-height: 464px;
-  /* border: 1px solid green; */
 }
+.what-is {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-gap: 1rem;
+  padding: 6rem 3rem 0 5rem;
+}
+.what-is article {
+  text-align: center;
+}
+.what-is .diagram {
+  display: grid;
+  grid-template-columns: repeat(2, 50%);
+  background-color: var(--Background2);
+  border-radius: .5rem;
+  max-width: 100%;
+  align-items: center;
+  /* justify-content: center; */
+  padding: 0 8rem;
+  gap: 3rem;
+}
+.what-is .content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+
 .doc-item ul {
   margin: 1rem;
 }
+
 .doc-item li {
-  margin: .5rem 0 0 1rem;
+  margin: 0.5rem 0 0 1rem;
+}
+
+.code-box img {
+  width: 100%;
 }
 
 .copy-button {
   position: absolute;
-  top: .5rem;
-  right: .5rem;
+  top: 0.5rem;
+  right: 0.5rem;
   padding: 0.5rem;
   color: var(--Foreground2);
   background-color: transparent;
@@ -365,9 +418,35 @@ s {text-decoration: none;}
   border-radius: 8px;
   cursor: pointer;
 }
-.copy-button:hover, .copy-button:focus {
+.copy-button:hover,
+.copy-button:focus {
   background-color: var(--Background);
 }
 .copy-button:active {
   background-color: var(--Background2);
+}
+
+/* For smaller screens */
+@media (max-width: 900px) {
+  .doc-item {
+    grid-template-columns: 100%;
+    grid-gap: 1rem;
+    padding: 6rem 2rem 0 2rem;
+  }
+
+  nav li:not(.mobile) {
+    display: none;
+  }
+
+  nav .mobile {
+    display: block;
+  }
+
+  nav .github {
+    display: flex;
+  }
+
+  header {
+    display: none;
+  }
 }

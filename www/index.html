@@ -10,7 +10,7 @@
   <body>
     <header>
       <h1 class="sitename"><a href="#">Prompty.ai</a></h1>
-      <aside class="share">
+      <aside class="share github">
         <img src="assets/github_icon.svg" alt="GitHub logo icon of Octocat" /><a
           href="#"
           >GitHub</a
@@ -39,15 +39,37 @@
       </p>
       <nav id="mainNav">
         <ul>
-          <!-- <li><a href="#">Prompty.ai</a></li> -->
+          <li class="mobile"><a href="#">Prompty.ai</a></li>
           <li><a href="#whatIsPrompty">What is Prompty?</a></li>
           <li><a href="#spec">Spec</a></li>
           <li><a href="#tooling">Tooling</a></li>
           <li><a href="#runtime">Runtime</a></li>
           <li><a href="#howToUseIt">How to use it</a></li>
           <li><a href="#benefits">Benefits</a></li>
+          <li class="mobile github"><img src="assets/github_icon.svg" alt="GitHub logo icon of Octocat" /><a
+            href="#"
+            >GitHub</a
+          ><img
+            src="assets/external_link.svg"
+            alt="An external link icon of a box with an arrow out of the top right to show leaving the site or opening in a new tab."
+          /></li>
         </ul>
       </nav>
+
+
+      <section class="doc-item what-is" id="whatIsPrompty">
+        <article>
+          <h3>What is Prompty?</h2>
+        </article>
+        <div class="diagram">
+          <div class="content">
+            <p>Prompty is an asset class & format for LLM prompts that aims to provide observability, understandability, and portability for developers - the primary goal is to speed up the developer inner loop.</p>
+            <p>Prompty is comprised of 3 things, the specification, its tooling, and runtime.</p>
+          </div>
+              
+          <img src="assets/images/prompty-venn.png" alt="Example of a Prompty file in VS Code using the Prompty extension." />
+        </div>
+      </section>
 
       <section class="doc-item" id="spec">
         <article>
@@ -106,32 +128,7 @@ Use their name to address them in your responses.
             </ul>
         </article>
         <div class="code-box">
-          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
-<pre>
-<code class="prompty code-content"><s class="c0">---</s>
-<s class="c3">inputs</s><s class="c0">:</s>
-  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
-  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
-  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
-
-<s class="c3">parameters</s><s class="c0">:</s>
-  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
-  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
-
-<s class="c0">---</s>
-<s class="c3">system</s><s class="c0">:</s>
-<s class="c0">
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-</s>
-<s class="c2"># Customer</s>
-You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
-Use their name to address them in your responses.
-
-<s class="c3">user</s>:
-<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
-</code>
-</pre>
+        <img src="assets/images/prompty-tooling.png" alt="Prompty tooling example of the Prompty extension in VS Code" />
         </div>
     </section>
 
@@ -149,32 +146,7 @@ Use their name to address them in your responses.
           </ul>
         </article>
         <div class="code-box">
-          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
-<pre>
-<code class="prompty code-content"><s class="c0">---</s>
-<s class="c3">inputs</s><s class="c0">:</s>
-  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
-  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
-  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
-
-<s class="c3">parameters</s><s class="c0">:</s>
-  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
-  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
-
-<s class="c0">---</s>
-<s class="c3">system</s><s class="c0">:</s>
-<s class="c0">
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-</s>
-<s class="c2"># Customer</s>
-You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
-Use their name to address them in your responses.
-
-<s class="c3">user</s>:
-<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
-</code>
-</pre>
+          <img src="assets/images/prompty-runtime.png" alt="The Prompty runtime processing a .prompty file in VS Code using the Prompty extension." />
         </div>
     </section>
 
