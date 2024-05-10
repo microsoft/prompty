@@ -150,92 +150,97 @@ Use their name to address them in your responses.
         </div>
     </section>
 
-
-      <section class="doc-item" id="howToUseIt">
-        <article>
-            <h3>How do I use this?</h2>
-            <h4>Execution engine:</h4>
-            <ul>
-                <li>CLI</li>
-                <li>SDK</li>
-            </ul>
-            <h4>The runtime:</h4>
-            <ul>
-              <li>The runtime interface is available for developers to implement it in the language of there choice when it is not already provided via SDK's and CLI's</li>
-            </ul>
-        </article>
-        <div class="code-box">
-          <pre>
-<code class="code-content">
-> python -m pip install prompty
-</code>
-</pre>
-
-          <pre>
-<code>
-> prompty execute --file sample.prompty
-</code>
-</pre>
-        </div>
-    </section>
-
-
-      <section class="benefits" id="benefits">
-        <h3>What are the benefits of Prompty?</h3>
-        <div class="grid-container">
-          <div class="cell item1">
-            <i class="bullet-number">1</i>
+      <section class="doc-item how" id="howToUseIt">
+        <h3>How do I use Prompty?</h3>
+        <div class="card-container">
+          <article class="cell">
+            <i class="pill">Step 1</i>
             <h4>Feel confident while building</h4>
             <p>
               Understand what's coming in and going out and how to manage it
               effectively.
             </p>
-          </div>
-          <div class="cell item2">
-            <i class="bullet-number">2</i>
+          </article>
+          <article class="cell">
+            <i class="pill">Step 2</i>
             <h4>Flexible and simple</h4>
             <p>
               Integrate into whatever development environments or workflows you
               have.
             </p>
-          </div>
-          <div class="cell item3">
-            <i class="bullet-number">3</i>
+          </article>
+          <article class="cell">
+            <i class="pill">Step 3</i>
             <h4>Language agnostic</h4>
             <p>Use with any language or framework you are familiar with.</p>
-          </div>
-          <div class="cell item4">
-            <h4>Standards open doors</h4>
-            <p>
-              By working in a common format we open up opportunities for new
-              improvements.
-            </p>
+          </article>
+        </div>
+      </section>
 
-            <ul>
-              <li>
-                By default all prompty executions will produce tracing for each
-                prompty called
-              </li>
-              <li>
-                Developers can add additional tracing via simple SDK functions
-              </li>
-              <li>
-                Tracing output uses OpenTelemetry so any/all existing tooling
-                around that standard can be used to visualize the tracing
-                output.
-              </li>
-            </ul>
+      
+      <section class="benefits" id="benefits">
+        <h3>What are the benefits of Prompty?</h3>
+        <div class="grid-container">
+          <div class="item0">
+            <article class="cell item1">
+              <i class="pill bullet-number">1</i>
+              <h4>Feel confident while building</h4>
+              <p>
+                Understand what's coming in and going out and how to manage it effectively.
+              </p>
+            </article>
+            <article class="cell item2">
+              <i class="pill bullet-number">2</i>
+              <h4>Language agnostic</h4>
+              <p>
+                Use with any language or framework you are familiar with.
+              </p>
+            </article>
+            <article class="cell item3">
+              <i class="pill bullet-number">3</i>
+              <h4>Flexible and simple</h4>
+              <p>Integrate into whatever development environments or workflows you have.</p>
+            </article>
           </div>
-          <div class="cell item5">
-            <h4>Works for everyone</h4>
-            <p>
-              Prompty is built on the premise that even with increasing
-              complexity in AI, a fundamental unit remains prompts. And
-              understanding this can lead to more innovative developments in AI
-              applications, for everyone. [focus on partners / how it would work
-              across stuff. more language support]
-            </p>
-          </div>
+
+          <article class="cell item4">
+            <div>
+              <h4>Standards open doors</h4>
+              <p>
+                By working in a common format we open up opportunities for new
+                improvements.
+              </p>
+  
+              <ul>
+                <li>
+                  By default all prompty executions will produce tracing for each
+                  prompty called
+                </li>
+                <li>
+                  Developers can add additional tracing via simple SDK functions
+                </li>
+                <li>
+                  Tracing output uses OpenTelemetry so any/all existing tooling
+                  around that standard can be used to visualize the tracing
+                  output.
+                </li>
+              </ul>
+            </div>
+            <img src="assets/images/prompty-graph.png" alt=""/>
+          </article>
+          <article class="cell item5">
+            <div>
+              <h4>Works for everyone</h4>
+              <p>
+                Prompty is built on the premise that even with increasing
+                complexity in AI, a fundamental unit remains prompts. And
+                understanding this can lead to more innovative developments in AI
+                applications, for everyone. [focus on partners / how it would work
+                across stuff. more language support]
+              </p>
+            </div>
+            <img src="assets/images/prompty-ascii-art-globe.png" alt=""/>
+          </article>
         </div>
       </section>
     </main>
