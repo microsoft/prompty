@@ -1,6 +1,6 @@
 @font-face {
   font-family: Aptos, Helvetica, sans-serif;
-  src: url("../assets/fonts/Aptos.ttf") format("truetype");
+  src: url("../www/assets/fonts/Aptos.ttf") format("truetype");
 }
 
 html,
@@ -36,10 +36,12 @@ body {
   --Text: #fff;
   --Background: #1f1f1f;
   --Background2: #2d2d2d;
-  --Foreground2: #d7d7d7;
+  --Foreground2: #ccc;
   --FixedOffsetY: 1.5rem;
   --FixedOffsetX: 2rem;
   --Stroke3: #9cdcfe;
+  --BorderRadius: 1rem;
+  --LinkHover: #fff;
 
   /* Add more variables here */
 
@@ -48,15 +50,29 @@ body {
   color: var(--Text);
   background-color: var(--Background);
   scroll-behavior: smooth;
+  font-weight: 100;
+  padding-bottom: 3rem;
 }
 
 a {
   color: var(--Foreground2);
   text-decoration: none;
 }
+a:hover, a:focus {
+  color: var(--LinkHover)
+} 
 
 li {
   margin: 0.25rem 1rem 0.25rem;
+}
+
+.how h3, .benefits h3 {
+  margin-bottom: 0;
+}
+
+h3, h4 {
+  color: #fff;
+  font-weight: 400;
 }
 
 header {
@@ -80,6 +96,12 @@ main {
   padding-top: 7.25rem;
 }
 
+.diagram {
+  border-radius: var(--BorderRadius);
+}
+
+
+
 .learn-more-container,
 .learn-more {
   border-radius: 0.5rem;
@@ -91,17 +113,23 @@ main {
 .learn-more {
   display: flex;
   padding: 12px 16px;
+  letter-spacing: 0.1rem;
   justify-content: center;
   align-items: center;
   gap: 8px;
   background-color: var(--Background);
+  font-weight: 600;
 }
 
 .main-subheader {
   font-size: 6rem;
-  font-weight: bold;
-  line-height: 90%;
+  font-weight: 400;
+  line-height: 100%;
   max-width: 75%;
+  background: linear-gradient(to top, #a6d9ff, #fff 30%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .short-desc {
@@ -149,7 +177,6 @@ button {
 nav ul {
   display: inline-flex;
   padding: 1rem;
-  gap: 2rem;
   justify-content: center;
   align-items: center;
 }
@@ -184,7 +211,7 @@ pre code {
   font-size: 0.75rem;
   background-color: #2d2d2d;
   color: #f8f8f2;
-  border-radius: 8px;
+  border-radius: var(--BorderRadius);
   overflow-x: auto;
   padding: 1rem;
   max-width: 100%;
@@ -206,9 +233,8 @@ article ul {
   font-size: 0.875rem;
 }
 
-.faq p {
+p {
   font-size: 1rem;
-  margin-bottom: 1rem;
   color: var(--Foreground2);
 }
 
@@ -233,6 +259,7 @@ article ul {
   display: grid;
   grid-template-columns: 100%;
   padding: 6rem 3rem 0 5rem;
+  grid-gap: 1rem;
 }
 .benefits h3 {
   text-align: left;
@@ -257,8 +284,8 @@ article ul {
   align-items: flex-start;
   background-color: var(--Background2);
   color: var(--Foreground2);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: var(--BorderRadius);
+  padding: 2rem;
   text-align: left;
   gap: 0.5rem;
 }
@@ -267,9 +294,8 @@ article ul {
   grid-area: 1 / 1 / 2 / 7;
   display: grid;
   background-color: var(--Background2);
-  border-radius: 0.5rem;
+  border-radius: var(--BorderRadius);
   align-items: center;
-  padding: 1rem;
 }
 .item1 {
   grid-area: 1 / 1 / 2 / 3;
@@ -308,6 +334,7 @@ article ul {
   bottom: 0;
   right: 0;
   align-self: flex-end;
+  mix-blend-mode: screen;
 }
 
 .logo-container {
@@ -353,7 +380,7 @@ article ul {
 
 .pill {
   display: inline-block;
-  padding: 0.25rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.5rem;
   border-radius: 0.75rem;
   height: auto;
   background-color: var(--Background2);
@@ -364,10 +391,15 @@ article ul {
   text-align: center;
   border: 1px solid var(--Foreground2);
   border-color: var(--Stroke3);
+  font-style: normal;
+  margin-bottom: 0.25rem;
 }
+
 .bullet-number {
   width: 1rem;
   height: 1rem;
+  padding: 0.3rem;
+  border-radius: 1rem;
 }
 
 /* Code theme colors */
@@ -433,7 +465,7 @@ s {
   display: grid;
   grid-template-columns: repeat(2, 50%);
   background-color: var(--Background2);
-  border-radius: 0.5rem;
+  border-radius: var(--BorderRadius);
   max-width: 100%;
   align-items: center;
   /* justify-content: center; */
