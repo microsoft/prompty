@@ -119,6 +119,7 @@ main {
   gap: 8px;
   background-color: var(--Background);
   font-weight: 600;
+  text-transform: ;
 }
 
 .main-subheader {
@@ -335,7 +336,7 @@ p {
 .logo-container {
   overflow: hidden;
   position: relative;
-  height: 500px;
+  height: auto;
 }
 .logo-container::after {
   content: "";
@@ -381,7 +382,6 @@ p {
   background-color: var(--Background2);
   color: var(--Foreground2);
   font-size: 0.75rem;
-  vertical-align: middle;
   font-size: 0.75rem;
   text-align: center;
   border: 1px solid var(--Foreground2);
@@ -568,4 +568,22 @@ s {
   .item0{
     display: block;
   }
+  
+  .grid-container{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .item4, .item5 {
+    flex-direction: column;
+  }
+  
+  
+  .benefits {
+    padding: 2rem;
+  }
+
 }
