@@ -87,7 +87,6 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  /* TODO: temp hack. make this reflow better. */
   max-width: 70rem;
   margin: 0 auto;
   text-align: center;
@@ -119,7 +118,7 @@ main {
   gap: 8px;
   background-color: var(--Background);
   font-weight: 600;
-  text-transform: ;
+  text-transform: uppercase;
 }
 
 .main-subheader {
@@ -131,6 +130,8 @@ main {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  padding-bottom: .5rem;
+  line-height: 90%;
 }
 
 .short-desc {
@@ -337,18 +338,20 @@ p {
   overflow: hidden;
   position: relative;
   height: auto;
+  width: 60%;
+  margin-bottom: -2rem; /* reduce the gap between the logo and the nav */
 }
-.logo-container::after {
-  content: "";
+.logo-gradient {
   position: absolute;
+  display: block;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px; /* The height of the gradient overlay */
-  background: linear-gradient(transparent, 50%, var(--Background));
+  height: 25%;
+  background: linear-gradient(transparent, var(--Background) 60%);
 }
 .large-logo {
-  width: 75%;
+  width: auto;
   position: relative;
   bottom: -600px; /* Start below the container */
   opacity: 0;
@@ -522,6 +525,10 @@ s {
 @media (max-width: 900px) {
   .main-subheader {
     font-size: 3rem;
+    background: linear-gradient(to top, #a6d9ff, #fff 18%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .doc-item {
@@ -577,6 +584,18 @@ s {
 }
 
 @media (max-width: 600px) {
+  .main-subheader {
+    font-size: 2rem;
+    background: linear-gradient(to top, #a6d9ff, #fff 25%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .short-desc {
+    font-size: 1rem;
+  }
+
   .item4, .item5 {
     flex-direction: column;
   }
