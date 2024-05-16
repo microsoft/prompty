@@ -42,6 +42,7 @@ body {
   --Stroke3: #9cdcfe;
   --BorderRadius: 1rem;
   --LinkHover: #fff;
+  --Link: #9CDCFE;
 
   /* Add more variables here */
 
@@ -86,20 +87,26 @@ header {
 main {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 7rem;
   max-width: 70rem;
   margin: 0 auto;
   text-align: center;
   align-items: center;
   justify-content: flex-start;
-  padding: 7.25rem 0;
+  padding: 7.25rem 4rem;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .diagram {
   border-radius: var(--BorderRadius);
 }
-
-
 
 .learn-more-container,
 .learn-more {
@@ -214,6 +221,16 @@ pre code {
   max-width: 100%;
 }
 
+.info-links {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.info-links a {
+  color: var(--Link);
+}
+
 .faq {
   text-align: left;
   width: 20rem;
@@ -255,7 +272,7 @@ p {
 .benefits {
   display: grid;
   grid-template-columns: 100%;
-  padding: 6rem 3rem 0 5rem;
+  padding: 6rem 3rem 0 3rem;
   grid-gap: 1rem;
 }
 .benefits h3 {
@@ -274,7 +291,8 @@ p {
   width: 100%;
 }
 
-.cell {
+.doc-item .cell,
+.benefits .cell {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -292,7 +310,6 @@ p {
   display: grid;
   background-color: var(--Background2);
   border-radius: var(--BorderRadius);
-  align-items: center;
 }
 .item1 {
   grid-area: 1 / 1 / 2 / 3;
@@ -434,9 +451,9 @@ s {
   box-sizing: border-box;
   text-align: left;
   display: grid;
-  grid-template-columns: 35% 65%;
+  grid-template-columns: 1fr 60%;
   grid-gap: 3rem;
-  padding: 6rem 6rem 0 6rem;
+  padding: 6rem 3rem 0 3rem;
   width: 100%;
 }
 
@@ -454,21 +471,26 @@ s {
   display: grid;
   grid-template-columns: 100%;
   grid-gap: 1rem;
-  padding: 6rem 3rem 0 5rem;
+  padding: 6rem 3rem 0 3rem;
 }
 .what-is article {
   text-align: center;
 }
 .what-is .diagram {
   display: grid;
-  grid-template-columns: repeat(2, 50%);
+  /* grid-template-columns: repeat(2, 50%); */
   background-color: var(--Background2);
   border-radius: var(--BorderRadius);
   max-width: 100%;
   align-items: center;
-  /* justify-content: center; */
   padding: 0 8rem;
   gap: 3rem;
+  overflow: hidden;
+  grid-template-columns: 1fr 50%;
+  justify-content: center;
+}
+.what-is img {
+  height: 100%;
 }
 .what-is .content {
   display: flex;
@@ -481,7 +503,7 @@ s {
   display: grid;
   grid-template-columns: 100%;
   grid-gap: 1rem;
-  padding: 6rem 3rem 0 5rem;
+  padding: 6rem 3rem 0 3rem;
 }
 
 .how .card-container {
@@ -605,4 +627,7 @@ s {
     padding: 2rem;
   }
 
+  main {
+    padding: 3rem 0;
+  }
 }
