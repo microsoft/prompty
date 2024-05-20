@@ -8,31 +8,30 @@ This Visual Studio Code extension offers an intuitive prompt playground within V
 ### Specification
 Prompty standardizes prompts and their execution into a single asset.
 
-![Language Spec](img/readme_lang_spec.png)
+![Language Spec](img/vscode/readme_lang_spec.png)
 
 ## VSCode Extension Features
 ### Quick Create
 Quickly create a basic prompty by right-clicking in the VS Code explorer and selecting "New Prompty."
 
-![Quick Create](img/image-2.png)
+![Quick Create](img/vscode/image-2.png)
 
 ### Preview
 Preview prompty similar to markdown with dynamic template rendering while typing, allowing you to see the prompt that will be sent to the model.
 
-![Preview](img/readme_preview.png)
+![Preview](img/vscode/readme_preview.png)
 
 ### Define and Switch Connections
 * Define your model connections directly in VS Code.
 * Quickly switch between different connections.
 
-  ![Define Connections](img/image-5.png)
+  ![Define Connections](img/vscode/image-5.png)
 
-  ![Switch Connection](img/image-7.png)
 * Use VS Code settings to define connections at:
   * User level for use across different prompty files.
   * Workspace level to share with team members via Git.
 
-  ![Settings](img/image-6.png)
+  ![Settings](img/vscode/image-6.png)
 
 * We strongly encourage using Azure Active Directory authentication for enhanced security. Leave the `api_key` empty to trigger AAD auth.
 * OpenAI connection is also supported. You can store the key in settings or use `${env:xxx}` to read the API key from an environment variable. Follow [OpenAI's Guide](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) for key safety, setting it through Control Panel/zsh/bash, and then restart VS Code to load new values.
@@ -41,11 +40,11 @@ Preview prompty similar to markdown with dynamic template rendering while typing
 Hit **F5** or click the **Run** button at the top. There are two output windows:
 * **Prompty Output** shows a concise view.
 
-  ![Prompty Output](img/image-3.png)
+  ![Prompty Output](img/vscode/image-3.png)
 
 * **Prompty Output (Verbose)** shows detailed requests sent and received.
 
-  ![Prompty Output (Verbose)](img/image-8.png)
+  ![Prompty Output (Verbose)](img/vscode/image-8.png)
 
 ### Orchestrator Integration
 Prompty is supported by popular orchestration frameworks:
@@ -55,7 +54,7 @@ Prompty is supported by popular orchestration frameworks:
 
 Right-click on a `.prompty` file to quickly generate integration snippets.
 
-![Orchestrator Integration](img/image-9.png)
+![Orchestrator Integration](img/vscode/image-9.png)
 
 ## Feedback
 Submit your feedback about Prompty or the VS Code extension to the [Microsoft/prompty](https://github.com/microsoft/prompty/issues) GitHub repository.
