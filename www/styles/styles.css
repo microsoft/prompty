@@ -492,9 +492,6 @@ s {
   grid-template-columns: 1fr 50%;
   justify-content: center;
 }
-.what-is img {
-  height: 100%;
-}
 .what-is .content {
   display: flex;
   flex-direction: column;
