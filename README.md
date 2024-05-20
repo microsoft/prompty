@@ -1,4 +1,4 @@
-# Prompty Extension for Visual Studio Code
+# Prompty
 
 Prompty is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop.
 
