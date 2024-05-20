@@ -467,6 +467,8 @@ s {
   position: relative;
   max-width: 100%;
   max-height: 464px;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 .what-is {
   display: grid;

@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'; require-trusted-types-for 'script';">
+    <link rel="icon" type="image/png" href="assets/images/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="assets/images/favicon-32x32.png" sizes="32x32" />
     <link rel="stylesheet" href="styles/styles.css" />
     <title>Prompty.ai</title>
   </head>
@@ -86,32 +88,7 @@
             </ul>
         </article>
         <div class="code-box">
-          <button class="copy-button"><img src="assets/icon-copy-20.svg" alt="Copy button"></button>
-<pre>
-<code class="prompty code-content"><s class="c0">---</s>
-<s class="c3">inputs</s><s class="c0">:</s>
-  <s class="c3">firstName</s><s class="c0">:</s> <s class="c0">Sally</s>
-  <s class="c3">lastName</s><s class="c0"></s>:</s> <s class="c0">Doe</s>
-  <s class="c3">question</s><s class="c0"></s>:</s> <s class="c0">What is the meaning of life?</s>
-
-<s class="c3">parameters</s><s class="c0">:</s>
-  <s class="c3">max_tokens</s><s class="c0">:</s> <s class="c0">45</s>
-  <s class="c3">frequency_penalty</s><s class="c0">:</s> <s class="c0">2.0</s>
-
-<s class="c0">---</s>
-<s class="c3">system</s><s class="c0">:</s>
-<s class="c0">
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly, and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-</s>
-<s class="c2"># Customer</s>
-You are helping <s class="c1">{{</s>firstName</s><s class="c1">}}</s> <s class="c1">{{</s>lastName</s><s class="c1">}}</s> to find answers to their questions.
-Use their name to address them in your responses.
-
-<s class="c3">user</s>:
-<s class="c1">{{</s><s class="c1">question</s><s class="c1">}}</s>
-</code>
-</pre>
+          <img src="assets/images/spec.png" alt="Example of a Prompty file in VS Code using the Prompty extension." />
         </div>
     </section>
 
@@ -132,7 +109,7 @@ Use their name to address them in your responses.
             </ul>
         </article>
         <div class="code-box">
-        <img src="assets/images/prompty-tooling.png" alt="Prompty tooling example of the Prompty extension in VS Code" />
+        <img src="assets/images/tools.png" alt="Prompty tooling example of the Prompty extension in VS Code" />
         </div>
     </section>
 
@@ -150,7 +127,7 @@ Use their name to address them in your responses.
           </ul>
         </article>
         <div class="code-box">
-          <img src="assets/images/prompty-runtime.png" alt="The Prompty runtime processing a .prompty file in VS Code using the Prompty extension." />
+          <img src="assets/images/runtime.png" alt="The Prompty runtime processing a .prompty file in VS Code using the Prompty extension." />
         </div>
     </section>
 
@@ -176,7 +153,7 @@ Use their name to address them in your responses.
               Get .prompty file syntax highlighting, tracing, and runtime support.
             </p>
             <p class="info-links">
-              <a href="">Get the extension</a>
+              <a href="https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty" target="_blank">Get the extension</a>
             </p>
           </article>
           <article class="cell">
@@ -259,6 +236,5 @@ Use their name to address them in your responses.
         </div>
       </section>
     </main>
-    <script src="scripts/main.js"></script>
   </body>
 </html>
