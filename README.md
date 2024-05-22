@@ -11,7 +11,7 @@ Prompty standardizes prompts and their execution into a single asset.
 ![Language Spec](img/vscode/readme_lang_spec.png)
 
 ## VSCode Extension Features
-### Quick Create
+### Quickly Create
 Quickly create a basic prompty by right-clicking in the VS Code explorer and selecting "New Prompty."
 
 ![Quick Create](img/vscode/image-2.png)
