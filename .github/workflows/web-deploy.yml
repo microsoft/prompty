@@ -26,7 +26,7 @@ jobs:
     - name: rewrite version
       run: |
         echo "export const VERSION = '$TAG';" > web/src/lib/version.ts
-        cat web/src/endpoint.ts
+        cat web/src/lib/version.ts
 
 
     - name: Log in to registry
