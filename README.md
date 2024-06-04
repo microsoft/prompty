@@ -63,4 +63,4 @@ Right-click on a `.prompty` file to quickly generate integration snippets.
 Submit your feedback about Prompty or the VS Code extension to the [Microsoft/prompty](https://github.com/microsoft/prompty/issues) GitHub repository.
 
 ## Documentation
-* https://microsoft.github.io/prompty/
+* https://prompty.ai
