@@ -1,0 +1,68 @@
+name: prompty.ai web deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-ui:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create tag
+      run: |
+        echo "TAG=v$(date +%Y%m%d.%H%M%S)" >> "$GITHUB_ENV"
+        echo "Using tag: ${TAG}"
+
+    - name: Log in to Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: rewrite version
+      run: |
+        echo "export const VERSION = '$TAG';" > web/src/lib/version.ts
+        cat web/src/endpoint.ts
+
+
+    - name: Log in to registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.REGISTRY_ENDPOINT }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push container
+      run: |
+        cd web
+        docker build . -t ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG}
+        docker push ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG}
+
+    
+
+    - name: Push Container
+      run: |
+        az containerapp up --name prompty-web \
+                            --image ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG} \
+                            --ingress external \
+                            --target-port 8080 \
+                            --resource-group prompty \
+                            --registry-server ${{ secrets.REGISTRY_ENDPOINT }} \
+                            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+                            --registry-password ${{ secrets.REGISTRY_PASSWORD }}
+
+        az containerapp update --name prompty-web \
+                                --resource-group prompty \
+                                --min-replicas 1 \
+                                --max-replicas 5 \
+                                --scale-rule-name azure-http-rule \
+                                --scale-rule-type http \
+                                --scale-rule-http-concurrency 100
+
+    - name: Logout
+      run: |
+        az logout

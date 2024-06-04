@@ -1,7 +1,6 @@
-@font-face {
-  font-family: Aptos;
-  src: url("../assets/fonts/Aptos.ttf") format("truetype");
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html,
 body {
