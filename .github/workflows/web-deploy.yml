@@ -49,7 +49,7 @@ jobs:
         az containerapp up --name prompty-web \
                             --image ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG} \
                             --ingress external \
-                            --target-port 8080 \
+                            --target-port 3000 \
                             --resource-group prompty \
                             --registry-server ${{ secrets.REGISTRY_ENDPOINT }} \
                             --registry-username ${{ secrets.REGISTRY_USERNAME }} \
