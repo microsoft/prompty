@@ -53,7 +53,7 @@ Hit **F5** or click the **Run** button at the top. There are two output windows:
 Prompty is supported by popular orchestration frameworks:
 * [Prompt flow](https://microsoft.github.io/promptflow/tutorials/prompty-quickstart.html)
 * [Langchain](https://github.com/langchain-ai/langchain/tree/master/libs/partners/prompty)
-* [Semantic Kernel](https://github.com/microsoft/semantic-kernel/tree/main/dotnet/samples/Concepts/Prompty)
+* [Semantic Kernel](https://github.com/microsoft/semantic-kernel/blob/main/dotnet/samples/Concepts/PromptTemplates/PromptyFunction.cs)
 
 Right-click on a `.prompty` file to quickly generate integration snippets.
 
