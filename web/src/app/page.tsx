@@ -186,6 +186,7 @@ export default function Home() {
         <section className="doc-item how" id="howToUseIt">
           <h3>How do I use Prompty?</h3>
           <div className="card-container">
+            {/*
             <article className="cell">
               <i className="pill">Step 1</i>
               <h4>Feel confident while building</h4>
@@ -194,9 +195,10 @@ export default function Home() {
                 either see below.
               </p>
             </article>
+            */}
             <article className="cell">
-              <i className="pill">Step 2</i>
-              <h4>Flexible and simple</h4>
+              {/*<i className="pill">Step 2</i>*/}
+              <h4>Install the VS code extention</h4>
               <p>
                 Get .prompty file syntax highlighting, tracing, and runtime
                 support.
@@ -210,6 +212,7 @@ export default function Home() {
                 </a>
               </p>
             </article>
+            {/*
             <article className="cell">
               <i className="pill">Step 3</i>
               <h4>Language agnostic</h4>
@@ -218,6 +221,7 @@ export default function Home() {
                 tutorial.
               </p>
             </article>
+            */}
           </div>
         </section>
 
