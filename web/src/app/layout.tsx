@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
+import Block from "@/components/block";
 
 
 export const metadata: Metadata = {
@@ -13,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link
@@ -28,9 +30,15 @@ export default function RootLayout({
           href="assets/images/favicon-32x32.png"
           sizes="32x32"
         />
-        <title>Prompty.ai</title>
+        <title>prompty.ai</title>
       </head>
-      <body>{children}</body>
+      <body className="bg-zinc-50 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            {children}
+          </div>
+        </Providers>
+      </body>
     </html>
   );
 }
