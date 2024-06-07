@@ -61,7 +61,8 @@ jobs:
                                 --max-replicas 5 \
                                 --scale-rule-name azure-http-rule \
                                 --scale-rule-type http \
-                                --scale-rule-http-concurrency 100
+                                --scale-rule-http-concurrency 100 \
+                                --no-wait
 
     - name: Logout
       run: |

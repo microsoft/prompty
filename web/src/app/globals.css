@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+a {
+  @apply text-sky-600 font-semibold hover:text-sky-400 dark:text-sky-400 dark:hover:text-sky-600;
+}

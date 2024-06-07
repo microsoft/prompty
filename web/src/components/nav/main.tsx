@@ -1,35 +1,49 @@
 "use client";
-
-import React from "react";
-import Image from "next/image";
-import {
-  ArrowTopRightOnSquareIcon,
-  NewspaperIcon,
-} from "@heroicons/react/24/solid";
+import React, { useEffect, useState } from "react";
+import { HiMoon, HiSun } from "react-icons/hi2";
+import { FaGithub } from "react-icons/fa";
+import { useTheme } from "next-themes";
 
 const Main = () => {
+  const { resolvedTheme, setTheme } = useTheme();
+  const otherTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <div className="text-slate-200">
-        <img src="assets/images/prompty32x32.png" />
+        <a href="/">
+          <img src="assets/images/prompty32x32.png" />
+        </a>
       </div>
-      <div
-        className="text-sky-300 hover:text-sky-700 hover:cursor-pointer"
-        onClick={() => alert("ME!dfgvdfgbvdfgbdfgdfgb!!!")}
-      >
-        Docs
+      <div>
+        <a href="/docs">Docs</a>
       </div>
-      <div>Blog</div>
+      <div>
+        <a href="/docs">Blog</a>
+      </div>
       <div className="grow" />
+
       <div className="flex flex-row items-center gap-2">
-        <Image
-          src="/assets/github_icon.svg"
-          alt="GitHub logo icon of Octocat"
-          width={24}
-          height={24}
-        />
-        <div>GitHub</div>
-        <ArrowTopRightOnSquareIcon className="w-6 h-6 stroke-slate-400 rounded-full hover:cursor-pointer" />
+        <button
+          type="button"
+          aria-label={
+            mounted ? `Switch to ${otherTheme} theme` : "Toggle theme"
+          }
+          onClick={() => setTheme(otherTheme)}
+        >
+          <HiSun className="h-6 w-6 dark:hidden fill-sky-600" />
+          <HiMoon className="hidden h-6 w-6 transition dark:block fill-sky-600" />
+        </button>
+      </div>
+      <div className="flex flex-row items-center hover:cursor-pointer">
+        <a href="https://github.com/Microsoft/prompty/" target="_blank">
+          <FaGithub className="h-6 w-6 fill-stone-950 dark:fill-stone-50" />
+        </a>
       </div>
     </>
   );
