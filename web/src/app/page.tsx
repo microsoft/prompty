@@ -1,13 +1,26 @@
 import Block from "@/components/block";
+import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
-import Main from "@/components/nav/main";
+import { navigation } from "@/lib/navigation";
 import { VERSION } from "@/lib/version";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "prompty.ai",
+  description:
+    "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers.",
+  icons: ["assets/images/favicon-16x16.png", "assets/images/favicon-32x32.png"],
+};
 
 export default function Home() {
   return (
     <>
       <Header innerClassName="h-12 flex flex-row center items-center gap-3">
-        <Main />
+        {navigation.map((item) => (
+          <div key={item.href}>
+            <a href={item.href}>{item.title}</a>
+          </div>
+        ))}
       </Header>
       <Block outerClassName="mt-2 md:mt-28" innerClassName="block">
         <section className="justify-center gap-5 md:gap-10 flex flex-col items-center">
@@ -194,7 +207,7 @@ export default function Home() {
         </div>
       </Block>
       <Block outerClassName="mt-8">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-8">
           <div className="basis-1/2 bg-zinc-200 dark:bg-zinc-700 rounded-2xl flex flex-col gap-5 p-5">
             <h2 className="text-xl md:text-3xl font-bold">
               Standards open doors
@@ -248,34 +261,16 @@ export default function Home() {
           </div>
         </div>
       </Block>
-      <Block
+      <Footer
         outerClassName="mt-8 mb-8"
         innerClassName="border-t-[1px] border-zinc-300 dark:border-zinc-700"
       >
-        <div className="flex flex-row gap-5 mt-6">
-          <div>
-            <a href="/docs">Docs</a>
+        {navigation.map((item) => (
+          <div key={item.href}>
+            <a href={item.href}>{item.title}</a>
           </div>
-          <div>
-            <a href="/blog">Blog</a>
-          </div>
-          <div className="grow"></div>
-          <div className="flex flex-col gap-1">
-            <div className="text-right mr-1">Sponsored by:</div>
-            <img
-              src="/assets/images/microsoft-dark.png"
-              className="hidden dark:block"
-            />
-            <img
-              src="/assets/images/microsoft-light.png"
-              className="block dark:hidden"
-            />
-            <div className="text-right mr-1 text-zinc-300 dark:text-zinc-700">
-              {VERSION}
-            </div>
-          </div>
-        </div>
-      </Block>
+        ))}
+      </Footer>
     </>
   );
 }
