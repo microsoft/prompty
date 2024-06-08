@@ -2,7 +2,6 @@ import Block from "@/components/block";
 import Header from "@/components/nav/header";
 import Main from "@/components/nav/main";
 import { VERSION } from "@/lib/version";
-import { GiH2O } from "react-icons/gi";
 
 export default function Home() {
   return (
@@ -20,6 +19,15 @@ export default function Home() {
             provide observability, understandability, and portability for
             developers.
           </p>
+          <div className="mt-5 mb-5">
+            <a
+              href="https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty"
+              target="_blank"
+              className="ring-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 p-5 rounded-2xl"
+            >
+              Get the Extension
+            </a>
+          </div>
           <p className="relative overflow-visible h-auto w-[60%] md:w-[40%] mb-[-2rem] block">
             <img
               src="/assets/prompty_p.svg"
@@ -52,7 +60,7 @@ export default function Home() {
               <li>and runtime.</li>
             </ul>
           </div>
-          <div className="basis-1/2 lg:basis-1/3 flex justify-center bg-zinc-700 rounded-2xl">
+          <div className="basis-1/2 xl:basis-1/3 flex justify-center bg-zinc-700 rounded-2xl">
             <img
               src="/assets/images/prompty-venn.png"
               alt="Example of a Prompty file in VS Code using the Prompty extension."
@@ -185,7 +193,89 @@ export default function Home() {
           </div>
         </div>
       </Block>
-      <Block outerClassName="mt-8 mb-8">&nbsp;</Block>
+      <Block outerClassName="mt-8">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="basis-1/2 bg-zinc-200 dark:bg-zinc-700 rounded-2xl flex flex-col gap-5 p-5">
+            <h2 className="text-xl md:text-3xl font-bold">
+              Standards open doors
+            </h2>
+            <div>
+              By working in a common format we open up opportunities for new
+              improvements.
+            </div>
+            <ul className="list-disc mt-3 ms-8">
+              <li>
+                By default all prompty executions will produce tracing for each
+                prompty called
+              </li>
+              <li>
+                Developers can add additional tracing via simple SDK functions
+              </li>
+              <li>
+                Tracing output uses OpenTelemetry so any/all existing tooling
+                around that standard can be used to visualize the tracing
+                output.
+              </li>
+            </ul>
+            <div className="flex flex-row justify-end relative">
+              <img
+                src="/assets/images/prompty-graph.png"
+                alt=""
+                className="justify-end mix-blend-overlay dark:mix-blend-screen"
+              />
+            </div>
+          </div>
+          <div className="basis-1/2 bg-zinc-200 dark:bg-zinc-700 rounded-2xl flex flex-col gap-5 p-5">
+            <h2 className="text-xl md:text-3xl font-bold">
+              Works for everyone
+            </h2>
+            <div>
+              Prompty is built on the premise that even with increasing
+              complexity in AI, a fundamental unit remains prompts. And
+              understanding this can lead to more innovative developments in AI
+              applications, for everyone.
+            </div>
+            <div className="grow"></div>
+            <div className="flex flex-row justify-end relative">
+              <div className="flex flex-row justify-end relative">
+                <img
+                  src="/assets/images/prompty-ascii-art-globe.png"
+                  alt=""
+                  className="justify-end mix-blend-overlay dark:mix-blend-screen"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Block>
+      <Block
+        outerClassName="mt-8 mb-8"
+        innerClassName="border-t-[1px] border-zinc-300 dark:border-zinc-700"
+      >
+        <div className="flex flex-row gap-5 mt-6">
+          <div>
+            <a href="/docs">Docs</a>
+          </div>
+          <div>
+            <a href="/blog">Blog</a>
+          </div>
+          <div className="grow"></div>
+          <div className="flex flex-col gap-1">
+            <div className="text-right mr-1">Sponsored by:</div>
+            <img
+              src="/assets/images/microsoft-dark.png"
+              className="hidden dark:block"
+            />
+            <img
+              src="/assets/images/microsoft-light.png"
+              className="block dark:hidden"
+            />
+            <div className="text-right mr-1 text-zinc-300 dark:text-zinc-700">
+              {VERSION}
+            </div>
+          </div>
+        </div>
+      </Block>
     </>
   );
 }

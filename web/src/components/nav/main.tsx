@@ -24,7 +24,7 @@ const Main = () => {
         <a href="/docs">Docs</a>
       </div>
       <div>
-        <a href="/docs">Blog</a>
+        <a href="/blog">Blog</a>
       </div>
       <div className="grow" />
 
