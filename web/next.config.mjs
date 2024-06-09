@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone'
+  pageExtensions: ["js", "jsx", "mdx", "md", "ts", "tsx"],
+  output: "standalone"
 };
 
 export default nextConfig;

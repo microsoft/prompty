@@ -28,7 +28,7 @@ const Header = ({ children, outerClassName, innerClassName }: Props) => {
       >
         <div className="text-slate-200">
           <a href="/">
-            <img src="assets/images/prompty32x32.png" />
+            <img src="/assets/images/prompty32x32.png" />
           </a>
         </div>
         {children}
