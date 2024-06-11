@@ -1,91 +1,14 @@
 ---
-title: Documentation
-tags:
-  - getting-started
+title: Prompty Documentation
+description: This is the prompty documentation
 authors:
   - sethjuarez
   - wayliums
   - cassiebreviu
-description: This is the documentation page
-date: 2022-02-22
-images:
-  - _slug-item-one/spec.png
+tags:
+  - getting-started
+  - documentation
+date: 2024-06-10
 ---
 
-This is the documentation page
-
-```jsx
-import React from 'react';
-
-const Documentation = () => {
-  return (
-    <div>
-      <h1>Documentation</h1>
-      <p>This is the documentation page</p>
-    </div>
-  );
-};
-
-export default Documentation;
-```
-
-# API
-
-```python
-@trace
-def write(researchContext, research, productContext, products, assignment):
-    configuration = AzureOpenAIModelConfiguration(
-        azure_deployment="gpt-4o",
-        api_version="2024-02-01",
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_4O"),
-        api_key=os.getenv("AZURE_OPENAI_KEY_40"),
-    )
-    flow = Flow.load(
-        base / "writer.prompty",
-        model={"configuration": configuration, "parameters": {"max_tokens": 1200}},
-    )
-    result = flow(
-        researchContext=researchContext,
-        research=research,
-        productContext=productContext,
-        products=products,
-        assignment=assignment,
-    )
-    return {"article": result.replace("```markdown\n", "").replace("\n```", "")}
-```
-
-# Examples
-
-```jsx
-import React from 'react';
-
-const Examples = () => {
-  return (
-    <div>
-      <h1>Examples</h1>
-      <p>This is the examples page</p>
-    </div>
-  );
-};
-
-export default Examples;
-```
-
-# Support
-
-```jsx
-
-import React from 'react';
-
-const Support = () => {
-  return (
-    <div>
-      <h1>Support</h1>
-      <p>This is the support page</p>
-    </div>
-  );
-};
-
-export default Support;
-```
-
+Hi!
