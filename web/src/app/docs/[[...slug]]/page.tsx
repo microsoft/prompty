@@ -10,6 +10,7 @@ import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { Metadata, ResolvingMetadata } from "next";
+import Toc from "@/components/nav/toc";
 
 type Props = {
   params: { slug?: string[] };
@@ -84,7 +85,7 @@ const getIndex = async () => {
   );
   const index: Index = JSON.parse(contents);
   return index;
-}
+};
 
 const getCachedIndex = cache(getIndex);
 const getCachedContent = cache(getContent);
@@ -129,12 +130,11 @@ export default async function Page({ params }: Props) {
   const slug = params.slug ? params.slug : [];
   const { content, metadata } = await getCachedContent(slug);
   const index = await getCachedIndex();
-  const children = index.children.sort((a, b) => (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0) );
+  const children = index.children.sort(
+    (a, b) =>
+      (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0)
+  );
 
-  const items =
-    slug.length === 0
-      ? index
-      : children.find((item) => item.path === `/docs/${slug[0]}`);
 
   return (
     <>
@@ -148,12 +148,7 @@ export default async function Page({ params }: Props) {
       <Block>
         <div className="flex flex-row gap-1">
           <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md w-[250px] p-2">
-            {items &&
-              items.children.map((item) => (
-                <div key={item.path}>
-                  <a href={item.path}>{item.document?.title}</a>
-                </div>
-              ))}
+            <Toc index={index.children} visible={true} />
           </div>
           <div className="p-2 grow">
             <div className="text-2xl md:text-4xl font-bold mb-4">

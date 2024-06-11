@@ -44,6 +44,16 @@
       "path": "/docs/getting-started",
       "document": {
         "title": "Getting Started",
+        "authors": [
+          "sethjuarez",
+          "wayliums",
+          "cassiebreviu"
+        ],
+        "date": "2024-06-10T00:00:00.000Z",
+        "tags": [
+          "getting-started",
+          "documentation"
+        ],
         "index": 0
       },
       "children": []
