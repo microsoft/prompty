@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "prompty.ai",
   description:
     "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers.",
-  icons: ["assets/images/favicon-16x16.png", "assets/images/favicon-32x32.png"],
+  icons: ["/assets/images/favicon-16x16.png", "/assets/images/favicon-32x32.png"],
 };
 
 export default function Home() {

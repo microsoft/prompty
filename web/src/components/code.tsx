@@ -14,7 +14,7 @@ type Props = {
   code: string;
 };
 
-const CodeBlock = ({ language, code }: Props) => {
+const Code = ({ language, code }: Props) => {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -83,4 +83,4 @@ const CodeBlock = ({ language, code }: Props) => {
   );
 };
 
-export default CodeBlock;
+export default Code;

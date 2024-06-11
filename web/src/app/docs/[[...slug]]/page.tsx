@@ -1,15 +1,15 @@
+import path from "path";
+import { cache } from "react";
+import { BASE } from "@/lib/base";
+import { promises as fs } from "fs";
+import Code from "@/components/code";
 import Block from "@/components/block";
+import Mermaid from "@/components/mermaid";
+import { IDocument, Index } from "@/lib/navigation";
 import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
-import { promises as fs } from "fs";
-import path from "path";
-import CodeBlock from "@/components/code";
-import { IDocument } from "@/lib/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { cache } from "react";
 import { Metadata, ResolvingMetadata } from "next";
-import { BASE } from "@/lib/base";
-import Mermaid from "@/components/mermaid";
 
 type Props = {
   params: { slug?: string[] };
@@ -40,7 +40,7 @@ const getComponents = (slug: string[]) => {
           if (lang === "mermaid") {
             return <Mermaid code={code} />;
           } else {
-            return <CodeBlock language={items[1]} code={code} />;
+            return <Code language={items[1]} code={code} />;
           }
         }
         return <pre {...rest}>{children}</pre>;
@@ -77,6 +77,16 @@ const getContent = async (slug: string[]) => {
   };
 };
 
+const getIndex = async () => {
+  const contents = await fs.readFile(
+    process.cwd() + "/docs/docs.json",
+    "utf-8"
+  );
+  const index: Index = JSON.parse(contents);
+  return index;
+}
+
+const getCachedIndex = cache(getIndex);
 const getCachedContent = cache(getContent);
 
 export async function generateMetadata(
@@ -108,22 +118,42 @@ export async function generateMetadata(
     openGraph: {
       images: [...previousImages, ...currentImages],
     },
+    icons: [
+      "/assets/images/favicon-16x16.png",
+      "/assets/images/favicon-32x32.png",
+    ],
   };
 }
 
 export default async function Page({ params }: Props) {
   const slug = params.slug ? params.slug : [];
   const { content, metadata } = await getCachedContent(slug);
+  const index = await getCachedIndex();
+  const children = index.children.sort((a, b) => (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0) );
+
+  const items =
+    slug.length === 0
+      ? index
+      : children.find((item) => item.path === `/docs/${slug[0]}`);
 
   return (
     <>
       <Header innerClassName="h-12 flex flex-row center items-center gap-3">
-        <div>My thing</div>
+        {children.map((item) => (
+          <div key={item.path}>
+            <a href={item.path}>{item.document?.title}</a>
+          </div>
+        ))}
       </Header>
       <Block>
         <div className="flex flex-row gap-1">
           <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md w-[250px] p-2">
-            LEFT
+            {items &&
+              items.children.map((item) => (
+                <div key={item.path}>
+                  <a href={item.path}>{item.document?.title}</a>
+                </div>
+              ))}
           </div>
           <div className="p-2 grow">
             <div className="text-2xl md:text-4xl font-bold mb-4">
@@ -170,7 +200,11 @@ export default async function Page({ params }: Props) {
         outerClassName="mt-8 mb-8"
         innerClassName="border-t-[1px] border-zinc-300 dark:border-zinc-700"
       >
-        <div>My thing</div>
+        {children.map((item) => (
+          <div key={item.path}>
+            <a href={item.path}>{item.document?.title}</a>
+          </div>
+        ))}
       </Footer>
     </>
   );

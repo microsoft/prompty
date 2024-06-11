@@ -4,21 +4,26 @@ interface NavigationItem {
 }
 
 export const navigation: NavigationItem[] = [
-  /*
   {
     title: "Docs",
     href: "/docs",
-  }
-  
+  },
+  /*
   {
     title: "Blog",
     href: "/blog",
   }*/
 ];
 
+export interface Index {
+  path: string;
+  document?: IDocument;
+  children: Index[];
+}
 
 export interface IDocument {
   title: string;
+  index: number;
   tags: string[];
   authors: string[];
   description: string;

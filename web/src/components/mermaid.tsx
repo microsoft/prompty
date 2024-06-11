@@ -16,7 +16,7 @@ const Mermaid = ({ code }: Props) => {
 
   if (!mounted) {
     return (
-      <pre className="rounded-xl bg-zinc-100 dark:bg-zinc-900 p-3 flex flex-col relative text-sm">
+      <pre>
         <code>{code}</code>
       </pre>
     );

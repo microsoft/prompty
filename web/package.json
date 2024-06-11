@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "index": "tsc --esModuleInterop --allowSyntheticDefaultImports process.ts && node process.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
     "@next/mdx": "^14.2.3",
     "@types/mdx": "^2.0.13",
     "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
     "mermaid": "^10.9.1",
     "next": "14.2.3",
     "next-mdx-remote": "^5.0.0",
