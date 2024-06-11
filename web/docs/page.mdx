@@ -1,17 +1,18 @@
 ---
 title: Documentation
+tags:
+  - getting-started
 authors:
-  - Seth Juarez
-  - Micky Liu
-decsription: This is the documentation page
+  - sethjuarez
+  - wayliums
+  - cassiebreviu
+description: This is the documentation page
+date: 2022-02-22
+images:
+  - _slug-item-one/spec.png
 ---
 
-# Documentation
-
 This is the documentation page
-
-![alt text](runtime.png "Title")
-
 
 ```jsx
 import React from 'react';
@@ -30,19 +31,27 @@ export default Documentation;
 
 # API
 
-```jsx
-import React from 'react';
-
-const API = () => {
-  return (
-    <div>
-      <h1>API</h1>
-      <p>This is the API page</p>
-    </div>
-  );
-};
-
-export default API;
+```python
+@trace
+def write(researchContext, research, productContext, products, assignment):
+    configuration = AzureOpenAIModelConfiguration(
+        azure_deployment="gpt-4o",
+        api_version="2024-02-01",
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_4O"),
+        api_key=os.getenv("AZURE_OPENAI_KEY_40"),
+    )
+    flow = Flow.load(
+        base / "writer.prompty",
+        model={"configuration": configuration, "parameters": {"max_tokens": 1200}},
+    )
+    result = flow(
+        researchContext=researchContext,
+        research=research,
+        productContext=productContext,
+        products=products,
+        assignment=assignment,
+    )
+    return {"article": result.replace("```markdown\n", "").replace("\n```", "")}
 ```
 
 # Examples

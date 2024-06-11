@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { HiMoon, HiSun } from "react-icons/hi2";
 import { FaGithub } from "react-icons/fa";
 import { useTheme } from "next-themes";
-import { navigation } from "@/lib/navigation";
 
 type Props = {
   children: ReactNode;

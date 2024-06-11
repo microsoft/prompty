@@ -15,3 +15,14 @@ export const navigation: NavigationItem[] = [
     href: "/blog",
   }*/
 ];
+
+
+export interface IDocument {
+  title: string;
+  tags: string[];
+  authors: string[];
+  description: string;
+  images: string[];
+  date: string;
+  [key: string]: unknown;
+}
