@@ -2,7 +2,6 @@ import Block from "@/components/block";
 import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
 import { navigation } from "@/lib/navigation";
-import { VERSION } from "@/lib/version";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

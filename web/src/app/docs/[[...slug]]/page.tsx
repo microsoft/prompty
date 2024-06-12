@@ -5,7 +5,7 @@ import { promises as fs } from "fs";
 import Code from "@/components/code";
 import Block from "@/components/block";
 import Mermaid from "@/components/mermaid";
-import { IDocument, Index } from "@/lib/navigation";
+import { IDocument, Index, navigation } from "@/lib/navigation";
 import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
 import { compileMDX } from "next-mdx-remote/rsc";
@@ -139,9 +139,9 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <Header innerClassName="h-12 flex flex-row center items-center gap-3">
-        {children.map((item) => (
-          <div key={item.path}>
-            <a href={item.path}>{item.document?.title}</a>
+        {navigation.map((item) => (
+          <div key={item.href}>
+            <a href={item.href}>{item.title}</a>
           </div>
         ))}
       </Header>
@@ -195,9 +195,9 @@ export default async function Page({ params }: Props) {
         outerClassName="mt-8 mb-8"
         innerClassName="border-t-[1px] border-zinc-300 dark:border-zinc-700"
       >
-        {children.map((item) => (
-          <div key={item.path}>
-            <a href={item.path}>{item.document?.title}</a>
+        {navigation.map((item) => (
+          <div key={item.href}>
+            <a href={item.href}>{item.title}</a>
           </div>
         ))}
       </Footer>

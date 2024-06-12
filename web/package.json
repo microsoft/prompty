@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsc --esModuleInterop --allowSyntheticDefaultImports process.ts && node process.js && next dev",
     "build": "next build",
     "start": "next start",
     "index": "tsc --esModuleInterop --allowSyntheticDefaultImports process.ts && node process.js",

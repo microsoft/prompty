@@ -90,10 +90,4 @@ indexdocs().then(async (items) => {
   // write the index to a file
   await pfs.writeFile("./docs/docs.json", JSON.stringify(items, null, 2));
   console.log("index written to file");
-
-  //console.log("pulling authors");
-
-  if (items) {
-    //processAuthors(items);
-  }
 });

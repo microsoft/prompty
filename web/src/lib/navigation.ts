@@ -5,7 +5,7 @@ interface NavigationItem {
 
 export const navigation: NavigationItem[] = [
   {
-    title: "Docs",
+    title: "Documentation",
     href: "/docs",
   },
   /*
