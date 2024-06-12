@@ -5,3 +5,35 @@
 a {
   @apply text-sky-600 font-semibold hover:text-sky-400 dark:text-sky-400 dark:hover:text-sky-600;
 }
+
+h1 {
+  @apply text-xl md:text-3xl font-bold
+}
+
+h2 {
+  @apply text-lg md:text-xl font-bold
+}
+
+h3 {
+  @apply text-base md:text-lg font-bold
+}
+
+h4 {
+  @apply text-base font-bold
+}
+
+p {
+  @apply text-base mb-3
+}
+
+ul {
+  @apply list-disc list-inside
+}
+
+ol {
+  @apply list-decimal list-inside
+}
+
+li {
+  @apply text-base
+}

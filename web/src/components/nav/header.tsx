@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { HiMoon, HiSun } from "react-icons/hi2";
 import { FaGithub } from "react-icons/fa";
 import { useTheme } from "next-themes";
-import { navigation } from "@/lib/navigation";
 
 type Props = {
   children: ReactNode;
@@ -28,7 +27,7 @@ const Header = ({ children, outerClassName, innerClassName }: Props) => {
       >
         <div className="text-slate-200">
           <a href="/">
-            <img src="assets/images/prompty32x32.png" />
+            <img src="/assets/images/prompty32x32.png" />
           </a>
         </div>
         {children}

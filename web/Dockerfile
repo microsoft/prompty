@@ -14,6 +14,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+RUN npm run index
+
 RUN npm run build
 
 # Next.js collects completely anonymous telemetry data about general usage.
@@ -33,6 +35,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+COPY --from=builder /app/docs ./docs
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
