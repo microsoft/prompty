@@ -10,6 +10,7 @@ import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { Metadata, ResolvingMetadata } from "next";
+import { HiOutlinePencilSquare, HiOutlinePencil } from "react-icons/hi2";
 import Toc from "@/components/nav/toc";
 
 type Props = {
@@ -135,7 +136,6 @@ export default async function Page({ params }: Props) {
       (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0)
   );
 
-
   return (
     <>
       <Header innerClassName="h-12 flex flex-row center items-center gap-3">
@@ -150,9 +150,33 @@ export default async function Page({ params }: Props) {
           <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md w-[250px] p-2">
             <Toc index={index.children} visible={true} />
           </div>
-          <div className="p-2 grow">
-            <div className="text-2xl md:text-4xl font-bold mb-4">
-              {metadata.title}
+          <div className="ml-6 grow">
+            <div className="flex flex-row mb-4 gap-4">
+              <div className="text-2xl md:text-4xl font-bold ">
+                {metadata.title}
+              </div>
+              <div className="flex flex-row gap-2">
+                <a
+                  href={`https://github.com/microsoft/prompty/edit/main/web/docs/${slug.join(
+                    "/"
+                  )}/page.mdx`}
+                  className="flex flex-col align-middle justify-center"
+                  title="Edit this page on GitHub"
+                  target="_blank"
+                >
+                  <HiOutlinePencil className="w-6 h-6" />
+                </a>
+                <a
+                  href={`https://github.dev/microsoft/prompty/blob/main/web/docs/${slug.join(
+                    "/"
+                  )}/page.mdx`}
+                  className="flex flex-col align-middle justify-center"
+                  title="Edit this page on GitHub.dev"
+                  target="_blank"
+                >
+                  <HiOutlinePencilSquare className="w-6 h-6" />
+                </a>
+              </div>
             </div>
             <div className="flex flex-row mb-6">
               {metadata.authors && (
@@ -163,10 +187,11 @@ export default async function Page({ params }: Props) {
                         href={`https://github.com/${author}`}
                         key={author}
                         className="hover:cursor-pointer"
+                        target="_blank"
                       >
                         <img
                           className="relative z-30 inline-block h-8 w-8 rounded-full ring-2 ring-zinc-300 dark:ring-zinc-100"
-                          src={`https://github.com/${author}.png`}
+                          src={`/content/authors/${author}.png`}
                           alt={author}
                         />
                       </a>
@@ -174,15 +199,10 @@ export default async function Page({ params }: Props) {
                   })}
                 </div>
               )}
-              <div className="ml-3">
+              <div className="ml-3 flex flex-col justify-center align-middle">
                 {metadata.date && (
-                  <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <div className="text-base md:text-lg text-zinc-500 dark:text-zinc-400">
                     {new Date(Date.parse(metadata.date)).toLocaleDateString()}
-                  </div>
-                )}
-                {metadata.tags && (
-                  <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                    {metadata.tags.join(", ")}
                   </div>
                 )}
               </div>
