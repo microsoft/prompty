@@ -13,6 +13,20 @@ export async function GET(
       const content = await fs.readFile(file);
       return new Response(content);
     } catch (e) {
+      // nonexistent file, check if its an author image
+      if (params.slug[0] === "authors") {
+        
+        const content = await fs.readFile(
+          path.join(
+            ...[process.cwd(), "public", "assets", "prompty_p.svg"]
+          )
+        );
+        return new Response(content, {
+          headers: {
+            "Content-Type": "image/svg+xml",
+          },
+        });
+      }
       return new Response("Not Found", { status: 404 });
     }
   }

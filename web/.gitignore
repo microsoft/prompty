@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# remove dynamically generated author folder
+/docs/authors
+/docs/docs.json
