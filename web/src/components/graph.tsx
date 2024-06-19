@@ -1,12 +1,13 @@
 "use client";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
+import mermaid from "mermaid";
 
 type Props = {
   code: string;
 };
 
-const Mermaid = ({ code }: Props) => {
+const Graph = ({ code }: Props) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -27,4 +28,4 @@ const Mermaid = ({ code }: Props) => {
   );
 };
 
-export default Mermaid;
+export default Graph;

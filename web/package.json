@@ -25,9 +25,11 @@
     "react-dom": "^18",
     "react-icons": "^5.2.1",
     "react-syntax-highlighter": "^15.5.0",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "sharp": "^0.33.4"
   },
   "devDependencies": {
+    "@babel/plugin-transform-logical-assignment-operators": "^7.24.7",
     "@tailwindcss/typography": "^0.5.13",
     "@types/node": "^20",
     "@types/react": "^18",

@@ -4,7 +4,7 @@ import { BASE } from "@/lib/base";
 import { promises as fs } from "fs";
 import Code from "@/components/code";
 import Block from "@/components/block";
-import Mermaid from "@/components/mermaid";
+import Graph from "@/components/graph";
 import { IDocument, Index, navigation } from "@/lib/navigation";
 import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
@@ -40,7 +40,7 @@ const getComponents = (slug: string[]) => {
         if (items.length === 2) {
           const lang = items[1];
           if (lang === "mermaid") {
-            return <Mermaid code={code} />;
+            return <Graph code={code} />;
           } else {
             return <Code language={items[1]} code={code} />;
           }
@@ -127,14 +127,28 @@ export async function generateMetadata(
   };
 }
 
+const normalize = (index: Index): string[] => {
+  const items = [index.path.replace("/docs", "")];
+  if (index.children) {
+    index.children.forEach((child) => {
+      items.push(...normalize(child));
+    });
+  }
+  return items;
+};
+
+export async function generateStaticParams() {
+  const index = await getCachedIndex();
+  const posts = normalize(index);
+  return posts.map((post) => ({
+    slug: post.split("/").slice(1),
+  }));
+}
+
 export default async function Page({ params }: Props) {
   const slug = params.slug ? params.slug : [];
   const { content, metadata } = await getCachedContent(slug);
   const index = await getCachedIndex();
-  const children = index.children.sort(
-    (a, b) =>
-      (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0)
-  );
 
   return (
     <>
