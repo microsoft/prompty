@@ -1,29 +1,29 @@
 "use client";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
+import mermaid from "mermaid";
 
 type Props = {
   code: string;
 };
 
+let loaded = false;
+
 const Mermaid = ({ code }: Props) => {
-  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    if (!loaded) {
+      mermaid.initialize({
+        startOnLoad: true,
+        darkMode: true,
+      });
+      loaded = true;
+    }
   }, []);
 
-
-
-  if (!mounted) {
-    return (
-      <pre>
-        <code>{code}</code>
-      </pre>
-    );
-  }
-
   return (
-    <div>{code}</div>
+    <div>
+      <pre className="mermaid">{code}</pre>
+    </div>
   );
 };
 

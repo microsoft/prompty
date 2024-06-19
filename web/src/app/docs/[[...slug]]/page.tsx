@@ -58,7 +58,6 @@ const fetchMDX = async (slug: string[]) => {
     process.cwd() + "/docs/" + slug.join("/") + "/page.mdx",
     "utf-8"
   );
-
   return source;
 };
 
@@ -127,14 +126,28 @@ export async function generateMetadata(
   };
 }
 
+const normalize = (index: Index): string[] => {
+  const items = [index.path.replace("/docs", "")];
+  if (index.children) {
+    index.children.forEach((child) => {
+      items.push(...normalize(child));
+    });
+  }
+  return items;
+};
+
+export async function generateStaticParams() {
+  const index = await getCachedIndex();
+  const posts = normalize(index);
+  return posts.map((post) => ({
+    slug: post.split("/").slice(1),
+  }));
+}
+
 export default async function Page({ params }: Props) {
   const slug = params.slug ? params.slug : [];
   const { content, metadata } = await getCachedContent(slug);
   const index = await getCachedIndex();
-  const children = index.children.sort(
-    (a, b) =>
-      (a.document ? a.document.index : 0) - (b.document ? b.document.index : 0)
-  );
 
   return (
     <>
@@ -146,8 +159,8 @@ export default async function Page({ params }: Props) {
         ))}
       </Header>
       <Block>
-        <div className="flex flex-row gap-1">
-          <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md w-[250px] p-2">
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md md:w-[250px] p-2 mb-2 md:mb-0">
             <Toc index={index.children} visible={true} />
           </div>
           <div className="ml-6 grow">

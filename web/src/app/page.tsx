@@ -43,7 +43,7 @@ export default function Home() {
           <p className="relative overflow-visible h-auto w-[60%] md:w-[40%] mb-[-2rem] block">
             <img
               src="/assets/prompty_p.svg"
-              alt="Prompty.ai logo of a capital 'P' with cartoon cute eyes and a thick border."
+              alt="Prompty.ai logo of a capital P with cartoon cute eyes and a thick border."
               className="relative overflow-visible text-center animate-[float_10s_ease-in-out_infinite]"
             />
             <span className="absolute block left-0 right-0 bottom-0 h-[25%] bg-gradient-to-b dark:from-transparent dark:to-zinc-800 to-40% from-transparent to-zinc-50"></span>
@@ -111,8 +111,8 @@ export default function Home() {
           <div className="basis-1/2 flex flex-col justify-center">
             <h2 className="text-xl md:text-3xl font-bold">The tooling</h2>
             <p className="mt-3">
-              Given the standard specification, there's a lot of nice things we
-              can give developers in their environment.
+              Given the standard specification, there&apos;s a lot of nice
+              things we can give developers in their environment.
             </p>
             <ul className="list-disc mt-3 ms-8">
               <li>Front matter autocompletion</li>
@@ -138,7 +138,7 @@ export default function Home() {
             <h2 className="text-xl md:text-3xl font-bold">The runtime</h2>
             <p className="mt-3">
               Prompty runtime is the whatever engine that understands and can
-              execute the format. As a standalone file, it can't really do
+              execute the format. As a standalone file, it can&apos;t really do
               anything without the help of the extension (when developing) or
               the runtime (when running).
             </p>
@@ -180,8 +180,8 @@ export default function Home() {
               Feel confident while building
             </h2>
             <div>
-              Understand what's coming in and going out and how to manage it
-              effectively.
+              Understand what&apos;s coming in and going out and how to manage
+              it effectively.
             </div>
           </div>
           <div className="basis-1/3 text-xl flex flex-col items-start justify-start gap-3 p-3">
