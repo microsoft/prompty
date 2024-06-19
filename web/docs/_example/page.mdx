@@ -17,11 +17,23 @@ Here's a link to the [getting started](/docs/getting-started) page.
 
 Nice Diagram
 
-![Runtime Image](runtime.png "Prompty Runtime")
 
 
+```mermaid
+gantt
+    title A Gantt Diagram
+    dateFormat YYYY-MM-DD
+    section Section
+        A task          :a1, 2014-01-01, 30d
+        Another task    :after a1, 20d
+    section Another
+        Task in Another :2014-01-12, 12d
+        another task    :24d
+```
 
 Some code
+
+![Runtime Image](runtime.png "Prompty Runtime")
 
 ```jsx
 import React from 'react';
@@ -97,6 +109,3 @@ const Support = () => {
 
 export default Support;
 ```
-
-import { Diagram } from "mermaid/dist/Diagram.js"
-

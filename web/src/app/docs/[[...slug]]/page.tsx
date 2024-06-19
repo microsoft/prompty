@@ -4,7 +4,7 @@ import { BASE } from "@/lib/base";
 import { promises as fs } from "fs";
 import Code from "@/components/code";
 import Block from "@/components/block";
-import Graph from "@/components/graph";
+import Mermaid from "@/components/mermaid";
 import { IDocument, Index, navigation } from "@/lib/navigation";
 import Footer from "@/components/nav/footer";
 import Header from "@/components/nav/header";
@@ -40,7 +40,7 @@ const getComponents = (slug: string[]) => {
         if (items.length === 2) {
           const lang = items[1];
           if (lang === "mermaid") {
-            return <Graph code={code} />;
+            return <Mermaid code={code} />;
           } else {
             return <Code language={items[1]} code={code} />;
           }
@@ -58,7 +58,6 @@ const fetchMDX = async (slug: string[]) => {
     process.cwd() + "/docs/" + slug.join("/") + "/page.mdx",
     "utf-8"
   );
-
   return source;
 };
 
@@ -160,8 +159,8 @@ export default async function Page({ params }: Props) {
         ))}
       </Header>
       <Block>
-        <div className="flex flex-row gap-1">
-          <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md w-[250px] p-2">
+        <div className="flex flex-col md:flex-row gap-1">
+          <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md md:w-[250px] p-2 mb-2 md:mb-0">
             <Toc index={index.children} visible={true} />
           </div>
           <div className="ml-6 grow">
