@@ -163,7 +163,7 @@ export default async function Page({ params }: Props) {
           <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md md:w-[250px] p-2 mb-2 md:mb-0">
             <Toc index={index.children} visible={true} />
           </div>
-          <div className="ml-6 grow">
+          <div className="ml-1 md:ml-6 grow">
             <div className="flex flex-row mb-4 gap-4">
               <div className="text-2xl md:text-4xl font-bold ">
                 {metadata.title}
