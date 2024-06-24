@@ -7,7 +7,10 @@ on:
     paths:
       - 'web/**'
   workflow_dispatch:
-
+  
+permissions:
+  id-token: write
+  contents: read
 jobs:
   build-and-deploy-web:
     runs-on: ubuntu-latest
