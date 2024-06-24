@@ -1,8 +1,6 @@
 "use client";
-import React, { ReactNode, useState } from "react";
-import Block from "../block";
-import { VERSION } from "@/lib/version";
-import { Index, navigation } from "@/lib/navigation";
+import React, { useState } from "react";
+import { Index } from "@/lib/navigation";
 import clsx from "clsx";
 import { HiChevronDoubleRight, HiChevronDoubleDown } from "react-icons/hi2";
 
@@ -33,18 +31,19 @@ const Toc = ({ index, depth, visible }: Props) => {
   );
 
   return (
-    <>
+    <div className={clsx(`ml-${depth * 2 + 2}`)}>
       {sorted.map((item, i) => (
-        <div key={`main_${item.path}_${i}`}>
+        <div key={`main_${item.path}`}>
           <div
             className={clsx(
               "flex flex-row p-2 dark:hover:bg-zinc-600 hover:bg-zinc-200 align-middle items-center",
-              depth === 0 ? "" : "ml-4",
               visible ? "block" : "hidden"
             )}
             onClick={() => toggleExpansion(item)}
           >
-            <a href={item.path} onClick={(e) => e.stopPropagation()}>{item.document?.title}</a>
+            <a href={item.path} onClick={(e) => e.stopPropagation()}>
+              {item.document?.title}
+            </a>
             <div className="grow items"></div>
             {hasChildren(item) && (
               <div>
@@ -63,16 +62,18 @@ const Toc = ({ index, depth, visible }: Props) => {
             )}
           </div>
           {hasChildren(item) && (
-            <Toc
-              index={item.children}
-              depth={depth + 1}
-              visible={expanded}
-              key={`toc_${item.path}`}
-            />
+            <div className={clsx("flex flex-col", `ml-${depth * 2 + 2}`)}>
+              <Toc
+                index={item.children}
+                depth={depth + 1}
+                visible={expanded}
+                key={`toc_${item.path}`}
+              />
+            </div>
           )}
         </div>
       ))}
-    </>
+    </div>
   );
 };
 
