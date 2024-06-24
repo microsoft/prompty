@@ -8,7 +8,7 @@ This repo contains the following:
 - [Documentation](https://github.com/microsoft/prompty/tree/main/web) site (visit [prompty.ai](https://prompty.ai) for the live site)
 - (More on the way)
 
-This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Pormpty extension in the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Prompty extension in the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
 
 ## What is Prompty?
 ### Specification
