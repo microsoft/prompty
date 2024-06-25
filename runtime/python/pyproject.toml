@@ -1,0 +1,28 @@
+[project]
+name = "prompty"
+version = "0.1.0"
+description = "Prompty Python Runtime"
+authors = [
+    {name = "sethjuarez", email = "seth.juarez@microsoft.com"},
+]
+dependencies = [
+    "opentelemetry-api>=1.25.0",
+    "pydantic>=2.7.4",
+    "python-dotenv>=1.0.1",
+    "click>=8.1.7",
+    "openai>=1.35.3",
+    "azure-identity>=1.17.1",
+    "pyyaml>=6.0.1",
+    "jinja2>=3.1.4",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
