@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Index } from "@/lib/navigation";
 import clsx from "clsx";
 import { HiChevronDoubleRight, HiChevronDoubleDown } from "react-icons/hi2";
+import { set } from "mermaid/dist/diagrams/state/id-cache.js";
 
 type Props = {
   index: Index[];
@@ -12,6 +13,8 @@ type Props = {
 
 const Toc = ({ index, depth, visible }: Props) => {
   const [expanded, setExpanded] = useState<boolean>(true);
+  const divRef = useRef<HTMLDivElement>(null);
+
   const hasChildren = (index: Index) =>
     index.children && index.children.length > 0;
 
@@ -20,6 +23,13 @@ const Toc = ({ index, depth, visible }: Props) => {
       setExpanded(!expanded);
     }
   };
+
+  const toggleChildren = () => {
+    if (divRef.current) {
+      setExpanded(!expanded);
+      divRef.current.style.display = expanded ? "none" : "block";
+    }
+  }
 
   if (!depth) {
     depth = 0;
@@ -31,15 +41,16 @@ const Toc = ({ index, depth, visible }: Props) => {
   );
 
   return (
-    <div className={clsx(`ml-${depth * 2 + 2}`)}>
+    <>
       {sorted.map((item, i) => (
-        <div key={`main_${item.path}`}>
+        <div key={`main_${item.path}`} className={clsx(`ml-${depth * 2 + 2}`)}
+        style={{"marginLeft": `${depth}rem`}}>
           <div
             className={clsx(
               "flex flex-row p-2 dark:hover:bg-zinc-600 hover:bg-zinc-200 align-middle items-center",
               visible ? "block" : "hidden"
             )}
-            onClick={() => toggleExpansion(item)}
+            onClick={() => toggleChildren()}
           >
             <a href={item.path} onClick={(e) => e.stopPropagation()}>
               {item.document?.title}
@@ -50,19 +61,19 @@ const Toc = ({ index, depth, visible }: Props) => {
                 {expanded ? (
                   <HiChevronDoubleDown
                     className="h-4 w-4 hover:cursor-pointer"
-                    onClick={() => setExpanded(false)}
+                    onClick={() => toggleChildren()}
                   />
                 ) : (
                   <HiChevronDoubleRight
                     className="h-4 w-4 hover:cursor-pointer"
-                    onClick={() => setExpanded(true)}
+                    onClick={() => toggleChildren()}
                   />
                 )}
               </div>
             )}
           </div>
           {hasChildren(item) && (
-            <div className={clsx("flex flex-col", `ml-${depth * 2 + 2}`)}>
+            <div ref={divRef}>
               <Toc
                 index={item.children}
                 depth={depth + 1}
@@ -73,7 +84,7 @@ const Toc = ({ index, depth, visible }: Props) => {
           )}
         </div>
       ))}
-    </div>
+    </>
   );
 };
 
