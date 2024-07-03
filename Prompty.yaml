@@ -90,7 +90,7 @@ properties:
     
   inputs:
     type: object
-    description: The outputs of the prompty
+    description: The inputs to the prompty
 
   outputs:
     type: object
