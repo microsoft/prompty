@@ -1,7 +1,7 @@
 import re
 import base64
 from .core import Invoker, InvokerFactory, Prompty
-import opentelemetry.trace as otel_trace
+
 
 @InvokerFactory.register_parser("prompty.chat")
 class PromptyChatParser(Invoker):
@@ -73,7 +73,6 @@ class PromptyChatParser(Invoker):
             return content
 
     def invoke(self, data: str) -> str:
-        otel_trace.get_current_span().update_name(f"PromptyChatParser")
         messages = []
         separator = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")\s*:\s*\n"
 

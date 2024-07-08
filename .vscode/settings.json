@@ -3,5 +3,5 @@
     "*.css": "tailwindcss",
     "*.mdx": "markdown"
   },
-  "python.defaultInterpreterPath": "./runtime/python/.venv/Scripts/python.exe",
+  "python.defaultInterpreterPath": "./runtime/prompty/.venv/Scripts/python.exe",
 }

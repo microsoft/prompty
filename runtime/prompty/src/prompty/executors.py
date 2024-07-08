@@ -1,7 +1,7 @@
+import azure.identity
 from openai import AzureOpenAI
 from .core import Invoker, InvokerFactory, Prompty
-import opentelemetry.trace as otel_trace
-import azure.identity
+
 
 @InvokerFactory.register_executor("azure")
 @InvokerFactory.register_executor("azure_openai")
@@ -43,7 +43,6 @@ class AzureOpenAIExecutor(Invoker):
         self.parameters = self.prompty.model.parameters
 
     def invoke(self, data: any) -> any:
-        otel_trace.get_current_span().update_name(f"AzureOpenAIExecutor.{self.api}")
         if self.api == "chat":
             response = self.client.chat.completions.create(
                 model=self.deployment,

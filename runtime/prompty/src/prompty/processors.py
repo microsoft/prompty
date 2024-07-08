@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from openai.types.completion import Completion
+from .core import Invoker, InvokerFactory, Prompty
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
-from .core import Invoker, InvokerFactory, Prompty
-import opentelemetry.trace as otel_trace
+
 
 
 class ToolCall(BaseModel):
@@ -27,7 +27,7 @@ class OpenAIProcessor(Invoker):
             or isinstance(data, CreateEmbeddingResponse)
         )
         if isinstance(data, ChatCompletion):
-            otel_trace.get_current_span().update_name(f"OpenAIProcessor.ChatCompletion")
+            # TODO: Check for streaming response
             response = data.choices[0].message
             # tool calls available in response
             if response.tool_calls:
@@ -43,10 +43,8 @@ class OpenAIProcessor(Invoker):
                 return response.content
 
         elif isinstance(data, Completion):
-            otel_trace.get_current_span().update_name(f"OpenAIProcessor.Completion")
             return data.choices[0].text
         elif isinstance(data, CreateEmbeddingResponse):
-            otel_trace.get_current_span().update_name(f"OpenAIProcessor.CreateEmbedding")
             if len(data.data) == 0:
                 raise ValueError("Invalid data")
             elif len(data.data) == 1:

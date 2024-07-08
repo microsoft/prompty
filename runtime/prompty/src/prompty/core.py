@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 import re
 import yaml
@@ -47,7 +45,7 @@ class Prompty(BaseModel):
     tags: List[str] = Field(default=[])
     version: str = Field(default="")
     base: str = Field(default="")
-    basePrompty: Prompty | None = Field(default=None)
+    basePrompty: "Prompty" | None = Field(default=None)
     # model
     model: ModelSettings = Field(default_factory=ModelSettings)
 
@@ -202,6 +200,7 @@ class InvokerFactory:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._renderers[name] = wrapped_class
             return wrapped_class
+
         return inner_wrapper
 
     @classmethod
@@ -209,6 +208,7 @@ class InvokerFactory:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._parsers[name] = wrapped_class
             return wrapped_class
+
         return inner_wrapper
 
     @classmethod
@@ -216,6 +216,7 @@ class InvokerFactory:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._executors[name] = wrapped_class
             return wrapped_class
+
         return inner_wrapper
 
     @classmethod
@@ -223,6 +224,7 @@ class InvokerFactory:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._processors[name] = wrapped_class
             return wrapped_class
+
         return inner_wrapper
 
     @classmethod
@@ -230,19 +232,19 @@ class InvokerFactory:
         if name not in cls._renderers:
             raise ValueError(f"Renderer {name} not found")
         return cls._renderers[name](prompty)
-    
+
     @classmethod
     def create_parser(cls, name: str, prompty: Prompty) -> Invoker:
         if name not in cls._parsers:
             raise ValueError(f"Parser {name} not found")
         return cls._parsers[name](prompty)
-    
+
     @classmethod
     def create_executor(cls, name: str, prompty: Prompty) -> Invoker:
         if name not in cls._executors:
             raise ValueError(f"Executor {name} not found")
         return cls._executors[name](prompty)
-    
+
     @classmethod
     def create_processor(cls, name: str, prompty: Prompty) -> Invoker:
         if name not in cls._processors:
@@ -299,8 +301,3 @@ class Frontmatter:
             "body": body,
             "frontmatter": fmatter,
         }
-
-
-if __name__ == "__main__":
-    pass
-

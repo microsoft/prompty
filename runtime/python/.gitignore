@@ -1,5 +1,0 @@
-.venv/
-__pycache__/
-.pdm-python
-dist/
-.pdm-build/

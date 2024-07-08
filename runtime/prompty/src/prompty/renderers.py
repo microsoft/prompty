@@ -1,7 +1,5 @@
-from pydantic import BaseModel
-from .core import Invoker, InvokerFactory, Prompty
 from jinja2 import DictLoader, Environment
-import opentelemetry.trace as otel_trace
+from .core import Invoker, InvokerFactory, Prompty
 
 
 @InvokerFactory.register_renderer("jinja2")
@@ -18,7 +16,6 @@ class Jinja2Renderer(Invoker):
         self.name = self.prompty.file.name
 
     def invoke(self, data: any) -> any:
-        otel_trace.get_current_span().update_name(f"Jinja2Renderer")
         env = Environment(loader=DictLoader(self.templates))
         t = env.get_template(self.name)
         generated = t.render(**data)
