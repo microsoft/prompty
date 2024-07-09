@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "../",
+      "name": "repository"
+    },
+    {
+      "path": "../web",
+      "name": "website"
+    },
+    {
+      "path": "../runtime/prompty",
+      "name": "prompty"
+    }
+  ],
+}

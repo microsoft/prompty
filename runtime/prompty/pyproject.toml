@@ -12,7 +12,7 @@ dependencies = [
     "openai>=1.35.10",
     "azure-identity>=1.17.1",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 readme = "README.md"
 license = {text = "MIT"}
 
@@ -23,3 +23,8 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.2.2",
+]

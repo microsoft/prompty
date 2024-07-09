@@ -12,6 +12,11 @@ from .core import (
     param_hoisting,
 )
 
+from .renderers import *
+from .parsers import *
+from .executors import *
+from .processors import *
+
 
 def load_global_config(
     prompty_path: Path = Path.cwd(), configuration: str = "default"
@@ -69,7 +74,7 @@ def load(prompty_file: str, configuration: str = "default") -> Prompty:
     p = Path(prompty_file)
     if not p.is_absolute():
         # get caller's path (take into account trace frame)
-        caller = Path(traceback.extract_stack()[-3].filename)
+        caller = Path(traceback.extract_stack()[-2].filename)
         p = Path(caller.parent / p).resolve().absolute()
 
     # load dictionary from prompty file
@@ -243,7 +248,7 @@ def execute(
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)
-            caller = Path(traceback.extract_stack()[-3].filename)
+            caller = Path(traceback.extract_stack()[-2].filename)
             path = Path(caller.parent / path).resolve().absolute()
         prompt = load(path, connection)
 

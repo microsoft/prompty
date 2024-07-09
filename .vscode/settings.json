@@ -1,7 +1,6 @@
 {
-  "files.associations": {
-    "*.css": "tailwindcss",
-    "*.mdx": "markdown"
-  },
-  "python.defaultInterpreterPath": "./runtime/prompty/.venv/Scripts/python.exe",
+  "files.exclude": {
+    "**/web": true,
+    "**/runtime": true
+  }
 }

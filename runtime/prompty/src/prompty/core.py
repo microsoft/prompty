@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import re
 import yaml
@@ -45,7 +47,7 @@ class Prompty(BaseModel):
     tags: List[str] = Field(default=[])
     version: str = Field(default="")
     base: str = Field(default="")
-    basePrompty: "Prompty" | None = Field(default=None)
+    basePrompty: Prompty | None = Field(default=None)
     # model
     model: ModelSettings = Field(default_factory=ModelSettings)
 
