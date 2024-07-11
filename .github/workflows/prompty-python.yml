@@ -1,0 +1,38 @@
+name: prompty Python build and publish
+
+on:
+  push:
+    paths:
+      - 'runtime/prompty/**'
+    tags:
+      - 'python/*'
+  workflow_dispatch:
+
+jobs:
+  pypi-publish:
+    name: upload release to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pdm-project/setup-pdm@v3
+
+      - name: set directory
+        run: cd runtime/prompty
+
+      - name: installd dependencies
+        run: pdm install
+
+      - name: test package
+        run: pdm run pytest
+
+      - name: build package
+        run: pdm build
+
+      - name: Publish package distributions to PyPI
+        run: pdm publish --no-build

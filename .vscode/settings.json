@@ -1,6 +1,6 @@
 {
-  "files.associations": {
-    "*.css": "tailwindcss",
-    "*.mdx": "markdown"
+  "files.exclude": {
+    "**/web": true,
+    "**/runtime": true
   }
 }

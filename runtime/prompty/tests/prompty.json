@@ -1,0 +1,8 @@
+{
+  "default": {
+    "type": "FROM_CONTENT",
+    "api_version": "2023-07-01-preview",
+    "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+    "api_key": "${env:AZURE_OPENAI_KEY}"
+  }
+}
