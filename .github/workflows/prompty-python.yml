@@ -22,17 +22,18 @@ jobs:
 
       - uses: pdm-project/setup-pdm@v3
 
-      - name: set directory
-        run: cd runtime/prompty
-
       - name: installd dependencies
+        working-directory: ./runtime/prompty
         run: pdm install
 
       - name: test package
+        working-directory: ./runtime/prompty
         run: pdm run pytest
 
       - name: build package
+        working-directory: ./runtime/prompty
         run: pdm build
 
       - name: Publish package distributions to PyPI
+        working-directory: ./runtime/prompty
         run: pdm publish --no-build
