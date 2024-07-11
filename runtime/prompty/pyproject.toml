@@ -1,6 +1,6 @@
 [project]
 name = "prompty"
-version = "1.0.0.dev0"
+dynamic = ["version"]
 description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
 authors = [
     {name = "Seth Juarez", email = "seth.juarez@microsoft.com"},
@@ -28,3 +28,9 @@ distribution = true
 dev = [
     "pytest>=8.2.2",
 ]
+
+[tool.pdm.version]
+source = "scm"
+fallback_version = "0.1.0.dev0"
+tag_filter = "python/*"
+tag_regex = '^python/(?:\D*)?(?P<version>([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|c|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$)$'

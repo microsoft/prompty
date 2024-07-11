@@ -2,10 +2,10 @@ name: prompty Python build and publish
 
 on:
   push:
-    branches:
-      - main
     paths:
       - 'runtime/prompty/**'
+    tags:
+      - 'python/*'
   workflow_dispatch:
 
 jobs:
