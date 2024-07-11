@@ -26,6 +26,11 @@ jobs:
         working-directory: ./runtime/prompty
         run: pdm install
 
+      - name: write fake env file
+        working-directory: ./runtime/prompty
+        run: |
+          echo "AZURE_OPENAI_ENDPOINT=https://fake\nAZURE_OPENAI_KEY=123432" > .env
+
       - name: test package
         working-directory: ./runtime/prompty
         run: pdm run pytest
