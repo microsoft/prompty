@@ -8,6 +8,12 @@ on:
       - 'python/*'
   workflow_dispatch:
 
+
+env:
+  AZURE_OPENAI_ENDPOINT: https://fake
+  AZURE_OPENAI_KEY: 12342323433
+  
+
 jobs:
   pypi-publish:
     name: upload release to PyPI
@@ -22,16 +28,9 @@ jobs:
 
       - uses: pdm-project/setup-pdm@v3
 
-      - name: write fake env file
-        working-directory: ./runtime/prompty
-        run: |
-          echo "AZURE_OPENAI_ENDPOINT=https://fake\\nAZURE_OPENAI_KEY=123432" > .env
-          cat .env
-
       - name: install dependencies
         working-directory: ./runtime/prompty
         run: pdm install
-
 
       - name: test package
         working-directory: ./runtime/prompty
