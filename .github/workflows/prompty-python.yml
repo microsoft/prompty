@@ -22,15 +22,16 @@ jobs:
 
       - uses: pdm-project/setup-pdm@v3
 
-      - name: installd dependencies
-        working-directory: ./runtime/prompty
-        run: pdm install
-
       - name: write fake env file
         working-directory: ./runtime/prompty
         run: |
-          echo "AZURE_OPENAI_ENDPOINT=https://fake\nAZURE_OPENAI_KEY=123432" > .env
+          echo "AZURE_OPENAI_ENDPOINT=https://fake\\nAZURE_OPENAI_KEY=123432" > .env
           cat .env
+
+      - name: install dependencies
+        working-directory: ./runtime/prompty
+        run: pdm install
+
 
       - name: test package
         working-directory: ./runtime/prompty
