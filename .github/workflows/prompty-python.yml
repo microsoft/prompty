@@ -30,6 +30,7 @@ jobs:
         working-directory: ./runtime/prompty
         run: |
           echo "AZURE_OPENAI_ENDPOINT=https://fake\nAZURE_OPENAI_KEY=123432" > .env
+          cat .env
 
       - name: test package
         working-directory: ./runtime/prompty
