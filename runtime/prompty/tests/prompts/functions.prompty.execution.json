@@ -1,0 +1,59 @@
+{
+  "id": "chatcmpl-9jcaKROocK2Ja7voBYSlyd6SnP3uj",
+  "choices": [
+    {
+      "finish_reason": "tool_calls",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": null,
+        "role": "assistant",
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "call_Ez0OJV0bHoarQGVakNY437wn",
+            "function": {
+              "arguments": "{\n  \"location\": \"San Francisco, CA\"\n}",
+              "name": "get_current_weather"
+            },
+            "type": "function"
+          }
+        ]
+      },
+      "content_filter_results": {}
+    }
+  ],
+  "created": 1720660108,
+  "model": "gpt-35-turbo",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": null,
+  "usage": {
+    "completion_tokens": 19,
+    "prompt_tokens": 310,
+    "total_tokens": 329
+  },
+  "prompt_filter_results": [
+    {
+      "prompt_index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        }
+      }
+    }
+  ]
+}

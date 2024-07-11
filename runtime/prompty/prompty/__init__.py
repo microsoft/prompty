@@ -192,7 +192,7 @@ def prepare(
     if prompt.template.parser == "NOOP":
         result = render
     else:
-        # parse
+        # parse [parser].[api]
         parser = InvokerFactory.create_parser(
             f"{prompt.template.parser}.{prompt.model.api}", prompt
         )

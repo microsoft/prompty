@@ -1,6 +1,7 @@
 import azure.identity
 from openai import AzureOpenAI
 from .core import Invoker, InvokerFactory, Prompty
+from pathlib import Path
 
 
 @InvokerFactory.register_executor("azure")
@@ -65,5 +66,29 @@ class AzureOpenAIExecutor(Invoker):
 
         elif self.api == "image":
             raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
+
+
+        if self.prompty.file:
+            with open(
+                Path(self.prompty.file.parent) / f"{self.prompty.file.name}.execution.json",
+                "w",
+                encoding="utf-8",
+            ) as f:
+                f.write(response.model_dump_json(indent=2))
+        elif self.api == "embedding":
+            if not isinstance(data, list):
+                d = [data]
+            else:
+                d = data
+
+            n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
+            
+            with open(
+                Path(__file__).parent
+                / f"{n}.embedding.json",
+                "w",
+                encoding="utf-8",
+            ) as f:
+                f.write(response.model_dump_json(indent=2))
 
         return response
