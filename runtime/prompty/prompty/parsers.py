@@ -5,12 +5,25 @@ from .core import Invoker, InvokerFactory, Prompty
 
 @InvokerFactory.register_parser("prompty.chat")
 class PromptyChatParser(Invoker):
+    """ Prompty Chat Parser  """
     def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
+        super().__init__(prompty)
         self.roles = ["assistant", "function", "system", "user"]
         self.path = self.prompty.file.parent
 
     def inline_image(self, image_item: str) -> str:
+        """ Inline Image
+
+        Parameters
+        ----------
+        image_item : str
+            The image item to inline
+        
+        Returns
+        -------
+        str
+            The inlined image
+        """
         # pass through if it's a url or base64 encoded
         if image_item.startswith("http") or image_item.startswith("data"):
             return image_item
@@ -32,7 +45,18 @@ class PromptyChatParser(Invoker):
                 )
 
     def parse_content(self, content: str):
-        """for parsing inline images"""
+        """ for parsing inline images
+        
+        Parameters
+        ----------
+        content : str
+            The content to parse
+        
+        Returns
+        -------
+        any
+            The parsed content
+        """
         # regular expression to parse markdown images
         image = r"(?P<alt>!\[[^\]]*\])\((?P<filename>.*?)(?=\"|\))\)"
         matches = re.findall(image, content, flags=re.MULTILINE)
@@ -73,6 +97,18 @@ class PromptyChatParser(Invoker):
             return content
 
     def invoke(self, data: str) -> str:
+        """ Invoke the Prompty Chat Parser
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+        
+        Returns
+        -------
+        str
+            The parsed data
+        """
         messages = []
         separator = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")\s*:\s*\n"
 

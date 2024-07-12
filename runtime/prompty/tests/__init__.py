@@ -24,13 +24,12 @@ class FakeInvoker(Invoker):
 @InvokerFactory.register_executor("azure_openai")
 class FakeAzureExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
+        super().__init__(prompty)
         self.api = self.prompty.model.api
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
     def invoke(self, data: any) -> any:
-
         if self.prompty.file:
             p = (
                 Path(self.prompty.file.parent)

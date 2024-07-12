@@ -5,7 +5,6 @@ from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
-
 class ToolCall(BaseModel):
     id: str
     name: str
@@ -16,11 +15,23 @@ class ToolCall(BaseModel):
 @InvokerFactory.register_processor("azure")
 @InvokerFactory.register_processor("azure_openai")
 class OpenAIProcessor(Invoker):
+    """ OpenAI/Azure Processor """
     def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
+        super().__init__(prompty)
 
     def invoke(self, data: any) -> any:
-
+        """ Invoke the OpenAI/Azure API
+        
+        Parameters
+        ----------
+        data : any
+            The data to send to the OpenAI/Azure API
+        
+        Returns
+        -------
+        any
+            The response from the OpenAI/Azure API
+        """
         assert (
             isinstance(data, ChatCompletion)
             or isinstance(data, Completion)
