@@ -53,6 +53,38 @@ def headless(
     parameters: Dict[str, any] = {},
     connection: str = "default",
 ) -> Prompty:
+    """Create a headless prompty object for programmatic use.
+
+    Parameters
+    ----------
+    api : str
+        The API to use for the model
+    content : str | List[str] | dict
+        The content to process
+    configuration : Dict[str, any], optional
+        The configuration to use, by default {}
+    parameters : Dict[str, any], optional
+        The parameters to use, by default {}
+    connection : str, optional
+        The connection to use, by default "default"
+
+    Returns
+    -------
+    Prompty
+        The headless prompty object
+
+    Example
+    -------
+    >>> import prompty
+    >>> p = prompty.headless(
+            api="embedding",
+            configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+            content="hello world",
+        )
+    >>> emb = prompty.execute(p)
+
+    """
+
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
     templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
@@ -71,6 +103,27 @@ def headless(
 
 
 def load(prompty_file: str, configuration: str = "default") -> Prompty:
+    """Load a prompty file.
+
+    Parameters
+    ----------
+    prompty_file : str
+        The path to the prompty file
+    configuration : str, optional
+        The configuration to use, by default "default"
+
+    Returns
+    -------
+    Prompty
+        The loaded prompty object
+
+    Example
+    -------
+    >>> import prompty
+    >>> p = prompty.load("prompts/basic.prompty")
+    >>> print(p)
+    """
+
     p = Path(prompty_file)
     if not p.is_absolute():
         # get caller's path (take into account trace frame)
@@ -180,6 +233,27 @@ def prepare(
     prompt: Prompty,
     inputs: Dict[str, any] = {},
 ):
+    """ Prepare the inputs for the prompt.
+
+    Parameters
+    ----------
+    prompt : Prompty
+        The prompty object
+    inputs : Dict[str, any], optional
+        The inputs to the prompt, by default {}
+
+    Returns
+    -------
+    dict
+        The prepared and hidrated template shaped to the LLM model
+
+    Example
+    -------
+    >>> import prompty
+    >>> p = prompty.load("prompts/basic.prompty")
+    >>> inputs = {"name": "John Doe"}
+    >>> content = prompty.prepare(p, inputs)
+    """
     inputs = param_hoisting(inputs, prompt.sample)
 
     if prompt.template.type == "NOOP":
@@ -208,7 +282,34 @@ def run(
     parameters: Dict[str, any] = {},
     raw: bool = False,
 ):
-    # invoker = InvokerFactory()
+    """Run the prepared Prompty content.
+
+    Parameters
+    ----------
+    prompt : Prompty
+        The prompty object
+    content : dict | list | str
+        The content to process
+    configuration : Dict[str, any], optional
+        The configuration to use, by default {}
+    parameters : Dict[str, any], optional
+        The parameters to use, by default {}
+    raw : bool, optional
+        Whether to skip processing, by default False
+
+    Returns
+    -------
+    any
+        The result of the prompt
+
+    Example
+    -------
+    >>> import prompty
+    >>> p = prompty.load("prompts/basic.prompty")
+    >>> inputs = {"name": "John Doe"}
+    >>> content = prompty.prepare(p, inputs)
+    >>> result = prompty.run(p, content)
+    """
 
     if configuration != {}:
         prompt.model.configuration = param_hoisting(
@@ -243,7 +344,34 @@ def execute(
     raw: bool = False,
     connection: str = "default",
 ):
+    """Execute a prompty.
 
+    Parameters
+    ----------
+    prompt : Union[str, Prompty]
+        The prompty object or path to the prompty file
+    configuration : Dict[str, any], optional
+        The configuration to use, by default {}
+    parameters : Dict[str, any], optional
+        The parameters to use, by default {}
+    inputs : Dict[str, any], optional
+        The inputs to the prompt, by default {}
+    raw : bool, optional
+        Whether to skip processing, by default False
+    connection : str, optional
+        The connection to use, by default "default"
+
+    Returns
+    -------
+    any
+        The result of the prompt
+
+    Example
+    -------
+    >>> import prompty
+    >>> inputs = {"name": "John Doe"}
+    >>> result = prompty.execute("prompts/basic.prompty", inputs=inputs)
+    """
     if isinstance(prompt, str):
         path = Path(prompt)
         if not path.is_absolute():

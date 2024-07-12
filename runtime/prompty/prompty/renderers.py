@@ -4,8 +4,9 @@ from .core import Invoker, InvokerFactory, Prompty
 
 @InvokerFactory.register_renderer("jinja2")
 class Jinja2Renderer(Invoker):
+    """ Jinja2 Renderer """
     def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
+        super().__init__(prompty)
         self.templates = {}
         # generate template dictionary
         cur_prompt = self.prompty
