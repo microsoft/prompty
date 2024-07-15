@@ -14,7 +14,7 @@ sample:
   answer: The main transformer is the object that feeds all the fixtures in low voltage tracks.
 ---
 
-System:
+system:
 You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the provided evaluation metric.
 User:
 You will be presented with a CONTEXT and an ANSWER about that CONTEXT. You need to decide whether the ANSWER is entailed by the CONTEXT by choosing one of the following rating:

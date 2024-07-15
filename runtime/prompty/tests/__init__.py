@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 from prompty import Invoker, Prompty, InvokerFactory
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
-from pydantic_core import from_json
+from openai.types.chat import ChatCompletionChunk
+
 
 
 @InvokerFactory.register_renderer("fake")
@@ -38,7 +40,12 @@ class FakeAzureExecutor(Invoker):
             with open(p, "r", encoding="utf-8") as f:
                 j = f.read()
 
-            if self.api == "chat":
+            if self.parameters.get("stream", False):
+                items = json.loads(j)
+                for i in range(1, len(items)):
+                    yield ChatCompletionChunk.model_validate(items[i])
+
+            elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
             elif self.api == "embedding":
                 return CreateEmbeddingResponse.model_validate_json(j)

@@ -1,3 +1,5 @@
+from collections.abc import Iterable, Iterator
+from openai import Stream
 from pydantic import BaseModel
 from openai.types.completion import Completion
 from .core import Invoker, InvokerFactory, Prompty
@@ -15,18 +17,19 @@ class ToolCall(BaseModel):
 @InvokerFactory.register_processor("azure")
 @InvokerFactory.register_processor("azure_openai")
 class OpenAIProcessor(Invoker):
-    """ OpenAI/Azure Processor """
+    """OpenAI/Azure Processor"""
+
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
     def invoke(self, data: any) -> any:
-        """ Invoke the OpenAI/Azure API
-        
+        """Invoke the OpenAI/Azure API
+
         Parameters
         ----------
         data : any
             The data to send to the OpenAI/Azure API
-        
+
         Returns
         -------
         any
@@ -36,9 +39,9 @@ class OpenAIProcessor(Invoker):
             isinstance(data, ChatCompletion)
             or isinstance(data, Completion)
             or isinstance(data, CreateEmbeddingResponse)
+            or isinstance(data, Iterator)
         )
         if isinstance(data, ChatCompletion):
-            # TODO: Check for streaming response
             response = data.choices[0].message
             # tool calls available in response
             if response.tool_calls:
@@ -62,5 +65,7 @@ class OpenAIProcessor(Invoker):
                 return data.data[0].embedding
             else:
                 return [item.embedding for item in data.data]
-        else:
-            raise ValueError("Invalid data type")
+        elif isinstance(data, Iterator):
+            for chunk in data:
+                if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
+                    yield chunk.choices[0].delta.content
