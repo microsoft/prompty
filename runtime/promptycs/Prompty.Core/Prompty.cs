@@ -1,122 +1,60 @@
-﻿using Prompty.Core.Parsers;
-using Prompty.Core.Renderers;
-using Prompty.Core.Processors;
-using Prompty.Core.Executors;
-using YamlDotNet.Serialization;
-using Prompty.Core.Types;
-using System.Dynamic;
-using Newtonsoft.Json.Linq;
-
+﻿
 namespace Prompty.Core
 {
+  public class PropertySettings
+  {
+    public required string Type { get; set; }
+    public object? Default { get; set; }
+    public string Description { get; set; } = "";
+  }
 
-    public class Prompty() : BaseModel
-    {
-        // PromptyModelConfig model, string prompt, bool isFromSettings = true
-        // TODO: validate  the prompty attributes needed, what did I miss that should be included?
-        [YamlMember(Alias = "name")]
-        public string Name;
+  public class ModelSettings
+  {
+    public string Api { get; set; } = "";
 
-        [YamlMember(Alias = "description")]
-        public string Description;
-
-        [YamlMember(Alias = "version")]
-        public string Version;
-
-        [YamlMember(Alias = "tags")]
-        public List<string> Tags;
-
-        [YamlMember(Alias = "authors")]
-        public List<string> Authors;
-
-        [YamlMember(Alias = "inputs")]
-        public Dictionary<string, dynamic> Inputs;
-
-        [YamlMember(Alias = "outputs")]
-        public Dictionary<string, dynamic> Outputs;
-
-        [YamlMember(Alias = "sample")]
-        public dynamic Sample;
+    // TODO: this should be an interface
+    public object Configuration { get; set; } = "";
 
 
-        [YamlMember(Alias = "model")]
-        public PromptyModel Model = new PromptyModel();
+    // TODO: this should be an interface
+    public object Parameters { get; set; } = "";
 
-        public TemplateType TemplateFormatType;
-        public string FilePath;
-        public bool FromContent = false;
+    // TODO: this should be an interface
+    public object Response { get; set; } = "";
 
-        // This is called from Execute to load a prompty file from location to create a Prompty object.
-        // If sending a Prompty Object, this will not be used in execute.
-        public static Prompty Load(string promptyFileName, Prompty prompty)
-        {
+  }
 
-            //Then load settings from prompty file and override if not null
-            var promptyFileInfo = new FileInfo(promptyFileName);
+  public class TemplateSettings
+  {
+    public string Type { get; set; } = "";
+    public string Parser { get; set; } = "";
+  }
 
-            // Get the full path of the prompty file
-            prompty.FilePath = promptyFileInfo.FullName;
-            var fileContent = File.ReadAllText(prompty.FilePath);
-            // parse file in to frontmatter and prompty based on --- delimiter
-            var promptyFrontMatterYaml = fileContent.Split("---")[1];
-            var promptyContent = fileContent.Split("---")[2];
-            // deserialize yaml into prompty object
-            prompty = Helpers.ParsePromptyYamlFile(prompty, promptyFrontMatterYaml);
-            prompty.Prompt = promptyContent;
+  public class Prompty
+  {
+    // Metadata
+    public string Name { get; set; } ="";
+    public string Description { get; set; } = "";
+    public string[] Authors { get; set; } = [];
+    public string Version { get; set; } = "";
+    public string Base { get; set; } = "";
+    public Prompty? BasePrompty { get; set; } = null;
 
-            return prompty;
-        }
+    // Model
+    public ModelSettings Model { get; set; } = new ModelSettings();
 
-        // Method to Execute Prompty, can send Prompty object or a string
-        // This is the main method that will be called to execute the prompty file
-        public async Task<Prompty> Execute(string promptyFileName = null,
-                                            Prompty? prompty = null,
-                                            bool raw = false)
-        {
+    // Sample
+    public string Sample { get; set; } = "";
 
-            // check if promptyFileName is null or if prompty is null
-            if (promptyFileName == null && prompty == null)
-            {
-                throw new ArgumentNullException("PromptyFileName or Prompty object must be provided");
-            }
-            if (prompty == null)
-            {
-                prompty = new Prompty();
-            }
+    // input / output
+    public Dictionary<string, PropertySettings> Inputs { get; set; } = new Dictionary<string, PropertySettings>();
+    public Dictionary<string, PropertySettings> Outputs { get; set; } = new Dictionary<string, PropertySettings>();
 
-            prompty = Load(promptyFileName, prompty);
+    // template
+    public TemplateSettings Template { get; set; } = new TemplateSettings();
 
-            // create invokerFactory
-            var invokerFactory = new InvokerFactory();
+    public string File { get; set; } = "";
 
-            // Render
-            //this gives me the right invoker for the renderer specificed in the prompty
-            //invoker should be a singleton
-            //name of invoker should be unique to the process
-            //var typeinvoker = invokerFactory.GetRenderer(prompty.TemplateFormatType);
-
-            var render = new RenderPromptLiquidTemplate(prompty, invokerFactory);
-            await render.Invoke(prompty);
-
-            // Parse
-            var parser = new PromptyChatParser(prompty, invokerFactory);
-            await parser.Invoke(prompty);
-
-            // Execute
-            var executor = new AzureOpenAIExecutor(prompty, invokerFactory);
-            await executor.Invoke(prompty);
-
-
-            if (!raw)
-            {
-                // Process
-                var processor = new OpenAIProcessor(prompty, invokerFactory);
-                await processor.Invoke(prompty);
-            }
-
-
-            return prompty;
-        }
-
-    }
+    public object Content { get; set; } = "";
+  }
 }
