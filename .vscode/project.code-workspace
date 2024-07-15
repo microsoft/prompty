@@ -11,6 +11,10 @@
     {
       "path": "../runtime/prompty",
       "name": "prompty"
+    },
+    {
+      "path": "../runtime/promptycs",
+      "name": "promptycs"
     }
-  ],
+  ]
 }

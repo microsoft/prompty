@@ -119,3 +119,11 @@ def test_function_calling():
         "prompts/functions.prompty",
     )
     print(result)
+
+
+def test_streaming():
+    result = prompty.execute(
+        "prompts/streaming.prompty",
+    )
+    for item in result:
+        print(item)

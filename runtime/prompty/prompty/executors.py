@@ -1,14 +1,14 @@
 import azure.identity
 from openai import AzureOpenAI
 from .core import Invoker, InvokerFactory, Prompty
-from pathlib import Path
 
 
 @InvokerFactory.register_executor("azure")
 @InvokerFactory.register_executor("azure_openai")
 class AzureOpenAIExecutor(Invoker):
+    """ Azure OpenAI Executor  """
     def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
+        super().__init__(prompty)
         kwargs = {
             key: value
             for key, value in self.prompty.model.configuration.items()
@@ -44,6 +44,18 @@ class AzureOpenAIExecutor(Invoker):
         self.parameters = self.prompty.model.parameters
 
     def invoke(self, data: any) -> any:
+        """ Invoke the Azure OpenAI API
+
+        Parameters
+        ----------
+        data : any
+            The data to send to the Azure OpenAI API
+
+        Returns
+        -------
+        any
+            The response from the Azure OpenAI API
+        """
         if self.api == "chat":
             response = self.client.chat.completions.create(
                 model=self.deployment,

@@ -14,12 +14,38 @@ T = TypeVar("T")
 
 
 class PropertySettings(BaseModel):
+    """ PropertySettings class to define the properties of the model
+
+    Attributes
+    ----------
+    type : str
+        The type of the property
+    default : any
+        The default value of the property
+    description : str
+        The description of the property
+    """
+
     type: Literal["string", "number", "array", "object", "boolean"]
     default: str | int | float | List | dict | bool = Field(default=None)
     description: str = Field(default="")
 
 
 class ModelSettings(BaseModel):
+    """ ModelSettings class to define the model of the prompty
+
+    Attributes
+    ----------
+    api : str
+        The api of the model
+    configuration : dict
+        The configuration of the model
+    parameters : dict
+        The parameters of the model
+    response : dict
+        The response of the model
+    """
+
     api: str = Field(default="")
     configuration: dict = Field(default={})
     parameters: dict = Field(default={})
@@ -35,11 +61,54 @@ class ModelSettings(BaseModel):
 
 
 class TemplateSettings(BaseModel):
+    """ TemplateSettings class to define the template of the prompty
+    
+    Attributes
+    ----------
+    type : str
+        The type of the template
+    parser : str
+        The parser of the template
+    """
+
     type: str = Field(default="jinja2")
     parser: str = Field(default="")
 
 
 class Prompty(BaseModel):
+    """ Prompty class to define the prompty
+
+    Attributes
+    ----------
+    name : str
+        The name of the prompty
+    description : str
+        The description of the prompty
+    authors : List[str]
+        The authors of the prompty
+    tags : List[str]
+        The tags of the prompty
+    version : str
+        The version of the prompty
+    base : str
+        The base of the prompty
+    basePrompty : Prompty
+        The base prompty
+    model : ModelSettings
+        The model of the prompty
+    sample : dict
+        The sample of the prompty
+    inputs : Dict[str, PropertySettings]
+        The inputs of the prompty
+    outputs : Dict[str, PropertySettings]
+        The outputs of the prompty
+    template : TemplateSettings
+        The template of the prompty
+    file : FilePath
+        The file of the prompty
+    content : str | List[str] | dict
+        The content of the prompty
+    """
     # metadata
     name: str = Field(default="")
     description: str = Field(default="")
@@ -180,18 +249,55 @@ def param_hoisting(
 
 
 class Invoker(abc.ABC):
+    """ Abstract class for Invoker
+
+    Attributes
+    ----------
+    prompty : Prompty
+        The prompty object
+    name : str
+        The name of the invoker
+
+    """
     def __init__(self, prompty: Prompty) -> None:
         self.prompty = prompty
+        self.name = self.__class__.__name__
 
     @abc.abstractmethod
     def invoke(self, data: any) -> any:
+        """ Abstract method to invoke the invoker
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
         pass
 
     def __call__(self, data: any) -> any:
+        """ Method to call the invoker
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+        
+        Returns
+        -------
+        any
+            The invoked
+        """
         return self.invoke(data)
+    
 
 
 class InvokerFactory:
+    """ Factory class for Invoker """
     _renderers: Dict[str, Invoker] = {}
     _parsers: Dict[str, Invoker] = {}
     _executors: Dict[str, Invoker] = {}
@@ -267,6 +373,8 @@ class NoOp(Invoker):
 
 
 class Frontmatter:
+    """ Frontmatter class to extract frontmatter from string."""
+
     _yaml_delim = r"(?:---|\+\+\+)"
     _yaml = r"(.*?)"
     _content = r"\s*(.+)$"
@@ -275,8 +383,12 @@ class Frontmatter:
 
     @classmethod
     def read_file(cls, path):
-        """Reads file at path and returns dict with separated frontmatter.
-        See read() for more info on dict return value.
+        """ Returns dict with separated frontmatter from file.
+        
+        Parameters
+        ----------
+        path : str
+            The path to the file
         """
         with open(path, encoding="utf-8") as file:
             file_contents = file.read()
@@ -284,12 +396,18 @@ class Frontmatter:
 
     @classmethod
     def read(cls, string):
-        """Returns dict with separated frontmatter from string.
+        """ Returns dict with separated frontmatter from string.
 
-        Returned dict keys:
-        attributes -- extracted YAML attributes in dict form.
-        body -- string contents below the YAML separators
-        frontmatter -- string representation of YAML
+        Parameters
+        ----------
+        string : str
+            The string to extract frontmatter from
+
+
+        Returns
+        -------
+        dict
+            The separated frontmatter
         """
         fmatter = ""
         body = ""
