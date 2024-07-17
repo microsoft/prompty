@@ -1,2 +1,6 @@
 .DS_Store
 *.js
+runtime/promptycs/Prompty.Core/bin/
+runtime/promptycs/Prompty.Core/obj/
+runtime/promptycs/Tests/bin/
+runtime/promptycs/Tests/obj/
