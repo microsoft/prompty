@@ -16,6 +16,16 @@ from .renderers import *
 from .parsers import *
 from .executors import *
 from .processors import *
+from ._version import __version__
+
+__all__ = [
+    "load",
+    "prepare",
+    "run",
+    "execute",
+    "headless",
+    "__version__",
+]
 
 
 def load_global_config(

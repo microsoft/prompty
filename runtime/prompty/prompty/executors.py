@@ -1,6 +1,7 @@
 import azure.identity
 from openai import AzureOpenAI
 from .core import Invoker, InvokerFactory, Prompty
+from ._version import __version__
 
 
 @InvokerFactory.register_executor("azure")
@@ -35,7 +36,10 @@ class AzureOpenAIExecutor(Invoker):
             )
 
         self.client = AzureOpenAI(
-            default_headers={"User-Agent": "prompty/0.1.0"},
+            default_headers={
+                "User-Agent": f"prompty/{__version__}",
+                "x-ms-useragent": f"prompty/{__version__}",
+            },
             **kwargs,
         )
 

@@ -31,6 +31,8 @@ dev = [
 
 [tool.pdm.version]
 source = "scm"
-fallback_version = "0.1.0.dev0"
+fallback_version = "0.1.0"
 tag_filter = "python/*"
 tag_regex = '^python/(?:\D*)?(?P<version>([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|c|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$)$'
+write_to = "prompty/_version.py"
+write_template = "__version__ = '{}'"
