@@ -8,9 +8,7 @@ import abc
 from pathlib import Path
 from pydantic import BaseModel, Field, FilePath
 from typing import List, Literal, Dict, Callable, TypeVar
-
-
-T = TypeVar("T")
+from .tracer import trace
 
 
 class PropertySettings(BaseModel):
@@ -264,6 +262,7 @@ class Invoker(abc.ABC):
         self.name = self.__class__.__name__
 
     @abc.abstractmethod
+    @trace
     def invoke(self, data: any) -> any:
         """ Abstract method to invoke the invoker
 

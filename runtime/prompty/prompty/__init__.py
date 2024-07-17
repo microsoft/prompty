@@ -2,6 +2,8 @@ import json
 import traceback
 from pathlib import Path
 from typing import Dict, List, Union
+
+from .tracer import trace
 from .core import (
     Frontmatter,
     InvokerFactory,
@@ -56,6 +58,7 @@ def load_global_config(
     return {}
 
 
+@trace(description="Create a headless prompty object for programmatic use.")
 def headless(
     api: str,
     content: str | List[str] | dict,
@@ -112,6 +115,7 @@ def headless(
     return Prompty(model=modelSettings, template=templateSettings, content=content)
 
 
+@trace(description="Load a prompty file.")
 def load(prompty_file: str, configuration: str = "default") -> Prompty:
     """Load a prompty file.
 
@@ -137,7 +141,7 @@ def load(prompty_file: str, configuration: str = "default") -> Prompty:
     p = Path(prompty_file)
     if not p.is_absolute():
         # get caller's path (take into account trace frame)
-        caller = Path(traceback.extract_stack()[-2].filename)
+        caller = Path(traceback.extract_stack()[-3].filename)
         p = Path(caller.parent / p).resolve().absolute()
 
     # load dictionary from prompty file
@@ -238,7 +242,7 @@ def load(prompty_file: str, configuration: str = "default") -> Prompty:
         )
     return p
 
-
+@trace(description="Prepare the inputs for the prompt.")
 def prepare(
     prompt: Prompty,
     inputs: Dict[str, any] = {},
@@ -284,7 +288,7 @@ def prepare(
 
     return result
 
-
+@trace(description="Run the prepared Prompty content against the model.")
 def run(
     prompt: Prompty,
     content: dict | list | str,
@@ -345,7 +349,7 @@ def run(
 
     return result
 
-
+@trace(description="Execute a prompty")
 def execute(
     prompt: Union[str, Prompty],
     configuration: Dict[str, any] = {},
@@ -386,7 +390,7 @@ def execute(
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)
-            caller = Path(traceback.extract_stack()[-2].filename)
+            caller = Path(traceback.extract_stack()[-3].filename)
             path = Path(caller.parent / path).resolve().absolute()
         prompt = load(path, connection)
 
