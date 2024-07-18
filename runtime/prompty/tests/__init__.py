@@ -31,6 +31,7 @@ class FakeAzureExecutor(Invoker):
                 items = json.loads(j)
                 for i in range(1, len(items)):
                     yield ChatCompletionChunk.model_validate(items[i])
+
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
             elif self.api == "embedding":

@@ -35,12 +35,6 @@ class OpenAIProcessor(Invoker):
         any
             The response from the OpenAI/Azure API
         """
-        assert (
-            isinstance(data, ChatCompletion)
-            or isinstance(data, Completion)
-            or isinstance(data, CreateEmbeddingResponse)
-            or isinstance(data, Iterator)
-        )
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
             # tool calls available in response
@@ -69,3 +63,5 @@ class OpenAIProcessor(Invoker):
             for chunk in data:
                 if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
                     yield chunk.choices[0].delta.content
+        else:
+            return data

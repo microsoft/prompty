@@ -262,7 +262,6 @@ class Invoker(abc.ABC):
         self.name = self.__class__.__name__
 
     @abc.abstractmethod
-    @trace
     def invoke(self, data: any) -> any:
         """ Abstract method to invoke the invoker
 
@@ -278,6 +277,7 @@ class Invoker(abc.ABC):
         """
         pass
 
+    @trace
     def __call__(self, data: any) -> any:
         """ Method to call the invoker
 

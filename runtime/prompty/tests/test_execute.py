@@ -2,6 +2,8 @@ import pytest
 import prompty
 from pathlib import Path
 
+from prompty.tracer import trace
+
 
 BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 
@@ -21,10 +23,12 @@ def test_basic_execution(prompt: str):
     print(result)
 
 
+@trace
 def get_customer(customerId):
     return {"id": customerId, "firstName": "Sally", "lastName": "Davis"}
 
 
+@trace
 def get_context(search):
     return [
         {
@@ -54,6 +58,7 @@ def get_context(search):
     ]
 
 
+@trace
 def get_response(customerId, question, prompt):
     customer = get_customer(customerId)
     context = get_context(question)
@@ -65,6 +70,7 @@ def get_response(customerId, question, prompt):
     return {"question": question, "answer": result, "context": context}
 
 
+@trace
 def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"

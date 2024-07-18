@@ -6,7 +6,7 @@ from pathlib import Path
 from numbers import Number
 from pydantic import BaseModel
 from functools import wraps, partial
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 
 class Tracer(abc.ABC):
@@ -42,9 +42,9 @@ class Trace:
             tracer.trace(name, value)
 
     @classmethod
-    def end(cls, name: str) -> None:
+    def end(cls) -> None:
         for tracer in cls._tracers.values():
-            tracer.end(name)
+            tracer.end()
 
     @classmethod
     def clear(cls) -> None:
@@ -55,29 +55,51 @@ class Trace:
         def inner_wrapper(wrapped_class: Tracer) -> Callable:
             cls._tracers[name] = wrapped_class()
             return wrapped_class
+
         return inner_wrapper
 
     @classmethod
-    def json_dump(cls, obj: Any) -> str:
-
-        """
-        Recursively converts a Python object to a JSON string.
-
-        Args:
-            obj: The Python object to be converted.
-
-        Returns:
-            A JSON string representation of the object.
-        """
-
-        if isinstance(obj, str):
+    def dict_dump(cls, obj: Any) -> Dict[str, Any]:
+        # simple json types
+        if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
             return obj
+        # datetime
+        elif isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        # sanitize Prompty objects
+        elif type(obj).__name__ == "Prompty":
+            return obj.to_safe_dict()
+        # pydantic models have their own json serialization
+        elif isinstance(obj, BaseModel):
+            return obj.model_dump()
+        # recursive list and dict
+        elif isinstance(obj, list):
+            return [Trace.dict_dump(item) for item in obj]
+        elif isinstance(obj, dict):
+            return {
+                k: v if isinstance(v, str) else Trace.dict_dump(v)
+                for k, v in obj.items()
+            }
+
+        # cast to string otherwise...
+        else:
+            return str(obj)
+
+    @classmethod
+    def json_dump(cls, obj: Any) -> str:
+        # simple json types
+        if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
+            return obj
+        # datetime
+        elif isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        # sanitize Prompty objects
         elif type(obj).__name__ == "Prompty":
             return obj.to_safe_json()
-        elif isinstance(obj, Path):
-            return str(obj)
+        # pydantic models have their own json serialization
         elif isinstance(obj, BaseModel):
             return obj.model_dump_json()
+        # recursive list and dict
         elif isinstance(obj, list):
             return [Trace.json_dump(item) for item in obj]
         elif isinstance(obj, dict):
@@ -87,26 +109,12 @@ class Trace:
                     for k, v in obj.items()
                 }
             )
-        elif isinstance(obj, Number):
-            return obj
-        elif isinstance(obj, bool):
-            return obj
+        # cast to string otherwise...
         else:
             return str(obj)
 
 
 def trace(func: Callable = None, *, description: str = None) -> Callable:
-    """
-    Decorator function that traces the execution of a given function.
-
-    Args:
-        func (Callable): The function to be traced.
-        name (str, optional): The name of the output to be logged. Defaults to None.
-
-    Returns:
-        Callable: The wrapped function with tracing capabilities.
-    """
-
     if func is None:
         return partial(trace, description=description)
 
@@ -122,11 +130,11 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
         # core invoker gets special treatment
         core_invoker = signature == "prompty.core.Invoker.__call__"
         if core_invoker:
-            span_name = type(args[0]).__name__
+            name = type(args[0]).__name__
         else:
-            span_name = func.__name__
+            name = func.__name__
 
-        Trace.start(span_name)
+        Trace.start(name)
 
         if core_invoker:
             Trace.trace(
@@ -141,39 +149,50 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
 
         ba = inspect.signature(func).bind(*args, **kwargs)
         ba.apply_defaults()
-        if core_invoker:
-            obj = args[1].model_dump()
-            keys = list(obj.keys())
-            if len(keys) == 1:
-                inputs = obj[keys[0]]
-            else:
-                inputs = obj
-        else:
-            inputs = {
-                k: Trace.json_dump(v) for k, v in ba.arguments.items() if k != "self"
-            }
 
-        input = Trace.json_dump(inputs)
-        Trace.trace("input", input)
+        inputs = {k: Trace.dict_dump(v) for k, v in ba.arguments.items() if k != "self"}
+
+        Trace.trace("input", Trace.dict_dump(inputs))
         result = func(*args, **kwargs)
         Trace.trace(
             "result",
-            Trace.json_dump(result) if result is not None else "None",
+            Trace.dict_dump(result) if result is not None else "None",
         )
 
-        Trace.end(span_name)
+        Trace.end()
 
         return result
 
     return wrapper
 
+
 @Trace.register("prompty")
 class PromptyTracer(Tracer):
+    _stack: List[Dict[str, Any]] = []
+
     def start(self, name: str) -> None:
-        print(f"Starting {name}")
+        self._stack.append({"name": name})
 
     def trace(self, name: str, value: Any) -> None:
-        print(f"Tracing {name}: {value}")
+        frame = self._stack[-1]
+        if "params" not in frame:
+            frame["params"] = {}
+        frame["params"][name] = value
 
-    def end(self, name: str) -> None:
-        print(f"Ending {name}")
+    def end(self) -> None:
+        # pop the current stack
+        frame = self._stack.pop()
+        
+        # if stack is empty, dump the frame
+        if len(self._stack) == 0:
+            with open("trace.json", "w") as f:
+                json.dump(frame, f, indent=4)
+        # otherwise, append the frame to the parent
+        else:
+            if "frames" not in self._stack[-1]:
+                self._stack[-1]["frames"] = []
+            self._stack[-1]["frames"].append(frame)
+
+    def flush(frame: Dict[str, Any]) -> None:
+        with open("trace.json", "w") as f:
+            json.dump(frame, f, indent=4)
