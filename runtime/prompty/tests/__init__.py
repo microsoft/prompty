@@ -29,8 +29,11 @@ class FakeAzureExecutor(Invoker):
 
             if self.parameters.get("stream", False):
                 items = json.loads(j)
-                for i in range(1, len(items)):
-                    yield ChatCompletionChunk.model_validate(items[i])
+                def generator():
+                    for i in range(1, len(items)):
+                        yield ChatCompletionChunk.model_validate(items[i])
+                        
+                return generator()
 
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)

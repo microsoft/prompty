@@ -1,4 +1,5 @@
 import azure.identity
+from .tracer import Trace
 from openai import AzureOpenAI
 from .core import Invoker, InvokerFactory, Prompty
 from ._version import __version__
@@ -66,6 +67,7 @@ class AzureOpenAIExecutor(Invoker):
                 messages=data if isinstance(data, list) else [data],
                 **self.parameters,
             )
+            
         elif self.api == "completion":
             response = self.client.completions.create(
                 prompt=data.item,
@@ -80,7 +82,14 @@ class AzureOpenAIExecutor(Invoker):
                 **self.parameters,
             )
 
+            
+
         elif self.api == "image":
             raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
+        if hasattr(response, "usage") and response.usage:
+            Trace.add("completion_tokens", response.usage.completion_tokens)
+            Trace.add("prompt_tokens", response.usage.prompt_tokens)
+            Trace.add("total_tokens", response.usage.total_tokens)
+        
         return response

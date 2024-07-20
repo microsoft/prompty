@@ -126,7 +126,10 @@ def test_function_calling():
     )
     print(result)
 
-
+# need to add trace attribute to
+# materialize stream into the function
+# trace decorator
+@trace
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",

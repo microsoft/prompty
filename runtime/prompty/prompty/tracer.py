@@ -2,11 +2,10 @@ import abc
 import json
 import inspect
 import datetime
-from pathlib import Path
 from numbers import Number
 from pydantic import BaseModel
 from functools import wraps, partial
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, Iterator, List
 
 
 class Tracer(abc.ABC):
@@ -16,7 +15,7 @@ class Tracer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def trace(self, key: str, value: Any) -> None:
+    def add(self, key: str, value: Any) -> None:
         pass
 
     @abc.abstractmethod
@@ -37,9 +36,9 @@ class Trace:
             tracer.start(name)
 
     @classmethod
-    def trace(cls, name: str, value: Any) -> None:
+    def add(cls, name: str, value: Any) -> None:
         for tracer in cls._tracers.values():
-            tracer.trace(name, value)
+            tracer.add(name, value)
 
     @classmethod
     def end(cls) -> None:
@@ -137,24 +136,25 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
         Trace.start(name)
 
         if core_invoker:
-            Trace.trace(
+            Trace.add(
                 "signature",
                 f"{args[0].__module__}.{args[0].__class__.__name__}.invoke",
             )
         else:
-            Trace.trace("signature", signature)
+            Trace.add("signature", signature)
 
         if len(description) > 0:
-            Trace.trace("description", description)
+            Trace.add("description", description)
 
         ba = inspect.signature(func).bind(*args, **kwargs)
         ba.apply_defaults()
 
         inputs = {k: Trace.dict_dump(v) for k, v in ba.arguments.items() if k != "self"}
 
-        Trace.trace("input", Trace.dict_dump(inputs))
+        Trace.add("input", Trace.dict_dump(inputs))
         result = func(*args, **kwargs)
-        Trace.trace(
+
+        Trace.add(
             "result",
             Trace.dict_dump(result) if result is not None else "None",
         )
@@ -173,26 +173,31 @@ class PromptyTracer(Tracer):
     def start(self, name: str) -> None:
         self._stack.append({"name": name})
 
-    def trace(self, name: str, value: Any) -> None:
+    def add(self, name: str, value: Any) -> None:
         frame = self._stack[-1]
-        if "params" not in frame:
-            frame["params"] = {}
-        frame["params"][name] = value
+        if name not in frame:
+            frame[name] = value
+        # multiple values creates list
+        else:
+            if isinstance(frame[name], list):
+                frame[name].append(value)
+            else:
+                frame[name] = [frame[name], value]
+
 
     def end(self) -> None:
         # pop the current stack
         frame = self._stack.pop()
-        
+
         # if stack is empty, dump the frame
         if len(self._stack) == 0:
-            with open("trace.json", "w") as f:
-                json.dump(frame, f, indent=4)
+            self.flush(frame)
         # otherwise, append the frame to the parent
         else:
-            if "frames" not in self._stack[-1]:
-                self._stack[-1]["frames"] = []
-            self._stack[-1]["frames"].append(frame)
+            if "__frames" not in self._stack[-1]:
+                self._stack[-1]["__frames"] = []
+            self._stack[-1]["__frames"].append(frame)
 
-    def flush(frame: Dict[str, Any]) -> None:
+    def flush(self, frame: Dict[str, Any]) -> None:
         with open("trace.json", "w") as f:
             json.dump(frame, f, indent=4)
