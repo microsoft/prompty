@@ -8,29 +8,6 @@ from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
-class StreamIterator(Iterator):
-    def __init__(self, stream: Stream) -> None:
-        self.stream = stream
-        self.chunk = None
-
-    def __next__(self):
-        if self.chunk is None:
-            self.chunk = next(self.stream)
-        if len(self.chunk.choices) == 1 and self.chunk.choices[0].delta.content != None:
-            content = self.chunk.choices[0].delta.content
-            self.chunk = None
-            Trace.add("stream", content)
-            return content
-        else:
-            raise StopIteration
-
-    def __iter__(self):
-        return self
-
-    def close(self):
-        self.stream.close()
-
-
 class ToolCall(BaseModel):
     id: str
     name: str
