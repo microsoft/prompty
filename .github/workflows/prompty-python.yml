@@ -46,4 +46,4 @@ jobs:
 
       - name: Publish package distributions to PyPI
         working-directory: ./runtime/prompty
-        run: pdm publish --no-build
+        run: pdm publish
