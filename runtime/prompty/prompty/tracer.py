@@ -3,9 +3,12 @@ import json
 import inspect
 import datetime
 from numbers import Number
+import os
+from datetime import datetime
+from pathlib import Path
 from pydantic import BaseModel
 from functools import wraps, partial
-from typing import Any, Callable, Dict, Iterator, List
+from typing import Any, Callable, Dict, List
 
 
 class Tracer(abc.ABC):
@@ -27,8 +30,8 @@ class Trace:
     _tracers: Dict[str, Tracer] = {}
 
     @classmethod
-    def register(cls, name: str, tracer: Tracer) -> None:
-        cls._tracers[name] = tracer()
+    def add_tracer(cls, name: str, tracer: Tracer) -> None:
+        cls._tracers[name] = tracer
 
     @classmethod
     def start(cls, name: str) -> None:
@@ -58,14 +61,14 @@ class Trace:
         return inner_wrapper
 
     @classmethod
-    def dict_dump(cls, obj: Any) -> Dict[str, Any]:
+    def to_dict(cls, obj: Any) -> Dict[str, Any]:
         # simple json types
         if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
             return obj
         # datetime
-        elif isinstance(obj, datetime.datetime):
+        elif isinstance(obj, datetime):
             return obj.isoformat()
-        # sanitize Prompty objects
+        # safe Prompty obj serialization
         elif type(obj).__name__ == "Prompty":
             return obj.to_safe_dict()
         # pydantic models have their own json serialization
@@ -73,41 +76,14 @@ class Trace:
             return obj.model_dump()
         # recursive list and dict
         elif isinstance(obj, list):
-            return [Trace.dict_dump(item) for item in obj]
+            return [Trace.to_dict(item) for item in obj]
         elif isinstance(obj, dict):
             return {
-                k: v if isinstance(v, str) else Trace.dict_dump(v)
+                k: v if isinstance(v, str) else Trace.to_dict(v)
                 for k, v in obj.items()
             }
-
-        # cast to string otherwise...
-        else:
+        elif isinstance(obj, Path):
             return str(obj)
-
-    @classmethod
-    def json_dump(cls, obj: Any) -> str:
-        # simple json types
-        if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
-            return obj
-        # datetime
-        elif isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        # sanitize Prompty objects
-        elif type(obj).__name__ == "Prompty":
-            return obj.to_safe_json()
-        # pydantic models have their own json serialization
-        elif isinstance(obj, BaseModel):
-            return obj.model_dump_json()
-        # recursive list and dict
-        elif isinstance(obj, list):
-            return [Trace.json_dump(item) for item in obj]
-        elif isinstance(obj, dict):
-            return json.dumps(
-                {
-                    k: v if isinstance(v, str) else Trace.json_dump(v)
-                    for k, v in obj.items()
-                }
-            )
         # cast to string otherwise...
         else:
             return str(obj)
@@ -149,14 +125,14 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
         ba = inspect.signature(func).bind(*args, **kwargs)
         ba.apply_defaults()
 
-        inputs = {k: Trace.dict_dump(v) for k, v in ba.arguments.items() if k != "self"}
+        inputs = {k: Trace.to_dict(v) for k, v in ba.arguments.items() if k != "self"}
 
-        Trace.add("input", Trace.dict_dump(inputs))
+        Trace.add("input", Trace.to_dict(inputs))
         result = func(*args, **kwargs)
 
         Trace.add(
             "result",
-            Trace.dict_dump(result) if result is not None else "None",
+            Trace.to_dict(result) if result is not None else "None",
         )
 
         Trace.end()
@@ -165,13 +141,26 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
 
     return wrapper
 
-
 @Trace.register("prompty")
 class PromptyTracer(Tracer):
     _stack: List[Dict[str, Any]] = []
+    _name: str = None
+
+    def __init__(self, output_dir: str = None) -> None:
+        super().__init__()
+        if output_dir:
+            self.root = Path(output_dir).resolve().absolute()
+        else:
+            self.root = Path(Path(os.getcwd()) / ".runs").resolve().absolute()
+
+        if not self.root.exists():
+            self.root.mkdir(parents=True, exist_ok=True)
 
     def start(self, name: str) -> None:
         self._stack.append({"name": name})
+        # first entry frame
+        if self._name is None:
+            self._name = name
 
     def add(self, name: str, value: Any) -> None:
         frame = self._stack[-1]
@@ -199,5 +188,10 @@ class PromptyTracer(Tracer):
             self._stack[-1]["__frames"].append(frame)
 
     def flush(self, frame: Dict[str, Any]) -> None:
-        with open("trace.json", "w") as f:
+        
+        trace_file = (
+            self.root / f"{self._name}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.ptrace"
+        )
+        
+        with open(trace_file, "w") as f:
             json.dump(frame, f, indent=4)

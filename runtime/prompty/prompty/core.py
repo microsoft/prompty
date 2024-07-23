@@ -7,12 +7,12 @@ import json
 import abc
 from pathlib import Path
 from pydantic import BaseModel, Field, FilePath
-from typing import List, Literal, Dict, Callable, TypeVar
+from typing import List, Literal, Dict, Callable, Set, TypeVar
 from .tracer import trace
 
 
 class PropertySettings(BaseModel):
-    """ PropertySettings class to define the properties of the model
+    """PropertySettings class to define the properties of the model
 
     Attributes
     ----------
@@ -30,7 +30,7 @@ class PropertySettings(BaseModel):
 
 
 class ModelSettings(BaseModel):
-    """ ModelSettings class to define the model of the prompty
+    """ModelSettings class to define the model of the prompty
 
     Attributes
     ----------
@@ -49,8 +49,40 @@ class ModelSettings(BaseModel):
     parameters: dict = Field(default={})
     response: dict = Field(default={})
 
-    def model_dump_safe(self) -> dict:
-        d = self.model_dump()
+    def model_dump(
+        self,
+        *,
+        mode: str = "python",
+        include: (
+            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
+        ) = None,
+        exclude: (
+            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
+        ) = None,
+        context: os.Any | None = None,
+        by_alias: bool = False,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+        round_trip: bool = False,
+        warnings: bool | Literal["none"] | Literal["warn"] | Literal["error"] = True,
+        serialize_as_any: bool = False,
+    ) -> Dict[str, os.Any]:
+        """Method to dump the model in a safe way"""
+        d = super().model_dump(
+            mode=mode,
+            include=include,
+            exclude=exclude,
+            context=context,
+            by_alias=by_alias,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+            exclude_none=exclude_none,
+            round_trip=round_trip,
+            warnings=warnings,
+            serialize_as_any=serialize_as_any,
+        )
+
         d["configuration"] = {
             k: "*" * len(v) if "key" in k.lower() or "secret" in k.lower() else v
             for k, v in d["configuration"].items()
@@ -59,8 +91,8 @@ class ModelSettings(BaseModel):
 
 
 class TemplateSettings(BaseModel):
-    """ TemplateSettings class to define the template of the prompty
-    
+    """TemplateSettings class to define the template of the prompty
+
     Attributes
     ----------
     type : str
@@ -74,7 +106,7 @@ class TemplateSettings(BaseModel):
 
 
 class Prompty(BaseModel):
-    """ Prompty class to define the prompty
+    """Prompty class to define the prompty
 
     Attributes
     ----------
@@ -107,6 +139,7 @@ class Prompty(BaseModel):
     content : str | List[str] | dict
         The content of the prompty
     """
+
     # metadata
     name: str = Field(default="")
     description: str = Field(default="")
@@ -136,7 +169,7 @@ class Prompty(BaseModel):
         for k, v in self:
             if v != "" and v != {} and v != [] and v != None:
                 if k == "model":
-                    d[k] = v.model_dump_safe()
+                    d[k] = v.model_dump()
                 elif k == "template":
                     d[k] = v.model_dump()
                 elif k == "inputs" or k == "outputs":
@@ -154,11 +187,6 @@ class Prompty(BaseModel):
                 else:
                     d[k] = v
         return d
-
-    # generate json representation of the prompty
-    def to_safe_json(self) -> str:
-        d = self.to_safe_dict()
-        return json.dumps(d)
 
     @staticmethod
     def _process_file(file: str, parent: Path) -> any:
@@ -247,7 +275,7 @@ def param_hoisting(
 
 
 class Invoker(abc.ABC):
-    """ Abstract class for Invoker
+    """Abstract class for Invoker
 
     Attributes
     ----------
@@ -257,13 +285,14 @@ class Invoker(abc.ABC):
         The name of the invoker
 
     """
+
     def __init__(self, prompty: Prompty) -> None:
         self.prompty = prompty
         self.name = self.__class__.__name__
 
     @abc.abstractmethod
     def invoke(self, data: any) -> any:
-        """ Abstract method to invoke the invoker
+        """Abstract method to invoke the invoker
 
         Parameters
         ----------
@@ -279,24 +308,24 @@ class Invoker(abc.ABC):
 
     @trace
     def __call__(self, data: any) -> any:
-        """ Method to call the invoker
+        """Method to call the invoker
 
         Parameters
         ----------
         data : any
             The data to be invoked
-        
+
         Returns
         -------
         any
             The invoked
         """
         return self.invoke(data)
-    
 
 
 class InvokerFactory:
-    """ Factory class for Invoker """
+    """Factory class for Invoker"""
+
     _renderers: Dict[str, Invoker] = {}
     _parsers: Dict[str, Invoker] = {}
     _executors: Dict[str, Invoker] = {}
@@ -372,7 +401,7 @@ class NoOp(Invoker):
 
 
 class Frontmatter:
-    """ Frontmatter class to extract frontmatter from string."""
+    """Frontmatter class to extract frontmatter from string."""
 
     _yaml_delim = r"(?:---|\+\+\+)"
     _yaml = r"(.*?)"
@@ -382,8 +411,8 @@ class Frontmatter:
 
     @classmethod
     def read_file(cls, path):
-        """ Returns dict with separated frontmatter from file.
-        
+        """Returns dict with separated frontmatter from file.
+
         Parameters
         ----------
         path : str
@@ -395,7 +424,7 @@ class Frontmatter:
 
     @classmethod
     def read(cls, string):
-        """ Returns dict with separated frontmatter from string.
+        """Returns dict with separated frontmatter from string.
 
         Parameters
         ----------
