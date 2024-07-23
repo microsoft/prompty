@@ -24,9 +24,9 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: pdm-project/setup-pdm@v3
+      - uses: pdm-project/setup-pdm@v4
 
       - name: install dependencies
         working-directory: ./runtime/prompty
@@ -38,7 +38,11 @@ jobs:
 
       - name: build package
         working-directory: ./runtime/prompty
-        run: pdm build
+        run: pdm build -vv
+
+      - name: package version
+        working-directory: ./runtime/prompty
+        run: cat prompty/_version.py
 
       - name: Publish package distributions to PyPI
         working-directory: ./runtime/prompty
