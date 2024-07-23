@@ -160,10 +160,10 @@ export default async function Page({ params }: Props) {
       </Header>
       <Block>
         <div className="flex flex-col md:flex-row gap-1">
-          <div className="bg-zinc-100 dark:bg-zinc-700 rounded-md md:w-[250px] p-2 mb-2 md:mb-0">
+          <div className="bg-zinc-100 dark:bg-zinc-700 md:w-[224px] w- rounded-md p-2 mb-2 md:mb-0">
             <Toc index={index.children} visible={true} />
           </div>
-          <div className="ml-1 md:ml-6 grow">
+          <div className="ml-1 md:ml-6 md:w-[calc(100%-256px)]">
             <div className="flex flex-row mb-4 gap-4">
               <div className="text-2xl md:text-4xl font-bold ">
                 {metadata.title}
