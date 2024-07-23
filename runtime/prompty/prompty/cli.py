@@ -7,11 +7,11 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from . import load, execute
-from .tracer import trace
+from .tracer import trace, Trace, PromptyTracer
 from dotenv import load_dotenv
 
 load_dotenv()
-
+Trace.add_tracer("prompty", PromptyTracer())
 
 def normalize_path(p, create_dir=False) -> Path:
     path = Path(p)

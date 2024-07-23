@@ -141,7 +141,7 @@ def trace(func: Callable = None, *, description: str = None) -> Callable:
 
     return wrapper
 
-@Trace.register("prompty")
+
 class PromptyTracer(Tracer):
     _stack: List[Dict[str, Any]] = []
     _name: str = None
