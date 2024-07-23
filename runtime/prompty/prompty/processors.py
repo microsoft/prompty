@@ -1,5 +1,6 @@
-from collections.abc import Iterable, Iterator
+from .tracer import Trace
 from openai import Stream
+from typing import Iterator
 from pydantic import BaseModel
 from openai.types.completion import Completion
 from .core import Invoker, InvokerFactory, Prompty
@@ -35,12 +36,6 @@ class OpenAIProcessor(Invoker):
         any
             The response from the OpenAI/Azure API
         """
-        assert (
-            isinstance(data, ChatCompletion)
-            or isinstance(data, Completion)
-            or isinstance(data, CreateEmbeddingResponse)
-            or isinstance(data, Iterator)
-        )
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
             # tool calls available in response
@@ -66,6 +61,14 @@ class OpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, Iterator):
-            for chunk in data:
-                if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
-                    yield chunk.choices[0].delta.content
+
+            def generator():
+                for chunk in data:
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
+                        content = chunk.choices[0].delta.content
+                        Trace.add("stream", content)
+                        yield content
+
+            return generator()
+        else:
+            return data

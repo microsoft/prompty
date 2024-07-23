@@ -1,22 +1,9 @@
 import json
 from pathlib import Path
+from openai.types.chat import ChatCompletionChunk
 from prompty import Invoker, Prompty, InvokerFactory
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
-from openai.types.chat import ChatCompletionChunk
-
-
-
-@InvokerFactory.register_renderer("fake")
-@InvokerFactory.register_parser("fake.chat")
-@InvokerFactory.register_executor("fake")
-@InvokerFactory.register_processor("fake")
-class FakeInvoker(Invoker):
-    def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
-
-    def invoke(self, data: any) -> any:
-        return data
 
 
 ## Azure Fake Executor
@@ -42,14 +29,17 @@ class FakeAzureExecutor(Invoker):
 
             if self.parameters.get("stream", False):
                 items = json.loads(j)
-                for i in range(1, len(items)):
-                    yield ChatCompletionChunk.model_validate(items[i])
+                def generator():
+                    for i in range(1, len(items)):
+                        yield ChatCompletionChunk.model_validate(items[i])
+                        
+                return generator()
 
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
             elif self.api == "embedding":
                 return CreateEmbeddingResponse.model_validate_json(j)
-            
+
         elif self.api == "embedding":
             if not isinstance(data, list):
                 d = [data]
