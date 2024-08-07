@@ -46,6 +46,8 @@ def to_dict(obj: Any) -> Dict[str, Any]:
     # safe PromptyStream obj serialization
     elif type(obj).__name__ == "PromptyStream":
         return "PromptyStream"
+    elif type(obj).__name__ == "AsyncPromptyStream":
+        return "AsyncPromptyStream"
     # pydantic models have their own json serialization
     elif isinstance(obj, BaseModel):
         return obj.model_dump()
