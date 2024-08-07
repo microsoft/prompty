@@ -8,7 +8,7 @@ import abc
 from pathlib import Path
 from .tracer import Tracer, trace, to_dict
 from pydantic import BaseModel, Field, FilePath
-from typing import Iterator, List, Literal, Dict, Callable, Set
+from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set
 
 
 class PropertySettings(BaseModel):
@@ -476,6 +476,36 @@ class PromptyStream(Iterator):
             # contents are exhausted
             if len(self.items) > 0:     
                 with Tracer.start(f"{self.name}.PromptyStream") as trace:
+                    trace("items", [to_dict(s) for s in self.items])
+
+            raise StopIteration
+
+
+class AsyncPromptyStream(AsyncIterator):
+    """AsyncPromptyStream class to iterate over LLM stream.
+    Necessary for Prompty to handle streaming data when tracing."""
+
+    def __init__(self, name: str, iterator: AsyncIterator):
+        self.name = name
+        self.iterator = iterator
+        self.items: List[any] = []
+        self.__name__ = "AsyncPromptyStream"
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            # enumerate but add to list
+            o = await self.iterator.__anext__()
+            self.items.append(o)
+            return o
+
+        except StopIteration:
+            # StopIteration is raised
+            # contents are exhausted
+            if len(self.items) > 0:
+                with Tracer.start(f"{self.name}.AsyncPromptyStream") as trace:
                     trace("items", [to_dict(s) for s in self.items])
 
             raise StopIteration
