@@ -1,8 +1,8 @@
 import azure.identity
-from .tracer import Trace
-from openai import AzureOpenAI
-from .core import Invoker, InvokerFactory, Prompty
 import importlib.metadata
+from typing import Iterator
+from openai import AzureOpenAI
+from .core import Invoker, InvokerFactory, Prompty, PromptyStream
 
 VERSION = importlib.metadata.version("prompty")
 
@@ -87,9 +87,8 @@ class AzureOpenAIExecutor(Invoker):
         elif self.api == "image":
             raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
-        if hasattr(response, "usage") and response.usage:
-            Trace.add("completion_tokens", response.usage.completion_tokens)
-            Trace.add("prompt_tokens", response.usage.prompt_tokens)
-            Trace.add("total_tokens", response.usage.total_tokens)
-
-        return response
+        # stream response
+        if isinstance(response, Iterator):
+            return PromptyStream("AzureOpenAIExecutor", response)
+        else:
+            return response

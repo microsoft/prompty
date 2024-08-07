@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from prompty.core import PromptyStream
 from openai.types.chat import ChatCompletionChunk
 from prompty import Invoker, Prompty, InvokerFactory
 from openai.types.chat.chat_completion import ChatCompletion
@@ -29,11 +30,12 @@ class FakeAzureExecutor(Invoker):
 
             if self.parameters.get("stream", False):
                 items = json.loads(j)
+
                 def generator():
                     for i in range(1, len(items)):
                         yield ChatCompletionChunk.model_validate(items[i])
-                        
-                return generator()
+
+                return PromptyStream("FakeAzureExecutor", generator())
 
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
