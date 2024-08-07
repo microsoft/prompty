@@ -1,8 +1,6 @@
-import os
-from typing import Dict
 import pytest
-from pathlib import Path
 import prompty
+from pathlib import Path
 from prompty.core import InvokerFactory
 
 

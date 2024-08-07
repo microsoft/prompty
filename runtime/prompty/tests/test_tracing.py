@@ -1,6 +1,13 @@
 import pytest
 import prompty
-from prompty.tracer import trace
+from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+
+
+@pytest.fixture
+def setup_tracing():
+    Tracer.add("console", console_tracer)
+    json_tracer = PromptyTracer()
+    Tracer.add("console", json_tracer.tracer)
 
 
 @pytest.mark.parametrize(
@@ -13,7 +20,7 @@ from prompty.tracer import trace
         "prompts/embedding.prompty",
     ],
 )
-def test_basic_execution(prompt: str):
+def test_basic_execution(prompt: str, setup_tracing):
     result = prompty.execute(prompt)
     print(result)
 
@@ -66,7 +73,7 @@ def get_response(customerId, question, prompt):
 
 
 @trace
-def test_context_flow():
+def test_context_flow(setup_tracing):
     customerId = 1
     question = "tell me about your jackets"
     prompt = "context.prompty"
@@ -75,6 +82,7 @@ def test_context_flow():
     print(response)
 
 
+@trace
 def evaluate(prompt, evalprompt, customerId, question):
     response = get_response(customerId, question, prompt)
 
@@ -85,7 +93,8 @@ def evaluate(prompt, evalprompt, customerId, question):
     return result
 
 
-def test_context_groundedness():
+@trace
+def test_context_groundedness(setup_tracing):
     result = evaluate(
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
@@ -95,7 +104,8 @@ def test_context_groundedness():
     print(result)
 
 
-def test_embedding_headless():
+@trace
+def test_embedding_headless(setup_tracing):
     p = prompty.headless(
         api="embedding",
         configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
@@ -105,7 +115,8 @@ def test_embedding_headless():
     print(emb)
 
 
-def test_embeddings_headless():
+@trace
+def test_embeddings_headless(setup_tracing):
     p = prompty.headless(
         api="embedding",
         configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
@@ -115,7 +126,8 @@ def test_embeddings_headless():
     print(emb)
 
 
-def test_function_calling():
+@trace
+def test_function_calling(setup_tracing):
     result = prompty.execute(
         "prompts/functions.prompty",
     )
@@ -126,7 +138,7 @@ def test_function_calling():
 # materialize stream into the function
 # trace decorator
 @trace
-def test_streaming():
+def test_streaming(setup_tracing):
     result = prompty.execute(
         "prompts/streaming.prompty",
     )

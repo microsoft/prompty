@@ -1,10 +1,8 @@
-from .tracer import Trace
-from openai import Stream
 from typing import Iterator
 from pydantic import BaseModel
 from openai.types.completion import Completion
-from .core import Invoker, InvokerFactory, Prompty
 from openai.types.chat.chat_completion import ChatCompletion
+from .core import Invoker, InvokerFactory, Prompty, PromptyStream
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
@@ -66,9 +64,8 @@ class OpenAIProcessor(Invoker):
                 for chunk in data:
                     if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
                         content = chunk.choices[0].delta.content
-                        Trace.add("stream", content)
                         yield content
 
-            return generator()
+            return PromptyStream("OpenAIProcessor", generator())
         else:
             return data
