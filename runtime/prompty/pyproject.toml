@@ -1,6 +1,7 @@
 [project]
 name = "prompty"
 dynamic = ["version"]
+readme = "README.md"
 description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
 authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
 dependencies = [
@@ -30,7 +31,6 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = true
-
 
 
 [tool.pdm.version]
