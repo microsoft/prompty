@@ -213,14 +213,16 @@ class Prompty(BaseModel):
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(variable: str, env_error=True) -> any:
+    def _process_env(variable: str, env_error=True, default: str = None) -> any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
+            if default:
+                return default
             if env_error:
                 raise ValueError(f"Variable {variable} not found in environment")
-            else:
-                return ""
+
+            return ""
 
     @staticmethod
     def normalize(attribute: any, parent: Path, env_error=True) -> any:
@@ -230,7 +232,11 @@ class Prompty(BaseModel):
                 # check if env or file
                 variable = attribute[2:-1].split(":")
                 if variable[0] == "env" and len(variable) > 1:
-                    return Prompty._process_env(variable[1], env_error)
+                    return Prompty._process_env(
+                        variable[1],
+                        env_error,
+                        variable[2] if len(variable) > 2 else None,
+                    )
                 elif variable[0] == "file" and len(variable) > 1:
                     return Prompty._process_file(variable[1], parent)
                 else:
