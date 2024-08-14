@@ -46,6 +46,7 @@ class ServerlessExecutor(Invoker):
             response = ChatCompletionsClient(
                 endpoint=self.endpoint,
                 credential=AzureKeyCredential(self.key),
+                user_agent=f"prompty/{VERSION}"
             ).complete(
                 model=self.model,
                 messages=data if isinstance(data, list) else [data],
@@ -61,6 +62,7 @@ class ServerlessExecutor(Invoker):
             response = EmbeddingsClient(
                 endpoint=self.endpoint,
                 credential=AzureKeyCredential(self.key),
+                user_agent=f"prompty/{VERSION}",
             ).complete(
                 model=self.model,
                 input=data if isinstance(data, list) else [data],
