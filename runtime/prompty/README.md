@@ -20,7 +20,6 @@ model:
   api: chat
   configuration:
     api_version: 2023-12-01-preview
-    azure_deployment: gpt-35-turbo
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
     azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT:gpt-35-turbo}
 sample:
