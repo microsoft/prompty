@@ -4,14 +4,21 @@ dynamic = ["version"]
 description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
 authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
 dependencies = [
-  "pyyaml>=6.0.1",
-  "pydantic>=2.8.2",
-  "jinja2>=3.1.4",
-  "openai>=1.35.10",
-  "azure-identity>=1.17.1",
-  "python-dotenv>=1.0.1",
-  "click>=8.1.7",
+    "pyyaml>=6.0.1",
+    "pydantic>=2.8.2",
+    "jinja2>=3.1.4",
+    "python-dotenv>=1.0.1",
+    "click>=8.1.7"
 ]
+
+[project.optional-dependencies]
+azure = ["azure-identity>=1.17.1","openai>=1.35.10"]
+openai = ["openai>=1.35.10"]
+serverless = ["azure-ai-inference>=1.0.0b3"]
+
+[tool.pdm.dev-dependencies]
+dev = ["pytest>=8.2.2","openai>=1.35.10","azure-ai-inference>=1.0.0b3"]
+
 requires-python = ">=3.9"
 readme = "README.md"
 license = { text = "MIT" }
@@ -24,8 +31,7 @@ build-backend = "pdm.backend"
 [tool.pdm]
 distribution = true
 
-[tool.pdm.dev-dependencies]
-dev = ["pytest>=8.2.2"]
+
 
 [tool.pdm.version]
 source = "scm"

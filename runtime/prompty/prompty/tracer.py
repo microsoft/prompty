@@ -1,6 +1,7 @@
 import os
 import json
 import inspect
+import importlib
 import contextlib
 from pathlib import Path
 from numbers import Number
@@ -163,6 +164,9 @@ class PromptyTracer:
         try:
             self.stack.append({"name": name})
             frame = self.stack[-1]
+            frame["__time"] = {
+                "start": datetime.now(),
+            }
 
             def add(key: str, value: Any) -> None:
                 if key not in frame:
@@ -177,6 +181,53 @@ class PromptyTracer:
             yield add
         finally:
             frame = self.stack.pop()
+            start: datetime = frame["__time"]["start"]
+            end: datetime = datetime.now()
+
+            # add duration to frame
+            frame["__time"] = {
+                "start": start.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "end": end.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "duration": int((end - start).total_seconds() * 1000),
+            }
+
+            # hoist usage to parent frame
+            if "result" in frame and isinstance(frame["result"], dict):
+                if "usage" in frame["result"]:
+                    if "__usage" in frame:
+                        for key, value in frame["result"]["usage"].items():
+                            frame["__usage"][key] += value
+                    else:
+                        frame["__usage"] = frame["result"]["usage"]
+
+            # streamed results may have usage as well
+            if "result" in frame and isinstance(frame["result"], list):
+                for result in frame["result"]:
+                    if (
+                        isinstance(result, dict)
+                        and "usage" in result
+                        and isinstance(result["usage"], dict)
+                    ):
+                        if "__usage" not in frame:
+                            frame["__usage"] = {}
+                        for key, value in result["usage"].items():
+                            if key not in frame["__usage"]:
+                                frame["__usage"][key] = value
+                            else:
+                                frame["__usage"][key] += value
+
+            # add any usage frames from below
+            if "__frames" in frame:
+                for child in frame["__frames"]:
+                    if "__usage" in child:
+                        if "__usage" not in frame:
+                            frame["__usage"] = {}
+                        for key, value in child["__usage"].items():
+                            if key not in frame["__usage"]:
+                                frame["__usage"][key] = value
+                            else:
+                                frame["__usage"][key] += value
+
             # if stack is empty, dump the frame
             if len(self.stack) == 0:
                 trace_file = (
@@ -184,8 +235,15 @@ class PromptyTracer:
                     / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.ptrace"
                 )
 
+                v = importlib.metadata.version("prompty")
+                enriched_frame = {
+                    "runtime": "python",
+                    "version": v,
+                    "trace": frame,
+                }
+
                 with open(trace_file, "w") as f:
-                    json.dump(frame, f, indent=4)
+                    json.dump(enriched_frame, f, indent=4)
             # otherwise, append the frame to the parent
             else:
                 if "__frames" not in self.stack[-1]:

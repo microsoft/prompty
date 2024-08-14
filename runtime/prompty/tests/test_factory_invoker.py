@@ -3,6 +3,17 @@ import prompty
 from pathlib import Path
 from prompty.core import InvokerFactory
 
+from tests.fake_azure_executor import FakeAzureExecutor
+from prompty.azure import AzureOpenAIProcessor
+
+
+@pytest.fixture(scope="module", autouse=True)
+def fake_azure_executor():
+    InvokerFactory.add_executor("azure", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
+    InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+
 
 BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 
