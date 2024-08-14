@@ -344,7 +344,7 @@ def execute(
     parameters: Dict[str, any] = {},
     inputs: Dict[str, any] = {},
     raw: bool = False,
-    connection: str = "default",
+    config_name: str = "default",
 ):
     """Execute a prompty.
 
@@ -380,7 +380,7 @@ def execute(
             # get caller's path (take into account trace frame)
             caller = Path(traceback.extract_stack()[-3].filename)
             path = Path(caller.parent / path).resolve().absolute()
-        prompt = load(path, connection)
+        prompt = load(path, config_name)
 
     # prepare content
     content = prepare(prompt, inputs)
