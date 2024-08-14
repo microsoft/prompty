@@ -24,14 +24,14 @@ def test_prompty_config_headless():
 # make sure the prompty path is
 # relative to the current executing file
 def test_prompty_relative_local():
-    from .prompts.test import run
+    from tests.prompts.test import run
 
     p = run()
     assert p.name == "Basic Prompt"
 
 
 def test_prompty_relative():
-    from .prompts.sub.sub.test import run
+    from tests.prompts.sub.sub.test import run
 
     p = run()
     assert p.name == "Prompt with complex context"

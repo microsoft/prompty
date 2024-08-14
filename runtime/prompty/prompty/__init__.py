@@ -3,8 +3,8 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Union
 
-from .tracer import trace
-from .core import (
+from prompty.tracer import trace
+from prompty.core import (
     Frontmatter,
     InvokerFactory,
     ModelSettings,
@@ -16,8 +16,6 @@ from .core import (
 
 from .renderers import *
 from .parsers import *
-from .executors import *
-from .processors import *
 
 
 def load_global_config(

@@ -11,6 +11,12 @@ from pydantic import BaseModel, Field, FilePath
 from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set
 
 
+class ToolCall(BaseModel):
+    id: str
+    name: str
+    arguments: str
+
+
 class PropertySettings(BaseModel):
     """PropertySettings class to define the properties of the model
 
@@ -332,6 +338,22 @@ class InvokerFactory:
     _processors: Dict[str, Invoker] = {}
 
     @classmethod
+    def add_renderer(cls, name: str, invoker: Invoker) -> None:
+        cls._renderers[name] = invoker
+
+    @classmethod
+    def add_parser(cls, name: str, invoker: Invoker) -> None:
+        cls._parsers[name] = invoker
+
+    @classmethod
+    def add_executor(cls, name: str, invoker: Invoker) -> None:
+        cls._executors[name] = invoker
+
+    @classmethod
+    def add_processor(cls, name: str, invoker: Invoker) -> None:
+        cls._processors[name] = invoker
+
+    @classmethod
     def register_renderer(cls, name: str) -> Callable:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._renderers[name] = wrapped_class
@@ -474,9 +496,9 @@ class PromptyStream(Iterator):
         except StopIteration:
             # StopIteration is raised
             # contents are exhausted
-            if len(self.items) > 0:     
+            if len(self.items) > 0:
                 with Tracer.start(f"{self.name}.PromptyStream") as trace:
-                    trace("items", [to_dict(s) for s in self.items])
+                    trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration
 
@@ -506,6 +528,6 @@ class AsyncPromptyStream(AsyncIterator):
             # contents are exhausted
             if len(self.items) > 0:
                 with Tracer.start(f"{self.name}.AsyncPromptyStream") as trace:
-                    trace("items", [to_dict(s) for s in self.items])
+                    trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration

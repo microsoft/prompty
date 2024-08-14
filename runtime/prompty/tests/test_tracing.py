@@ -2,12 +2,21 @@ import pytest
 import prompty
 from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
 
+from prompty.core import InvokerFactory
+from tests.fake_azure_executor import FakeAzureExecutor
+from prompty.azure import AzureOpenAIProcessor
 
-@pytest.fixture
-def setup_tracing():
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_module():
+    InvokerFactory.add_executor("azure", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
+    InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+
     Tracer.add("console", console_tracer)
     json_tracer = PromptyTracer()
-    Tracer.add("console", json_tracer.tracer)
+    Tracer.add("PromptyTracer", json_tracer.tracer)
 
 
 @pytest.mark.parametrize(
@@ -20,7 +29,7 @@ def setup_tracing():
         "prompts/embedding.prompty",
     ],
 )
-def test_basic_execution(prompt: str, setup_tracing):
+def test_basic_execution(prompt: str):
     result = prompty.execute(prompt)
     print(result)
 
@@ -73,7 +82,7 @@ def get_response(customerId, question, prompt):
 
 
 @trace
-def test_context_flow(setup_tracing):
+def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"
     prompt = "context.prompty"
@@ -94,7 +103,7 @@ def evaluate(prompt, evalprompt, customerId, question):
 
 
 @trace
-def test_context_groundedness(setup_tracing):
+def test_context_groundedness():
     result = evaluate(
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
@@ -105,7 +114,7 @@ def test_context_groundedness(setup_tracing):
 
 
 @trace
-def test_embedding_headless(setup_tracing):
+def test_embedding_headless():
     p = prompty.headless(
         api="embedding",
         configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
@@ -116,7 +125,7 @@ def test_embedding_headless(setup_tracing):
 
 
 @trace
-def test_embeddings_headless(setup_tracing):
+def test_embeddings_headless():
     p = prompty.headless(
         api="embedding",
         configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
@@ -127,7 +136,7 @@ def test_embeddings_headless(setup_tracing):
 
 
 @trace
-def test_function_calling(setup_tracing):
+def test_function_calling():
     result = prompty.execute(
         "prompts/functions.prompty",
     )
@@ -138,7 +147,7 @@ def test_function_calling(setup_tracing):
 # materialize stream into the function
 # trace decorator
 @trace
-def test_streaming(setup_tracing):
+def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
     )

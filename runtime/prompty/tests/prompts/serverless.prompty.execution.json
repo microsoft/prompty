@@ -1,0 +1,22 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Hi Seth! I'd be happy to tell you about our Alpine Explorer Tent. It's a fantastic blend of privacy, comfort, and convenience, perfect for your outdoor adventures. It features a detachable divider for privacy, mesh windows and adjustable vents for ventilation, and a waterproof design. Plus, it has a built-in gear loft for storing your essentials. It truly is a second home in the heart of nature! \ud83c\udfd5\ufe0f\ud83c\udf32\ud83c\udf1f",
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1723587835,
+  "id": "77221a76f010441aafb87bd178672200",
+  "model": "mistral-small",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 113,
+    "prompt_tokens": 198,
+    "total_tokens": 311
+  }
+}
