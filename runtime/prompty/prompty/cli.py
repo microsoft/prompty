@@ -27,6 +27,11 @@ def normalize_path(p, create_dir=False) -> Path:
 
     return path
 
+def dynamic_import(module: str):
+    t = module if "." in module else f"prompty.{module}"
+    print(f"Loading invokers from {t}")
+    importlib.import_module(t)
+
 
 @trace
 def chat_mode(prompt_path: str):
@@ -44,40 +49,45 @@ def chat_mode(prompt_path: str):
         )
         return
     else:
-        chat_history = p.sample["chat_history"]
-        while True:
-            user_input = input(f"{B}User:{W} ")
-            if user_input == "exit":
-                break
-            chat_history.append({"role": "user", "content": user_input})
-            # reloadable prompty file
-            result = execute(prompt_path, inputs={"chat_history": chat_history})
-            print(f"\n{G}Assistant:{W} {result}\n")
-            chat_history.append({"role": "assistant", "content": result})
-    print("Goodbye!")
+
+        try:
+            # load executor / processor types
+            dynamic_import(p.model.configuration["type"])
+            chat_history = p.sample["chat_history"]
+            while True:
+                user_input = input(f"\n{B}User:{W} ")
+                if user_input == "exit":
+                    break
+                # reloadable prompty file
+                chat_history.append({"role": "user", "content": user_input})
+                result = prompty.execute(prompt_path, inputs={"chat_history": chat_history})
+                print(f"\n{G}Assistant:{W} {result}")
+                chat_history.append({"role": "assistant", "content": result})
+        except Exception as e:
+            print(f"{type(e).__qualname__}: {e}")
+
+    print(f"\n{R}Goodbye!{W}\n")
 
 
 @trace
 def execute(prompt_path: str, raw=False):
     p = prompty.load(prompt_path)
 
-    # load executor / processor types
-    t = p.model.configuration["type"]
-    t = t if "." in t else f"prompty.{t}"
-    print(f"Loading {t}")
     try:
-        importlib.import_module(t)
+        # load executor / processor types
+        dynamic_import(p.model.configuration["type"])
 
         result = prompty.execute(p, raw=raw)
-
         if issubclass(type(result), BaseModel):
-            print(json.dumps(result.model_dump(), indent=4))
+            print("\n", json.dumps(result.model_dump(), indent=4), "\n")
         elif isinstance(result, list):
-            print(json.dumps([item.model_dump() for item in result], indent=4))
+            print(
+                "\n", json.dumps([item.model_dump() for item in result], indent=4), "\n"
+            )
         else:
-            print(result)
+            print("\n", result, "\n")
     except Exception as e:
-        print(type(e).__qualname__, e)
+        print(f"{type(e).__qualname__}: {e}", "\n")
 
 
 @click.command()
