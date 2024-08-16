@@ -1,3 +1,8 @@
 # __init__.py
-from .executor import ServerlessExecutor
-from .processor import ServerlessProcessor
+from prompty.core import InvokerException
+
+try:
+    from .executor import ServerlessExecutor
+    from .processor import ServerlessProcessor
+except ImportError:
+    raise InvokerException("Error registering ServerlessExecutor and ServerlessProcessor", "serverless")

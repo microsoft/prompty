@@ -344,6 +344,21 @@ class InvokerFactory:
     _processors: Dict[str, Invoker] = {}
 
     @classmethod
+    def has_invoker(
+        cls, type: Literal["renderer", "parser", "executor", "processor"], name: str
+    ) -> bool:
+        if type == "renderer":
+            return name in cls._renderers
+        elif type == "parser":
+            return name in cls._parsers
+        elif type == "executor":
+            return name in cls._executors
+        elif type == "processor":
+            return name in cls._processors
+        else:
+            raise ValueError(f"Type {type} not found")
+
+    @classmethod
     def add_renderer(cls, name: str, invoker: Invoker) -> None:
         cls._renderers[name] = invoker
 
@@ -414,6 +429,17 @@ class InvokerFactory:
         if name not in cls._processors:
             raise ValueError(f"Processor {name} not found")
         return cls._processors[name](prompty)
+
+
+class InvokerException(Exception):
+    """Exception class for Invoker"""
+
+    def __init__(self, message: str, type: str) -> None:
+        super().__init__(message)
+        self.type = type
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}. Make sure to pip install any necessary package extras (i.e. could be something like `pip install prompty[{self.type}]`) for {self.type} as well as import the appropriate invokers (i.e. could be something like `import prompty.{self.type}`)."
 
 
 @InvokerFactory.register_renderer("NOOP")

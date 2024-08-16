@@ -7,7 +7,7 @@ VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("openai")
-class AzureOpenAIExecutor(Invoker):
+class OpenAIExecutor(Invoker):
     """OpenAI Executor"""
 
     def __init__(self, prompty: Prompty) -> None:

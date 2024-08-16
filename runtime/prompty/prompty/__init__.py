@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 from prompty.tracer import trace
 from prompty.core import (
     Frontmatter,
+    InvokerException,
     InvokerFactory,
     ModelSettings,
     Prompty,
@@ -321,18 +322,28 @@ def run(
     if parameters != {}:
         prompt.model.parameters = param_hoisting(parameters, prompt.model.parameters)
 
+    invoker_type = prompt.model.configuration["type"]
+
+    # invoker registration check
+    if not InvokerFactory.has_invoker("executor", invoker_type):
+        raise InvokerException(
+            f"{invoker_type} Invoker has not been registered properly.", invoker_type
+        )
+
     # execute
-    executor = InvokerFactory.create_executor(
-        prompt.model.configuration["type"], prompt
-    )
+    executor = InvokerFactory.create_executor(invoker_type, prompt)
     result = executor(content)
 
     # skip?
     if not raw:
+        # invoker registration check
+        if not InvokerFactory.has_invoker("processor", invoker_type):
+            raise InvokerException(
+                f"{invoker_type} Invoker has not been registered properly.", invoker_type
+            )
+        
         # process
-        processor = InvokerFactory.create_processor(
-            prompt.model.configuration["type"], prompt
-        )
+        processor = InvokerFactory.create_processor(invoker_type, prompt)
         result = processor(result)
 
     return result
