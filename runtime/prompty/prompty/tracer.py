@@ -232,7 +232,7 @@ class PromptyTracer:
             if len(self.stack) == 0:
                 trace_file = (
                     self.output
-                    / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.ptrace"
+                    / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
                 )
 
                 v = importlib.metadata.version("prompty")

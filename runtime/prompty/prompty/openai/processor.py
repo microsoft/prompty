@@ -6,7 +6,7 @@ from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
 @InvokerFactory.register_processor("openai")
-class AzureOpenAIProcessor(Invoker):
+class OpenAIProcessor(Invoker):
     """OpenAI Processor"""
 
     def __init__(self, prompty: Prompty) -> None:
