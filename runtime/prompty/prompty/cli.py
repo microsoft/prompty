@@ -10,8 +10,6 @@ import prompty
 from prompty.tracer import trace, PromptyTracer, console_tracer, Tracer
 from dotenv import load_dotenv
 
-load_dotenv()
-
 
 def normalize_path(p, create_dir=False) -> Path:
     path = Path(p)
@@ -27,8 +25,16 @@ def normalize_path(p, create_dir=False) -> Path:
 
     return path
 
+
 def dynamic_import(module: str):
-    t = module if "." in module else f"prompty.{module}"
+    # built in modules
+    if module == "azure" or module == "azure_openai":
+        t = f"prompty.azure"
+    elif module == "serverless":
+        t = f"prompty.serverless"
+    else:
+        t = module
+
     print(f"Loading invokers from {t}")
     importlib.import_module(t)
 
@@ -60,7 +66,9 @@ def chat_mode(prompt_path: str):
                     break
                 # reloadable prompty file
                 chat_history.append({"role": "user", "content": user_input})
-                result = prompty.execute(prompt_path, inputs={"chat_history": chat_history})
+                result = prompty.execute(
+                    prompt_path, inputs={"chat_history": chat_history}
+                )
                 print(f"\n{G}Assistant:{W} {result}")
                 chat_history.append({"role": "assistant", "content": result})
         except Exception as e:
@@ -92,10 +100,16 @@ def execute(prompt_path: str, raw=False):
 
 @click.command()
 @click.option("--source", "-s", required=True)
+@click.option("--env", "-e", required=False)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--chat", "-c", is_flag=True)
 @click.version_option()
-def run(source, verbose, chat):
+def run(source, env, verbose, chat):
+    # load external env file
+    if env:
+        print(f"Loading environment variables from {env}")
+        load_dotenv(env)
+
     prompt_path = normalize_path(source)
     if not prompt_path.exists():
         print(f"{str(prompt_path)} does not exist")
