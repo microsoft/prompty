@@ -29,9 +29,9 @@ def normalize_path(p, create_dir=False) -> Path:
 def dynamic_import(module: str):
     # built in modules
     if module == "azure" or module == "azure_openai":
-        t = f"prompty.azure"
+        t = "prompty.azure"
     elif module == "serverless":
-        t = f"prompty.serverless"
+        t = "prompty.serverless"
     else:
         t = module
 
