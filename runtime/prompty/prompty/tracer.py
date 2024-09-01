@@ -108,8 +108,21 @@ def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
 
-            result = func(*args, **kwargs)
-            trace("result", _results(result))
+            try:
+                result = func(*args, **kwargs)
+                trace("result", _results(result))
+            except Exception as e:
+                trace(
+                    "result",
+                    {
+                        "exception": {
+                            "type": type(e).__name__,
+                            "message": str(e),
+                            "args": e.args,
+                        }
+                    },
+                )
+                raise e
 
             return result
 
@@ -129,9 +142,21 @@ def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
-
-            result = await func(*args, **kwargs)
-            trace("result", _results(result))
+            try:
+                result = await func(*args, **kwargs)
+                trace("result", _results(result))
+            except Exception as e:
+                trace(
+                    "result",
+                    {
+                        "exception": {
+                            "type": type(e).__name__,
+                            "message": str(e),
+                            "args": e.args,
+                        }
+                    },
+                )
+                raise e
 
             return result
 
