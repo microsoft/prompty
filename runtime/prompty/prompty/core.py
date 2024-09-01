@@ -529,7 +529,9 @@ class PromptyStream(Iterator):
             # StopIteration is raised
             # contents are exhausted
             if len(self.items) > 0:
-                with Tracer.start(f"{self.name}.PromptyStream") as trace:
+                with Tracer.start("PromptyStream") as trace:
+                    trace("signature", f"{self.name}.PromptyStream")
+                    trace("inputs", "None")
                     trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration
