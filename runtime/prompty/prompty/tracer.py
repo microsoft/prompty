@@ -11,6 +11,18 @@ from functools import wraps, partial
 from typing import Any, Callable, Dict, Iterator, List
 
 
+# clean up key value pairs for sensitive values
+def sanitize(key: str, value: Any) -> Any:
+    if isinstance(value, str) and any(
+        [s in key.lower() for s in ["key", "token", "secret", "password", "credential"]]
+    ):
+        return len(str(value)) * "*"
+    elif isinstance(value, dict):
+        return {k: sanitize(k, v) for k, v in value.items()}
+    else:
+        return value
+
+
 class Tracer:
     _tracers: Dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
 
@@ -31,7 +43,11 @@ class Tracer:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
-            yield lambda key, value: [trace(key, value) for trace in traces]
+            yield lambda key, value: [
+                # normalize and sanitize any trace values
+                trace(key, sanitize(key, to_dict(value)))
+                for trace in traces
+            ]
 
 
 def to_dict(obj: Any) -> Dict[str, Any]:
@@ -94,7 +110,9 @@ def _results(result: Any) -> dict:
     return to_dict(result) if result is not None else "None"
 
 
-def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
+def _trace_sync(
+    func: Callable = None, *, description: str = None, type: str = None
+) -> Callable:
     description = description or ""
 
     @wraps(func)
@@ -104,6 +122,9 @@ def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
             trace("signature", signature)
             if description and description != "":
                 trace("description", description)
+
+            if type and type != "":
+                trace("type", type)
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -118,7 +139,7 @@ def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
                         "exception": {
                             "type": type(e).__name__,
                             "message": str(e),
-                            "args": e.args,
+                            "args": to_dict(e.args),
                         }
                     },
                 )
@@ -129,7 +150,9 @@ def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
     return wrapper
 
 
-def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
+def _trace_async(
+    func: Callable = None, *, description: str = None, type: str = None
+) -> Callable:
     description = description or ""
 
     @wraps(func)
@@ -139,6 +162,9 @@ def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
             trace("signature", signature)
             if description and description != "":
                 trace("description", description)
+
+            if type and type != "":
+                trace("type", type)
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -152,7 +178,7 @@ def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
                         "exception": {
                             "type": type(e).__name__,
                             "message": str(e),
-                            "args": e.args,
+                            "args": to_dict(e.args),
                         }
                     },
                 )
@@ -163,13 +189,15 @@ def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
     return wrapper
 
 
-def trace(func: Callable = None, *, description: str = None) -> Callable:
+def trace(
+    func: Callable = None, *, description: str = None, type: str = None
+) -> Callable:
     if func is None:
-        return partial(trace, description=description)
+        return partial(trace, description=description, type=type)
 
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync
 
-    return wrapped_method(func, description=description)
+    return wrapped_method(func, description=description, type=type)
 
 
 class PromptyTracer:
@@ -280,6 +308,8 @@ class PromptyTracer:
 def console_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
     try:
         print(f"Starting {name}")
-        yield lambda key, value: print(f"{key}:\n{json.dumps(value, indent=4)}")
+        yield lambda key, value: print(
+            f"{key}:\n{json.dumps(to_dict(value), indent=4)}"
+        )
     finally:
         print(f"Ending {name}")

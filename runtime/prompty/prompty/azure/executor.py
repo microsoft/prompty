@@ -2,6 +2,8 @@ import azure.identity
 import importlib.metadata
 from typing import Iterator
 from openai import AzureOpenAI
+
+from prompty.tracer import Tracer
 from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
 
 VERSION = importlib.metadata.version("prompty")
@@ -14,18 +16,18 @@ class AzureOpenAIExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        kwargs = {
+        self.kwargs = {
             key: value
             for key, value in self.prompty.model.configuration.items()
             if key != "type"
         }
 
         # no key, use default credentials
-        if "api_key" not in kwargs:
+        if "api_key" not in self.kwargs:
             # managed identity if client id
-            if "client_id" in kwargs:
+            if "client_id" in self.kwargs:
                 default_credential = azure.identity.ManagedIdentityCredential(
-                    client_id=kwargs.pop("client_id"),
+                    client_id=self.kwargs.pop("client_id"),
                 )
             # default credential
             else:
@@ -33,19 +35,11 @@ class AzureOpenAIExecutor(Invoker):
                     exclude_shared_token_cache_credential=True
                 )
 
-            kwargs["azure_ad_token_provider"] = (
+            self.kwargs["azure_ad_token_provider"] = (
                 azure.identity.get_bearer_token_provider(
                     default_credential, "https://cognitiveservices.azure.com/.default"
                 )
             )
-
-        self.client = AzureOpenAI(
-            default_headers={
-                "User-Agent": f"prompty/{VERSION}",
-                "x-ms-useragent": f"prompty/{VERSION}",
-            },
-            **kwargs,
-        )
 
         self.api = self.prompty.model.api
         self.deployment = self.prompty.model.configuration["azure_deployment"]
@@ -64,29 +58,60 @@ class AzureOpenAIExecutor(Invoker):
         any
             The response from the Azure OpenAI API
         """
-        if self.api == "chat":
-            response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=data if isinstance(data, list) else [data],
-                **self.parameters,
-            )
 
-        elif self.api == "completion":
-            response = self.client.completions.create(
-                prompt=data.item,
-                model=self.deployment,
-                **self.parameters,
+        with Tracer.start("AzureOpenAI") as trace:
+            trace("type", "LLM")
+            trace("signature", "AzureOpenAI.ctor")
+            trace("description", "Azure OpenAI Constructor")
+            trace("inputs", self.kwargs)
+            client = AzureOpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **self.kwargs,
             )
+            trace("result", client)
 
-        elif self.api == "embedding":
-            response = self.client.embeddings.create(
-                input=data if isinstance(data, list) else [data],
-                model=self.deployment,
-                **self.parameters,
-            )
+        with Tracer.start("create") as trace:
+            trace("type", "LLM")
+            trace("description", "Azure OpenAI Client")
 
-        elif self.api == "image":
-            raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
+            if self.api == "chat":
+                trace("signature", "AzureOpenAI.chat.completions.create")
+                args = {
+                    "model": self.deployment,
+                    "messages": data if isinstance(data, list) else [data],
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.chat.completions.create(**args)
+                trace("result", response)
+
+            elif self.api == "completion":
+                trace("signature", "AzureOpenAI.completions.create")
+                args = {
+                    "prompt": data.item,
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.completions.create(**args)
+                trace("result", response)
+
+            elif self.api == "embedding":
+                trace("signature", "AzureOpenAI.embeddings.create")
+                args = {
+                    "input": data if isinstance(data, list) else [data],
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.embeddings.create(**args)
+                trace("result", response)
+
+            elif self.api == "image":
+                raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
         # stream response
         if isinstance(response, Iterator):
