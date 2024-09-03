@@ -1,6 +1,8 @@
 import importlib.metadata
 from openai import OpenAI
 from typing import Iterator
+
+from prompty.tracer import Tracer
 from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
 
 VERSION = importlib.metadata.version("prompty")
@@ -12,19 +14,11 @@ class OpenAIExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        kwargs = {
+        self.kwargs = {
             key: value
             for key, value in self.prompty.model.configuration.items()
             if key != "type"
         }
-
-        self.client = OpenAI(
-            default_headers={
-                "User-Agent": f"prompty/{VERSION}",
-                "x-ms-useragent": f"prompty/{VERSION}",
-            },
-            **kwargs,
-        )
 
         self.api = self.prompty.model.api
         self.deployment = self.prompty.model.configuration["azure_deployment"]
@@ -43,32 +37,62 @@ class OpenAIExecutor(Invoker):
         any
             The response from the OpenAI API
         """
-        if self.api == "chat":
-            response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=data if isinstance(data, list) else [data],
-                **self.parameters,
+        with Tracer.start("OpenAI") as trace:
+            trace("type", "LLM")
+            trace("signature", "OpenAI.ctor")
+            trace("description", "OpenAI Constructor")
+            trace("inputs", self.kwargs)
+            client = OpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **self.kwargs,
             )
+            trace("result", client)
 
-        elif self.api == "completion":
-            response = self.client.completions.create(
-                prompt=data.item,
-                model=self.deployment,
-                **self.parameters,
-            )
+        with Tracer.start("create") as trace:
+            trace("type", "LLM")
+            trace("description", "OpenAI Prompty Execution Invoker")
 
-        elif self.api == "embedding":
-            response = self.client.embeddings.create(
-                input=data if isinstance(data, list) else [data],
-                model=self.deployment,
-                **self.parameters,
-            )
+            if self.api == "chat":
+                trace("signature", "OpenAI.chat.completions.create")
+                args = {
+                    "model": self.deployment,
+                    "messages": data if isinstance(data, list) else [data],
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.chat.completions.create(**args)
 
-        elif self.api == "image":
-            raise NotImplementedError("OpenAI Image API is not implemented yet")
+            elif self.api == "completion":
+                trace("signature", "OpenAI.completions.create")
+                args = {
+                    "prompt": data.item,
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.completions.create(**args)
 
-        # stream response
-        if isinstance(response, Iterator):
-            return PromptyStream("OpenAIExecutor", response)
-        else:
-            return response
+            elif self.api == "embedding":
+                trace("signature", "OpenAI.embeddings.create")
+                args = {
+                    "input": data if isinstance(data, list) else [data],
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = client.embeddings.create(**args)
+
+            elif self.api == "image":
+                raise NotImplementedError("OpenAI Image API is not implemented yet")
+
+            # stream response
+            if isinstance(response, Iterator):
+                stream = PromptyStream("AzureOpenAIExecutor", response)
+                trace("result", stream)
+                return stream
+            else:
+                trace("result", response)
+                return response

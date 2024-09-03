@@ -3,7 +3,6 @@ import pytest
 import prompty
 from prompty.core import InvokerFactory
 
-
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
 from prompty.azure import AzureOpenAIProcessor
@@ -22,6 +21,7 @@ def fake_azure_executor():
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
+
 
 
 @pytest.mark.parametrize(
@@ -151,6 +151,7 @@ def test_streaming():
 
 
 def test_serverless():
+    
     result = prompty.execute(
         "prompts/serverless.prompty",
         configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},

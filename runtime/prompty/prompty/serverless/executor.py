@@ -9,6 +9,8 @@ from azure.ai.inference.models import (
     StreamingChatCompletions,
     AsyncStreamingChatCompletions,
 )
+
+from prompty.tracer import Tracer
 from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, AsyncPromptyStream
 
 VERSION = importlib.metadata.version("prompty")
@@ -29,6 +31,22 @@ class ServerlessExecutor(Invoker):
         # api type
         self.api = self.prompty.model.api
 
+    def _response(self, response: any) -> any:
+        # stream response
+        if isinstance(response, Iterator):
+            if isinstance(response, StreamingChatCompletions):
+                stream = PromptyStream("ServerlessExecutor", response)
+                return stream
+            elif isinstance(response, AsyncStreamingChatCompletions):
+                stream = AsyncPromptyStream("ServerlessExecutor", response)
+                return stream
+            else:
+                stream = PromptyStream("ServerlessExecutor", response)
+
+            return stream
+        else:
+            return response
+
     def invoke(self, data: any) -> any:
         """Invoke the Serverless SDK
 
@@ -42,16 +60,38 @@ class ServerlessExecutor(Invoker):
         any
             The response from the Serverless SDK
         """
+
+        cargs = {
+            "endpoint": self.endpoint,
+            "credential": AzureKeyCredential(self.key),
+        }
+
         if self.api == "chat":
-            response = ChatCompletionsClient(
-                endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.key),
-                user_agent=f"prompty/{VERSION}"
-            ).complete(
-                model=self.model,
-                messages=data if isinstance(data, list) else [data],
-                **self.prompty.model.parameters,
-            )
+            with Tracer.start("ChatCompletionsClient") as trace:
+                trace("type", "LLM")
+                trace("signature", "azure.ai.inference.ChatCompletionsClient.ctor")
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                trace("inputs", cargs)
+                client = ChatCompletionsClient(
+                    user_agent=f"prompty/{VERSION}",
+                    **cargs,
+                )
+                trace("result", client)
+
+            with Tracer.start("complete") as trace:
+                trace("type", "LLM")
+                trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                eargs = {
+                    "model": self.model,
+                    "messages": data if isinstance(data, list) else [data],
+                    **self.prompty.model.parameters,
+                }
+                trace("inputs", eargs)
+                r = client.complete(**eargs)
+                trace("result", r)
+
+            response = self._response(r)
 
         elif self.api == "completion":
             raise NotImplementedError(
@@ -59,26 +99,33 @@ class ServerlessExecutor(Invoker):
             )
 
         elif self.api == "embedding":
-            response = EmbeddingsClient(
-                endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.key),
-                user_agent=f"prompty/{VERSION}",
-            ).complete(
-                model=self.model,
-                input=data if isinstance(data, list) else [data],
-                **self.prompty.model.parameters,
-            )
+            with Tracer.start("EmbeddingsClient") as trace:
+                trace("type", "LLM")
+                trace("signature", "azure.ai.inference.EmbeddingsClient.ctor")
+                trace("description", "Azure Unified Inference SDK Embeddings Client")
+                trace("inputs", cargs)
+                client = EmbeddingsClient(
+                    user_agent=f"prompty/{VERSION}",
+                    **cargs,
+                )
+                trace("result", client)
+
+            with Tracer.start("complete") as trace:
+                trace("type", "LLM")
+                trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                eargs = {
+                    "model": self.model,
+                    "input": data if isinstance(data, list) else [data],
+                    **self.prompty.model.parameters,
+                }
+                trace("inputs", eargs)
+                r = client.complete(**eargs)
+                trace("result", r)
+
+            response = self._response(r)
 
         elif self.api == "image":
             raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
-        # stream response
-        if isinstance(response, Iterator):
-            if isinstance(response, StreamingChatCompletions):
-                return PromptyStream("ServerlessExecutor", response)
-            elif isinstance(response, AsyncStreamingChatCompletions):
-                return AsyncPromptyStream("ServerlessExecutor", response)
-            return PromptyStream("ServerlessExecutor", response)
-        else:
-
-            return response
+        return response
