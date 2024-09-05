@@ -1,6 +1,7 @@
 import os
 import json
 import inspect
+import traceback
 import importlib
 import contextlib
 from pathlib import Path
@@ -176,7 +177,8 @@ def _trace_async(
                     "result",
                     {
                         "exception": {
-                            "type": type(e).__name__,
+                            "type": type(e),
+                            "traceback": traceback.format_tb(),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }

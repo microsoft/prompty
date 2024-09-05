@@ -158,7 +158,7 @@ def get_response(customerId, prompt):
 
 ```
 
-In this case, whenever this code is executed, a `.ptrace` file will be created in the `path/to/output` directory. This file will contain the trace of the execution of the `get_response` function, the execution of the `get_customer` function, and the prompty internals that generated the response.
+In this case, whenever this code is executed, a `.tracy` file will be created in the `path/to/output` directory. This file will contain the trace of the execution of the `get_response` function, the execution of the `get_customer` function, and the prompty internals that generated the response.
 
 ## OpenTelemetry Tracing
 You can add OpenTelemetry tracing to your application using the same hook mechanism. In your application, you might create something like `trace_span` to trace the execution of your prompts:
@@ -187,10 +187,10 @@ This will produce spans during the execution of the prompt that can be sent to a
 The Prompty runtime also comes with a CLI tool that allows you to run prompts from the command line. The CLI tool is installed with the Python package.
 
 ```bash
-prompty -s path/to/prompty/file
+prompty -s path/to/prompty/file -e .env
 ```
 
-This will execute the prompt and print the response to the console. It also has default tracing enabled.
+This will execute the prompt and print the response to the console. If there are any environment variables the CLI should take into account, you can pass those in via the `-e` flag. It also has default tracing enabled.
 
 ## Contributing
 We welcome contributions to the Prompty project! This community led project is open to all contributors. The project cvan be found on [GitHub](https://github.com/Microsoft/prompty).

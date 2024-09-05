@@ -151,5 +151,8 @@ def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
     )
+    r = []
     for item in result:
-        print(item)
+        r.append(item)
+        
+    return ' '.join(r)
