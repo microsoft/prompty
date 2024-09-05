@@ -78,14 +78,14 @@ class AzureOpenAIExecutor(Invoker):
             trace("description", "Azure OpenAI Client")
 
             if self.api == "chat":
-                trace("signature", "AzureOpenAI.chat.completions.create")
+                trace("signature", "AzureOpenAI.beta.chat.completions.parse")
                 args = {
                     "model": self.deployment,
                     "messages": data if isinstance(data, list) else [data],
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.chat.completions.create(**args)
+                response = client.beta.chat.completions.parse(**args)
                 trace("result", response)
 
             elif self.api == "completion":
