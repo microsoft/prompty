@@ -138,7 +138,8 @@ def _trace_sync(
                     "result",
                     {
                         "exception": {
-                            "type": type(e).__name__,
+                            "type": type(e),
+                            "traceback": traceback.format_tb(),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
