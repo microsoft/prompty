@@ -1,5 +1,6 @@
 from typing import Iterator
 from openai.types.completion import Completion
+from openai.types.images_response import ImagesResponse
 from openai.types.chat.chat_completion import ChatCompletion
 from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, ToolCall
 from openai.types.create_embedding_response import CreateEmbeddingResponse
@@ -50,6 +51,17 @@ class AzureOpenAIProcessor(Invoker):
                 return data.data[0].embedding
             else:
                 return [item.embedding for item in data.data]
+        elif isinstance(data, ImagesResponse):
+            self.prompty.model.parameters
+            item: ImagesResponse = data
+
+            if len(data.data) == 0:
+                raise ValueError("Invalid data")
+            elif len(data.data) == 1:
+                return data.data[0].url if item.data[0].url else item.data[0].b64_json
+            else:
+                return [item.url if item.url else item.b64_json for item in data.data]
+
         elif isinstance(data, Iterator):
 
             def generator():
