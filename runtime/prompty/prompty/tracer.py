@@ -112,7 +112,7 @@ def _results(result: Any) -> dict:
 
 
 def _trace_sync(
-    func: Callable = None, *, description: str = None, type: str = None
+    func: Callable = None, *, description: str = None, itemtype: str = None
 ) -> Callable:
     description = description or ""
 
@@ -124,8 +124,8 @@ def _trace_sync(
             if description and description != "":
                 trace("description", description)
 
-            if type and type != "":
-                trace("type", type)
+            if itemtype and itemtype != "":
+                trace("type", itemtype)
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -153,7 +153,7 @@ def _trace_sync(
 
 
 def _trace_async(
-    func: Callable = None, *, description: str = None, type: str = None
+    func: Callable = None, *, description: str = None, itemtype: str = None
 ) -> Callable:
     description = description or ""
 
@@ -165,8 +165,8 @@ def _trace_async(
             if description and description != "":
                 trace("description", description)
 
-            if type and type != "":
-                trace("type", type)
+            if itemtype and itemtype != "":
+                trace("type", itemtype)
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -193,14 +193,14 @@ def _trace_async(
 
 
 def trace(
-    func: Callable = None, *, description: str = None, type: str = None
+    func: Callable = None, *, description: str = None, itemtype: str = None
 ) -> Callable:
     if func is None:
-        return partial(trace, description=description, type=type)
+        return partial(trace, description=description, itemtype=itemtype)
 
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync
 
-    return wrapped_method(func, description=description, type=type)
+    return wrapped_method(func, description=description, itemtype=itemtype)
 
 
 class PromptyTracer:
