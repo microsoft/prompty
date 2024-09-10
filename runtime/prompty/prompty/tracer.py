@@ -139,7 +139,7 @@ def _trace_sync(
                     {
                         "exception": {
                             "type": type(e),
-                            "traceback": traceback.format_tb(),
+                            "traceback": traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None,
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
@@ -179,7 +179,7 @@ def _trace_async(
                     {
                         "exception": {
                             "type": type(e),
-                            "traceback": traceback.format_tb(),
+                            "traceback": traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None,
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
