@@ -3,7 +3,7 @@ Prompty is an asset class and format for LLM prompts designed to enhance observa
 
 The file format has a supporting toolchain with a VS Code extension and runtimes in multiple programming languages to simplify and accelerate your AI application development.
 
-The tooling comes together in three ways: the *prompty file asset*, the *VS Code extension tool*, and *runtimes* in multiple programming languges.
+The tooling comes together in three ways: the *prompty file asset*, the *VS Code extension tool*, and *runtimes* in multiple programming languages.
 
 ## The Prompty File Format
 Prompty is a language agnostic prompt asset for creating prompts and engineering the responses. Learn more about the format [here](https://prompty.ai/docs/prompty-file-spec).
@@ -76,7 +76,7 @@ The Prompty runtime comes with a set of built-in invokers that can be used to ex
 
 
 ## Using Tracing in Prompty
-Prompty supports tracing to help you understand the execution of your prompts. This functionality is customizeable and can be used to trace the execution of your prompts in a way that makes sense to you. Prompty has two default traces built in: `console_tracer` and `PromptyTracer`. The `console_tracer` writes the trace to the console, and the `PromptyTracer` writes the trace to a JSON file. You can also create your own tracer by creating your own hook.
+Prompty supports tracing to help you understand the execution of your prompts. This functionality is customizable and can be used to trace the execution of your prompts in a way that makes sense to you. Prompty has two default traces built in: `console_tracer` and `PromptyTracer`. The `console_tracer` writes the trace to the console, and the `PromptyTracer` writes the trace to a JSON file. You can also create your own tracer by creating your own hook.
 
 ```python
 import prompty
@@ -98,7 +98,7 @@ print(response)
 ```
 
 You can also bring your own tracer by your own tracing hook. The `console_tracer` is the simplest example of a tracer. It writes the trace to the console.
-This is what it loks like:
+This is what it looks like:
 
 ```python
 @contextlib.contextmanager
@@ -193,4 +193,4 @@ prompty -s path/to/prompty/file -e .env
 This will execute the prompt and print the response to the console. If there are any environment variables the CLI should take into account, you can pass those in via the `-e` flag. It also has default tracing enabled.
 
 ## Contributing
-We welcome contributions to the Prompty project! This community led project is open to all contributors. The project cvan be found on [GitHub](https://github.com/Microsoft/prompty).
+We welcome contributions to the Prompty project! This community led project is open to all contributors. The project can be found on [GitHub](https://github.com/Microsoft/prompty).
