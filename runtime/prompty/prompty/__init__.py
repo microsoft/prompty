@@ -3,9 +3,10 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Union
 
-from .tracer import trace
-from .core import (
+from prompty.tracer import trace
+from prompty.core import (
     Frontmatter,
+    InvokerException,
     InvokerFactory,
     ModelSettings,
     Prompty,
@@ -16,8 +17,6 @@ from .core import (
 
 from .renderers import *
 from .parsers import *
-from .executors import *
-from .processors import *
 
 
 def load_global_config(
@@ -323,18 +322,28 @@ def run(
     if parameters != {}:
         prompt.model.parameters = param_hoisting(parameters, prompt.model.parameters)
 
+    invoker_type = prompt.model.configuration["type"]
+
+    # invoker registration check
+    if not InvokerFactory.has_invoker("executor", invoker_type):
+        raise InvokerException(
+            f"{invoker_type} Invoker has not been registered properly.", invoker_type
+        )
+
     # execute
-    executor = InvokerFactory.create_executor(
-        prompt.model.configuration["type"], prompt
-    )
+    executor = InvokerFactory.create_executor(invoker_type, prompt)
     result = executor(content)
 
     # skip?
     if not raw:
+        # invoker registration check
+        if not InvokerFactory.has_invoker("processor", invoker_type):
+            raise InvokerException(
+                f"{invoker_type} Invoker has not been registered properly.", invoker_type
+            )
+        
         # process
-        processor = InvokerFactory.create_processor(
-            prompt.model.configuration["type"], prompt
-        )
+        processor = InvokerFactory.create_processor(invoker_type, prompt)
         result = processor(result)
 
     return result
@@ -346,7 +355,7 @@ def execute(
     parameters: Dict[str, any] = {},
     inputs: Dict[str, any] = {},
     raw: bool = False,
-    connection: str = "default",
+    config_name: str = "default",
 ):
     """Execute a prompty.
 
@@ -382,7 +391,7 @@ def execute(
             # get caller's path (take into account trace frame)
             caller = Path(traceback.extract_stack()[-3].filename)
             path = Path(caller.parent / path).resolve().absolute()
-        prompt = load(path, connection)
+        prompt = load(path, config_name)
 
     # prepare content
     content = prepare(prompt, inputs)

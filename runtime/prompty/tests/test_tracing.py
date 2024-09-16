@@ -1,27 +1,22 @@
-import os
 import pytest
 import prompty
+from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+
 from prompty.core import InvokerFactory
-
 from tests.fake_azure_executor import FakeAzureExecutor
-from tests.fake_serverless_executor import FakeServerlessExecutor
 from prompty.azure import AzureOpenAIProcessor
-from prompty.serverless import ServerlessProcessor
-
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 @pytest.fixture(scope="module", autouse=True)
-def fake_azure_executor():
+def setup_module():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
-    InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
-    InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
+    Tracer.add("console", console_tracer)
+    json_tracer = PromptyTracer()
+    Tracer.add("PromptyTracer", json_tracer.tracer)
 
 
 @pytest.mark.parametrize(
@@ -39,10 +34,12 @@ def test_basic_execution(prompt: str):
     print(result)
 
 
+@trace
 def get_customer(customerId):
     return {"id": customerId, "firstName": "Sally", "lastName": "Davis"}
 
 
+@trace
 def get_context(search):
     return [
         {
@@ -72,6 +69,7 @@ def get_context(search):
     ]
 
 
+@trace
 def get_response(customerId, question, prompt):
     customer = get_customer(customerId)
     context = get_context(question)
@@ -83,6 +81,7 @@ def get_response(customerId, question, prompt):
     return {"question": question, "answer": result, "context": context}
 
 
+@trace
 def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"
@@ -92,6 +91,7 @@ def test_context_flow():
     print(response)
 
 
+@trace
 def evaluate(prompt, evalprompt, customerId, question):
     response = get_response(customerId, question, prompt)
 
@@ -102,6 +102,7 @@ def evaluate(prompt, evalprompt, customerId, question):
     return result
 
 
+@trace
 def test_context_groundedness():
     result = evaluate(
         "prompts/context.prompty",
@@ -112,6 +113,7 @@ def test_context_groundedness():
     print(result)
 
 
+@trace
 def test_embedding_headless():
     p = prompty.headless(
         api="embedding",
@@ -122,6 +124,7 @@ def test_embedding_headless():
     print(emb)
 
 
+@trace
 def test_embeddings_headless():
     p = prompty.headless(
         api="embedding",
@@ -132,6 +135,7 @@ def test_embeddings_headless():
     print(emb)
 
 
+@trace
 def test_function_calling():
     result = prompty.execute(
         "prompts/functions.prompty",
@@ -142,27 +146,13 @@ def test_function_calling():
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
+@trace
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
     )
+    r = []
     for item in result:
-        print(item)
-
-
-def test_serverless():
-    
-    result = prompty.execute(
-        "prompts/serverless.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
-    )
-    print(result)
-
-
-def test_serverless_streaming():
-    result = prompty.execute(
-        "prompts/serverless_stream.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
-    )
-    for item in result:
-        print(item)
+        r.append(item)
+        
+    return ' '.join(r)

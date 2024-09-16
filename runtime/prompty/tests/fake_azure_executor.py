@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
+from prompty import Invoker, Prompty
+from prompty.core import PromptyStream
 from openai.types.chat import ChatCompletionChunk
-from prompty import Invoker, Prompty, InvokerFactory
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
@@ -9,8 +10,6 @@ from openai.types.create_embedding_response import CreateEmbeddingResponse
 ## Azure Fake Executor
 ## To save on OpenAI Calls, will used known
 ## cached responses using invoker pattern
-@InvokerFactory.register_executor("azure")
-@InvokerFactory.register_executor("azure_openai")
 class FakeAzureExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
@@ -29,11 +28,12 @@ class FakeAzureExecutor(Invoker):
 
             if self.parameters.get("stream", False):
                 items = json.loads(j)
+
                 def generator():
                     for i in range(1, len(items)):
                         yield ChatCompletionChunk.model_validate(items[i])
-                        
-                return generator()
+
+                return PromptyStream("FakeAzureExecutor", generator())
 
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
