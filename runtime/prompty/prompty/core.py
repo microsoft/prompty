@@ -561,7 +561,9 @@ class AsyncPromptyStream(AsyncIterator):
             # StopIteration is raised
             # contents are exhausted
             if len(self.items) > 0:
-                with Tracer.start(f"{self.name}.AsyncPromptyStream") as trace:
+                with Tracer.start("AsyncPromptyStream") as trace:
+                    trace("signature", f"{self.name}.AsyncPromptyStream")
+                    trace("inputs", "None")
                     trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration
