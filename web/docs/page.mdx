@@ -36,36 +36,38 @@ The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Promp
 
 <details>
 <summary> **Learn More**: The `basic.prompty` asset file </summary>
-```markdown
----
-name: Basic Prompt
-description: A basic prompt that uses the GPT-3 chat API to answer questions
-authors:
-  - sethjuarez
-  - jietong
-model:
-  api: chat
-  configuration:
-    api_version: 2023-12-01-preview
-    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT:gpt-35-turbo}
-sample:
-  firstName: Jane
-  lastName: Doe
-  question: What is the meaning of life?
----
-system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly, 
-and in a personable manner using markdown and even add some personal flair with appropriate emojis.
 
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to their questions.
-Use their name to address them in your responses.
+  ```markdown
+  ---
+  name: Basic Prompt
+  description: A basic prompt that uses the GPT-3 chat API to answer questions
+  authors:
+    - sethjuarez
+    - jietong
+  model:
+    api: chat
+    configuration:
+      api_version: 2023-12-01-preview
+      azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+      azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT:gpt-35-turbo}
+  sample:
+    firstName: Jane
+    lastName: Doe
+    question: What is the meaning of life?
+  ---
+  system:
+  You are an AI assistant who helps people find information.
+  As the assistant, you answer questions briefly, succinctly, 
+  and in a personable manner using markdown and even add some personal flair with appropriate emojis.
 
-user:
-{{question}}
-```
+  # Customer
+  You are helping {{firstName}} {{lastName}} to find answers to their questions.
+  Use their name to address them in your responses.
+
+  user:
+  {{question}}
+  ```
+
 </details>
 <br/>
 
@@ -75,6 +77,7 @@ The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/
 
 <details>
 <summary> **Learn More**: The Prompty Visual Studio Code Extension </summary>
+
 - [Install the extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty) in your Visual Studio Code environment to get the following features out-of-the-box:
 - Create a default `basic.prompty` starter asset - then configure models and customize content.
 - Create the "pre-configured" starter assets for [GitHub Marketplace Models](https://github.com/marketplace/models) in _serverless_ mode.
@@ -83,6 +86,7 @@ The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/
 - Use _settings_ to create _named_ model configurations for reuse
 - Use toolbar icon to view and switch quickly between named configurations
 - View the "runs" history, and drill down into a run with a built-in trace viewer.
+
 </details>
 <br/>
 
@@ -102,6 +106,7 @@ Enhanced runtimes add support for orchestration frameworks, enabling complex wor
 * [Prompt flow](https://microsoft.github.io/promptflow/) → Python core
 * [LangChain (python)](https://pypi.org/project/langchain-prompty/) → Python core (_experimental_) 
 * [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/) → C# core
+
 </details>
 <br/>
 
@@ -142,6 +147,7 @@ Check back for updates to the documentation site with _tutorials_ (coming soon) 
 
 Watch the video replay to learn about _Practical End-to-end AI development using Prompty and AI Studio_ and how to streamline your workflow from prompt to prototype. You can find [session resources including the transcript](https://build.microsoft.com/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61?source=sessions) for added insights.
 <iframe width="800" height="400" src="https://www.youtube.com/embed/HALMFU7o9Gc" title="BRK114:Practical End-to-End AI Development using Prompty and AI Studio" frameborder="0" allowfullscreen></iframe>
+
 </details>
 
 <details>
