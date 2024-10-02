@@ -5,6 +5,20 @@ authors:
   - wayliums
   - cassiebreviu
   - bethanyjep
+date: 2024-10-02
+tags:
+  - getting-started
+  - documentation
+index: 1
+---
+
+---
+title: Getting Started
+authors:
+  - sethjuarez
+  - wayliums
+  - cassiebreviu
+  - bethanyjep
 date: 2024-08-14
 tags:
   - getting-started
@@ -31,12 +45,19 @@ To make the most of this Quick start, ensure you have:
 To get started with Prompty, first, install the Prompty extension in the Visual Studio Code Marketplace.
 
 - [Download the VS Code extension here](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty). 
-- Install the Prompty extension in your Visual Studio Code editor.
+- Install the Prompty extension in your Visual Studio Code editor or Codespaces.
 
+### Install the Prompty runtime
 
-### Create a Prompty file
+The Python runtime allows you to run your prompts in Python. It is available as a Python package and can be installed using ``pip``. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
 
-Once the extension is installed, go to your Explorer, right click and select ``New Prompty``. It will create a new file with the `.prompty` extension. We will update our Prompty file to get a response from an LLM.
+Install the Python runtime using the following command in your terminal: ```pip install prompty[azure]```
+
+Learn more about the [Prompty runtime here](https://pypi.org/project/prompty/).
+
+## Prompty file format
+
+Once the extension is installed, go to your Explorer, right click and select ``New Prompty``. It will create a new file with the `.prompty` extension. We will update our Prompty file as follows to get a response from an LLM.
 
 ```markdown
 ---
@@ -73,9 +94,9 @@ user:
 {{question}}
 ```
 
-## The Prompty Specification
-
 Prompty is an asset class not tied to any language as it uses ``markdown format with YAML`` to specify your metadata. It unifies the prompt and its execution in a single package to quickly get started. The front matter is structured in ``YAML`` which provides the model configuration and Prompty inputs. Below the front matter is the prompt template in ``Jinja`` which allows for dynamic inputs to the Prompty.
+
+Learn more about the [Prompty specification here](https://prompty.ai/docs/prompty-file-spec).
 
 ### Model Cofigurations
 
@@ -83,32 +104,38 @@ You can define and configure your model directly in Visual Studio Code. To confi
 
 Once in ``settings.json``, update your model name, type, api_version, endpoint and deployment. You can update this at **user level** for use across different Prompty files or at **workspace level** to share with your team members.
 
-> [TIP!]
+> [!IMPORTANT]
 > Login to Azure Active Directory to authenticate your Azure OpenAI models for enhanced security. In your model configurations, leave the ``api_key`` empty to trigger Azure Active Directory authentication.
 
 ### Environment Variables
 
 When using OpenAI, you can store your keys in a ``.env`` file in the same directory as the Prompty file or the root folder. In your Prompty file, you can reference your keys using ``${env:OPENAI_xxx}``
 
-
-
 ### Run your Prompty
 
 Run the Prompty file by either click the ``Run`` button at the top or clicking ``f5`` button. The Output will be in two formats:
 
 - **Prompty Output:** a brief response with just the model output.
-
 - **Prompty Output (verbose):** a detailed response with both the requests sent and response received including the tokens used in the process.
 
+## Prompty Runtime
 
-{/* to be updated: ## Prompty Runtime
+Prompty additionally generates code for you in different runtimees, currently it supports: Python (currently under development), LangChain, PromptFlow and Semantic Kernel. The asset class easily helps you convert to code simplifying your workflow as it is language agnostic. 
 
-Prompty additionally generates code for you in different frameworks e.g. LangChain, PromptFlow and Semantic Kernel. the asset class easily helps you convert to code simplifying your workflow as it is language agnostic. */}
+You can access the different runtimes by:
+
+- Right clicking on the Prompty file and selecting ``Add Code``
+- Select the runtime you want to convert to, it will automatically generate the code for you.
+
+## What's New?
+
+- **Prompty Runtime:** The Python runtime allows you to run your prompts in Python.
+- **Tracing in Prompty:** Prompty supports tracing to help you understand the execution of your prompts. This functionality is customizable and can be tailored to trace the execution of your prompts in a way that suits your needs.
+- **[GitHub Models and Prompty](https://youtu.be/rHEjCR3S8Z4):** GitHub Models enable developers to experiment with multiple models, simplifying the process of model experimentation and selection across the Azure AI catalog. This allows for quick comparison of models, parameters, and prompts, streamlining the development workflow. With Azure AI on GitHub, developers can quickly go from idea to prototype by using the Prompty extension to generate code with GitHub Models directly in Microsoft Visual Studio Code.
 
 ## Next Steps
-
-The following resources:
+Learn more about Prompty from the following resources:
 
 - [Microsoft Build: Practical End-to-End AI Development using Prompty and AI Studio](https://build.microsoft.com/en-US/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61)
+- [GitHub Models and Prompty](https://youtu.be/rHEjCR3S8Z4)
 - [Prompty samples: Collections | Microsoft Learn](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d?sharingId=ADFFF9D4AD9A0F29)
-
