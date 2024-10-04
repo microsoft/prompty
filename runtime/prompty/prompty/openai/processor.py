@@ -1,38 +1,29 @@
 from typing import Iterator
-from pydantic import BaseModel
 from openai.types.completion import Completion
 from openai.types.chat.chat_completion import ChatCompletion
-from .core import Invoker, InvokerFactory, Prompty, PromptyStream
+from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, ToolCall
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
-class ToolCall(BaseModel):
-    id: str
-    name: str
-    arguments: str
-
-
 @InvokerFactory.register_processor("openai")
-@InvokerFactory.register_processor("azure")
-@InvokerFactory.register_processor("azure_openai")
 class OpenAIProcessor(Invoker):
-    """OpenAI/Azure Processor"""
+    """OpenAI Processor"""
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
     def invoke(self, data: any) -> any:
-        """Invoke the OpenAI/Azure API
+        """Invoke the OpenAI API
 
         Parameters
         ----------
         data : any
-            The data to send to the OpenAI/Azure API
+            The data to send to the OpenAI API
 
         Returns
         -------
         any
-            The response from the OpenAI/Azure API
+            The response from the OpenAI API
         """
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
@@ -62,7 +53,10 @@ class OpenAIProcessor(Invoker):
 
             def generator():
                 for chunk in data:
-                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content != None:
+                    if (
+                        len(chunk.choices) == 1
+                        and chunk.choices[0].delta.content != None
+                    ):
                         content = chunk.choices[0].delta.content
                         yield content
 

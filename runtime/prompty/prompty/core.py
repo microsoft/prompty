@@ -11,6 +11,12 @@ from pydantic import BaseModel, Field, FilePath
 from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set
 
 
+class ToolCall(BaseModel):
+    id: str
+    name: str
+    arguments: str
+
+
 class PropertySettings(BaseModel):
     """PropertySettings class to define the properties of the model
 
@@ -207,14 +213,16 @@ class Prompty(BaseModel):
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(variable: str, env_error=True) -> any:
+    def _process_env(variable: str, env_error=True, default: str = None) -> any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
+            if default:
+                return default
             if env_error:
                 raise ValueError(f"Variable {variable} not found in environment")
-            else:
-                return ""
+
+            return ""
 
     @staticmethod
     def normalize(attribute: any, parent: Path, env_error=True) -> any:
@@ -224,7 +232,11 @@ class Prompty(BaseModel):
                 # check if env or file
                 variable = attribute[2:-1].split(":")
                 if variable[0] == "env" and len(variable) > 1:
-                    return Prompty._process_env(variable[1], env_error)
+                    return Prompty._process_env(
+                        variable[1],
+                        env_error,
+                        variable[2] if len(variable) > 2 else None,
+                    )
                 elif variable[0] == "file" and len(variable) > 1:
                     return Prompty._process_file(variable[1], parent)
                 else:
@@ -332,6 +344,37 @@ class InvokerFactory:
     _processors: Dict[str, Invoker] = {}
 
     @classmethod
+    def has_invoker(
+        cls, type: Literal["renderer", "parser", "executor", "processor"], name: str
+    ) -> bool:
+        if type == "renderer":
+            return name in cls._renderers
+        elif type == "parser":
+            return name in cls._parsers
+        elif type == "executor":
+            return name in cls._executors
+        elif type == "processor":
+            return name in cls._processors
+        else:
+            raise ValueError(f"Type {type} not found")
+
+    @classmethod
+    def add_renderer(cls, name: str, invoker: Invoker) -> None:
+        cls._renderers[name] = invoker
+
+    @classmethod
+    def add_parser(cls, name: str, invoker: Invoker) -> None:
+        cls._parsers[name] = invoker
+
+    @classmethod
+    def add_executor(cls, name: str, invoker: Invoker) -> None:
+        cls._executors[name] = invoker
+
+    @classmethod
+    def add_processor(cls, name: str, invoker: Invoker) -> None:
+        cls._processors[name] = invoker
+
+    @classmethod
     def register_renderer(cls, name: str) -> Callable:
         def inner_wrapper(wrapped_class: Invoker) -> Callable:
             cls._renderers[name] = wrapped_class
@@ -386,6 +429,17 @@ class InvokerFactory:
         if name not in cls._processors:
             raise ValueError(f"Processor {name} not found")
         return cls._processors[name](prompty)
+
+
+class InvokerException(Exception):
+    """Exception class for Invoker"""
+
+    def __init__(self, message: str, type: str) -> None:
+        super().__init__(message)
+        self.type = type
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}. Make sure to pip install any necessary package extras (i.e. could be something like `pip install prompty[{self.type}]`) for {self.type} as well as import the appropriate invokers (i.e. could be something like `import prompty.{self.type}`)."
 
 
 @InvokerFactory.register_renderer("NOOP")
@@ -474,9 +528,11 @@ class PromptyStream(Iterator):
         except StopIteration:
             # StopIteration is raised
             # contents are exhausted
-            if len(self.items) > 0:     
-                with Tracer.start(f"{self.name}.PromptyStream") as trace:
-                    trace("items", [to_dict(s) for s in self.items])
+            if len(self.items) > 0:
+                with Tracer.start("PromptyStream") as trace:
+                    trace("signature", f"{self.name}.PromptyStream")
+                    trace("inputs", "None")
+                    trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration
 
@@ -505,7 +561,9 @@ class AsyncPromptyStream(AsyncIterator):
             # StopIteration is raised
             # contents are exhausted
             if len(self.items) > 0:
-                with Tracer.start(f"{self.name}.AsyncPromptyStream") as trace:
-                    trace("items", [to_dict(s) for s in self.items])
+                with Tracer.start("AsyncPromptyStream") as trace:
+                    trace("signature", f"{self.name}.AsyncPromptyStream")
+                    trace("inputs", "None")
+                    trace("result", [to_dict(s) for s in self.items])
 
             raise StopIteration

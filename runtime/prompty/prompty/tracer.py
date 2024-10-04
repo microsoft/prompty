@@ -1,6 +1,9 @@
 import os
 import json
 import inspect
+import numbers
+import traceback
+import importlib
 import contextlib
 from pathlib import Path
 from numbers import Number
@@ -8,6 +11,18 @@ from datetime import datetime
 from pydantic import BaseModel
 from functools import wraps, partial
 from typing import Any, Callable, Dict, Iterator, List
+
+
+# clean up key value pairs for sensitive values
+def sanitize(key: str, value: Any) -> Any:
+    if isinstance(value, str) and any(
+        [s in key.lower() for s in ["key", "token", "secret", "password", "credential"]]
+    ):
+        return len(str(value)) * "*"
+    elif isinstance(value, dict):
+        return {k: sanitize(k, v) for k, v in value.items()}
+    else:
+        return value
 
 
 class Tracer:
@@ -30,7 +45,11 @@ class Tracer:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
-            yield lambda key, value: [trace(key, value) for trace in traces]
+            yield lambda key, value: [
+                # normalize and sanitize any trace values
+                trace(key, sanitize(key, to_dict(value)))
+                for trace in traces
+            ]
 
 
 def to_dict(obj: Any) -> Dict[str, Any]:
@@ -93,7 +112,9 @@ def _results(result: Any) -> dict:
     return to_dict(result) if result is not None else "None"
 
 
-def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
+def _trace_sync(
+    func: Callable = None, *, description: str = None, itemtype: str = None
+) -> Callable:
     description = description or ""
 
     @wraps(func)
@@ -104,18 +125,41 @@ def _trace_sync(func: Callable = None, *, description: str = None) -> Callable:
             if description and description != "":
                 trace("description", description)
 
+            if itemtype and itemtype != "":
+                trace("type", itemtype)
+
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
 
-            result = func(*args, **kwargs)
-            trace("result", _results(result))
+            try:
+                result = func(*args, **kwargs)
+                trace("result", _results(result))
+            except Exception as e:
+                trace(
+                    "result",
+                    {
+                        "exception": {
+                            "type": type(e),
+                            "traceback": (
+                                traceback.format_tb(tb=e.__traceback__)
+                                if e.__traceback__
+                                else None
+                            ),
+                            "message": str(e),
+                            "args": to_dict(e.args),
+                        }
+                    },
+                )
+                raise e
 
             return result
 
     return wrapper
 
 
-def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
+def _trace_async(
+    func: Callable = None, *, description: str = None, itemtype: str = None
+) -> Callable:
     description = description or ""
 
     @wraps(func)
@@ -126,24 +170,46 @@ def _trace_async(func: Callable = None, *, description: str = None) -> Callable:
             if description and description != "":
                 trace("description", description)
 
+            if itemtype and itemtype != "":
+                trace("type", itemtype)
+
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
-
-            result = await func(*args, **kwargs)
-            trace("result", _results(result))
+            try:
+                result = await func(*args, **kwargs)
+                trace("result", _results(result))
+            except Exception as e:
+                trace(
+                    "result",
+                    {
+                        "exception": {
+                            "type": type(e),
+                            "traceback": (
+                                traceback.format_tb(tb=e.__traceback__)
+                                if e.__traceback__
+                                else None
+                            ),
+                            "message": str(e),
+                            "args": to_dict(e.args),
+                        }
+                    },
+                )
+                raise e
 
             return result
 
     return wrapper
 
 
-def trace(func: Callable = None, *, description: str = None) -> Callable:
+def trace(
+    func: Callable = None, *, description: str = None, itemtype: str = None
+) -> Callable:
     if func is None:
-        return partial(trace, description=description)
+        return partial(trace, description=description, itemtype=itemtype)
 
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync
 
-    return wrapped_method(func, description=description)
+    return wrapped_method(func, description=description, itemtype=itemtype)
 
 
 class PromptyTracer:
@@ -163,6 +229,9 @@ class PromptyTracer:
         try:
             self.stack.append({"name": name})
             frame = self.stack[-1]
+            frame["__time"] = {
+                "start": datetime.now(),
+            }
 
             def add(key: str, value: Any) -> None:
                 if key not in frame:
@@ -177,26 +246,92 @@ class PromptyTracer:
             yield add
         finally:
             frame = self.stack.pop()
+            start: datetime = frame["__time"]["start"]
+            end: datetime = datetime.now()
+
+            # add duration to frame
+            frame["__time"] = {
+                "start": start.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "end": end.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "duration": int((end - start).total_seconds() * 1000),
+            }
+
+            # hoist usage to parent frame
+            if "result" in frame and isinstance(frame["result"], dict):
+                if "usage" in frame["result"]:
+                    frame["__usage"] = self.hoist_item(
+                        frame["result"]["usage"],
+                        frame["__usage"] if "__usage" in frame else {},
+                    )
+
+            # streamed results may have usage as well
+            if "result" in frame and isinstance(frame["result"], list):
+                for result in frame["result"]:
+                    if (
+                        isinstance(result, dict)
+                        and "usage" in result
+                        and isinstance(result["usage"], dict)
+                    ):
+                        frame["__usage"] = self.hoist_item(
+                            result["usage"],
+                            frame["__usage"] if "__usage" in frame else {},
+                        )
+
+            # add any usage frames from below
+            if "__frames" in frame:
+                for child in frame["__frames"]:
+                    if "__usage" in child:
+                        frame["__usage"] = self.hoist_item(
+                            child["__usage"],
+                            frame["__usage"] if "__usage" in frame else {},
+                        )
+
             # if stack is empty, dump the frame
             if len(self.stack) == 0:
-                trace_file = (
-                    self.output
-                    / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.ptrace"
-                )
-
-                with open(trace_file, "w") as f:
-                    json.dump(frame, f, indent=4)
+                self.write_trace(frame)
             # otherwise, append the frame to the parent
             else:
                 if "__frames" not in self.stack[-1]:
                     self.stack[-1]["__frames"] = []
                 self.stack[-1]["__frames"].append(frame)
 
+    def hoist_item(self, src: Dict[str, Any], cur: Dict[str, Any]) -> None:
+        for key, value in src.items():
+            if value is None or isinstance(value, list) or isinstance(value, dict):
+                continue
+            try:
+                if key not in cur:
+                    cur[key] = value
+                else:
+                    cur[key] += value
+            except:
+                continue
+
+        return cur
+
+    def write_trace(self, frame: Dict[str, Any]) -> None:
+        trace_file = (
+            self.output
+            / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
+        )
+
+        v = importlib.metadata.version("prompty")
+        enriched_frame = {
+            "runtime": "python",
+            "version": v,
+            "trace": frame,
+        }
+
+        with open(trace_file, "w") as f:
+            json.dump(enriched_frame, f, indent=4)
+
 
 @contextlib.contextmanager
 def console_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
     try:
         print(f"Starting {name}")
-        yield lambda key, value: print(f"{key}:\n{json.dumps(value, indent=4)}")
+        yield lambda key, value: print(
+            f"{key}:\n{json.dumps(to_dict(value), indent=4)}"
+        )
     finally:
         print(f"Ending {name}")
