@@ -2,5 +2,11 @@
   "files.exclude": {
     "**/web": true,
     "**/runtime": true
-  }
+  },
+  "python.testing.pytestArgs": [
+    "runtime"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "prompty.currentModelConfiguration": "gpt-4o-2024-05-13"
 }

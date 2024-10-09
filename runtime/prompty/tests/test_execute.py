@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
 @pytest.fixture(scope="module", autouse=True)
 def fake_azure_executor():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
@@ -138,6 +139,11 @@ def test_function_calling():
     )
     print(result)
 
+def test_structured_output():
+    result = prompty.execute(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
 
 # need to add trace attribute to
 # materialize stream into the function
