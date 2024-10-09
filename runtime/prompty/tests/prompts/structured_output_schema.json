@@ -1,0 +1,29 @@
+{
+    "type": "json_schema",
+    "json_schema": {
+        "name": "calendar_event",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "date",
+                "participants"
+            ]
+        }
+    }
+}
