@@ -91,7 +91,7 @@ class AzureOpenAIExecutor(Invoker):
             elif self.api == "completion":
                 trace("signature", "AzureOpenAI.completions.create")
                 args = {
-                    "prompt": data,
+                    "prompt": data.item,
                     "model": self.deployment,
                     **self.parameters,
                 }
@@ -111,22 +111,10 @@ class AzureOpenAIExecutor(Invoker):
                 trace("result", response)
 
             elif self.api == "image":
-                trace("signature", "AzureOpenAI.images.generate")
-                args = {
-                    "prompt": data,
-                    "model": self.deployment,
-                    **self.parameters,
-                }
-                trace("inputs", args)
-                response = client.images.generate.create(**args)
-                trace("result", response)
+                raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
         # stream response
         if isinstance(response, Iterator):
-            if self.api == "chat":
-                # TODO: handle the case where there might be no usage in the stream
-                return PromptyStream("AzureOpenAIExecutor", response)
-            else:
-                return PromptyStream("AzureOpenAIExecutor", response)
+            return PromptyStream("AzureOpenAIExecutor", response)
         else:
             return response
