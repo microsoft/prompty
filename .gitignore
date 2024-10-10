@@ -3,3 +3,7 @@
 .runs/
 node_modules/
 dist/
+runtime/promptycs/Prompty.Core/bin/
+runtime/promptycs/Prompty.Core/obj/
+runtime/promptycs/Tests/bin/
+runtime/promptycs/Tests/obj/

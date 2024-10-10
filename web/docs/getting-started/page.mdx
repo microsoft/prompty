@@ -4,12 +4,111 @@ authors:
   - sethjuarez
   - wayliums
   - cassiebreviu
-date: 2024-06-10
+  - bethanyjep
+date: 2024-08-14
 tags:
   - getting-started
   - documentation
 index: 1
 ---
 
-It is easy to get started with Prompty!
+# Quick Start
+In this Quick Start, we will cover how you can get started to build your first Prompty. At the end of the Quick start you should know how to:
+
+- Setup and configure your Prompty.
+- Create and run a Prompty.
+- Load and execute a Prompty in your code.
+
+## Prerequisites
+
+To make the most of this Quick start, ensure you have:
+
+- Azure OpenAI or OpenAI resource
+
+## Installation
+
+### Install the Prompty Extension
+To get started with Prompty, first, install the Prompty extension in the Visual Studio Code Marketplace.
+
+- [Download the VS Code extension here](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty). 
+- Install the Prompty extension in your Visual Studio Code editor.
+
+
+### Create a Prompty file
+
+Once the extension is installed, go to your Explorer, right click and select ``New Prompty``. It will create a new file with the `.prompty` extension. We will update our Prompty file to get a response from an LLM.
+
+```markdown
+---
+name: Shakespearean Writing Prompty
+description: A prompt that answers questions in Shakespearean style using GPT-4
+authors:
+  - Bethany Jepchumba
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-4
+  parameters:
+    max_tokens: 3000
+sample:
+  question: Please write a short text inviting friends to a Game Night.
+---
+
+system:
+You are a Shakespearean writing assistant who speaks in a Shakespearean style. You help people come up with creative ideas and content like stories, poems, and songs that use Shakespearean style of writing style, including words like "thou" and "hath”.
+Here are some example of Shakespeare's style:
+- Romeo, Romeo! Wherefore art thou Romeo?
+- Love looks not with the eyes, but with the mind; and therefore is winged Cupid painted blind.
+- Shall I compare thee to a summer's day? Thou art more lovely and more temperate.
+
+example:
+user: Please write a short text turning down an invitation to dinner.
+assistant: Dearest,
+  Regretfully, I must decline thy invitation.
+  Prior engagements call me hence. Apologies.
+
+user:
+{{question}}
+```
+
+## The Prompty Specification
+
+Prompty is an asset class not tied to any language as it uses ``markdown format with YAML`` to specify your metadata. It unifies the prompt and its execution in a single package to quickly get started. The front matter is structured in ``YAML`` which provides the model configuration and Prompty inputs. Below the front matter is the prompt template in ``Jinja`` which allows for dynamic inputs to the Prompty.
+
+### Model Cofigurations
+
+You can define and configure your model directly in Visual Studio Code. To configure your model, navigate to and edit your ``settings.json`` file. You can edit this by navigating to ``settings > Extensions > Prompty > Edit in settings.json``
+
+Once in ``settings.json``, update your model name, type, api_version, endpoint and deployment. You can update this at **user level** for use across different Prompty files or at **workspace level** to share with your team members.
+
+> [TIP!]
+> Login to Azure Active Directory to authenticate your Azure OpenAI models for enhanced security. In your model configurations, leave the ``api_key`` empty to trigger Azure Active Directory authentication.
+
+### Environment Variables
+
+When using OpenAI, you can store your keys in a ``.env`` file in the same directory as the Prompty file or the root folder. In your Prompty file, you can reference your keys using ``${env:OPENAI_xxx}``
+
+
+
+### Run your Prompty
+
+Run the Prompty file by either click the ``Run`` button at the top or clicking ``f5`` button. The Output will be in two formats:
+
+- **Prompty Output:** a brief response with just the model output.
+
+- **Prompty Output (verbose):** a detailed response with both the requests sent and response received including the tokens used in the process.
+
+
+{/* to be updated: ## Prompty Runtime
+
+Prompty additionally generates code for you in different frameworks e.g. LangChain, PromptFlow and Semantic Kernel. the asset class easily helps you convert to code simplifying your workflow as it is language agnostic. */}
+
+## Next Steps
+
+The following resources:
+
+- [Microsoft Build: Practical End-to-End AI Development using Prompty and AI Studio](https://build.microsoft.com/en-US/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61)
+- [Prompty samples: Collections | Microsoft Learn](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d?sharingId=ADFFF9D4AD9A0F29)
 

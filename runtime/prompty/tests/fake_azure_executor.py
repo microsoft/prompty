@@ -1,27 +1,15 @@
+import json
 from pathlib import Path
-from prompty import Invoker, Prompty, InvokerFactory
+from prompty import Invoker, Prompty
+from prompty.core import PromptyStream
+from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
-from pydantic_core import from_json
-
-
-@InvokerFactory.register_renderer("fake")
-@InvokerFactory.register_parser("fake.chat")
-@InvokerFactory.register_executor("fake")
-@InvokerFactory.register_processor("fake")
-class FakeInvoker(Invoker):
-    def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
-
-    def invoke(self, data: any) -> any:
-        return data
 
 
 ## Azure Fake Executor
 ## To save on OpenAI Calls, will used known
 ## cached responses using invoker pattern
-@InvokerFactory.register_executor("azure")
-@InvokerFactory.register_executor("azure_openai")
 class FakeAzureExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
@@ -38,11 +26,20 @@ class FakeAzureExecutor(Invoker):
             with open(p, "r", encoding="utf-8") as f:
                 j = f.read()
 
-            if self.api == "chat":
+            if self.parameters.get("stream", False):
+                items = json.loads(j)
+
+                def generator():
+                    for i in range(1, len(items)):
+                        yield ChatCompletionChunk.model_validate(items[i])
+
+                return PromptyStream("FakeAzureExecutor", generator())
+
+            elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)
             elif self.api == "embedding":
                 return CreateEmbeddingResponse.model_validate_json(j)
-            
+
         elif self.api == "embedding":
             if not isinstance(data, list):
                 d = [data]

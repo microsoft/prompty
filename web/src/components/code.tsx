@@ -65,17 +65,22 @@ const Code = ({ language, code }: Props) => {
       </div>
       <SyntaxHighlighter
         codeTagProps={{
-          className: "text-xs md:text-sm xl:text-base text-zinc-800 dark:text-sky-200 text-left",
+          className:
+            "text-xs md:text-sm xl:text-base text-zinc-800 dark:text-sky-200 text-left",
         }}
         customStyle={{
           background: theme === "dark" ? "#18181b" : "#f4f4f5",
           border: "none",
           padding: "0",
+          fontStyle: "normal",
         }}
         style={theme === "dark" ? vscDarkPlus : vs}
         language={language}
         showLineNumbers={true}
         wrapLongLines={true}
+        lineNumberStyle={{
+          fontStyle: "normal",
+        }}
       >
         {code}
       </SyntaxHighlighter>

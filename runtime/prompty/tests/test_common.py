@@ -1,8 +1,5 @@
 import pytest
 import prompty
-from pathlib import Path
-
-BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 
 
 @pytest.mark.parametrize(

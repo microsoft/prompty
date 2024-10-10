@@ -6,15 +6,19 @@ import yaml
 import json
 import abc
 from pathlib import Path
+from .tracer import Tracer, trace, to_dict
 from pydantic import BaseModel, Field, FilePath
-from typing import List, Literal, Dict, Callable, TypeVar
+from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set
 
 
-T = TypeVar("T")
+class ToolCall(BaseModel):
+    id: str
+    name: str
+    arguments: str
 
 
 class PropertySettings(BaseModel):
-    """ PropertySettings class to define the properties of the model
+    """PropertySettings class to define the properties of the model
 
     Attributes
     ----------
@@ -32,7 +36,7 @@ class PropertySettings(BaseModel):
 
 
 class ModelSettings(BaseModel):
-    """ ModelSettings class to define the model of the prompty
+    """ModelSettings class to define the model of the prompty
 
     Attributes
     ----------
@@ -51,8 +55,40 @@ class ModelSettings(BaseModel):
     parameters: dict = Field(default={})
     response: dict = Field(default={})
 
-    def model_dump_safe(self) -> dict:
-        d = self.model_dump()
+    def model_dump(
+        self,
+        *,
+        mode: str = "python",
+        include: (
+            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
+        ) = None,
+        exclude: (
+            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
+        ) = None,
+        context: os.Any | None = None,
+        by_alias: bool = False,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+        round_trip: bool = False,
+        warnings: bool | Literal["none"] | Literal["warn"] | Literal["error"] = True,
+        serialize_as_any: bool = False,
+    ) -> Dict[str, os.Any]:
+        """Method to dump the model in a safe way"""
+        d = super().model_dump(
+            mode=mode,
+            include=include,
+            exclude=exclude,
+            context=context,
+            by_alias=by_alias,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+            exclude_none=exclude_none,
+            round_trip=round_trip,
+            warnings=warnings,
+            serialize_as_any=serialize_as_any,
+        )
+
         d["configuration"] = {
             k: "*" * len(v) if "key" in k.lower() or "secret" in k.lower() else v
             for k, v in d["configuration"].items()
@@ -61,8 +97,8 @@ class ModelSettings(BaseModel):
 
 
 class TemplateSettings(BaseModel):
-    """ TemplateSettings class to define the template of the prompty
-    
+    """TemplateSettings class to define the template of the prompty
+
     Attributes
     ----------
     type : str
@@ -76,7 +112,7 @@ class TemplateSettings(BaseModel):
 
 
 class Prompty(BaseModel):
-    """ Prompty class to define the prompty
+    """Prompty class to define the prompty
 
     Attributes
     ----------
@@ -109,6 +145,7 @@ class Prompty(BaseModel):
     content : str | List[str] | dict
         The content of the prompty
     """
+
     # metadata
     name: str = Field(default="")
     description: str = Field(default="")
@@ -138,7 +175,7 @@ class Prompty(BaseModel):
         for k, v in self:
             if v != "" and v != {} and v != [] and v != None:
                 if k == "model":
-                    d[k] = v.model_dump_safe()
+                    d[k] = v.model_dump()
                 elif k == "template":
                     d[k] = v.model_dump()
                 elif k == "inputs" or k == "outputs":
@@ -156,11 +193,6 @@ class Prompty(BaseModel):
                 else:
                     d[k] = v
         return d
-
-    # generate json representation of the prompty
-    def to_safe_json(self) -> str:
-        d = self.to_safe_dict()
-        return json.dumps(d)
 
     @staticmethod
     def _process_file(file: str, parent: Path) -> any:
@@ -181,14 +213,16 @@ class Prompty(BaseModel):
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(variable: str, env_error=True) -> any:
+    def _process_env(variable: str, env_error=True, default: str = None) -> any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
+            if default:
+                return default
             if env_error:
                 raise ValueError(f"Variable {variable} not found in environment")
-            else:
-                return ""
+
+            return ""
 
     @staticmethod
     def normalize(attribute: any, parent: Path, env_error=True) -> any:
@@ -198,7 +232,11 @@ class Prompty(BaseModel):
                 # check if env or file
                 variable = attribute[2:-1].split(":")
                 if variable[0] == "env" and len(variable) > 1:
-                    return Prompty._process_env(variable[1], env_error)
+                    return Prompty._process_env(
+                        variable[1],
+                        env_error,
+                        variable[2] if len(variable) > 2 else None,
+                    )
                 elif variable[0] == "file" and len(variable) > 1:
                     return Prompty._process_file(variable[1], parent)
                 else:
@@ -249,7 +287,7 @@ def param_hoisting(
 
 
 class Invoker(abc.ABC):
-    """ Abstract class for Invoker
+    """Abstract class for Invoker
 
     Attributes
     ----------
@@ -259,13 +297,14 @@ class Invoker(abc.ABC):
         The name of the invoker
 
     """
+
     def __init__(self, prompty: Prompty) -> None:
         self.prompty = prompty
         self.name = self.__class__.__name__
 
     @abc.abstractmethod
     def invoke(self, data: any) -> any:
-        """ Abstract method to invoke the invoker
+        """Abstract method to invoke the invoker
 
         Parameters
         ----------
@@ -279,29 +318,61 @@ class Invoker(abc.ABC):
         """
         pass
 
+    @trace
     def __call__(self, data: any) -> any:
-        """ Method to call the invoker
+        """Method to call the invoker
 
         Parameters
         ----------
         data : any
             The data to be invoked
-        
+
         Returns
         -------
         any
             The invoked
         """
         return self.invoke(data)
-    
 
 
 class InvokerFactory:
-    """ Factory class for Invoker """
+    """Factory class for Invoker"""
+
     _renderers: Dict[str, Invoker] = {}
     _parsers: Dict[str, Invoker] = {}
     _executors: Dict[str, Invoker] = {}
     _processors: Dict[str, Invoker] = {}
+
+    @classmethod
+    def has_invoker(
+        cls, type: Literal["renderer", "parser", "executor", "processor"], name: str
+    ) -> bool:
+        if type == "renderer":
+            return name in cls._renderers
+        elif type == "parser":
+            return name in cls._parsers
+        elif type == "executor":
+            return name in cls._executors
+        elif type == "processor":
+            return name in cls._processors
+        else:
+            raise ValueError(f"Type {type} not found")
+
+    @classmethod
+    def add_renderer(cls, name: str, invoker: Invoker) -> None:
+        cls._renderers[name] = invoker
+
+    @classmethod
+    def add_parser(cls, name: str, invoker: Invoker) -> None:
+        cls._parsers[name] = invoker
+
+    @classmethod
+    def add_executor(cls, name: str, invoker: Invoker) -> None:
+        cls._executors[name] = invoker
+
+    @classmethod
+    def add_processor(cls, name: str, invoker: Invoker) -> None:
+        cls._processors[name] = invoker
 
     @classmethod
     def register_renderer(cls, name: str) -> Callable:
@@ -360,6 +431,17 @@ class InvokerFactory:
         return cls._processors[name](prompty)
 
 
+class InvokerException(Exception):
+    """Exception class for Invoker"""
+
+    def __init__(self, message: str, type: str) -> None:
+        super().__init__(message)
+        self.type = type
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}. Make sure to pip install any necessary package extras (i.e. could be something like `pip install prompty[{self.type}]`) for {self.type} as well as import the appropriate invokers (i.e. could be something like `import prompty.{self.type}`)."
+
+
 @InvokerFactory.register_renderer("NOOP")
 @InvokerFactory.register_parser("NOOP")
 @InvokerFactory.register_executor("NOOP")
@@ -373,7 +455,7 @@ class NoOp(Invoker):
 
 
 class Frontmatter:
-    """ Frontmatter class to extract frontmatter from string."""
+    """Frontmatter class to extract frontmatter from string."""
 
     _yaml_delim = r"(?:---|\+\+\+)"
     _yaml = r"(.*?)"
@@ -383,8 +465,8 @@ class Frontmatter:
 
     @classmethod
     def read_file(cls, path):
-        """ Returns dict with separated frontmatter from file.
-        
+        """Returns dict with separated frontmatter from file.
+
         Parameters
         ----------
         path : str
@@ -396,7 +478,7 @@ class Frontmatter:
 
     @classmethod
     def read(cls, string):
-        """ Returns dict with separated frontmatter from string.
+        """Returns dict with separated frontmatter from string.
 
         Parameters
         ----------
@@ -421,3 +503,67 @@ class Frontmatter:
             "body": body,
             "frontmatter": fmatter,
         }
+
+
+class PromptyStream(Iterator):
+    """PromptyStream class to iterate over LLM stream.
+    Necessary for Prompty to handle streaming data when tracing."""
+
+    def __init__(self, name: str, iterator: Iterator):
+        self.name = name
+        self.iterator = iterator
+        self.items: List[any] = []
+        self.__name__ = "PromptyStream"
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            # enumerate but add to list
+            o = self.iterator.__next__()
+            self.items.append(o)
+            return o
+
+        except StopIteration:
+            # StopIteration is raised
+            # contents are exhausted
+            if len(self.items) > 0:
+                with Tracer.start("PromptyStream") as trace:
+                    trace("signature", f"{self.name}.PromptyStream")
+                    trace("inputs", "None")
+                    trace("result", [to_dict(s) for s in self.items])
+
+            raise StopIteration
+
+
+class AsyncPromptyStream(AsyncIterator):
+    """AsyncPromptyStream class to iterate over LLM stream.
+    Necessary for Prompty to handle streaming data when tracing."""
+
+    def __init__(self, name: str, iterator: AsyncIterator):
+        self.name = name
+        self.iterator = iterator
+        self.items: List[any] = []
+        self.__name__ = "AsyncPromptyStream"
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            # enumerate but add to list
+            o = await self.iterator.__anext__()
+            self.items.append(o)
+            return o
+
+        except StopIteration:
+            # StopIteration is raised
+            # contents are exhausted
+            if len(self.items) > 0:
+                with Tracer.start("AsyncPromptyStream") as trace:
+                    trace("signature", f"{self.name}.AsyncPromptyStream")
+                    trace("inputs", "None")
+                    trace("result", [to_dict(s) for s in self.items])
+
+            raise StopIteration
