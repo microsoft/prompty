@@ -1,10 +1,8 @@
 ---
 title: First Prompty
 authors:
-  - sethjuarez
-  - wayliums
-  - cassiebreviu
   - bethanyjep
+  - nitya
 date: 2024-10-09
 tags:
   - getting-started
@@ -13,29 +11,87 @@ tags:
 index: 4
 ---
 
-- Setup and configure your Prompty.
-- Create and run a Prompty.
-- Load and execute a Prompty in your code.
+_In the last section, we **Setup** our development environment by installing the Visual Studio Code extension. In this section, we'll create, configure, and run, our first Prompty asset._
 
-## Prerequisites
+## 1. Pre-requisites
 
-To make the most of this Quick start, ensure you have:
+To _run_ the Prompty, you will need a valid Large Language Model deployed endpoint you can configure. The Prompty specification currently supports three model providers:
 
-- Azure OpenAI or OpenAI resource
+1. **OpenAI** - requires the endpoint and key configuration properties
+1. **Azure OpenAI** - requires the endpoint and uses keyless auth (with login)
+1. **Serverless** - requires a GitHub Personal Access Token, uses [Marketplaces models](https://github.com/marketplace/models)
 
-## Installation
+<br/>
+For our first Prompty, we'll focus on the Azure OpenAI option.
+ - we assume you've deployed an _Azure OpenAI_ model 
+ - we assume you've retrieved its Endpoint URL information
+ - we assume you've installed the Prompty extension in VS Code
 
-### Install the Prompty Extension
-To get started with Prompty, first, install the Prompty extension in the Visual Studio Code Marketplace.
+<br/>
+## 2. Create a Prompty asset
 
-- [Download the VS Code extension here](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty). 
-- Install the Prompty extension in your Visual Studio Code editor.
+Open the Visual Studio Code editor, then click the `File Explorer` icon to view your project filesystem. Select a destination folder (e.g., could be the repository root) and _right-click_ to get a drop-down menu. Look for the `New Prompty` option and click it.
 
+<details>
+<summary> ☑ **You should see this `basic.prompty` file created** (click to expand) </summary>
+```markdown
+---
+name: ExamplePrompt
+description: A prompt that uses context to ground an incoming question
+authors:
+  - Seth Juarez
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: <your-deployment>
+    api_version: 2024-07-01-preview
+  parameters:
+    max_tokens: 3000
+sample:
+  firstName: Seth
+  context: >
+    The Alpine Explorer Tent boasts a detachable divider for privacy, 
+    numerous mesh windows and adjustable vents for ventilation, and 
+    a waterproof design. It even has a built-in gear loft for storing 
+    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    and convenience, making it your second home in the heart of nature!
+  question: What can you tell me about your tents?
+---
 
-### Create a Prompty file
+system:
+You are an AI assistant who helps people find information. As the assistant, 
+you answer questions briefly, succinctly, and in a personable manner using 
+markdown and even add some personal flair with appropriate emojis.
 
-Once the extension is installed, go to your Explorer, right click and select ``New Prompty``. It will create a new file with the `.prompty` extension. We will update our Prompty file to get a response from an LLM.
+# Customer
+You are helping {{firstName}} to find answers to their questions.
+Use their name to address them in your responses.
 
+# Context
+Use the following context to provide a more personalized response to {{firstName}}:
+{{context}}
+
+user:
+{{question}}
+
+```
+</details>
+
+<br/>
+## 3. Update the default Prompty
+
+You can now update the file contents as shown below. Here, we have made three changes:
+
+- We changed the frontmatter (metadata) to customize _name, description, authors_
+- We updated the model (configuration) to reflect the _endpoint, deployment_
+- We updated the content (template) to tailor response behavior _with examples_
+
+Note that we updated the model to get its endpoint information from a `AZURE_OPENAI_ENDPOINT` environment variable. Make sure you set this in the terminal, or in a `.env` file at the root of the repo.
+
+<details>
+<summary> ☑ **This is our updated `shakespeare.prompty` asset** (click to expand) </summary>
 ```markdown
 ---
 name: Shakespearean Writing Prompty
@@ -70,43 +126,97 @@ assistant: Dearest,
 user:
 {{question}}
 ```
+</details>
 
-## The Prompty Specification
+<br/>
+## 4. Run the Prompty
+You can now run the Prompty by clicking the `Play` button (top right) in the editor pane of your `.prompty` file.
 
-Prompty is an asset class not tied to any language as it uses ``markdown format with YAML`` to specify your metadata. It unifies the prompt and its execution in a single package to quickly get started. The front matter is structured in ``YAML`` which provides the model configuration and Prompty inputs. Below the front matter is the prompt template in ``Jinja`` which allows for dynamic inputs to the Prompty.
+1. You will see a pop-up asking you to authenticate with Azure. **Sign in**
+1. You will see the VS Code terminal switch to the `Outputs` tab. **View output**
+The first step ensures that we use Azure managed identity to authenticate with the specified Azure OpenAI endpoint - and don't need to use explicitly defined keys. You only need to authenticate once. You can then iterate rapidly on prompty content ("prompt engineering") and run it for instant responses. We recommend clearing the output terminal after each run, for clarity.
+<br/>
+<details>
+<summary> ☑️ **This is a sample response from one prompty run**. (click to expand) </summary>
 
-### Model Cofigurations
+```bash
+Friends most dear,
 
-You can define and configure your model directly in Visual Studio Code. To configure your model, navigate to and edit your ``settings.json`` file. You can edit this by navigating to ``settings > Extensions > Prompty > Edit in settings.json``
+I do entreat thee to join me for an evening of mirth and games anon. 
+Let us gather our wits and spirits for a night of sport and jest.
 
-Once in ``settings.json``, update your model name, type, api_version, endpoint and deployment. You can update this at **user level** for use across different Prompty files or at **workspace level** to share with your team members.
+Thy presence would bring great joy.
 
-> [TIP!]
-> Login to Azure Active Directory to authenticate your Azure OpenAI models for enhanced security. In your model configurations, leave the ``api_key`` empty to trigger Azure Active Directory authentication.
-
-### Environment Variables
-
-When using OpenAI, you can store your keys in a ``.env`` file in the same directory as the Prompty file or the root folder. In your Prompty file, you can reference your keys using ``${env:OPENAI_xxx}``
-
-
-
-### Run your Prompty
-
-Run the Prompty file by either click the ``Run`` button at the top or clicking ``f5`` button. The Output will be in two formats:
-
-- **Prompty Output:** a brief response with just the model output.
-
-- **Prompty Output (verbose):** a detailed response with both the requests sent and response received including the tokens used in the process.
+Yours in fellowship,
+[Your Name]
+```
+</details>
 
 
-{/* to be updated: ## Prompty Runtime
+<br/>
+## 5. How Prompty assets work
 
-Prompty additionally generates code for you in different frameworks e.g. LangChain, PromptFlow and Semantic Kernel. the asset class easily helps you convert to code simplifying your workflow as it is language agnostic. */}
+The `.prompty` file is an example of a Prompty _asset_ that respects the schema defined in the Prompty specification. The asset class is language-agnostic (not tied to any language or framework), using a _markdown format with YAML_ to specify metadata ("frontmatter") and content ("template") for a _single prompt-based interaction_ with a Large Language Model. By doing this, it **unifies the prompt content and its execution context in a single asset package**, making it easy for developers to rapidly iterate on prompts for prototyping.
 
-## Next Steps
+The _frontmatter_ (metadata) is structured as YAML, and specifies the prompt inputs, outputs, and model configuration parameters - with optional sample data for testing. The _content_ (template) forms the body of the asset and is a _Jnja_ template that allows for dynamic data binding of variables from Prompty asset inputs. The ability to specify sample data for testing (as an inline object or an external filename) allows us to use Prompty to iteratively **define the shape of the data required in complex flows** at the granularity of single LLM calls. 
 
-The following resources:
+The asset is then _activated_ by a Prompty runtime as follows:
+1. The file asset is **loaded**, converting it into an executable function.
+1. The asset is now **rendered**, using function parameters to fill in the template data.
+1. The asset is then **executed**, invoking the configured model with the rendered template.
+<br/>
+The returned result can then be displayed to the caller (single node) or can be passed as the input to a different Prompty asset (chained flow) to support more complex orchestration.
 
-- [Microsoft Build: Practical End-to-End AI Development using Prompty and AI Studio](https://build.microsoft.com/en-US/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61)
-- [Prompty samples: Collections | Microsoft Learn](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d?sharingId=ADFFF9D4AD9A0F29)
+## 6. How Models Are Configured
 
+Prompty assets must be configured with a _model_ that is the target for the prompt request. However, this configuration can happen at different levels, with a hierarchy that decides which value takes final precedence during execution.
+
+1. The Visual Studio Code environment defines a _default_ configuration that you can view by clicking on the `Prompty default` tab in the bottom toolbar. If a Prompty asset does not specify an explicit model configuration, the invocation will use the default model.
+1. When we convert a Prompty asset to code, you may see a `prompty.json` file with a default configuration. This is equivalent to the Visual Studio Code default, but applied to the case when we execute the Prompty from code (vs. VS Code editor).
+1. The Prompty file can itself define model configuration in the _frontmatter_ as seen in our example Prompty (see snippet below). When specified, this value will override other defaults.
+<br/>
+In our example asset (snippet below), the Prompty file **explicitly defines** model configuration properties, giving it precedence. Note also that property values can be specified as constants (`gpt-4`) or reference environment variables (`${env:AZURE_OPENAI_ENDPOINT}`). The latter is the recommended approach, ensuring that secrets don't get checked into version control with asset file updates.
+
+```yaml
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-4
+  parameters:
+    max_tokens: 3000
+```
+
+**Tip 1: Configure Model in VS Code**. If you use the same model configuration repeatedly, or across multiple Prompty assets, consider setting it up as a _named_ model in Visual Studio Code.To configure your model, navigate to and edit your ``settings.json`` file. You can edit this by navigating to ``settings > Extensions > Prompty > Edit in settings.json``. Update an existing named model (e.g., `default`) or create a new one. _You can update this at user level (across your assets) or workspace level (across team assets)._ 
+
+**Tip 2: Use Azure Managed Identity**. If you are using Azure OpenAI or Azure-managed models, opt for _keyless authentication_ by logging into Azure Active Directory (from Prompty extension, once per session) and using that credential to authenticate with your Azure OpenAI model deployments. _To trigger this authflow, leave the `api_key` property value empty in your model configuration_.
+
+**Tip 3: Use Environment Variables**. As shown above, property values can be defined using environment variables in the format ``${env:ENVAR_NAME}``. By default, the Visual Studio Code extension will look for a `.env` file in the root folder of the repository containing Prompty assets - create and update that file (and ensure it is .gitignore-d by default). _If you use GitHub Codespaces, you can also store environment variables as Codespaces secrets that get automatically injected into the runtime at launch_.
+
+<br/>
+## 7. How To Observe Output
+
+By default, executing the Prompty will open the _Output_ tab on the Visual Studio Code terminal and show a _brief response_ with the model output. But what if you want more detail? Prompty provides two features that can help.
+
+1. **Terminal Options** - Look for the `Prompty Output (verbose)` option in a drop-down menu in the Visual Studio Code terminal (at top left of terminal). Selecting this option gives you verbose output which includes the _request_ details and _response_ details, including useful information like token usage for execution.
+1. **Code Options** - When assets are converted to code, you can take advantage of _Prompty Tracer_ features to log execution traces to the console, or to a JSON file, that can then be visualized for richer analysis of the flow steps and performance.
+
+<br/>
+## 8. How To Generate Code
+
+In this section, we focused on Prompty asset creation and execution from the Visual Studio Code editor (no coding involved). Here, the Visual Studio Code extension acts as the default runtime, loading the asset, rendering the template, and executing the model invocation transparently. But this approach will not work when we need to **orchestrate** complex flows with multiple assets, or when we need to **automate** execution in CI/CD pipelines.
+
+This is where the _Prompty Runtime_ comes in. The runtime converts the Prompty asset into code that uses a preferred language or framework. We can think of "runtimes" in two categories:
+
+- **Core Runtimes** - generate basic code in the target language. Examples: Python, C#
+- **Framework-Enabled** - generate code for a specific framework. Examples: LangChain, Semantic Kernel
+
+<br/>
+*In the next section, we'll explore how to go from Prompty To Code, using the core Python runtime*.
+
+
+<br/>
+---
+<br/>
+[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
