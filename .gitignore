@@ -1,2 +1,5 @@
 .DS_Store
 *.js
+.runs/
+node_modules/
+dist/
