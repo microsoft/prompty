@@ -142,6 +142,12 @@ def test_function_calling():
     )
     print(result)
 
+@trace
+def test_structured_output():
+    result = prompty.execute(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
 
 # need to add trace attribute to
 # materialize stream into the function
