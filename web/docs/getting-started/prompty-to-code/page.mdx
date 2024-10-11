@@ -11,12 +11,189 @@ tags:
 index: 5
 ---
 
+_In the last section, we learned how to create and run a Prompty asset. In this section, we will learn how to convert a Prompty asset to Python code and run our first app._
+
+## 1. Pre-requisites
+
+To convert a Prompty asset to code and execute your first app, you need to have the following installed:
+
+- [Python 3.6 or higher](https://www.python.org/downloads/)
+- [Prompty Package (Python library)](https://pypi.org/project/prompty/)
+
+<br/>
+
+For our first app, we will focus on Azure Open AI and cover the following steps:
 - Create code from Prompty asset in VS Code
-- Install Prompty SDK (Python library)
+- Install Prompty Package (Python library)
 - Configure code (use environment variables)
 - Execute code (from command line or VS Code)
 
 <br/>
+
+## 2. Generate Code from Prompty Asset
+Open the `File Explorer` in Visual Studio Code open the Prompty asset we created earlier on the the Prompty asset. Right click on the file name, and in the options, select `add code` then select `add Prompty code`. A new file will be created with the Python code generated from the Prompty asset.
+<details>
+<summary> ☑ **You should see this `shakesphere.py` file created** (click to expand) </summary>
+```python
+import json
+import prompty
+# to use the azure invoker make 
+# sure to install prompty like this:
+# pip install prompty[azure]
+import prompty.azure
+from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+
+# add console and json tracer:
+# this only has to be done once
+# at application startup
+Tracer.add("console", console_tracer)
+json_tracer = PromptyTracer()
+Tracer.add("PromptyTracer", json_tracer.tracer)
+
+# if your prompty file uses environment variables make
+# sure they are loaded properly for correct execution
+
+@trace
+def run(    
+      question: any
+) -> str:
+
+  # execute the prompty file
+  result = prompty.execute(
+    "shakespeare.prompty", 
+    inputs={
+      "question": question
+    }
+  )
+
+  return result
+
+if __name__ == "__main__":
+   json_input = '''{
+  "question": "Please write a short text inviting friends to a Game Night."
+}'''
+   args = json.loads(json_input)
+
+   result = run(**args)
+   print(result)
+```
+</details>
+
+<br/>
+## 3. Install Prompty Runtime
+When you run the code generated, you will receive the error ``ModuleNotFoundError: No module named 'prompty'``. To resolve this, you need to install the Prompty runtime. The runtime supports different invokers that you can customize based on your needs. In this example, we are usin Azure OpenAI API, therefore, we will need to insall the ``azure`` invoker. Run the following command in your terminal:
+
+``` pip install prompty[azure] ```
+
+The Prompty Package is a Python runtime that allows you to run your prompts in Python. It is available as a Python package and can be installed using pip. 
+Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
+
+## 4. Configure environment variables
+
+In the code generated, we will need to load our environment variables to connect our Azure OpenAI API and generate an output. As we had already created the ``.env`` file, you can load the environment variables in your code by adding the following code snippet at the top of your code:
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+```
+<br/>
+
+## 5. Execute the code
+You can now run the code by either clicking on the ``run`` button on VS Code or executing the following command in your terminal:
+
+```python shakesphere.py```
+
+<details>
+<summary>☑ **You should see this as part of the sample response from the python run** (click to expand)</summary>
+
+```json
+Ending execute
+result:
+"Hark, dear friends! \n\nWith mirth and cheer, I extend a joyous summons unto thee for a night of merry games and friendly rivalry. Let us gather under yon stars at my abode this coming eve, and partake in laughter and revelry most grand. Come, let the spirit of camaraderie guide thy steps to my door, as we engage in diversions that shall bind our hearts in jocund fellowship.\n\nPray, grant me the boon of thy presence. The hour of merriment awaiteth us!\n\nFaithfully thine,  \n[Thy Name]"
+Ending run
+Hark, dear friends! 
+
+With mirth and cheer, I extend a joyous summons unto thee for a night of merry games and friendly rivalry. Let us gather under yon stars at my abode this coming eve, and partake in laughter and revelry most grand. Come, let the spirit of camaraderie guide thy steps to my door, as we engage in diversions that shall bind our hearts in jocund fellowship.
+
+Pray, grant me the boon of thy presence. The hour of merriment awaiteth us!
+
+Faithfully thine,  
+[Thy Name]
+```
+</details>
+
+<br/>
+
+## 6. Prompty invokers
+
+The Prompty runtime comes with a set of built-in invokers that can be used to execute prompts. Invokers trigger the execution of prompts These include:
+
+1. **azure**: Invokes the Azure OpenAI API
+2. **openai**: Invokes the OpenAI API
+3. **serverless**: Invokes serverless models (e.g. GitHub Models) using the Azure AI Inference client library (currently only key based authentication is supported with more managed identity support coming soon)
+
+<br/>
+## 7. How Python code works
+
+1. The ``.py`` code generated first imports the necessary modules and libraries. Next, it defines a function that executes the Prompty asset. The function takes the question as an input and returns the response generated by the Prompty asset. 
+```python
+def run(    
+      question: any
+) -> str:
+
+  # execute the prompty file
+  result = prompty.execute(
+    "shakespeare.prompty", 
+    inputs={
+      "question": question
+    }
+  )
+
+  return result
+```
+2. The code also includes a main block that loads the input from the prompty file and calls the function to execute the Prompty asset. 
+
+```python
+if __name__ == "__main__":
+   json_input = '''{
+  "question": "Please write a short text inviting friends to a Game Night."
+}'''
+   args = json.loads(json_input)
+
+   result = run(**args)
+```
+
+3. Finally, the code prints the response generated by the Prompty asset.
+
+<br/>
+The tracer provides observability functionality to the code, allowing you to monitor the execution of the Prompty asset and log the output generated. The next section explains observability and how it works.
+
+<br/>
+
+## 6. Observability in Prompty
+
+In Prompty, you can easily trace and visualize flow, which helps you to understand and debug your code using the built-in tracer. Tracing is customizable and can be considered to trace the execution of your flows. You can create your own tracer by adding your own hook. Prompty has two default traces build-in:
+
+- **Console Tracer**: This tracer logs the output to the console.
+- **Prompty Tracer**: This tracer logs the output to a JSON file.
+
+To add a tracer, we have the following code snippet:
+
+```python
+from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+
+Tracer.add("console", console_tracer)
+json_tracer = PromptyTracer()
+Tracer.add("PromptyTracer", json_tracer.tracer)
+```
+{/* to add: output of the  tracer */}
+<br/>
+
+## 7. Additional supported runtimes
+
+The Prompty runtime supports additional runtimes, including frameworks such as LangChain, and Semantic Kernel. In the tutorials section, we will cover how to generate code from Prompty assets using these runtimes. (coming soon)
+
+
 ---
 <br/>
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
