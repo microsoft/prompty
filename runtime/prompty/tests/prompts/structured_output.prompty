@@ -7,6 +7,8 @@ model:
   api: chat
   configuration:
     azure_deployment: gpt-4o-2024-08-06-global
+    # Minimal API version required for structured output
+    api_version: 2024-08-01-preview
     type: azure_openai
   parameters:
     response_format: ${file:structured_output_schema.json}
