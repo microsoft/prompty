@@ -38,7 +38,7 @@ properties:
         default: first 
         enum:
           - first
-          - full
+          - all
 
 
   name:
