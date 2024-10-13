@@ -5,14 +5,66 @@ from openai import AzureOpenAI
 
 from prompty.tracer import Tracer
 from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
+import re
+from datetime import datetime
+
+def extract_date(data: str) -> datetime:
+    """Extract date from a string
+
+    Parameters
+    ----------
+    data : str
+        The string containing the date
+
+    Returns
+    -------
+    datetime
+        The extracted date as a datetime object
+    """
+
+    # Regular expression to find dates in the format YYYY-MM-DD
+    date_pattern = re.compile(r'\b\d{4}-\d{2}-\d{2}\b')
+    match = date_pattern.search(data)
+    if match:
+        date_str = match.group(0)
+        # Validate the date format
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+    return None
+
+def is_structured_output_available(api_version: str) -> bool:
+    """Check if the structured output API is available for the given API version
+
+    Parameters
+    ----------
+    api_version : datetime
+        The API version
+
+    Returns
+    -------
+    bool
+        True if the structured output API is available, False otherwise
+    """
+
+    # Define the threshold date
+    threshold_api_version_date = datetime(2024, 8, 1)
+
+    api_version_date = extract_date(api_version)
+
+    # Check if the API version are on or after the threshold date
+    if api_version_date >= threshold_api_version_date:
+        return True
+    return False
 
 VERSION = importlib.metadata.version("prompty")
 
 
-@InvokerFactory.register_executor("azure")
-@InvokerFactory.register_executor("azure_openai")
-class AzureOpenAIExecutor(Invoker):
-    """Azure OpenAI Executor"""
+@InvokerFactory.register_executor("azure_beta")
+@InvokerFactory.register_executor("azure_openai_beta")
+class AzureOpenAIBetaExecutor(Invoker):
+    """Azure OpenAI Beta Executor"""
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
@@ -42,6 +94,7 @@ class AzureOpenAIExecutor(Invoker):
             )
 
         self.api = self.prompty.model.api
+        self.api_version = self.prompty.model.configuration["api_version"]
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
@@ -78,20 +131,30 @@ class AzureOpenAIExecutor(Invoker):
             trace("description", "Azure OpenAI Client")
 
             if self.api == "chat":
-                trace("signature", "AzureOpenAI.chat.completions.create")
+                # We can only verify the API version as the model and its version are not part of prompty configuration
+                # Should be gpt-4o and 2024-08-06 or later    
+                choose_beta = is_structured_output_available(self.api_version)
+                if choose_beta:
+                    trace("signature", "AzureOpenAI.beta.chat.completions.parse")
+                else:
+                    trace("signature", "AzureOpenAI.chat.completions.create")
+                
                 args = {
                     "model": self.deployment,
                     "messages": data if isinstance(data, list) else [data],
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.chat.completions.create(**args)
+                if choose_beta:
+                    response = client.beta.chat.completions.parse(**args)
+                else:
+                    response = client.chat.completions.create(**args)
                 trace("result", response)
 
             elif self.api == "completion":
                 trace("signature", "AzureOpenAI.completions.create")
                 args = {
-                    "prompt": data,
+                    "prompt": data.item,
                     "model": self.deployment,
                     **self.parameters,
                 }
@@ -111,22 +174,10 @@ class AzureOpenAIExecutor(Invoker):
                 trace("result", response)
 
             elif self.api == "image":
-                trace("signature", "AzureOpenAI.images.generate")
-                args = {
-                    "prompt": data,
-                    "model": self.deployment,
-                    **self.parameters,
-                }
-                trace("inputs", args)
-                response = client.images.generate.create(**args)
-                trace("result", response)
+                raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
         # stream response
         if isinstance(response, Iterator):
-            if self.api == "chat":
-                # TODO: handle the case where there might be no usage in the stream
-                return PromptyStream("AzureOpenAIExecutor", response)
-            else:
-                return PromptyStream("AzureOpenAIExecutor", response)
+            return PromptyStream("AzureOpenAIExecutor", response)
         else:
             return response

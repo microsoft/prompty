@@ -18,8 +18,12 @@ load_dotenv()
 def fake_azure_executor():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_beta", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai_beta", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
