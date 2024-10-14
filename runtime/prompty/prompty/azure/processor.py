@@ -8,6 +8,8 @@ from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 @InvokerFactory.register_processor("azure")
 @InvokerFactory.register_processor("azure_openai")
+@InvokerFactory.register_processor("azure_beta")
+@InvokerFactory.register_processor("azure_openai_beta")
 class AzureOpenAIProcessor(Invoker):
     """Azure OpenAI Processor"""
 

@@ -14,6 +14,7 @@ import prompty
         "prompts/faithfulness.prompty",
         "prompts/funcfile.prompty",
         "prompts/functions.prompty",
+        "prompts/structured_output.prompty",
         "prompts/groundedness.prompty",
         "prompts/sub/basic.prompty",
         "prompts/sub/sub/basic.prompty",
