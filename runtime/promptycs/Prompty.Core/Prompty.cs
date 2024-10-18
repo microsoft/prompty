@@ -1,13 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
+﻿using System.Text.Json;
 using YamlDotNet.Serialization;
 using Microsoft.Extensions.FileSystemGlobbing;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using System.Reflection.Metadata.Ecma335;
-using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
 
 namespace Prompty.Core
 {
@@ -176,5 +171,7 @@ namespace Prompty.Core
 
             return prompty;
         }
+
+        
     }
 }
