@@ -2,7 +2,7 @@
 {
     public abstract class Invoker
     {
-        private Prompty _prompty { get; set; }
+        internal Prompty _prompty { get; set; }
         public Invoker(Prompty prompty) => _prompty = prompty;
 
         public abstract object Invoke(object args);
