@@ -16,10 +16,15 @@ namespace Prompty.Core.Parsers
         {
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
+            ChatMessage[] messages = Parse((string)args, true).GetAwaiter().GetResult();
+            return messages;
+        }
 
-            ChatMessage[] messages = Parse((string)args);
-
-
+        public async override Task<object> InvokeAsync(object args)
+        {
+            if (args.GetType() != typeof(string))
+                throw new Exception("Invalid args type for prompty.chat");
+            ChatMessage[] messages = await Parse((string)args, false);
             return messages;
         }
 
@@ -43,7 +48,7 @@ namespace Prompty.Core.Parsers
             }
         }
 
-        private ChatMessage[] Parse(string template)
+        private async Task<ChatMessage[]> Parse(string template, bool sync)
         {
             var chunks = Regex.Split(template, _messageRegex, RegexOptions.Multiline)
                                 .Where(s => s.Trim().Length > 0)
@@ -64,9 +69,13 @@ namespace Prompty.Core.Parsers
             List<ChatMessage> messages = [];
             for (int i = 0; i < chunks.Count; i += 2)
             {
+                // check for embedded images
                 var imageMatches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
                 if (imageMatches.Count > 0)
-                    messages.Add(new ChatMessage(ToChatRole(chunks[i]), GetContent(imageMatches, chunks[i + 1])));
+                {
+                    var c = await GetContent(imageMatches, chunks[i + 1], sync);
+                    messages.Add(new ChatMessage(ToChatRole(chunks[i]), c));
+                }
                 else
                     messages.Add(new ChatMessage(ToChatRole(chunks[i]), chunks[i + 1]));
             }
@@ -75,7 +84,7 @@ namespace Prompty.Core.Parsers
             return [.. messages];
         }
 
-        private IList<AIContent> GetContent(MatchCollection matches, string content)
+        private async Task<IList<AIContent>> GetContent(MatchCollection matches, string content, bool sync)
         {
             List<AIContent> contents = [];
             var content_chunks = Regex.Split(content, _imageRegex, RegexOptions.Multiline)
@@ -108,8 +117,17 @@ namespace Prompty.Core.Parsers
                         var basePath = Path.GetDirectoryName(_prompty.Path);
                         var path = basePath != null ? Path.GetFullPath(img, basePath) : Path.GetFullPath(img);
                         // load image from file into ReadOnlyMemory<byte>
-                        var bytes = File.ReadAllBytes(path);
-                        contents.Add(new ImageContent(bytes, $"image/{media}"));
+                        if (sync)
+                        {
+                            var bytes = File.ReadAllBytes(path);
+                            contents.Add(new ImageContent(bytes, $"image/{media}"));
+                        }
+                        else
+                        {
+                            var bytes = await File.ReadAllBytesAsync(path);
+                            contents.Add(new ImageContent(bytes, $"image/{media}"));
+                        }
+
                     }
                     current_chunk += 1;
                 }
@@ -124,13 +142,6 @@ namespace Prompty.Core.Parsers
             }
 
             return contents;
-        }
-
-
-
-        public override Task<object> InvokeAsync(object args)
-        {
-            return Task.FromResult(Invoke(args));
         }
     }
 }
