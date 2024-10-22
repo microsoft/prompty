@@ -10,9 +10,9 @@ model:
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
     azure_deployment: gpt-4o
   parameters:
-    max_tokens: 30
+    max_tokens: 150
 sample:
-  question: Please write a short text inviting friends to a Game Night.
+  question: Can you create 5 different versions of a short message inviting friends to a Game Night?
 ---
 
 system:

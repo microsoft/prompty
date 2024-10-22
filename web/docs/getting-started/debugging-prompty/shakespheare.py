@@ -35,7 +35,7 @@ def run(
 
 if __name__ == "__main__":
    json_input = '''{
-  "question": "Please write a short text inviting friends to a Game Night."
+  "question": "Can you create 5 different versions of a short message inviting friends to a Game Night?"
 }'''
    args = json.loads(json_input)
 
