@@ -3,7 +3,7 @@ title: Prompty To Code
 authors:
   - bethanyjep
   - nitya
-date: 2024-10-09
+date: 2024-10-21
 tags:
   - getting-started
   - documentation
@@ -17,7 +17,7 @@ _In the last section, we learned how to create and run a Prompty asset. In this 
 
 To convert a Prompty asset to code and execute your first app, you need to have the following installed:
 
-- [Python 3.6 or higher](https://www.python.org/downloads/)
+- [Python 3.10 or higher](https://www.python.org/downloads/)
 - [Prompty Package (Python library)](https://pypi.org/project/prompty/)
 
 <br/>
@@ -124,17 +124,7 @@ Faithfully thine,
 
 <br/>
 
-## 6. Prompty invokers
-
-The Prompty runtime comes with a set of built-in invokers that can be used to execute external models and APIs. 
-Invokers trigger a call to a the different models and return its output ensuring standardization when it comes to handling models. The invokers currently supported are:
-
-1. **azure**: Invokes the Azure OpenAI API
-2. **openai**: Invokes the OpenAI API
-3. **serverless**: Invokes serverless models (e.g. GitHub Models) using the Azure AI Inference client library (currently only key based authentication is supported with more managed identity support coming soon)
-
-<br/>
-## 7. How Python code works
+## 6. How Python code works
 
 1. The ``.py`` code generated first imports the necessary modules and libraries. 
 
@@ -217,37 +207,11 @@ if __name__ == "__main__":
 
 <br/>
 
-## 6. Observability in Prompty
 
-Observability refers to the ability to monitor and understand the behavior of a system based on the data it produces such as logs, metrics and traces. In Prompty, you can easily trace and visualize flow, which helps you to understand and debug your code using the built-in tracer. You can create your own tracer by adding your own hook. By default, Prompty has two traces built-in:
-
-- **Console Tracer**: This tracer logs the output to the console.
-- **Prompty Tracer**: This tracer logs the output to a JSON file.
-
-<br/>
-
-To add a tracer, we have the following code snippet:
-
-```python
-from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
-
-Tracer.add("console", console_tracer)
-json_tracer = PromptyTracer()
-Tracer.add("PromptyTracer", json_tracer.tracer)
-```
-<br/>
-
-The output from the tracer is displayed in the console and in a `.tracy` file. A new `.tracy` file is created in a new `.runs` folder. 
-The trace output is divided into three: _load, prepare_ and _run_. Load refers to the loading of the Prompty asset, prepare refers to the preparation of the Prompty asset, and run refers to the execution of the Prompty asset. Below is a sample of the trace output showing the inputs, outputs and metrics i.e. time to execute the prompt and tokens:
-
-![Sample trace output](tracy_output.png)
-
-{/* to add: output of the  tracer */}
-<br/>
 
 ## 7. Additional supported runtimes
 
-The Prompty runtime supports additional runtimes, including frameworks such as LangChain, and Semantic Kernel. In the tutorials section, we will cover how to generate code from Prompty assets using these runtimes. (coming soon)
+The Prompty runtime supports additional runtimes, including frameworks such as [LangChain](/docs/tutorials/using-langchain), and [Semantic Kernel](/docs/tutorials/using-semantic-kernel). In the [tutorials](/docs/tutorials) section, we will cover how to generate code from Prompty assets using these runtimes. (coming soon)
 
 
 ---
