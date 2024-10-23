@@ -1,8 +1,32 @@
 ﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.FileSystemGlobbing;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Prompty.Core.Parsers
 {
+    enum ContentType
+    {
+        Text,
+        LocalImage,
+        RemoteImage
+    }
+
+    struct RawMessage
+    {
+        public ChatRole Role { get; set; }
+        public string? Content { get; set; }
+        public IEnumerable<RawContent> Contents { get; set; }
+    }
+
+    struct RawContent
+    {
+        public ContentType ContentType { get; set; }
+        public string Content { get; set; }
+        public string Media { get; set; }
+    }
+
     [Parser("prompty.chat")]
     public class PromptyChatParser : Invoker
     {
@@ -16,17 +40,79 @@ namespace Prompty.Core.Parsers
         {
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
-            ChatMessage[] messages = Parse((string)args, true).GetAwaiter().GetResult();
+
+            var messages = Parse((string)args).Select(m =>
+            {
+                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
+                {
+                    var contents = m.Contents.Select<RawContent, AIContent>(c =>
+                    {
+                        switch (c.ContentType)
+                        {
+                            case ContentType.Text:
+                                return new TextContent(c.Content);
+                            case ContentType.LocalImage:
+                                var image = GetImageContent(c.Content, c.Media);
+                                return new ImageContent(image, c.Media);
+                            case ContentType.RemoteImage:
+                                return new ImageContent(c.Content, c.Media);
+                            default:
+                                throw new Exception("Invalid content type!");
+                        }
+                    }).ToList();
+
+                    return new ChatMessage(m.Role, contents);
+                }
+                else
+                {
+                    return new ChatMessage(m.Role, m.Content);
+                }
+            }).ToArray();
+
+
             return messages;
+
         }
 
         public async override Task<object> InvokeAsync(object args)
         {
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
-            ChatMessage[] messages = await Parse((string)args, false);
+
+            var messageTask = Parse((string)args).Select(async m =>
+            {
+                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
+                {
+                    var task = m.Contents.Select<RawContent, Task<AIContent>>(async c =>
+                    {
+                        switch (c.ContentType)
+                        {
+                            case ContentType.Text:
+                                return new TextContent(c.Content);
+                            case ContentType.LocalImage:
+                                var image = await GetImageContentAsync(c.Content, c.Media);
+                                return new ImageContent(image, c.Media);
+                            case ContentType.RemoteImage:
+                                return new ImageContent(c.Content, c.Media);
+                            default:
+                                throw new Exception("Invalid content type!");
+                        }
+                    });
+
+                    var results = await Task.WhenAll(task);
+
+                    return new ChatMessage(m.Role, [.. results]);
+                }
+                else
+                {
+                    return new ChatMessage(m.Role, m.Content);
+                }
+            });
+
+            var messages = await Task.WhenAll(messageTask);
             return messages;
         }
+
 
         private ChatRole ToChatRole(string role)
         {
@@ -48,7 +134,7 @@ namespace Prompty.Core.Parsers
             }
         }
 
-        private async Task<ChatMessage[]> Parse(string template, bool sync)
+        private IEnumerable<RawMessage> Parse(string template)
         {
             var chunks = Regex.Split(template, _messageRegex, RegexOptions.Multiline)
                                 .Where(s => s.Trim().Length > 0)
@@ -69,28 +155,21 @@ namespace Prompty.Core.Parsers
             List<ChatMessage> messages = [];
             for (int i = 0; i < chunks.Count; i += 2)
             {
-                // check for embedded images
-                var imageMatches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
-                if (imageMatches.Count > 0)
-                {
-                    var c = await GetContent(imageMatches, chunks[i + 1], sync);
-                    messages.Add(new ChatMessage(ToChatRole(chunks[i]), c));
-                }
+                var matches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
+                if (matches.Count > 0)
+                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Contents = Processs(matches, chunks[i + 1]) };
                 else
-                    messages.Add(new ChatMessage(ToChatRole(chunks[i]), chunks[i + 1]));
+                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Content = chunks[i + 1] };
             }
-
-
-            return [.. messages];
         }
 
-        private async Task<IList<AIContent>> GetContent(MatchCollection matches, string content, bool sync)
+        private IEnumerable<RawContent> Processs(MatchCollection matches, string content)
         {
-            List<AIContent> contents = [];
+
             var content_chunks = Regex.Split(content, _imageRegex, RegexOptions.Multiline)
-                                .Where(s => s.Trim().Length > 0)
-                                .Select(s => s.Trim())
-                                .ToList();
+                            .Where(s => s.Trim().Length > 0)
+                            .Select(s => s.Trim())
+                            .ToList();
 
             int current_chunk = 0;
             for (int i = 0; i < content_chunks.Count; i++)
@@ -108,40 +187,37 @@ namespace Prompty.Core.Parsers
                     if (media != "jpg" && media != "jpeg" && media != "png")
                         throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
 
-                    if(img.StartsWith("http://") || img.StartsWith("https://"))
-                    {
-                        contents.Add(new ImageContent(img, $"image/{media}"));
-                    }
+                    if (img.StartsWith("http://") || img.StartsWith("https://"))
+                        yield return new RawContent { ContentType = ContentType.RemoteImage, Content = img, Media = $"image/{media}" };
                     else
-                    {
-                        var basePath = Path.GetDirectoryName(_prompty.Path);
-                        var path = basePath != null ? Path.GetFullPath(img, basePath) : Path.GetFullPath(img);
-                        // load image from file into ReadOnlyMemory<byte>
-                        if (sync)
-                        {
-                            var bytes = File.ReadAllBytes(path);
-                            contents.Add(new ImageContent(bytes, $"image/{media}"));
-                        }
-                        else
-                        {
-                            var bytes = await File.ReadAllBytesAsync(path);
-                            contents.Add(new ImageContent(bytes, $"image/{media}"));
-                        }
-
-                    }
+                        yield return new RawContent { ContentType = ContentType.LocalImage, Content = img, Media = $"image/{media}" };
                     current_chunk += 1;
                 }
                 // text entry
                 else
                 {
                     var text = content_chunks[i].Trim();
-                    if(text.Length > 0)
-                        contents.Add(new TextContent(text));
+                    if (text.Length > 0)
+                        yield return new RawContent { ContentType = ContentType.Text, Content = text };
                 }
 
             }
+        }
 
-            return contents;
+        private byte[]? GetImageContent(string image, string media)
+        {
+            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var bytes = File.ReadAllBytes(path);
+            return bytes;
+        }
+
+        private async Task<byte[]?> GetImageContentAsync(string image, string media)
+        {
+            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var bytes = await File.ReadAllBytesAsync(path);
+            return bytes;
         }
     }
 }

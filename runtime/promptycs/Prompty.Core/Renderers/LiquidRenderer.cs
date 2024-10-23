@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Scriban;
 
 namespace Prompty.Core.Renderers
 {
@@ -10,12 +10,15 @@ namespace Prompty.Core.Renderers
         public LiquidRenderer(Prompty prompty) : base(prompty) { }
         public override object Invoke(object args)
         {
-            throw new NotImplementedException();
+            // TODO - figure out base templating using liquid
+            var template = Scriban.Template.ParseLiquid(_prompty.Content.ToString());
+            return template.Render(args);
         }
 
         public override Task<object> InvokeAsync(object args)
         {
-            throw new NotImplementedException();
+            var template = Scriban.Template.ParseLiquid(_prompty.Content.ToString());
+            return Task.FromResult<object>(template.Render(args));
         }
     }
 }
