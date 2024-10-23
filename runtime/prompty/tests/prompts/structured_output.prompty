@@ -1,0 +1,24 @@
+---
+name: Structured Output Prompt
+description: A prompt that uses the GPT-4o chat API to answer questions in a structured format.
+authors:
+  - vgiraud
+model:
+  api: chat
+  configuration:
+    # Minimal model version required for structured output
+    azure_deployment: gpt-4o-2024-08-06
+    # Minimal API version required for structured output
+    api_version: 2024-08-01-preview
+    # OpenAI beta API required for structured output
+    type: azure_openai_beta
+  parameters:
+    response_format: ${file:structured_output_schema.json}
+sample:
+  statement: Alice and Bob are going to a science fair on Friday.
+---
+system:
+Extract the event information.
+
+user:
+{{statement}}
