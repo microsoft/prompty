@@ -11,7 +11,7 @@ namespace Prompty.Core.Tests
     {
         public ParserTests()
         {
-            InvokerFactory.Instance.AutoRegister();
+            InvokerFactory.AutoDiscovery();
             Environment.SetEnvironmentVariable("AZURE_OPENAI_ENDPOINT", "ENDPOINT_VALUE");
         }
 

@@ -26,7 +26,7 @@ namespace Prompty.Core.Tests
     {
         public InvokerTests()
         {
-            InvokerFactory.Instance.AutoRegister();
+            InvokerFactory.AutoDiscovery();
         }
 
         [Fact]

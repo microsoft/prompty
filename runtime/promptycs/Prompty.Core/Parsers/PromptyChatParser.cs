@@ -69,7 +69,6 @@ namespace Prompty.Core.Parsers
                 }
             }).ToArray();
 
-
             return messages;
 
         }
@@ -157,15 +156,14 @@ namespace Prompty.Core.Parsers
             {
                 var matches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
                 if (matches.Count > 0)
-                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Contents = Processs(matches, chunks[i + 1]) };
+                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Contents = Process(matches, chunks[i + 1]) };
                 else
                     yield return new RawMessage { Role = ToChatRole(chunks[i]), Content = chunks[i + 1] };
             }
         }
 
-        private IEnumerable<RawContent> Processs(MatchCollection matches, string content)
+        private IEnumerable<RawContent> Process(MatchCollection matches, string content)
         {
-
             var content_chunks = Regex.Split(content, _imageRegex, RegexOptions.Multiline)
                             .Where(s => s.Trim().Length > 0)
                             .Select(s => s.Trim())
@@ -174,13 +172,13 @@ namespace Prompty.Core.Parsers
             int current_chunk = 0;
             for (int i = 0; i < content_chunks.Count; i++)
             {
+                var chunk = content_chunks[i];
+
                 // alt entry
-                if (current_chunk < matches.Count && content_chunks[i] == matches[current_chunk].Groups["alt"].Value)
-                {
+                if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["alt"].Value)
                     continue;
-                }
                 // image entry
-                else if (current_chunk < matches.Count && content_chunks[i] == matches[current_chunk].Groups["filename"].Value)
+                else if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["filename"].Value)
                 {
                     var img = matches[current_chunk].Groups[2].Value.Split(" ")[0].Trim();
                     var media = img.Split(".").Last().Trim().ToLower();
@@ -191,15 +189,12 @@ namespace Prompty.Core.Parsers
                         yield return new RawContent { ContentType = ContentType.RemoteImage, Content = img, Media = $"image/{media}" };
                     else
                         yield return new RawContent { ContentType = ContentType.LocalImage, Content = img, Media = $"image/{media}" };
-                    current_chunk += 1;
+
+                    current_chunk++;
                 }
                 // text entry
-                else
-                {
-                    var text = content_chunks[i].Trim();
-                    if (text.Length > 0)
-                        yield return new RawContent { ContentType = ContentType.Text, Content = text };
-                }
+                else if (chunk.Trim().Length > 0)
+                    yield return new RawContent { ContentType = ContentType.Text, Content = chunk.Trim() };
 
             }
         }

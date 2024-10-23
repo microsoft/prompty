@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +12,11 @@ namespace Prompty.Core
 {
     public static class DictionaryExtensions
     {
+        public static Prompty ToPrompty(this Dictionary<string, object> dict, string path)
+        {
+            return PromptyExtensions.FromDictionary(dict, path);
+        }
+
         public static Dictionary<string, object> ToDictionary(this JsonElement obj)
         {
             return JsonConverter.ConvertJsonElementToDictionary(obj);

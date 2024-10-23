@@ -18,7 +18,7 @@ namespace Prompty.Core
 
         private InvokerFactory() { }
 
-        private void AddOrUpdateKey(Dictionary<string, Type> dict, string key, Type value)
+        private void AddOrUpdate(Dictionary<string, Type> dict, string key, Type value)
         {
             if (dict.ContainsKey(key))
                 dict[key] = value;
@@ -31,16 +31,16 @@ namespace Prompty.Core
             switch(invokerType)
             {
                 case InvokerType.Renderer:
-                    AddOrUpdateKey(_renderers, name, type);
+                    AddOrUpdate(_renderers, name, type);
                     break;
                 case InvokerType.Parser:
-                    AddOrUpdateKey(_parsers, name, type);
+                    AddOrUpdate(_parsers, name, type);
                     break;
                 case InvokerType.Executor:
-                    AddOrUpdateKey(_executors, name, type);
+                    AddOrUpdate(_executors, name, type);
                     break;
                 case InvokerType.Processor:
-                    AddOrUpdateKey(_processors, name, type);
+                    AddOrUpdate(_processors, name, type);
                     break;
             }
         }
@@ -83,22 +83,22 @@ namespace Prompty.Core
 
         public void RegisterRenderer(string name, Type type)
         {
-            _renderers.Add(name, type);
+            AddOrUpdate(_renderers, name, type);
         }
 
         public void RegisterParser(string name, Type type)
         {
-            _parsers.Add(name, type);
+            AddOrUpdate(_parsers, name, type);
         }
 
         public void RegisterExecutor(string name, Type type)
         {
-            _executors.Add(name, type);
+            AddOrUpdate(_executors, name, type);
         }
 
         public void RegisterProcessor(string name, Type type)
         {
-            _processors.Add(name, type);
+            AddOrUpdate(_processors, name, type);
         }
 
         public Invoker CreateInvoker(string name, InvokerType invokerType, Prompty prompty)
@@ -112,9 +112,26 @@ namespace Prompty.Core
             return CreateInvoker(name, InvokerType.Renderer, prompty);
         }
 
+        public Invoker CreateRenderer(Prompty prompty)
+        {
+            if(prompty?.Template?.Type == null)
+                throw new Exception("Template type not found!");
+
+            return CreateInvoker(prompty?.Template?.Type!, InvokerType.Renderer, prompty!);
+        }
+
         public Invoker CreateParser(string name, Prompty prompty)
         {
             return CreateInvoker(name, InvokerType.Parser, prompty);
+        }
+
+        public Invoker CreateParser(Prompty prompty)
+        {
+            if (prompty?.Template?.Parser == null || prompty?.Model?.Api == null)
+                throw new Exception("Invalid Parser - Parser and Model Api are required");
+
+            var parserType = $"{prompty?.Template?.Parser}.{prompty?.Model?.Api}";
+            return CreateInvoker(parserType, InvokerType.Parser, prompty!);
         }
 
         public Invoker CreateExecutor(string name, Prompty prompty)
@@ -122,12 +139,20 @@ namespace Prompty.Core
             return CreateInvoker(name, InvokerType.Executor, prompty);
         }
 
+        public Invoker CreateExecutor(Prompty prompty)
+        {
+            if(prompty?.Model?.Configuration?.Type == null)
+                throw new Exception("Model Configuration type not found!");
+
+            return CreateInvoker(prompty?.Model?.Configuration?.Type!, InvokerType.Executor, prompty!);
+        }
+
         public Invoker CreateProcessor(string name, Prompty prompty)
         {
             return CreateInvoker(name, InvokerType.Processor, prompty);
         }
 
-        public void AutoRegister()
+        public static void AutoDiscovery()
         {
             var types = AppDomain.CurrentDomain.GetAssemblies()
                             .SelectMany(a => a.GetTypes())
@@ -137,7 +162,7 @@ namespace Prompty.Core
             {
                 var attributes = (IEnumerable<InvokerAttribute>)type.GetCustomAttributes(typeof(InvokerAttribute), true)!;
                 foreach (var attribute in attributes)
-                    RegisterInvoker(attribute.Name, attribute.Type, type);
+                   Instance.RegisterInvoker(attribute.Name, attribute.Type, type);
             }
         }
     }

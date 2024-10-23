@@ -3,6 +3,8 @@ using YamlDotNet.Serialization;
 using Microsoft.Extensions.FileSystemGlobbing;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using System.Diagnostics;
+using System.Security.AccessControl;
 
 namespace Prompty.Core
 {
@@ -36,142 +38,94 @@ namespace Prompty.Core
         public string Path { get; set; } = string.Empty;
         public object Content { get; set; } = string.Empty;
 
-        internal static async Task<Dictionary<string, object>> LoadGlobalConfigAsync(string path, string configuration = "default")
+
+
+        public static Prompty Load(string path, string configuration = "default")
         {
-            if (string.IsNullOrEmpty(path))
-                path = Directory.GetCurrentDirectory();
-
-            Matcher matcher = new();
-            matcher.AddInclude("**/prompty.json");
-
-            var result = matcher.Execute(
-                new DirectoryInfoWrapper(
-                    new DirectoryInfo(Directory.GetCurrentDirectory())));
-
-            if (result.HasMatches)
-            {
-                var global_config = result.Files
-                    .Where(f => System.IO.Path.GetDirectoryName(f.Path)?.Length <= path.Length)
-                    .Select(f => f.Path)
-                    .OrderByDescending(f => f.Length)
-                    .First();
-
-                string json = await File.ReadAllTextAsync(global_config);
-                var config = JsonDocument.Parse(json).RootElement.ToDictionary();
-
-                if (config != null && config.ContainsKey(configuration))
-                    return config.GetValue<Dictionary<string, object>>(configuration) ?? [];
-            }
-
-            return [];
-
-        }
-
-        internal static Dictionary<string, object> LoadGlobalConfig(string path, string configuration = "default")
-        {
-            if (string.IsNullOrEmpty(path))
-                path = Directory.GetCurrentDirectory();
-
-            Matcher matcher = new();
-            matcher.AddInclude("**/prompty.json");
-
-            var result = matcher.Execute(
-                new DirectoryInfoWrapper(
-                    new DirectoryInfo(Directory.GetCurrentDirectory())));
-
-            if (result.HasMatches)
-            {
-                var global_config = result.Files
-                    .Where(f => System.IO.Path.GetDirectoryName(f.Path)?.Length <= path.Length)
-                    .Select(f => f.Path)
-                    .OrderByDescending(f => f.Length)
-                    .First();
-
-                string json = File.ReadAllText(global_config);
-                var config = JsonDocument.Parse(json).RootElement.ToDictionary();
-
-                if (config != null && config.ContainsKey(configuration))
-                    return config.GetValue<Dictionary<string, object>>(configuration) ?? [];
-            }
-
-            return [];
-        }
-
-        public static Prompty Load(string path)
-        {
-            using StreamReader reader = new(path);
-            string text = reader.ReadToEnd();
-            var content = text.Split("---", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (content.Length != 2)
-                throw new Exception("Invalida prompty format");
-
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            var frontmatter = deserializer.Deserialize<Dictionary<string, object>>(content[0]);
-
-            // frontmatter normalization 
-            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
-            frontmatter = Normalizer.Normalize(frontmatter, parentPath);
-
-            // load global configuration
-            var global_config = Normalizer.Normalize(
-                LoadGlobalConfig(System.IO.Path.GetDirectoryName(path) ?? string.Empty) ?? [], parentPath);
-
-
-            // model configuration hoisting
-            if (!frontmatter.ContainsKey("model"))
-                frontmatter["model"] = new Dictionary<string, object>();
-            else
-                frontmatter["model"] = frontmatter.GetValue<Dictionary<string, object>>("model") ?? [];
-
-
-            var modelDict = ((Dictionary<string, object>)frontmatter["model"]);
-
-            if (modelDict.ContainsKey("configuration") && modelDict["configuration"].GetType() == typeof(Dictionary<string, object>))
-                // param hoisting
-                modelDict["configuration"] = ((Dictionary<string, object>)modelDict["configuration"]).ParamHoisting(global_config);
-            else
-                // empty - use global configuration
-                modelDict["configuration"] = global_config;
-
-            Prompty prompty = new();
-
-            // metadata
-            prompty.Name = frontmatter.GetValue<string>("name") ?? string.Empty;
-            prompty.Description = frontmatter.GetValue<string>("description") ?? string.Empty;
-            prompty.Authors = frontmatter.GetList<string>("authors").ToArray();
-            prompty.Tags = frontmatter.GetList<string>("tags").ToArray();
-            prompty.Version = frontmatter.GetValue<string>("version") ?? string.Empty;
-
-            // base
-            prompty.Base = frontmatter.GetValue<string>("base") ?? string.Empty;
-
-            // model settings from hoisted params
-            prompty.Model = new Model(frontmatter.GetConfig("model") ?? []);
-
-            // sample
-            prompty.Sample = frontmatter.GetConfig("sample") ?? [];
-
-            // properties
-            prompty.Inputs = frontmatter.GetConfigList("inputs", d => new Settings(d)).ToArray();
-            prompty.Outputs = frontmatter.GetConfigList("outputs", d => new Settings(d)).ToArray();
-
-            // template
-            prompty.Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template
-            {
-                Type = "jinja2",
-                Parser = "prompty"
-            };
-
-            // internals
-            prompty.Path = System.IO.Path.GetFullPath(path);
-            prompty.Content = content[1] ?? string.Empty;
-
+            string text = File.ReadAllText(path);
+            var frontmatter = PromptyExtensions.LoadRaw(text, path, configuration);
+            var prompty = frontmatter.ToPrompty(path);
             return prompty;
         }
 
-        
+        public static async Task<Prompty> LoadAsync(string path, string configuration = "default")
+        {
+            string text = await File.ReadAllTextAsync(path);
+            var frontmatter = PromptyExtensions.LoadRaw(text, path, configuration);
+            var prompty = frontmatter.ToPrompty(path);
+            return prompty;
+        }
+
+
+        public static object Prepare(Prompty prompty, Dictionary<string, object>? inputs = null)
+        {
+            return prompty.Prepare(inputs);
+        }
+
+        public static async Task<object> PrepareAsync(Prompty prompty, Dictionary<string, object>? inputs = null)
+        {
+            return await prompty.PrepareAsync(inputs);
+        }
+
+        public static object Run(Prompty prompty, 
+            object content, 
+            Dictionary<string, object>? configuration = null, 
+            Dictionary<string, object>? parameters = null, 
+            bool raw = false)
+        {
+            return prompty.Run(content, configuration, parameters, raw);
+        }
+
+        public static async Task<object> RunAsync(Prompty prompty, 
+            object content, 
+            Dictionary<string, object>? configuration = null, 
+            Dictionary<string, object>? parameters = null, 
+            bool raw = false)
+        {
+            return await prompty.RunAsync(content, configuration, parameters, raw);
+        }
+
+        public static object Execute(Prompty prompt, 
+            Dictionary<string, object>? configuration = null, 
+            Dictionary<string, object>? parameters = null, 
+            Dictionary<string, object>? inputs = null, 
+            bool raw = false)
+        {
+            return prompt.Execute(configuration, parameters, inputs, raw);
+        }
+
+        public static async Task<object> ExecuteAsync(Prompty prompt, 
+            Dictionary<string, object>? configuration = null, 
+            Dictionary<string, object>? parameters = null, 
+            Dictionary<string, object>? inputs = null, 
+            bool raw = false)
+        {
+            return await prompt.ExecuteAsync(configuration, parameters, inputs, raw);
+        }
+
+
+        public static object Execute(string prompty,
+            Dictionary<string, object>? configuration = null,
+            Dictionary<string, object>? parameters = null,
+            Dictionary<string, object>? inputs = null,
+            string? config = "default",
+            bool raw = false)
+        {
+            var prompt = Prompty.Load(prompty, config ?? "default");
+            var result = prompt.Execute(configuration, parameters, inputs, raw);
+            return result;
+        }
+
+        public static async Task<object> ExecuteAsync(string prompty,
+            Dictionary<string, object>? configuration = null,
+            Dictionary<string, object>? parameters = null,
+            Dictionary<string, object>? inputs = null,
+            string? config = "default",
+            bool raw = false)
+        {
+            var prompt = await Prompty.LoadAsync(prompty, config ?? "default");
+            var result = await prompt.ExecuteAsync(configuration, parameters, inputs, raw);
+            return result;
+        }
     }
 }
