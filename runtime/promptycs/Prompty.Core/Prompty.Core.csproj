@@ -12,8 +12,9 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>0.0.9-alpha</Version>
+    <Version>0.0.10-alpha</Version>
     <Authors>Cassie Breviu, Seth Juarez</Authors>
+    <PackageIcon>prompty.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
