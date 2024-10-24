@@ -318,9 +318,25 @@ class Invoker(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    async def invoke_async(self, data: any) -> any:
+        """Abstract method to invoke the invoker asynchronously
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        pass
+
     @trace
-    def __call__(self, data: any) -> any:
-        """Method to call the invoker
+    def run(self, data: any) -> any:
+        """Method to run the invoker
 
         Parameters
         ----------
@@ -333,6 +349,22 @@ class Invoker(abc.ABC):
             The invoked
         """
         return self.invoke(data)
+    
+    @trace
+    async def run_async(self, data: any) -> any:
+        """Method to run the invoker asynchronously
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        return await self.invoke_async(data)
 
 
 class InvokerFactory:
@@ -452,6 +484,9 @@ class InvokerException(Exception):
 class NoOp(Invoker):
     def invoke(self, data: any) -> any:
         return data
+
+    async def invoke_async(self, data: str) -> str:
+        return self.invoke(data)
 
 
 class Frontmatter:

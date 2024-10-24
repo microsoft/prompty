@@ -4,7 +4,8 @@ from .core import Invoker, InvokerFactory, Prompty
 
 @InvokerFactory.register_renderer("jinja2")
 class Jinja2Renderer(Invoker):
-    """ Jinja2 Renderer """
+    """Jinja2 Renderer"""
+
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.templates = {}
@@ -21,3 +22,18 @@ class Jinja2Renderer(Invoker):
         t = env.get_template(self.name)
         generated = t.render(**data)
         return generated
+
+    async def invoke_async(self, data: str) -> str:
+        """Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        return self.invoke(data)

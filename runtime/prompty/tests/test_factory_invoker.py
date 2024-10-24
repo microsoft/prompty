@@ -30,7 +30,7 @@ BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 def test_renderer_invoker(prompt: str):
     p = prompty.load(prompt)
     renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
+    result = renderer.run(p.sample)
     print(result)
 
 
@@ -52,7 +52,7 @@ def test_parser_invoker(markdown: str):
         content = f.read()
     prompt = prompty.load("prompts/basic.prompty")
     parser = InvokerFactory.create_parser("prompty.chat", prompt)
-    result = parser(content)
+    result = parser.run(content)
     print(result)
 
 
@@ -68,13 +68,13 @@ def test_parser_invoker(markdown: str):
 def test_executor_invoker(prompt: str):
     p = prompty.load(prompt)
     renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
+    result = renderer.run(p.sample)
 
     parser = InvokerFactory.create_parser("prompty.chat", p)
-    result = parser(result)
+    result = parser.run(result)
 
     executor = InvokerFactory.create_executor("azure", p)
-    result = executor(result)
+    result = executor.run(result)
     print(result)
 
 
@@ -90,14 +90,14 @@ def test_executor_invoker(prompt: str):
 def test_processor_invoker(prompt: str):
     p = prompty.load(prompt)
     renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
+    result = renderer.run(p.sample)
 
     parser = InvokerFactory.create_parser("prompty.chat", p)
-    result = parser(result)
+    result = parser.run(result)
 
     executor = InvokerFactory.create_executor("azure", p)
-    result = executor(result)
+    result = executor.run(result)
 
     processor = InvokerFactory.create_processor("azure", p)
-    result = processor(result)
+    result = processor.run(result)
     print(result)

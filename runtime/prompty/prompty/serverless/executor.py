@@ -70,7 +70,9 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("ChatCompletionsClient") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.ctor")
-                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                trace(
+                    "description", "Azure Unified Inference SDK Chat Completions Client"
+                )
                 trace("inputs", cargs)
                 client = ChatCompletionsClient(
                     user_agent=f"prompty/{VERSION}",
@@ -81,7 +83,9 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("complete") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
-                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                trace(
+                    "description", "Azure Unified Inference SDK Chat Completions Client"
+                )
                 eargs = {
                     "model": self.model,
                     "messages": data if isinstance(data, list) else [data],
@@ -113,7 +117,9 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("complete") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
-                trace("description", "Azure Unified Inference SDK Chat Completions Client")
+                trace(
+                    "description", "Azure Unified Inference SDK Chat Completions Client"
+                )
                 eargs = {
                     "model": self.model,
                     "input": data if isinstance(data, list) else [data],
@@ -129,3 +135,18 @@ class ServerlessExecutor(Invoker):
             raise NotImplementedError("Azure OpenAI Image API is not implemented yet")
 
         return response
+
+    async def invoke_async(self, data: str) -> str:
+        """Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        return self.invoke(data)

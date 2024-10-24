@@ -137,3 +137,19 @@ class PromptyChatParser(Invoker):
             messages.append({"role": role, "content": self.parse_content(content)})
 
         return messages
+    
+
+    async def invoke_async(self, data: str) -> str:
+        """ Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+        
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        return self.invoke(data)

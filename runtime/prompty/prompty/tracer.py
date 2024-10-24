@@ -89,7 +89,7 @@ def _name(func: Callable, args):
         signature = f"{func.__module__}.{func.__name__}"
 
     # core invoker gets special treatment
-    core_invoker = signature == "prompty.core.Invoker.__call__"
+    core_invoker = signature == "prompty.core.Invoker.run"
     if core_invoker:
         name = type(args[0]).__name__
         signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"

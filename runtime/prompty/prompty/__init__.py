@@ -264,7 +264,7 @@ def prepare(
     else:
         # render
         renderer = InvokerFactory.create_renderer(prompt.template.type, prompt)
-        render = renderer(inputs)
+        render = renderer.run(inputs)
 
     if prompt.template.parser == "NOOP":
         result = render
@@ -273,7 +273,7 @@ def prepare(
         parser = InvokerFactory.create_parser(
             f"{prompt.template.parser}.{prompt.model.api}", prompt
         )
-        result = parser(render)
+        result = parser.run(render)
 
     return result
 
@@ -332,7 +332,7 @@ def run(
 
     # execute
     executor = InvokerFactory.create_executor(invoker_type, prompt)
-    result = executor(content)
+    result = executor.run(content)
 
     # skip?
     if not raw:
@@ -341,10 +341,10 @@ def run(
             raise InvokerException(
                 f"{invoker_type} Invoker has not been registered properly.", invoker_type
             )
-        
+
         # process
         processor = InvokerFactory.create_processor(invoker_type, prompt)
-        result = processor(result)
+        result = processor.run(result)
 
     return result
 
