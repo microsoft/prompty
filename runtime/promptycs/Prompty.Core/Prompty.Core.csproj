@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-	<PackageId>Prompty</PackageId>
+	  <PackageId>Prompty.Core</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <Nullable>enable</Nullable>
@@ -12,7 +12,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>0.0.7-alpha</Version>
+    <Version>0.0.9-alpha</Version>
+    <Authors>Cassie Breviu, Seth Juarez</Authors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,10 @@
       <PackagePath>\</PackagePath>
     </None>
     <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="assets\prompty.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

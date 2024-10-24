@@ -38,92 +38,254 @@ namespace Prompty.Core
         public string Path { get; set; } = string.Empty;
         public object Content { get; set; } = string.Empty;
 
+        private string? GetInvokerName(InvokerType type)
+        {
+            return type switch
+            {
+                InvokerType.Renderer => Template?.Type,
+                InvokerType.Parser => $"{Template?.Parser}.{Model?.Api}",
+                InvokerType.Executor => Model?.Configuration?.Type,
+                InvokerType.Processor => Model?.Configuration?.Type,
+                _ => throw new NotImplementedException(),
+            };
+        }
 
+        private object RunInvoker(InvokerType type, object input, object? alt = null)
+        {
+            string? invokerType = GetInvokerName(type);
+
+            if (invokerType == null)
+                throw new Exception($"Invalid invoker type {invokerType}");
+
+            if (invokerType == "NOOP")
+                return input;
+
+            var invoker = InvokerFactory.Instance.CreateInvoker(invokerType, type, this);
+            if (invoker != null)
+                return invoker.Invoke(input);
+
+            if (alt != null)
+                return alt;
+            else
+                return input;
+        }
+
+        private async Task<object> RunInvokerAsync(InvokerType type, object input, object? alt = null)
+        {
+            string? invokerType = GetInvokerName(type);
+
+            if (invokerType == null)
+                throw new Exception($"Invalid invoker type {invokerType}");
+
+            if (invokerType == "NOOP")
+                return input;
+
+            var invoker = InvokerFactory.Instance.CreateInvoker(invokerType, type, this);
+            if (invoker != null)
+                return await invoker.InvokeAsync(input);
+
+            if (alt != null)
+                return alt;
+            else
+                return input;
+        }
+
+        private static Dictionary<string, object> LoadRaw(string promptyContent, string path, string configuration = "default")
+        {
+            var content = promptyContent.Split("---", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (content.Length != 2)
+                throw new Exception("Invalida prompty format");
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+
+            var frontmatter = deserializer.Deserialize<Dictionary<string, object>>(content[0]);
+
+            // frontmatter normalization 
+            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+            frontmatter = Normalizer.Normalize(frontmatter, parentPath);
+
+            // load global configuration
+            var global_config = Normalizer.Normalize(
+                GlobalConfig.Load(System.IO.Path.GetDirectoryName(path) ?? string.Empty) ?? [], parentPath);
+
+
+            // model configuration hoisting
+            if (!frontmatter.ContainsKey("model"))
+                frontmatter["model"] = new Dictionary<string, object>();
+            else
+                frontmatter["model"] = frontmatter.GetValue<Dictionary<string, object>>("model") ?? [];
+
+
+            var modelDict = ((Dictionary<string, object>)frontmatter["model"]);
+
+            if (modelDict.ContainsKey("configuration") && modelDict["configuration"].GetType() == typeof(Dictionary<string, object>))
+                // param hoisting
+                modelDict["configuration"] = ((Dictionary<string, object>)modelDict["configuration"]).ParamHoisting(global_config);
+            else
+                // empty - use global configuration
+                modelDict["configuration"] = global_config;
+
+            frontmatter["content"] = content[1];
+
+            return frontmatter;
+        }
+
+        private static Prompty Convert(Dictionary<string, object> frontmatter, string path)
+        {
+            Prompty prompty = new();
+
+            // metadata
+            prompty.Name = frontmatter.GetValue<string>("name") ?? string.Empty;
+            prompty.Description = frontmatter.GetValue<string>("description") ?? string.Empty;
+            prompty.Authors = frontmatter.GetList<string>("authors").ToArray();
+            prompty.Tags = frontmatter.GetList<string>("tags").ToArray();
+            prompty.Version = frontmatter.GetValue<string>("version") ?? string.Empty;
+
+            // base
+            prompty.Base = frontmatter.GetValue<string>("base") ?? string.Empty;
+
+            // model settings from hoisted params
+            prompty.Model = new Model(frontmatter.GetConfig("model") ?? []);
+
+            // sample
+            prompty.Sample = frontmatter.GetConfig("sample") ?? [];
+
+            // properties
+            prompty.Inputs = frontmatter.GetConfigList("inputs", d => new Settings(d)).ToArray();
+            prompty.Outputs = frontmatter.GetConfigList("outputs", d => new Settings(d)).ToArray();
+
+            // template
+            prompty.Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template
+            {
+                Type = "jinja2",
+                Parser = "prompty"
+            };
+
+            // internals
+            prompty.Path = System.IO.Path.GetFullPath(path);
+            prompty.Content = frontmatter.GetValue<string>("content") ?? string.Empty;
+
+            return prompty;
+        }
 
         public static Prompty Load(string path, string configuration = "default")
         {
             string text = File.ReadAllText(path);
-            var frontmatter = PromptyExtensions.LoadRaw(text, path, configuration);
-            var prompty = frontmatter.ToPrompty(path);
+            var frontmatter = LoadRaw(text, path, configuration);
+            var prompty = Convert(frontmatter, path);
             return prompty;
         }
 
         public static async Task<Prompty> LoadAsync(string path, string configuration = "default")
         {
             string text = await File.ReadAllTextAsync(path);
-            var frontmatter = PromptyExtensions.LoadRaw(text, path, configuration);
-            var prompty = frontmatter.ToPrompty(path);
+            var frontmatter = LoadRaw(text, path, configuration);
+            var prompty = Convert(frontmatter, path);
             return prompty;
         }
 
 
-        public static object Prepare(Prompty prompty, Dictionary<string, object>? inputs = null)
+        public object Prepare(object? inputs = null)
         {
-            return prompty.Prepare(inputs);
+            var resolvedInputs = inputs != null ? inputs.ToParamDictionary().ParamHoisting(Sample ?? []) : Sample ?? [];
+            object render = RunInvoker(InvokerType.Renderer, resolvedInputs, Content ?? "");
+            object parsed = RunInvoker(InvokerType.Parser, render);
+            return parsed;
         }
 
-        public static async Task<object> PrepareAsync(Prompty prompty, Dictionary<string, object>? inputs = null)
+        public async Task<object> PrepareAsync(object? inputs = null)
         {
-            return await prompty.PrepareAsync(inputs);
+            var resolvedInputs = inputs != null ? inputs.ToParamDictionary().ParamHoisting(Sample ?? []) : Sample ?? [];
+            object render = await RunInvokerAsync(InvokerType.Renderer, resolvedInputs, Content ?? "");
+            object parsed = await RunInvokerAsync(InvokerType.Parser, render);
+            return parsed;
         }
 
-        public static object Run(Prompty prompty, 
-            object content, 
-            Dictionary<string, object>? configuration = null, 
-            Dictionary<string, object>? parameters = null, 
+        public object Run(
+            object content,
+            object? configuration = null,
+            object? parameters = null,
             bool raw = false)
         {
-            return prompty.Run(content, configuration, parameters, raw);
+            if (configuration != null)
+                Model!.Configuration = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Configuration.Items ?? []));
+
+            if (parameters != null)
+                Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+
+            object executed = RunInvoker(InvokerType.Executor, content);
+
+            if (raw)
+                return executed;
+            else
+                return RunInvoker(InvokerType.Renderer, executed);
         }
 
-        public static async Task<object> RunAsync(Prompty prompty, 
-            object content, 
-            Dictionary<string, object>? configuration = null, 
-            Dictionary<string, object>? parameters = null, 
+        public async Task<object> RunAsync(
+            object content,
+            object? configuration = null,
+            object? parameters = null,
             bool raw = false)
         {
-            return await prompty.RunAsync(content, configuration, parameters, raw);
+            if (configuration != null)
+                Model!.Configuration = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Configuration.Items ?? []));
+
+            if (parameters != null)
+                Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+
+            object executed = await RunInvokerAsync(InvokerType.Executor, content);
+
+            if (raw)
+                return executed;
+            else
+                return await RunInvokerAsync(InvokerType.Renderer, executed);
         }
 
-        public static object Execute(Prompty prompt, 
-            Dictionary<string, object>? configuration = null, 
-            Dictionary<string, object>? parameters = null, 
-            Dictionary<string, object>? inputs = null, 
+        public object Execute(
+            object? configuration = null,
+            object? parameters = null,
+            object? inputs = null,
             bool raw = false)
         {
-            return prompt.Execute(configuration, parameters, inputs, raw);
+            var content = Prepare(inputs?.ToParamDictionary());
+            var result = Run(content, configuration, parameters, raw);
+            return result;
         }
 
-        public static async Task<object> ExecuteAsync(Prompty prompt, 
-            Dictionary<string, object>? configuration = null, 
-            Dictionary<string, object>? parameters = null, 
-            Dictionary<string, object>? inputs = null, 
+        public async Task<object> ExecuteAsync(
+            object? configuration = null,
+            object? parameters = null,
+            object? inputs = null,
             bool raw = false)
         {
-            return await prompt.ExecuteAsync(configuration, parameters, inputs, raw);
+            var content = await PrepareAsync(inputs?.ToParamDictionary());
+            var result = await RunAsync(content, configuration, parameters, raw);
+            return result;
         }
 
 
         public static object Execute(string prompty,
-            Dictionary<string, object>? configuration = null,
-            Dictionary<string, object>? parameters = null,
-            Dictionary<string, object>? inputs = null,
+            object? configuration = null,
+            object? parameters = null,
+            object? inputs = null,
             string? config = "default",
             bool raw = false)
         {
-            var prompt = Prompty.Load(prompty, config ?? "default");
+            var prompt = Load(prompty, config ?? "default");
             var result = prompt.Execute(configuration, parameters, inputs, raw);
             return result;
         }
 
         public static async Task<object> ExecuteAsync(string prompty,
-            Dictionary<string, object>? configuration = null,
-            Dictionary<string, object>? parameters = null,
-            Dictionary<string, object>? inputs = null,
+            object? configuration = null,
+            object? parameters = null,
+            object? inputs = null,
             string? config = "default",
             bool raw = false)
         {
-            var prompt = await Prompty.LoadAsync(prompty, config ?? "default");
+            var prompt = await LoadAsync(prompty, config ?? "default");
             var result = await prompt.ExecuteAsync(configuration, parameters, inputs, raw);
             return result;
         }

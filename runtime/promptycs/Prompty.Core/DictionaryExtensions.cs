@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,10 +13,55 @@ namespace Prompty.Core
 {
     public static class DictionaryExtensions
     {
-        public static Prompty ToPrompty(this Dictionary<string, object> dict, string path)
+        private static Dictionary<string, object> Expand(IDictionary dictionary)
         {
-            return PromptyExtensions.FromDictionary(dict, path);
+            var dict = new Dictionary<string, object>();
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                if(entry.Value != null)
+                    dict.Add(entry.Key.ToString()!, GetValue(entry.Value));
+            }
+            return dict;
         }
+        private static object GetValue(object o)
+        {
+            return Type.GetTypeCode(o.GetType()) switch
+            {
+                TypeCode.Object => o switch
+                {
+
+                    IDictionary dict => Expand(dict),
+                    IList list => Enumerable.Range(0, list.Count).Where(i => list[i] != null).Select(i => list[i]!.ToParamDictionary()).ToArray(),
+                    _ => o.ToParamDictionary(),
+                },
+                _ => o,
+            };
+        }
+
+        public static Dictionary<string, object> ToParamDictionary(this object obj)
+        {
+            if (obj == null)
+                return new Dictionary<string, object>();
+
+            else if (obj is Dictionary<string, object>)
+                return (Dictionary<string, object>)obj;
+
+            var items = obj.GetType()
+                  .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                  .Where(prop => prop.GetGetMethod() != null);
+
+            var dict = new Dictionary<string, object>();
+
+            foreach (var item in items)
+            {
+                var value = item.GetValue(obj);
+                if (value != null)
+                    dict.Add(item.Name, GetValue(value));
+            }
+
+            return dict;
+        }
+
 
         public static Dictionary<string, object> ToDictionary(this JsonElement obj)
         {
@@ -111,7 +157,7 @@ namespace Prompty.Core
         {
             Dictionary<string, object> dict;
             if (!string.IsNullOrEmpty(key))
-                dict = top != null ? 
+                dict = top != null ?
                     top.GetConfig(key) ?? new Dictionary<string, object>() :
                     new Dictionary<string, object>();
             else

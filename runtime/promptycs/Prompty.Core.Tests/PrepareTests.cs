@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Prompty.Core.Tests
 {
+    class MyObject
+    {
+        public string question { get; set; } = string.Empty;
+    }
+
     public class PrepareTests
     {
         public PrepareTests()
@@ -38,11 +43,53 @@ namespace Prompty.Core.Tests
                 { "question", replacementText }
             });
 
+           
+
             Assert.IsType<ChatMessage[]>(prepared);
             var messages = (ChatMessage[])prepared;
 
             Assert.Equal(2, messages.Length);
             Assert.Equal(replacementText, messages[1].Text);
         }
+
+        [Theory]
+        [InlineData("prompty/basic.prompty")]
+        [InlineData("prompty/context.prompty")]
+        [InlineData("prompty/functions.prompty")]
+        public void PrepareWithObjectInput(string path)
+        {
+            var replacementText = "OTHER_TEXT_OTHER_TEXT";
+            var prompty = Prompty.Load(path);
+            var prepared = prompty.Prepare(new { question = replacementText });
+
+
+
+            Assert.IsType<ChatMessage[]>(prepared);
+            var messages = (ChatMessage[])prepared;
+
+            Assert.Equal(2, messages.Length);
+            Assert.Equal(replacementText, messages[1].Text);
+        }
+
+        [Theory]
+        [InlineData("prompty/basic.prompty")]
+        [InlineData("prompty/context.prompty")]
+        [InlineData("prompty/functions.prompty")]
+        public void PrepareWithStrongObjectInput(string path)
+        {
+            
+            var replacementText = new MyObject { question = "OTHER_TEXT_OTHER_TEXT" };
+            var prompty = Prompty.Load(path);
+            var prepared = prompty.Prepare(replacementText);
+
+
+
+            Assert.IsType<ChatMessage[]>(prepared);
+            var messages = (ChatMessage[])prepared;
+
+            Assert.Equal(2, messages.Length);
+            Assert.Equal(replacementText.question, messages[1].Text);
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,36 +12,30 @@ namespace Prompty.Core
     {
         public static InvokerFactory Instance { get; } = new InvokerFactory();
 
-        private readonly Dictionary<string, Type> _renderers = [];
-        private readonly Dictionary<string, Type> _parsers = [];
-        private readonly Dictionary<string, Type> _executors = [];
-        private readonly Dictionary<string, Type> _processors = [];
+        // make it thread safe for predictable updates
+        private readonly ConcurrentDictionary<string, Type> _renderers = [];
+        private readonly ConcurrentDictionary<string, Type> _parsers = [];
+        private readonly ConcurrentDictionary<string, Type> _executors = [];
+        private readonly ConcurrentDictionary<string, Type> _processors = [];
 
         private InvokerFactory() { }
 
-        private void AddOrUpdate(Dictionary<string, Type> dict, string key, Type value)
-        {
-            if (dict.ContainsKey(key))
-                dict[key] = value;
-            else
-                dict.Add(key, value);
-        }
 
         public void RegisterInvoker(string name, InvokerType invokerType, Type type)
         {
             switch(invokerType)
             {
                 case InvokerType.Renderer:
-                    AddOrUpdate(_renderers, name, type);
+                    _renderers.AddOrUpdate(name, type, (key, oldValue) => type);
                     break;
                 case InvokerType.Parser:
-                    AddOrUpdate(_parsers, name, type);
+                    _parsers.AddOrUpdate(name, type, (key, oldValue) => type);
                     break;
                 case InvokerType.Executor:
-                    AddOrUpdate(_executors, name, type);
+                    _executors.AddOrUpdate(name, type, (key, oldValue) => type);
                     break;
                 case InvokerType.Processor:
-                    AddOrUpdate(_processors, name, type);
+                    _processors.AddOrUpdate(name, type, (key, oldValue) => type);
                     break;
             }
         }
@@ -83,22 +78,22 @@ namespace Prompty.Core
 
         public void RegisterRenderer(string name, Type type)
         {
-            AddOrUpdate(_renderers, name, type);
+            RegisterInvoker(name, InvokerType.Renderer, type);
         }
 
         public void RegisterParser(string name, Type type)
         {
-            AddOrUpdate(_parsers, name, type);
+            RegisterInvoker(name, InvokerType.Parser, type);
         }
 
         public void RegisterExecutor(string name, Type type)
         {
-            AddOrUpdate(_executors, name, type);
+            RegisterInvoker(name, InvokerType.Executor, type);
         }
 
         public void RegisterProcessor(string name, Type type)
         {
-            AddOrUpdate(_processors, name, type);
+            RegisterInvoker(name, InvokerType.Processor, type);
         }
 
         public Invoker CreateInvoker(string name, InvokerType invokerType, Prompty prompty)
