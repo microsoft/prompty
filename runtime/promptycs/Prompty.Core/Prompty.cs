@@ -90,7 +90,7 @@ namespace Prompty.Core
                 return input;
         }
 
-        private static Dictionary<string, object> LoadRaw(string promptyContent, string path, string configuration = "default")
+        private static Dictionary<string, object> LoadRaw(string promptyContent, string path, Dictionary<string, object> global_config)
         {
             var content = promptyContent.Split("---", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (content.Length != 2)
@@ -103,12 +103,7 @@ namespace Prompty.Core
             var frontmatter = deserializer.Deserialize<Dictionary<string, object>>(content[0]);
 
             // frontmatter normalization 
-            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
-            frontmatter = Normalizer.Normalize(frontmatter, parentPath);
-
-            // load global configuration
-            var global_config = Normalizer.Normalize(
-                GlobalConfig.Load(System.IO.Path.GetDirectoryName(path) ?? string.Empty) ?? [], parentPath);
+            frontmatter = Normalizer.Normalize(frontmatter, path);
 
 
             // model configuration hoisting
@@ -173,7 +168,12 @@ namespace Prompty.Core
         public static Prompty Load(string path, string configuration = "default")
         {
             string text = File.ReadAllText(path);
-            var frontmatter = LoadRaw(text, path, configuration);
+            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+
+            var global_config = GlobalConfig.Load(System.IO.Path.GetDirectoryName(path) ?? string.Empty, configuration) ?? [];
+            global_config = Normalizer.Normalize(global_config, path);
+
+            var frontmatter = LoadRaw(text, parentPath, global_config);
             var prompty = Convert(frontmatter, path);
             return prompty;
         }
@@ -181,7 +181,12 @@ namespace Prompty.Core
         public static async Task<Prompty> LoadAsync(string path, string configuration = "default")
         {
             string text = await File.ReadAllTextAsync(path);
-            var frontmatter = LoadRaw(text, path, configuration);
+            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+
+            var global_config = await GlobalConfig.LoadAsync(System.IO.Path.GetDirectoryName(path) ?? string.Empty, configuration) ?? [];
+            global_config = Normalizer.Normalize(global_config, path);
+
+            var frontmatter = LoadRaw(text, path, global_config);
             var prompty = Convert(frontmatter, path);
             return prompty;
         }

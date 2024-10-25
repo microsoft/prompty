@@ -17,6 +17,19 @@ public class LoadTests
     public void LoadRaw(string path)
     {
         var prompty = Prompty.Load(path);
+        
 
+
+    }
+
+    [Theory]
+    [InlineData("prompty/basic.prompty")]
+    [InlineData("prompty/basic_props.prompty")]
+    [InlineData("prompty/context.prompty")]
+    [InlineData("prompty/functions.prompty")]
+    public void LoadRawWithConfig(string path)
+    {
+        var prompty = Prompty.Load(path, "fake");
+        Assert.Equal("FAKE_TYPE", prompty.Model?.Configuration.Type);
     }
 }
