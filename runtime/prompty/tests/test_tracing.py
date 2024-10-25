@@ -155,4 +155,4 @@ def test_streaming():
     for item in result:
         r.append(item)
         
-    return ' '.join(r)
+    print(' '.join(r))

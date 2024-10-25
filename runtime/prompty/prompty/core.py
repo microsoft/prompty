@@ -5,6 +5,7 @@ import re
 import yaml
 import json
 import abc
+import asyncio
 from pathlib import Path
 from .tracer import Tracer, trace, to_dict
 from pydantic import BaseModel, Field, FilePath
@@ -512,6 +513,26 @@ class Frontmatter:
             return cls.read(file_contents)
 
     @classmethod
+    async def read_file_async(cls, path):
+        """Returns dict with separated frontmatter from file.
+
+        Parameters
+        ----------
+        path : str
+            The path to the file
+        """
+        
+        with open(path, 'rb') as f:
+            reader = asyncio.StreamReader()
+            protocol = asyncio.StreamReaderProtocol(reader)
+            await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, f)
+            data = await reader.read()
+
+            # Decode the binary data to text
+            file_contents = data.decode("utf-8")
+            return cls.read(file_contents)
+
+    @classmethod
     def read(cls, string):
         """Returns dict with separated frontmatter from string.
 
@@ -592,7 +613,7 @@ class AsyncPromptyStream(AsyncIterator):
             self.items.append(o)
             return o
 
-        except StopIteration:
+        except StopAsyncIteration:
             # StopIteration is raised
             # contents are exhausted
             if len(self.items) > 0:
@@ -601,4 +622,4 @@ class AsyncPromptyStream(AsyncIterator):
                     trace("inputs", "None")
                     trace("result", [to_dict(s) for s in self.items])
 
-            raise StopIteration
+            raise StopAsyncIteration
