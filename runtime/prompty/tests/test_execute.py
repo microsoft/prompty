@@ -242,7 +242,7 @@ async def test_streaming_async():
     result = await prompty.execute_async(
         "prompts/streaming.prompty",
     )
-    for item in result:
+    async for item in result:
         print(item)
 
 
@@ -278,5 +278,6 @@ async def test_serverless_streaming_async():
         "prompts/serverless_stream.prompty",
         configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
     )
-    for item in result:
+
+    async for item in result:
         print(item)

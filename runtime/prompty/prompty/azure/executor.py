@@ -1,10 +1,10 @@
 import azure.identity
 import importlib.metadata
-from typing import Iterator
-from openai import AzureOpenAI
+from typing import AsyncIterator, Iterator
+from openai import AzureOpenAI, AsyncAzureOpenAI
 
 from prompty.tracer import Tracer
-from ..core import Prompty, PromptyStream
+from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
@@ -145,4 +145,74 @@ class AzureOpenAIExecutor(Invoker):
         str
             The parsed data
         """
-        return self.invoke(data)
+        with Tracer.start("AzureOpenAIAsync") as trace:
+            trace("type", "LLM")
+            trace("signature", "AzureOpenAIAsync.ctor")
+            trace("description", "Async Azure OpenAI Constructor")
+            trace("inputs", self.kwargs)
+            client = AsyncAzureOpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **self.kwargs,
+            )
+            trace("result", client)
+
+        with Tracer.start("create") as trace:
+            trace("type", "LLM")
+            trace("description", "Azure OpenAI Client")
+
+            if self.api == "chat":
+                trace("signature", "AzureOpenAIAsync.chat.completions.create")
+                args = {
+                    "model": self.deployment,
+                    "messages": data if isinstance(data, list) else [data],
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = await client.chat.completions.create(**args)
+                trace("result", response)
+
+            elif self.api == "completion":
+                trace("signature", "AzureOpenAIAsync.completions.create")
+                args = {
+                    "prompt": data,
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = await client.completions.create(**args)
+                trace("result", response)
+
+            elif self.api == "embedding":
+                trace("signature", "AzureOpenAIAsync.embeddings.create")
+                args = {
+                    "input": data if isinstance(data, list) else [data],
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = await client.embeddings.create(**args)
+                trace("result", response)
+
+            elif self.api == "image":
+                trace("signature", "AzureOpenAIAsync.images.generate")
+                args = {
+                    "prompt": data,
+                    "model": self.deployment,
+                    **self.parameters,
+                }
+                trace("inputs", args)
+                response = await client.images.generate.create(**args)
+                trace("result", response)
+
+        # stream response
+        if isinstance(response, AsyncIterator):
+            if self.api == "chat":
+                # TODO: handle the case where there might be no usage in the stream
+                return AsyncPromptyStream("AzureOpenAIExecutorAsync", response)
+            else:
+                return AsyncPromptyStream("AzureOpenAIExecutorAsync", response)
+        else:
+            return response

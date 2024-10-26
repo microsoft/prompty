@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 import pytest
 import prompty
 from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
@@ -258,5 +259,6 @@ async def test_streaming_async():
     result = await prompty.execute_async(
         "prompts/streaming.prompty",
     )
-    for item in result:
-        print(item)
+    if isinstance(result, AsyncIterator):
+        async for item in result:
+            print(item)
