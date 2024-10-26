@@ -1,7 +1,8 @@
 from typing import Iterator
 from openai.types.completion import Completion
 from openai.types.chat.chat_completion import ChatCompletion
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, ToolCall
+from ..invoker import Invoker, InvokerFactory
+from ..core import Prompty, PromptyStream, ToolCall
 from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 

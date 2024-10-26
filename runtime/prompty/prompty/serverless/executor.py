@@ -10,8 +10,9 @@ from azure.ai.inference.models import (
     AsyncStreamingChatCompletions,
 )
 
-from prompty.tracer import Tracer
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, AsyncPromptyStream
+from ..tracer import Tracer
+from ..invoker import Invoker, InvokerFactory
+from ..core import Prompty, PromptyStream, AsyncPromptyStream
 
 VERSION = importlib.metadata.version("prompty")
 

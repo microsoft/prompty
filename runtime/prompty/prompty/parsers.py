@@ -1,6 +1,7 @@
 import re
 import base64
-from .core import Invoker, InvokerFactory, Prompty
+from .core import Prompty
+from .invoker import Invoker, InvokerFactory
 
 
 @InvokerFactory.register_parser("prompty.chat")

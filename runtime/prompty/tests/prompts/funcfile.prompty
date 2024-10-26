@@ -8,7 +8,7 @@ model:
   configuration:
     azure_deployment: gpt-35-turbo
   parameters:
-    tools: file:funcfile.json
+    tools: ${file:funcfile.json}
 sample:
   firstName: Seth
   lastName: Juarez

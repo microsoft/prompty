@@ -3,7 +3,8 @@ from openai import OpenAI
 from typing import Iterator
 
 from prompty.tracer import Tracer
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
+from ..core import Prompty, PromptyStream
+from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
 

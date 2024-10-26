@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from prompty import Invoker, Prompty
+from prompty import Prompty
+from prompty.invoker import Invoker
 from prompty.core import PromptyStream
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletion

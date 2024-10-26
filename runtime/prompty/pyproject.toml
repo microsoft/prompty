@@ -4,12 +4,16 @@ dynamic = ["version"]
 readme = "README.md"
 description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
 authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
+requires-python = ">=3.9"
+
+license = { text = "MIT" }
 dependencies = [
     "pyyaml>=6.0.1",
     "pydantic>=2.8.2",
     "jinja2>=3.1.4",
     "python-dotenv>=1.0.1",
-    "click>=8.1.7"
+    "click>=8.1.7",
+    "aiofiles>=24.1.0",
 ]
 
 [project.optional-dependencies]
@@ -17,20 +21,21 @@ azure = ["azure-identity>=1.17.1","openai>=1.35.10"]
 openai = ["openai>=1.35.10"]
 serverless = ["azure-ai-inference>=1.0.0b3"]
 
-[tool.pdm.dev-dependencies]
-dev = ["pytest>=8.2.2","openai>=1.35.10","azure-ai-inference>=1.0.0b3"]
-
-requires-python = ">=3.9"
-readme = "README.md"
-license = { text = "MIT" }
-
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
 
 [tool.pdm]
 distribution = true
+
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.2.2",
+    "openai>=1.35.10",
+    "azure-ai-inference>=1.0.0b3",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
 
 
 [tool.pdm.version]
@@ -41,7 +46,10 @@ tag_regex = '^python/(?:\D*)?(?P<version>([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-
 [tool.pdm.scripts]
 prompty = { call = "prompty.cli:run" }
 
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
 [project.scripts]
 prompty = "prompty.cli:run"
-
-

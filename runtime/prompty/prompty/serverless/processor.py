@@ -1,5 +1,6 @@
 from typing import Iterator
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream, ToolCall
+from ..invoker import Invoker, InvokerFactory
+from ..core import Prompty, PromptyStream, ToolCall
 
 from azure.ai.inference.models import ChatCompletions, EmbeddingsResult
 
