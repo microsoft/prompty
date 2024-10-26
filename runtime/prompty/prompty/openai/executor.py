@@ -3,7 +3,8 @@ from openai import OpenAI
 from typing import Iterator
 
 from prompty.tracer import Tracer
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
+from ..core import Prompty, PromptyStream
+from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
 
@@ -96,3 +97,18 @@ class OpenAIExecutor(Invoker):
             else:
                 trace("result", response)
                 return response
+
+    async def invoke_async(self, data: str) -> str:
+        """Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        return self.invoke(data)

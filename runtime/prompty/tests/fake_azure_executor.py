@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
-from prompty import Invoker, Prompty
-from prompty.core import PromptyStream
+from prompty import Prompty
+from prompty.invoker import Invoker
+from prompty.core import AsyncPromptyStream, PromptyStream
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
@@ -34,6 +35,55 @@ class FakeAzureExecutor(Invoker):
                         yield ChatCompletionChunk.model_validate(items[i])
 
                 return PromptyStream("FakeAzureExecutor", generator())
+
+            elif self.api == "chat":
+                return ChatCompletion.model_validate_json(j)
+            elif self.api == "embedding":
+                return CreateEmbeddingResponse.model_validate_json(j)
+
+        elif self.api == "embedding":
+            if not isinstance(data, list):
+                d = [data]
+            else:
+                d = data
+
+            n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
+            p = Path(__file__).parent / f"{n}.embedding.json"
+            with open(p, "r", encoding="utf-8") as f:
+                response = CreateEmbeddingResponse.model_validate_json(f.read())
+                return response
+
+        return data
+
+    async def invoke_async(self, data: str) -> str:
+        """Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        if self.prompty.file:
+            p = (
+                Path(self.prompty.file.parent)
+                / f"{self.prompty.file.name}.execution.json"
+            )
+            with open(p, "r", encoding="utf-8") as f:
+                j = f.read()
+
+            if self.parameters.get("stream", False):
+                items = json.loads(j)
+
+                async def generator():
+                    for i in range(1, len(items)):
+                        yield ChatCompletionChunk.model_validate(items[i])
+
+                return AsyncPromptyStream("FakeAzureExecutor", generator())
 
             elif self.api == "chat":
                 return ChatCompletion.model_validate_json(j)

@@ -1,155 +1,218 @@
-﻿
+﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.FileSystemGlobbing;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Prompty.Core.Types;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Prompty.Core.Parsers
 {
-    public class PromptyChatParser : IInvoker
+    enum ContentType
     {
-        private string _path;
-        public PromptyChatParser(Prompty prompty, InvokerFactory invoker)
+        Text,
+        LocalImage,
+        RemoteImage
+    }
+
+    struct RawMessage
+    {
+        public ChatRole Role { get; set; }
+        public string? Content { get; set; }
+        public IEnumerable<RawContent> Contents { get; set; }
+    }
+
+    struct RawContent
+    {
+        public ContentType ContentType { get; set; }
+        public string Content { get; set; }
+        public string Media { get; set; }
+    }
+
+    [Parser("prompty.chat")]
+    public class PromptyChatParser : Invoker
+    {
+        private static readonly string[] _roles = ["assistant", "function", "tool", "system", "user"];
+        private static readonly string _messageRegex = @"^\s*#?\s*(" + string.Join("|", _roles) + @")\s*:\s*$";
+        private static readonly string _imageRegex = @"(?<alt>!\[[^\]]*\])\((?<filename>.*?)(?=\""|\))\)";
+
+        public PromptyChatParser(Prompty prompty) : base(prompty) { }
+
+        public override object Invoke(object args)
         {
-            _path = prompty.FilePath;
-            invoker.Register(InvokerType.Parser, ParserType.Chat.ToString(), this);
+            if (args.GetType() != typeof(string))
+                throw new Exception("Invalid args type for prompty.chat");
 
-            //just in case someone makes a full prompty for embedding, completion, or image...
-            invoker.Register(InvokerType.Parser, ParserType.Embedding.ToString(), new NoOpInvoker());
-            invoker.Register(InvokerType.Parser, ParserType.Image.ToString(),  new NoOpInvoker());
-            invoker.Register(InvokerType.Parser, ParserType.Completion.ToString(), new NoOpInvoker());
-        }
-
-
-        public string InlineImage(string imageItem)
-        {
-            // Pass through if it's a URL or base64 encoded
-            if (imageItem.StartsWith("http") || imageItem.StartsWith("data"))
+            var messages = Parse((string)args).Select(m =>
             {
-                return imageItem;
-            }
-            // Otherwise, it's a local file - need to base64 encode it
-            else
-            {
-                string imageFilePath = Path.Combine(_path, imageItem);
-                byte[] imageBytes = File.ReadAllBytes(imageFilePath);
-                string base64Image = Convert.ToBase64String(imageBytes);
+                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
+                {
+                    var contents = m.Contents.Select<RawContent, AIContent>(c =>
+                    {
+                        switch (c.ContentType)
+                        {
+                            case ContentType.Text:
+                                return new TextContent(c.Content);
+                            case ContentType.LocalImage:
+                                var image = GetImageContent(c.Content, c.Media);
+                                return new ImageContent(image, c.Media);
+                            case ContentType.RemoteImage:
+                                return new ImageContent(c.Content, c.Media);
+                            default:
+                                throw new Exception("Invalid content type!");
+                        }
+                    }).ToList();
 
-                if (Path.GetExtension(imageFilePath).Equals(".png", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"data:image/png;base64,{base64Image}";
-                }
-                else if (Path.GetExtension(imageFilePath).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                         Path.GetExtension(imageFilePath).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"data:image/jpeg;base64,{base64Image}";
+                    return new ChatMessage(m.Role, contents);
                 }
                 else
                 {
-                    throw new ArgumentException($"Invalid image format {Path.GetExtension(imageFilePath)}. " +
-                                                "Currently only .png and .jpg / .jpeg are supported.");
+                    return new ChatMessage(m.Role, m.Content);
                 }
-            }
+            }).ToArray();
+
+            return messages;
+
         }
 
-        public List<Dictionary<string, string>> ParseContent(string content)
+        public async override Task<object> InvokeAsync(object args)
         {
-            // Regular expression to parse markdown images
-           // var imagePattern = @"(?P<alt>!\[[^\]]*\])\((?P<filename>.*?)(?=""|\))";
-            var imagePattern = @"(\!\[[^\]]*\])\(([^""\)]+)(?=\""\))";
-            var matches = Regex.Matches(content, imagePattern, RegexOptions.Multiline);
+            if (args.GetType() != typeof(string))
+                throw new Exception("Invalid args type for prompty.chat");
 
-            if (matches.Count > 0)
+            var messageTask = Parse((string)args).Select(async m =>
             {
-                var contentItems = new List<Dictionary<string, string>>();
-                var contentChunks = Regex.Split(content, imagePattern, RegexOptions.Multiline);
-                var currentChunk = 0;
-
-                for (int i = 0; i < contentChunks.Length; i++)
+                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
                 {
-                    // Image entry
-                    if (currentChunk < matches.Count && contentChunks[i] == matches[currentChunk].Groups[0].Value)
+                    var task = m.Contents.Select<RawContent, Task<AIContent>>(async c =>
                     {
-                        contentItems.Add(new Dictionary<string, string>
-                    {
-                        { "type", "image_url" },
-                        { "image_url", this.InlineImage(matches[currentChunk].Groups[2].Value.Split(" ")[0].Trim()) }
-                    });
-                    }
-                    // Second part of image entry
-                    else if (currentChunk < matches.Count && contentChunks[i] == matches[currentChunk].Groups[2].Value)
-                    {
-                        currentChunk++;
-                    }
-                    // Text entry
-                    else
-                    {
-                        var trimmedChunk = contentChunks[i].Trim();
-                        if (!string.IsNullOrEmpty(trimmedChunk))
+                        switch (c.ContentType)
                         {
-                            contentItems.Add(new Dictionary<string, string>
-                        {
-                            { "type", "text" },
-                            { "text", trimmedChunk }
-                        });
+                            case ContentType.Text:
+                                return new TextContent(c.Content);
+                            case ContentType.LocalImage:
+                                var image = await GetImageContentAsync(c.Content, c.Media);
+                                return new ImageContent(image, c.Media);
+                            case ContentType.RemoteImage:
+                                return new ImageContent(c.Content, c.Media);
+                            default:
+                                throw new Exception("Invalid content type!");
                         }
-                    }
-                }
+                    });
 
-                return contentItems;
-            }
-            else
-            {
-                // No image matches found, return original content
-                return new List<Dictionary<string, string>>
+                    var results = await Task.WhenAll(task);
+
+                    return new ChatMessage(m.Role, [.. results]);
+                }
+                else
                 {
-                    new Dictionary<string, string>
-                    {
-                        { "type", "text" },
-                        { "text", content }
-                    }
-                };
-            }
+                    return new ChatMessage(m.Role, m.Content);
+                }
+            });
+
+            var messages = await Task.WhenAll(messageTask);
+            return messages;
         }
 
 
-
-        public async Task<BaseModel> Invoke(BaseModel data)
+        private ChatRole ToChatRole(string role)
         {
-            var roles = (RoleType[])Enum.GetValues(typeof(RoleType));
-            var messages = new List<Dictionary<string, string>>();
-            var separator = @"(?i)^\s*#?\s*(" + string.Join("|", roles) + @")\s*:\s*\n";
-
-            // Get valid chunks - remove empty items
-            var chunks = new List<string>();
-            foreach (var item in Regex.Split(data.Prompt, separator, RegexOptions.Multiline))
+            switch (role)
             {
-                if (!string.IsNullOrWhiteSpace(item))
-                    chunks.Add(item.Trim());
+                case "assistant":
+                    return ChatRole.Assistant;
+                case "function":
+                    return ChatRole.Tool;
+                case "tool":
+                    return ChatRole.Tool;
+                case "system":
+                    return ChatRole.System;
+                case "user":
+                    return ChatRole.User;
+
+                default:
+                    throw new Exception("Invalid role!");
             }
+        }
 
-            // If no starter role, then inject system role
-            if (!chunks[0].ToLower().Trim().Equals(RoleType.system.ToString().ToLower()))
-                chunks.Insert(0, RoleType.system.ToString());
+        private IEnumerable<RawMessage> Parse(string template)
+        {
+            var chunks = Regex.Split(template, _messageRegex, RegexOptions.Multiline)
+                                .Where(s => s.Trim().Length > 0)
+                                .Select(s => s.Trim())
+                                .ToList();
 
-            // If last chunk is role entry, then remove (no content?)
-            if (chunks[chunks.Count - 1].ToLower().Trim().Equals(RoleType.system.ToString().ToLower()))
+            // if no starter role, assume system
+            if (chunks[0].Trim().ToLower() != "system")
+                chunks.Insert(0, "system");
+
+            // if last chunk is role then content is empty
+            if (_roles.Contains(chunks[chunks.Count - 1].Trim().ToLower()))
                 chunks.RemoveAt(chunks.Count - 1);
 
             if (chunks.Count % 2 != 0)
-                throw new ArgumentException("Invalid prompt format");
+                throw new Exception("Invalid prompt format!");
 
-            // Create messages
+            List<ChatMessage> messages = [];
             for (int i = 0; i < chunks.Count; i += 2)
             {
-                var role = chunks[i].ToLower().Trim();
-                var content = chunks[i + 1].Trim();
-                var parsedContent = ParseContent(content).LastOrDefault().Values.LastOrDefault();
-                messages.Add(new Dictionary<string, string> { { "role", role }, { "content", parsedContent } }) ;
+                var matches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
+                if (matches.Count > 0)
+                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Contents = Process(matches, chunks[i + 1]) };
+                else
+                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Content = chunks[i + 1] };
             }
-            data.Messages = messages;
+        }
 
-            return data;
+        private IEnumerable<RawContent> Process(MatchCollection matches, string content)
+        {
+            var content_chunks = Regex.Split(content, _imageRegex, RegexOptions.Multiline)
+                            .Where(s => s.Trim().Length > 0)
+                            .Select(s => s.Trim())
+                            .ToList();
+
+            int current_chunk = 0;
+            for (int i = 0; i < content_chunks.Count; i++)
+            {
+                var chunk = content_chunks[i];
+
+                // alt entry
+                if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["alt"].Value)
+                    continue;
+                // image entry
+                else if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["filename"].Value)
+                {
+                    var img = matches[current_chunk].Groups[2].Value.Split(" ")[0].Trim();
+                    var media = img.Split(".").Last().Trim().ToLower();
+                    if (media != "jpg" && media != "jpeg" && media != "png")
+                        throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
+
+                    if (img.StartsWith("http://") || img.StartsWith("https://"))
+                        yield return new RawContent { ContentType = ContentType.RemoteImage, Content = img, Media = $"image/{media}" };
+                    else
+                        yield return new RawContent { ContentType = ContentType.LocalImage, Content = img, Media = $"image/{media}" };
+
+                    current_chunk++;
+                }
+                // text entry
+                else if (chunk.Trim().Length > 0)
+                    yield return new RawContent { ContentType = ContentType.Text, Content = chunk.Trim() };
+
+            }
+        }
+
+        private byte[]? GetImageContent(string image, string media)
+        {
+            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var bytes = File.ReadAllBytes(path);
+            return bytes;
+        }
+
+        private async Task<byte[]?> GetImageContentAsync(string image, string media)
+        {
+            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var bytes = await File.ReadAllBytesAsync(path);
+            return bytes;
         }
     }
-
 }
-

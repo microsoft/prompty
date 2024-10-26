@@ -1,5 +1,5 @@
 # __init__.py
-from prompty.core import InvokerException
+from prompty.invoker import InvokerException
 
 try:
     from .executor import ServerlessExecutor

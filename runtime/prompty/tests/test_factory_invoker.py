@@ -1,7 +1,7 @@
 import pytest
 import prompty
 from pathlib import Path
-from prompty.core import InvokerFactory
+from prompty.invoker import InvokerFactory
 
 from tests.fake_azure_executor import FakeAzureExecutor
 from prompty.azure import AzureOpenAIProcessor
@@ -29,8 +29,7 @@ BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 )
 def test_renderer_invoker(prompt: str):
     p = prompty.load(prompt)
-    renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
+    result = InvokerFactory.run("renderer", p, p.sample)
     print(result)
 
 
@@ -51,8 +50,7 @@ def test_parser_invoker(markdown: str):
     with open(f"{BASE_PATH}/generated/{markdown}", "r", encoding="utf-8") as f:
         content = f.read()
     prompt = prompty.load("prompts/basic.prompty")
-    parser = InvokerFactory.create_parser("prompty.chat", prompt)
-    result = parser(content)
+    result = InvokerFactory.run_parser(prompt, content)
     print(result)
 
 
@@ -67,14 +65,10 @@ def test_parser_invoker(markdown: str):
 )
 def test_executor_invoker(prompt: str):
     p = prompty.load(prompt)
-    renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
-
-    parser = InvokerFactory.create_parser("prompty.chat", p)
-    result = parser(result)
-
-    executor = InvokerFactory.create_executor("azure", p)
-    result = executor(result)
+    
+    result = InvokerFactory.run_renderer(p, p.sample)
+    result = InvokerFactory.run_parser(p, result)
+    result = InvokerFactory.run_executor(p, result)
     print(result)
 
 
@@ -89,15 +83,8 @@ def test_executor_invoker(prompt: str):
 )
 def test_processor_invoker(prompt: str):
     p = prompty.load(prompt)
-    renderer = InvokerFactory.create_renderer("jinja2", p)
-    result = renderer(p.sample)
-
-    parser = InvokerFactory.create_parser("prompty.chat", p)
-    result = parser(result)
-
-    executor = InvokerFactory.create_executor("azure", p)
-    result = executor(result)
-
-    processor = InvokerFactory.create_processor("azure", p)
-    result = processor(result)
+    result = InvokerFactory.run_renderer(p, p.sample)
+    result = InvokerFactory.run_parser(p, result)
+    result = InvokerFactory.run_executor(p, result)
+    result = InvokerFactory.run_processor(p, result)
     print(result)
