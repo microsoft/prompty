@@ -32,6 +32,8 @@ dev = [
     "openai>=1.35.10",
     "azure-ai-inference>=1.0.0b3",
     "pytest-asyncio>=0.24.0",
+    "azure-identity>=1.17.1",
+    "openai>=1.35.10"
 ]
 
 [tool.pytest.ini_options]
