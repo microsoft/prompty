@@ -32,7 +32,7 @@ jobs:
 
       - name: install dependencies
         working-directory: ./runtime/prompty
-        run: pdm update
+        run: pdm install
 
       - name: test package
         working-directory: ./runtime/prompty
