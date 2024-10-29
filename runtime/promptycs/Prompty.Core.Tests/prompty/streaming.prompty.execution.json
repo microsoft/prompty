@@ -1,0 +1,3601 @@
+[
+  {
+    "id": "",
+    "choices": [],
+    "created": 0,
+    "model": "",
+    "object": "",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null,
+    "prompt_filter_results": [
+      {
+        "prompt_index": 0,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": null,
+          "function_call": null,
+          "role": "assistant",
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {}
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "Ah",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " the",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " age",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "-old",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " question",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " about",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " the",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " meaning",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " of",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " life",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "!",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " \ud83c\udf0d",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "\n",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "While",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " everyone",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " may",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " have",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " their",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " own",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " interpretation",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " some",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " philosoph",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "ies",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " suggest",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " that",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " the",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " meaning",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " of",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " life",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " is",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " subjective",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " and",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " can",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " vary",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " from",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " person",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " to",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " person",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ".",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " It",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " could",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " be",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " about",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " finding",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " happiness",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " pursuing",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " personal",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " goals",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " making",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " meaningful",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " connections",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " with",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " others",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " or",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " contributing",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " to",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " the",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " better",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "ment",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " of",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " society",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ".",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " Ultimately",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " it",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": "'s",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " up",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " to",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " you",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " Jane",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ",",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " to",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " define",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " what",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " gives",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " your",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " life",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " purpose",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " and",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " fulfillment",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": ".",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": " \ud83c\udf1f",
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": null,
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  },
+  {
+    "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+    "choices": [
+      {
+        "delta": {
+          "content": null,
+          "function_call": null,
+          "role": null,
+          "tool_calls": null
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "content_filter_results": {}
+      }
+    ],
+    "created": 1721074375,
+    "model": "gpt-35-turbo",
+    "object": "chat.completion.chunk",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": null
+  }
+]

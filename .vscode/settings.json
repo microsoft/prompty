@@ -2,5 +2,5 @@
   "files.exclude": {
     "**/web": false,
     "**/runtime": false
-  },
+  }
 }

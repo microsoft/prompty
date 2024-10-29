@@ -4,5 +4,4 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "prompty.currentModelConfiguration": "gpt-35-turbo",
 }

@@ -88,11 +88,16 @@ def _name(func: Callable, args):
     else:
         signature = f"{func.__module__}.{func.__name__}"
 
-    # core invoker gets special treatment
-    core_invoker = signature == "prompty.core.Invoker.__call__"
+    # core invoker gets special treatment prompty.invoker.Invoker
+    core_invoker = signature.startswith("prompty.invoker.Invoker.run")
     if core_invoker:
         name = type(args[0]).__name__
-        signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"
+        if signature.endswith("async"):
+            signature = (
+                f"{args[0].__module__}.{args[0].__class__.__name__}.invoke_async"
+            )
+        else:
+            signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"
     else:
         name = func.__name__
 
@@ -113,20 +118,19 @@ def _results(result: Any) -> dict:
 
 
 def _trace_sync(
-    func: Callable = None, *, description: str = None, itemtype: str = None
+    func: Callable = None, **okwargs: Any
 ) -> Callable:
-    description = description or ""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
         with Tracer.start(name) as trace:
             trace("signature", signature)
-            if description and description != "":
-                trace("description", description)
 
-            if itemtype and itemtype != "":
-                trace("type", itemtype)
+            # support arbitrary keyword
+            # arguments for trace decorator
+            for k, v in okwargs.items():
+                trace(k, to_dict(v))
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -158,20 +162,19 @@ def _trace_sync(
 
 
 def _trace_async(
-    func: Callable = None, *, description: str = None, itemtype: str = None
+    func: Callable = None, **okwargs: Any
 ) -> Callable:
-    description = description or ""
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
         with Tracer.start(name) as trace:
             trace("signature", signature)
-            if description and description != "":
-                trace("description", description)
 
-            if itemtype and itemtype != "":
-                trace("type", itemtype)
+            # support arbitrary keyword 
+            # arguments for trace decorator
+            for k, v in okwargs.items():
+                trace(k, to_dict(v))
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -201,15 +204,11 @@ def _trace_async(
     return wrapper
 
 
-def trace(
-    func: Callable = None, *, description: str = None, itemtype: str = None
-) -> Callable:
+def trace(func: Callable = None, **kwargs: Any) -> Callable:
     if func is None:
-        return partial(trace, description=description, itemtype=itemtype)
-
+        return partial(trace, **kwargs)
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync
-
-    return wrapped_method(func, description=description, itemtype=itemtype)
+    return wrapped_method(func, **kwargs)
 
 
 class PromptyTracer:

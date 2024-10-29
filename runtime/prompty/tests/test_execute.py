@@ -1,7 +1,7 @@
 import os
 import pytest
 import prompty
-from prompty.core import InvokerFactory
+from prompty.invoker import InvokerFactory
 
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
@@ -28,7 +28,6 @@ def fake_azure_executor():
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
 
-
 @pytest.mark.parametrize(
     "prompt",
     [
@@ -41,6 +40,22 @@ def fake_azure_executor():
 )
 def test_basic_execution(prompt: str):
     result = prompty.execute(prompt)
+    print(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "prompts/basic.prompty",
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        "prompts/faithfulness.prompty",
+        "prompts/embedding.prompty",
+    ],
+)
+async def test_basic_execution_async(prompt: str):
+    result = await prompty.execute_async(prompt)
     print(result)
 
 
@@ -88,12 +103,33 @@ def get_response(customerId, question, prompt):
     return {"question": question, "answer": result, "context": context}
 
 
+async def get_response_async(customerId, question, prompt):
+    customer = get_customer(customerId)
+    context = get_context(question)
+
+    result = await prompty.execute_async(
+        prompt,
+        inputs={"question": question, "customer": customer, "documentation": context},
+    )
+    return {"question": question, "answer": result, "context": context}
+
+
 def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"
     prompt = "context.prompty"
 
     response = get_response(customerId, question, f"prompts/{prompt}")
+    print(response)
+
+
+@pytest.mark.asyncio
+async def test_context_flow_async():
+    customerId = 1
+    question = "tell me about your jackets"
+    prompt = "context.prompty"
+
+    response = await get_response_async(customerId, question, f"prompts/{prompt}")
     print(response)
 
 
@@ -107,8 +143,29 @@ def evaluate(prompt, evalprompt, customerId, question):
     return result
 
 
+async def evaluate_async(prompt, evalprompt, customerId, question):
+    response = await get_response_async(customerId, question, prompt)
+
+    result = await prompty.execute_async(
+        evalprompt,
+        inputs=response,
+    )
+    return result
+
+
 def test_context_groundedness():
     result = evaluate(
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        1,
+        "tell me about your jackets",
+    )
+    print(result)
+
+
+@pytest.mark.asyncio
+async def test_context_groundedness_async():
+    result = await evaluate_async(
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         1,
@@ -127,6 +184,17 @@ def test_embedding_headless():
     print(emb)
 
 
+@pytest.mark.asyncio
+async def test_embedding_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content="hello world",
+    )
+    emb = await prompty.execute_async(p)
+    print(emb)
+
+
 def test_embeddings_headless():
     p = prompty.headless(
         api="embedding",
@@ -134,6 +202,17 @@ def test_embeddings_headless():
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = prompty.execute(p)
+    print(emb)
+
+
+@pytest.mark.asyncio
+async def test_embeddings_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content=["hello world", "goodbye world", "hello again"],
+    )
+    emb = await prompty.execute_async(p)
     print(emb)
 
 
@@ -149,6 +228,14 @@ def test_structured_output():
     )
     print(result)
 
+@pytest.mark.asyncio
+async def test_function_calling_async():
+    result = await prompty.execute_async(
+        "prompts/functions.prompty",
+    )
+    print(result)
+
+
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
@@ -160,9 +247,26 @@ def test_streaming():
         print(item)
 
 
+@pytest.mark.asyncio
+async def test_streaming_async():
+    result = await prompty.execute_async(
+        "prompts/streaming.prompty",
+    )
+    async for item in result:
+        print(item)
+
+
 def test_serverless():
-    
     result = prompty.execute(
+        "prompts/serverless.prompty",
+        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+    )
+    print(result)
+
+
+@pytest.mark.asyncio
+async def test_serverless_async():
+    result = await prompty.execute_async(
         "prompts/serverless.prompty",
         configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
     )
@@ -175,4 +279,15 @@ def test_serverless_streaming():
         configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
     )
     for item in result:
+        print(item)
+
+
+@pytest.mark.asyncio
+async def test_serverless_streaming_async():
+    result = await prompty.execute_async(
+        "prompts/serverless_stream.prompty",
+        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+    )
+
+    async for item in result:
         print(item)

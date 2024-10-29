@@ -1,8 +1,9 @@
+from typing import AsyncIterator
 import pytest
 import prompty
 from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
 
-from prompty.core import InvokerFactory
+from prompty.invoker import InvokerFactory
 from tests.fake_azure_executor import FakeAzureExecutor
 from prompty.azure import AzureOpenAIProcessor
 
@@ -31,6 +32,22 @@ def setup_module():
 )
 def test_basic_execution(prompt: str):
     result = prompty.execute(prompt)
+    print(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "prompts/basic.prompty",
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        "prompts/faithfulness.prompty",
+        "prompts/embedding.prompty",
+    ],
+)
+async def test_basic_execution_async(prompt: str):
+    result = await prompty.execute_async(prompt)
     print(result)
 
 
@@ -82,12 +99,35 @@ def get_response(customerId, question, prompt):
 
 
 @trace
+async def get_response_async(customerId, question, prompt):
+    customer = get_customer(customerId)
+    context = get_context(question)
+
+    result = await prompty.execute_async(
+        prompt,
+        inputs={"question": question, "customer": customer, "documentation": context},
+    )
+    return {"question": question, "answer": result, "context": context}
+
+
+@trace
 def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"
     prompt = "context.prompty"
 
     response = get_response(customerId, question, f"prompts/{prompt}")
+    print(response)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_context_flow_async():
+    customerId = 1
+    question = "tell me about your jackets"
+    prompt = "context.prompty"
+
+    response = await get_response_async(customerId, question, f"prompts/{prompt}")
     print(response)
 
 
@@ -101,10 +141,32 @@ def evaluate(prompt, evalprompt, customerId, question):
     )
     return result
 
+@trace
+async def evaluate_async(prompt, evalprompt, customerId, question):
+    response = await get_response_async(customerId, question, prompt)
+
+    result = await prompty.execute_async(
+        evalprompt,
+        inputs=response,
+    )
+    return result
+
 
 @trace
 def test_context_groundedness():
     result = evaluate(
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        1,
+        "tell me about your jackets",
+    )
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_context_groundedness_async():
+    result = await evaluate_async(
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         1,
@@ -124,6 +186,18 @@ def test_embedding_headless():
     print(emb)
 
 
+@pytest.mark.asyncio
+@trace
+async def test_embedding_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content="hello world",
+    )
+    emb = await prompty.execute_async(p)
+    print(emb)
+
+
 @trace
 def test_embeddings_headless():
     p = prompty.headless(
@@ -132,6 +206,18 @@ def test_embeddings_headless():
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = prompty.execute(p)
+    print(emb)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_embeddings_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content=["hello world", "goodbye world", "hello again"],
+    )
+    emb = await prompty.execute_async(p)
     print(emb)
 
 
@@ -149,10 +235,19 @@ def test_structured_output():
     )
     print(result)
 
+@pytest.mark.asyncio
+@trace
+async def test_function_calling_async():
+    result = await prompty.execute_async(
+        "prompts/functions.prompty",
+    )
+    print(result)
+
+
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
-@trace
+@trace(streaming=True, other="test")
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
@@ -160,5 +255,16 @@ def test_streaming():
     r = []
     for item in result:
         r.append(item)
-        
-    return ' '.join(r)
+
+    print(' '.join(r))
+
+
+@pytest.mark.asyncio
+@trace(streaming=True)
+async def test_streaming_async():
+    result = await prompty.execute_async(
+        "prompts/streaming.prompty",
+    )
+    if isinstance(result, AsyncIterator):
+        async for item in result:
+            print(item)
