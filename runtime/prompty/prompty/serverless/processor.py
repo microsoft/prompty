@@ -1,6 +1,6 @@
-from typing import Iterator
+from typing import AsyncIterator, Iterator
 from ..invoker import Invoker, InvokerFactory
-from ..core import Prompty, PromptyStream, ToolCall
+from ..core import AsyncPromptyStream, Prompty, PromptyStream, ToolCall
 
 from azure.ai.inference.models import ChatCompletions, EmbeddingsResult
 
@@ -75,4 +75,39 @@ class ServerlessProcessor(Invoker):
         str
             The parsed data
         """
-        return self.invoke(data)
+        if isinstance(data, ChatCompletions):
+            response = data.choices[0].message
+            # tool calls available in response
+            if response.tool_calls:
+                return [
+                    ToolCall(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        arguments=tool_call.function.arguments,
+                    )
+                    for tool_call in response.tool_calls
+                ]
+            else:
+                return response.content
+
+        elif isinstance(data, EmbeddingsResult):
+            if len(data.data) == 0:
+                raise ValueError("Invalid data")
+            elif len(data.data) == 1:
+                return data.data[0].embedding
+            else:
+                return [item.embedding for item in data.data]
+        elif isinstance(data, AsyncIterator):
+
+            async def generator():
+                async for chunk in data:
+                    if (
+                        len(chunk.choices) == 1
+                        and chunk.choices[0].delta.content != None
+                    ):
+                        content = chunk.choices[0].delta.content
+                        yield content
+
+            return AsyncPromptyStream("ServerlessProcessor", generator())
+        else:
+            return data
