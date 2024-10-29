@@ -241,7 +241,7 @@ async def test_function_calling_async():
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
-@trace
+@trace(streaming=True, other="test")
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
@@ -254,7 +254,7 @@ def test_streaming():
 
 
 @pytest.mark.asyncio
-@trace
+@trace(streaming=True)
 async def test_streaming_async():
     result = await prompty.execute_async(
         "prompts/streaming.prompty",
