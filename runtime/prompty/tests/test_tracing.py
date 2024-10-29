@@ -1,19 +1,27 @@
 from typing import AsyncIterator
 import pytest
 import prompty
+from prompty.serverless.processor import ServerlessProcessor
 from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
 
 from prompty.invoker import InvokerFactory
 from tests.fake_azure_executor import FakeAzureExecutor
 from prompty.azure import AzureOpenAIProcessor
+from tests.fake_serverless_executor import FakeServerlessExecutor
 
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_module():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_beta", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai_beta", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
+    InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
     Tracer.add("console", console_tracer)
     json_tracer = PromptyTracer()
@@ -228,12 +236,32 @@ def test_function_calling():
     )
     print(result)
 
+
+@pytest.mark.asyncio
+@trace
+async def test_function_calling_async():
+    result = await prompty.execute_async(
+        "prompts/functions.prompty",
+    )
+    print(result)
+
+
 @trace
 def test_structured_output():
     result = prompty.execute(
         "prompts/structured_output.prompty",
     )
     print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_structured_output_async():
+    result = await prompty.execute_async(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
+
 
 @pytest.mark.asyncio
 @trace
