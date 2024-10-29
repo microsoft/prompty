@@ -13,12 +13,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
 @pytest.fixture(scope="module", autouse=True)
 def fake_azure_executor():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_beta", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai_beta", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
@@ -217,6 +222,11 @@ def test_function_calling():
     )
     print(result)
 
+def test_structured_output():
+    result = prompty.execute(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
 
 @pytest.mark.asyncio
 async def test_function_calling_async():

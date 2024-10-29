@@ -228,6 +228,12 @@ def test_function_calling():
     )
     print(result)
 
+@trace
+def test_structured_output():
+    result = prompty.execute(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
 
 @pytest.mark.asyncio
 @trace

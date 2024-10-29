@@ -17,8 +17,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-azure = ["azure-identity>=1.17.1","openai>=1.35.10"]
-openai = ["openai>=1.35.10"]
+azure = ["azure-identity>=1.17.1","openai>=1.43.0"]
+openai = ["openai>=1.43.0"]
 serverless = ["azure-identity>=1.17.1","azure-ai-inference>=1.0.0b3"]
 
 
@@ -29,11 +29,11 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "pytest>=8.2.2",
-    "openai>=1.35.10",
+    "openai>=1.43.0",
     "azure-ai-inference>=1.0.0b3",
     "pytest-asyncio>=0.24.0",
     "azure-identity>=1.17.1",
-    "openai>=1.35.10"
+
 ]
 
 [tool.pytest.ini_options]
