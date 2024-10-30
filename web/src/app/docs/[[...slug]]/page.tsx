@@ -220,7 +220,9 @@ export default async function Page({ params }: Props) {
                 )}
               </div>
             </div>
-            <div className="prose-lg prose-h1:mb-1 prose-h2:mb-1 prose-h1:mt-4 prose-h2:mt-3 dark:prose-invert">{content}</div>
+            <div className="prose-lg prose-pre:mt-0 prose-pre:mb-0 prose-pre:pt-0 prose-pre:pb-0 prose-h1:mb-1 prose-h2:mb-1 prose-h1:mt-4 prose-h2:mt-3 dark:prose-invert">
+              {content}
+            </div>
           </div>
         </div>
       </Block>

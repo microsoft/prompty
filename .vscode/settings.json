@@ -2,5 +2,9 @@
   "files.exclude": {
     "**/web": false,
     "**/runtime": false
+  },
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "*.mdx": "markdown"
   }
 }

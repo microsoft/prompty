@@ -27,11 +27,11 @@ p {
 }
 
 ul {
-  @apply list-disc list-inside;
+  @apply list-disc list-outside;
 }
 
 ol {
-  @apply list-decimal list-inside;
+  @apply list-decimal list-outside;
 }
 
 li {
