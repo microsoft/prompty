@@ -20,7 +20,6 @@ To convert a Prompty asset to code and execute your first app, you need to have 
 - [Python 3.10 or higher](https://www.python.org/downloads/)
 - [Prompty Package (Python library)](https://pypi.org/project/prompty/)
 
-<br/>
 
 For our first app, we will focus on Azure Open AI and cover the following steps:
 - Create code from Prompty asset in VS Code
@@ -28,7 +27,6 @@ For our first app, we will focus on Azure Open AI and cover the following steps:
 - Configure code (use environment variables)
 - Execute code (from command line or VS Code)
 
-<br/>
 
 ## 2. Generate Code from Prompty Asset
 Open the `File Explorer` in Visual Studio Code open the Prompty asset we created earlier. Right click on the file name, and in the options, select `add code` then select `add Prompty code`. A new file will be created with the Python code generated from the Prompty asset.
@@ -79,7 +77,6 @@ if __name__ == "__main__":
 ```
 </details>
 
-<br/>
 ## 3. Install Prompty Runtime
 When you run the code generated, you will receive the error ``ModuleNotFoundError: No module named 'prompty'``. To resolve this, you need to install the Prompty runtime. The runtime supports different invokers that you can customize based on your needs. In this example, we are using Azure OpenAI API, therefore, we will need to install the ``azure`` invoker. Run the following command in your terminal:
 
@@ -96,7 +93,6 @@ In the code generated, we will need to load our environment variables to connect
 from dotenv import load_dotenv
 load_dotenv()
 ```
-<br/>
 
 ## 5. Execute the code
 You can now run the code by either clicking on the ``run`` button on VS Code or executing the following command in your terminal:
@@ -122,7 +118,6 @@ Faithfully thine,
 ```
 </details>
 
-<br/>
 
 ## 6. How Python code works
 
@@ -205,7 +200,6 @@ if __name__ == "__main__":
 
 
 
-<br/>
 
 
 
@@ -215,5 +209,4 @@ The Prompty runtime supports additional runtimes, including frameworks such as [
 
 
 ---
-<br/>
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

@@ -1,5 +1,5 @@
 ---
-title: Debuggging Prompty
+title: Debugging Prompty
 authors:
   - bethanyjep
   - nitya
@@ -13,7 +13,6 @@ index: 6
 
 _In the last section, we converted our Prompty asset into code and successfully executed the application. In this section, we will cover how we can use Observability in Prompty to debug our application._
 
-<br/>
 
 ## 1. What we will cover
 
@@ -24,7 +23,6 @@ For observability in Prompty, we will use the tracer to visualize and debug the 
 - Understand how observability works in your code
 - Analyze the trace output to debug and fix the bug
 
-<br/>
 
 ## 2. Understandfing Observability in Prompty
 
@@ -35,14 +33,12 @@ In Prompty, you can easily trace and visualize flow, which helps you to understa
 - **Console Tracer**: This tracer logs the output to the console.
 - **Prompty Tracer**: This tracer logs the output to a JSON file.
 
-<br/>
 
 ## 3. Modify our Prompty
 In our `shakespeare.prompty` asset we will update the prompt to request for different variations of the same message. The new prompt will be: `"Can you create 5 different versions of a short message inviting friends to a Game Night?"`. Additionally, change the `max_tokens:` value from `3000` to `150`.
 
 Head over to the `shakespeare.py` file as well and update the question to: `"Can you create 5 different versions of a short message inviting friends to a Game Night?"`.
 
-<br/>
 
 <details>
 <summary>☑ **Function that executes the Prompty asset** (click to expand)</summary>
@@ -82,7 +78,6 @@ user:
 ```
 </details>
 
-<br/>
 
 ## 4. Adding observability to your code
 To add a tracer, we have the following in our previously generated code snippet:
@@ -107,14 +102,12 @@ def run(
     }
   )
 ```
-<br/>
 
-- **Tracer.add("console", console_tracer)**: logs tracing information to the console, useful for real-time debugging.
-- **json_tracer = PromptyTracer()**: Creates an instance of the PromptyTracer class, which is a custom tracer.
-- **Tracer.add("PromptyTracer", json_tracer.tracer)**: logs tracing in a `.tracy` JSON file for more detailed inspection after runs, providing you with an interactive UI.
-- **@trace**: Decorator that traces the execution of the run function.
+- **`Tracer.add("console", console_tracer)`**: logs tracing information to the console, useful for real-time debugging.
+- **`json_tracer = PromptyTracer()`**: Creates an instance of the PromptyTracer class, which is a custom tracer.
+- **`Tracer.add("PromptyTracer", json_tracer.tracer)`**: logs tracing in a `.tracy` JSON file for more detailed inspection after runs, providing you with an interactive UI.
+- **`@trace`**: Decorator that traces the execution of the run function.
 
-<br/>
 
 ## 5: Analyzing and debugging the trace output
 
@@ -126,7 +119,6 @@ The trace output is divided into three: _load, prepare_ and _run_. Load refers t
 
 ![Trace Output](trace-output.png)
 
-<br/>
 
 From the trace output, you can see the inputs, outputs and metrics such as time to execute the prompt and tokens. This information can be used to debug and fix any issues in your code. For example, we can see output has been truncated and the `Completion Tokens` count is less than 1000, which might not be sufficent for the prompt to generate different outputs. We can increase the `max_tokens` in our Prompty to 1000 to generate more tokens. Once done, run the code again and confirm you get 5 examples of the short message inviting friends to a Game Night.
 
@@ -134,7 +126,6 @@ From the trace output, you can see the inputs, outputs and metrics such as time 
 
 You can continue experimenting with different parameters such as `temperature` and observe how it affects the model outputs.
 
-<br/>
 
 ## 6. Using observability for Model Selection
 
@@ -142,15 +133,13 @@ Another way to make the most of observability is in Model Selection. You can swi
 
 ![grpt-35-turbo output](gpt-35-turbo-trace.png)
 
-<br/>
 
 From the output, you can see the difference in the completion tokens and the time taken to execute the prompt. This information can be used to select the best model for your use case.
 
 
 ## 7. Building a Custom Tracer in Prompty
 
-In the guides section, we will provide a deep dive into [Observability in Prompty](docs/guides/prompty-observability) and how you can create your own tracer.
+In the guides section, we will provide a deep dive into [Observability in Prompty](/docs/guides/prompty-observability) and how you can create your own tracer.
 
 ---
-<br/>
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

@@ -7,33 +7,37 @@ a {
 }
 
 h1 {
-  @apply text-xl md:text-3xl font-bold
+  @apply text-xl md:text-3xl font-bold;
 }
 
 h2 {
-  @apply text-lg md:text-xl font-bold
+  @apply text-lg md:text-xl font-bold;
 }
 
 h3 {
-  @apply text-base md:text-lg font-bold
+  @apply text-base md:text-lg font-bold;
 }
 
 h4 {
-  @apply text-base font-bold
+  @apply text-base font-bold;
 }
 
 p {
-  @apply text-base mb-3
+  @apply text-base mb-3;
 }
 
 ul {
-  @apply list-disc list-inside
+  @apply list-disc list-inside;
 }
 
 ol {
-  @apply list-decimal list-inside
+  @apply list-decimal list-inside;
 }
 
 li {
-  @apply text-base
+  @apply text-base ml-1;
+}
+
+summary {
+  @apply text-base hover:cursor-pointer text-sky-600 hover:text-sky-400 dark:text-sky-400 dark:hover:text-sky-600 font-normal;
 }

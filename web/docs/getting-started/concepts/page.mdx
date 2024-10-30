@@ -16,16 +16,13 @@ index: 2
 
 _In this section, we cover the core building blocks of Prompty (specification, tooling, and runtime) and walk you through the developer flow and mindset for going from "prompt" to "prototype"_.
 
-<br/>
 
 
 ## 1. Prompty Components
 
 The Prompty implementation consists of three core components - the _specification_ (file format), the _tooling_ (developer experience) and the _runtime_ (executable code). Let's review these briefly.
-<br/>
 
 ![What is Prompty?](01-what-is-prompty.png)
-<br/>
 
 
 ### 1.1 The Prompty Specification
@@ -67,7 +64,6 @@ The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Promp
   ```
 
 </details>
-<br/>
 
 ### 1.2 The Prompty Tooling
 
@@ -86,7 +82,6 @@ The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/
 - View the "runs" history, and drill down into a run with a built-in trace viewer.
 
 </details>
-<br/>
 
 ### 1.3 The Prompty Runtime
 
@@ -98,7 +93,6 @@ The Prompty Runtime helps you make the transition from _static asset_ (`.prompty
 Core runtimes provide the base package needed to run the Prompty asset with code. Prompty currently has two core runtimes, with more support coming.
 * [Prompty Core (python)](https://pypi.org/project/prompty/) → Available _in preview_. 
 * Prompty Core (csharp) → In _active development_.
-<br/>
 
 Enhanced runtimes add support for orchestration frameworks, enabling complex workflows with Prompty assets:
 * [Prompt flow](https://microsoft.github.io/promptflow/) → Python core
@@ -106,7 +100,6 @@ Enhanced runtimes add support for orchestration frameworks, enabling complex wor
 * [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/) → C# core
 
 </details>
-<br/>
 
 
 ## 2. Developer Workflow
@@ -117,9 +110,7 @@ Prompty is ideal for rapid prototyping and iteration of a new generative AI appl
 2. **Develop** by iterating config & content, use tracing to debug
 3. **Evaluate** prompts with AI assistance, saved locally or to cloud
 
-<br/>
 ![How do we use prompty?](02-build-with-prompty.png)
-<br/>
 
 
 ## 3. Developer Mindset
@@ -131,10 +122,7 @@ Think of it as a **micro-orchestrator focused on a single LLM invocation** putti
  - _engineer_ the prompt (system, user, context, instructions) for that request
  - _shape_ the data used to "render" the template on execution by the runtime
 
-<br/>
 ![Where does this fit?](03-micro-orchestrator-mindset.png)
 
-<br/>
 ---
-<br/>
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
