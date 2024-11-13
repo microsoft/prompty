@@ -28,6 +28,10 @@ def sanitize(key: str, value: Any) -> Any:
 class Tracer:
     _tracers: Dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
 
+    SIGNATURE = "signature"
+    INPUTS = "inputs"
+    RESULT = "result"
+
     @classmethod
     def add(
         cls, name: str, tracer: Callable[[str], Iterator[Callable[[str, Any], None]]]
@@ -40,11 +44,17 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(cls, name: str) -> Iterator[Callable[[str, Any], None]]:
+    def start(cls, name: str, attributes: Dict[str, Any] = None) -> Iterator[Callable[[str, Any], None]]:
         with contextlib.ExitStack() as stack:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
+
+            if attributes:
+                for trace in traces:
+                    for key, value in attributes.items():
+                        trace(key, value)
+
             yield lambda key, value: [
                 # normalize and sanitize any trace values
                 trace(key, sanitize(key, to_dict(value)))
