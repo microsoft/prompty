@@ -16,9 +16,9 @@ from typing import Any, Callable, Dict, Iterator, List
 # clean up key value pairs for sensitive values
 def sanitize(key: str, value: Any) -> Any:
     if isinstance(value, str) and any(
-        [s in key.lower() for s in ["key", "token", "secret", "password", "credential"]]
+        [s in key.lower() for s in ["key", "secret", "password", "credential"]]
     ):
-        return len(str(value)) * "*"
+        return 10 * "*"
     elif isinstance(value, dict):
         return {k: sanitize(k, v) for k, v in value.items()}
     else:
