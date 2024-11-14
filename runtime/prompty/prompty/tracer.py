@@ -134,7 +134,17 @@ def _trace_sync(
     @wraps(func)
     def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
+        altname: str = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
+
         with Tracer.start(name) as trace:
+            if altname != None:
+                trace("function", altname)
+
             trace("signature", signature)
 
             # support arbitrary keyword
@@ -178,10 +188,20 @@ def _trace_async(
     @wraps(func)
     async def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
+        altname: str = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
+
         with Tracer.start(name) as trace:
+            if altname != None:
+                trace("function", altname)
+                
             trace("signature", signature)
 
-            # support arbitrary keyword 
+            # support arbitrary keyword
             # arguments for trace decorator
             for k, v in okwargs.items():
                 trace(k, to_dict(v))
