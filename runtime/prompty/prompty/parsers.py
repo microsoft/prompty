@@ -35,9 +35,14 @@ class PromptyChatParser(Invoker):
             return image_item
         # otherwise, it's a local file - need to base64 encode it
         else:
-            image_path = self.path / image_item
-            with open(image_path, "rb") as f:
-                base64_image = base64.b64encode(f.read()).decode("utf-8")
+            try:
+                image_path = self.path / image_item
+                with open(image_path, "rb") as f:
+                    base64_image = base64.b64encode(f.read()).decode("utf-8")
+            except (FileNotFoundError, OSError):
+                image_path = image_item
+                with open(image_path, "rb") as f:
+                    base64_image = base64.b64encode(f.read()).decode("utf-8")
 
             if image_path.suffix == ".png":
                 return f"data:image/png;base64,{base64_image}"
