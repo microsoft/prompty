@@ -2,10 +2,6 @@
 import clsx from "clsx";
 import { ReactNode, useEffect, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  vscDarkPlus,
-  vs,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { VscCopy } from "react-icons/vsc";
 import { useTheme } from "next-themes";
 
@@ -69,12 +65,11 @@ const Code = ({ language, code }: Props) => {
             "text-xs md:text-sm xl:text-base text-zinc-800 dark:text-sky-200 text-left",
         }}
         customStyle={{
-          background: theme === "dark" ? "#18181b" : "#f4f4f5",
+          background: theme === "dark" ? "#201c1c" : "transparent",
           border: "none",
           padding: "0",
           fontStyle: "normal",
         }}
-        style={theme === "dark" ? vscDarkPlus : vs}
         language={language}
         showLineNumbers={true}
         wrapLongLines={true}
