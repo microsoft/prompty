@@ -111,6 +111,10 @@ def _attributes_to_dict(
         k, v = arg.split("=")
         if k in result:
             raise click.BadParameter(f"Attribute {k!r} is specified twice")
+        if v == "@-":
+            v = click.get_text_stream("stdin").read()
+        if v.startswith("@"):
+            v = Path(v[1:]).read_text()
         result[k] = v
 
     return result
