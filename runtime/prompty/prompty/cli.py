@@ -2,6 +2,7 @@ import os
 import json
 import click
 import importlib
+from typing import Any, Dict, Optional
 
 from pathlib import Path
 from pydantic import BaseModel
@@ -78,14 +79,16 @@ def chat_mode(prompt_path: str):
 
 
 @trace
-def execute(prompt_path: str, raw=False):
+def execute(prompt_path: str, inputs: Optional[Dict[str, Any]] = None, raw=False):
     p = prompty.load(prompt_path)
+
+    inputs = inputs or {}
 
     try:
         # load executor / processor types
         dynamic_import(p.model.configuration["type"])
 
-        result = prompty.execute(p, raw=raw)
+        result = prompty.execute(p, inputs=inputs, raw=raw)
         if issubclass(type(result), BaseModel):
             print("\n", json.dumps(result.model_dump(), indent=4), "\n")
         elif isinstance(result, list):
@@ -98,13 +101,29 @@ def execute(prompt_path: str, raw=False):
         print(f"{type(e).__qualname__}: {e}", "\n")
 
 
+def _attributes_to_dict(
+    ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]
+) -> dict[str, str]:
+    """Click callback that converts attributes specified in the form `key=value` to a
+    dictionary"""
+    result = {}
+    for arg in attributes:
+        k, v = arg.split("=")
+        if k in result:
+            raise click.BadParameter(f"Attribute {k!r} is specified twice")
+        result[k] = v
+
+    return result
+
+
 @click.command()
 @click.option("--source", "-s", required=True)
 @click.option("--env", "-e", required=False)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--chat", "-c", is_flag=True)
+@click.argument("inputs", nargs=-1, callback=_attributes_to_dict)
 @click.version_option()
-def run(source, env, verbose, chat):
+def run(source, env, verbose, chat, inputs):
     # load external env file
     if env:
         print(f"Loading environment variables from {env}")
@@ -124,7 +143,7 @@ def run(source, env, verbose, chat):
     if chat:
         chat_mode(str(prompt_path))
     else:
-        execute(str(prompt_path), raw=verbose)
+        execute(str(prompt_path), inputs=inputs, raw=verbose)
 
 
 if __name__ == "__main__":
