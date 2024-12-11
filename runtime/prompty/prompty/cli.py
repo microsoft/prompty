@@ -120,7 +120,16 @@ def _attributes_to_dict(
     return result
 
 
-@click.command()
+@click.command(epilog="""
+\b
+INPUTS: key=value pairs
+    The values can come from:
+    - plain strings - e.g.: question="Does it have windows?"
+    - files - e.g.: question=@question.txt
+    - stdin - e.g.: question=@-
+
+For more information, visit https://prompty.ai/
+""")
 @click.option("--source", "-s", required=True)
 @click.option("--env", "-e", required=False)
 @click.option("--verbose", "-v", is_flag=True)
