@@ -33,6 +33,8 @@ def dynamic_import(module: str):
         t = "prompty.azure"
     elif module == "serverless":
         t = "prompty.serverless"
+    elif module == "openai":
+        t = "prompty.openai"
     else:
         t = module
 
