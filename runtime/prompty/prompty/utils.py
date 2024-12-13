@@ -29,7 +29,7 @@ async def load_json_async(file_path, encoding='utf-8'):
     return json.loads(content)
 
 def _find_global_config(prompty_path: Path = Path.cwd()) -> Path:
-    prompty_config = list(Path.cwd().glob.glob("**/prompty.json"))
+    prompty_config = list(Path.cwd().glob("**/prompty.json"))
 
     if len(prompty_config) > 0:
         return sorted(
