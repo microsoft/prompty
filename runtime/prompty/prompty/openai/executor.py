@@ -18,12 +18,12 @@ class OpenAIExecutor(Invoker):
         self.kwargs = {
             key: value
             for key, value in self.prompty.model.configuration.items()
-            if key != "type"
+            if key != "type" and key != "name"
         }
 
         self.api = self.prompty.model.api
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
+        self.model = self.prompty.model.configuration["name"]
 
     def invoke(self, data: any) -> any:
         """Invoke the OpenAI API
@@ -59,7 +59,7 @@ class OpenAIExecutor(Invoker):
             if self.api == "chat":
                 trace("signature", "OpenAI.chat.completions.create")
                 args = {
-                    "model": self.deployment,
+                    "model": self.model,
                     "messages": data if isinstance(data, list) else [data],
                     **self.parameters,
                 }
