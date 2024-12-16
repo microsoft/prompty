@@ -1,3 +1,4 @@
+import os
 import re
 import base64
 from .core import Prompty
@@ -58,6 +59,9 @@ class PromptyChatParser(Invoker):
         any
             The parsed content
         """
+        if os.getenv("PROMPTY_CHAT_PARSER_DISABLE_IMAGE_PARSING", "false").lower() == "true":
+            return content
+
         # regular expression to parse markdown images
         image = r"(?P<alt>!\[[^\]]*\])\((?P<filename>.*?)(?=\"|\))\)"
         matches = re.findall(image, content, flags=re.MULTILINE)
