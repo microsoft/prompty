@@ -49,15 +49,6 @@ export const indexdocs = async (dir?: string) => {
   return index;
 };
 
-const statPath = async (path: string): Promise<string> => {
-  try {
-    await pfs.access(path);
-  } catch (e) {
-    await pfs.mkdir(path);
-  }
-  return path;
-};
-
 const fetchAuthor = (author: string): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     const imageUrl = `https://github.com/${author}.png`;

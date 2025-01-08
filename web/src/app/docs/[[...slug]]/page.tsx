@@ -14,7 +14,7 @@ import { HiOutlinePencilSquare, HiOutlinePencil } from "react-icons/hi2";
 import Toc from "@/components/nav/toc";
 
 type Props = {
-  params: { slug?: string[] };
+  params: Promise<{ slug: string[] }>;
 };
 
 const getComponents = (slug: string[]) => {
@@ -94,7 +94,7 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const slug = params.slug ? params.slug : [];
+  const slug = (await params).slug || [];
   const { metadata } = await getCachedContent(slug);
   const previousImages = (await parent).openGraph?.images || [];
   const currentImages = metadata.images
@@ -145,19 +145,12 @@ export async function generateStaticParams() {
 }
 
 export default async function Page({ params }: Props) {
-  const slug = params.slug ? params.slug : [];
+  const slug = (await params).slug || [];
   const { content, metadata } = await getCachedContent(slug);
   const index = await getCachedIndex();
 
   return (
     <>
-      <Header innerClassName="h-12 flex flex-row center items-center gap-3">
-        {navigation.map((item) => (
-          <div key={item.href}>
-            <a href={item.href}>{item.title}</a>
-          </div>
-        ))}
-      </Header>
       <Block>
         <div className="flex flex-col md:flex-row gap-1">
           <div className="bg-zinc-100 dark:bg-zinc-700 md:w-[224px] w- rounded-md p-2 mb-2 md:mb-0">
@@ -226,16 +219,6 @@ export default async function Page({ params }: Props) {
           </div>
         </div>
       </Block>
-      <Footer
-        outerClassName="mt-8 mb-8"
-        innerClassName="border-t-[1px] border-zinc-300 dark:border-zinc-700"
-      >
-        {navigation.map((item) => (
-          <div key={item.href}>
-            <a href={item.href}>{item.title}</a>
-          </div>
-        ))}
-      </Footer>
     </>
   );
 }

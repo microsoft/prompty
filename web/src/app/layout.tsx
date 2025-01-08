@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "./providers";
-import Block from "@/components/block";
+import "./global.scss";
+import { ThemeProvider } from "next-themes";
+import styles from "./layout.module.scss";
+import Header from "@/components/nav/header";
+import Footer from "@/components/nav/footer";
 
 export default function RootLayout({
   children,
@@ -9,11 +11,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body className="bg-zinc-50 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
-        <Providers>
-          <div className="flex min-h-screen flex-col">{children}</div>
-        </Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className={styles.body}>
+        <ThemeProvider>
+          <div className={styles.container}>
+            <Header />
+            {children}
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
