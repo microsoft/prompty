@@ -1,9 +1,9 @@
 "use client";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
 import mermaid from "mermaid";
 import { useTheme } from "next-themes";
-import RenderResult from "next/dist/server/render-result";
+import { useEffect, useState } from "react";
+import styles from "./mermaid.module.scss";
 
 type Props = {
   code: string;
@@ -25,7 +25,7 @@ const Mermaid = ({ code }: Props) => {
 
   return (
     <div
-      className={clsx(svg === "" ? "hidden" : "block")}
+      className={clsx(svg === "" ? styles.hidden : styles.block)}
       dangerouslySetInnerHTML={{ __html: svg }}
     ></div>
   );

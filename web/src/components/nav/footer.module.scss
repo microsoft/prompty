@@ -1,0 +1,105 @@
+@use "@/app/defaults.scss" as *;
+
+.footer {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footerContainer {
+  display: flex;
+  flex-direction: row;
+  padding-top: 1rem;
+  border-top: 1px solid $stone-500;
+
+  @container style(--theme: light) {
+    border-top: 1px solid $stone-300;
+  }
+
+  @container style(--theme: dark) {
+    border-top: 1px solid $stone-500;
+  }
+}
+
+.menuItems {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.menuItem {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: $sky-500;
+
+  &:hover {
+    color: $stone-500;
+  }
+
+  &[aria-current] {
+    color: $stone-500;
+  }
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.sponsored {
+  display: flex;
+  flex-direction: column;
+}
+
+.sponsoredText {
+  text-align: right;
+  margin-right: 0.25rem;
+  color: $stone-700;
+
+  @container style(--theme: light) {
+    color: $stone-700;
+  }
+
+  @container style(--theme: dark) {
+    color: $stone-300;
+  }
+}
+
+.darkIcon {
+  display: block;
+
+  @container style(--theme: light) {
+    display: none;
+  }
+
+  @container style(--theme: dark) {
+    display: block;
+  }
+}
+
+.lightIcon {
+  display: block;
+
+  @container style(--theme: dark) {
+    display: none;
+  }
+
+  @container style(--theme: light) {
+    display: block;
+  }
+}
+
+.version {
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+  text-align: right;
+  color: $stone-300;
+
+  @container style(--theme: light) {
+    color: $stone-300;
+  }
+
+  @container style(--theme: dark) {
+    color: $stone-500;
+  }
+}

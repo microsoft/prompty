@@ -1,56 +1,92 @@
 "use client";
-import clsx from "clsx";
-import { ReactNode } from "react";
-import React, { useEffect, useState } from "react";
-import { HiMoon, HiSun } from "react-icons/hi2";
-import { FaGithub } from "react-icons/fa";
+import Block from "@/components/block";
 import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
+import { HiBars3, HiXMark, HiSun, HiMoon } from "react-icons/hi2";
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+} from "@headlessui/react";
 
-type Props = {
-  children: ReactNode;
-  outerClassName?: string;
-  innerClassName?: string;
-};
+import Link from "next/link";
 
-const Header = ({ children, outerClassName, innerClassName }: Props) => {
-    const { resolvedTheme, setTheme } = useTheme();
-    const otherTheme = resolvedTheme === "dark" ? "light" : "dark";
-    const [mounted, setMounted] = useState(false);
+import styles from "./header.module.scss";
+import { navigation } from "@/lib/navigation";
 
-    useEffect(() => {
-      setMounted(true);
-    }, []);
+const Header = () => {
+  const { resolvedTheme, setTheme } = useTheme();
+  const otherTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const pathname = usePathname();
+
+  const isCurrent = (src: string) =>
+    pathname.toLowerCase().includes(src.toLowerCase());
+
   return (
-    <header className={clsx(outerClassName)}>
-      <div
-        className={clsx("max-w-screen-xl pl-3 pr-3 xl:mx-auto", innerClassName)}
-      >
-        <div className="text-slate-200">
-          <a href="/">
-            <img src="/assets/images/prompty32x32.png" />
-          </a>
-        </div>
-        {children}
-        <div className="grow" />
+    <header>
+      <Disclosure as="nav">
+        {({ open }) => (
+          <>
+            <Block innerClassName={styles.header}>
+              <div className={styles.disclosure}>
+                <DisclosureButton className={styles.disclosureButton}>
+                  {open ? (
+                    <HiXMark className={styles.icon} aria-hidden="true" />
+                  ) : (
+                    <HiBars3 className={styles.icon} aria-hidden="true" />
+                  )}
+                </DisclosureButton>
+              </div>
 
-        <div className="flex flex-row items-center gap-2">
-          <button
-            type="button"
-            aria-label={
-              mounted ? `Switch to ${otherTheme} theme` : "Toggle theme"
-            }
-            onClick={() => setTheme(otherTheme)}
-          >
-            <HiSun className="h-6 w-6 dark:hidden fill-sky-600" />
-            <HiMoon className="hidden h-6 w-6 transition dark:block fill-sky-600" />
-          </button>
-        </div>
-        <div className="flex flex-row items-center hover:cursor-pointer">
-          <a href="https://github.com/Microsoft/prompty/" target="_blank">
-            <FaGithub className="h-6 w-6 fill-stone-950 dark:fill-stone-50" />
-          </a>
-        </div>
-      </div>
+              <div className={styles.logo}>
+                <Link href="/">
+                  <img src="/assets/images/prompty32x32.png" />
+                </Link>
+              </div>
+              <div className={styles.menu}>
+                <div className={styles.menuItems}>
+                  <nav>
+                    {navigation.map((item) => (
+                      <a
+                        key={item.title}
+                        href={
+                          item.href.endsWith("/") ? item.href : `${item.href}/`
+                        }
+                        className={styles.menuItem}
+                        aria-current={isCurrent(item.href) ? "page" : undefined}
+                      >
+                        {item.title}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+              <div
+                className={styles.themeSwitcher}
+                onClick={() => setTheme(otherTheme)}
+              >
+                <HiSun className={styles.themeLight} />
+                <HiMoon className={styles.themeDark} />
+              </div>
+            </Block>
+            <DisclosurePanel className={styles.disclosurePanel}>
+              <div className={styles.panel}>
+                {navigation.map((item) => (
+                  <DisclosureButton
+                    key={item.title}
+                    as="a"
+                    href={item.href.endsWith("/") ? item.href : `${item.href}/`}
+                    className={styles.panelMenuItem}
+                    aria-current={isCurrent(item.href) ? "page" : undefined}
+                  >
+                    {item.title}
+                  </DisclosureButton>
+                ))}
+              </div>
+            </DisclosurePanel>
+          </>
+        )}
+      </Disclosure>
     </header>
   );
 };
