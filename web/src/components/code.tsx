@@ -8,7 +8,7 @@ import {
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { VscCopy } from "react-icons/vsc";
 import { useTheme } from "next-themes";
-import styles from "./Code.module.scss";
+import styles from "./code.module.scss";
 
 type Props = {
   language: string;
