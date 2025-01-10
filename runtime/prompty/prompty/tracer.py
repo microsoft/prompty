@@ -16,9 +16,9 @@ from typing import Any, Callable, Dict, Iterator, List
 # clean up key value pairs for sensitive values
 def sanitize(key: str, value: Any) -> Any:
     if isinstance(value, str) and any(
-        [s in key.lower() for s in ["key", "token", "secret", "password", "credential"]]
+        [s in key.lower() for s in ["key", "secret", "password", "credential"]]
     ):
-        return len(str(value)) * "*"
+        return 10 * "*"
     elif isinstance(value, dict):
         return {k: sanitize(k, v) for k, v in value.items()}
     else:
@@ -27,6 +27,10 @@ def sanitize(key: str, value: Any) -> Any:
 
 class Tracer:
     _tracers: Dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
+
+    SIGNATURE = "signature"
+    INPUTS = "inputs"
+    RESULT = "result"
 
     @classmethod
     def add(
@@ -40,11 +44,17 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(cls, name: str) -> Iterator[Callable[[str, Any], None]]:
+    def start(cls, name: str, attributes: Dict[str, Any] = None) -> Iterator[Callable[[str, Any], None]]:
         with contextlib.ExitStack() as stack:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
+
+            if attributes:
+                for trace in traces:
+                    for key, value in attributes.items():
+                        trace(key, value)
+
             yield lambda key, value: [
                 # normalize and sanitize any trace values
                 trace(key, sanitize(key, to_dict(value)))
@@ -124,7 +134,17 @@ def _trace_sync(
     @wraps(func)
     def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
+        altname: str = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
+
         with Tracer.start(name) as trace:
+            if altname != None:
+                trace("function", altname)
+
             trace("signature", signature)
 
             # support arbitrary keyword
@@ -168,10 +188,20 @@ def _trace_async(
     @wraps(func)
     async def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
+        altname: str = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
+
         with Tracer.start(name) as trace:
+            if altname != None:
+                trace("function", altname)
+                
             trace("signature", signature)
 
-            # support arbitrary keyword 
+            # support arbitrary keyword
             # arguments for trace decorator
             for k, v in okwargs.items():
                 trace(k, to_dict(v))

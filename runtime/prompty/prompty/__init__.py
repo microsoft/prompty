@@ -517,7 +517,7 @@ def execute(
     >>> inputs = {"name": "John Doe"}
     >>> result = prompty.execute("prompts/basic.prompty", inputs=inputs)
     """
-    if isinstance(prompt, str):
+    if isinstance(prompt, (str, Path)):
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)
@@ -571,7 +571,7 @@ async def execute_async(
     >>> inputs = {"name": "John Doe"}
     >>> result = await prompty.execute_async("prompts/basic.prompty", inputs=inputs)
     """
-    if isinstance(prompt, str):
+    if isinstance(prompt, (str, Path)):
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)

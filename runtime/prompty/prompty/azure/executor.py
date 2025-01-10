@@ -1,10 +1,12 @@
+import json
 import azure.identity
 import importlib.metadata
 from typing import AsyncIterator, Iterator
-from openai import AzureOpenAI, AsyncAzureOpenAI
+from openai import APIResponse, AzureOpenAI, AsyncAzureOpenAI
 
-from prompty.tracer import Tracer
+from prompty.tracer import Tracer, sanitize
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
+from openai.types.chat.chat_completion import ChatCompletion
 from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
@@ -86,7 +88,21 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.chat.completions.create(**args)
+
+                if "stream" in args and args["stream"] == True:
+                    response = client.chat.completions.create(**args)
+                else:
+                    raw: APIResponse = client.chat.completions.with_raw_response.create(
+                        **args
+                    )
+                    response = ChatCompletion.model_validate_json(raw.text)
+
+                    for k, v in raw.headers.raw:
+                        trace(k.decode("utf-8"), v.decode("utf-8"))
+
+                    trace("request_id", raw.request_id)
+                    trace("retries_taken", raw.retries_taken)
+
                 trace("result", response)
 
             elif self.api == "completion":
@@ -171,7 +187,20 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = await client.chat.completions.create(**args)
+
+                if "stream" in args and args["stream"] == True:
+                    response = await client.chat.completions.create(**args)
+                else:
+                    raw: APIResponse = await client.chat.completions.with_raw_response.create(
+                        **args
+                    )
+                    response = ChatCompletion.model_validate_json(raw.text)
+                    for k, v in raw.headers.raw:
+                        trace(k.decode("utf-8"), v.decode("utf-8"))
+
+                    trace("request_id", raw.request_id)
+                    trace("retries_taken", raw.retries_taken)
+
                 trace("result", response)
 
             elif self.api == "completion":
@@ -182,6 +211,7 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
+
                 response = await client.completions.create(**args)
                 trace("result", response)
 

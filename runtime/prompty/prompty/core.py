@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from .tracer import Tracer, to_dict
+from .tracer import Tracer, to_dict, sanitize
 from pydantic import BaseModel, Field, FilePath
 from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set, Tuple
 
@@ -88,10 +88,7 @@ class ModelSettings(BaseModel):
             serialize_as_any=serialize_as_any,
         )
 
-        d["configuration"] = {
-            k: "*" * len(v) if "key" in k.lower() or "secret" in k.lower() else v
-            for k, v in d["configuration"].items()
-        }
+        d["configuration"] = {k: sanitize(k, v) for k, v in d["configuration"].items()}
         return d
 
 
