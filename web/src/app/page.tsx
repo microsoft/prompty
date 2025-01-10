@@ -1,6 +1,7 @@
 import Block from "@/components/block";
 import { Metadata } from "next";
 import styles from "./page.module.scss";
+import clsx from "clsx";
 
 export const metadata: Metadata = {
   title: "prompty.ai",
@@ -133,14 +134,9 @@ export default function Home() {
               the runtime (when running).
             </p>
             <ul className={styles.itemList}>
-              <li>
-                Targeting LangChain, Semantic Kernel, and Prompt Flow as
-                supporting runtimes
-              </li>
-              <li>Works in Python (Prompt Flow and LangChain)</li>
-              <li>Works in C# (Semantic Kernel)</li>
-              <li>(Future Work) works in TypeScript/JavaScript</li>
-              <li>Understood in Azure AI Studio</li>
+              <li>Works in Python</li>
+              <li>Works in C#</li>
+              <li>(In progress) works in TypeScript/JavaScript</li>
             </ul>
           </div>
           <div className={styles.tileImage}>
@@ -188,7 +184,7 @@ export default function Home() {
       </Block>
       <Block outerClassName={styles.sectionGap}>
         <div className={styles.halfSection}>
-          <div className={styles.halfColorbox}>
+          <div className={clsx(styles.halfColorbox, styles.promptyGraph)}>
             <h2 className={styles.tileTitle}>Standards open doors</h2>
             <div>
               By working in a common format we open up opportunities for new
@@ -208,15 +204,9 @@ export default function Home() {
                 output.
               </li>
             </ul>
-            <div className="flex flex-row justify-end relative">
-              <img
-                src="/assets/images/prompty-graph.png"
-                alt=""
-                className="justify-end mix-blend-overlay dark:mix-blend-screen"
-              />
-            </div>
+            <div className={styles.spacer}>&nbsp;</div>
           </div>
-          <div className={styles.halfColorbox}>
+          <div className={clsx(styles.halfColorbox, styles.promptyWorld)}>
             <h2 className={styles.tileTitle}>Works for everyone</h2>
             <div>
               Prompty is built on the premise that even with increasing
@@ -224,16 +214,7 @@ export default function Home() {
               understanding this can lead to more innovative developments in AI
               applications, for everyone.
             </div>
-            <div className="grow"></div>
-            <div className="flex flex-row justify-end relative">
-              <div className="flex flex-row justify-end relative">
-                <img
-                  src="/assets/images/prompty-ascii-art-globe.png"
-                  alt=""
-                  className="justify-end mix-blend-overlay dark:mix-blend-screen"
-                />
-              </div>
-            </div>
+            <div className={styles.spacer}>&nbsp;</div>
           </div>
         </div>
       </Block>

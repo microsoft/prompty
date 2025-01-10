@@ -4,6 +4,7 @@ import { Index } from "@/lib/navigation";
 import { usePathname } from "next/navigation";
 import React, { useState, useRef } from "react";
 import { HiChevronDoubleRight, HiChevronDoubleDown } from "react-icons/hi2";
+import styles from "./toc.module.scss";
 
 type Props = {
   index: Index[];
@@ -33,7 +34,7 @@ const Toc = ({ index, depth, visible }: Props) => {
   };
 
   const [expanded, setExpanded] = useState<boolean[]>(
-    sorted.map((value, index) => hasCurrentChild(value))
+    sorted.map((value) => hasCurrentChild(value))
   );
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -54,37 +55,37 @@ const Toc = ({ index, depth, visible }: Props) => {
   return (
     <>
       {sorted.map((item, i) => (
-        <div
-          key={`main_${item.path}`}
-          className={clsx(`ml-${depth * 2 + 2}`)}
-          style={{ marginLeft: `${depth}rem` }}
-        >
+        <div key={`main_${item.path}`} style={{ marginLeft: `${depth}rem` }}>
           <div
             className={clsx(
-              "flex flex-row p-2 dark:hover:bg-zinc-600 hover:bg-zinc-200 align-middle items-center",
-              visible ? "block" : "hidden"
+              styles.itemContainer,
+              visible ? styles.block : styles.hidden
             )}
             onClick={() => toggleExpansion(i)}
           >
-            <a href={item.path} onClick={(e) => e.stopPropagation()}>
-              {item.document?.title}
-            </a>
-            <div className="grow items"></div>
-            {hasChildren(item) && (
-              <div>
-                {expanded[i] ? (
-                  <HiChevronDoubleDown
-                    className="h-4 w-4 hover:cursor-pointer"
-                    onClick={() => toggleExpansion(i)}
-                  />
-                ) : (
-                  <HiChevronDoubleRight
-                    className="h-4 w-4 hover:cursor-pointer"
-                    onClick={() => toggleExpansion(i)}
-                  />
-                )}
-              </div>
-            )}
+            <div className={styles.item}>
+              <a href={item.path} onClick={(e) => e.stopPropagation()}>
+                {item.document?.title}
+              </a>
+              {hasChildren(item) && (
+                <>
+                  <div className={styles.grow} />
+                  <div>
+                    {expanded[i] ? (
+                      <HiChevronDoubleDown
+                        className={styles.expander}
+                        onClick={() => toggleExpansion(i)}
+                      />
+                    ) : (
+                      <HiChevronDoubleRight
+                        className={styles.expander}
+                        onClick={() => toggleExpansion(i)}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           {hasChildren(item) && (
             <div ref={divRef}>

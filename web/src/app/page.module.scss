@@ -44,15 +44,18 @@
 .heroLink {
   padding: 1.25rem;
   border-radius: 1rem;
-  box-shadow: inset 0 0 0 2px color.change($sky-800, $alpha: 80%);
-
+  color: $sky-600;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 3px color.change($sky-600, $alpha: 80%);
 
   &:hover {
-    box-shadow: inset 0 0 0 2px color.change($stone-500, $alpha: 80%);
+    box-shadow: inset 0 0 0 3px color.change($stone-500, $alpha: 80%);
     background-color: $sky-800;
     color: $stone-50;
   }
 }
+
 
 .heroTitle {
   text-align: center;
@@ -75,7 +78,6 @@
   line-height: 1.25rem;
   text-align: center;
 
-
   @media (min-width: $layout-breakpoint-small) {
     font-size: 1.25rem;
     line-height: 1.75rem;
@@ -90,7 +92,6 @@
   height: auto;
   width: 60%;
   margin-bottom: -2rem;
-
 
   @media (min-width: $layout-breakpoint-small) {
     width: 40%;
@@ -142,7 +143,6 @@
   line-height: 1.75rem;
   font-weight: 700;
 
-
   @media (min-width: $layout-breakpoint-small) {
     font-size: 1.875rem;
     line-height: 2.25rem;
@@ -157,7 +157,6 @@
   justify-content: center;
   align-items: center;
   vertical-align: middle;
-
   border-radius: 1rem;
   background-color: $stone-200;
 
@@ -254,12 +253,12 @@
 
 .tileTitle {
   font-size: 1.25rem;
-  line-height: 1.75rem;
   font-weight: 700;
+  line-height: normal;
+  margin-top: 0;
 
   @media (min-width: $layout-breakpoint-small) {
     font-size: 1.875rem;
-    line-height: 2.25rem;
   }
 }
 
@@ -331,9 +330,9 @@
   padding: 1.25rem;
   flex-direction: column;
   gap: 1.25rem;
-  justify-content: center;
-  align-items: center;
-  vertical-align: middle;
+  justify-content: flex-start;
+  align-items: flex-start;
+  vertical-align: text-top;
 
   flex-basis: 50%;
 
@@ -358,4 +357,24 @@
   @media (min-width: $layout-breakpoint-small) {
     flex-direction: row;
   }
+}
+
+.promptyGraph {
+  background-image: url('/assets/images/prompty-graph.png');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-blend-mode: soft-light;
+  color: var(--text-color);
+}
+
+.promptyWorld {
+  background-image: url('/assets/images/prompty-ascii-art-globe.png');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-blend-mode: soft-light;
+  color: var(--text-color);
+}
+
+.spacer {
+  height: 275px;
 }
