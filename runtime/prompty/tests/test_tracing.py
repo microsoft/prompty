@@ -296,3 +296,30 @@ async def test_streaming_async():
     if isinstance(result, AsyncIterator):
         async for item in result:
             print(item)
+
+@trace
+def test_tracing_attributes():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.INPUTS, 4)
+        with Tracer.start("Test2", {"signature": "5", "six": 6}) as trace:
+            trace("inputs", 7)
+            trace(Tracer.RESULT, 8)
+            with Tracer.start("Test3", {"signature": "9", "ten": 10}) as trace:
+                trace("inputs", 11)
+                trace(Tracer.RESULT, 12)
+
+
+@trace(name="OTHER")
+def test_named_tracer():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.RESULT, 4)
+
+
+@pytest.mark.asyncio
+@trace(name="OTHER")
+async def test_named_tracer_async():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.RESULT, 4)
