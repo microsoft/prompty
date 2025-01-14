@@ -1,12 +1,13 @@
-from typing import AsyncIterator
-import pytest
-import prompty
-from prompty.serverless.processor import ServerlessProcessor
-from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+from collections.abc import AsyncIterator
 
-from prompty.invoker import InvokerFactory
-from tests.fake_azure_executor import FakeAzureExecutor
+import pytest
+
+import prompty
 from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from prompty.serverless.processor import ServerlessProcessor
+from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
+from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
 
 
@@ -149,6 +150,7 @@ def evaluate(prompt, evalprompt, customerId, question):
     )
     return result
 
+
 @trace
 async def evaluate_async(prompt, evalprompt, customerId, question):
     response = await get_response_async(customerId, question, prompt)
@@ -263,15 +265,6 @@ async def test_structured_output_async():
     print(result)
 
 
-@pytest.mark.asyncio
-@trace
-async def test_function_calling_async():
-    result = await prompty.execute_async(
-        "prompts/functions.prompty",
-    )
-    print(result)
-
-
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
@@ -284,7 +277,7 @@ def test_streaming():
     for item in result:
         r.append(item)
 
-    print(' '.join(r))
+    print(" ".join(r))
 
 
 @pytest.mark.asyncio
@@ -296,6 +289,7 @@ async def test_streaming_async():
     if isinstance(result, AsyncIterator):
         async for item in result:
             print(item)
+
 
 @trace
 def test_tracing_attributes():

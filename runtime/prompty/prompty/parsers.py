@@ -1,25 +1,30 @@
-import re
 import base64
+import re
+from pathlib import Path
+
 from .core import Prompty
-from .invoker import Invoker, InvokerFactory
+from .invoker import Invoker
 
 
-@InvokerFactory.register_parser("prompty.chat")
 class PromptyChatParser(Invoker):
-    """ Prompty Chat Parser  """
+    """Prompty Chat Parser"""
+
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.roles = ["assistant", "function", "system", "user"]
+        if isinstance(self.prompty.file, str):
+            self.prompty.file = Path(self.prompty.file).resolve().absolute()
+
         self.path = self.prompty.file.parent
 
     def inline_image(self, image_item: str) -> str:
-        """ Inline Image
+        """Inline Image
 
         Parameters
         ----------
         image_item : str
             The image item to inline
-        
+
         Returns
         -------
         str
@@ -46,13 +51,13 @@ class PromptyChatParser(Invoker):
                 )
 
     def parse_content(self, content: str):
-        """ for parsing inline images
-        
+        """for parsing inline images
+
         Parameters
         ----------
         content : str
             The content to parse
-        
+
         Returns
         -------
         any
@@ -97,14 +102,14 @@ class PromptyChatParser(Invoker):
         else:
             return content
 
-    def invoke(self, data: str) -> str:
-        """ Invoke the Prompty Chat Parser
+    def invoke(self, data: str) -> list[dict[str, str]]:
+        """Invoke the Prompty Chat Parser
 
         Parameters
         ----------
         data : str
             The data to parse
-        
+
         Returns
         -------
         str
@@ -121,7 +126,7 @@ class PromptyChatParser(Invoker):
         ]
 
         # if no starter role, then inject system role
-        if not chunks[0].strip().lower() in self.roles:
+        if chunks[0].strip().lower() not in self.roles:
             chunks.insert(0, "system")
 
         # if last chunk is role entry, then remove (no content?)
@@ -138,16 +143,15 @@ class PromptyChatParser(Invoker):
             messages.append({"role": role, "content": self.parse_content(content)})
 
         return messages
-    
 
-    async def invoke_async(self, data: str) -> str:
-        """ Invoke the Prompty Chat Parser (Async)
+    async def invoke_async(self, data: str) -> list[dict[str, str]]:
+        """Invoke the Prompty Chat Parser (Async)
 
         Parameters
         ----------
         data : str
             The data to parse
-        
+
         Returns
         -------
         str

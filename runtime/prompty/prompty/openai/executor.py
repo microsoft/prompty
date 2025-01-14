@@ -1,8 +1,11 @@
 import importlib.metadata
+import typing
+from collections.abc import Iterator
+
 from openai import OpenAI
-from typing import Iterator
 
 from prompty.tracer import Tracer
+
 from ..core import Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
@@ -24,8 +27,9 @@ class OpenAIExecutor(Invoker):
         self.api = self.prompty.model.api
         self.parameters = self.prompty.model.parameters
         self.model = self.prompty.model.configuration["name"]
+        self.deployment = self.prompty.model.configuration["deployment"]
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters

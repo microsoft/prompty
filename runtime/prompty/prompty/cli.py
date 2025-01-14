@@ -1,15 +1,15 @@
-import os
-import json
-import click
 import importlib
-from typing import Any, Dict, Optional
-
+import json
+import os
 from pathlib import Path
+from typing import Any, Optional
+
+import click
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 import prompty
-from prompty.tracer import trace, PromptyTracer, console_tracer, Tracer
-from dotenv import load_dotenv
+from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
 
 
 def normalize_path(p, create_dir=False) -> Path:
@@ -47,9 +47,9 @@ def chat_mode(prompt_path: str):
     W = "\033[0m"  # white (normal)
     R = "\033[31m"  # red
     G = "\033[32m"  # green
-    O = "\033[33m"  # orange
+    #O = "\033[33m"  # orange
     B = "\033[34m"  # blue
-    P = "\033[35m"  # purple
+    #P = "\033[35m"  # purple
     print(f"Executing {str(prompt_path)} in chat mode...")
     p = prompty.load(str(prompt_path))
     if "chat_history" not in p.sample:
@@ -81,7 +81,7 @@ def chat_mode(prompt_path: str):
 
 
 @trace
-def execute(prompt_path: str, inputs: Optional[Dict[str, Any]] = None, raw=False):
+def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False):
     p = prompty.load(prompt_path)
 
     inputs = inputs or {}

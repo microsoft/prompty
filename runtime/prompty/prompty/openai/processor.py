@@ -1,9 +1,12 @@
-from typing import Iterator
-from openai.types.completion import Completion
+import typing
+from collections.abc import Iterator
+
 from openai.types.chat.chat_completion import ChatCompletion
-from ..invoker import Invoker, InvokerFactory
-from ..core import Prompty, PromptyStream, ToolCall
+from openai.types.completion import Completion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
+
+from ..core import Prompty, PromptyStream, ToolCall
+from ..invoker import Invoker, InvokerFactory
 
 
 @InvokerFactory.register_processor("openai")
@@ -13,7 +16,7 @@ class OpenAIProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters
@@ -56,7 +59,7 @@ class OpenAIProcessor(Invoker):
                 for chunk in data:
                     if (
                         len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content != None
+                        and chunk.choices[0].delta.content is not None
                     ):
                         content = chunk.choices[0].delta.content
                         yield content
