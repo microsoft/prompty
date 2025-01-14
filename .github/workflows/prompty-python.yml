@@ -48,7 +48,16 @@ jobs:
   pypi-publish:
     name: upload release to PyPI
     runs-on: ubuntu-latest
+    
     steps:
+      - uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: 3.11.5
+
+      - name: install dependencies
+        working-directory: ./runtime/prompty
+        run: pdm install
+        
       - name: Publish package distributions to PyPI
         working-directory: ./runtime/prompty
         run: pdm publish
