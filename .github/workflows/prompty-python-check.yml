@@ -1,12 +1,8 @@
 name: prompty Python build and test
 on:
-  push:
-    paths:
-      - 'runtime/prompty/**'
   pull_request:
     paths:
       - 'runtime/prompty/**'
-  workflow_dispatch:
 
 
 env:

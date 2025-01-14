@@ -4,7 +4,7 @@ import inspect
 import json
 import os
 import traceback
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from datetime import datetime
 from functools import partial, wraps
 from numbers import Number
