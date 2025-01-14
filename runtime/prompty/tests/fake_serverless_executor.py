@@ -1,8 +1,11 @@
 import json
 from pathlib import Path
-from prompty import Invoker, Prompty
-from prompty.core import AsyncPromptyStream, PromptyStream
+
 from azure.ai.inference.models import ChatCompletions, StreamingChatCompletionsUpdate
+
+from prompty import Prompty
+from prompty.core import AsyncPromptyStream, PromptyStream
+from prompty.invoker import Invoker
 
 
 ## Azure Fake Executor
@@ -27,7 +30,7 @@ class FakeServerlessExecutor(Invoker):
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):
@@ -62,7 +65,7 @@ class FakeServerlessExecutor(Invoker):
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):

@@ -1,13 +1,16 @@
-import azure.identity
 import importlib.metadata
-from typing import AsyncIterator, Iterator
-from openai import AzureOpenAI, AsyncAzureOpenAI
+import re
+from collections.abc import AsyncIterator, Iterator
+from datetime import datetime
+
+import azure.identity
+from openai import AsyncAzureOpenAI, AzureOpenAI
 
 from prompty.tracer import Tracer
+
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
-import re
-from datetime import datetime
+
 
 def extract_date(data: str) -> datetime:
     """Extract date from a string

@@ -1,11 +1,13 @@
 import json
 from pathlib import Path
-from prompty import Prompty
-from prompty.invoker import Invoker
-from prompty.core import AsyncPromptyStream, PromptyStream
+
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
+
+from prompty import Prompty
+from prompty.core import AsyncPromptyStream, PromptyStream
+from prompty.invoker import Invoker
 
 
 ## Azure Fake Executor
@@ -24,7 +26,7 @@ class FakeAzureExecutor(Invoker):
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):
@@ -49,7 +51,7 @@ class FakeAzureExecutor(Invoker):
 
             n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
             p = Path(__file__).parent / f"{n}.embedding.json"
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 response = CreateEmbeddingResponse.model_validate_json(f.read())
                 return response
 
@@ -73,7 +75,7 @@ class FakeAzureExecutor(Invoker):
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):
@@ -98,7 +100,7 @@ class FakeAzureExecutor(Invoker):
 
             n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
             p = Path(__file__).parent / f"{n}.embedding.json"
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 response = CreateEmbeddingResponse.model_validate_json(f.read())
                 return response
 

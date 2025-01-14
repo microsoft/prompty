@@ -1,10 +1,11 @@
-import pytest
-import prompty
 from pathlib import Path
-from prompty.invoker import InvokerFactory
 
-from tests.fake_azure_executor import FakeAzureExecutor
+import pytest
+
+import prompty
 from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from tests.fake_azure_executor import FakeAzureExecutor
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -47,7 +48,7 @@ def test_renderer_invoker(prompt: str):
     ],
 )
 def test_parser_invoker(markdown: str):
-    with open(f"{BASE_PATH}/generated/{markdown}", "r", encoding="utf-8") as f:
+    with open(f"{BASE_PATH}/generated/{markdown}", encoding="utf-8") as f:
         content = f.read()
     prompt = prompty.load("prompts/basic.prompty")
     result = InvokerFactory.run_parser(prompt, content)

@@ -1,12 +1,11 @@
-from __future__ import annotations
-
 import os
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
+from typing import Any, Literal, Union
 
-from .tracer import Tracer, to_dict, sanitize
 from pydantic import BaseModel, Field, FilePath
-from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set, Tuple
 
+from .tracer import Tracer, sanitize, to_dict
 from .utils import load_json, load_json_async
 
 
@@ -30,7 +29,7 @@ class PropertySettings(BaseModel):
     """
 
     type: Literal["string", "number", "array", "object", "boolean"]
-    default: str | int | float | List | dict | bool = Field(default=None)
+    default: Union[str, int, float, list, dict, bool] = Field(default=None)
     description: str = Field(default="")
 
 
@@ -58,21 +57,19 @@ class ModelSettings(BaseModel):
         self,
         *,
         mode: str = "python",
-        include: (
-            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
-        ) = None,
-        exclude: (
-            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
-        ) = None,
-        context: os.Any | None = None,
+        include: Union[set[int], set[str], dict[int, Any], dict[str, Any], None] = None,
+        exclude: Union[set[int], set[str], dict[int, Any], dict[str, Any], None] = None,
+        context: Union[Any, None] = None,
         by_alias: bool = False,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
         exclude_none: bool = False,
         round_trip: bool = False,
-        warnings: bool | Literal["none"] | Literal["warn"] | Literal["error"] = True,
+        warnings: Union[
+            bool, Literal["none"], Literal["warn"], Literal["error"]
+        ] = True,
         serialize_as_any: bool = False,
-    ) -> Dict[str, os.Any]:
+    ) -> dict[str, Any]:
         """Method to dump the model in a safe way"""
         d = super().model_dump(
             mode=mode,
@@ -145,11 +142,11 @@ class Prompty(BaseModel):
     # metadata
     name: str = Field(default="")
     description: str = Field(default="")
-    authors: List[str] = Field(default=[])
-    tags: List[str] = Field(default=[])
+    authors: list[str] = Field(default=[])
+    tags: list[str] = Field(default=[])
     version: str = Field(default="")
     base: str = Field(default="")
-    basePrompty: Prompty | None = Field(default=None)
+    basePrompty: Union["Prompty", None] = Field(default=None)
     # model
     model: ModelSettings = Field(default_factory=ModelSettings)
 
@@ -157,19 +154,19 @@ class Prompty(BaseModel):
     sample: dict = Field(default={})
 
     # input / output
-    inputs: Dict[str, PropertySettings] = Field(default={})
-    outputs: Dict[str, PropertySettings] = Field(default={})
+    inputs: dict[str, PropertySettings] = Field(default={})
+    outputs: dict[str, PropertySettings] = Field(default={})
 
     # template
     template: TemplateSettings
 
     file: FilePath = Field(default="")
-    content: str | List[str] | dict = Field(default="")
+    content: Union[str, list[str], dict] = Field(default="")
 
-    def to_safe_dict(self) -> Dict[str, any]:
+    def to_safe_dict(self) -> dict[str, any]:
         d = {}
         for k, v in self:
-            if v != "" and v != {} and v != [] and v != None:
+            if v != "" and v != {} and v != [] and v is not None:
                 if k == "model":
                     d[k] = v.model_dump()
                 elif k == "template":
@@ -191,7 +188,7 @@ class Prompty(BaseModel):
         return d
 
     @staticmethod
-    def hoist_base_prompty(top: Prompty, base: Prompty) -> Prompty:
+    def hoist_base_prompty(top: "Prompty", base: "Prompty") -> "Prompty":
         top.name = base.name if top.name == "" else top.name
         top.description = base.description if top.description == "" else top.description
         top.authors = list(set(base.authors + top.authors))
@@ -319,14 +316,14 @@ class Prompty(BaseModel):
 
 
 def param_hoisting(
-    top: Dict[str, any], bottom: Dict[str, any], top_key: str = None
-) -> Dict[str, any]:
+    top: dict[str, any], bottom: dict[str, any], top_key: str = None
+) -> dict[str, any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}
     else:
         new_dict = {**top}
     for key, value in bottom.items():
-        if not key in new_dict:
+        if key not in new_dict:
             new_dict[key] = value
     return new_dict
 
@@ -338,7 +335,7 @@ class PromptyStream(Iterator):
     def __init__(self, name: str, iterator: Iterator):
         self.name = name
         self.iterator = iterator
-        self.items: List[any] = []
+        self.items: list[any] = []
         self.__name__ = "PromptyStream"
 
     def __iter__(self):
@@ -370,7 +367,7 @@ class AsyncPromptyStream(AsyncIterator):
     def __init__(self, name: str, iterator: AsyncIterator):
         self.name = name
         self.iterator = iterator
-        self.items: List[any] = []
+        self.items: list[any] = []
         self.__name__ = "AsyncPromptyStream"
 
     def __aiter__(self):

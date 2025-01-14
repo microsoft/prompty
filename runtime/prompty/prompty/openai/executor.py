@@ -1,8 +1,10 @@
 import importlib.metadata
+from collections.abc import Iterator
+
 from openai import OpenAI
-from typing import Iterator
 
 from prompty.tracer import Tracer
+
 from ..core import Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 

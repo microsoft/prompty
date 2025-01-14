@@ -1,7 +1,8 @@
 import abc
-from .tracer import trace
+from typing import Callable, Literal
+
 from .core import Prompty
-from typing import Callable, Dict, Literal
+from .tracer import trace
 
 
 class Invoker(abc.ABC):
@@ -88,10 +89,10 @@ class Invoker(abc.ABC):
 class InvokerFactory:
     """Factory class for Invoker"""
 
-    _renderers: Dict[str, Invoker] = {}
-    _parsers: Dict[str, Invoker] = {}
-    _executors: Dict[str, Invoker] = {}
-    _processors: Dict[str, Invoker] = {}
+    _renderers: dict[str, Invoker] = {}
+    _parsers: dict[str, Invoker] = {}
+    _executors: dict[str, Invoker] = {}
+    _processors: dict[str, Invoker] = {}
 
     @classmethod
     def add_renderer(cls, name: str, invoker: Invoker) -> None:
@@ -204,7 +205,7 @@ class InvokerFactory:
         default: any = None,
     ):
         name = cls._get_name(type, prompty)
-        if name.startswith("NOOP") and default != None:
+        if name.startswith("NOOP") and default is not None:
             return default
         elif name.startswith("NOOP"):
             return data
@@ -222,7 +223,7 @@ class InvokerFactory:
         default: any = None,
     ):
         name = cls._get_name(type, prompty)
-        if name.startswith("NOOP") and default != None:
+        if name.startswith("NOOP") and default is not None:
             return default
         elif name.startswith("NOOP"):
             return data

@@ -2,8 +2,8 @@
 from prompty.invoker import InvokerException
 
 try:
-    from .executor import OpenAIExecutor
-    from .processor import OpenAIProcessor
+    from .executor import OpenAIExecutor  # noqa
+    from .processor import OpenAIProcessor  # noqa
 except ImportError as e:
     raise InvokerException(
         f"Error registering OpenAIExecutor and OpenAIProcessor: {e}", "openai"

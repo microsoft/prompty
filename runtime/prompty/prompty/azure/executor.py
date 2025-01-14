@@ -1,12 +1,13 @@
-import json
-import azure.identity
 import importlib.metadata
-from typing import AsyncIterator, Iterator
-from openai import APIResponse, AzureOpenAI, AsyncAzureOpenAI
+from collections.abc import AsyncIterator, Iterator
 
-from prompty.tracer import Tracer, sanitize
-from ..core import AsyncPromptyStream, Prompty, PromptyStream
+import azure.identity
+from openai import APIResponse, AsyncAzureOpenAI, AzureOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
+
+from prompty.tracer import Tracer
+
+from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
@@ -89,7 +90,7 @@ class AzureOpenAIExecutor(Invoker):
                 }
                 trace("inputs", args)
 
-                if "stream" in args and args["stream"] == True:
+                if "stream" in args and args["stream"]:
                     response = client.chat.completions.create(**args)
                 else:
                     raw: APIResponse = client.chat.completions.with_raw_response.create(
@@ -188,7 +189,7 @@ class AzureOpenAIExecutor(Invoker):
                 }
                 trace("inputs", args)
 
-                if "stream" in args and args["stream"] == True:
+                if "stream" in args and args["stream"]:
                     response = await client.chat.completions.create(**args)
                 else:
                     raw: APIResponse = await client.chat.completions.with_raw_response.create(

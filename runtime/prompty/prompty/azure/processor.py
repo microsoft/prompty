@@ -1,10 +1,12 @@
-from typing import AsyncIterator, Iterator
-from openai.types.completion import Completion
-from openai.types.images_response import ImagesResponse
+from collections.abc import AsyncIterator, Iterator
+
 from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.completion import Completion
+from openai.types.create_embedding_response import CreateEmbeddingResponse
+from openai.types.images_response import ImagesResponse
+
 from ..core import AsyncPromptyStream, Prompty, PromptyStream, ToolCall
 from ..invoker import Invoker, InvokerFactory
-from openai.types.create_embedding_response import CreateEmbeddingResponse
 
 
 @InvokerFactory.register_processor("azure")
@@ -71,7 +73,7 @@ class AzureOpenAIProcessor(Invoker):
                 for chunk in data:
                     if (
                         len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content != None
+                        and chunk.choices[0].delta.content is not None
                     ):
                         content = chunk.choices[0].delta.content
                         yield content
@@ -134,7 +136,7 @@ class AzureOpenAIProcessor(Invoker):
                 async for chunk in data:
                     if (
                         len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content != None
+                        and chunk.choices[0].delta.content is not None
                     ):
                         content = chunk.choices[0].delta.content
                         yield content

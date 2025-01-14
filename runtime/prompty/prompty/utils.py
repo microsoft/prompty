@@ -1,10 +1,9 @@
-import re
-import yaml
 import json
-import asyncio
-import aiofiles
-from typing import Dict
+import re
 from pathlib import Path
+
+import aiofiles
+import yaml
 
 _yaml_regex = re.compile(
     r"^\s*" + r"(?:---|\+\+\+)" + r"(.*?)" + r"(?:---|\+\+\+)" + r"\s*(.+)$",
@@ -12,11 +11,11 @@ _yaml_regex = re.compile(
 )
 
 def load_text(file_path, encoding='utf-8'):
-    with open(file_path, 'r', encoding=encoding) as file:
+    with open(file_path, encoding=encoding) as file:
         return file.read()
 
 async def load_text_async(file_path, encoding='utf-8'):
-    async with aiofiles.open(file_path, mode='r', encoding=encoding) as f:
+    async with aiofiles.open(file_path, encoding=encoding) as f:
         content = await f.read()
         return content
 
@@ -46,7 +45,7 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> Path:
 
 def load_global_config(
     prompty_path: Path = Path.cwd(), configuration: str = "default"
-) -> Dict[str, any]:
+) -> dict[str, any]:
     # prompty.config laying around?
     config = _find_global_config(prompty_path)
 
@@ -63,7 +62,7 @@ def load_global_config(
 
 async def load_global_config_async(
     prompty_path: Path = Path.cwd(), configuration: str = "default"
-) -> Dict[str, any]:
+) -> dict[str, any]:
     # prompty.config laying around?
     config = _find_global_config(prompty_path)
 

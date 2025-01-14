@@ -1,12 +1,13 @@
-from typing import AsyncIterator
-import pytest
-import prompty
-from prompty.serverless.processor import ServerlessProcessor
-from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+from collections.abc import AsyncIterator
 
-from prompty.invoker import InvokerFactory
-from tests.fake_azure_executor import FakeAzureExecutor
+import pytest
+
+import prompty
 from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from prompty.serverless.processor import ServerlessProcessor
+from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
+from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
 
 
@@ -259,15 +260,6 @@ def test_structured_output():
 async def test_structured_output_async():
     result = await prompty.execute_async(
         "prompts/structured_output.prompty",
-    )
-    print(result)
-
-
-@pytest.mark.asyncio
-@trace
-async def test_function_calling_async():
-    result = await prompty.execute_async(
-        "prompts/functions.prompty",
     )
     print(result)
 

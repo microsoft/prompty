@@ -1,16 +1,17 @@
-import os
-import json
-import inspect
-import numbers
-import traceback
-import importlib
 import contextlib
-from pathlib import Path
-from numbers import Number
+import importlib
+import inspect
+import json
+import os
+import traceback
+from collections.abc import Iterator
 from datetime import datetime
+from functools import partial, wraps
+from numbers import Number
+from pathlib import Path
+from typing import Any, Callable
+
 from pydantic import BaseModel
-from functools import wraps, partial
-from typing import Any, Callable, Dict, Iterator, List
 
 
 # clean up key value pairs for sensitive values
@@ -26,7 +27,7 @@ def sanitize(key: str, value: Any) -> Any:
 
 
 class Tracer:
-    _tracers: Dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
+    _tracers: dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
 
     SIGNATURE = "signature"
     INPUTS = "inputs"
@@ -44,7 +45,7 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(cls, name: str, attributes: Dict[str, Any] = None) -> Iterator[Callable[[str, Any], None]]:
+    def start(cls, name: str, attributes: dict[str, Any] = None) -> Iterator[Callable[[str, Any], None]]:
         with contextlib.ExitStack() as stack:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
@@ -62,7 +63,7 @@ class Tracer:
             ]
 
 
-def to_dict(obj: Any) -> Dict[str, Any]:
+def to_dict(obj: Any) -> dict[str, Any]:
     # simple json types
     if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
         return obj
@@ -142,7 +143,7 @@ def _trace_sync(
             del okwargs["name"]
 
         with Tracer.start(name) as trace:
-            if altname != None:
+            if altname is not None:
                 trace("function", altname)
 
             trace("signature", signature)
@@ -196,7 +197,7 @@ def _trace_async(
             del okwargs["name"]
 
         with Tracer.start(name) as trace:
-            if altname != None:
+            if altname is not None:
                 trace("function", altname)
                 
             trace("signature", signature)
@@ -251,7 +252,7 @@ class PromptyTracer:
         if not self.output.exists():
             self.output.mkdir(parents=True, exist_ok=True)
 
-        self.stack: List[Dict[str, Any]] = []
+        self.stack: list[dict[str, Any]] = []
 
     @contextlib.contextmanager
     def tracer(self, name: str) -> Iterator[Callable[[str, Any], None]]:
@@ -324,7 +325,7 @@ class PromptyTracer:
                     self.stack[-1]["__frames"] = []
                 self.stack[-1]["__frames"].append(frame)
 
-    def hoist_item(self, src: Dict[str, Any], cur: Dict[str, Any]) -> None:
+    def hoist_item(self, src: dict[str, Any], cur: dict[str, Any]) -> None:
         for key, value in src.items():
             if value is None or isinstance(value, list) or isinstance(value, dict):
                 continue
@@ -333,12 +334,13 @@ class PromptyTracer:
                     cur[key] = value
                 else:
                     cur[key] += value
-            except:
+            except Exception:
+                # TODO: Be more specific about exceptions here
                 continue
 
         return cur
 
-    def write_trace(self, frame: Dict[str, Any]) -> None:
+    def write_trace(self, frame: dict[str, Any]) -> None:
         trace_file = (
             self.output
             / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"

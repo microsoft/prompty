@@ -1,8 +1,9 @@
-from typing import AsyncIterator, Iterator
-from ..invoker import Invoker, InvokerFactory
-from ..core import AsyncPromptyStream, Prompty, PromptyStream, ToolCall
+from collections.abc import AsyncIterator, Iterator
 
 from azure.ai.inference.models import ChatCompletions, EmbeddingsResult
+
+from ..core import AsyncPromptyStream, Prompty, PromptyStream, ToolCall
+from ..invoker import Invoker, InvokerFactory
 
 
 @InvokerFactory.register_processor("serverless")
@@ -53,7 +54,7 @@ class ServerlessProcessor(Invoker):
                 for chunk in data:
                     if (
                         len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content != None
+                        and chunk.choices[0].delta.content is not None
                     ):
                         content = chunk.choices[0].delta.content
                         yield content
@@ -103,7 +104,7 @@ class ServerlessProcessor(Invoker):
                 async for chunk in data:
                     if (
                         len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content != None
+                        and chunk.choices[0].delta.content is not None
                     ):
                         content = chunk.choices[0].delta.content
                         yield content

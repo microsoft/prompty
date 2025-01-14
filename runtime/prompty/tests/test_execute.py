@@ -1,16 +1,16 @@
 import os
-import pytest
-import prompty
-from prompty.invoker import InvokerFactory
 from pathlib import Path
 from typing import Union
 
+import pytest
+from dotenv import load_dotenv
+
+import prompty
+from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from prompty.serverless import ServerlessProcessor
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
-from prompty.azure import AzureOpenAIProcessor
-from prompty.serverless import ServerlessProcessor
-
-from dotenv import load_dotenv
 
 load_dotenv()
 

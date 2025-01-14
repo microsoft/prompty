@@ -33,11 +33,21 @@ dev = [
     "azure-ai-inference>=1.0.0b3",
     "pytest-asyncio>=0.24.0",
     "azure-identity>=1.17.1",
-
+    "ruff>=0.9.1",
+    "mypy>=1.14.1"
 ]
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+output-format = "full"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["D203", "E501"]
 
 
 [tool.pdm.version]

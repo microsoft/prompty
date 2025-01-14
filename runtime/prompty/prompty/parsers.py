@@ -1,10 +1,10 @@
-import re
 import base64
+import re
+
 from .core import Prompty
-from .invoker import Invoker, InvokerFactory
+from .invoker import Invoker
 
 
-@InvokerFactory.register_parser("prompty.chat")
 class PromptyChatParser(Invoker):
     """ Prompty Chat Parser  """
     def __init__(self, prompty: Prompty) -> None:
@@ -121,7 +121,7 @@ class PromptyChatParser(Invoker):
         ]
 
         # if no starter role, then inject system role
-        if not chunks[0].strip().lower() in self.roles:
+        if chunks[0].strip().lower() not in self.roles:
             chunks.insert(0, "system")
 
         # if last chunk is role entry, then remove (no content?)

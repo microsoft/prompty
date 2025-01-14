@@ -1,9 +1,9 @@
-from .core import Prompty
 from jinja2 import DictLoader, Environment
-from .invoker import Invoker, InvokerFactory
+
+from .core import Prompty
+from .invoker import Invoker
 
 
-@InvokerFactory.register_renderer("jinja2")
 class Jinja2Renderer(Invoker):
     """Jinja2 Renderer"""
 

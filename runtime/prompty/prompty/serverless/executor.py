@@ -1,24 +1,26 @@
-import azure.identity
 import importlib.metadata
-from typing import Iterator
-from azure.core.credentials import AzureKeyCredential
+from collections.abc import Iterator
+
+import azure.identity
 from azure.ai.inference import (
     ChatCompletionsClient,
     EmbeddingsClient,
 )
-
 from azure.ai.inference.aio import (
     ChatCompletionsClient as AsyncChatCompletionsClient,
+)
+from azure.ai.inference.aio import (
     EmbeddingsClient as AsyncEmbeddingsClient,
 )
 from azure.ai.inference.models import (
-    StreamingChatCompletions,
     AsyncStreamingChatCompletions,
+    StreamingChatCompletions,
 )
+from azure.core.credentials import AzureKeyCredential
 
-from ..tracer import Tracer
+from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
-from ..core import Prompty, PromptyStream, AsyncPromptyStream
+from ..tracer import Tracer
 
 VERSION = importlib.metadata.version("prompty")
 
