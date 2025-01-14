@@ -49,6 +49,12 @@ jobs:
     name: upload release to PyPI
     runs-on: ubuntu-latest
     needs: prompty-tests
+
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     
     steps:
       - uses: actions/checkout@v4
