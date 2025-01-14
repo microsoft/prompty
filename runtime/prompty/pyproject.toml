@@ -34,7 +34,9 @@ dev = [
     "pytest-asyncio>=0.24.0",
     "azure-identity>=1.17.1",
     "ruff>=0.9.1",
-    "mypy>=1.14.1"
+    "mypy>=1.14.1",
+    "types-aiofiles>=21.1.0",
+    "types-PyYAML>=6.0.12"
 ]
 
 [tool.pytest.ini_options]

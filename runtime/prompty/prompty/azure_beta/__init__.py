@@ -3,8 +3,8 @@ from prompty.invoker import InvokerException
 
 try:
     # Reuse the common Azure OpenAI Processor
-    from ..azure.processor import AzureOpenAIProcessor
-    from .executor import AzureOpenAIBetaExecutor
+    from ..azure.processor import AzureOpenAIProcessor # noqa
+    from .executor import AzureOpenAIBetaExecutor # noqa
 except ImportError:
     raise InvokerException(
         "Error registering AzureOpenAIBetaExecutor and AzureOpenAIProcessor", "azure_beta"

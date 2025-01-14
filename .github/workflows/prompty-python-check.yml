@@ -1,11 +1,11 @@
-name: prompty Python build and publish
-
+name: prompty Python build and test
 on:
   push:
     paths:
       - 'runtime/prompty/**'
-    tags:
-      - 'python/*'
+  pull_request:
+    paths:
+      - 'runtime/prompty/**'
   workflow_dispatch:
 
 
@@ -45,10 +45,3 @@ jobs:
         working-directory: ./runtime/prompty
         run: pdm run mypy . --check-untyped-defs
 
-  pypi-publish:
-    name: upload release to PyPI
-    runs-on: ubuntu-latest
-    steps:
-      - name: Publish package distributions to PyPI
-        working-directory: ./runtime/prompty
-        run: pdm publish

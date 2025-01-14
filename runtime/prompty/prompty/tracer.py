@@ -4,7 +4,7 @@ import inspect
 import json
 import os
 import traceback
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from datetime import datetime
 from functools import partial, wraps
 from numbers import Number
@@ -27,7 +27,12 @@ def sanitize(key: str, value: Any) -> Any:
 
 
 class Tracer:
-    _tracers: dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
+    _tracers: dict[
+        str,
+        Callable[
+            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
+        ],
+    ] = {}
 
     SIGNATURE = "signature"
     INPUTS = "inputs"
@@ -35,7 +40,11 @@ class Tracer:
 
     @classmethod
     def add(
-        cls, name: str, tracer: Callable[[str], Iterator[Callable[[str, Any], None]]]
+        cls,
+        name: str,
+        tracer: Callable[
+            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
+        ],
     ) -> None:
         cls._tracers[name] = tracer
 
@@ -47,9 +56,9 @@ class Tracer:
     @contextlib.contextmanager
     def start(
         cls, name: str, attributes: Union[dict[str, Any], None] = None
-    ) -> Iterator[Callable[[str, Any], None]]:
+    ) -> Iterator[Callable[[str, Any], list[None]]]:
         with contextlib.ExitStack() as stack:
-            traces = [
+            traces: list[Callable[[str, Any], None]] = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
 
@@ -65,7 +74,7 @@ class Tracer:
             ]
 
 
-def to_dict(obj: Any) -> dict[str, Any]:
+def to_dict(obj: Any) -> Any:
     # simple json types
     if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
         return obj
@@ -126,16 +135,16 @@ def _inputs(func: Callable, args, kwargs) -> dict:
     return inputs
 
 
-def _results(result: Any) -> dict:
+def _results(result: Any) -> Any:
     return to_dict(result) if result is not None else "None"
 
 
-def _trace_sync(func: Callable = None, **okwargs: Any) -> Callable:
+def _trace_sync(func: Callable, **okwargs: Any) -> Callable:
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
-        altname: str = None
+        altname: Union[str, None] = None
         # special case
         if "name" in okwargs:
             altname = name
@@ -182,12 +191,12 @@ def _trace_sync(func: Callable = None, **okwargs: Any) -> Callable:
     return wrapper
 
 
-def _trace_async(func: Callable = None, **okwargs: Any) -> Callable:
+def _trace_async(func: Callable, **okwargs: Any) -> Callable:
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
-        altname: str = None
+        altname: Union[str, None] = None
         # special case
         if "name" in okwargs:
             altname = name
@@ -233,7 +242,7 @@ def _trace_async(func: Callable = None, **okwargs: Any) -> Callable:
     return wrapper
 
 
-def trace(func: Callable = None, **kwargs: Any) -> Callable:
+def trace(func: Union[Callable, None] = None, **kwargs: Any) -> Callable:
     if func is None:
         return partial(trace, **kwargs)
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync

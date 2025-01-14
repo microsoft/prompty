@@ -27,7 +27,7 @@ class OpenAIExecutor(Invoker):
         self.api = self.prompty.model.api
         self.parameters = self.prompty.model.parameters
         self.model = self.prompty.model.configuration["name"]
-        #self.deployment = self.prompty.model.configuration["deployment"] ?
+        self.deployment = self.prompty.model.configuration["deployment"]
 
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API

@@ -150,6 +150,7 @@ def evaluate(prompt, evalprompt, customerId, question):
     )
     return result
 
+
 @trace
 async def evaluate_async(prompt, evalprompt, customerId, question):
     response = await get_response_async(customerId, question, prompt)
@@ -276,7 +277,7 @@ def test_streaming():
     for item in result:
         r.append(item)
 
-    print(' '.join(r))
+    print(" ".join(r))
 
 
 @pytest.mark.asyncio
@@ -288,6 +289,7 @@ async def test_streaming_async():
     if isinstance(result, AsyncIterator):
         async for item in result:
             print(item)
+
 
 @trace
 def test_tracing_attributes():

@@ -13,7 +13,7 @@ from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
 
-def extract_date(data: str) -> datetime:
+def extract_date(data: str) -> typing.Union[datetime, None]:
     """Extract date from a string
 
     Parameters
@@ -28,16 +28,17 @@ def extract_date(data: str) -> datetime:
     """
 
     # Regular expression to find dates in the format YYYY-MM-DD
-    date_pattern = re.compile(r'\b\d{4}-\d{2}-\d{2}\b')
+    date_pattern = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
     match = date_pattern.search(data)
     if match:
         date_str = match.group(0)
         # Validate the date format
         try:
-            return datetime.strptime(date_str, '%Y-%m-%d')
+            return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             pass
     return None
+
 
 def is_structured_output_available(api_version: str) -> bool:
     """Check if the structured output API is available for the given API version
@@ -59,9 +60,10 @@ def is_structured_output_available(api_version: str) -> bool:
     api_version_date = extract_date(api_version)
 
     # Check if the API version are on or after the threshold date
-    if api_version_date >= threshold_api_version_date:
+    if api_version_date is not None and api_version_date >= threshold_api_version_date:
         return True
     return False
+
 
 VERSION = importlib.metadata.version("prompty")
 
@@ -83,7 +85,10 @@ class AzureOpenAIBetaExecutor(Invoker):
         if "api_key" not in self.kwargs:
             # managed identity if client id
             if "client_id" in self.kwargs:
-                default_credential = azure.identity.ManagedIdentityCredential(
+                default_credential: typing.Union[
+                    azure.identity.ManagedIdentityCredential,
+                    azure.identity.DefaultAzureCredential,
+                ] = azure.identity.ManagedIdentityCredential(
                     client_id=self.kwargs.pop("client_id"),
                 )
             # default credential
@@ -137,13 +142,13 @@ class AzureOpenAIBetaExecutor(Invoker):
 
             if self.api == "chat":
                 # We can only verify the API version as the model and its version are not part of prompty configuration
-                # Should be gpt-4o and 2024-08-06 or later    
+                # Should be gpt-4o and 2024-08-06 or later
                 choose_beta = is_structured_output_available(self.api_version)
                 if choose_beta:
                     trace("signature", "AzureOpenAI.beta.chat.completions.parse")
                 else:
                     trace("signature", "AzureOpenAI.chat.completions.create")
-                
+
                 args = {
                     "model": self.deployment,
                     "messages": data if isinstance(data, list) else [data],
@@ -151,7 +156,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 }
                 trace("inputs", args)
                 if choose_beta:
-                    response = client.beta.chat.completions.parse(**args)
+                    response: typing.Any = client.beta.chat.completions.parse(**args)
                 else:
                     response = client.chat.completions.create(**args)
                 trace("result", response)
@@ -186,7 +191,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.images.generate.create(**args)
+                response = client.images.generate(**args)
                 trace("result", response)
 
         # stream response
@@ -199,7 +204,7 @@ class AzureOpenAIBetaExecutor(Invoker):
         else:
             return response
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -271,7 +276,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = await client.images.generate.create(**args)
+                response = await client.images.generate(**args)
                 trace("result", response)
 
         # stream response

@@ -20,7 +20,15 @@ class AzureOpenAIProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(self, data: typing.Any) -> typing.Any:
+    def invoke(self, data: typing.Any) -> typing.Union[
+        str,
+        list[typing.Union[str, None]],
+        list[ToolCall],
+        list[float],
+        list[list[float]],
+        PromptyStream,
+        None,
+    ]:
         """Invoke the OpenAI/Azure API
 
         Parameters
@@ -83,7 +91,7 @@ class AzureOpenAIProcessor(Invoker):
         else:
             return data
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters

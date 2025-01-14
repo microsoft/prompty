@@ -31,7 +31,10 @@ class AzureOpenAIExecutor(Invoker):
         if "api_key" not in self.kwargs:
             # managed identity if client id
             if "client_id" in self.kwargs:
-                default_credential = azure.identity.ManagedIdentityCredential(
+                default_credential: typing.Union[
+                    azure.identity.ManagedIdentityCredential,
+                    azure.identity.DefaultAzureCredential,
+                ] = azure.identity.ManagedIdentityCredential(
                     client_id=self.kwargs.pop("client_id"),
                 )
             # default credential
@@ -50,7 +53,7 @@ class AzureOpenAIExecutor(Invoker):
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: typing.Any) -> typing.Any:
+    def invoke(self, data: typing.Any) -> typing.Union[str, PromptyStream]:
         """Invoke the Azure OpenAI API
 
         Parameters
@@ -94,9 +97,8 @@ class AzureOpenAIExecutor(Invoker):
                 if "stream" in args and args["stream"]:
                     response = client.chat.completions.create(**args)
                 else:
-                    raw: APIResponse = client.chat.completions.with_raw_response.create(
-                        **args
-                    )
+                    raw = client.chat.completions.with_raw_response.create(**args)
+
                     response = ChatCompletion.model_validate_json(raw.text)
 
                     for k, v in raw.headers.raw:
@@ -137,7 +139,7 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.images.generate.create(**args)
+                response = client.images.generate(**args)
                 trace("result", response)
 
         # stream response
@@ -150,7 +152,7 @@ class AzureOpenAIExecutor(Invoker):
         else:
             return response
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -193,10 +195,10 @@ class AzureOpenAIExecutor(Invoker):
                 if "stream" in args and args["stream"]:
                     response = await client.chat.completions.create(**args)
                 else:
-                    raw: APIResponse = await client.chat.completions.with_raw_response.create(
-                        **args
+                    raw: APIResponse = (
+                        await client.chat.completions.with_raw_response.create(**args)
                     )
-                    response = ChatCompletion.model_validate_json(raw.text)
+                    response = ChatCompletion.model_validate_json(raw.text())
                     for k, v in raw.headers.raw:
                         trace(k.decode("utf-8"), v.decode("utf-8"))
 
@@ -236,7 +238,7 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = await client.images.generate.create(**args)
+                response = await client.images.generate(**args)
                 trace("result", response)
 
         # stream response

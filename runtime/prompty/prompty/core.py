@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal, Union
 
 from pydantic import BaseModel, Field, FilePath
+from pydantic.main import IncEx
 
 from .tracer import Tracer, sanitize, to_dict
 from .utils import load_json, load_json_async
@@ -58,8 +59,8 @@ class ModelSettings(BaseModel):
         self,
         *,
         mode: str = "python",
-        include: Union[set[int], set[str], dict[int, typing.Any], dict[str, typing.Any], None] = None,
-        exclude: Union[set[int], set[str], dict[int, typing.Any], dict[str, typing.Any], None] = None,
+        include: Union[IncEx, None] = None,
+        exclude: Union[IncEx, None] = None,
         context: Union[typing.Any, None] = None,
         by_alias: bool = False,
         exclude_unset: bool = False,
@@ -161,7 +162,7 @@ class Prompty(BaseModel):
     # template
     template: TemplateSettings
 
-    file: Union[FilePath, Path] = Field(default="")
+    file: Union[str, FilePath] = Field(default="")
     content: Union[str, list[str], dict] = Field(default="")
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
@@ -213,9 +214,9 @@ class Prompty(BaseModel):
 
     @staticmethod
     def _process_file(file: str, parent: Path) -> typing.Any:
-        file = Path(parent / Path(file)).resolve().absolute()
-        if file.exists():
-            items = load_json(file)
+        f = Path(parent / Path(file)).resolve().absolute()
+        if f.exists():
+            items = load_json(f)
             if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
@@ -230,9 +231,9 @@ class Prompty(BaseModel):
 
     @staticmethod
     async def _process_file_async(file: str, parent: Path) -> typing.Any:
-        file = Path(parent / Path(file)).resolve().absolute()
-        if file.exists():
-            items = await load_json_async(file)
+        f = Path(parent / Path(file)).resolve().absolute()
+        if f.exists():
+            items = await load_json_async(f)
             if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
@@ -246,7 +247,9 @@ class Prompty(BaseModel):
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(variable: str, env_error=True, default: str = None) -> typing.Any:
+    def _process_env(
+        variable: str, env_error=True, default: Union[str, None] = None
+    ) -> typing.Any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
@@ -319,7 +322,9 @@ class Prompty(BaseModel):
 
 
 def param_hoisting(
-    top: dict[str, typing.Any], bottom: dict[str, typing.Any], top_key: str = None
+    top: dict[str, typing.Any],
+    bottom: dict[str, typing.Any],
+    top_key: Union[str, None] = None,
 ) -> dict[str, typing.Any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}

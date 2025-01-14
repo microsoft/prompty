@@ -1,4 +1,5 @@
 import typing
+from pathlib import Path
 
 from jinja2 import DictLoader, Environment
 
@@ -11,12 +12,20 @@ class Jinja2Renderer(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.templates = {}
+        self.templates: dict[str, str] = {}
         # generate template dictionary
-        cur_prompt = self.prompty
+        cur_prompt: typing.Union[Prompty, None] = self.prompty
         while cur_prompt:
-            self.templates[cur_prompt.file.name] = cur_prompt.content
+            if isinstance(cur_prompt.file, str):
+                cur_prompt.file = Path(cur_prompt.file).resolve().absolute()
+
+            if isinstance(cur_prompt.content, str):
+                self.templates[cur_prompt.file.name] = cur_prompt.content
+
             cur_prompt = cur_prompt.basePrompty
+
+        if isinstance(self.prompty.file, str):
+            self.prompty.file = Path(self.prompty.file).resolve().absolute()
 
         self.name = self.prompty.file.name
 

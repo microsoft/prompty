@@ -27,6 +27,9 @@ class FakeServerlessExecutor(Invoker):
 
     def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
+            if isinstance(self.prompty.file, str):
+                self.prompty.file = Path(self.prompty.file).resolve().absolute()
+
             p = (
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
@@ -48,7 +51,7 @@ class FakeServerlessExecutor(Invoker):
 
         return data
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Any:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -62,6 +65,9 @@ class FakeServerlessExecutor(Invoker):
             The parsed data
         """
         if self.prompty.file:
+            if isinstance(self.prompty.file, str):
+                self.prompty.file = Path(self.prompty.file).resolve().absolute()
+
             p = (
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"

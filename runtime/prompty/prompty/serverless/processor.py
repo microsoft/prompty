@@ -14,7 +14,9 @@ class ServerlessProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(self, data: typing.Any) -> typing.Any:
+    def invoke(
+        self, data: typing.Any
+    ) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters
@@ -64,7 +66,7 @@ class ServerlessProcessor(Invoker):
         else:
             return data
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters

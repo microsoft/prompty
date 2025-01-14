@@ -192,17 +192,17 @@ def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: di
     else:
         outputs = {}
 
-    p = Prompty(
-        **attributes,
+    prompty = Prompty(
         model=model,
         inputs=inputs,
         outputs=outputs,
         template=template,
         content=content,
         file=p,
+        **attributes
     )
 
-    return p
+    return prompty
 
 
 @trace(description="Load a prompty file.")

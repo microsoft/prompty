@@ -11,24 +11,29 @@ _yaml_regex = re.compile(
     re.S | re.M,
 )
 
-def load_text(file_path, encoding='utf-8'):
+
+def load_text(file_path, encoding="utf-8"):
     with open(file_path, encoding=encoding) as file:
         return file.read()
 
-async def load_text_async(file_path, encoding='utf-8'):
+
+async def load_text_async(file_path, encoding="utf-8"):
     async with aiofiles.open(file_path, encoding=encoding) as f:
         content = await f.read()
         return content
 
-def load_json(file_path, encoding='utf-8'):
+
+def load_json(file_path, encoding="utf-8"):
     return json.loads(load_text(file_path, encoding=encoding))
 
-async def load_json_async(file_path, encoding='utf-8'):
+
+async def load_json_async(file_path, encoding="utf-8"):
     # async file open
     content = await load_text_async(file_path, encoding=encoding)
     return json.loads(content)
 
-def _find_global_config(prompty_path: Path = Path.cwd()) -> Path:
+
+def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, None]:
     prompty_config = list(Path.cwd().glob("**/prompty.json"))
 
     if len(prompty_config) > 0:
@@ -78,7 +83,7 @@ async def load_global_config_async(
     return {}
 
 
-def load_prompty(file_path, encoding='utf-8'):
+def load_prompty(file_path, encoding="utf-8"):
     contents = load_text(file_path, encoding=encoding)
     return parse(contents)
 

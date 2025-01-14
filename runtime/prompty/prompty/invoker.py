@@ -23,7 +23,7 @@ class Invoker(abc.ABC):
         self.name = self.__class__.__name__
 
     @abc.abstractmethod
-    def invoke(self, data: typing.any) -> typing.Any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Abstract method to invoke the invoker
 
         Parameters
@@ -90,30 +90,31 @@ class Invoker(abc.ABC):
 class InvokerFactory:
     """Factory class for Invoker"""
 
-    _renderers: dict[str, Invoker] = {}
-    _parsers: dict[str, Invoker] = {}
-    _executors: dict[str, Invoker] = {}
-    _processors: dict[str, Invoker] = {}
+    _renderers: dict[str, type[Invoker]] = {}
+    _parsers: dict[str, type[Invoker]] = {}
+    _executors: dict[str, type[Invoker]] = {}
+    _processors: dict[str, type[Invoker]] = {}
 
     @classmethod
-    def add_renderer(cls, name: str, invoker: Invoker) -> None:
+    def add_renderer(cls, name: str, invoker: type[Invoker]) -> None:
         cls._renderers[name] = invoker
 
     @classmethod
-    def add_parser(cls, name: str, invoker: Invoker) -> None:
+    def add_parser(cls, name: str, invoker: type[Invoker]) -> None:
         cls._parsers[name] = invoker
 
     @classmethod
-    def add_executor(cls, name: str, invoker: Invoker) -> None:
+    def add_executor(cls, name: str, invoker: type[Invoker]) -> None:
         cls._executors[name] = invoker
 
     @classmethod
-    def add_processor(cls, name: str, invoker: Invoker) -> None:
+    def add_processor(cls, name: str, invoker: type[Invoker]) -> None:
         cls._processors[name] = invoker
 
     @classmethod
     def register_renderer(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
+
+        def inner_wrapper(wrapped_class: type[Invoker]) -> type[Invoker]:
             cls._renderers[name] = wrapped_class
             return wrapped_class
 
@@ -121,7 +122,8 @@ class InvokerFactory:
 
     @classmethod
     def register_parser(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
+
+        def inner_wrapper(wrapped_class: type[Invoker]) -> type[Invoker]:
             cls._parsers[name] = wrapped_class
             return wrapped_class
 
@@ -129,7 +131,8 @@ class InvokerFactory:
 
     @classmethod
     def register_executor(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
+
+        def inner_wrapper(wrapped_class: type[Invoker]) -> type[Invoker]:
             cls._executors[name] = wrapped_class
             return wrapped_class
 
@@ -137,7 +140,8 @@ class InvokerFactory:
 
     @classmethod
     def register_processor(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
+
+        def inner_wrapper(wrapped_class: type[Invoker]) -> type[Invoker]:
             cls._processors[name] = wrapped_class
             return wrapped_class
 
@@ -233,7 +237,9 @@ class InvokerFactory:
         return value
 
     @classmethod
-    def run_renderer(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
+    def run_renderer(
+        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
+    ) -> typing.Any:
         return cls.run("renderer", prompty, data, default)
 
     @classmethod
@@ -243,7 +249,9 @@ class InvokerFactory:
         return await cls.run_async("renderer", prompty, data, default)
 
     @classmethod
-    def run_parser(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
+    def run_parser(
+        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
+    ) -> typing.Any:
         return cls.run("parser", prompty, data, default)
 
     @classmethod
@@ -253,7 +261,9 @@ class InvokerFactory:
         return await cls.run_async("parser", prompty, data, default)
 
     @classmethod
-    def run_executor(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
+    def run_executor(
+        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
+    ) -> typing.Any:
         return cls.run("executor", prompty, data, default)
 
     @classmethod
@@ -263,7 +273,9 @@ class InvokerFactory:
         return await cls.run_async("executor", prompty, data, default)
 
     @classmethod
-    def run_processor(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
+    def run_processor(
+        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
+    ) -> typing.Any:
         return cls.run("processor", prompty, data, default)
 
     @classmethod
