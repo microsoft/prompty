@@ -1,4 +1,5 @@
 import json
+import typing
 from pathlib import Path
 
 from azure.ai.inference.models import ChatCompletions, StreamingChatCompletionsUpdate
@@ -24,7 +25,7 @@ class FakeServerlessExecutor(Invoker):
         self.api = self.prompty.model.api
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
             p = (
                 Path(self.prompty.file.parent)

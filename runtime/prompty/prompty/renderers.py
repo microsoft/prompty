@@ -1,3 +1,5 @@
+import typing
+
 from jinja2 import DictLoader, Environment
 
 from .core import Prompty
@@ -18,7 +20,7 @@ class Jinja2Renderer(Invoker):
 
         self.name = self.prompty.file.name
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         env = Environment(loader=DictLoader(self.templates))
         t = env.get_template(self.name)
         generated = t.render(**data)

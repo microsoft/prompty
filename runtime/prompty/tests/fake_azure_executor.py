@@ -1,4 +1,5 @@
 import json
+import typing
 from pathlib import Path
 
 from openai.types.chat import ChatCompletionChunk
@@ -20,7 +21,7 @@ class FakeAzureExecutor(Invoker):
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
             p = (
                 Path(self.prompty.file.parent)

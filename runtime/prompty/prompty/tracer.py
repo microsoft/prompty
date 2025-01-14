@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import partial, wraps
 from numbers import Number
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 from pydantic import BaseModel
 
@@ -45,7 +45,9 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(cls, name: str, attributes: dict[str, Any] = None) -> Iterator[Callable[[str, Any], None]]:
+    def start(
+        cls, name: str, attributes: Union[dict[str, Any], None] = None
+    ) -> Iterator[Callable[[str, Any], None]]:
         with contextlib.ExitStack() as stack:
             traces = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
@@ -128,9 +130,7 @@ def _results(result: Any) -> dict:
     return to_dict(result) if result is not None else "None"
 
 
-def _trace_sync(
-    func: Callable = None, **okwargs: Any
-) -> Callable:
+def _trace_sync(func: Callable = None, **okwargs: Any) -> Callable:
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -182,9 +182,7 @@ def _trace_sync(
     return wrapper
 
 
-def _trace_async(
-    func: Callable = None, **okwargs: Any
-) -> Callable:
+def _trace_async(func: Callable = None, **okwargs: Any) -> Callable:
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -199,7 +197,7 @@ def _trace_async(
         with Tracer.start(name) as trace:
             if altname is not None:
                 trace("function", altname)
-                
+
             trace("signature", signature)
 
             # support arbitrary keyword
@@ -243,7 +241,7 @@ def trace(func: Callable = None, **kwargs: Any) -> Callable:
 
 
 class PromptyTracer:
-    def __init__(self, output_dir: str = None) -> None:
+    def __init__(self, output_dir: Union[str, None] = None) -> None:
         if output_dir:
             self.output = Path(output_dir).resolve().absolute()
         else:
@@ -325,7 +323,7 @@ class PromptyTracer:
                     self.stack[-1]["__frames"] = []
                 self.stack[-1]["__frames"].append(frame)
 
-    def hoist_item(self, src: dict[str, Any], cur: dict[str, Any]) -> None:
+    def hoist_item(self, src: dict[str, Any], cur: dict[str, Any]) -> dict[str, Any]:
         for key, value in src.items():
             if value is None or isinstance(value, list) or isinstance(value, dict):
                 continue

@@ -1,3 +1,4 @@
+import typing
 from collections.abc import AsyncIterator, Iterator
 
 from azure.ai.inference.models import ChatCompletions, EmbeddingsResult
@@ -13,7 +14,7 @@ class ServerlessProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters

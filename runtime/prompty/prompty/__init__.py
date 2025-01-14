@@ -1,4 +1,5 @@
 import traceback
+import typing
 from pathlib import Path
 from typing import Union
 
@@ -27,9 +28,9 @@ InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
 @trace(description="Create a headless prompty object for programmatic use.")
 def headless(
     api: str,
-    content: str | list[str] | dict,
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
+    content: Union[str, list[str], dict],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -84,9 +85,9 @@ def headless(
 @trace(description="Create a headless prompty object for programmatic use.")
 async def headless_async(
     api: str,
-    content: str | list[str] | dict,
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
+    content: Union[str, list[str], dict],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -314,7 +315,7 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
 @trace(description="Prepare the inputs for the prompt.")
 def prepare(
     prompt: Prompty,
-    inputs: dict[str, any] = {},
+    inputs: dict[str, typing.Any] = {},
 ):
     """Prepare the inputs for the prompt.
 
@@ -348,7 +349,7 @@ def prepare(
 @trace(description="Prepare the inputs for the prompt.")
 async def prepare_async(
     prompt: Prompty,
-    inputs: dict[str, any] = {},
+    inputs: dict[str, typing.Any] = {},
 ):
     """Prepare the inputs for the prompt.
 
@@ -382,9 +383,9 @@ async def prepare_async(
 @trace(description="Run the prepared Prompty content against the model.")
 def run(
     prompt: Prompty,
-    content: dict | list | str,
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
+    content: Union[dict, list, str],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -434,9 +435,9 @@ def run(
 @trace(description="Run the prepared Prompty content against the model.")
 async def run_async(
     prompt: Prompty,
-    content: dict | list | str,
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
+    content: Union[dict, list, str],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -486,9 +487,9 @@ async def run_async(
 @trace(description="Execute a prompty")
 def execute(
     prompt: Union[str, Prompty],
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
-    inputs: dict[str, any] = {},
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
+    inputs: dict[str, typing.Any] = {},
     raw: bool = False,
     config_name: str = "default",
 ):
@@ -540,9 +541,9 @@ def execute(
 @trace(description="Execute a prompty")
 async def execute_async(
     prompt: Union[str, Prompty],
-    configuration: dict[str, any] = {},
-    parameters: dict[str, any] = {},
-    inputs: dict[str, any] = {},
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
+    inputs: dict[str, typing.Any] = {},
     raw: bool = False,
     config_name: str = "default",
 ):

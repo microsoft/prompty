@@ -1,3 +1,4 @@
+import typing
 from collections.abc import Iterator
 
 from openai.types.chat.chat_completion import ChatCompletion
@@ -15,7 +16,7 @@ class OpenAIProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters

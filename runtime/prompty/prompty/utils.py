@@ -1,5 +1,6 @@
 import json
 import re
+import typing
 from pathlib import Path
 
 import aiofiles
@@ -45,7 +46,7 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> Path:
 
 def load_global_config(
     prompty_path: Path = Path.cwd(), configuration: str = "default"
-) -> dict[str, any]:
+) -> dict[str, typing.Any]:
     # prompty.config laying around?
     config = _find_global_config(prompty_path)
 
@@ -62,7 +63,7 @@ def load_global_config(
 
 async def load_global_config_async(
     prompty_path: Path = Path.cwd(), configuration: str = "default"
-) -> dict[str, any]:
+) -> dict[str, typing.Any]:
     # prompty.config laying around?
     config = _find_global_config(prompty_path)
 

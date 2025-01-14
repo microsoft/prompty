@@ -1,5 +1,6 @@
 import importlib.metadata
 import re
+import typing
 from collections.abc import AsyncIterator, Iterator
 from datetime import datetime
 
@@ -102,7 +103,7 @@ class AzureOpenAIBetaExecutor(Invoker):
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Azure OpenAI API
 
         Parameters

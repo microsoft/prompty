@@ -1,4 +1,5 @@
 import importlib.metadata
+import typing
 from collections.abc import Iterator
 
 import azure.identity
@@ -48,7 +49,7 @@ class ServerlessExecutor(Invoker):
         # api type
         self.api = self.prompty.model.api
 
-    def _response(self, response: any) -> any:
+    def _response(self, response: typing.Any) -> typing.Any:
         # stream response
         if isinstance(response, Iterator):
             if isinstance(response, StreamingChatCompletions):
@@ -64,7 +65,7 @@ class ServerlessExecutor(Invoker):
         else:
             return response
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Serverless SDK
 
         Parameters
