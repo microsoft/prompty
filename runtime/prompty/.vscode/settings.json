@@ -4,4 +4,7 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
+  "mypy-type-checker.args": [
+    "--check-untyped-defs"
+  ],
 }

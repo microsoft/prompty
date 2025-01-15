@@ -16,6 +16,11 @@ dependencies = [
     "aiofiles>=24.1.0",
 ]
 
+[project.urls]
+Repository = "https://github.com/Microsoft/prompty"
+Documentation = "https://prompty.ai/docs"
+Issues = "https://github.com/microsoft/prompty/issues"
+
 [project.optional-dependencies]
 azure = ["azure-identity>=1.17.1","openai>=1.43.0"]
 openai = ["openai>=1.43.0"]
