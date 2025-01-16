@@ -198,7 +198,9 @@ class AzureOpenAIExecutor(Invoker):
                     raw: APIResponse = (
                         await client.chat.completions.with_raw_response.create(**args)
                     )
-                    response = ChatCompletion.model_validate_json(raw.text())
+                    if raw is not None and raw.text is not None and isinstance(raw.text, str):
+                        response = ChatCompletion.model_validate_json(raw.text)
+
                     for k, v in raw.headers.raw:
                         trace(k.decode("utf-8"), v.decode("utf-8"))
 
