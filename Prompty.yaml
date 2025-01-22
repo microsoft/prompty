@@ -38,7 +38,7 @@ properties:
         default: first 
         enum:
           - first
-          - full
+          - all
 
 
   name:
@@ -138,6 +138,10 @@ definitions:
         type: string
         description: Type of the model
         const: azure_openai
+      api_key:
+        type: string
+        description: |
+          API key for the model (recommended to use environment variables - e.g.: `${env:OPENAI_API_KEY}`)
       api_version:
         type: string
         description: Version of the model

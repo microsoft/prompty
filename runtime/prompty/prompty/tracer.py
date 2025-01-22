@@ -1,24 +1,25 @@
-import os
-import json
-import inspect
-import numbers
-import traceback
-import importlib
 import contextlib
-from pathlib import Path
-from numbers import Number
+import importlib
+import inspect
+import json
+import os
+import traceback
+from collections.abc import Iterator
 from datetime import datetime
+from functools import partial, wraps
+from numbers import Number
+from pathlib import Path
+from typing import Any, Callable, Union
+
 from pydantic import BaseModel
-from functools import wraps, partial
-from typing import Any, Callable, Dict, Iterator, List
 
 
 # clean up key value pairs for sensitive values
 def sanitize(key: str, value: Any) -> Any:
     if isinstance(value, str) and any(
-        [s in key.lower() for s in ["key", "token", "secret", "password", "credential"]]
+        [s in key.lower() for s in ["key", "secret", "password", "credential"]]
     ):
-        return len(str(value)) * "*"
+        return 10 * "*"
     elif isinstance(value, dict):
         return {k: sanitize(k, v) for k, v in value.items()}
     else:
@@ -26,11 +27,24 @@ def sanitize(key: str, value: Any) -> Any:
 
 
 class Tracer:
-    _tracers: Dict[str, Callable[[str], Iterator[Callable[[str, Any], None]]]] = {}
+    _tracers: dict[
+        str,
+        Callable[
+            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
+        ],
+    ] = {}
+
+    SIGNATURE = "signature"
+    INPUTS = "inputs"
+    RESULT = "result"
 
     @classmethod
     def add(
-        cls, name: str, tracer: Callable[[str], Iterator[Callable[[str, Any], None]]]
+        cls,
+        name: str,
+        tracer: Callable[
+            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
+        ],
     ) -> None:
         cls._tracers[name] = tracer
 
@@ -40,11 +54,19 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(cls, name: str) -> Iterator[Callable[[str, Any], None]]:
+    def start(
+        cls, name: str, attributes: Union[dict[str, Any], None] = None
+    ) -> Iterator[Callable[[str, Any], list[None]]]:
         with contextlib.ExitStack() as stack:
-            traces = [
+            traces: list[Callable[[str, Any], None]] = [
                 stack.enter_context(tracer(name)) for tracer in cls._tracers.values()
             ]
+
+            if attributes:
+                for trace in traces:
+                    for key, value in attributes.items():
+                        trace(key, value)
+
             yield lambda key, value: [
                 # normalize and sanitize any trace values
                 trace(key, sanitize(key, to_dict(value)))
@@ -52,7 +74,7 @@ class Tracer:
             ]
 
 
-def to_dict(obj: Any) -> Dict[str, Any]:
+def to_dict(obj: Any) -> Any:
     # simple json types
     if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
         return obj
@@ -88,11 +110,16 @@ def _name(func: Callable, args):
     else:
         signature = f"{func.__module__}.{func.__name__}"
 
-    # core invoker gets special treatment
-    core_invoker = signature == "prompty.core.Invoker.__call__"
+    # core invoker gets special treatment prompty.invoker.Invoker
+    core_invoker = signature.startswith("prompty.invoker.Invoker.run")
     if core_invoker:
         name = type(args[0]).__name__
-        signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"
+        if signature.endswith("async"):
+            signature = (
+                f"{args[0].__module__}.{args[0].__class__.__name__}.invoke_async"
+            )
+        else:
+            signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"
     else:
         name = func.__name__
 
@@ -108,25 +135,32 @@ def _inputs(func: Callable, args, kwargs) -> dict:
     return inputs
 
 
-def _results(result: Any) -> dict:
+def _results(result: Any) -> Any:
     return to_dict(result) if result is not None else "None"
 
 
-def _trace_sync(
-    func: Callable = None, *, description: str = None, itemtype: str = None
-) -> Callable:
-    description = description or ""
+def _trace_sync(func: Callable, **okwargs: Any) -> Callable:
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
-        with Tracer.start(name) as trace:
-            trace("signature", signature)
-            if description and description != "":
-                trace("description", description)
+        altname: Union[str, None] = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
 
-            if itemtype and itemtype != "":
-                trace("type", itemtype)
+        with Tracer.start(name) as trace:
+            if altname is not None:
+                trace("function", altname)
+
+            trace("signature", signature)
+
+            # support arbitrary keyword
+            # arguments for trace decorator
+            for k, v in okwargs.items():
+                trace(k, to_dict(v))
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -157,21 +191,28 @@ def _trace_sync(
     return wrapper
 
 
-def _trace_async(
-    func: Callable = None, *, description: str = None, itemtype: str = None
-) -> Callable:
-    description = description or ""
+def _trace_async(func: Callable, **okwargs: Any) -> Callable:
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
         name, signature = _name(func, args)
-        with Tracer.start(name) as trace:
-            trace("signature", signature)
-            if description and description != "":
-                trace("description", description)
+        altname: Union[str, None] = None
+        # special case
+        if "name" in okwargs:
+            altname = name
+            name = okwargs["name"]
+            del okwargs["name"]
 
-            if itemtype and itemtype != "":
-                trace("type", itemtype)
+        with Tracer.start(name) as trace:
+            if altname is not None:
+                trace("function", altname)
+
+            trace("signature", signature)
+
+            # support arbitrary keyword
+            # arguments for trace decorator
+            for k, v in okwargs.items():
+                trace(k, to_dict(v))
 
             inputs = _inputs(func, args, kwargs)
             trace("inputs", inputs)
@@ -201,19 +242,15 @@ def _trace_async(
     return wrapper
 
 
-def trace(
-    func: Callable = None, *, description: str = None, itemtype: str = None
-) -> Callable:
+def trace(func: Union[Callable, None] = None, **kwargs: Any) -> Callable:
     if func is None:
-        return partial(trace, description=description, itemtype=itemtype)
-
+        return partial(trace, **kwargs)
     wrapped_method = _trace_async if inspect.iscoroutinefunction(func) else _trace_sync
-
-    return wrapped_method(func, description=description, itemtype=itemtype)
+    return wrapped_method(func, **kwargs)
 
 
 class PromptyTracer:
-    def __init__(self, output_dir: str = None) -> None:
+    def __init__(self, output_dir: Union[str, None] = None) -> None:
         if output_dir:
             self.output = Path(output_dir).resolve().absolute()
         else:
@@ -222,7 +259,7 @@ class PromptyTracer:
         if not self.output.exists():
             self.output.mkdir(parents=True, exist_ok=True)
 
-        self.stack: List[Dict[str, Any]] = []
+        self.stack: list[dict[str, Any]] = []
 
     @contextlib.contextmanager
     def tracer(self, name: str) -> Iterator[Callable[[str, Any], None]]:
@@ -295,7 +332,7 @@ class PromptyTracer:
                     self.stack[-1]["__frames"] = []
                 self.stack[-1]["__frames"].append(frame)
 
-    def hoist_item(self, src: Dict[str, Any], cur: Dict[str, Any]) -> None:
+    def hoist_item(self, src: dict[str, Any], cur: dict[str, Any]) -> dict[str, Any]:
         for key, value in src.items():
             if value is None or isinstance(value, list) or isinstance(value, dict):
                 continue
@@ -304,12 +341,13 @@ class PromptyTracer:
                     cur[key] = value
                 else:
                     cur[key] += value
-            except:
+            except Exception:
+                # TODO: Be more specific about exceptions here
                 continue
 
         return cur
 
-    def write_trace(self, frame: Dict[str, Any]) -> None:
+    def write_trace(self, frame: dict[str, Any]) -> None:
         trace_file = (
             self.output
             / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"

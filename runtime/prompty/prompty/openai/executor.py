@@ -1,9 +1,13 @@
 import importlib.metadata
+import typing
+from collections.abc import Iterator
+
 from openai import OpenAI
-from typing import Iterator
 
 from prompty.tracer import Tracer
-from ..core import Invoker, InvokerFactory, Prompty, PromptyStream
+
+from ..core import Prompty, PromptyStream
+from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
 
@@ -17,14 +21,15 @@ class OpenAIExecutor(Invoker):
         self.kwargs = {
             key: value
             for key, value in self.prompty.model.configuration.items()
-            if key != "type"
+            if key != "type" and key != "name"
         }
 
         self.api = self.prompty.model.api
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
+        self.model = self.prompty.model.configuration["name"]
+        self.deployment = self.prompty.model.configuration["deployment"]
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters
@@ -58,7 +63,7 @@ class OpenAIExecutor(Invoker):
             if self.api == "chat":
                 trace("signature", "OpenAI.chat.completions.create")
                 args = {
-                    "model": self.deployment,
+                    "model": self.model,
                     "messages": data if isinstance(data, list) else [data],
                     **self.parameters,
                 }
@@ -96,3 +101,18 @@ class OpenAIExecutor(Invoker):
             else:
                 trace("result", response)
                 return response
+
+    async def invoke_async(self, data: str) -> str:
+        """Invoke the Prompty Chat Parser (Async)
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+        return self.invoke(data)

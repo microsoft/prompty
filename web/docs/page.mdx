@@ -1,49 +1,56 @@
 ---
 title: Welcome to Prompty
-description: This is the prompty documentation
+description: This is the Prompty documentation landing page. Get an overview of what Prompty is and how it fits into the developer workflow for generative AI applications.
 authors:
   - sethjuarez
   - wayliums
   - cassiebreviu
+  - bethanyjep
+  - nitya
 tags:
   - getting-started
   - documentation
-date: 2024-07-17
+date: 2024-10-02
 ---
 
-Prompty is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop of prompt engineering and prompt source management in a cross-language and cross-platform implementation.
+## 1. Introduction
 
-The file format has a supporting toolchain with a VS Code extension and runtimes in multiple programming languages to simplify and accelerate your AI application development.
+[Prompty](https://github.com/microsoft/prompty) is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop of _prompt engineering_ and _prompt source management_ in a cross-language and cross-platform implementation. 
 
-The tooling comes together in three ways: the *prompty file asset*, the *VS Code extension tool*, and *runtimes* in multiple programming languges.
+The implementation currently supports popular runtimes (Python, C#) and frameworks (LangChain, Semantic Kernel, Prompt flow) with plans to add more. 
+The project is [open source](https://github.com/microsoft/prompty) and we encourage developers to extend the capabilities to new runtimes and tooling _and contribute those back to the core_ for use by the community.
 
-## The Prompty File Format
-Prompty is a language agnostic prompt asset for creating prompts and engineering the responses. Learn more about the format [here](/docs/prompty-file-spec).
+_Watch the [**Microsoft Build 2024 Breakout Session**](https://build.microsoft.com/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61?source=sessions)_ for an in-depth introduction. 
+<iframe width="800" height="400" src="https://www.youtube.com/embed/HALMFU7o9Gc" title="BRK114:Practical End-to-End AI Development using Prompty and AI Studio"></iframe>
 
-## The Prompty VS Code Extension
-Run Prompty files directly in VS Code. This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Prompty extension in the Visual Studio Code Marketplace.
+## 2. Developer Resources
 
-Download the [VS Code extension here](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+Check back for updates to the documentation site with _tutorials_ (coming soon) and _deep-dives_ (for contributors). In the meantime, here are three more resources to get you started:
 
+<details>
+<summary> [**Contoso Creative Writer: Multi-Agent Sample**](https://github.com/Azure-Samples/contoso-creative-writer) - Click for more details </summary>
 
-## The Prompty Runtimes
+Contoso Creative Writer is an app that will help you write well researched, product specific articles. Enter the required information and then click "Start Work". To watch the steps in the agent workflow select the debug button in the bottom right corner of the screen. The result will begin writing once the agents complete the tasks to write the article. |  _The solution is built with Prompty and Azure AI Studio_ - [*Workshop Guide*](https://github.com/Azure-Samples/contoso-creative-writer/blob/main/docs/README.md)
 
-To execute a Prompty file asset in code, you can use one of the supporting runtimes such as: 
+</details>
 
-* [Prompty Core (python)](https://pypi.org/project/prompty/) - The python Prompty core package is the base package needed to run a prompty asset file. Please note this package is preview and under active development.
-* [Prompty Core (csharp)]() - Coming soon.
-* [Promptyflow (python)](https://microsoft.github.io/promptflow/) -  Use Prompty with Promptflow as your runtime and logic orchestrator.
-* [LangChain (python)](https://pypi.org/project/langchain-prompty/) - Use the experimental LangChain Prompty runtime.
-* [Semantic Kernal (csharp)](https://learn.microsoft.com/semantic-kernel/) - Use the experimental Semantic Kernal Prompty runtime.
+<details>
+<summary> [**Contoso Chat: Retail RAG Sample**](https://github.com/Azure-Samples/contoso-chat) - Click for more details </summary>
 
-**Note: We are continuing to work on the runtimes so watch for frequent updates!
+This sample implements a retail copilot solution for Contoso Outdoor that uses a retrieval augmented generation design pattern to ground chatbot responses in the retailer's product and customer data. Customers can now ask questions from the website in natural language, and get relevant responses along with potential recommendations based on their purchase history - with responsible AI practices to ensure response quality and safety. | _The solution is built with Prompty and Azure AI Studio_ - [*Workshop Guide*](https://aka.ms/aitour/contoso-chat/workshop)
 
-### Learn more and get started building applications with Prompty
-________________________
-[Quick Start](/docs/getting-started/) - Coming soon.
+</details>
 
-[Tutorials](/docs/tutorials/) - Coming soon.
+<details>
+<summary> [**Azure AI Solution Templates**](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d) - Click for more details </summary>
 
-[Examples](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d) - Check out the AI App templates that were released at Microsoft Build that leverage Prompty for a variety of scenarios.
+This is a curated set of Azure AI Templates for use with the Azure Developer CLI, and released initially at Microsoft Build 2024. The collection showcases complete end-to-end solutions for diverse application scenarios, languages, and frameworks - using Prompty and Azure AI Studio. Deploy the solution with one command, then customize it to your needs to learn by experimentation.
 
-[Contributing](/docs/contributing/) - Coming soon.
+</details>
+
+## Next Steps
+
+Start with the **[Getting Started](/docs/getting-started)** section to validate your development setup and build your first Prompty sample.
+
+---
+[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

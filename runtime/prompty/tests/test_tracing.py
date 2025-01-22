@@ -1,18 +1,28 @@
-import pytest
-import prompty
-from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+from collections.abc import AsyncIterator
 
-from prompty.core import InvokerFactory
-from tests.fake_azure_executor import FakeAzureExecutor
+import pytest
+
+import prompty
 from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from prompty.serverless.processor import ServerlessProcessor
+from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
+from tests.fake_azure_executor import FakeAzureExecutor
+from tests.fake_serverless_executor import FakeServerlessExecutor
 
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_module():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_beta", FakeAzureExecutor)
+    InvokerFactory.add_executor("azure_openai_beta", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
+    InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
     Tracer.add("console", console_tracer)
     json_tracer = PromptyTracer()
@@ -31,6 +41,22 @@ def setup_module():
 )
 def test_basic_execution(prompt: str):
     result = prompty.execute(prompt)
+    print(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "prompts/basic.prompty",
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        "prompts/faithfulness.prompty",
+        "prompts/embedding.prompty",
+    ],
+)
+async def test_basic_execution_async(prompt: str):
+    result = await prompty.execute_async(prompt)
     print(result)
 
 
@@ -82,12 +108,35 @@ def get_response(customerId, question, prompt):
 
 
 @trace
+async def get_response_async(customerId, question, prompt):
+    customer = get_customer(customerId)
+    context = get_context(question)
+
+    result = await prompty.execute_async(
+        prompt,
+        inputs={"question": question, "customer": customer, "documentation": context},
+    )
+    return {"question": question, "answer": result, "context": context}
+
+
+@trace
 def test_context_flow():
     customerId = 1
     question = "tell me about your jackets"
     prompt = "context.prompty"
 
     response = get_response(customerId, question, f"prompts/{prompt}")
+    print(response)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_context_flow_async():
+    customerId = 1
+    question = "tell me about your jackets"
+    prompt = "context.prompty"
+
+    response = await get_response_async(customerId, question, f"prompts/{prompt}")
     print(response)
 
 
@@ -103,8 +152,31 @@ def evaluate(prompt, evalprompt, customerId, question):
 
 
 @trace
+async def evaluate_async(prompt, evalprompt, customerId, question):
+    response = await get_response_async(customerId, question, prompt)
+
+    result = await prompty.execute_async(
+        evalprompt,
+        inputs=response,
+    )
+    return result
+
+
+@trace
 def test_context_groundedness():
     result = evaluate(
+        "prompts/context.prompty",
+        "prompts/groundedness.prompty",
+        1,
+        "tell me about your jackets",
+    )
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_context_groundedness_async():
+    result = await evaluate_async(
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         1,
@@ -124,6 +196,18 @@ def test_embedding_headless():
     print(emb)
 
 
+@pytest.mark.asyncio
+@trace
+async def test_embedding_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content="hello world",
+    )
+    emb = await prompty.execute_async(p)
+    print(emb)
+
+
 @trace
 def test_embeddings_headless():
     p = prompty.headless(
@@ -135,6 +219,18 @@ def test_embeddings_headless():
     print(emb)
 
 
+@pytest.mark.asyncio
+@trace
+async def test_embeddings_headless_async():
+    p = await prompty.headless_async(
+        api="embedding",
+        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        content=["hello world", "goodbye world", "hello again"],
+    )
+    emb = await prompty.execute_async(p)
+    print(emb)
+
+
 @trace
 def test_function_calling():
     result = prompty.execute(
@@ -143,10 +239,36 @@ def test_function_calling():
     print(result)
 
 
+@pytest.mark.asyncio
+@trace
+async def test_function_calling_async():
+    result = await prompty.execute_async(
+        "prompts/functions.prompty",
+    )
+    print(result)
+
+
+@trace
+def test_structured_output():
+    result = prompty.execute(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_structured_output_async():
+    result = await prompty.execute_async(
+        "prompts/structured_output.prompty",
+    )
+    print(result)
+
+
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator
-@trace
+@trace(streaming=True, other="test")
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
@@ -154,5 +276,44 @@ def test_streaming():
     r = []
     for item in result:
         r.append(item)
-        
-    return ' '.join(r)
+
+    print(" ".join(r))
+
+
+@pytest.mark.asyncio
+@trace(streaming=True)
+async def test_streaming_async():
+    result = await prompty.execute_async(
+        "prompts/streaming.prompty",
+    )
+    if isinstance(result, AsyncIterator):
+        async for item in result:
+            print(item)
+
+
+@trace
+def test_tracing_attributes():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.INPUTS, 4)
+        with Tracer.start("Test2", {"signature": "5", "six": 6}) as trace:
+            trace("inputs", 7)
+            trace(Tracer.RESULT, 8)
+            with Tracer.start("Test3", {"signature": "9", "ten": 10}) as trace:
+                trace("inputs", 11)
+                trace(Tracer.RESULT, 12)
+
+
+@trace(name="OTHER")
+def test_named_tracer():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.RESULT, 4)
+
+
+@pytest.mark.asyncio
+@trace(name="OTHER")
+async def test_named_tracer_async():
+    with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
+        trace(Tracer.INPUTS, 3)
+        trace(Tracer.RESULT, 4)

@@ -1,5 +1,7 @@
 from inspect import getmembers, isclass, isfunction
+
 import prompty
+
 
 def build():
     fn = [

@@ -1,14 +1,14 @@
-from __future__ import annotations
-
 import os
-import re
-import yaml
-import json
-import abc
+import typing
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
-from .tracer import Tracer, trace, to_dict
+from typing import Literal, Union
+
 from pydantic import BaseModel, Field, FilePath
-from typing import AsyncIterator, Iterator, List, Literal, Dict, Callable, Set
+from pydantic.main import IncEx
+
+from .tracer import Tracer, sanitize, to_dict
+from .utils import load_json, load_json_async
 
 
 class ToolCall(BaseModel):
@@ -31,7 +31,7 @@ class PropertySettings(BaseModel):
     """
 
     type: Literal["string", "number", "array", "object", "boolean"]
-    default: str | int | float | List | dict | bool = Field(default=None)
+    default: Union[str, int, float, list, dict, bool, None] = Field(default=None)
     description: str = Field(default="")
 
 
@@ -59,21 +59,19 @@ class ModelSettings(BaseModel):
         self,
         *,
         mode: str = "python",
-        include: (
-            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
-        ) = None,
-        exclude: (
-            Set[int] | Set[str] | Dict[int, os.Any] | Dict[str, os.Any] | None
-        ) = None,
-        context: os.Any | None = None,
+        include: Union[IncEx, None] = None,
+        exclude: Union[IncEx, None] = None,
+        context: Union[typing.Any, None] = None,
         by_alias: bool = False,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
         exclude_none: bool = False,
         round_trip: bool = False,
-        warnings: bool | Literal["none"] | Literal["warn"] | Literal["error"] = True,
+        warnings: Union[
+            bool, Literal["none"], Literal["warn"], Literal["error"]
+        ] = True,
         serialize_as_any: bool = False,
-    ) -> Dict[str, os.Any]:
+    ) -> dict[str, typing.Any]:
         """Method to dump the model in a safe way"""
         d = super().model_dump(
             mode=mode,
@@ -89,10 +87,7 @@ class ModelSettings(BaseModel):
             serialize_as_any=serialize_as_any,
         )
 
-        d["configuration"] = {
-            k: "*" * len(v) if "key" in k.lower() or "secret" in k.lower() else v
-            for k, v in d["configuration"].items()
-        }
+        d["configuration"] = {k: sanitize(k, v) for k, v in d["configuration"].items()}
         return d
 
 
@@ -149,11 +144,11 @@ class Prompty(BaseModel):
     # metadata
     name: str = Field(default="")
     description: str = Field(default="")
-    authors: List[str] = Field(default=[])
-    tags: List[str] = Field(default=[])
+    authors: list[str] = Field(default=[])
+    tags: list[str] = Field(default=[])
     version: str = Field(default="")
     base: str = Field(default="")
-    basePrompty: Prompty | None = Field(default=None)
+    basePrompty: Union["Prompty", None] = Field(default=None)
     # model
     model: ModelSettings = Field(default_factory=ModelSettings)
 
@@ -161,19 +156,19 @@ class Prompty(BaseModel):
     sample: dict = Field(default={})
 
     # input / output
-    inputs: Dict[str, PropertySettings] = Field(default={})
-    outputs: Dict[str, PropertySettings] = Field(default={})
+    inputs: dict[str, PropertySettings] = Field(default={})
+    outputs: dict[str, PropertySettings] = Field(default={})
 
     # template
     template: TemplateSettings
 
-    file: FilePath = Field(default="")
-    content: str | List[str] | dict = Field(default="")
+    file: Union[str, FilePath] = Field(default="")
+    content: Union[str, list[str], dict] = Field(default="")
 
-    def to_safe_dict(self) -> Dict[str, any]:
+    def to_safe_dict(self) -> dict[str, typing.Any]:
         d = {}
         for k, v in self:
-            if v != "" and v != {} and v != [] and v != None:
+            if v != "" and v != {} and v != [] and v is not None:
                 if k == "model":
                     d[k] = v.model_dump()
                 elif k == "template":
@@ -195,25 +190,66 @@ class Prompty(BaseModel):
         return d
 
     @staticmethod
-    def _process_file(file: str, parent: Path) -> any:
-        file = Path(parent / Path(file)).resolve().absolute()
-        if file.exists():
-            with open(str(file), "r") as f:
-                items = json.load(f)
-                if isinstance(items, list):
-                    return [Prompty.normalize(value, parent) for value in items]
-                elif isinstance(items, dict):
-                    return {
-                        key: Prompty.normalize(value, parent)
-                        for key, value in items.items()
-                    }
-                else:
-                    return items
+    def hoist_base_prompty(top: "Prompty", base: "Prompty") -> "Prompty":
+        top.name = base.name if top.name == "" else top.name
+        top.description = base.description if top.description == "" else top.description
+        top.authors = list(set(base.authors + top.authors))
+        top.tags = list(set(base.tags + top.tags))
+        top.version = base.version if top.version == "" else top.version
+
+        top.model.api = base.model.api if top.model.api == "" else top.model.api
+        top.model.configuration = param_hoisting(
+            top.model.configuration, base.model.configuration
+        )
+        top.model.parameters = param_hoisting(
+            top.model.parameters, base.model.parameters
+        )
+        top.model.response = param_hoisting(top.model.response, base.model.response)
+
+        top.sample = param_hoisting(top.sample, base.sample)
+
+        top.basePrompty = base
+
+        return top
+
+    @staticmethod
+    def _process_file(file: str, parent: Path) -> typing.Any:
+        f = Path(parent / Path(file)).resolve().absolute()
+        if f.exists():
+            items = load_json(f)
+            if isinstance(items, list):
+                return [Prompty.normalize(value, parent) for value in items]
+            elif isinstance(items, dict):
+                return {
+                    key: Prompty.normalize(value, parent)
+                    for key, value in items.items()
+                }
+            else:
+                return items
         else:
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(variable: str, env_error=True, default: str = None) -> any:
+    async def _process_file_async(file: str, parent: Path) -> typing.Any:
+        f = Path(parent / Path(file)).resolve().absolute()
+        if f.exists():
+            items = await load_json_async(f)
+            if isinstance(items, list):
+                return [Prompty.normalize(value, parent) for value in items]
+            elif isinstance(items, dict):
+                return {
+                    key: Prompty.normalize(value, parent)
+                    for key, value in items.items()
+                }
+            else:
+                return items
+        else:
+            raise FileNotFoundError(f"File {file} not found")
+
+    @staticmethod
+    def _process_env(
+        variable: str, env_error=True, default: Union[str, None] = None
+    ) -> typing.Any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
@@ -225,7 +261,7 @@ class Prompty(BaseModel):
             return ""
 
     @staticmethod
-    def normalize(attribute: any, parent: Path, env_error=True) -> any:
+    def normalize(attribute: typing.Any, parent: Path, env_error=True) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
             if attribute.startswith("${") and attribute.endswith("}"):
@@ -240,26 +276,7 @@ class Prompty(BaseModel):
                 elif variable[0] == "file" and len(variable) > 1:
                     return Prompty._process_file(variable[1], parent)
                 else:
-                    # old way of doing things for back compatibility
-                    v = Prompty._process_env(variable[0], False)
-                    if len(v) == 0:
-                        if len(variable) > 1:
-                            return variable[1]
-                        else:
-                            if env_error:
-                                raise ValueError(
-                                    f"Variable {variable[0]} not found in environment"
-                                )
-                            else:
-                                return v
-                    else:
-                        return v
-            elif (
-                attribute.startswith("file:")
-                and Path(parent / attribute.split(":")[1]).exists()
-            ):
-                # old way of doing things for back compatibility
-                return Prompty._process_file(attribute.split(":")[1], parent)
+                    raise ValueError(f"Invalid attribute format ({attribute})")
             else:
                 return attribute
         elif isinstance(attribute, list):
@@ -272,237 +289,51 @@ class Prompty(BaseModel):
         else:
             return attribute
 
+    @staticmethod
+    async def normalize_async(
+        attribute: typing.Any, parent: Path, env_error=True
+    ) -> typing.Any:
+        if isinstance(attribute, str):
+            attribute = attribute.strip()
+            if attribute.startswith("${") and attribute.endswith("}"):
+                # check if env or file
+                variable = attribute[2:-1].split(":")
+                if variable[0] == "env" and len(variable) > 1:
+                    return Prompty._process_env(
+                        variable[1],
+                        env_error,
+                        variable[2] if len(variable) > 2 else None,
+                    )
+                elif variable[0] == "file" and len(variable) > 1:
+                    return await Prompty._process_file_async(variable[1], parent)
+                else:
+                    raise ValueError(f"Invalid attribute format ({attribute})")
+            else:
+                return attribute
+        elif isinstance(attribute, list):
+            return [await Prompty.normalize_async(value, parent) for value in attribute]
+        elif isinstance(attribute, dict):
+            return {
+                key: await Prompty.normalize_async(value, parent)
+                for key, value in attribute.items()
+            }
+        else:
+            return attribute
+
 
 def param_hoisting(
-    top: Dict[str, any], bottom: Dict[str, any], top_key: str = None
-) -> Dict[str, any]:
+    top: dict[str, typing.Any],
+    bottom: dict[str, typing.Any],
+    top_key: Union[str, None] = None,
+) -> dict[str, typing.Any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}
     else:
         new_dict = {**top}
     for key, value in bottom.items():
-        if not key in new_dict:
+        if key not in new_dict:
             new_dict[key] = value
     return new_dict
-
-
-class Invoker(abc.ABC):
-    """Abstract class for Invoker
-
-    Attributes
-    ----------
-    prompty : Prompty
-        The prompty object
-    name : str
-        The name of the invoker
-
-    """
-
-    def __init__(self, prompty: Prompty) -> None:
-        self.prompty = prompty
-        self.name = self.__class__.__name__
-
-    @abc.abstractmethod
-    def invoke(self, data: any) -> any:
-        """Abstract method to invoke the invoker
-
-        Parameters
-        ----------
-        data : any
-            The data to be invoked
-
-        Returns
-        -------
-        any
-            The invoked
-        """
-        pass
-
-    @trace
-    def __call__(self, data: any) -> any:
-        """Method to call the invoker
-
-        Parameters
-        ----------
-        data : any
-            The data to be invoked
-
-        Returns
-        -------
-        any
-            The invoked
-        """
-        return self.invoke(data)
-
-
-class InvokerFactory:
-    """Factory class for Invoker"""
-
-    _renderers: Dict[str, Invoker] = {}
-    _parsers: Dict[str, Invoker] = {}
-    _executors: Dict[str, Invoker] = {}
-    _processors: Dict[str, Invoker] = {}
-
-    @classmethod
-    def has_invoker(
-        cls, type: Literal["renderer", "parser", "executor", "processor"], name: str
-    ) -> bool:
-        if type == "renderer":
-            return name in cls._renderers
-        elif type == "parser":
-            return name in cls._parsers
-        elif type == "executor":
-            return name in cls._executors
-        elif type == "processor":
-            return name in cls._processors
-        else:
-            raise ValueError(f"Type {type} not found")
-
-    @classmethod
-    def add_renderer(cls, name: str, invoker: Invoker) -> None:
-        cls._renderers[name] = invoker
-
-    @classmethod
-    def add_parser(cls, name: str, invoker: Invoker) -> None:
-        cls._parsers[name] = invoker
-
-    @classmethod
-    def add_executor(cls, name: str, invoker: Invoker) -> None:
-        cls._executors[name] = invoker
-
-    @classmethod
-    def add_processor(cls, name: str, invoker: Invoker) -> None:
-        cls._processors[name] = invoker
-
-    @classmethod
-    def register_renderer(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
-            cls._renderers[name] = wrapped_class
-            return wrapped_class
-
-        return inner_wrapper
-
-    @classmethod
-    def register_parser(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
-            cls._parsers[name] = wrapped_class
-            return wrapped_class
-
-        return inner_wrapper
-
-    @classmethod
-    def register_executor(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
-            cls._executors[name] = wrapped_class
-            return wrapped_class
-
-        return inner_wrapper
-
-    @classmethod
-    def register_processor(cls, name: str) -> Callable:
-        def inner_wrapper(wrapped_class: Invoker) -> Callable:
-            cls._processors[name] = wrapped_class
-            return wrapped_class
-
-        return inner_wrapper
-
-    @classmethod
-    def create_renderer(cls, name: str, prompty: Prompty) -> Invoker:
-        if name not in cls._renderers:
-            raise ValueError(f"Renderer {name} not found")
-        return cls._renderers[name](prompty)
-
-    @classmethod
-    def create_parser(cls, name: str, prompty: Prompty) -> Invoker:
-        if name not in cls._parsers:
-            raise ValueError(f"Parser {name} not found")
-        return cls._parsers[name](prompty)
-
-    @classmethod
-    def create_executor(cls, name: str, prompty: Prompty) -> Invoker:
-        if name not in cls._executors:
-            raise ValueError(f"Executor {name} not found")
-        return cls._executors[name](prompty)
-
-    @classmethod
-    def create_processor(cls, name: str, prompty: Prompty) -> Invoker:
-        if name not in cls._processors:
-            raise ValueError(f"Processor {name} not found")
-        return cls._processors[name](prompty)
-
-
-class InvokerException(Exception):
-    """Exception class for Invoker"""
-
-    def __init__(self, message: str, type: str) -> None:
-        super().__init__(message)
-        self.type = type
-
-    def __str__(self) -> str:
-        return f"{super().__str__()}. Make sure to pip install any necessary package extras (i.e. could be something like `pip install prompty[{self.type}]`) for {self.type} as well as import the appropriate invokers (i.e. could be something like `import prompty.{self.type}`)."
-
-
-@InvokerFactory.register_renderer("NOOP")
-@InvokerFactory.register_parser("NOOP")
-@InvokerFactory.register_executor("NOOP")
-@InvokerFactory.register_processor("NOOP")
-@InvokerFactory.register_parser("prompty.embedding")
-@InvokerFactory.register_parser("prompty.image")
-@InvokerFactory.register_parser("prompty.completion")
-class NoOp(Invoker):
-    def invoke(self, data: any) -> any:
-        return data
-
-
-class Frontmatter:
-    """Frontmatter class to extract frontmatter from string."""
-
-    _yaml_delim = r"(?:---|\+\+\+)"
-    _yaml = r"(.*?)"
-    _content = r"\s*(.+)$"
-    _re_pattern = r"^\s*" + _yaml_delim + _yaml + _yaml_delim + _content
-    _regex = re.compile(_re_pattern, re.S | re.M)
-
-    @classmethod
-    def read_file(cls, path):
-        """Returns dict with separated frontmatter from file.
-
-        Parameters
-        ----------
-        path : str
-            The path to the file
-        """
-        with open(path, encoding="utf-8") as file:
-            file_contents = file.read()
-            return cls.read(file_contents)
-
-    @classmethod
-    def read(cls, string):
-        """Returns dict with separated frontmatter from string.
-
-        Parameters
-        ----------
-        string : str
-            The string to extract frontmatter from
-
-
-        Returns
-        -------
-        dict
-            The separated frontmatter
-        """
-        fmatter = ""
-        body = ""
-        result = cls._regex.search(string)
-
-        if result:
-            fmatter = result.group(1)
-            body = result.group(2)
-        return {
-            "attributes": yaml.load(fmatter, Loader=yaml.FullLoader),
-            "body": body,
-            "frontmatter": fmatter,
-        }
 
 
 class PromptyStream(Iterator):
@@ -512,7 +343,7 @@ class PromptyStream(Iterator):
     def __init__(self, name: str, iterator: Iterator):
         self.name = name
         self.iterator = iterator
-        self.items: List[any] = []
+        self.items: list[typing.Any] = []
         self.__name__ = "PromptyStream"
 
     def __iter__(self):
@@ -544,7 +375,7 @@ class AsyncPromptyStream(AsyncIterator):
     def __init__(self, name: str, iterator: AsyncIterator):
         self.name = name
         self.iterator = iterator
-        self.items: List[any] = []
+        self.items: list[typing.Any] = []
         self.__name__ = "AsyncPromptyStream"
 
     def __aiter__(self):
@@ -557,7 +388,7 @@ class AsyncPromptyStream(AsyncIterator):
             self.items.append(o)
             return o
 
-        except StopIteration:
+        except StopAsyncIteration:
             # StopIteration is raised
             # contents are exhausted
             if len(self.items) > 0:
@@ -566,4 +397,4 @@ class AsyncPromptyStream(AsyncIterator):
                     trace("inputs", "None")
                     trace("result", [to_dict(s) for s in self.items])
 
-            raise StopIteration
+            raise StopAsyncIteration

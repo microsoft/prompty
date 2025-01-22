@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { ReactNode } from "react";
+import styles from "./block.module.scss";
 
 type Props = {
   children: ReactNode;
@@ -10,11 +11,7 @@ type Props = {
 const Block = ({ children, outerClassName, innerClassName }: Props) => {
   return (
     <div className={clsx(outerClassName)}>
-      <div
-        className={clsx("max-w-screen-xl pl-3 pr-3 xl:mx-auto", innerClassName)}
-      >
-        {children}
-      </div>
+      <div className={clsx(styles.block, innerClassName)}>{children}</div>
     </div>
   );
 };

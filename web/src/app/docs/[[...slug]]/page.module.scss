@@ -1,0 +1,215 @@
+@use "@/app/defaults.scss" as *;
+
+
+.page {
+  display: flex;
+
+  gap: 0.25rem;
+  flex-direction: column;
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row;
+  }
+}
+
+.toc {
+  background-color: $stone-100;
+  padding: 0.5rem;
+  margin-bottom: 0;
+  border-radius: 0.375rem;
+  width: 100%;
+
+  @media (min-width: $layout-breakpoint-small) {
+    width: 224px;
+    margin-bottom: 0.5rem;
+  }
+
+  @container style(--theme: light) {
+    background-color: $stone-100;
+  }
+
+  @container style(--theme: dark) {
+    background-color: $stone-700;
+  }
+}
+
+.contentContainer {
+  margin-left: 0.25rem;
+
+  @media (min-width: $layout-breakpoint-small) {
+    margin-left: 1.5rem;
+    width: calc(100% - 256px);
+  }
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+.links {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.linkIcon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  vertical-align: middle;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: $sky-600;
+
+  &:hover {
+    color: $stone-500;
+  }
+}
+
+.authorContainer {
+  display: flex;
+  margin-bottom: 1.5rem;
+  flex-direction: row;
+}
+
+.authorIcons {
+  padding: 0.25rem;
+  overflow: hidden;
+  display: flex;
+  isolation: isolate;
+  unicode-bidi: isolate;
+  padding-right: 20px;
+  align-items: center;
+}
+
+.authorIcons>* {
+  margin-right: -0.65rem;
+}
+
+.authorIcon a {
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.authorIcon {
+  display: inline-block;
+  position: relative;
+  z-index: 30;
+  border-radius: 9999px;
+  width: 2rem;
+  height: 2rem;
+
+  box-shadow: 0 0 0 2px transparent;
+
+  @container style(--theme: light) {
+    box-shadow: 0 0 0 2px transparent;
+  }
+
+  @container style(--theme: dark) {
+    box-shadow: 0 0 0 2px $stone-50;
+  }
+}
+
+.date {
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+
+  color: $stone-500;
+
+  @container style(--theme: light) {
+    color: $stone-500;
+  }
+
+  @container style(--theme: dark) {
+    color: $stone-400;
+  }
+}
+
+.content {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+
+  pre {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  h1 {
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  h2 {
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  details {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  ul {
+    margin-top: 0.75rem;
+    list-style-type: disc;
+    list-style-position: outside;
+    margin-inline-start: 2rem;
+  }
+
+  ol {
+    margin-top: 0.75rem;
+    list-style-type: decimal;
+    list-style-position: outside;
+    margin-inline-start: 2rem;
+  }
+
+  a {
+    color: $sky-600;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      color: $stone-500;
+    }
+
+    &[aria-current] {
+      color: $stone-500;
+    }
+  }
+
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

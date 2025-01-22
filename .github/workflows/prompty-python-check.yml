@@ -1,0 +1,43 @@
+name: prompty Python build and test
+on:
+  pull_request:
+    paths:
+      - 'runtime/prompty/**'
+
+
+env:
+  AZURE_OPENAI_ENDPOINT: https://fake
+  AZURE_OPENAI_KEY: 12342323433
+  
+jobs:
+  prompty-tests:
+    name: run unit tests on supported python versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install dependencies
+        working-directory: ./runtime/prompty
+        run: pdm install
+
+      - name: test package
+        working-directory: ./runtime/prompty
+        run: pdm run pytest
+
+      - name: mypy check
+        working-directory: ./runtime/prompty
+        run: pdm run mypy . --check-untyped-defs
+
