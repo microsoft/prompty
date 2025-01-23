@@ -7,4 +7,5 @@
   "mypy-type-checker.args": [
     "--check-untyped-defs"
   ],
+  "jest.enable": false,
 }
