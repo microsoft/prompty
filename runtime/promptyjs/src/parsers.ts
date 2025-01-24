@@ -17,26 +17,28 @@ class PromptyChatParser extends Invoker {
     if (imageItem.startsWith("http") || imageItem.startsWith("data")) {
       return imageItem;
     } else {
-        if(utils.isNode) {
-            const imagePath = path.join(path.dirname(this.prompty.file), imageItem);
-            const fileContent = await utils.readFileSafe(imagePath, 'base64');
-            const extension = path.extname(imagePath).toLowerCase();
-            switch (extension) {
-              case '.png':
-                return `data:image/png;base64,${fileContent}`;
-              case '.jpg':
-              case '.jpeg':
-                return `data:image/jpeg;base64,${fileContent}`;
-              default:
-                throw new Error(`Invalid image format ${extension} - currently only .png and .jpg/.jpeg are supported.`);
-            }
-        } else {
-            throw new Error("Load from file not supported in browser")
+      if (utils.isNode) {
+        const imagePath = path.join(path.dirname(this.prompty.file), imageItem);
+        const fileContent = await utils.readFileSafe(imagePath, 'base64');
+        const extension = path.extname(imagePath).toLowerCase();
+        switch (extension) {
+          case '.png':
+            return `data:image/png;base64,${fileContent}`;
+          case '.jpg':
+          case '.jpeg':
+            return `data:image/jpeg;base64,${fileContent}`;
+          default:
+            throw new Error(`Invalid image format ${extension} - currently only .png and .jpg/.jpeg are supported.`);
         }
+      } else {
+        throw new Error("Load from file not supported in browser")
+      }
     }
   }
 
   public async parseContent(content: string, role: ROLE): Promise<Array<ChatCompletionContentPart>> {
+    // Normalize line endings
+    content = content.replaceAll("\r\n", "\n");
     const imageRegex = /!\[(.*?)\]\((.*?)\)/gm;
     let matches;
     let contentItems: Array<ChatCompletionContentPart> = [];
@@ -47,10 +49,10 @@ class PromptyChatParser extends Invoker {
       if (index % 3 === 0 && chunk.trim()) {
         contentItems.push({ type: "text", text: chunk.trim() });
       } else if (index % 3 === 2) {
-        const base64Str = await this.inlineImage(chunk.split(" ")[0].trim()) 
-        let msg:ChatCompletionContentPartImage = {
+        const base64Str = await this.inlineImage(chunk.split(" ")[0].trim())
+        let msg: ChatCompletionContentPartImage = {
           type: "image_url",
-          image_url: { url: base64Str}
+          image_url: { url: base64Str }
         }
 
         contentItems.push(msg);
@@ -68,7 +70,7 @@ class PromptyChatParser extends Invoker {
     let messages: any[] = [];
     const separator = new RegExp(`\\s*#?\\s*(${this.roles.join("|")})\\s*:\\s*\\n`, "im");
 
-    let chunks = data.split(separator).filter(chunk => chunk.trim());
+    let chunks = data.split(separator).filter((chunk: string) => chunk.trim());
 
     if (!this.roles.includes(chunks[0].trim().toLowerCase())) {
       chunks.unshift("system");
@@ -89,12 +91,11 @@ class PromptyChatParser extends Invoker {
 
       // backward compatible for models inference runtime that just supports content as a string.
       // for example ollama, ai toolkit for VSCode
-      if(parsedContent.length == 1 && parsedContent[0].type == "text")
-      {
-        messages.push({ role, content: parsedContent[0].text});
+      if (parsedContent.length == 1 && parsedContent[0].type == "text") {
+        messages.push({ role, content: parsedContent[0].text });
       }
       else {
-        messages.push({ role, content: parsedContent});
+        messages.push({ role, content: parsedContent });
       }
     }
 

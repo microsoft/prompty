@@ -1,4 +1,3 @@
-import * as path from "path";
 import matter from "gray-matter";
 import {
   utils
@@ -71,7 +70,7 @@ export class Prompty {
   tags: string[] = [];
   version: string = "";
   base: string = "";
-  basePrompty: Prompty = null;
+  basePrompty?: Prompty;
 
   // model
   model: ModelSettings = new ModelSettings();

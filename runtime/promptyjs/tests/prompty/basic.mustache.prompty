@@ -7,7 +7,7 @@ model:
   api: chat
   configuration:
     azure_deployment: gpt-4
-    type: azure
+    type: azure_openai
   parameters:
     max_tokens: 800
 template: mustache

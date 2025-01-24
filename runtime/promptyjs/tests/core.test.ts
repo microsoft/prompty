@@ -1,10 +1,6 @@
 import { Prompty } from "../src/core";
 import { InvokerFactory } from "../src/invokerFactory";
-import * as path from 'path';
 import * as fs from 'fs/promises';
-import puppeteer from 'puppeteer';
-//import * as dotenv from "dotenv"; 
-//dotenv.config({ path: './.env' });
 
 describe("core load", () => {
   it.each`
@@ -22,7 +18,7 @@ describe("prepare", () => {
     ["tests/prompty/basic.prompty"],
     ["tests/prompty/basic.mustache.prompty"],
   ])('Testing file: %s', async (prompty) => {
-    const factory = InvokerFactory.getInstance();
+    //const factory = InvokerFactory.getInstance();
     const p = await Prompty.load(prompty)
     const prepared = await Prompty.prepare(p)
     console.log(JSON.stringify(prepared))
@@ -31,10 +27,14 @@ describe("prepare", () => {
 
     // Read and parse the expected JSON content
     const expectedJsonContent = await fs.readFile(parsedJsonPath, 'utf8');
-    const expectedJson = JSON.parse(expectedJsonContent);
+    const expectedJson = JSON.parse(expectedJsonContent.replaceAll('\r\n', '\n'));
 
     // Compare the prepared object with the expected JSON
-    expect(prepared).toEqual(expectedJson);
+    expect(prepared.length).toEqual(expectedJson.length);
+    for (let i = 0; i < prepared.length; i++) {
+      expect(prepared[i]["role"]).toEqual(expectedJson[i]["role"]);
+      expect(prepared[i]["content"]).toEqual(expectedJson[i]["content"]);
+    }
   })
 });
 

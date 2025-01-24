@@ -4,6 +4,7 @@
     "lib": ["es2022", "esnext.disposable", "dom"],
     "module": "commonjs",
     "strict": true,
+    "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,

@@ -5,7 +5,7 @@ import * as mustache from 'mustache'
 
 class NunjucksRenderer extends Invoker {
     private templates: Record<string, string> = {};
-    private name: string;
+    //private name: string;
 
     async invoke(data: any): Promise<any> {
         return Promise.resolve(this.invokeSync(data));
@@ -18,7 +18,7 @@ class NunjucksRenderer extends Invoker {
 
 class MustacheRenderer extends Invoker {
     private templates: Record<string, string> = {};
-    private name: string;
+    //private name: string;
 
     async invoke(data: any): Promise<any> {
         return Promise.resolve(this.invokeSync(data));

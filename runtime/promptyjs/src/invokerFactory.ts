@@ -5,7 +5,7 @@ import {
 export abstract class Invoker {
     prompty: Prompty;
 
-    constructor(prompty ? : Prompty) {
+    constructor(prompty: Prompty) {
         this.prompty = prompty;
     }
 
