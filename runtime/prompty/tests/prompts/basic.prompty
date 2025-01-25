@@ -7,7 +7,6 @@ authors:
 model:
   api: chat
   configuration:
-    type: mcs
     azure_deployment: gpt-35-turbo
 inputs:
   table:
@@ -30,21 +29,7 @@ sample:
   question: What is the meaning of life?
   top_n: 5
   table: customers
-parser:
-  type: jina2
-  parser: mcs
 ---
-tools:
-  - name: query
-    type: dataverse
-    configuration:
-      connection: "https://contoso.crm.dynamics.com"
-      query: SELECT * FROM {{table}} WHERE firstName = '{{firstName}}' AND lastName = '{{lastName}}'
-    
-  - name: search
-    type: bing
-    configuration:
-      parameters: [{{question}}]
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
