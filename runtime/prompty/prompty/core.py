@@ -1,4 +1,5 @@
 import os
+import typing
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field, fields, asdict
 from pathlib import Path
@@ -110,8 +111,8 @@ class Prompty:
     # metadata
     name: str = field(default="")
     description: str = field(default="")
-    authors: list[str] = field(default_factory=list)
-    tags: list[str] = field(default_factory=list)
+    authors: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
     version: str = field(default="")
     base: str = field(default="")
     basePrompty: Union["Prompty", None] = field(default=None)
@@ -128,10 +129,10 @@ class Prompty:
     # template
     template: TemplateSettings = field(default_factory=TemplateSettings)
 
-    file: Union[Path, str] = field(default="")
+    file: Union[str, Path] = field(default="")
     content: Union[str, list[str], dict] = field(default="")
 
-    def to_safe_dict(self) -> dict[str, any]:
+    def to_safe_dict(self) -> dict[str, typing.Any]:
         d = {}
         for field in fields(self):
             k = field.name
@@ -183,7 +184,7 @@ class Prompty:
         return top
 
     @staticmethod
-    def _process_file(file: str, parent: Path) -> Any:
+    def _process_file(file: str, parent: Path) -> typing.Any:
         f = Path(parent / Path(file)).resolve().absolute()
         if f.exists():
             items = load_json(f)
@@ -200,7 +201,7 @@ class Prompty:
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    async def _process_file_async(file: str, parent: Path) -> Any:
+    async def _process_file_async(file: str, parent: Path) -> typing.Any:
         f = Path(parent / Path(file)).resolve().absolute()
         if f.exists():
             items = await load_json_async(f)
@@ -219,7 +220,7 @@ class Prompty:
     @staticmethod
     def _process_env(
         variable: str, env_error=True, default: Union[str, None] = None
-    ) -> Any:
+    ) -> typing.Any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
@@ -231,7 +232,7 @@ class Prompty:
             return ""
 
     @staticmethod
-    def normalize(attribute: Any, parent: Path, env_error=True) -> Any:
+    def normalize(attribute: typing.Any, parent: Path, env_error=True) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
             if attribute.startswith("${") and attribute.endswith("}"):
@@ -261,8 +262,8 @@ class Prompty:
 
     @staticmethod
     async def normalize_async(
-        attribute: Any, parent: Path, env_error=True
-    ) -> Any:
+        attribute: typing.Any, parent: Path, env_error=True
+    ) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
             if attribute.startswith("${") and attribute.endswith("}"):
@@ -292,10 +293,10 @@ class Prompty:
 
 
 def param_hoisting(
-    top: dict[str, Any],
-    bottom: dict[str, Any],
+    top: dict[str, typing.Any],
+    bottom: dict[str, typing.Any],
     top_key: Union[str, None] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, typing.Any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}
     else:
@@ -313,7 +314,7 @@ class PromptyStream(Iterator):
     def __init__(self, name: str, iterator: Iterator):
         self.name = name
         self.iterator = iterator
-        self.items: list[Any] = []
+        self.items: list[typing.Any] = []
         self.__name__ = "PromptyStream"
 
     def __iter__(self):
@@ -345,7 +346,7 @@ class AsyncPromptyStream(AsyncIterator):
     def __init__(self, name: str, iterator: AsyncIterator):
         self.name = name
         self.iterator = iterator
-        self.items: list[Any] = []
+        self.items: list[typing.Any] = []
         self.__name__ = "AsyncPromptyStream"
 
     def __aiter__(self):
