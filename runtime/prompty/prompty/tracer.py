@@ -84,7 +84,7 @@ def to_dict(obj: Any) -> Any:
     elif type(obj).__name__ == "Prompty":
         obj_dict = asdict(obj)
         if "model" in obj_dict and "configuration" in obj_dict["model"]:
-            obj_dict["model"]["configuration"] = sanitize(obj_dict["model"]["configuration"])
+            obj_dict["model"]["configuration"] = sanitize("configuration", obj_dict["model"]["configuration"])
         return obj_dict
     # safe PromptyStream obj serialization
     elif type(obj).__name__ == "PromptyStream":
