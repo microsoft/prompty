@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 import click
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from dataclasses import asdict, is_dataclass
 
 import prompty
 from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
@@ -91,11 +91,11 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
         dynamic_import(p.model.configuration["type"])
 
         result = prompty.execute(p, inputs=inputs, raw=raw)
-        if issubclass(type(result), BaseModel):
-            print("\n", json.dumps(result.model_dump(), indent=4), "\n")
+        if is_dataclass(result):
+            print("\n", json.dumps(asdict(result), indent=4), "\n")
         elif isinstance(result, list):
             print(
-                "\n", json.dumps([item.model_dump() for item in result], indent=4), "\n"
+                "\n", json.dumps([asdict(item) for item in result], indent=4), "\n"
             )
         else:
             print("\n", result, "\n")
