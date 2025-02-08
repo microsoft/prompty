@@ -5,7 +5,7 @@ import * as fs from 'fs/promises';
 describe("core load", () => {
   it.each`
     prompty
-    ${"tests/prompty/basic.prompty"}
+    ${"tests/prompts/basic.prompty"}
   `("should load $prompty", async ({prompty}) => {
     const p = await Prompty.load(prompty) 
     expect(p).toBeInstanceOf(Prompty);
@@ -15,8 +15,8 @@ describe("core load", () => {
 
 describe("prepare", () => {
   it.each([
-    ["tests/prompty/basic.prompty"],
-    ["tests/prompty/basic.mustache.prompty"],
+    ["tests/prompts/basic.prompty"],
+    ["tests/prompts/basic.mustache.prompty"],
   ])('Testing file: %s', async (prompty) => {
     //const factory = InvokerFactory.getInstance();
     const p = await Prompty.load(prompty)

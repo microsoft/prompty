@@ -38,7 +38,6 @@ class PromptyChatParser extends Invoker {
 
   public async parseContent(content: string, role: ROLE): Promise<Array<ChatCompletionContentPart>> {
     // Normalize line endings
-    content = content.replaceAll("\r\n", "\n");
     const imageRegex = /!\[(.*?)\]\((.*?)\)/gm;
     let matches;
     let contentItems: Array<ChatCompletionContentPart> = [];
@@ -70,7 +69,9 @@ class PromptyChatParser extends Invoker {
     let messages: any[] = [];
     const separator = new RegExp(`\\s*#?\\s*(${this.roles.join("|")})\\s*:\\s*\\n`, "im");
 
-    let chunks = data.split(separator).filter((chunk: string) => chunk.trim());
+    let chunks = data.replaceAll("\r\n", "\n")   // normalize line endings
+                      .split(separator)
+                      .filter((chunk: string) => chunk.trim());
 
     if (!this.roles.includes(chunks[0].trim().toLowerCase())) {
       chunks.unshift("system");

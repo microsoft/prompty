@@ -20,6 +20,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
     "@types/base-64": "^1.0.2",
+    "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/mustache": "^4.2.5",
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "base-64": "^1.0.0",
+    "glob": "^11.0.1",
     "gray-matter": "^4.0.3",
     "js-yaml": "^4.1.0",
     "mustache": "^4.2.0",

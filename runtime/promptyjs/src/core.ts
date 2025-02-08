@@ -8,6 +8,8 @@ import {
 import "./parsers";
 import "./renderers";
 import * as yaml from 'js-yaml';
+import path from "path";
+import { glob } from "glob";
 
 export class PropertySettings {
   type: string = "";
@@ -15,37 +17,14 @@ export class PropertySettings {
   description: string = "";
 }
 
-// Interface for openaiModel
-interface OpenAIModel {
-  type: "openai";
-  name: string;
-  organization?: string;
-  api_key: string;
-  base_url?: string;
+export class ModelConfiguration {
+  type: string = "unknown";
+  [key: string]: any;
 }
-
-// Interface for azureOpenaiModel
-interface AzureOpenAIModel {
-  type: "azure_openai";
-  api_version: string;
-  azure_deployment: string;
-  azure_endpoint: string;
-  api_key?: string
-}
-
-// Interface for maasModel
-interface MaasModel {
-  type: "serverless";
-  endpoint: string;
-  name: string;
-  api_key?: string;
-}
-
-export type ModelConfiguration = OpenAIModel | AzureOpenAIModel | MaasModel
 
 export class ModelSettings {
   api: string = "chat";
-  configuration: ModelConfiguration = {} as ModelConfiguration;
+  configuration: ModelConfiguration = { type: "unknown" } as ModelConfiguration;
   parameters: any = {};
   response: any = {};
 }
@@ -131,50 +110,76 @@ export class Prompty {
     this.content = items.content;
   }
 
+  private static async _findGlobalConfig(promptyPath: string): Promise<string | undefined> {
+    const configs = await glob("**/prompty.json", {
+      cwd: process.cwd(),
+    });
+
+    const filtered = configs.map(c => path.resolve(c))
+      .filter((config) => config.length <= promptyPath.length)
+      .sort((a, b) => a.length - b.length);
+
+    if (filtered.length > 0) {
+      return filtered[filtered.length - 1];
+    } else {
+      return undefined;
+    }
+  }
+
+  static async load(filePath: string, configuration: string = "default"): Promise<any> {
+    filePath = path.resolve(filePath);
+    const p = new Prompty(await utils.readFileSafe(filePath));
+    const c = await Prompty._findGlobalConfig(filePath);
+    p.file = filePath;
+    // hoist default configuration left to right
+    return p;
+  }
+
   static async prepare(prompt: Prompty, inputs: any = {}): Promise<any> {
+    const invoker = InvokerFactory.getInstance();
+    inputs = utils.paramHoisting(inputs, prompt.sample);
+    const render = await invoker.callRenderer(prompt, inputs, prompt.content);
+    const result = await invoker.callParser(prompt, render);
+    return result;
+  }
+
+  static prepareSync(prompt: Prompty, inputs: any = {}): any {
+    const invoker = InvokerFactory.getInstance();
+    inputs = utils.paramHoisting(inputs, prompt.sample);
+    const render = invoker.callRendererSync(prompt, inputs, prompt.content);
+    const result = invoker.callParserSync(prompt, render);
+    return result;
+  }
+
+  static async run(prompt: Prompty, inputs: any = {}, options: ExecutionOptions = {}): Promise<any> {
+
+    // TODO: Implement the execute method
     const invoker = InvokerFactory.getInstance();
 
     inputs = utils.paramHoisting(inputs, prompt.sample);
 
-    let render: any;
-
-    if (prompt.template.type === "NOOP") {
-      render = prompt.content;
-    } else {
-      render = await invoker.call("renderer", prompt.template.type, prompt, inputs);
-    }
-
-    let result: any;
-
-    if (prompt.template.parser === "NOOP") {
-      result = render;
-    } else {
-      result = await invoker.call("parser", `${prompt.template.parser}.${prompt.model.api}`, prompt, render);
-    }
-    return result;
+    return {};
   }
 
-  static async load(filePath: string): Promise < any > {
-    return new Prompty(await utils.readFileSafe(filePath));
-  }
+
 
   static export(prompt: Prompty): string {
     // Object for the frontmatter attributes
     const front_matter = {
-      name : prompt.name,
-      description : prompt.description,
-      authors : prompt.authors,
-      tags : prompt.tags,
-      version : prompt.version,
-      base : prompt.base,
-      model : prompt.model,
-      sample : prompt.sample,
-      input : prompt.input,
-      output : prompt.output,
-      template : prompt.template
+      name: prompt.name,
+      description: prompt.description,
+      authors: prompt.authors,
+      tags: prompt.tags,
+      version: prompt.version,
+      base: prompt.base,
+      model: prompt.model,
+      sample: prompt.sample,
+      input: prompt.input,
+      output: prompt.output,
+      template: prompt.template
     };
 
-    const yaml_str = "---\r\n"+ yaml.dump(front_matter) + "---\r\n" + prompt.content;
+    const yaml_str = "---\r\n" + yaml.dump(front_matter) + "---\r\n" + prompt.content;
     return yaml_str;
   }
 }
