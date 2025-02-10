@@ -1,43 +1,12 @@
-﻿using System.Text.Json;
+﻿using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
-using Microsoft.Extensions.FileSystemGlobbing;
 using YamlDotNet.Serialization.NamingConventions;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using System.Diagnostics;
-using System.Security.AccessControl;
 
 namespace Prompty.Core
 {
-    public class Prompty
+    public partial class Prompty
     {
-        // metadata
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string[] Authors { get; set; } = [];
-        public string[] Tags { get; set; } = [];
-        public string Version { get; set; } = string.Empty;
-
-        // base
-        public string Base { get; set; } = string.Empty;
-        public Prompty? BasePrompty { get; set; } = null;
-
-        // model settings
-        public Model? Model { get; set; } = null;
-
-        // sample
-        public Dictionary<string, object> Sample { get; set; } = [];
-
-        // properties
-        public Settings[] Inputs { get; set; } = [];
-        public Settings[] Outputs { get; set; } = [];
-
-        // template
-        public Template? Template { get; set; } = null;
-
-        // internals
-        public string Path { get; set; } = string.Empty;
-        public object Content { get; set; } = string.Empty;
-
+        #region private
         private string? GetInvokerName(InvokerType type)
         {
             return type switch
@@ -49,7 +18,6 @@ namespace Prompty.Core
                 _ => throw new NotImplementedException(),
             };
         }
-
         private object RunInvoker(InvokerType type, object input, object? alt = null)
         {
             string? invokerType = GetInvokerName(type);
@@ -90,21 +58,38 @@ namespace Prompty.Core
                 return input;
         }
 
-        private static Dictionary<string, object> LoadRaw(string promptyContent, string path, Dictionary<string, object> global_config)
+        private static Dictionary<string, object> LoadRaw(string promptyContent, Dictionary<string, object> global_config, string? path = null)
         {
-            var content = promptyContent.Split("---", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (content.Length != 2)
-                throw new Exception("Invalida prompty format");
+            // parse the YAML frontmatter and content from the prompty template
+            Match m = PromptyRegex().Match(promptyContent);
+            if (!m.Success)
+            {
+                throw new ArgumentException("Invalid prompty template. Header and content could not be parsed.");
+            }
+
+            var header = m.Groups["header"].Value;
+            if (string.IsNullOrEmpty(header))
+            {
+                throw new ArgumentException("Invalid prompty template. Header is empty.");
+            }
+
+            var content = m.Groups["content"].Value;
+            if (string.IsNullOrEmpty(content))
+            {
+                throw new ArgumentException("Invalid prompty template. Content is empty.");
+            }
 
             var deserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
 
-            var frontmatter = deserializer.Deserialize<Dictionary<string, object>>(content[0]);
+            var frontmatter = deserializer.Deserialize<Dictionary<string, object>>(header);
 
-            // frontmatter normalization 
-            frontmatter = Normalizer.Normalize(frontmatter, path);
-
+            // frontmatter normalization
+            if (path is not null)
+            {
+                frontmatter = Normalizer.Normalize(frontmatter, path);
+            }
 
             // model configuration hoisting
             if (!frontmatter.ContainsKey("model"))
@@ -112,22 +97,20 @@ namespace Prompty.Core
             else
                 frontmatter["model"] = frontmatter.GetValue<Dictionary<string, object>>("model") ?? [];
 
-
             var modelDict = ((Dictionary<string, object>)frontmatter["model"]);
 
-            if (modelDict.ContainsKey("configuration") && modelDict["configuration"].GetType() == typeof(Dictionary<string, object>))
+            if (modelDict.TryGetValue("configuration", out object? value) && value.GetType() == typeof(Dictionary<string, object>))
                 // param hoisting
-                modelDict["configuration"] = ((Dictionary<string, object>)modelDict["configuration"]).ParamHoisting(global_config);
+                modelDict["configuration"] = ((Dictionary<string, object>)value).ParamHoisting(global_config);
             else
                 // empty - use global configuration
                 modelDict["configuration"] = global_config;
 
-            frontmatter["content"] = content[1];
+            frontmatter["content"] = content;
 
             return frontmatter;
         }
-
-        private static Prompty Convert(Dictionary<string, object> frontmatter, string path)
+        private static Prompty Convert(Dictionary<string, object> frontmatter, string? path)
         {
             Prompty prompty = new();
 
@@ -152,45 +135,64 @@ namespace Prompty.Core
             prompty.Outputs = frontmatter.GetConfigList("outputs", d => new Settings(d)).ToArray();
 
             // template
-            prompty.Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template
-            {
-                Type = "jinja2",
-                Parser = "prompty"
-            };
+            prompty.Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template(null);
 
             // internals
-            prompty.Path = System.IO.Path.GetFullPath(path);
+            prompty.Path = path is not null ? System.IO.Path.GetFullPath(path) : null;
             prompty.Content = frontmatter.GetValue<string>("content") ?? string.Empty;
 
             return prompty;
         }
+        #endregion
 
+        /// <summary>
+        /// Load a prompty file using the provided file path.
+        /// </summary>
+        /// <param name="path">File path to the prompty file.</param>
+        /// <param name="configuration">Id of the configuration to use.</param>
         public static Prompty Load(string path, string configuration = "default")
         {
             string text = File.ReadAllText(path);
-            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
 
             var global_config = GlobalConfig.Load(System.IO.Path.GetDirectoryName(path) ?? string.Empty, configuration) ?? [];
             global_config = Normalizer.Normalize(global_config, path);
 
-            var frontmatter = LoadRaw(text, parentPath, global_config);
+            var frontmatter = LoadRaw(text, global_config, path);
             var prompty = Convert(frontmatter, path);
             return prompty;
         }
 
+        /// <summary>
+        /// Load a prompty file using the provided file path.
+        /// </summary>
+        /// <param name="path">File path to the prompty file.</param>
+        /// <param name="configuration">Id of the configuration to use.</param>
         public static async Task<Prompty> LoadAsync(string path, string configuration = "default")
         {
-            string text = await File.ReadAllTextAsync(path);
-            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+            string text = await FileUtils.ReadAllTextAsync(path);
 
             var global_config = await GlobalConfig.LoadAsync(System.IO.Path.GetDirectoryName(path) ?? string.Empty, configuration) ?? [];
             global_config = Normalizer.Normalize(global_config, path);
 
-            var frontmatter = LoadRaw(text, path, global_config);
+            var frontmatter = LoadRaw(text, global_config, path);
             var prompty = Convert(frontmatter, path);
             return prompty;
         }
 
+        /// <summary>
+        /// Load a prompty file using the provided text content.
+        /// </summary>
+        /// <param name="text">Id of the configuration to use.</param>
+        /// <param name="gloablConfig">Global configuration to use.</param>
+        /// <param name="path">Optional: File path to the prompty file.</param>
+        public static Prompty Load(string text, Dictionary<string, object> globalConfig, string? path = null)
+        {
+            var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+
+            var frontmatter = LoadRaw(text, globalConfig, parentPath);
+            var prompty = Convert(frontmatter, path);
+            return prompty;
+        }
 
         public object Prepare(object? inputs = null)
         {

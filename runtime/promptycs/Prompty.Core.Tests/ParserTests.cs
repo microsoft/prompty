@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.AI;
 
 namespace Prompty.Core.Tests
 {
@@ -32,6 +28,10 @@ namespace Prompty.Core.Tests
             var prompty = Prompty.Load("generated/basic.prompty");
             var invoker = InvokerFactory.Instance.CreateParser("prompty.chat", prompty);
             var result = invoker.Invoke(text);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<ChatMessage[]>(result);
+            Assert.True(((ChatMessage[])result).Length > 0);
         }
     }
 }
