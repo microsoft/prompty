@@ -3,8 +3,9 @@ name: prompty CSharp build and test
 on:
   pull_request:
     paths:
-      - 'runtime/csharp/**'
+      - 'runtime/promptycs/**'
 
+  workflow_dispatch:
   workflow_call:
 
 jobs:
@@ -26,14 +27,16 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-          cache: true
+
+      - name: dotnet restore
+        working-directory: ./runtime/promptycs
+        run: dotnet restore
 
       - name: dotnet build
-        working-directory: ./runtime/csharp
+        working-directory: ./runtime/promptycs
         run: dotnet build
 
-
       - name: dotnet test
-        working-directory: ./runtime/csharp
+        working-directory: ./runtime/promptycs
         run: dotnet test --logger "console;verbosity=detailed"
 
