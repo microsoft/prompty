@@ -27,11 +27,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-          cache: true
 
       - name: dotnet restore
         working-directory: ./runtime/promptycs
-        run: dotnet restore --locked-mode
+        run: dotnet restore
 
       - name: dotnet build
         working-directory: ./runtime/promptycs
