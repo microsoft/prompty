@@ -48,8 +48,12 @@ jobs:
 
       - name: dotnet build
         working-directory: ./runtime/promptycs
-        run: dotnet build
+        run: dotnet build --configuration Release
 
       - name: publish nguget package
         working-directory: ./runtime/promptycs
         run: dotnet nuget push Prompty.Core/bin/Release/Prompty.Core.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+
+# /home/runner/work/prompty/prompty/runtime/promptycs/Prompty.Core/bin/Debug/Prompty.Core.0.0.21-alpha.nupkg
+# /home/runner/work/prompty/prompty/runtime/promptycs/Prompty.Core/bin/Release
