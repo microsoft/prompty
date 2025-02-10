@@ -3,8 +3,9 @@ name: prompty CSharp build and test
 on:
   pull_request:
     paths:
-      - 'runtime/csharp/**'
+      - 'runtime/promptycs/**'
 
+  workflow_dispatch:
   workflow_call:
 
 jobs:
