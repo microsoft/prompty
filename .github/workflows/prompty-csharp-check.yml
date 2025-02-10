@@ -1,0 +1,39 @@
+name: prompty CSharp build and test
+
+on:
+  pull_request:
+    paths:
+      - 'runtime/csharp/**'
+
+  workflow_call:
+
+jobs:
+  prompty-tests:
+    name: run unit tests on supported .net versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        dotnet-version: [ '8.0.x', '9.0.x' ]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+          cache: true
+
+      - name: dotnet build
+        working-directory: ./runtime/csharp
+        run: dotnet build
+
+
+      - name: dotnet test
+        working-directory: ./runtime/csharp
+        run: dotnet test --logger "console;verbosity=detailed"
+

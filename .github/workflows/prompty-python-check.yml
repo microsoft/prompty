@@ -4,6 +4,8 @@ on:
     paths:
       - 'runtime/prompty/**'
 
+  workflow_call:
+
 
 env:
   AZURE_OPENAI_ENDPOINT: https://fake
