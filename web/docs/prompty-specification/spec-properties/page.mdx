@@ -3,6 +3,7 @@ title: Spec Properties
 authors:
   - bethanyjep
   - nitya
+  - markwallace
 date: 2024-06-10
 tags:
   - prompty-file-spec
@@ -10,6 +11,101 @@ tags:
 index: 2
 ---
 
-TODO - Add details on the properties of the Prompty file spec.
+The schema reference for Prompty is a detailed reference that lists all supported properties and their available options.
+
+## The YAML file consists of the following fields
+
+1. `name`
+  
+    Type: `string`
+
+    Description: A descriptive name for the prompty.
+
+    Example:
+
+    ```yaml
+    name: Basic Prompt
+    ```
+
+2. `description`
+
+    Type: `string`
+
+    Description: A brief explanation of what the prompt does, including it's  intended use or functionality.
+
+    Example:
+
+    ```yaml
+    description: A basic prompt that uses a chat completion API to answer questions
+    ```
+
+3. `authors`
+
+    Type: `array`
+
+    Description: A list of authors who contributed to the prompty. Each author is represented by their name.
+
+    Example:
+
+    ```yaml
+    authors:  
+      - sethjuarez  
+      - jietong  
+    ```
+
+4. `tags`
+
+    Type: `array`
+
+    Description: A list of tags associated with the prompty.
+
+    Example:
+
+    ```yaml
+    tags:  
+      - basic  
+    ```
+
+5. `base`
+
+    Type: `string`
+
+    Description: The base prompty which defines properties and content which the current prompty will inherit.
+
+    Example:
+
+    ```yaml
+    base: base.prompty
+    ```
+
+## Example Prompty
+
+```yaml
+---
+name: Basic Prompt
+description: A basic prompt that uses a chat completion API to answer questions
+authors:
+  - sethjuarez
+  - jietong
+tags:
+  - basic
+base: base.prompty
+---
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, 
+and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+{{ query }}
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+user:
+{{question}}
+```
+
+TODO - Add details on the remaining properties of the Prompty file spec.
+
 ---
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
