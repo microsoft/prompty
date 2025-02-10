@@ -13,6 +13,10 @@
       "name": "prompty"
     },
     {
+      "path": "../runtime/promptyjs",
+      "name": "promptyjs"
+    },
+    {
       "path": "../runtime/promptycs",
       "name": "promptycs"
     }

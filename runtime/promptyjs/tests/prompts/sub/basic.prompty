@@ -8,33 +8,15 @@ model:
   api: chat
   configuration:
     azure_deployment: gpt-35-turbo
-inputs:
-  table:
-    type: string
-    default: sample
-    description: The name of the sample
-    # net new
-    internal: true
-  firstName:
-    type: string
-    description: The first name of the customer
-  lastName:
-    type: string
-    default: Doe
-    description: The last name of the customer
-
 sample:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
-  top_n: 5
-  table: customers
 ---
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-{{ query }}
 
 # Customer
 You are helping {{firstName}} {{lastName}} to find answers to their questions.
