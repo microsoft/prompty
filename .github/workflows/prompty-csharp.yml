@@ -32,6 +32,7 @@ jobs:
 
       - name: csharp version
         run: |
+          echo $GITHUB_REF
           echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
           echo "Using version: ${VERSION}"
 
