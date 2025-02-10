@@ -144,7 +144,7 @@ class Prompty:
                 elif k == "template":
                     d[k] = asdict(self.template)
                 elif k == "inputs" or k == "outputs":
-                    d[k] = copy.deepcopy(v)
+                    d[k] = {k: asdict(v) for k, v in v.items()}
                 elif k == "file":
                     d[k] = (
                         str(self.file.as_posix())
