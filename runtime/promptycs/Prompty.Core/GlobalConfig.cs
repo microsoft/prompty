@@ -1,12 +1,6 @@
-﻿using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-using Microsoft.Extensions.FileSystemGlobbing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 
 namespace Prompty.Core
 {
@@ -50,7 +44,7 @@ namespace Prompty.Core
             var global_config = Find(path);
             if (!string.IsNullOrEmpty(global_config))
             {
-                string json = await File.ReadAllTextAsync(global_config);
+                string json = await FileUtils.ReadAllTextAsync(global_config);
                 return ParseJson(json, configuration);
             }
 

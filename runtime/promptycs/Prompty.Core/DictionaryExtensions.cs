@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Prompty.Core
 {
@@ -18,7 +11,7 @@ namespace Prompty.Core
             var dict = new Dictionary<string, object>();
             foreach (DictionaryEntry entry in dictionary)
             {
-                if(entry.Value != null)
+                if (entry.Value != null)
                     dict.Add(entry.Key.ToString()!, GetValue(entry.Value));
             }
             return dict;
@@ -136,9 +129,7 @@ namespace Prompty.Core
 
         public static Dictionary<string, object> ToConfig(this Dictionary<object, object> dict)
         {
-            return new Dictionary<string, object>(
-                dict.Select(static item => new KeyValuePair<string, object>((string)item.Key, item.Value))
-            );
+            return dict.ToDictionary(kvp => (string)kvp.Key, kvp => kvp.Value);
         }
 
         public static T? GetAndRemove<T>(this Dictionary<string, object> dict, string key)
@@ -157,9 +148,9 @@ namespace Prompty.Core
         {
             Dictionary<string, object> dict;
             if (!string.IsNullOrEmpty(key))
-                dict = top != null ?
-                    top.GetConfig(key) ?? new Dictionary<string, object>() :
-                    new Dictionary<string, object>();
+            {
+                dict = top?.GetConfig(key!) ?? [];
+            }
             else
                 dict = new Dictionary<string, object>(top ?? []);
 
