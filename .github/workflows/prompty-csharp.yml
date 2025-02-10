@@ -9,12 +9,41 @@ on:
   workflow_dispatch:
 
 jobs:
+  prompty-tests:
+    name: run unit tests on supported .net versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        dotnet-version: [ '8.0.x', '9.0.x' ]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
 
+      - name: dotnet restore
+        working-directory: ./runtime/promptycs
+        run: dotnet restore
+
+      - name: dotnet build
+        working-directory: ./runtime/promptycs
+        run: dotnet build
+
+      - name: dotnet test
+        working-directory: ./runtime/promptycs
+        run: dotnet test --logger "console;verbosity=detailed"
 
   nuget-publish:
     name: publish nuget package
     runs-on: ubuntu-latest
-    #needs: prompty-tests
+    needs: prompty-tests
 
     permissions:
       # This permission is needed for private repositories.
