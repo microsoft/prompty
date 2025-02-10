@@ -166,3 +166,7 @@ pdm.lock
 # trace
 trace.json
 .runs/
+
+
+# ruff
+.ruff_cache/

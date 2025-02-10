@@ -1,12 +1,8 @@
-name: prompty Python build and publish
-
+name: prompty Python build and test
 on:
-  push:
+  pull_request:
     paths:
       - 'runtime/prompty/**'
-    tags:
-      - 'python/*'
-  workflow_dispatch:
 
 
 env:
@@ -45,27 +41,3 @@ jobs:
         working-directory: ./runtime/prompty
         run: pdm run mypy . --check-untyped-defs
 
-  pypi-publish:
-    name: upload release to PyPI
-    runs-on: ubuntu-latest
-    needs: prompty-tests
-
-    permissions:
-      # This permission is needed for private repositories.
-      contents: read
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
-    
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pdm-project/setup-pdm@v4
-        with:
-          python-version: 3.9
-
-      - name: install dependencies
-        working-directory: ./runtime/prompty
-        run: pdm install
-
-      - name: Publish package distributions to PyPI
-        working-directory: ./runtime/prompty
-        run: pdm publish

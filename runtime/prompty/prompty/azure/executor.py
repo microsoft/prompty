@@ -1,12 +1,14 @@
-import json
-import azure.identity
 import importlib.metadata
-from typing import AsyncIterator, Iterator
-from openai import APIResponse, AzureOpenAI, AsyncAzureOpenAI
+import typing
+from collections.abc import AsyncIterator, Iterator
 
-from prompty.tracer import Tracer, sanitize
-from ..core import AsyncPromptyStream, Prompty, PromptyStream
+import azure.identity
+from openai import APIResponse, AsyncAzureOpenAI, AzureOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
+
+from prompty.tracer import Tracer
+
+from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
 VERSION = importlib.metadata.version("prompty")
@@ -29,7 +31,10 @@ class AzureOpenAIExecutor(Invoker):
         if "api_key" not in self.kwargs:
             # managed identity if client id
             if "client_id" in self.kwargs:
-                default_credential = azure.identity.ManagedIdentityCredential(
+                default_credential: typing.Union[
+                    azure.identity.ManagedIdentityCredential,
+                    azure.identity.DefaultAzureCredential,
+                ] = azure.identity.ManagedIdentityCredential(
                     client_id=self.kwargs.pop("client_id"),
                 )
             # default credential
@@ -48,7 +53,7 @@ class AzureOpenAIExecutor(Invoker):
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Union[str, PromptyStream]:
         """Invoke the Azure OpenAI API
 
         Parameters
@@ -89,12 +94,11 @@ class AzureOpenAIExecutor(Invoker):
                 }
                 trace("inputs", args)
 
-                if "stream" in args and args["stream"] == True:
+                if "stream" in args and args["stream"]:
                     response = client.chat.completions.create(**args)
                 else:
-                    raw: APIResponse = client.chat.completions.with_raw_response.create(
-                        **args
-                    )
+                    raw = client.chat.completions.with_raw_response.create(**args)
+
                     response = ChatCompletion.model_validate_json(raw.text)
 
                     for k, v in raw.headers.raw:
@@ -135,7 +139,7 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = client.images.generate.create(**args)
+                response = client.images.generate(**args)
                 trace("result", response)
 
         # stream response
@@ -148,7 +152,7 @@ class AzureOpenAIExecutor(Invoker):
         else:
             return response
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -188,13 +192,15 @@ class AzureOpenAIExecutor(Invoker):
                 }
                 trace("inputs", args)
 
-                if "stream" in args and args["stream"] == True:
+                if "stream" in args and args["stream"]:
                     response = await client.chat.completions.create(**args)
                 else:
-                    raw: APIResponse = await client.chat.completions.with_raw_response.create(
-                        **args
+                    raw: APIResponse = (
+                        await client.chat.completions.with_raw_response.create(**args)
                     )
-                    response = ChatCompletion.model_validate_json(raw.text)
+                    if raw is not None and raw.text is not None and isinstance(raw.text, str):
+                        response = ChatCompletion.model_validate_json(raw.text)
+
                     for k, v in raw.headers.raw:
                         trace(k.decode("utf-8"), v.decode("utf-8"))
 
@@ -234,7 +240,7 @@ class AzureOpenAIExecutor(Invoker):
                     **self.parameters,
                 }
                 trace("inputs", args)
-                response = await client.images.generate.create(**args)
+                response = await client.images.generate(**args)
                 trace("result", response)
 
         # stream response

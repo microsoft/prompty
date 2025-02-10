@@ -1,11 +1,14 @@
 import json
+import typing
 from pathlib import Path
-from prompty import Prompty
-from prompty.invoker import Invoker
-from prompty.core import AsyncPromptyStream, PromptyStream
+
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
+
+from prompty import Prompty
+from prompty.core import AsyncPromptyStream, PromptyStream
+from prompty.invoker import Invoker
 
 
 ## Azure Fake Executor
@@ -18,13 +21,16 @@ class FakeAzureExecutor(Invoker):
         self.deployment = self.prompty.model.configuration["azure_deployment"]
         self.parameters = self.prompty.model.parameters
 
-    def invoke(self, data: any) -> any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
+            if isinstance(self.prompty.file, str):
+                self.prompty.file = Path(self.prompty.file).resolve().absolute()
+                
             p = (
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):
@@ -49,13 +55,13 @@ class FakeAzureExecutor(Invoker):
 
             n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
             p = Path(__file__).parent / f"{n}.embedding.json"
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 response = CreateEmbeddingResponse.model_validate_json(f.read())
                 return response
 
         return data
 
-    async def invoke_async(self, data: str) -> str:
+    async def invoke_async(self, data: str) -> typing.Any:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -69,11 +75,13 @@ class FakeAzureExecutor(Invoker):
             The parsed data
         """
         if self.prompty.file:
+            if isinstance(self.prompty.file, str):
+                self.prompty.file = Path(self.prompty.file).resolve().absolute()
             p = (
                 Path(self.prompty.file.parent)
                 / f"{self.prompty.file.name}.execution.json"
             )
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 j = f.read()
 
             if self.parameters.get("stream", False):
@@ -98,7 +106,7 @@ class FakeAzureExecutor(Invoker):
 
             n = "-".join([s.replace(" ", "_") for s in d if isinstance(s, str)])
             p = Path(__file__).parent / f"{n}.embedding.json"
-            with open(p, "r", encoding="utf-8") as f:
+            with open(p, encoding="utf-8") as f:
                 response = CreateEmbeddingResponse.model_validate_json(f.read())
                 return response
 

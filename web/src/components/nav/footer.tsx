@@ -1,40 +1,51 @@
 import React, { ReactNode } from "react";
-import Block from "../block";
 import { VERSION } from "@/lib/version";
-import { navigation } from "@/lib/navigation";
+import Block from "@/components/block";
 import clsx from "clsx";
+import { navigation } from "@/lib/navigation";
+import styles from "./footer.module.scss";
+import Image from "next/image";
 
-type Props = {
-  children: ReactNode;
-  outerClassName?: string;
-  innerClassName?: string;
-};
-
-const Footer = ({ children, outerClassName, innerClassName }: Props) => {
+const Footer = () => {
   return (
-    <footer className={clsx(outerClassName)}>
-      <div
-        className={clsx("max-w-screen-xl pl-3 pr-3 xl:mx-auto", innerClassName)}
+    <footer>
+      <Block
+        outerClassName={styles.footer}
+        innerClassName={styles.footerContainer}
       >
-        <div className="flex flex-row gap-5 mt-6">
-          {children}
-          <div className="grow"></div>
-          <div className="flex flex-col gap-1">
-            <div className="text-right mr-1">Sponsored by:</div>
-            <img
-              src="/assets/images/microsoft-dark.png"
-              className="hidden dark:block"
-            />
-            <img
-              src="/assets/images/microsoft-light.png"
-              className="block dark:hidden"
-            />
-            <div className="text-right mr-1 text-zinc-300 dark:text-zinc-700">
-              {VERSION}
-            </div>
+        <div className={styles.menuItems}>
+          <nav>
+            {navigation.map((item) => (
+              <a key={item.href} className={styles.menuItem} href={item.href}>
+                {item.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+        <div className={styles.grow}></div>
+        <div className={styles.sponsored}>
+          <div className={styles.sponsoredText}>Sponsored by:</div>
+          <Image
+            src="/assets/images/microsoft-dark.png"
+            className={styles.darkIcon}
+            title="Microsoft"
+            height={40}
+            width={150}
+            alt="Microsoft"
+          />
+          <Image
+            src="/assets/images/microsoft-light.png"
+            className={styles.lightIcon}
+            title="Microsoft"
+            height={40}
+            width={150}
+            alt="Microsoft"
+          />
+          <div className={styles.version}>
+            {VERSION}
           </div>
         </div>
-      </div>
+      </Block>
     </footer>
   );
 };

@@ -1,10 +1,13 @@
-import { promises as fs } from "fs";
 import path from "path";
+import { promises as fs } from "fs";
+
+type Params = Promise<{ slug?: string[] }>;
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug?: string[] } }
+  segmentData: { params: Params }
 ) {
+  const params = await segmentData.params;
   if (params.slug) {
     const file = path.normalize(
       path.join(...[process.cwd(), "docs", ...params.slug])

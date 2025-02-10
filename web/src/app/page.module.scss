@@ -1,0 +1,380 @@
+@use "@/app/defaults.scss" as *;
+@use "sass:color";
+
+.sectionGap {
+  margin-top: 2rem;
+
+  @media (min-width: $layout-breakpoint-small) {
+    margin-top: 4rem;
+  }
+}
+
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.heroContainer {
+  margin-top: 0.5rem;
+
+  @media (min-width: $layout-breakpoint-small) {
+    margin-top: 7rem;
+  }
+}
+
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+
+
+  @media (min-width: $layout-breakpoint-small) {
+    gap: 2.5rem;
+  }
+}
+
+.heroButtonSection {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.heroLink {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  color: $sky-600;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 3px color.change($sky-600, $alpha: 80%);
+
+  &:hover {
+    box-shadow: inset 0 0 0 3px color.change($stone-500, $alpha: 80%);
+    background-color: $sky-800;
+    color: $stone-50;
+  }
+}
+
+
+.heroTitle {
+  text-align: center;
+  color: transparent;
+  background: var(--background-color);
+  background: linear-gradient(to bottom, var(--text-color) 65%, $sky-700);
+  background-clip: text;
+  font-size: 3rem;
+  line-height: 4rem;
+  font-weight: 400;
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 6rem;
+    line-height: 1;
+  }
+}
+
+.heroDescription {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-align: center;
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    max-width: 60%;
+  }
+}
+
+.promptyContainer {
+  display: block;
+  overflow: visible;
+  position: relative;
+  height: auto;
+  width: 60%;
+  margin-bottom: -2rem;
+
+  @media (min-width: $layout-breakpoint-small) {
+    width: 40%;
+  }
+}
+
+@keyframes easeInOut {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.promptyIcon {
+  overflow: visible;
+  position: relative;
+  text-align: center;
+  animation: easeInOut 4s ease-in-out infinite;
+
+}
+
+.promptyGradient {
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: linear-gradient(to bottom, transparent, var(--background-color) 40%);
+  background-color: transparent;
+  height: 25%;
+}
+
+.centerContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.titleContent {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+
+.colorbox {
+  display: flex;
+  padding: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
+  border-radius: 1rem;
+  background-color: $stone-200;
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row;
+  }
+
+  @container style(--theme: light) {
+    background-color: $stone-200;
+  }
+
+  @container style(--theme: dark) {
+    background-color: $stone-700;
+  }
+}
+
+.whatis {
+  flex-basis: 50%;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (min-width: $layout-breakpoint-medium) {
+    flex-basis: 40%;
+  }
+}
+
+.itemList {
+  margin-top: 0.75rem;
+  list-style-type: disc;
+  list-style-position: outside;
+  margin-inline-start: 2rem;
+}
+
+.whatisvenn {
+  display: flex;
+  flex-basis: 50%;
+  justify-content: center;
+  border-radius: 1rem;
+  background-color: $stone-700;
+
+  @media (min-width: $layout-breakpoint-medium) {
+    flex-basis: 40%;
+  }
+}
+
+.tileSection {
+  display: flex;
+  padding: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
+
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row;
+  }
+}
+
+.tileReverse {
+  display: flex;
+  padding: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row-reverse;
+  }
+}
+
+.tileContainer {
+  flex-basis: 50%;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tileImage {
+  flex-basis: 50%;
+}
+
+.tileImage img {
+  border-radius: 1rem;
+}
+
+.tileTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: normal;
+  margin-top: 0;
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 1.875rem;
+  }
+}
+
+.numberSection {
+  display: flex;
+  padding: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  vertical-align: text-top;
+
+  border-radius: 1rem;
+  background-color: $stone-200;
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row;
+  }
+
+  @container style(--theme: light) {
+    background-color: $stone-200;
+  }
+
+  @container style(--theme: dark) {
+    background-color: $stone-700;
+  }
+}
+
+.numberContainer {
+  display: flex;
+  padding: 0.75rem;
+  flex-basis: 33%;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.number {
+  display: flex;
+  padding: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px color.change($sky-600, $alpha: 80%);
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  color: $sky-600;
+}
+
+.numberTitle {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+
+
+  @media (min-width: $layout-breakpoint-small) {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+
+.halfColorbox {
+  display: flex;
+  padding: 1.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: flex-start;
+  align-items: flex-start;
+  vertical-align: text-top;
+
+  flex-basis: 50%;
+
+  border-radius: 1rem;
+  background-color: $stone-200;
+
+
+  @container style(--theme: light) {
+    background-color: $stone-200;
+  }
+
+  @container style(--theme: dark) {
+    background-color: $stone-700;
+  }
+}
+
+.halfSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  @media (min-width: $layout-breakpoint-small) {
+    flex-direction: row;
+  }
+}
+
+.promptyGraph {
+  background-image: url('/assets/images/prompty-graph.png');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-blend-mode: soft-light;
+  color: var(--text-color);
+}
+
+.promptyWorld {
+  background-image: url('/assets/images/prompty-ascii-art-globe.png');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-blend-mode: soft-light;
+  color: var(--text-color);
+}
+
+.spacer {
+  height: 275px;
+}

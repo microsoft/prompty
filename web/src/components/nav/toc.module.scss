@@ -1,0 +1,64 @@
+@use "@/app/defaults.scss" as *;
+
+.itemContainer {
+  padding: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+
+  &:hover {
+    background-color: $stone-200;
+  }
+
+  @container style(--theme: light) {
+    &:hover {
+      background-color: $stone-200;
+    }
+  }
+
+  @container style(--theme: dark) {
+    &:hover {
+      background-color: $stone-600;
+    }
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+
+  a {
+    color: $sky-600;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      color: $stone-500;
+    }
+
+    &[aria-current] {
+      color: $stone-500;
+    }
+  }
+}
+
+.block {
+  display: block;
+}
+
+.hidden {
+  display: none;
+}
+
+.expander {
+  width: 1rem;
+  height: 1rem;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.grow {
+  flex-grow: 1;
+}

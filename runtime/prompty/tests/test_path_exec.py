@@ -1,6 +1,8 @@
-import prompty
-import pytest
 from pathlib import Path
+
+import pytest
+
+import prompty
 
 BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 

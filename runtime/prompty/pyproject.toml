@@ -16,6 +16,11 @@ dependencies = [
     "aiofiles>=24.1.0",
 ]
 
+[project.urls]
+Repository = "https://github.com/Microsoft/prompty"
+Documentation = "https://prompty.ai/docs"
+Issues = "https://github.com/microsoft/prompty/issues"
+
 [project.optional-dependencies]
 azure = ["azure-identity>=1.17.1","openai>=1.43.0"]
 openai = ["openai>=1.43.0"]
@@ -33,11 +38,23 @@ dev = [
     "azure-ai-inference>=1.0.0b3",
     "pytest-asyncio>=0.24.0",
     "azure-identity>=1.17.1",
-
+    "ruff>=0.9.1",
+    "mypy>=1.14.1",
+    "types-aiofiles>=21.1.0",
+    "types-PyYAML>=6.0.12"
 ]
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+output-format = "full"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["D203", "E501"]
 
 
 [tool.pdm.version]

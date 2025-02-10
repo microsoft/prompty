@@ -1,14 +1,16 @@
 import os
-import pytest
-import prompty
-from prompty.invoker import InvokerFactory
+from pathlib import Path
+from typing import Union
 
+import pytest
+from dotenv import load_dotenv
+
+import prompty
+from prompty.azure import AzureOpenAIProcessor
+from prompty.invoker import InvokerFactory
+from prompty.serverless import ServerlessProcessor
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
-from prompty.azure import AzureOpenAIProcessor
-from prompty.serverless import ServerlessProcessor
-
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -36,9 +38,14 @@ def fake_azure_executor():
         "prompts/groundedness.prompty",
         "prompts/faithfulness.prompty",
         "prompts/embedding.prompty",
+        Path("prompts/basic.prompty"),
+        Path("prompts/context.prompty"),
+        Path("prompts/groundedness.prompty"),
+        Path("prompts/faithfulness.prompty"),
+        Path("prompts/embedding.prompty"),
     ],
 )
-def test_basic_execution(prompt: str):
+def test_basic_execution(prompt: Union[str, Path]):
     result = prompty.execute(prompt)
     print(result)
 
@@ -52,9 +59,14 @@ def test_basic_execution(prompt: str):
         "prompts/groundedness.prompty",
         "prompts/faithfulness.prompty",
         "prompts/embedding.prompty",
+        Path("prompts/basic.prompty"),
+        Path("prompts/context.prompty"),
+        Path("prompts/groundedness.prompty"),
+        Path("prompts/faithfulness.prompty"),
+        Path("prompts/embedding.prompty"),
     ],
 )
-async def test_basic_execution_async(prompt: str):
+async def test_basic_execution_async(prompt: Union[str, Path]):
     result = await prompty.execute_async(prompt)
     print(result)
 

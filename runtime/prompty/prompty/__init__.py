@@ -1,8 +1,8 @@
 import traceback
+import typing
 from pathlib import Path
-from typing import Dict, List, Union
-from .tracer import trace
-from .invoker import InvokerFactory, NoOp
+from typing import Union
+
 from .core import (
     ModelSettings,
     Prompty,
@@ -10,23 +10,27 @@ from .core import (
     TemplateSettings,
     param_hoisting,
 )
+from .invoker import InvokerFactory
+from .parsers import PromptyChatParser
+from .renderers import Jinja2Renderer
+from .tracer import trace
 from .utils import (
     load_global_config,
     load_global_config_async,
-    load_prompty_async,
     load_prompty,
+    load_prompty_async,
 )
 
-from .renderers import *
-from .parsers import *
+InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
+InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
 
 
 @trace(description="Create a headless prompty object for programmatic use.")
 def headless(
     api: str,
-    content: str | List[str] | dict,
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
+    content: Union[str, list[str], dict],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -81,9 +85,9 @@ def headless(
 @trace(description="Create a headless prompty object for programmatic use.")
 async def headless_async(
     api: str,
-    content: str | List[str] | dict,
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
+    content: Union[str, list[str], dict],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -188,17 +192,17 @@ def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: di
     else:
         outputs = {}
 
-    p = Prompty(
-        **attributes,
+    prompty = Prompty(
         model=model,
         inputs=inputs,
         outputs=outputs,
         template=template,
         content=content,
         file=p,
+        **attributes
     )
 
-    return p
+    return prompty
 
 
 @trace(description="Load a prompty file.")
@@ -311,7 +315,7 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
 @trace(description="Prepare the inputs for the prompt.")
 def prepare(
     prompt: Prompty,
-    inputs: Dict[str, any] = {},
+    inputs: dict[str, typing.Any] = {},
 ):
     """Prepare the inputs for the prompt.
 
@@ -345,7 +349,7 @@ def prepare(
 @trace(description="Prepare the inputs for the prompt.")
 async def prepare_async(
     prompt: Prompty,
-    inputs: Dict[str, any] = {},
+    inputs: dict[str, typing.Any] = {},
 ):
     """Prepare the inputs for the prompt.
 
@@ -379,9 +383,9 @@ async def prepare_async(
 @trace(description="Run the prepared Prompty content against the model.")
 def run(
     prompt: Prompty,
-    content: dict | list | str,
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
+    content: Union[dict, list, str],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -431,9 +435,9 @@ def run(
 @trace(description="Run the prepared Prompty content against the model.")
 async def run_async(
     prompt: Prompty,
-    content: dict | list | str,
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
+    content: Union[dict, list, str],
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -483,9 +487,9 @@ async def run_async(
 @trace(description="Execute a prompty")
 def execute(
     prompt: Union[str, Prompty],
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
-    inputs: Dict[str, any] = {},
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
+    inputs: dict[str, typing.Any] = {},
     raw: bool = False,
     config_name: str = "default",
 ):
@@ -517,7 +521,7 @@ def execute(
     >>> inputs = {"name": "John Doe"}
     >>> result = prompty.execute("prompts/basic.prompty", inputs=inputs)
     """
-    if isinstance(prompt, str):
+    if isinstance(prompt, (str, Path)):
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)
@@ -537,9 +541,9 @@ def execute(
 @trace(description="Execute a prompty")
 async def execute_async(
     prompt: Union[str, Prompty],
-    configuration: Dict[str, any] = {},
-    parameters: Dict[str, any] = {},
-    inputs: Dict[str, any] = {},
+    configuration: dict[str, typing.Any] = {},
+    parameters: dict[str, typing.Any] = {},
+    inputs: dict[str, typing.Any] = {},
     raw: bool = False,
     config_name: str = "default",
 ):
@@ -571,7 +575,7 @@ async def execute_async(
     >>> inputs = {"name": "John Doe"}
     >>> result = await prompty.execute_async("prompts/basic.prompty", inputs=inputs)
     """
-    if isinstance(prompt, str):
+    if isinstance(prompt, (str, Path)):
         path = Path(prompt)
         if not path.is_absolute():
             # get caller's path (take into account trace frame)
