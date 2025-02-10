@@ -32,17 +32,15 @@ jobs:
 
       - name: csharp version
         run: |
-          echo $GITHUB_REF
-          echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///'
           echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
-          echo "Using version: ${VERSION}"
+          echo "Using version: $VERSION"
 
       - name: Set Prompty.Core version
         id: update
         uses: vers-one/dotnet-project-version-updater@v1.7
         with:
           file: "./runtime/promptycs/Prompty.Core/Prompty.Core.csproj"
-          version: ${VERSION}
+          version: "${VERSION}"
 
       - name: dotnet restore
         working-directory: ./runtime/promptycs
@@ -54,4 +52,4 @@ jobs:
 
       - name: publish nguget package
         working-directory: ./runtime/promptycs
-        run: dotnet nuget push Prompty.Core/bin/Release/Prompty.Core.${VERSION}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push Prompty.Core/bin/Release/Prompty.Core.$VERSION.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
