@@ -1,0 +1,17 @@
+﻿<Project>
+  <PropertyGroup>
+    <!-- Default properties inherited by all projects. Projects can override. -->
+    <!-- Settings used by Semantic Kernel to be enabled later -->
+    <!--
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    -->
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+</Project>

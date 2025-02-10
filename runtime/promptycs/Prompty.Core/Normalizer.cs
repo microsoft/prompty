@@ -14,7 +14,7 @@ namespace Prompty.Core
 
         internal static Dictionary<string, object> ProcessFile(string file, string parentPath)
         {
-            var fullFile = Path.GetFullPath(file, Path.GetFullPath(parentPath));
+            var fullFile = FileUtils.GetFullPath(file, Path.GetFullPath(parentPath));
             if (File.Exists(fullFile))
             {
                 string json = File.ReadAllText(fullFile);
@@ -46,7 +46,7 @@ namespace Prompty.Core
                     if (stringValue.StartsWith("${") && stringValue.EndsWith("}"))
                     {
                         var subString = stringValue.Substring(2, stringValue.Length - 3);
-                        var variable = subString.Split(":");
+                        var variable = subString.Split(':');
                         if (variable[0].ToLower() == "file" && variable.Length > 1)
                             return ProcessFile(variable[1], parentPath);
                         else if (variable[0].ToLower() == "env" && variable.Length > 1)

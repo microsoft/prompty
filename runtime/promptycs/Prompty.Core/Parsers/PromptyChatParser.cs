@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.AI;
-using Microsoft.Extensions.FileSystemGlobbing;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Prompty.Core.Parsers
 {
@@ -180,8 +177,8 @@ namespace Prompty.Core.Parsers
                 // image entry
                 else if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["filename"].Value)
                 {
-                    var img = matches[current_chunk].Groups[2].Value.Split(" ")[0].Trim();
-                    var media = img.Split(".").Last().Trim().ToLower();
+                    var img = matches[current_chunk].Groups[2].Value.Split(' ')[0].Trim();
+                    var media = img.Split('.').Last().Trim().ToLower();
                     if (media != "jpg" && media != "jpeg" && media != "png")
                         throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
 
@@ -202,7 +199,7 @@ namespace Prompty.Core.Parsers
         private byte[]? GetImageContent(string image, string media)
         {
             var basePath = Path.GetDirectoryName(_prompty.Path);
-            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
             var bytes = File.ReadAllBytes(path);
             return bytes;
         }
@@ -210,8 +207,8 @@ namespace Prompty.Core.Parsers
         private async Task<byte[]?> GetImageContentAsync(string image, string media)
         {
             var basePath = Path.GetDirectoryName(_prompty.Path);
-            var path = basePath != null ? Path.GetFullPath(image, basePath) : Path.GetFullPath(image);
-            var bytes = await File.ReadAllBytesAsync(path);
+            var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
+            var bytes = await FileUtils.ReadAllBytesAsync(path);
             return bytes;
         }
     }
