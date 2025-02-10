@@ -15,6 +15,7 @@
     <Version>0.0.14-alpha</Version>
     <Authors>Cassie Breviu, Seth Juarez,Mark Wallace</Authors>
     <PackageIcon>prompty.png</PackageIcon>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>

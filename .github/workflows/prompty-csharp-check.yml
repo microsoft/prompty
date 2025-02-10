@@ -29,12 +29,15 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
           cache: true
 
+      - name: dotnet restore
+        working-directory: ./runtime/promptycs
+        run: dotnet restore --locked-mode
+
       - name: dotnet build
-        working-directory: ./runtime/csharp
+        working-directory: ./runtime/promptycs
         run: dotnet build
 
-
       - name: dotnet test
-        working-directory: ./runtime/csharp
+        working-directory: ./runtime/promptycs
         run: dotnet test --logger "console;verbosity=detailed"
 
