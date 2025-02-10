@@ -1,3 +1,4 @@
 {
-  "dotnet.defaultSolution": "prompty-dotnet.sln"
+  "dotnet.defaultSolution": "prompty-dotnet.sln",
+  "jest.enable": false
 }
