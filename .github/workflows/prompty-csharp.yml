@@ -62,9 +62,10 @@ jobs:
 
       - name: csharp version
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/csharp/}" >> $GITHUB_ENV
+          echo "VERSION=$(echo $TAG_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
+          echo "Using version: ${VERSION}"
 
-      - name: Set MyProject.csproj version
+      - name: Set Prompty.Core version
         id: update
         uses: vers-one/dotnet-project-version-updater@v1.7
         with:
