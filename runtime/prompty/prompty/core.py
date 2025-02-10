@@ -1,3 +1,4 @@
+import copy
 import os
 import typing
 from collections.abc import AsyncIterator, Iterator
@@ -174,7 +175,7 @@ class Prompty(BaseModel):
                 elif k == "template":
                     d[k] = v.model_dump()
                 elif k == "inputs" or k == "outputs":
-                    d[k] = {k: v.model_dump() for k, v in v.items()}
+                    d[k] = copy.deepcopy(v)
                 elif k == "file":
                     d[k] = (
                         str(self.file.as_posix())
