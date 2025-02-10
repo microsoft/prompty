@@ -1,3 +1,4 @@
+import copy
 import os
 import typing
 from collections.abc import AsyncIterator, Iterator
@@ -142,10 +143,8 @@ class Prompty:
                     d[k] = asdict(self.model)
                 elif k == "template":
                     d[k] = asdict(self.template)
-                elif k == "inputs":
-                    d[k] = {k: asdict(v) for k, v in self.inputs.items()}
-                elif k == "outputs":
-                    d[k] = {k: asdict(v) for k, v in self.outputs.items()}
+                elif k == "inputs" or k == "outputs":
+                    d[k] = copy.deepcopy(v)
                 elif k == "file":
                     d[k] = (
                         str(self.file.as_posix())
