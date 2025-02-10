@@ -91,7 +91,7 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
         dynamic_import(p.model.configuration["type"])
 
         result = prompty.execute(p, inputs=inputs, raw=raw)
-        if is_dataclass(result):
+        if is_dataclass(result) and not isinstance(result, type):
             print("\n", json.dumps(asdict(result), indent=4), "\n")
         elif isinstance(result, list):
             print(

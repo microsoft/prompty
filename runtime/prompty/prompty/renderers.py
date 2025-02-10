@@ -58,7 +58,7 @@ class MustacheRenderer(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.templates = {}
-        cur_prompt = self.prompty
+        cur_prompt: typing.Union[Prompty, None] = self.prompty
         while cur_prompt:
             self.templates[Path(cur_prompt.file).name] = cur_prompt.content
             cur_prompt = cur_prompt.basePrompty

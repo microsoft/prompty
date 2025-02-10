@@ -133,7 +133,7 @@ class Prompty:
     content: Union[str, list[str], dict] = field(default="")
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
-        d = {}
+        d: dict[str, typing.Any] = {}
         for field in fields(self):
             k = field.name
             v = getattr(self, field.name)

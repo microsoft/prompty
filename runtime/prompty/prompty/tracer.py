@@ -89,7 +89,7 @@ def to_dict(obj: Any) -> Any:
     # safe PromptyStream obj serialization
     elif type(obj).__name__ == "PromptyStream":
         return "PromptyStream"
-    elif is_dataclass(obj):
+    elif is_dataclass(obj) and not isinstance(obj, type):
         return asdict(obj)
     elif type(obj).__name__ == "AsyncPromptyStream":
         return "AsyncPromptyStream"
