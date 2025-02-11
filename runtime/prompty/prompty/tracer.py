@@ -5,13 +5,12 @@ import json
 import os
 import traceback
 from collections.abc import Iterator
+from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from functools import partial, wraps
 from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Union
-
-from pydantic import BaseModel
 
 
 # clean up key value pairs for sensitive values
@@ -83,15 +82,17 @@ def to_dict(obj: Any) -> Any:
         return obj.isoformat()
     # safe Prompty obj serialization
     elif type(obj).__name__ == "Prompty":
-        return obj.to_safe_dict()
+        obj_dict = asdict(obj)
+        if "model" in obj_dict and "configuration" in obj_dict["model"]:
+            obj_dict["model"]["configuration"] = sanitize("configuration", obj_dict["model"]["configuration"])
+        return obj_dict
     # safe PromptyStream obj serialization
     elif type(obj).__name__ == "PromptyStream":
         return "PromptyStream"
+    elif is_dataclass(obj) and not isinstance(obj, type):
+        return asdict(obj)
     elif type(obj).__name__ == "AsyncPromptyStream":
         return "AsyncPromptyStream"
-    # pydantic models have their own json serialization
-    elif isinstance(obj, BaseModel):
-        return obj.model_dump()
     # recursive list and dict
     elif isinstance(obj, list):
         return [to_dict(item) for item in obj]

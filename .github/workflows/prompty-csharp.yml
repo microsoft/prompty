@@ -62,7 +62,7 @@ jobs:
       - name: csharp version
         run: |
           echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
-          echo "Using version: $VERSION"
+          echo "Using version: ${{ env.VERSION }}"
 
       - name: Set Prompty.Core version
         id: update

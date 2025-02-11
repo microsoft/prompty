@@ -1,23 +1,23 @@
+import copy
 import os
 import typing
 from collections.abc import AsyncIterator, Iterator
+from dataclasses import dataclass, field, fields, asdict
 from pathlib import Path
-from typing import Literal, Union
-
-from pydantic import BaseModel, Field, FilePath
-from pydantic.main import IncEx
-
-from .tracer import Tracer, sanitize, to_dict
+from typing import Any, Dict, List, Literal, Union
+from .tracer import Tracer, to_dict
 from .utils import load_json, load_json_async
 
 
-class ToolCall(BaseModel):
+@dataclass
+class ToolCall:
     id: str
     name: str
     arguments: str
 
 
-class PropertySettings(BaseModel):
+@dataclass
+class PropertySettings:
     """PropertySettings class to define the properties of the model
 
     Attributes
@@ -31,11 +31,12 @@ class PropertySettings(BaseModel):
     """
 
     type: Literal["string", "number", "array", "object", "boolean"]
-    default: Union[str, int, float, list, dict, bool, None] = Field(default=None)
-    description: str = Field(default="")
+    default: Union[str, int, float, list, dict, bool, None] = field(default=None)
+    description: str = field(default="")
 
 
-class ModelSettings(BaseModel):
+@dataclass
+class ModelSettings:
     """ModelSettings class to define the model of the prompty
 
     Attributes
@@ -50,48 +51,14 @@ class ModelSettings(BaseModel):
         The response of the model
     """
 
-    api: str = Field(default="")
-    configuration: dict = Field(default={})
-    parameters: dict = Field(default={})
-    response: dict = Field(default={})
-
-    def model_dump(
-        self,
-        *,
-        mode: str = "python",
-        include: Union[IncEx, None] = None,
-        exclude: Union[IncEx, None] = None,
-        context: Union[typing.Any, None] = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: Union[
-            bool, Literal["none"], Literal["warn"], Literal["error"]
-        ] = True,
-        serialize_as_any: bool = False,
-    ) -> dict[str, typing.Any]:
-        """Method to dump the model in a safe way"""
-        d = super().model_dump(
-            mode=mode,
-            include=include,
-            exclude=exclude,
-            context=context,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-            serialize_as_any=serialize_as_any,
-        )
-
-        d["configuration"] = {k: sanitize(k, v) for k, v in d["configuration"].items()}
-        return d
+    api: str = field(default="")
+    configuration: dict = field(default_factory=dict)
+    parameters: dict = field(default_factory=dict)
+    response: dict = field(default_factory=dict)
 
 
-class TemplateSettings(BaseModel):
+@dataclass
+class TemplateSettings:
     """TemplateSettings class to define the template of the prompty
 
     Attributes
@@ -102,11 +69,12 @@ class TemplateSettings(BaseModel):
         The parser of the template
     """
 
-    type: str = Field(default="jinja2")
-    parser: str = Field(default="")
+    type: str = field(default="mustache")
+    parser: str = field(default="")
 
 
-class Prompty(BaseModel):
+@dataclass
+class Prompty:
     """Prompty class to define the prompty
 
     Attributes
@@ -115,9 +83,9 @@ class Prompty(BaseModel):
         The name of the prompty
     description : str
         The description of the prompty
-    authors : List[str]
+    authors : list[str]
         The authors of the prompty
-    tags : List[str]
+    tags : list[str]
         The tags of the prompty
     version : str
         The version of the prompty
@@ -129,52 +97,54 @@ class Prompty(BaseModel):
         The model of the prompty
     sample : dict
         The sample of the prompty
-    inputs : Dict[str, PropertySettings]
+    inputs : dict[str, PropertySettings]
         The inputs of the prompty
-    outputs : Dict[str, PropertySettings]
+    outputs : dict[str, PropertySettings]
         The outputs of the prompty
     template : TemplateSettings
         The template of the prompty
     file : FilePath
         The file of the prompty
-    content : str | List[str] | dict
+    content : Union[str, list[str], dict]
         The content of the prompty
     """
 
     # metadata
-    name: str = Field(default="")
-    description: str = Field(default="")
-    authors: list[str] = Field(default=[])
-    tags: list[str] = Field(default=[])
-    version: str = Field(default="")
-    base: str = Field(default="")
-    basePrompty: Union["Prompty", None] = Field(default=None)
+    name: str = field(default="")
+    description: str = field(default="")
+    authors: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+    version: str = field(default="")
+    base: str = field(default="")
+    basePrompty: Union["Prompty", None] = field(default=None)
     # model
-    model: ModelSettings = Field(default_factory=ModelSettings)
+    model: ModelSettings = field(default_factory=ModelSettings)
 
     # sample
-    sample: dict = Field(default={})
+    sample: dict = field(default_factory=dict)
 
     # input / output
-    inputs: dict[str, PropertySettings] = Field(default={})
-    outputs: dict[str, PropertySettings] = Field(default={})
+    inputs: dict[str, PropertySettings] = field(default_factory=dict)
+    outputs: dict[str, PropertySettings] = field(default_factory=dict)
 
     # template
-    template: TemplateSettings
+    template: TemplateSettings = field(default_factory=TemplateSettings)
 
-    file: Union[str, FilePath] = Field(default="")
-    content: Union[str, list[str], dict] = Field(default="")
+    file: Union[str, Path] = field(default="")
+    content: Union[str, list[str], dict] = field(default="")
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
-        d = {}
-        for k, v in self:
+        d: dict[str, typing.Any] = {}
+        for field in fields(self):
+            k = field.name
+            v = getattr(self, field.name)
             if v != "" and v != {} and v != [] and v is not None:
                 if k == "model":
-                    d[k] = v.model_dump()
+                    d[k] = asdict(self.model)
                 elif k == "template":
-                    d[k] = v.model_dump()
+                    d[k] = asdict(self.template)
                 elif k == "inputs" or k == "outputs":
-                    d[k] = {k: v.model_dump() for k, v in v.items()}
+                    d[k] = copy.deepcopy(v)
                 elif k == "file":
                     d[k] = (
                         str(self.file.as_posix())
@@ -217,7 +187,7 @@ class Prompty(BaseModel):
         f = Path(parent / Path(file)).resolve().absolute()
         if f.exists():
             items = load_json(f)
-            if isinstance(items, list):
+            if isinstance(items, List):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
                 return {
@@ -325,7 +295,7 @@ def param_hoisting(
     top: dict[str, typing.Any],
     bottom: dict[str, typing.Any],
     top_key: Union[str, None] = None,
-) -> dict[str, typing.Any]:
+) -> Dict[str, typing.Any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}
     else:

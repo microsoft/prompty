@@ -13,8 +13,6 @@ inputs:
     type: string
     default: sample
     description: The name of the sample
-    # net new
-    internal: true
   firstName:
     type: string
     description: The first name of the customer
