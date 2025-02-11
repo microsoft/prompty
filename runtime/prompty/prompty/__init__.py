@@ -1,7 +1,7 @@
 import traceback
 import typing
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
 
 from .core import (
     ModelSettings,
@@ -12,7 +12,7 @@ from .core import (
 )
 from .invoker import InvokerFactory
 from .parsers import PromptyChatParser
-from .renderers import Jinja2Renderer
+from .renderers import Jinja2Renderer, MustacheRenderer
 from .tracer import trace
 from .utils import (
     load_global_config,
@@ -22,6 +22,7 @@ from .utils import (
 )
 
 InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
+InvokerFactory.add_renderer("mustache", MustacheRenderer)
 InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
 
 
@@ -139,6 +140,22 @@ async def headless_async(
 
     return Prompty(model=modelSettings, template=templateSettings, content=content)
 
+def _get_type(t: type) -> Literal["string", "number", "array", "object", "boolean"]:
+    if t == str:
+        return "string"
+    elif t == int:
+        return "number"
+    elif t == float:
+        return "number"
+    elif t == list:
+        return "array"
+    elif t == dict:
+        return "object"
+    elif t == bool:
+        return "boolean"
+    else:
+        raise ValueError(f"Unsupported type: {t}")
+
 
 def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: dict):
     if "model" not in attributes:
@@ -182,6 +199,7 @@ def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: di
             raise ValueError(f"Error in inputs: {e}")
     else:
         inputs = {}
+
     if "outputs" in attributes:
         try:
             outputs = {
@@ -192,12 +210,32 @@ def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: di
     else:
         outputs = {}
 
+    # infer input types
+    if "sample" in attributes:
+        sample = attributes.pop("sample")
+        for k, v in sample.items():
+            # implicit input
+            if k not in inputs:
+                # infer v type to json type
+                inputs[k] = PropertySettings(type=_get_type(type(v)))
+            else:
+                # explicit input (overwrite)
+                if inputs[k].type is None:
+                    inputs[k].type = _get_type(type(v))
+                elif inputs[k].type != _get_type(type(v)):
+                    raise ValueError(
+                        f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({_get_type(type(v))})"
+                    )
+    else:
+        sample = {}
+
     prompty = Prompty(
         model=model,
         inputs=inputs,
         outputs=outputs,
         template=template,
         content=content,
+        sample=sample,
         file=p,
         **attributes
     )
