@@ -2,7 +2,7 @@ import typing
 from pathlib import Path
 
 from jinja2 import DictLoader, Environment
-from .mustache import render
+from chevron import render
 
 from .core import Prompty
 from .invoker import Invoker
