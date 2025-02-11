@@ -14,7 +14,7 @@
     "@headlessui/react": "^2.2.0",
     "@hookform/resolvers": "^3.9.1",
     "clsx": "^2.1.1",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.0",
     "glob": "^11.0.0",
     "gray-matter": "^4.0.3",
     "katex": "^0.16.21",
