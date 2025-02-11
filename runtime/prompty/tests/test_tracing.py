@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+import json
 
 import pytest
 
@@ -40,7 +41,7 @@ def setup_module():
     ],
 )
 def test_basic_execution(prompt: str):
-    result = prompty.execute(prompt)
+    result = prompty.execute(prompt, merge_sample=True)
     print(result)
 
 
@@ -56,7 +57,7 @@ def test_basic_execution(prompt: str):
     ],
 )
 async def test_basic_execution_async(prompt: str):
-    result = await prompty.execute_async(prompt)
+    result = await prompty.execute_async(prompt, merge_sample=True)
     print(result)
 
 
@@ -146,7 +147,12 @@ def evaluate(prompt, evalprompt, customerId, question):
 
     result = prompty.execute(
         evalprompt,
-        inputs=response,
+        inputs={
+            "question": response["question"],
+            "answer": response["answer"],
+            # expects string
+            "context": json.dumps(response["context"]),
+        },
     )
     return result
 
@@ -157,7 +163,12 @@ async def evaluate_async(prompt, evalprompt, customerId, question):
 
     result = await prompty.execute_async(
         evalprompt,
-        inputs=response,
+        inputs={
+            "question": response["question"],
+            "answer": response["answer"],
+            # expects string
+            "context": json.dumps(response["context"]),
+        },
     )
     return result
 
@@ -235,6 +246,11 @@ async def test_embeddings_headless_async():
 def test_function_calling():
     result = prompty.execute(
         "prompts/functions.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     print(result)
 
@@ -244,6 +260,11 @@ def test_function_calling():
 async def test_function_calling_async():
     result = await prompty.execute_async(
         "prompts/functions.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     print(result)
 
@@ -252,6 +273,9 @@ async def test_function_calling_async():
 def test_structured_output():
     result = prompty.execute(
         "prompts/structured_output.prompty",
+        inputs={
+            "statement": "The quick brown fox jumps over the lazy dog",
+        }
     )
     print(result)
 
@@ -261,6 +285,9 @@ def test_structured_output():
 async def test_structured_output_async():
     result = await prompty.execute_async(
         "prompts/structured_output.prompty",
+        inputs={
+            "statement": "The quick brown fox jumps over the lazy dog",
+        }
     )
     print(result)
 
@@ -272,6 +299,11 @@ async def test_structured_output_async():
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     r = []
     for item in result:
@@ -285,6 +317,11 @@ def test_streaming():
 async def test_streaming_async():
     result = await prompty.execute_async(
         "prompts/streaming.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     if isinstance(result, AsyncIterator):
         async for item in result:

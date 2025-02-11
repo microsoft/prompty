@@ -219,9 +219,10 @@ def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: di
                 # infer v type to json type
                 inputs[k] = PropertySettings(type=_get_type(type(v)))
             else:
-                # explicit input (overwrite)
+                # explicit input (overwrite type?)
                 if inputs[k].type is None:
                     inputs[k].type = _get_type(type(v))
+                # type mismatch
                 elif inputs[k].type != _get_type(type(v)):
                     raise ValueError(
                         f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({_get_type(type(v))})"
@@ -350,10 +351,31 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
     return prompty
 
 
+def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False):
+    if merge_sample:
+        inputs = param_hoisting(inputs, prompt.sample)
+
+    clean_inputs = {}
+    for k, v in prompt.inputs.items():
+        if k in inputs:
+            if v.type != _get_type(type(inputs[k])):
+                raise ValueError(
+                    f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({v.type})"
+                )
+            clean_inputs[k] = inputs[k]
+        else:
+            if v.default is not None:
+                clean_inputs[k] = v.default
+            else:
+                raise ValueError(f"Missing input property {k}")
+            
+    return clean_inputs
+
 @trace(description="Prepare the inputs for the prompt.")
 def prepare(
     prompt: Prompty,
     inputs: dict[str, typing.Any] = {},
+    merge_sample: bool = False,
 ):
     """Prepare the inputs for the prompt.
 
@@ -376,9 +398,9 @@ def prepare(
     >>> inputs = {"name": "John Doe"}
     >>> content = prompty.prepare(p, inputs)
     """
-    inputs = param_hoisting(inputs, prompt.sample)
+    values = _validate_inputs(prompt, inputs, merge_sample)
 
-    render = InvokerFactory.run_renderer(prompt, inputs, prompt.content)
+    render = InvokerFactory.run_renderer(prompt, values, prompt.content)
     result = InvokerFactory.run_parser(prompt, render)
 
     return result
@@ -388,6 +410,7 @@ def prepare(
 async def prepare_async(
     prompt: Prompty,
     inputs: dict[str, typing.Any] = {},
+    merge_sample: bool = False,
 ):
     """Prepare the inputs for the prompt.
 
@@ -410,9 +433,9 @@ async def prepare_async(
     >>> inputs = {"name": "John Doe"}
     >>> content = await prompty.prepare_async(p, inputs)
     """
-    inputs = param_hoisting(inputs, prompt.sample)
+    values = _validate_inputs(prompt, inputs, merge_sample)
 
-    render = await InvokerFactory.run_renderer_async(prompt, inputs, prompt.content)
+    render = await InvokerFactory.run_renderer_async(prompt, values, prompt.content)
     result = await InvokerFactory.run_parser_async(prompt, render)
 
     return result
@@ -529,6 +552,7 @@ def execute(
     parameters: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
     raw: bool = False,
+    merge_sample: bool = False,
     config_name: str = "default",
 ):
     """Execute a prompty.
@@ -568,7 +592,7 @@ def execute(
         prompt = load(path, config_name)
 
     # prepare content
-    content = prepare(prompt, inputs)
+    content = prepare(prompt, inputs, merge_sample)
 
     # run LLM model
     result = run(prompt, content, configuration, parameters, raw)
@@ -583,6 +607,7 @@ async def execute_async(
     parameters: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
     raw: bool = False,
+    merge_sample: bool = False,
     config_name: str = "default",
 ):
     """Execute a prompty.
@@ -622,7 +647,7 @@ async def execute_async(
         prompt = await load_async(path, config_name)
 
     # prepare content
-    content = await prepare_async(prompt, inputs)
+    content = await prepare_async(prompt, inputs, merge_sample)
 
     # run LLM model
     result = await run_async(prompt, content, configuration, parameters, raw)
