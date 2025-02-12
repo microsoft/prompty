@@ -11,7 +11,7 @@ class PromptyChatParser(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.roles = ["assistant", "function", "system", "user"]
+        self.roles = ["assistant", "function", "system", "user", "tools"]
         if isinstance(self.prompty.file, str):
             self.prompty.file = Path(self.prompty.file).resolve().absolute()
 
@@ -38,7 +38,7 @@ class PromptyChatParser(Invoker):
             image_path = Path(image_item)
             if not image_path.is_absolute():
                 image_path = self.path / image_item
-                
+
             with open(image_path, "rb") as f:
                 base64_image = base64.b64encode(f.read()).decode("utf-8")
 
@@ -52,6 +52,40 @@ class PromptyChatParser(Invoker):
                 raise ValueError(
                     f"Invalid image format {image_path.suffix} - currently only .png and .jpg / .jpeg are supported."
                 )
+            
+    def parse_args(self, args: str) -> dict[str, str]:
+        """Parse args
+
+        Parameters
+        ----------
+        args : str
+            The args to parse
+
+        Returns
+        -------
+        dict[str, str]
+            The parsed args
+        """
+        # regular expression to parse key-value pairs
+        string_matches = r"(\w+)\s*=\s*\"([^\"]*)\"\s*(,?)\s*"
+        bool_matches = r"(\w+)\s*=\s*([Tt]rue|[Ff]alse)\s*(,?)\s*"
+        float_matches = r"(\w+)\s*=\s*([0-9]+(\.[0-9]+))\s*(,?)\s*"
+        int_matches = r"(\w+)\s*=\s*([0-9]+)\s*(,?)\s*"
+        patterns = f"({string_matches}|{bool_matches}|{float_matches}|{int_matches})"
+
+        matches = re.findall(patterns, args)
+        full_args = {}
+        for m in matches:
+            if m[1] != "":
+                full_args[m[1]] = m[2]
+            elif m[4] != "":
+                full_args[m[4]] = m[5].lower() == "true"
+            elif m[7] != "":
+                full_args[m[7]] = float(m[8])
+            elif m[11] != "":
+                full_args[m[11]] = int(m[12])
+
+        return full_args
 
     def parse_content(self, content: str):
         """for parsing inline images
@@ -119,31 +153,40 @@ class PromptyChatParser(Invoker):
             The parsed data
         """
         messages = []
-        separator = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")\s*:\s*\n"
+        # regular expression to capture boundary roles with optional key-value pairs
+        boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*"
+        content_buffer = []
 
-        # get valid chunks - remove empty items
-        chunks = [
-            item
-            for item in re.split(separator, data, flags=re.MULTILINE)
-            if len(item.strip()) > 0
-        ]
+        # first role is system (if not specified)
+        arg_buffer = {"role": "system"}
 
-        # if no starter role, then inject system role
-        if chunks[0].strip().lower() not in self.roles:
-            chunks.insert(0, "system")
+        for line in data.splitlines():
+            # check if line is a boundary
+            if re.match(boundary, line):
+                # if content buffer is not empty, then add to messages
+                if len(content_buffer) > 0:                        
+                    messages.append(arg_buffer | { "content": self.parse_content("\n".join(content_buffer)) })
+                    content_buffer = []
 
-        # if last chunk is role entry, then remove (no content?)
-        if chunks[-1].strip().lower() in self.roles:
-            chunks.pop()
+                # boundary check for args
+                if "[" in line and "]" in line:
+                    role, args = line[:-2].split("[", 2)
+                    arg_buffer = self.parse_args(args) | {
+                        "role": role.strip().lower(),
+                    }
+                # standard boundary
+                else:
+                    arg_buffer = {
+                        "role": line.replace(":", "").strip().lower(),
+                    }
+            else:
+                content_buffer.append(line)
 
-        if len(chunks) % 2 != 0:
-            raise ValueError("Invalid prompt format")
-
-        # create messages
-        for i in range(0, len(chunks), 2):
-            role = chunks[i].strip().lower()
-            content = chunks[i + 1].strip()
-            messages.append({"role": role, "content": self.parse_content(content)})
+        # add last message
+        if len(content_buffer) > 0:                        
+            messages.append(arg_buffer | { "content": self.parse_content("\n".join(content_buffer)) })
+            content_buffer = []
+            arg_buffer = {}
 
         return messages
 
