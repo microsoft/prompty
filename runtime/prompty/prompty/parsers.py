@@ -66,24 +66,28 @@ class PromptyChatParser(Invoker):
         dict[str, str]
             The parsed args
         """
+       
         # regular expression to parse key-value pairs
-        string_matches = r"(\w+)\s*=\s*\"([^\"]*)\"\s*(,?)\s*"
-        bool_matches = r"(\w+)\s*=\s*([Tt]rue|[Ff]alse)\s*(,?)\s*"
-        float_matches = r"(\w+)\s*=\s*([0-9]+(\.[0-9]+))\s*(,?)\s*"
-        int_matches = r"(\w+)\s*=\s*([0-9]+)\s*(,?)\s*"
-        patterns = f"({string_matches}|{bool_matches}|{float_matches}|{int_matches})"
+        string_match = r"\"([^\"]*)\""
+        bool_match = r"([Tt]rue|[Ff]alse)"
+        float_match = r"([0-9]+(\.[0-9]+))"
+        int_match = r"([0-9]+)"
+
+        s = f"({string_match}|{bool_match}|{float_match}|{int_match})"
+
+        patterns = r"(\w+)\s*=\s*(" + s + r")\s*(,?)\s*"
 
         matches = re.findall(patterns, args)
         full_args = {}
         for m in matches:
-            if m[1] != "":
-                full_args[m[1]] = m[2]
+            if m[3] != "":
+                full_args[m[0]] = m[3]
             elif m[4] != "":
-                full_args[m[4]] = m[5].lower() == "true"
+                full_args[m[0]] = m[4].lower() == "true"
+            elif m[5] != "":
+                full_args[m[0]] = float(m[5])
             elif m[7] != "":
-                full_args[m[7]] = float(m[8])
-            elif m[11] != "":
-                full_args[m[11]] = int(m[12])
+                full_args[m[0]] = int(m[7])
 
         return full_args
 
@@ -152,11 +156,10 @@ class PromptyChatParser(Invoker):
         str
             The parsed data
         """
-        messages = []
         # regular expression to capture boundary roles with optional key-value pairs
-        boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*"
+        boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
+        messages = []
         content_buffer = []
-
         # first role is system (if not specified)
         arg_buffer = {"role": "system"}
 
