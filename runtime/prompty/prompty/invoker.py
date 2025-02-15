@@ -154,7 +154,7 @@ class InvokerFactory:
         prompty: Prompty,
     ) -> str:
         if type == "renderer":
-            return prompty.template.type
+            return prompty.template.format
         elif type == "parser":
             return f"{prompty.template.parser}.{prompty.model.api}"
         elif type == "executor":
@@ -171,7 +171,7 @@ class InvokerFactory:
         prompty: Prompty,
     ) -> Invoker:
         if type == "renderer":
-            name = prompty.template.type
+            name = prompty.template.format
             if name not in cls._renderers:
                 raise ValueError(f"Renderer {name} not found")
 

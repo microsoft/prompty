@@ -82,6 +82,21 @@ async def load_global_config_async(
 
     return {}
 
+def get_json_type(t: type) -> typing.Literal["string", "number", "array", "object", "boolean"]:
+    if t == str:
+        return "string"
+    elif t == int:
+        return "number"
+    elif t == float:
+        return "number"
+    elif t == list:
+        return "array"
+    elif t == dict:
+        return "object"
+    elif t == bool:
+        return "boolean"
+    else:
+        raise ValueError(f"Unsupported type: {t}")
 
 def load_prompty(file_path, encoding="utf-8"):
     contents = load_text(file_path, encoding=encoding)

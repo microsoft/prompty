@@ -9,10 +9,6 @@ model:
   configuration:
     azure_deployment: gpt-35-turbo
 inputs:
-  table:
-    type: string
-    default: sample
-    description: The name of the sample
   firstName:
     type: string
     description: The first name of the customer
@@ -20,10 +16,6 @@ inputs:
     type: string
     default: Doe
     description: The last name of the customer
-
-sample:
-  firstName: Jane
-  lastName: Doe
   question: What is the meaning of life?
 
 template: mustache

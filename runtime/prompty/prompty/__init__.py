@@ -15,6 +15,7 @@ from .parsers import PromptyChatParser
 from .renderers import Jinja2Renderer, MustacheRenderer
 from .tracer import trace
 from .utils import (
+    get_json_type,
     load_global_config,
     load_global_config_async,
     load_prompty,
@@ -68,7 +69,7 @@ def headless(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
+    templateSettings = TemplateSettings(format="NOOP", parser="NOOP")
     modelSettings = ModelSettings(
         api=api,
         configuration=Prompty.normalize(
@@ -125,7 +126,7 @@ async def headless_async(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
+    templateSettings = TemplateSettings(format="NOOP", parser="NOOP")
 
     global_config = await load_global_config_async(caller.parent, connection)
     c = await Prompty.normalize_async(
@@ -139,109 +140,6 @@ async def headless_async(
     )
 
     return Prompty(model=modelSettings, template=templateSettings, content=content)
-
-def _get_type(t: type) -> Literal["string", "number", "array", "object", "boolean"]:
-    if t == str:
-        return "string"
-    elif t == int:
-        return "number"
-    elif t == float:
-        return "number"
-    elif t == list:
-        return "array"
-    elif t == dict:
-        return "object"
-    elif t == bool:
-        return "boolean"
-    else:
-        raise ValueError(f"Unsupported type: {t}")
-
-
-def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: dict):
-    if "model" not in attributes:
-        attributes["model"] = {}
-
-    if "configuration" not in attributes["model"]:
-        attributes["model"]["configuration"] = global_config
-    else:
-        attributes["model"]["configuration"] = param_hoisting(
-            attributes["model"]["configuration"],
-            global_config,
-        )
-
-    # pull model settings out of attributes
-    try:
-        model = ModelSettings(**attributes.pop("model"))
-    except Exception as e:
-        raise ValueError(f"Error in model settings: {e}")
-
-    # pull template settings
-    try:
-        if "template" in attributes:
-            t = attributes.pop("template")
-            if isinstance(t, dict):
-                template = TemplateSettings(**t)
-            # has to be a string denoting the type
-            else:
-                template = TemplateSettings(type=t, parser="prompty")
-        else:
-            template = TemplateSettings(type="jinja2", parser="prompty")
-    except Exception as e:
-        raise ValueError(f"Error in template loader: {e}")
-
-    # formalize inputs and outputs
-    if "inputs" in attributes:
-        try:
-            inputs = {
-                k: PropertySettings(**v) for (k, v) in attributes.pop("inputs").items()
-            }
-        except Exception as e:
-            raise ValueError(f"Error in inputs: {e}")
-    else:
-        inputs = {}
-
-    if "outputs" in attributes:
-        try:
-            outputs = {
-                k: PropertySettings(**v) for (k, v) in attributes.pop("outputs").items()
-            }
-        except Exception as e:
-            raise ValueError(f"Error in outputs: {e}")
-    else:
-        outputs = {}
-
-    # infer input types
-    if "sample" in attributes:
-        sample = attributes.pop("sample")
-        for k, v in sample.items():
-            # implicit input
-            if k not in inputs:
-                # infer v type to json type
-                inputs[k] = PropertySettings(type=_get_type(type(v)))
-            else:
-                # explicit input (overwrite type?)
-                if inputs[k].type is None:
-                    inputs[k].type = _get_type(type(v))
-                # type mismatch
-                elif inputs[k].type != _get_type(type(v)):
-                    raise ValueError(
-                        f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({_get_type(type(v))})"
-                    )
-    else:
-        sample = {}
-
-    prompty = Prompty(
-        model=model,
-        inputs=inputs,
-        outputs=outputs,
-        template=template,
-        content=content,
-        sample=sample,
-        file=p,
-        **attributes
-    )
-
-    return prompty
 
 
 @trace(description="Load a prompty file.")
@@ -287,7 +185,7 @@ def load(prompty_file: str, configuration: str = "default") -> Prompty:
         load_global_config(p.parent, configuration), p.parent
     )
 
-    prompty = _load_raw_prompty(attributes, content, p, global_config)
+    prompty = Prompty.load_raw(attributes, content, p, global_config)
 
     # recursive loading of base prompty
     if "base" in attributes:
@@ -340,7 +238,7 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
     config = await load_global_config_async(p.parent, configuration)
     global_config = await Prompty.normalize_async(config, p.parent)
 
-    prompty = _load_raw_prompty(attributes, content, p, global_config)
+    prompty = Prompty.load_raw(attributes, content, p, global_config)
 
     # recursive loading of base prompty
     if "base" in attributes:
@@ -353,12 +251,12 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
 
 def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False):
     if merge_sample:
-        inputs = param_hoisting(inputs, prompt.sample)
+        inputs = param_hoisting(inputs, prompt.get_sample())
 
     clean_inputs = {}
     for k, v in prompt.inputs.items():
         if k in inputs:
-            if v.type != _get_type(type(inputs[k])):
+            if v.type != get_json_type(type(inputs[k])):
                 raise ValueError(
                     f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({v.type})"
                 )
