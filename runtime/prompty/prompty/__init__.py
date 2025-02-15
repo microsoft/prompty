@@ -1,7 +1,8 @@
-import traceback
+import uuid
 import typing
+import traceback
 from pathlib import Path
-from typing import Literal, Union
+from typing import Union
 
 from .core import (
     ModelSettings,
@@ -298,6 +299,9 @@ def prepare(
     """
     values = _validate_inputs(prompt, inputs, merge_sample)
 
+    # add nonce for this run
+    prompt.template.nonce = uuid.uuid4().hex
+
     render = InvokerFactory.run_renderer(prompt, values, prompt.content)
     result = InvokerFactory.run_parser(prompt, render)
 
@@ -332,6 +336,9 @@ async def prepare_async(
     >>> content = await prompty.prepare_async(p, inputs)
     """
     values = _validate_inputs(prompt, inputs, merge_sample)
+
+    # add nonce for this run
+    prompt.template.nonce = uuid.uuid4().hex
 
     render = await InvokerFactory.run_renderer_async(prompt, values, prompt.content)
     result = await InvokerFactory.run_parser_async(prompt, render)

@@ -22,15 +22,16 @@ class ToolCall:
 class ToolParameter:
     name: str
     type: str
-    description: str
+    description: str = field(default="")
     required: bool = field(default=False)
+
 
 @dataclass
 class Tool:
     name: str
-    type: str
-    description: str
-    configuration: dict[str, typing.Any]
+    type: str 
+    description: str = field(default="")
+    configuration: dict[str, typing.Any] = field(default_factory=dict)
     parameters: list[ToolParameter] = field(default_factory=list)
 
 
@@ -87,10 +88,16 @@ class TemplateSettings:
         The type of the template
     parser : str
         The parser of the template
+    nonce : str
+        Nonce is automatically genereted for each run
+    content : str
+        Template content used for rendering
     """
 
     format: str = field(default="mustache")
     parser: str = field(default="")
+    nonce: str = field(default="")
+    content: str = field(default="")
 
 
 @dataclass
@@ -194,6 +201,26 @@ class Prompty:
                 sample[k] = v.default
         return sample
     
+    def merge_tools(self, tools: list[Tool]) -> None:
+        self.tools = [*self.tools, *tools]
+
+    @staticmethod
+    def load_tools(tools: list[dict]) -> list[Tool]:
+        loaded_tools = []
+        for t in tools:
+            parameters = []
+            if "parameters" in t:
+                if isinstance(t["parameters"], list):
+                    params = t.pop("parameters")
+                    for p in params:
+                        parameters.append(ToolParameter(**p))
+                else:
+                    raise ValueError("Parameters must be a list")
+            
+            loaded_tools.append(Tool(**t, parameters=parameters))
+
+        return loaded_tools
+    
     @staticmethod
     def load_property(value: typing.Any) -> PropertySettings:
         
@@ -268,7 +295,15 @@ class Prompty:
         else:
             outputs = {}
 
+        tools = []
+        if "tools" in attributes:
+            tools_attribute = attributes.pop("tools")
+            if isinstance(tools_attribute, list):
+                tools = Prompty.load_tools(tools_attribute)
+
+
         # infer input types
+        # DEPRECATED: use inputs instead of sample
         if "sample" in attributes:
             warnings.warn("Sample is deprecated, use inputs instead", DeprecationWarning)
             sample = attributes.pop("sample")
@@ -286,18 +321,21 @@ class Prompty:
                         raise ValueError(
                             f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({get_json_type(type(v))})"
                         )
-        else:
-            sample = {}
+
 
         prompty = Prompty(
             model=model,
             inputs=inputs,
             outputs=outputs,
+            tools=tools,
             template=template,
             content=content,
             file=p,
             **attributes
         )
+
+        # setting template scratch pad
+        prompty.template.content = prompty.content
 
         return prompty
 

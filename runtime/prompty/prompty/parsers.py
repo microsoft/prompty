@@ -1,12 +1,13 @@
-import base64
 import re
+import yaml
+import base64
 from pathlib import Path
 
 from .core import Prompty
-from .invoker import Invoker
+from .invoker import Parser
 
 
-class PromptyChatParser(Invoker):
+class PromptyChatParser(Parser):
     """Prompty Chat Parser"""
 
     def __init__(self, prompty: Prompty) -> None:
@@ -207,3 +208,24 @@ class PromptyChatParser(Invoker):
             The parsed data
         """
         return self.invoke(data)
+    
+    def sanitize(self, data):
+        # gets template before rendering
+        # to clean up any sensitive data
+        print("SANITIZE!")
+        return data
+    
+    def process(self, data):
+        # gets template after parse
+        # to manage any parsed prompty
+        # settings
+        if len(data) > 0 and data[0]["role"] == "tools":
+            content = "tools:\n" + data[0]["content"]
+            tools_dict = yaml.load(content, Loader=yaml.FullLoader)
+            tools = Prompty.load_tools(tools_dict["tools"])
+            self.prompty.merge_tools(tools)
+
+            # remove first item from data
+            data = data[1:]
+            
+        return data
