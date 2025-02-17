@@ -1,4 +1,5 @@
 import re
+from typing import Any, Iterator
 import yaml
 import base64
 from pathlib import Path
@@ -144,22 +145,21 @@ class PromptyChatParser(Parser):
         else:
             return content
 
-    def invoke(self, data: str) -> list[dict[str, str]]:
-        """Invoke the Prompty Chat Parser
+    def parse(self, data: str) -> Iterator[dict[str, any]]:
+        """Stream the data
 
         Parameters
         ----------
         data : str
-            The data to parse
+            The data to stream
 
         Returns
         -------
-        str
-            The parsed data
+        Iterator[str]
+            The streamed data
         """
         # regular expression to capture boundary roles with optional key-value pairs
         boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
-        messages = []
         content_buffer = []
         # first role is system (if not specified)
         arg_buffer = {"role": "system"}
@@ -169,7 +169,7 @@ class PromptyChatParser(Parser):
             if re.match(boundary, line):
                 # if content buffer is not empty, then add to messages
                 if len(content_buffer) > 0:                        
-                    messages.append(arg_buffer | { "content": self.parse_content("\n".join(content_buffer)) })
+                    yield arg_buffer | { "content": "\n".join(content_buffer) }
                     content_buffer = []
 
                 # boundary check for args
@@ -188,11 +188,31 @@ class PromptyChatParser(Parser):
 
         # add last message
         if len(content_buffer) > 0:                        
-            messages.append(arg_buffer | { "content": self.parse_content("\n".join(content_buffer)) })
-            content_buffer = []
-            arg_buffer = {}
+            yield arg_buffer | { "content": "\n".join(content_buffer) }
+
+    def invoke(self, data: str) -> list[dict[str, str]]:
+        """Invoke the Prompty Chat Parser
+
+        Parameters
+        ----------
+        data : str
+            The data to parse
+
+        Returns
+        -------
+        str
+            The parsed data
+        """
+
+        messages = []
+        for item in self.parse(data):
+            item["content"] = self.parse_content(item["content"])
+            messages.append(item)
 
         return messages
+
+
+        
 
     async def invoke_async(self, data: str) -> list[dict[str, str]]:
         """Invoke the Prompty Chat Parser (Async)
@@ -212,13 +232,26 @@ class PromptyChatParser(Parser):
     def sanitize(self, data):
         # gets template before rendering
         # to clean up any sensitive data
-        print("SANITIZE!")
-        return data
+        sanitized_prompt = []
+        for item in self.parse(data):
+            # add nonce to pre-rendered roles
+            item["nonce"] = self.prompty.template.nonce
+            role = item.pop("role")
+            content = item.pop("content")
+            stringify = lambda x: f'"{str(x)}"' if isinstance(x, str) else str(x)
+            attr = [f"{k}={stringify(v)}" for k, v in item.items()]
+            boundary = ','.join(attr)
+            sanitized_prompt.append(f"{role}[{boundary}]:")
+            sanitized_prompt.append(content)
+
+        return "\n".join(sanitized_prompt)
+
+        
     
     def process(self, data):
         # gets template after parse
         # to manage any parsed prompty
-        # settings
+        # settings (in  this case, tools)
         if len(data) > 0 and data[0]["role"] == "tools":
             content = "tools:\n" + data[0]["content"]
             tools_dict = yaml.load(content, Loader=yaml.FullLoader)

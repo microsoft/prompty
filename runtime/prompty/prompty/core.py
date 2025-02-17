@@ -52,7 +52,6 @@ class PropertySettings:
     type: Literal["string", "number", "array", "object", "boolean"]
     default: Union[str, int, float, list, dict, bool, None] = field(default=None)
     sample: Union[str, int, float, list, dict, bool, None] = field(default=None)
-    sanitize: bool = field(default=False)
     description: str = field(default="")
 
 
@@ -98,6 +97,7 @@ class TemplateSettings:
     parser: str = field(default="")
     nonce: str = field(default="")
     content: str = field(default="")
+    strict: bool = field(default=False)
 
 
 @dataclass
