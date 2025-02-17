@@ -51,7 +51,7 @@ Download the [VS Code extension here](https://marketplace.visualstudio.com/items
 The Python runtime is a simple way to run your prompts in Python. The runtime is available as a Python package and can be installed using pip. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
 
 ```bash
-pip install prompty[azure]
+pip install "prompty[azure]"
 ```
 
 Simple usage example:
