@@ -12,16 +12,17 @@ Examples prompty file:
 ```markdown
 ---
 name: Basic Prompt
-description: A basic prompt that uses the GPT-3 chat API to answer questions
+description: A basic prompt that uses the gpt-3.5-turbo chat API to answer questions
 authors:
   - sethjuarez
   - jietong
 model:
   api: chat
   configuration:
-    api_version: 2023-12-01-preview
+    api_version: 2024-10-21
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
     azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT:gpt-35-turbo}
+    type: azure_openai
 sample:
   firstName: Jane
   lastName: Doe
@@ -51,7 +52,7 @@ Download the [VS Code extension here](https://marketplace.visualstudio.com/items
 The Python runtime is a simple way to run your prompts in Python. The runtime is available as a Python package and can be installed using pip. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
 
 ```bash
-pip install prompty[azure]
+pip install "prompty[azure]"
 ```
 
 Simple usage example:
