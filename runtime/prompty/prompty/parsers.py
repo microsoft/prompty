@@ -253,6 +253,9 @@ class PromptyChatParser(Parser):
         # to manage any parsed prompty
         # settings (in  this case, tools)
         if len(data) > 0 and data[0]["role"] == "tools":
+            if self.prompty.template.strict and data[0]["nonce"] != self.prompty.template.nonce:
+                raise ValueError("Nonce mismatch. Dynamic tools section not allowed in strict mode.")
+
             content = "tools:\n" + data[0]["content"]
             tools_dict = yaml.load(content, Loader=yaml.FullLoader)
             tools = Prompty.load_tools(tools_dict["tools"])
