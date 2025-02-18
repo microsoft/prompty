@@ -8,7 +8,7 @@ model:
   api: embedding
   configuration:
     azure_deployment: text-embedding-ada-002
-sample:
+inputs:
   text: embedding text
 ---
 {{text}}

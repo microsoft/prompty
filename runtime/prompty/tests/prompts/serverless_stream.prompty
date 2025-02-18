@@ -11,7 +11,7 @@ model:
     model: Mistral-small
   parameters:
     stream: true
-sample:
+inputs:
   firstName: Seth
   context: >
     The Alpine Explorer Tent boasts a detachable divider for privacy, 

@@ -9,12 +9,12 @@ model:
   configuration:
     type: fake
     azure_deployment: gpt-35-turbo
-sample:
+inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
 template:
-  type: fake
+  format: fake
   parser: fake
 ---
 system:

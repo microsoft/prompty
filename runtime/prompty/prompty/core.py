@@ -1,12 +1,14 @@
-import copy
 import os
+import copy
+import uuid
 import typing
+import warnings
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field, fields, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Union
+from typing import Dict, List, Literal, Union
 from .tracer import Tracer, to_dict
-from .utils import load_json, load_json_async
+from .utils import get_json_type, load_json, load_json_async
 
 
 @dataclass
@@ -14,6 +16,23 @@ class ToolCall:
     id: str
     name: str
     arguments: str
+
+
+@dataclass
+class ToolParameter:
+    name: str
+    type: str
+    description: str = field(default="")
+    required: bool = field(default=False)
+
+
+@dataclass
+class Tool:
+    name: str
+    type: str 
+    description: str = field(default="")
+    configuration: dict[str, typing.Any] = field(default_factory=dict)
+    parameters: list[ToolParameter] = field(default_factory=list)
 
 
 @dataclass
@@ -32,6 +51,7 @@ class PropertySettings:
 
     type: Literal["string", "number", "array", "object", "boolean"]
     default: Union[str, int, float, list, dict, bool, None] = field(default=None)
+    sample: Union[str, int, float, list, dict, bool, None] = field(default=None)
     description: str = field(default="")
 
 
@@ -67,10 +87,17 @@ class TemplateSettings:
         The type of the template
     parser : str
         The parser of the template
+    nonce : str
+        Nonce is automatically genereted for each run
+    content : str
+        Template content used for rendering
     """
 
-    type: str = field(default="mustache")
+    format: str = field(default="mustache")
     parser: str = field(default="")
+    nonce: str = field(default="")
+    content: Union[str, list[str], dict] = field(default="")
+    strict: bool = field(default=False)
 
 
 @dataclass
@@ -79,6 +106,8 @@ class Prompty:
 
     Attributes
     ----------
+    id : str
+        The id of the prompty
     name : str
         The name of the prompty
     description : str
@@ -95,14 +124,14 @@ class Prompty:
         The base prompty
     model : ModelSettings
         The model of the prompty
-    sample : dict
-        The sample of the prompty
     inputs : dict[str, PropertySettings]
         The inputs of the prompty
     outputs : dict[str, PropertySettings]
         The outputs of the prompty
     template : TemplateSettings
         The template of the prompty
+    tools:
+        The tools of the prompty
     file : FilePath
         The file of the prompty
     content : Union[str, list[str], dict]
@@ -110,6 +139,7 @@ class Prompty:
     """
 
     # metadata
+    id: str = field(default=uuid.uuid4().hex)
     name: str = field(default="")
     description: str = field(default="")
     authors: List[str] = field(default_factory=list)
@@ -117,15 +147,16 @@ class Prompty:
     version: str = field(default="")
     base: str = field(default="")
     basePrompty: Union["Prompty", None] = field(default=None)
+
     # model
     model: ModelSettings = field(default_factory=ModelSettings)
-
-    # sample
-    sample: dict = field(default_factory=dict)
 
     # input / output
     inputs: dict[str, PropertySettings] = field(default_factory=dict)
     outputs: dict[str, PropertySettings] = field(default_factory=dict)
+
+    # tools
+    tools: list[Tool] = field(default_factory=list)
 
     # template
     template: TemplateSettings = field(default_factory=TemplateSettings)
@@ -151,6 +182,8 @@ class Prompty:
                         if isinstance(self.file, Path)
                         else self.file
                     )
+                elif k == "tools":
+                    d[k] = [asdict(t) for t in v]
                 elif k == "basePrompty":
                     # no need to serialize basePrompty
                     continue
@@ -158,6 +191,153 @@ class Prompty:
                 else:
                     d[k] = v
         return d
+    
+    def get_sample(self) -> dict[str, typing.Any]:
+        sample = {}
+        for k, v in self.inputs.items():
+            if v.sample:
+                sample[k] = v.sample
+            elif v.default:
+                sample[k] = v.default
+        return sample
+    
+    def merge_tools(self, tools: list[Tool]) -> None:
+        self.tools = [*self.tools, *tools]
+
+    @staticmethod
+    def load_tools(tools: list[dict]) -> list[Tool]:
+        loaded_tools = []
+        for t in tools:
+            parameters = []
+            if "parameters" in t:
+                if isinstance(t["parameters"], list):
+                    params = t.pop("parameters")
+                    for p in params:
+                        parameters.append(ToolParameter(**p))
+                else:
+                    raise ValueError("Parameters must be a list")
+            
+            loaded_tools.append(Tool(**t, parameters=parameters))
+
+        return loaded_tools
+    
+    @staticmethod
+    def load_property(value: typing.Any) -> PropertySettings:
+        
+        # if a dict, need to check if it's a PropertySettings
+        if isinstance(value, dict):
+            # check if dict is a PropertySettings
+            # needs to contain subset of type, default, 
+            # sample, sanitize, description
+            if any([f.name in value for f in fields(PropertySettings)]):
+                return PropertySettings(**value)
+            # otherwise, assume it's a sample value
+            else:
+                return PropertySettings(type=get_json_type(type(value)), sample=value)
+        else:
+            return PropertySettings(type=get_json_type(type(value)), sample=value)
+    
+    @staticmethod
+    def load_raw(attributes: dict, content: str, p: Path, global_config: dict) -> "Prompty":
+        if "model" not in attributes:
+            attributes["model"] = {}
+
+        if "configuration" not in attributes["model"]:
+            attributes["model"]["configuration"] = global_config
+        else:
+            attributes["model"]["configuration"] = param_hoisting(
+                attributes["model"]["configuration"],
+                global_config,
+            )
+
+        # pull model settings out of attributes
+        try:
+            model = ModelSettings(**attributes.pop("model"))
+        except Exception as e:
+            raise ValueError(f"Error in model settings: {e}")
+
+        # pull template settings
+        try:
+            if "template" in attributes:
+                t = attributes.pop("template")
+                if "type" in t:
+                    warnings.warn("Template type is deprecated, use format instead", DeprecationWarning)
+                    t["format"] = t.pop("type")
+
+                if isinstance(t, dict):
+                    template = TemplateSettings(**t)
+                # has to be a string denoting the type
+                else:
+                    template = TemplateSettings(format=t, parser="prompty")
+            else:
+                template = TemplateSettings(format="jinja2", parser="prompty")
+        except Exception as e:
+            raise ValueError(f"Error in template loader: {e}")
+
+        # formalize inputs and outputs
+        if "inputs" in attributes:
+            try:
+                inputs = {
+                    k: Prompty.load_property(v) for (k, v) in attributes.pop("inputs").items()
+                }
+            except Exception as e:
+                raise ValueError(f"Error in inputs: {e}")
+        else:
+            inputs = {}
+
+        if "outputs" in attributes:
+            try:
+                outputs = {
+                    k: Prompty.load_property(v) for (k, v) in attributes.pop("outputs").items()
+                }
+            except Exception as e:
+                raise ValueError(f"Error in outputs: {e}")
+        else:
+            outputs = {}
+
+        tools = []
+        if "tools" in attributes:
+            tools_attribute = attributes.pop("tools")
+            if isinstance(tools_attribute, list):
+                tools = Prompty.load_tools(tools_attribute)
+
+
+        # infer input types
+        # DEPRECATED: use inputs instead of sample
+        if "sample" in attributes:
+            warnings.warn("Sample is deprecated, use inputs instead", DeprecationWarning)
+            sample = attributes.pop("sample")
+            for k, v in sample.items():
+                # implicit input
+                if k not in inputs:
+                    # infer v type to json type
+                    inputs[k] = PropertySettings(type=get_json_type(type(v)))
+                else:
+                    # explicit input (overwrite type?)
+                    if inputs[k].type is None:
+                        inputs[k].type = get_json_type(type(v))
+                    # type mismatch
+                    elif inputs[k].type != get_json_type(type(v)):
+                        raise ValueError(
+                            f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({get_json_type(type(v))})"
+                        )
+
+
+        prompty = Prompty(
+            model=model,
+            inputs=inputs,
+            outputs=outputs,
+            tools=tools,
+            template=template,
+            content=content,
+            file=p,
+            **attributes
+        )
+
+        # setting template scratch pad
+        prompty.template.content = prompty.content
+
+        return prompty
 
     @staticmethod
     def hoist_base_prompty(top: "Prompty", base: "Prompty") -> "Prompty":
@@ -176,9 +356,9 @@ class Prompty:
         )
         top.model.response = param_hoisting(top.model.response, base.model.response)
 
-        top.sample = param_hoisting(top.sample, base.sample)
-
         top.basePrompty = base
+
+        # TODO: Hoist tools
 
         return top
 

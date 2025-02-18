@@ -8,7 +8,7 @@ model:
   api: chat
   configuration:
     azure_deployment: gpt-35-turbo
-sample:
+inputs:
   firstName: Jane
   lastName: Doe
   input: What is the meaning of life?
