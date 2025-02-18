@@ -96,7 +96,7 @@ class TemplateSettings:
     format: str = field(default="mustache")
     parser: str = field(default="")
     nonce: str = field(default="")
-    content: str = field(default="")
+    content: Union[str, list[str], dict] = field(default="")
     strict: bool = field(default=False)
 
 

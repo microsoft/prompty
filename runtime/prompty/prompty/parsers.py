@@ -1,5 +1,6 @@
 import re
 from typing import Any, Iterator
+import typing
 import yaml
 import base64
 from pathlib import Path
@@ -145,7 +146,7 @@ class PromptyChatParser(Parser):
         else:
             return content
 
-    def parse(self, data: str) -> Iterator[dict[str, any]]:
+    def parse(self, data: str) -> Iterator[dict[str, typing.Any]]:
         """Stream the data
 
         Parameters
@@ -160,7 +161,7 @@ class PromptyChatParser(Parser):
         """
         # regular expression to capture boundary roles with optional key-value pairs
         boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
-        content_buffer = []
+        content_buffer: typing.List[str] = []
         # first role is system (if not specified)
         arg_buffer = {"role": "system"}
 
