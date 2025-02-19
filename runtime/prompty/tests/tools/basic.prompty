@@ -28,7 +28,7 @@ tools:
         type: number
         description: The number of results to return.
 ---
-system:
+system[name="seth"]:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.

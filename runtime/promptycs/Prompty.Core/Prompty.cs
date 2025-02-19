@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Linq;
+using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -11,7 +12,7 @@ namespace Prompty.Core
         {
             return type switch
             {
-                InvokerType.Renderer => Template?.Type,
+                InvokerType.Renderer => Template?.Format,
                 InvokerType.Parser => $"{Template?.Parser}.{Model?.Api}",
                 InvokerType.Executor => Model?.Configuration?.Type,
                 InvokerType.Processor => Model?.Configuration?.Type,
@@ -88,7 +89,7 @@ namespace Prompty.Core
             // frontmatter normalization
             if (path is not null)
             {
-                frontmatter = Normalizer.Normalize(frontmatter, path);
+                frontmatter = Normalizer.Normalize(frontmatter, System.IO.Path.GetFullPath(path));
             }
 
             // model configuration hoisting
@@ -128,11 +129,12 @@ namespace Prompty.Core
             prompty.Model = new Model(frontmatter.GetConfig("model") ?? []);
 
             // sample
-            prompty.Sample = frontmatter.GetConfig("sample") ?? [];
+            // DEPRECAED
+            //prompty.Sample = frontmatter.GetConfig("sample") ?? [];
 
             // properties
-            prompty.Inputs = frontmatter.GetConfigList("inputs", d => new Settings(d)).ToArray();
-            prompty.Outputs = frontmatter.GetConfigList("outputs", d => new Settings(d)).ToArray();
+            prompty.Inputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("inputs") ?? []);
+            prompty.Outputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("outputs") ?? []);
 
             // template
             prompty.Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template(null);
@@ -194,17 +196,51 @@ namespace Prompty.Core
             return prompty;
         }
 
-        public object Prepare(object? inputs = null)
+
+        //internal 
+
+        public Dictionary<string, object> GetSample()
         {
-            var resolvedInputs = inputs != null ? inputs.ToParamDictionary().ParamHoisting(Sample ?? []) : Sample ?? [];
+            Dictionary<string, object> sample = new Dictionary<string, object>();
+            foreach (var key in Inputs.Keys)
+            {
+                if (Inputs[key].Sample != null)
+                    sample[key] = Inputs[key].Sample ?? "";
+                else if (Inputs[key].Default != null)
+                    sample[key] = Inputs[key].Default ?? "";
+            }
+            return sample;
+        }
+
+        internal Dictionary<string, object> ValidateInputs(object? inputs, bool mergeSample = false)
+        {
+            Dictionary<string, object> cleanInputs = new Dictionary<string, object>();
+
+            if (inputs != null)
+                cleanInputs = inputs.ToParamDictionary();
+            
+            if (mergeSample)
+                cleanInputs = cleanInputs.ParamHoisting(GetSample());
+            
+
+            foreach (var key in Inputs.Keys)
+                if (!cleanInputs.ContainsKey(key))
+                    throw new Exception($"Missing required input '{key}'");
+
+            return cleanInputs;
+        }
+
+        public object Prepare(object? inputs = null, bool mergeSample = false)
+        {
+            var resolvedInputs = ValidateInputs(inputs, mergeSample);
             object render = RunInvoker(InvokerType.Renderer, resolvedInputs, Content ?? "");
             object parsed = RunInvoker(InvokerType.Parser, render);
             return parsed;
         }
 
-        public async Task<object> PrepareAsync(object? inputs = null)
+        public async Task<object> PrepareAsync(object? inputs = null, bool mergeSample = false)
         {
-            var resolvedInputs = inputs != null ? inputs.ToParamDictionary().ParamHoisting(Sample ?? []) : Sample ?? [];
+            var resolvedInputs = ValidateInputs(inputs, mergeSample);
             object render = await RunInvokerAsync(InvokerType.Renderer, resolvedInputs, Content ?? "");
             object parsed = await RunInvokerAsync(InvokerType.Parser, render);
             return parsed;

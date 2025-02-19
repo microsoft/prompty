@@ -35,11 +35,11 @@ namespace Prompty.Core
         public Model? Model { get; set; } = null;
 
         // sample
-        public Dictionary<string, object> Sample { get; set; } = [];
+        // public Dictionary<string, object> Sample { get; set; } = [];
 
         // properties
-        public Settings[] Inputs { get; set; } = [];
-        public Settings[] Outputs { get; set; } = [];
+        public Dictionary<string, Property> Inputs { get; set; } = [];
+        public Dictionary<string, Property> Outputs { get; set; } = [];
 
         // template
         public Template? Template { get; set; } = null;
