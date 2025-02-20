@@ -21,7 +21,7 @@ class Invoker(abc.ABC):
     def __init__(self, prompty: Prompty) -> None:
         self.prompty = prompty
         self.name = self.__class__.__name__
-
+        
     @abc.abstractmethod
     def invoke(self, data: typing.Any) -> typing.Any:
         """Abstract method to invoke the invoker
@@ -68,6 +68,7 @@ class Invoker(abc.ABC):
         any
             The invoked
         """
+        
         return self.invoke(data)
 
     @trace
@@ -85,6 +86,145 @@ class Invoker(abc.ABC):
             The invoked
         """
         return await self.invoke_async(data)
+    
+class Renderer(Invoker):
+    """Abstract class for Renderer
+
+    Attributes
+    ----------
+    prompty : Prompty
+        The prompty object
+    name : str
+        The name of the renderer
+
+    """
+
+    def __init__(self, prompty: Prompty) -> None:
+        super().__init__(prompty)
+
+
+    def run(self, data: typing.Any) -> typing.Any:
+        """Method to run the invoker
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+
+        # check if parser inherits from Parser
+        parser = InvokerFactory._get_invoker("parser", self.prompty)
+        if isinstance(parser, Parser):
+            self.prompty.template.content = parser.sanitize(self.prompty.content)
+
+        return self.invoke(data)
+    
+    async def run_async(self, data: typing.Any) -> typing.Any:
+        """Method to run the invoker asynchronously
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        
+        # check if parser inherits from Parser
+        parser = InvokerFactory._get_invoker("parser", self.prompty)
+        if isinstance(parser, Parser):
+            self.prompty.template.content = parser.sanitize(self.prompty.content)
+
+        return await self.invoke_async(data)
+    
+class Parser(Invoker):
+    """Abstract class for Parser
+
+    Attributes
+    ----------
+    prompty : Prompty
+        The prompty object
+    name : str
+        The name of the parser
+
+    """
+
+    def __init__(self, prompty: Prompty) -> None:
+        super().__init__(prompty)
+
+    @abc.abstractmethod
+    def sanitize(self, data: typing.Any) -> typing.Any:
+        """Abstract method to sanitize template
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        pass
+
+    @abc.abstractmethod
+    def process(self, data: typing.Any) -> typing.Any:
+        """Method to process parsed content
+
+        Parameters
+        ----------
+        data : any
+            The parsed content
+
+        Returns
+        -------
+        any
+            Processed parsed data
+        """
+        pass
+    
+
+    def run(self, data: typing.Any) -> typing.Any:
+        """Method to run the invoker
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        
+        parsed = self.invoke(data)
+        return self.process(parsed)
+    
+    async def run_async(self, data: typing.Any) -> typing.Any:
+        """Method to run the invoker asynchronously
+
+        Parameters
+        ----------
+        data : any
+            The data to be invoked
+
+        Returns
+        -------
+        any
+            The invoked
+        """
+        parsed = await self.invoke_async(data)
+        return self.process(parsed)
 
 
 class InvokerFactory:
@@ -154,7 +294,7 @@ class InvokerFactory:
         prompty: Prompty,
     ) -> str:
         if type == "renderer":
-            return prompty.template.type
+            return prompty.template.format
         elif type == "parser":
             return f"{prompty.template.parser}.{prompty.model.api}"
         elif type == "executor":
@@ -171,7 +311,7 @@ class InvokerFactory:
         prompty: Prompty,
     ) -> Invoker:
         if type == "renderer":
-            name = prompty.template.type
+            name = prompty.template.format
             if name not in cls._renderers:
                 raise ValueError(f"Renderer {name} not found")
 

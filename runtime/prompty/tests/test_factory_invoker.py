@@ -30,7 +30,7 @@ BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
 )
 def test_renderer_invoker(prompt: str):
     p = prompty.load(prompt)
-    result = InvokerFactory.run("renderer", p, p.sample)
+    result = InvokerFactory.run("renderer", p, p.get_sample())
     print(result)
 
 
@@ -67,7 +67,7 @@ def test_parser_invoker(markdown: str):
 def test_executor_invoker(prompt: str):
     p = prompty.load(prompt)
     
-    result = InvokerFactory.run_renderer(p, p.sample)
+    result = InvokerFactory.run_renderer(p, p.get_sample())
     result = InvokerFactory.run_parser(p, result)
     result = InvokerFactory.run_executor(p, result)
     print(result)
@@ -84,7 +84,7 @@ def test_executor_invoker(prompt: str):
 )
 def test_processor_invoker(prompt: str):
     p = prompty.load(prompt)
-    result = InvokerFactory.run_renderer(p, p.sample)
+    result = InvokerFactory.run_renderer(p, p.get_sample())
     result = InvokerFactory.run_parser(p, result)
     result = InvokerFactory.run_executor(p, result)
     result = InvokerFactory.run_processor(p, result)

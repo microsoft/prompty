@@ -87,9 +87,23 @@ class AzureOpenAIExecutor(Invoker):
 
             if self.api == "chat":
                 trace("signature", "AzureOpenAI.chat.completions.create")
+                messages = data if isinstance(data, list) else [data]
+                
+                if self.prompty.template.strict:
+                    if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
+                        raise ValueError("Nonce mismatch in messages array (strict mode)")
+                    
+                messages = [
+                    {
+                        "role": msg["role"],
+                        "content": msg["content"],
+                        "name": msg.get("name", None),
+                    }
+                    for msg in messages
+                ]
                 args = {
                     "model": self.deployment,
-                    "messages": data if isinstance(data, list) else [data],
+                    "messages": messages,
                     **self.parameters,
                 }
                 trace("inputs", args)

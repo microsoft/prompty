@@ -6,17 +6,32 @@ authors:
   - jietong
 model:
   api: chat
+  configuration:
+    azure_deployment: gpt-35-turbo
+
 inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
+
+tools:
+  - name: bing
+    type: web_search
+    description: A tool that can search the web for information.
+    configuration:
+      url: https://api.bing.microsoft.com/v7.0/search
+    parameters:
+      - name: query
+        type: string
+        description: The search query to use.
+      - name: count
+        type: number
+        description: The number of results to return.
 ---
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-
-Return the response in JSON format
 
 # Customer
 You are helping {{firstName}} {{lastName}} to find answers to their questions.
