@@ -12,7 +12,7 @@ from .core import (
 )
 from .invoker import InvokerFactory
 from .parsers import PromptyChatParser
-from .renderers import Jinja2Renderer
+from .renderers import Jinja2Renderer, MustacheRenderer
 from .tracer import trace
 from .utils import (
     load_global_config,
@@ -22,6 +22,7 @@ from .utils import (
 )
 
 InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
+InvokerFactory.add_renderer("mustache", MustacheRenderer)
 InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
 
 
