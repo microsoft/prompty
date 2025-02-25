@@ -39,3 +39,13 @@ class TestCore:
         p.file = Path("/path/to/file")
         d = p.to_safe_dict()
         assert d["file"] == "/path/to/file"
+
+
+    def test_headless(self, **kwargs):
+        content = "You are a helpful assistant,\n{{ question }}"
+        data = { "question": "where is Microsoft?" }
+        p = prompty.headless(api="chat", content=content)
+        p.template.type = "mustache"
+        prompt_template = prompty.InvokerFactory.run_renderer(p, data)
+        parsed = prompty.InvokerFactory.run_parser(p, prompt_template)
+        assert parsed == "You are a helpful assistant,\nwhere is Microsoft?"

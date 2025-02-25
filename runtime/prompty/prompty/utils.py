@@ -37,14 +37,15 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, N
     prompty_config = list(Path.cwd().glob("**/prompty.json"))
 
     if len(prompty_config) > 0:
-        return sorted(
+        sorted_list = sorted(
             [
                 c
                 for c in prompty_config
                 if len(c.parent.parts) <= len(prompty_path.parts)
             ],
             key=lambda p: len(p.parts),
-        )[-1]
+        )
+        return sorted_list[-1] if len(sorted_list) > 0 else None
     else:
         return None
 
