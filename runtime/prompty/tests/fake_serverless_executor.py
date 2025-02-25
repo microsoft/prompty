@@ -23,7 +23,7 @@ class FakeServerlessExecutor(Invoker):
 
         # api type
         self.api = self.prompty.model.api
-        self.parameters = self.prompty.model.parameters
+        self.options = self.prompty.model.options
 
     def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
@@ -37,7 +37,7 @@ class FakeServerlessExecutor(Invoker):
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 def generator():
@@ -75,7 +75,7 @@ class FakeServerlessExecutor(Invoker):
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 async def generator():

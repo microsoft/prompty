@@ -19,7 +19,7 @@ class FakeAzureExecutor(Invoker):
         super().__init__(prompty)
         self.api = self.prompty.model.api
         self.deployment = self.prompty.model.configuration["azure_deployment"]
-        self.parameters = self.prompty.model.parameters
+        self.options = self.prompty.model.options
 
     def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
@@ -33,7 +33,7 @@ class FakeAzureExecutor(Invoker):
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 def generator():
@@ -84,7 +84,7 @@ class FakeAzureExecutor(Invoker):
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 async def generator():

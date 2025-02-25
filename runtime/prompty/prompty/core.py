@@ -52,6 +52,9 @@ class PropertySettings:
     type: Literal["string", "number", "array", "object", "boolean"]
     default: Union[str, int, float, list, dict, bool, None] = field(default=None)
     sample: Union[str, int, float, list, dict, bool, None] = field(default=None)
+    required: bool = field(default=False)
+    strict: bool = field(default=True)
+    json_schema: dict = field(default_factory=dict)
     description: str = field(default="")
 
 
@@ -73,8 +76,7 @@ class ModelSettings:
 
     api: str = field(default="")
     configuration: dict = field(default_factory=dict)
-    parameters: dict = field(default_factory=dict)
-    response: dict = field(default_factory=dict)
+    options: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -98,6 +100,7 @@ class TemplateSettings:
     nonce: str = field(default="")
     content: Union[str, list[str], dict] = field(default="")
     strict: bool = field(default=False)
+    configuration: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -252,7 +255,12 @@ class Prompty:
 
         # pull model settings out of attributes
         try:
-            model = ModelSettings(**attributes.pop("model"))
+            model_props = attributes.pop("model")
+            if "parameters" in model_props:
+                warnings.warn("Model parameters is deprecated, use options instead", DeprecationWarning)
+                model_props["options"] = model_props.pop("parameters")
+
+            model = ModelSettings(**model_props)
         except Exception as e:
             raise ValueError(f"Error in model settings: {e}")
 
@@ -351,10 +359,9 @@ class Prompty:
         top.model.configuration = param_hoisting(
             top.model.configuration, base.model.configuration
         )
-        top.model.parameters = param_hoisting(
-            top.model.parameters, base.model.parameters
+        top.model.options = param_hoisting(
+            top.model.options, base.model.options
         )
-        top.model.response = param_hoisting(top.model.response, base.model.response)
 
         top.basePrompty = base
 

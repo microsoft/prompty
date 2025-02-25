@@ -33,7 +33,7 @@ def headless(
     api: str,
     content: Union[str, list[str], dict],
     configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -46,8 +46,8 @@ def headless(
         The content to process
     configuration : Dict[str, any], optional
         The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     connection : str, optional
         The connection to use, by default "default"
 
@@ -79,7 +79,7 @@ def headless(
             ),
             caller.parent,
         ),
-        parameters=parameters,
+        options=options,
     )
 
     return Prompty(model=modelSettings, template=templateSettings, content=content)
@@ -90,7 +90,7 @@ async def headless_async(
     api: str,
     content: Union[str, list[str], dict],
     configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
     connection: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
@@ -103,8 +103,8 @@ async def headless_async(
         The content to process
     configuration : Dict[str, any], optional
         The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     connection : str, optional
         The connection to use, by default "default"
 
@@ -137,7 +137,7 @@ async def headless_async(
     modelSettings = ModelSettings(
         api=api,
         configuration=c,
-        parameters=parameters,
+        options=options,
     )
 
     return Prompty(model=modelSettings, template=templateSettings, content=content)
