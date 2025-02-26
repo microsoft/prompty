@@ -1,0 +1,42 @@
+name: prompty JavaScript build and test
+
+on:
+  pull_request:
+    paths:
+      - 'runtime/promptyjs/**'
+
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  prompty-tests:
+    name: run unit tests on supported Node.js versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [ '16.x', '20.x' ]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    permissions:
+      # This permission is needed for private repositories.
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Node.js install dependencies
+        working-directory: ./runtime/promptyjs
+        run: npm install
+
+      - name: Node.js build
+        working-directory: ./runtime/promptyjs
+        run: npm run build
+
+      - name: Node.js test
+        working-directory: ./runtime/promptyjs
+        run: npm run test
+
