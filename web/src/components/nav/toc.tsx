@@ -63,8 +63,8 @@ const Toc = ({ index, depth, visible }: Props) => {
             )}
             onClick={() => toggleExpansion(i)}
           >
-            <div className={styles.item}>
-              <a href={item.path} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.item} onClick={(e) => e.stopPropagation()}>
+              <a href={item.path}>
                 {item.document?.title}
               </a>
               {hasChildren(item) && (
