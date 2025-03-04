@@ -14,7 +14,7 @@ model:
     type: azure_openai_beta
   parameters:
     response_format: ${file:structured_output_schema.json}
-sample:
+inputs:
   statement: Alice and Bob are going to a science fair on Friday.
 ---
 system:

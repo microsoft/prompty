@@ -6,7 +6,7 @@ authors:
   - jietong
 model:
   api: chat
-sample:
+inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?

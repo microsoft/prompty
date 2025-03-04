@@ -10,7 +10,7 @@ model:
     endpoint: https://models.inference.ai.azure.com
     model: Mistral-small
     key: ${env:SERVERLESS_KEY:KEY}
-sample:
+inputs:
   firstName: Seth
   context: >
     The Alpine Explorer Tent boasts a detachable divider for privacy, 

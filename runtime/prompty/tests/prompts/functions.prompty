@@ -39,7 +39,7 @@ model:
           required:
           - prompt
           type: object
-sample:
+inputs:
   firstName: Seth
   lastName: Juarez
   question: What's the weather like in San Francisco, Tokyo, and Paris?

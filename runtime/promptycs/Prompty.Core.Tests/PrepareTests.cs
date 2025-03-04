@@ -27,7 +27,7 @@ namespace Prompty.Core.Tests
         public void Prepare(string path)
         {
             var prompty = Prompty.Load(path);
-            var prepared = prompty.Prepare();
+            var prepared = prompty.Prepare(mergeSample: true);
         }
 
         [Theory]
@@ -41,9 +41,9 @@ namespace Prompty.Core.Tests
             var prepared = prompty.Prepare(new Dictionary<string, object>
             {
                 { "question", replacementText }
-            });
+            }, true);
 
-           
+
 
             Assert.IsType<ChatMessage[]>(prepared);
             var messages = (ChatMessage[])prepared;
@@ -60,7 +60,7 @@ namespace Prompty.Core.Tests
         {
             var replacementText = "OTHER_TEXT_OTHER_TEXT";
             var prompty = Prompty.Load(path);
-            var prepared = prompty.Prepare(new { question = replacementText });
+            var prepared = prompty.Prepare(new { question = replacementText }, true);
 
 
 
@@ -77,10 +77,10 @@ namespace Prompty.Core.Tests
         [InlineData("prompty/functions.prompty")]
         public void PrepareWithStrongObjectInput(string path)
         {
-            
+
             var replacementText = new MyObject { question = "OTHER_TEXT_OTHER_TEXT" };
             var prompty = Prompty.Load(path);
-            var prepared = prompty.Prepare(replacementText);
+            var prepared = prompty.Prepare(replacementText, true);
 
 
 

@@ -38,7 +38,7 @@ namespace Prompty.Core.Parsers
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
 
-            var messages = Parse((string)args).Select(m =>
+            var messages = ParseOld((string)args).Select(m =>
             {
                 if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
                 {
@@ -75,7 +75,7 @@ namespace Prompty.Core.Parsers
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
 
-            var messageTask = Parse((string)args).Select(async m =>
+            var messageTask = ParseOld((string)args).Select(async m =>
             {
                 if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
                 {
@@ -130,7 +130,78 @@ namespace Prompty.Core.Parsers
             }
         }
 
-        private IEnumerable<RawMessage> Parse(string template)
+        private Dictionary<string, object> ParseArgs(string args)
+        {
+            var argPattern = @"(\w+)\s*=\s*(\""([^\""]*)\""|([Tt]rue|[Ff]alse)|([0-9]+(\.[0-9]+))|([0-9]+))\s*(,?)\s*";
+            var matches = Regex.Matches(args, argPattern);
+
+            var result = new Dictionary<string, object>();
+            foreach (Match match in matches)
+            {
+                string key = match.Groups[1].Value;
+                // string
+                if (match.Groups[3].Value.Length > 0)
+                    result[key] = match.Groups[3].Value;
+                else if (match.Groups[4].Value.Length > 0)
+                    result[key] = match.Groups[4].Value.ToLower() == "true";
+                else if (match.Groups[5].Value.Length > 0)
+                    result[key] = float.Parse(match.Groups[5].Value);
+                else if (match.Groups[7].Value.Length > 0)
+                    result[key] = int.Parse(match.Groups[7].Value);
+            }
+            return result;
+        }
+
+
+        public IEnumerable<Settings> Parse(string template)
+        {
+            var boundary = @"^\s*#?\s*(" + string.Join("|", _roles) + @")(\[((\w+)*\s*=\s*\""?([^\""]*)\""?\s*(,?)\s*)+\])?\s*:\s*$";
+            var contentBuffer = new List<string>();
+            // first role is system (if not specified)
+            var argBuffer = new Dictionary<string, object>()
+            {
+                ["role"] = "system"
+            };
+
+            var lines = template.Split('\n');
+            foreach (var line in lines)
+            {
+                if (Regex.IsMatch(line, boundary))
+                {
+                    if (contentBuffer.Count > 0)
+                    {
+                        argBuffer["content"] = string.Join("\n", contentBuffer);
+                        yield return new Settings(argBuffer);
+                        contentBuffer = new List<string>();
+                        argBuffer = new Dictionary<string, object>();
+                    }
+
+                    if (line.Contains('[') && line.Contains(']'))
+                    {
+                        var role = Regex.Match(line, boundary);
+                        argBuffer["role"] = role.Groups[1].Value;
+                        var args = role.Groups[2].Value.Trim().Trim('[', ']');
+
+                        if (args.Length > 0)
+                            foreach (var item in ParseArgs(args))
+                                argBuffer[item.Key] = item.Value;
+                    }
+                    else
+                        argBuffer["role"] = line.Replace(":", "").Trim().ToLower();
+
+                }
+                else
+                    contentBuffer.Add(line);
+            }
+
+            if (contentBuffer.Count > 0)
+            {
+                argBuffer["content"] = string.Join("\n", contentBuffer);
+                yield return new Settings(argBuffer);
+            }
+        }
+
+        private IEnumerable<RawMessage> ParseOld(string template)
         {
             var chunks = Regex.Split(template, _messageRegex, RegexOptions.Multiline)
                                 .Where(s => s.Trim().Length > 0)

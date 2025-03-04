@@ -5,7 +5,7 @@ base: evaluation.prompty
 model:
   configuration:
     azure_deployment: gpt-4
-sample:
+inputs:
   name: Faitfullness Metric
   input: The input to the model
   output: The output from the model

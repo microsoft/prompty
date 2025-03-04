@@ -11,7 +11,7 @@ class TestCore:
         assert d["name"] == "Basic Prompt"
         assert d["model"]["configuration"]["type"] == "azure"
         assert d["model"]["configuration"]["azure_deployment"] == "gpt-35-turbo"
-        assert d["template"]["type"] == "jinja2"
+        assert d["template"]["format"] == "jinja2"
 
 
     def test_prompty_to_safe_dict(self, **kwargs):
@@ -27,7 +27,7 @@ class TestCore:
         assert d["name"] == "Basic Prompt"
         assert d["model"]["configuration"]["type"] == "azure"
         assert d["model"]["configuration"]["azure_deployment"] == "gpt-35-turbo"
-        assert d["template"]["type"] == "jinja2"
+        assert d["template"]["format"] == "jinja2"
         assert d["model"]["configuration"]["type"] == "azure"
         assert d["file"] == "/path/to/file"
         assert "basePrompty" not in d
@@ -39,13 +39,3 @@ class TestCore:
         p.file = Path("/path/to/file")
         d = p.to_safe_dict()
         assert d["file"] == "/path/to/file"
-
-
-    def test_headless(self, **kwargs):
-        content = "You are a helpful assistant,\n{{ question }}"
-        data = { "question": "where is Microsoft?" }
-        p = prompty.headless(api="chat", content=content)
-        p.template.type = "mustache"
-        prompt_template = prompty.InvokerFactory.run_renderer(p, data)
-        parsed = prompty.InvokerFactory.run_parser(p, prompt_template)
-        assert parsed == "You are a helpful assistant,\nwhere is Microsoft?"

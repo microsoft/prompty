@@ -73,7 +73,27 @@ class ServerlessExecutor(Invoker):
             return stream
         else:
             return response
+        
+    def _sanitize_messages(self, data: typing.Any) -> typing.List[typing.Dict[str, str]]:
+        messages = data if isinstance(data, list) else [data]
+                
+        if self.prompty.template.strict:
+            if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
+                raise ValueError("Nonce mismatch in messages array (strict mode)")
+            
+        messages = [
+            {
+                **{
+                    "role": msg["role"],
+                    "content": msg["content"]
+                },
+                **({"name": msg["name"]} if "name" in msg else {}),
+            }
+            for msg in messages
+        ]
 
+        return messages
+    
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Serverless SDK
 
@@ -115,8 +135,8 @@ class ServerlessExecutor(Invoker):
                 )
                 eargs = {
                     "model": self.model,
-                    "messages": data if isinstance(data, list) else [data],
-                    **self.prompty.model.parameters,
+                    "messages": self._sanitize_messages(data),
+                    **self.prompty.model.options,
                 }
                 trace("inputs", eargs)
                 r = client.complete(**eargs)
@@ -150,7 +170,7 @@ class ServerlessExecutor(Invoker):
                 eargs = {
                     "model": self.model,
                     "input": data if isinstance(data, list) else [data],
-                    **self.prompty.model.parameters,
+                    **self.prompty.model.options,
                 }
                 trace("inputs", eargs)
                 r = client.complete(**eargs)
@@ -205,8 +225,8 @@ class ServerlessExecutor(Invoker):
                 )
                 eargs = {
                     "model": self.model,
-                    "messages": data if isinstance(data, list) else [data],
-                    **self.prompty.model.parameters,
+                    "messages": self._sanitize_messages(data),
+                    **self.prompty.model.options,
                 }
                 trace("inputs", eargs)
                 r = await client.complete(**eargs)
@@ -242,7 +262,7 @@ class ServerlessExecutor(Invoker):
                 eargs = {
                     "model": self.model,
                     "input": data if isinstance(data, list) else [data],
-                    **self.prompty.model.parameters,
+                    **self.prompty.model.options,
                 }
                 trace("inputs", eargs)
                 r = await client.complete(**eargs)
