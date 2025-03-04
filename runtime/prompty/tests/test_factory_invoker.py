@@ -23,6 +23,7 @@ BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
     "prompt",
     [
         "prompts/basic.prompty",
+        "prompts/basic_mustache.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         "prompts/faithfulness.prompty",
