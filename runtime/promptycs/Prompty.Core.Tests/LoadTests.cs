@@ -41,8 +41,8 @@ public class LoadTests
     {
         var p = "prompty/basic.prompty";
         var prompty = Prompty.Load(p);
-        string[] props = ["firstName", "lastName", "question"];
-        string[] samples = ["Jane", "Doe", "What is the meaning of life?"];
+        string[] props = { "firstName", "lastName", "question" };
+        string[] samples = { "Jane", "Doe", "What is the meaning of life?" };
         for (int i = 0; i < props.Length; i++)
         {
             string? item = props[i];
