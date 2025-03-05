@@ -64,7 +64,7 @@ public class LoadTests
                                 PropertyType.Number, 
                                 PropertyType.Number,
                                 PropertyType.Boolean,
-                                PropertyType.Array];
+                                PropertyType.Array };
 
         string[] vals = { "one", "two", "three" };
         object[] samples = ["Jane", "Doe", "What is the meaning of life?", 45, 1.9, true, vals];
