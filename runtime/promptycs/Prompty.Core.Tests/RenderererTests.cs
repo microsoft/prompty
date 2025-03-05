@@ -10,11 +10,11 @@
         }
 
         [Theory]
-        [InlineData(["prompty/basic.prompty", "Jane Doe"])]
-        [InlineData(["prompty/basic_mustache.prompty", "Jane Doe"])]
-        [InlineData(["prompty/context.prompty", "Sally Davis"])]
-        [InlineData(["prompty/groundedness.prompty", "Actual Task Output:"])]
-        // [InlineData(["prompty/faithfulness.prompty", "The context used by the model"])]      // This prompty file is not working for renderer yet
+        [InlineData("prompty/basic.prompty", "Jane Doe")]
+        [InlineData("prompty/basic_mustache.prompty", "Jane Doe")]
+        [InlineData("prompty/context.prompty", "Sally Davis")]
+        [InlineData("prompty/groundedness.prompty", "Actual Task Output:")]
+        // [InlineData("prompty/faithfulness.prompty", "The context used by the model")]      // This prompty file is not working for renderer yet
         public void TestRenderer(string path, string expected)
         {
             var prompty = Prompty.Load(path);
