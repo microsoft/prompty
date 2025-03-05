@@ -9,16 +9,41 @@ model:
   configuration:
     azure_deployment: gpt-35-turbo
 inputs:
-  - name: sample
-    type: object
-    description: The sample object
-  - name: system
-    type: object
-    description: The system object
-sample:
-  firstName: Jane
-  lastName: Doe
-  question: What is the meaning of life?
+  firstName:
+    type: string
+    sample: Jane
+    default: User
+    description: The firstName description
+  lastName:
+    type: string
+    sample: Doe
+    description: The lastName description
+  question:
+    type: string
+    sample: What is the meaning of life?
+    description: The question description
+  age:
+    type: number
+    sample: 45
+    default: 18
+    description: The age description
+  pct:
+    type: number
+    sample: 1.9
+    default: 1.7
+    description: The pct description
+  valid:
+    type: boolean
+    sample: true
+    default: false
+    description: The valid description
+  items:
+    type: array
+    sample:
+      - one
+      - two
+      - three
+    description: The items description
 ---
 system:
 You are an AI assistant who helps people find information.
@@ -26,7 +51,7 @@ As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to their questions.
+You are helping {{firstName}} {{lastName}} age {{age}} to find answers to their questions.
 Use their name to address them in your responses.
 
 user:

@@ -8,10 +8,15 @@ model:
   api: chat
   configuration:
     azure_deployment: gpt-35-turbo
-sample:
+
+inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
+
+template:
+  format: jinja2
+  parser: prompty
 ---
 system:
 You are an AI assistant who helps people find information.
