@@ -109,10 +109,10 @@ namespace Prompty.Core
 
         public Invoker CreateRenderer(Prompty prompty)
         {
-            if(prompty?.Template?.Type == null)
+            if(prompty?.Template?.Format == null)
                 throw new Exception("Template type not found!");
 
-            return CreateInvoker(prompty?.Template?.Type!, InvokerType.Renderer, prompty!);
+            return CreateInvoker(prompty?.Template?.Format!, InvokerType.Renderer, prompty!);
         }
 
         public Invoker CreateParser(string name, Prompty prompty)

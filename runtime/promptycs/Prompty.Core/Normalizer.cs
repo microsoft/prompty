@@ -14,15 +14,15 @@ namespace Prompty.Core
 
         internal static Dictionary<string, object> ProcessFile(string file, string parentPath)
         {
-            var fullFile = FileUtils.GetFullPath(file, Path.GetFullPath(parentPath));
+            var fullFile = FileUtils.GetFullPath(file, Path.GetDirectoryName(parentPath) ?? "");
             if (File.Exists(fullFile))
             {
                 string json = File.ReadAllText(fullFile);
                 var config = JsonDocument.Parse(json).RootElement.ToDictionary();
                 return Normalize(config, parentPath);
             }
-
-            return [];
+            else
+                throw new InvalidOperationException($"File {file} not found");
         }
 
         internal static string? ProcessEnvironmentVariable(string variable, bool throwIfNotExists, string? defaultValue)

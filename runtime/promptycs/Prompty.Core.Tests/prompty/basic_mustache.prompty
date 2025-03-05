@@ -6,17 +6,24 @@ authors:
   - jietong
 model:
   api: chat
+  configuration:
+    azure_deployment: gpt-35-turbo
+
 inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
+
+template:
+  format: mustache
+  parser: prompty
 ---
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
 
-Return the response in JSON format
+{{! ignore this line from Mustache }}
 
 # Customer
 You are helping {{firstName}} {{lastName}} to find answers to their questions.
