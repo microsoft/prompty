@@ -57,8 +57,8 @@ public class LoadTests
     {
         var p = "prompty/basic_props.prompty";
         var prompty = Prompty.Load(p);
-        string[] props = ["firstName", "lastName", "question", "age", "pct", "valid", "items"];
-        PropertyType[] types = [PropertyType.String, 
+        string[] props = { "firstName", "lastName", "question", "age", "pct", "valid", "items" };
+        PropertyType[] types = { PropertyType.String, 
                                 PropertyType.String, 
                                 PropertyType.String, 
                                 PropertyType.Number, 
