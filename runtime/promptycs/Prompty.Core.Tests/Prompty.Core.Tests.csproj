@@ -69,6 +69,9 @@
     <None Update="prompty\basic.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="prompty\basic_mustache.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="prompty\basic.prompty.execution.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

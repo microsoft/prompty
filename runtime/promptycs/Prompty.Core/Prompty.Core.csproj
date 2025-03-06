@@ -37,6 +37,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Scriban" />
+    <PackageReference Include="Stubble.Core" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 

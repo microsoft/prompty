@@ -17,8 +17,7 @@ namespace Prompty.Core.Renderers
 
         public override Task<object> InvokeAsync(object args)
         {
-            var template = Scriban.Template.ParseLiquid(_prompty.Content.ToString());
-            return Task.FromResult<object>(template.Render(args));
+            return Task.FromResult(Invoke(args));
         }
     }
 }

@@ -38,8 +38,8 @@ namespace Prompty.Core
         // public Dictionary<string, object> Sample { get; set; } = [];
 
         // properties
-        public Dictionary<string, Property> Inputs { get; set; } = [];
-        public Dictionary<string, Property> Outputs { get; set; } = [];
+        public Dictionary<string, Property> Inputs { get; set; } = new Dictionary<string, Property>();
+        public Dictionary<string, Property> Outputs { get; set; } = new Dictionary<string, Property>();
 
         // template
         public Template? Template { get; set; } = null;

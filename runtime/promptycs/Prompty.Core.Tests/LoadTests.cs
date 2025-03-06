@@ -41,8 +41,8 @@ public class LoadTests
     {
         var p = "prompty/basic.prompty";
         var prompty = Prompty.Load(p);
-        string[] props = ["firstName", "lastName", "question"];
-        string[] samples = ["Jane", "Doe", "What is the meaning of life?"];
+        string[] props = { "firstName", "lastName", "question" };
+        string[] samples = { "Jane", "Doe", "What is the meaning of life?" };
         for (int i = 0; i < props.Length; i++)
         {
             string? item = props[i];
@@ -57,14 +57,14 @@ public class LoadTests
     {
         var p = "prompty/basic_props.prompty";
         var prompty = Prompty.Load(p);
-        string[] props = ["firstName", "lastName", "question", "age", "pct", "valid", "items"];
-        PropertyType[] types = [PropertyType.String, 
+        string[] props = { "firstName", "lastName", "question", "age", "pct", "valid", "items" };
+        PropertyType[] types = { PropertyType.String, 
                                 PropertyType.String, 
                                 PropertyType.String, 
                                 PropertyType.Number, 
                                 PropertyType.Number,
                                 PropertyType.Boolean,
-                                PropertyType.Array];
+                                PropertyType.Array };
 
         string[] vals = { "one", "two", "three" };
         object[] samples = ["Jane", "Doe", "What is the meaning of life?", 45, 1.9, true, vals];
