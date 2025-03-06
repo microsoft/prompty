@@ -34,12 +34,12 @@ class ServerlessExecutor(Invoker):
         super().__init__(prompty)
         self.kwargs = {
             key: value
-            for key, value in self.prompty.model.configuration.items()
+            for key, value in self.prompty.model.connection.items()
             if key != "type"
         }
 
-        self.endpoint = self.prompty.model.configuration["endpoint"]
-        self.model = self.prompty.model.configuration["model"]
+        self.endpoint = self.prompty.model.connection["endpoint"]
+        self.model = self.prompty.model.connection["model"]
 
         # no key, use default credentials
         if "key" not in self.kwargs:
@@ -49,9 +49,7 @@ class ServerlessExecutor(Invoker):
                 exclude_shared_token_cache_credential=True
             )
         else:
-            self.credential = AzureKeyCredential(
-                self.prompty.model.configuration["key"]
-            )
+            self.credential = AzureKeyCredential(self.prompty.model.connection["key"])
 
         # api type
         self.api = self.prompty.model.api
@@ -73,14 +71,14 @@ class ServerlessExecutor(Invoker):
             return stream
         else:
             return response
-        
-    def _sanitize_messages(self, data: typing.Any) -> typing.List[typing.Dict[str, str]]:
+
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
-                
+
         if self.prompty.template.strict:
             if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
                 raise ValueError("Nonce mismatch in messages array (strict mode)")
-            
+
         messages = [
             {
                 **{
@@ -93,7 +91,7 @@ class ServerlessExecutor(Invoker):
         ]
 
         return messages
-    
+
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Serverless SDK
 

@@ -17,9 +17,9 @@ class FakeServerlessExecutor(Invoker):
         super().__init__(prompty)
 
         # serverless configuration
-        self.endpoint = self.prompty.model.configuration["endpoint"]
-        self.model = self.prompty.model.configuration["model"]
-        self.key = self.prompty.model.configuration["key"]
+        self.endpoint = self.prompty.model.connection["endpoint"]
+        self.model = self.prompty.model.connection["model"]
+        self.key = self.prompty.model.connection["key"]
 
         # api type
         self.api = self.prompty.model.api

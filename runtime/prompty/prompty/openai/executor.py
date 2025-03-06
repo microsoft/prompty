@@ -20,22 +20,22 @@ class OpenAIExecutor(Invoker):
         super().__init__(prompty)
         self.kwargs = {
             key: value
-            for key, value in self.prompty.model.configuration.items()
+            for key, value in self.prompty.model.connection.items()
             if key != "type" and key != "name"
         }
 
         self.api = self.prompty.model.api
         self.options = self.prompty.model.options
-        self.model = self.prompty.model.configuration["name"]
-        self.deployment = self.prompty.model.configuration["deployment"]
+        self.model = self.prompty.model.connection["name"]
+        self.deployment = self.prompty.model.connection["deployment"]
 
-    def _sanitize_messages(self, data: typing.Any) -> typing.List[typing.Dict[str, str]]:
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
-                
+
         if self.prompty.template.strict:
             if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
                 raise ValueError("Nonce mismatch in messages array (strict mode)")
-            
+
         messages = [
             {
                 **{
@@ -48,7 +48,7 @@ class OpenAIExecutor(Invoker):
         ]
 
         return messages
-    
+
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 

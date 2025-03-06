@@ -77,7 +77,7 @@ class AzureOpenAIBetaExecutor(Invoker):
         super().__init__(prompty)
         self.kwargs = {
             key: value
-            for key, value in self.prompty.model.configuration.items()
+            for key, value in self.prompty.model.connection.items()
             if key != "type"
         }
 
@@ -104,18 +104,17 @@ class AzureOpenAIBetaExecutor(Invoker):
             )
 
         self.api = self.prompty.model.api
-        self.api_version = self.prompty.model.configuration["api_version"]
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
+        self.api_version = self.prompty.model.connection["api_version"]
+        self.deployment = self.prompty.model.connection["azure_deployment"]
         self.options = self.prompty.model.options
 
-
-    def _sanitize_messages(self, data: typing.Any) -> typing.List[typing.Dict[str, str]]:
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
-                
+
         if self.prompty.template.strict:
             if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
                 raise ValueError("Nonce mismatch in messages array (strict mode)")
-            
+
         messages = [
             {
                 **{

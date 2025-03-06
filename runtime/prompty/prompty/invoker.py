@@ -86,7 +86,7 @@ class Invoker(abc.ABC):
             The invoked
         """
         return await self.invoke_async(data)
-    
+
 class Renderer(Invoker):
     """Abstract class for Renderer
 
@@ -144,7 +144,7 @@ class Renderer(Invoker):
             self.prompty.template.content = parser.sanitize(self.prompty.content)
 
         return await self.invoke_async(data)
-    
+
 class Parser(Invoker):
     """Abstract class for Parser
 
@@ -298,9 +298,9 @@ class InvokerFactory:
         elif type == "parser":
             return f"{prompty.template.parser}.{prompty.model.api}"
         elif type == "executor":
-            return prompty.model.configuration["type"]
+            return prompty.model.connection["type"]
         elif type == "processor":
-            return prompty.model.configuration["type"]
+            return prompty.model.connection["type"]
         else:
             raise ValueError(f"Type {type} not found")
 
@@ -325,14 +325,14 @@ class InvokerFactory:
             return cls._parsers[name](prompty)
 
         elif type == "executor":
-            name = prompty.model.configuration["type"]
+            name = prompty.model.connection["type"]
             if name not in cls._executors:
                 raise ValueError(f"Executor {name} not found")
 
             return cls._executors[name](prompty)
 
         elif type == "processor":
-            name = prompty.model.configuration["type"]
+            name = prompty.model.connection["type"]
             if name not in cls._processors:
                 raise ValueError(f"Processor {name} not found")
 

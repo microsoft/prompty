@@ -1,12 +1,13 @@
-import os
 import copy
-import uuid
+import os
 import typing
+import uuid
 import warnings
 from collections.abc import AsyncIterator, Iterator
-from dataclasses import dataclass, field, fields, asdict
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Dict, List, Literal, Union
+from typing import Literal, Union
+
 from .tracer import Tracer, to_dict
 from .utils import get_json_type, load_json, load_json_async
 
@@ -29,7 +30,7 @@ class ToolParameter:
 @dataclass
 class Tool:
     name: str
-    type: str 
+    type: str
     description: str = field(default="")
     configuration: dict[str, typing.Any] = field(default_factory=dict)
     parameters: list[ToolParameter] = field(default_factory=list)
@@ -66,8 +67,8 @@ class ModelSettings:
     ----------
     api : str
         The api of the model
-    configuration : dict
-        The configuration of the model
+    connection : dict
+        The connection of the model
     parameters : dict
         The parameters of the model
     response : dict
@@ -75,7 +76,7 @@ class ModelSettings:
     """
 
     api: str = field(default="")
-    configuration: dict = field(default_factory=dict)
+    connection: dict = field(default_factory=dict)
     options: dict = field(default_factory=dict)
 
 
@@ -145,8 +146,8 @@ class Prompty:
     id: str = field(default=uuid.uuid4().hex)
     name: str = field(default="")
     description: str = field(default="")
-    authors: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    authors: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     version: str = field(default="")
     base: str = field(default="")
     basePrompty: Union["Prompty", None] = field(default=None)
@@ -169,9 +170,9 @@ class Prompty:
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
         d: dict[str, typing.Any] = {}
-        for field in fields(self):
-            k = field.name
-            v = getattr(self, field.name)
+        for items in fields(self):
+            k = items.name
+            v = getattr(self, k)
             if v != "" and v != {} and v != [] and v is not None:
                 if k == "model":
                     d[k] = asdict(self.model)
@@ -194,7 +195,7 @@ class Prompty:
                 else:
                     d[k] = v
         return d
-    
+
     def get_sample(self) -> dict[str, typing.Any]:
         sample = {}
         for k, v in self.inputs.items():
@@ -203,7 +204,7 @@ class Prompty:
             elif v.default:
                 sample[k] = v.default
         return sample
-    
+
     def merge_tools(self, tools: list[Tool]) -> None:
         self.tools = [*self.tools, *tools]
 
@@ -219,18 +220,18 @@ class Prompty:
                         parameters.append(ToolParameter(**p))
                 else:
                     raise ValueError("Parameters must be a list")
-            
+
             loaded_tools.append(Tool(**t, parameters=parameters))
 
         return loaded_tools
-    
+
     @staticmethod
     def load_property(value: typing.Any) -> PropertySettings:
-        
+
         # if a dict, need to check if it's a PropertySettings
         if isinstance(value, dict):
             # check if dict is a PropertySettings
-            # needs to contain subset of type, default, 
+            # needs to contain subset of type, default,
             # sample, sanitize, description
             if any([f.name in value for f in fields(PropertySettings)]):
                 return PropertySettings(**value)
@@ -239,9 +240,11 @@ class Prompty:
                 return PropertySettings(type=get_json_type(type(value)), sample=value)
         else:
             return PropertySettings(type=get_json_type(type(value)), sample=value)
-    
+
     @staticmethod
-    def load_raw(attributes: dict, content: str, p: Path, global_config: dict) -> "Prompty":
+    def load_raw(
+        attributes: dict, content: str, p: Path, global_config: dict
+    ) -> "Prompty":
         if "model" not in attributes:
             attributes["model"] = {}
 
@@ -257,8 +260,18 @@ class Prompty:
         try:
             model_props = attributes.pop("model")
             if "parameters" in model_props:
-                warnings.warn("Model parameters is deprecated, use options instead", DeprecationWarning)
+                warnings.warn(
+                    "Model parameters is deprecated, use options instead",
+                    DeprecationWarning,
+                )
                 model_props["options"] = model_props.pop("parameters")
+
+            if "configuration" in model_props:
+                warnings.warn(
+                    "Model configuration is deprecated, use connection instead",
+                    DeprecationWarning,
+                )
+                model_props["connection"] = model_props.pop("configuration")
 
             model = ModelSettings(**model_props)
         except Exception as e:
@@ -269,7 +282,10 @@ class Prompty:
             if "template" in attributes:
                 t = attributes.pop("template")
                 if "type" in t:
-                    warnings.warn("Template type is deprecated, use format instead", DeprecationWarning)
+                    warnings.warn(
+                        "Template type is deprecated, use format instead",
+                        DeprecationWarning,
+                    )
                     t["format"] = t.pop("type")
 
                 if isinstance(t, dict):
@@ -286,7 +302,8 @@ class Prompty:
         if "inputs" in attributes:
             try:
                 inputs = {
-                    k: Prompty.load_property(v) for (k, v) in attributes.pop("inputs").items()
+                    k: Prompty.load_property(v)
+                    for (k, v) in attributes.pop("inputs").items()
                 }
             except Exception as e:
                 raise ValueError(f"Error in inputs: {e}")
@@ -296,7 +313,8 @@ class Prompty:
         if "outputs" in attributes:
             try:
                 outputs = {
-                    k: Prompty.load_property(v) for (k, v) in attributes.pop("outputs").items()
+                    k: Prompty.load_property(v)
+                    for (k, v) in attributes.pop("outputs").items()
                 }
             except Exception as e:
                 raise ValueError(f"Error in outputs: {e}")
@@ -309,11 +327,12 @@ class Prompty:
             if isinstance(tools_attribute, list):
                 tools = Prompty.load_tools(tools_attribute)
 
-
         # infer input types
         # DEPRECATED: use inputs instead of sample
         if "sample" in attributes:
-            warnings.warn("Sample is deprecated, use inputs instead", DeprecationWarning)
+            warnings.warn(
+                "Sample is deprecated, use inputs instead", DeprecationWarning
+            )
             sample = attributes.pop("sample")
             for k, v in sample.items():
                 # implicit input
@@ -330,7 +349,6 @@ class Prompty:
                             f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({get_json_type(type(v))})"
                         )
 
-
         prompty = Prompty(
             model=model,
             inputs=inputs,
@@ -339,7 +357,7 @@ class Prompty:
             template=template,
             content=content,
             file=p,
-            **attributes
+            **attributes,
         )
 
         # setting template scratch pad
@@ -356,12 +374,10 @@ class Prompty:
         top.version = base.version if top.version == "" else top.version
 
         top.model.api = base.model.api if top.model.api == "" else top.model.api
-        top.model.configuration = param_hoisting(
-            top.model.configuration, base.model.configuration
+        top.model.connection = param_hoisting(
+            top.model.connection, base.model.connection
         )
-        top.model.options = param_hoisting(
-            top.model.options, base.model.options
-        )
+        top.model.options = param_hoisting(top.model.options, base.model.options)
 
         top.basePrompty = base
 
@@ -374,7 +390,7 @@ class Prompty:
         f = Path(parent / Path(file)).resolve().absolute()
         if f.exists():
             items = load_json(f)
-            if isinstance(items, List):
+            if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
                 return {
@@ -482,7 +498,7 @@ def param_hoisting(
     top: dict[str, typing.Any],
     bottom: dict[str, typing.Any],
     top_key: Union[str, None] = None,
-) -> Dict[str, typing.Any]:
+) -> dict[str, typing.Any]:
     if top_key:
         new_dict = {**top[top_key]} if top_key in top else {}
     else:

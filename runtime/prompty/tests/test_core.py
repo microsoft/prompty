@@ -1,5 +1,6 @@
-import prompty
 from pathlib import Path
+
+import prompty
 from prompty.tracer import to_dict
 
 
@@ -9,10 +10,9 @@ class TestCore:
         p = prompty.load(prompt_file)
         d = to_dict(p)
         assert d["name"] == "Basic Prompt"
-        assert d["model"]["configuration"]["type"] == "azure"
-        assert d["model"]["configuration"]["azure_deployment"] == "gpt-35-turbo"
+        assert d["model"]["connection"]["type"] == "azure"
+        assert d["model"]["connection"]["azure_deployment"] == "gpt-35-turbo"
         assert d["template"]["format"] == "jinja2"
-
 
     def test_prompty_to_safe_dict(self, **kwargs):
         prompt_file_base = "prompts/fake.prompty"
@@ -25,13 +25,11 @@ class TestCore:
         p.file = "/path/to/file"
         d = p.to_safe_dict()
         assert d["name"] == "Basic Prompt"
-        assert d["model"]["configuration"]["type"] == "azure"
-        assert d["model"]["configuration"]["azure_deployment"] == "gpt-35-turbo"
+        assert d["model"]["connection"]["type"] == "azure"
+        assert d["model"]["connection"]["azure_deployment"] == "gpt-35-turbo"
         assert d["template"]["format"] == "jinja2"
-        assert d["model"]["configuration"]["type"] == "azure"
         assert d["file"] == "/path/to/file"
         assert "basePrompty" not in d
-
 
     def test_prompty_to_safe_dict_file_path(self, **kwargs):
         prompt_file = "prompts/chat.prompty"

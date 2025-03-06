@@ -18,7 +18,7 @@ class FakeAzureExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.api = self.prompty.model.api
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
+        self.deployment = self.prompty.model.connection["azure_deployment"]
         self.options = self.prompty.model.options
 
     def invoke(self, data: typing.Any) -> typing.Any:

@@ -1,5 +1,5 @@
-from collections.abc import AsyncIterator
 import json
+from collections.abc import AsyncIterator
 
 import pytest
 
@@ -200,7 +200,7 @@ async def test_context_groundedness_async():
 def test_embedding_headless():
     p = prompty.headless(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content="hello world",
     )
     emb = prompty.execute(p)
@@ -212,7 +212,7 @@ def test_embedding_headless():
 async def test_embedding_headless_async():
     p = await prompty.headless_async(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content="hello world",
     )
     emb = await prompty.execute_async(p)
@@ -223,7 +223,7 @@ async def test_embedding_headless_async():
 def test_embeddings_headless():
     p = prompty.headless(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = prompty.execute(p)
@@ -235,7 +235,7 @@ def test_embeddings_headless():
 async def test_embeddings_headless_async():
     p = await prompty.headless_async(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = await prompty.execute_async(p)

@@ -23,7 +23,7 @@ class AzureOpenAIExecutor(Invoker):
         super().__init__(prompty)
         self.kwargs = {
             key: value
-            for key, value in self.prompty.model.configuration.items()
+            for key, value in self.prompty.model.connection.items()
             if key != "type"
         }
 
@@ -50,10 +50,10 @@ class AzureOpenAIExecutor(Invoker):
             )
 
         self.api = self.prompty.model.api
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
+        self.deployment = self.prompty.model.connection["azure_deployment"]
         self.options = self.prompty.model.options
 
-    def _sanitize_messages(self, data: typing.Any) -> typing.List[typing.Dict[str, str]]:
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
                 
         if self.prompty.template.strict:
