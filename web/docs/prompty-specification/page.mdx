@@ -3,7 +3,7 @@ title: Prompty Specification
 authors:
   - bethanyjep
   - nitya
-date: 2024-06-10
+date: 2025-03-06
 tags:
   - prompty-file-spec
   - documentation
@@ -262,54 +262,118 @@ definitions:
 
 The Prompty yaml file spec can be found [here](https://github.com/microsoft/prompty/blob/main/Prompty.yaml). Below if you can find a brief description of each section and the attributes within it.
 
+## The of a Prompty Asset
+
+The `.prompty` asset file format makes up the Prompty Specification. In this section we will dive into the different components and attributes of a Prompty asset file.
+
 ### Prompty description attributes:
-```yaml
- name:
-    type: string
-    description: Name of the Prompty
-  description:
-    type: string
-    description: Description of the Prompty
-  version:
-    type: string
-    description: Version of the Prompty
-  authors:
-    type: array
-    description: Authors of the Prompty
-    items:
-      type: string
-  tags:
-    type: array
-    description: Tags of the Prompty
-    items:
-      type: string
+
+#### `name`
+  - type: str
+  
+defines the name of the Prompty file
+
+``` yaml
+name: Basic Prompt
+```
+
+#### `description`
+ - type: string
+ 
+Description of the Prompty
+
+``` yaml
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+```
+
+#### `authors`
+ - type: array
+ - items:
+    - string
+
+Authors of the Prompty
+
+``` yaml
+authors:
+  - sethjuarez
+  - jietong
+```
+
+#### `version`
+ - type: string
+
+Version of the Prompty
+
+``` yaml
+version: v1
+```
+
+#### `tags`
+ - type: array
+ - items:
+    - string
+
+Tags of the prompty
+
+``` yaml
+tags:
+  - writer
+  - contoso
 ```
 ### Sample, inputs, outputs and template attributes:
+
+#### sample
+- type: ``object | string``
+
+object: the sample to be used in the Prompty test execution
+
 ```yaml
-  sample: 
-    oneOf:
-      - type: object
-        description: The sample to be used in the Prompty test execution
-        additionalProperties: true
-      - type: string
-        description: The file to be loaded to be used in the Prompty test execution
-
-
-  inputs:
-    type: object
-    description: The inputs of the Prompty
-
-  outputs:
-    type: object
-    description: The outputs of the Prompty
-
-  template:
-    type: string
-    description: The template engine to be used can be specified here. This is optional.
-    enum: [jinja2]
-    default: jinja2
-
+sample:
+  firstName: Jane
+  lastName: Doe
+  question: What is the meaning of life?
 ```
+
+string: the file to be loaded to be used in the Prompty test execution
+
+```yaml
+sample: ${file:context.json}
+```
+
+#### `inputs`
+- type: object
+
+The inputs of the Prompty
+
+```yaml
+inputs:
+  table:
+    type: string
+    default: sample
+    description: The name of the sample
+  firstName:
+    type: string
+    description: The first name of the customer
+  lastName:
+    type: string
+    default: Doe
+    description: The last name of the customer
+```
+
+#### `outputs`
+- type: object
+
+The outputs of the Prompty
+
+#### `template`
+- type: string
+
+The template engine to be used can be specified here. This is optional. Default template is `jinja2`.
+
+```yaml
+template: mustache
+```
+
 ### Model attributes
 
 ```yaml
