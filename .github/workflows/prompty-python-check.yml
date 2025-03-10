@@ -43,3 +43,26 @@ jobs:
         working-directory: ./runtime/prompty
         run: pdm run mypy . --check-untyped-defs
 
+  publish-artifacts:
+    name: publish artifacts
+    runs-on: ubuntu-latest
+    needs: prompty-tests
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: 3.9
+
+      - name: install dependencies
+        working-directory: ./runtime/prompty
+        run: pdm install
+
+      - name: Publish package distributions to PyPI
+        working-directory: ./runtime/prompty
+        run: pdm build 
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prompty-artifacts
+          path: ./runtime/prompty/dist/*
