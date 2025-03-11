@@ -3,7 +3,7 @@ name: Faithfulness Metric
 description: Faitfullness metric for GPT-4
 base: evaluation.prompty
 model:
-  configuration:
+  connection:
     azure_deployment: gpt-4
 inputs:
   name: Faitfullness Metric

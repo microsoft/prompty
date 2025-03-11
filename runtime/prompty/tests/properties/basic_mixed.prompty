@@ -5,21 +5,37 @@ metadata:
   authors:
     - sethjuarez
     - jietong
-    
+
 model:
   api: chat
   connection:
     azure_deployment: gpt-35-turbo
-  options:
-    stream: true
-    stream_options:
-      include_usage: true
+
 inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?
+
+outputs:
+  answer:
+    type: string
+    description: The answer to the question.
+
+tools:
+  - name: bing
+    type: web_search
+    description: A tool that can search the web for information.
+    configuration:
+      url: https://api.bing.microsoft.com/v7.0/search
+    parameters:
+      query:
+        type: string
+        description: The search query to use.
+      count:
+        type: number
+        description: The number of results to return.
 ---
-system:
+system[name="seth"]:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.

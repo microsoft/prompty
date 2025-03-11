@@ -26,6 +26,19 @@ def test_load(prompt: str):
     print(p)
 
 
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "properties/basic_array.prompty",
+        "properties/basic_dictionary.prompty",
+        "properties/basic_mixed.prompty",
+    ],
+)
+def test_complex_properties(prompt: str):
+    p = prompty.load(prompt)
+    print(p)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "prompt",

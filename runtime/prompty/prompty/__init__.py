@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Union
 
 from .core import (
-    ModelSettings,
+    ModelProperty,
     Prompty,
-    TemplateSettings,
+    TemplateProperty,
     param_hoisting,
 )
 from .invoker import InvokerFactory
@@ -69,19 +69,17 @@ def headless(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(format="NOOP", parser="NOOP")
-    modelSettings = ModelSettings(
+    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
+    modelProperty = ModelProperty(
         api=api,
         connection=Prompty.normalize(
-            param_hoisting(
-                connection, load_global_config(caller.parent, config)
-            ),
+            param_hoisting(connection, load_global_config(caller.parent, config)),
             caller.parent,
         ),
         options=options,
     )
 
-    return Prompty(model=modelSettings, template=templateSettings, content=content)
+    return Prompty(model=modelProperty, template=templateProperty, content=content)
 
 
 @trace(description="Create a headless prompty object for programmatic use.")
@@ -126,20 +124,20 @@ async def headless_async(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(format="NOOP", parser="NOOP")
+    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
 
     global_config = await load_global_config_async(caller.parent, config)
     c = await Prompty.normalize_async(
         param_hoisting(connection, global_config), caller.parent
     )
 
-    modelSettings = ModelSettings(
+    modelProperty = ModelProperty(
         api=api,
         connection=c,
         options=options,
     )
 
-    return Prompty(model=modelSettings, template=templateSettings, content=content)
+    return Prompty(model=modelProperty, template=templateProperty, content=content)
 
 
 @trace(description="Load a prompty file.")
@@ -252,19 +250,19 @@ def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sampl
         inputs = param_hoisting(inputs, prompt.get_sample())
 
     clean_inputs = {}
-    for k, v in prompt.inputs.items():
-        if k in inputs:
-            if v.type != get_json_type(type(inputs[k])):
+    for input in prompt.inputs:
+        if input.name in inputs:
+            if input.type != get_json_type(type(inputs[input.name])):
                 raise ValueError(
-                    f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({v.type})"
+                    f"Type mismatch for input property {input.name}: input type ({inputs[input.name].type}) != sample type ({input.type})"
                 )
-            clean_inputs[k] = inputs[k]
+            clean_inputs[input.name] = inputs[input.name]
         else:
-            if v.default is not None:
-                clean_inputs[k] = v.default
+            if input.default is not None:
+                clean_inputs[input.name] = input.default
             else:
-                raise ValueError(f"Missing input property {k}")
-            
+                raise ValueError(f"Missing input property {input.name}")
+
     return clean_inputs
 
 @trace(description="Prepare the inputs for the prompt.")

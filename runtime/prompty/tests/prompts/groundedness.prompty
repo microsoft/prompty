@@ -1,12 +1,14 @@
 ---
 name: QnA Groundedness Evaluation
 description: Compute the groundedness of the answer for the given question based on the context.
-authors:
-  - sethjuarez
-  - jietong
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-  configuration:
+  connection:
     azure_deployment: gpt-4
 inputs:
   question: What feeds all the fixtures in low voltage tracks instead of each light having a line-to-low voltage transformer?

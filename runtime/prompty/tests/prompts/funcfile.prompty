@@ -1,13 +1,16 @@
 ---
 name: Researcher Agent
 description: A basic prompt that uses the GPT-3 chat API to answer questions
-authors:
-  - Seth Juarez
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-  configuration:
+  connection:
     azure_deployment: gpt-35-turbo
-  parameters:
+  options:
     tools: ${file:funcfile.json}
 inputs:
   firstName: Seth

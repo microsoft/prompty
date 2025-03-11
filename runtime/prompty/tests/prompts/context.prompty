@@ -1,12 +1,14 @@
 ---
 name: Prompt with complex context
 description: A basic prompt with intermediate context data
-authors:
-  - sethjuarez
-  - jietong
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-  configuration:
+  connection:
     azure_deployment: gpt-35-turbo
 inputs: ${file:context.json}
 ---

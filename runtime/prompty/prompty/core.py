@@ -6,7 +6,7 @@ import warnings
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
 from .tracer import Tracer, to_dict
 from .utils import get_json_type, load_json, load_json_async
@@ -20,47 +20,61 @@ class ToolCall:
 
 
 @dataclass
-class ToolParameter:
-    name: str
-    type: str
-    description: str = field(default="")
-    required: bool = field(default=False)
-
-
-@dataclass
-class Tool:
-    name: str
-    type: str
-    description: str = field(default="")
-    configuration: dict[str, typing.Any] = field(default_factory=dict)
-    parameters: list[ToolParameter] = field(default_factory=list)
-
-
-@dataclass
-class PropertySettings:
-    """PropertySettings class to define the properties of the model
+class InputProperty:
+    """InputProperty class to define the input properties of the model
 
     Attributes
     ----------
     type : str
         The type of the property
-    default : any
-        The default value of the property
     description : str
         The description of the property
+    required : bool
+        Whether the property is required or not
+    default : any
+        The default value of the property
+    sample : any
+        The sample value of the property
+    strict : bool
+        Whether the property is strict or not
+    json_schema : dict
+        The json schema of the property (optional)
     """
 
     type: Literal["string", "number", "array", "object", "boolean"]
-    default: Union[str, int, float, list, dict, bool, None] = field(default=None)
-    sample: Union[str, int, float, list, dict, bool, None] = field(default=None)
-    required: bool = field(default=False)
-    strict: bool = field(default=True)
-    json_schema: dict = field(default_factory=dict)
+    name: str = field(default="")
     description: str = field(default="")
+    required: bool = field(default=False)
+    default: typing.Any = field(default=None)
+    sample: typing.Any = field(default=None)
+    strict: bool = field(default=True)
+    json_schema: Optional[dict] = field(default_factory=dict)
+
+@dataclass
+class OutputProperty:
+    """OutputProperty class to define the output properties of the model
+
+    Attributes
+    ----------
+    type : str
+        The type of the property
+    description : str
+        The description of the property
+    default : any
+        The default value of the property
+    json_schema : dict
+        The json schema of the property (optional)
+    """
+
+    type: Literal["string", "number", "array", "object", "boolean"]
+    name: str = field(default="")
+    description: str = field(default="")
+    default: typing.Any = field(default=None)
+    json_schema: Optional[dict] = field(default_factory=dict)
 
 
 @dataclass
-class ModelSettings:
+class ModelProperty:
     """ModelSettings class to define the model of the prompty
 
     Attributes
@@ -75,13 +89,14 @@ class ModelSettings:
         The response of the model
     """
 
+    id: str = field(default="")
     api: str = field(default="")
     connection: dict = field(default_factory=dict)
     options: dict = field(default_factory=dict)
 
 
 @dataclass
-class TemplateSettings:
+class TemplateProperty:
     """TemplateSettings class to define the template of the prompty
 
     Attributes
@@ -105,6 +120,23 @@ class TemplateSettings:
 
 
 @dataclass
+class ToolParameter:
+    name: str
+    type: Literal["string", "number", "array", "object", "boolean"]
+    description: str = field(default="")
+    required: bool = field(default=False)
+
+
+@dataclass
+class ToolProperty:
+    name: str
+    type: str
+    description: Optional[str] = field(default="")
+    configuration: dict[str, typing.Any] = field(default_factory=dict)
+    parameters: list[ToolParameter] = field(default_factory=list)
+
+
+@dataclass
 class Prompty:
     """Prompty class to define the prompty
 
@@ -112,16 +144,14 @@ class Prompty:
     ----------
     id : str
         The id of the prompty
+    version : str
+        The version of the prompty
     name : str
         The name of the prompty
     description : str
         The description of the prompty
-    authors : list[str]
-        The authors of the prompty
-    tags : list[str]
-        The tags of the prompty
-    version : str
-        The version of the prompty
+    metadata : dict
+        The metadata of the prompty
     base : str
         The base of the prompty
     basePrompty : Prompty
@@ -144,29 +174,67 @@ class Prompty:
 
     # metadata
     id: str = field(default=uuid.uuid4().hex)
+    version: str = field(default="")
     name: str = field(default="")
     description: str = field(default="")
-    authors: list[str] = field(default_factory=list)
-    tags: list[str] = field(default_factory=list)
-    version: str = field(default="")
+    metadata: dict[str, typing.Any] = field(default_factory=dict)
+
+    # future: undocumented template inheritance
     base: str = field(default="")
     basePrompty: Union["Prompty", None] = field(default=None)
 
-    # model
-    model: ModelSettings = field(default_factory=ModelSettings)
+    # model execution
+    model: ModelProperty = field(default_factory=ModelProperty)
 
     # input / output
-    inputs: dict[str, PropertySettings] = field(default_factory=dict)
-    outputs: dict[str, PropertySettings] = field(default_factory=dict)
+    inputs: list[InputProperty] = field(default_factory=list)
+    outputs: list[OutputProperty] = field(default_factory=list)
 
     # tools
-    tools: list[Tool] = field(default_factory=list)
+    tools: list[ToolProperty] = field(default_factory=list)
 
     # template
-    template: TemplateSettings = field(default_factory=TemplateSettings)
+    template: TemplateProperty = field(default_factory=TemplateProperty)
 
     file: Union[str, Path] = field(default="")
     content: Union[str, list[str], dict] = field(default="")
+
+    def get_input(self, name: str) -> InputProperty:
+        """Get the property of the prompty
+
+        Parameters
+        ----------
+        name : str
+            The name of the property
+
+        Returns
+        -------
+        InputProperty
+            The property of the prompty
+        """
+        for i in self.inputs:
+            if i.name == name:
+                return i
+        raise ValueError(f"Property {name} not found")
+
+    def get_output(self, name: str) -> OutputProperty:
+        """Get the output property of the prompty
+
+        Parameters
+        ----------
+        name : str
+            The name of the property
+
+        Returns
+        -------
+        OutputProperty
+            The property of the prompty
+        """
+
+        for i in self.outputs:
+            if i.name == name:
+                return i
+        raise ValueError(f"Property {name} not found")
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
         d: dict[str, typing.Any] = {}
@@ -198,48 +266,103 @@ class Prompty:
 
     def get_sample(self) -> dict[str, typing.Any]:
         sample = {}
-        for k, v in self.inputs.items():
-            if v.sample:
-                sample[k] = v.sample
-            elif v.default:
-                sample[k] = v.default
+        for input in self.inputs:
+            if input.sample:
+                sample[input.name] = input.sample
+            elif input.default:
+                sample[input.name] = input.default
         return sample
 
-    def merge_tools(self, tools: list[Tool]) -> None:
+    def merge_tools(self, tools: list[ToolProperty]) -> None:
         self.tools = [*self.tools, *tools]
 
     @staticmethod
-    def load_tools(tools: list[dict]) -> list[Tool]:
+    def load_tools(tools: list[dict]) -> list[ToolProperty]:
         loaded_tools = []
-        for t in tools:
-            parameters = []
-            if "parameters" in t:
-                if isinstance(t["parameters"], list):
-                    params = t.pop("parameters")
-                    for p in params:
-                        parameters.append(ToolParameter(**p))
-                else:
-                    raise ValueError("Parameters must be a list")
 
-            loaded_tools.append(Tool(**t, parameters=parameters))
+        for t in tools:
+            configuration = t.pop("configuration") if "configuration" in t else {}
+            params = t.pop("parameters") if "parameters" in t else []
+            parameters: dict[str, ToolParameter] = {}
+            if isinstance(params, dict):
+                # if parameters is a dict, convert to list of ToolParameter
+                parameters = {
+                    k: ToolParameter(name=k, **v) for k, v in params.items()
+                }
+            elif isinstance(params, list):
+                # if parameters is a list, convert to list of ToolParameter
+                parameters = {
+                    p["name"]: ToolParameter(**p) for p in params
+                }
+            elif params:
+                raise ValueError("Parameters must be a list or dict")
+
+            # hoist params from config if they exist
+            if "parameters" in configuration:
+                params = configuration.pop("parameters")
+                if isinstance(params, dict):
+                    for k, v in params.items():
+                        if k not in parameters:
+                            parameters[k] = ToolParameter(name=k, **v)
+                        else:
+                            raise ValueError(
+                                f"Duplicate parameter {k} in configuration and parameters"
+                            )
+                elif isinstance(params, list):
+                    for p in params:
+                        if p["name"] not in parameters:
+                            parameters[p["name"]] = ToolParameter(**p)
+                        else:
+                            raise ValueError(
+                                f"Duplicate parameter {p['name']} in configuration and parameters"
+                            )
+                else:
+                    raise ValueError("Parameters must be a list or dict")
+
+            if t["type"] == "function" and parameters == {}:
+                # if function, need to have parameters
+                raise ValueError("Function tools must have parameters")
+
+            loaded_tools.append(ToolProperty(**t, parameters=[*parameters.values()], configuration=configuration))
 
         return loaded_tools
 
     @staticmethod
-    def load_property(value: typing.Any) -> PropertySettings:
+    def load_input_property(name: str, value: typing.Any) -> InputProperty:
 
-        # if a dict, need to check if it's a PropertySettings
+        # if a dict, need to check if it's a InputProperty
         if isinstance(value, dict):
-            # check if dict is a PropertySettings
+            # check if dict is a InputProperty
             # needs to contain subset of type, default,
             # sample, sanitize, description
-            if any([f.name in value for f in fields(PropertySettings)]):
-                return PropertySettings(**value)
+            if any([f.name in value for f in fields(InputProperty)]):
+                ip = InputProperty(**value)
+                if ip.name == "":
+                    ip.name = name
+                return ip
             # otherwise, assume it's a sample value
             else:
-                return PropertySettings(type=get_json_type(type(value)), sample=value)
+                return InputProperty(type=get_json_type(type(value)), sample=value, name=name)
         else:
-            return PropertySettings(type=get_json_type(type(value)), sample=value)
+            return InputProperty(type=get_json_type(type(value)), sample=value, name=name)
+
+    @staticmethod
+    def load_output_property(name: str, value: typing.Any) -> OutputProperty:
+        # if a dict, need to check if it's a PropertySettings
+        if isinstance(value, dict):
+            # check if dict is a OutputProperty
+            # needs to contain subset of type, default,
+            # sample, sanitize, description
+            if any([f.name in value for f in fields(OutputProperty)]):
+                op = OutputProperty(**value)
+                if op.name == "":
+                    op.name = name
+                return op
+            # otherwise, assume it's a sample value
+            else:
+                return OutputProperty(type=get_json_type(type(value)), name=name)
+        else:
+            return OutputProperty(type=get_json_type(type(value)), name=name)
 
     @staticmethod
     def load_raw(
@@ -248,24 +371,9 @@ class Prompty:
         if "model" not in attributes:
             attributes["model"] = {}
 
-        if "configuration" not in attributes["model"]:
-            attributes["model"]["configuration"] = global_config
-        else:
-            attributes["model"]["configuration"] = param_hoisting(
-                attributes["model"]["configuration"],
-                global_config,
-            )
-
         # pull model settings out of attributes
         try:
             model_props = attributes.pop("model")
-            if "parameters" in model_props:
-                warnings.warn(
-                    "Model parameters is deprecated, use options instead",
-                    DeprecationWarning,
-                )
-                model_props["options"] = model_props.pop("parameters")
-
             if "configuration" in model_props:
                 warnings.warn(
                     "Model configuration is deprecated, use connection instead",
@@ -273,7 +381,23 @@ class Prompty:
                 )
                 model_props["connection"] = model_props.pop("configuration")
 
-            model = ModelSettings(**model_props)
+            if "parameters" in model_props:
+                warnings.warn(
+                    "Model parameters is deprecated, use options instead",
+                    DeprecationWarning,
+                )
+                model_props["options"] = model_props.pop("parameters")
+
+            # load connection settings
+            if "connection" not in model_props:
+                model_props["connection"] = global_config
+            else:
+                model_props["connection"] = param_hoisting(
+                    model_props["connection"],
+                    global_config,
+                )
+
+            model = ModelProperty(**model_props)
         except Exception as e:
             raise ValueError(f"Error in model settings: {e}")
 
@@ -289,37 +413,47 @@ class Prompty:
                     t["format"] = t.pop("type")
 
                 if isinstance(t, dict):
-                    template = TemplateSettings(**t)
+                    template = TemplateProperty(**t)
                 # has to be a string denoting the type
                 else:
-                    template = TemplateSettings(format=t, parser="prompty")
+                    template = TemplateProperty(format=t, parser="prompty")
             else:
-                template = TemplateSettings(format="jinja2", parser="prompty")
+                template = TemplateProperty(format="jinja2", parser="prompty")
         except Exception as e:
             raise ValueError(f"Error in template loader: {e}")
 
         # formalize inputs and outputs
+        inputs: dict[str, InputProperty] = {}
         if "inputs" in attributes:
-            try:
+            raw_inputs = attributes.pop("inputs")
+            if isinstance(raw_inputs, list):
                 inputs = {
-                    k: Prompty.load_property(v)
-                    for (k, v) in attributes.pop("inputs").items()
+                    # name should be in list item
+                    i["name"]: Prompty.load_input_property(i["name"], i)
+                    for i in raw_inputs
                 }
-            except Exception as e:
-                raise ValueError(f"Error in inputs: {e}")
-        else:
-            inputs = {}
+            elif isinstance(raw_inputs, dict):
+                inputs = {
+                    k: Prompty.load_input_property(k, v) for (k, v) in raw_inputs.items()
+                }
+            else:
+                raise ValueError("Inputs must be a list or dict")
 
+        outputs: dict[str, OutputProperty] = {}
         if "outputs" in attributes:
-            try:
+            raw_outputs = attributes.pop("outputs")
+            if isinstance(raw_outputs, list):
                 outputs = {
-                    k: Prompty.load_property(v)
-                    for (k, v) in attributes.pop("outputs").items()
+                    # name should be in list item
+                    i["name"]: Prompty.load_output_property("", i)
+                    for i in raw_outputs
                 }
-            except Exception as e:
-                raise ValueError(f"Error in outputs: {e}")
-        else:
-            outputs = {}
+            elif isinstance(raw_outputs, dict):
+                outputs = {
+                    k: Prompty.load_output_property(k, v) for (k, v) in raw_outputs.items()
+                }
+            else:
+                raise ValueError("Outputs must be a list or dict")
 
         tools = []
         if "tools" in attributes:
@@ -336,9 +470,10 @@ class Prompty:
             sample = attributes.pop("sample")
             for k, v in sample.items():
                 # implicit input
+                # check if k is in inputs
                 if k not in inputs:
                     # infer v type to json type
-                    inputs[k] = PropertySettings(type=get_json_type(type(v)))
+                    inputs[k] = Prompty.load_input_property(k, v)
                 else:
                     # explicit input (overwrite type?)
                     if inputs[k].type is None:
@@ -349,10 +484,32 @@ class Prompty:
                             f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({get_json_type(type(v))})"
                         )
 
+        metadata = attributes.pop("metadata") if "metadata" in attributes else {}
+        # DEPRECATED: authors and tags now in metadata
+        if "authors" in attributes:
+            warnings.warn(
+                "Authors is deprecated, add authors to metadata instead", DeprecationWarning
+            )
+            authors = attributes.pop("authors")
+            if isinstance(authors, list):
+                metadata["authors"] = authors
+            else:
+                raise ValueError("Authors must be a list")
+        if "tags" in attributes:
+            warnings.warn(
+                "Tags is deprecated, add tags to metadata instead", DeprecationWarning
+            )
+            tags = attributes.pop("tags")
+            if isinstance(tags, list):
+                metadata["tags"] = tags
+            else:
+                raise ValueError("Tags must be a list")
+
         prompty = Prompty(
             model=model,
-            inputs=inputs,
-            outputs=outputs,
+            metadata=metadata,
+            inputs=[*inputs.values()],
+            outputs=[*outputs.values()],
             tools=tools,
             template=template,
             content=content,
@@ -369,8 +526,7 @@ class Prompty:
     def hoist_base_prompty(top: "Prompty", base: "Prompty") -> "Prompty":
         top.name = base.name if top.name == "" else top.name
         top.description = base.description if top.description == "" else top.description
-        top.authors = list(set(base.authors + top.authors))
-        top.tags = list(set(base.tags + top.tags))
+        top.metadata = param_hoisting(top.metadata, base.metadata)
         top.version = base.version if top.version == "" else top.version
 
         top.model.api = base.model.api if top.model.api == "" else top.model.api

@@ -1,10 +1,12 @@
 import pytest
+
 import prompty
 from prompty.azure.processor import AzureOpenAIProcessor
 from prompty.invoker import InvokerFactory
 from prompty.serverless.processor import ServerlessProcessor
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
+
 
 @pytest.fixture(scope="module", autouse=True)
 def fake_azure_executor():

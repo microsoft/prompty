@@ -3,9 +3,9 @@ name: Base Evaluation Template
 description: Base Evaluator for GPT-4
 model:
   api: chat
-  configuration:
+  connection:
     azure_deployment: gpt-4
-  parameters:
+  options:
     temperature: 0.0
     max_tokens: 200
     top_p: 1.0
