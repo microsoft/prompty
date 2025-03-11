@@ -176,17 +176,18 @@ Common parameters that can be configured for model execution:
     <tr>
       <td><code>response_format</code></td>
       <td>object</td>
-      <td>An object specifying the format that the model must output.</tr>
+      <td>An object specifying the format that the model must output.</td>
+    </tr>
     <tr>
       <td><code>seed</code></td>
       <td>integer</td>
-      <td>For deterministic sampling. This feature is in Beta. If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result. Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes
-          in the backend. </td>
+      <td>For deterministic sampling. This feature is in Beta. If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result. Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend. </td>
     </tr>
     <tr>
       <td><code>max_tokens</code></td>
       <td>integer</td>
-      <td>The maximum number of [tokens](/tokenizer) that can be generated in the chat completion.    </tr>
+      <td>The maximum number of [tokens](/tokenizer) that can be generated in the chat completion. </td>   
+    </tr>
     <tr>
       <td><code>temperature</code></td>
       <td>number</td>
@@ -220,29 +221,47 @@ Common parameters that can be configured for model execution:
 ## Sample Prompty
 
 ```yaml
-name: "My Prompty"
-description: "A sample prompty configuration"
-version: "1.0.0"
+---
+name: ExamplePrompt
+description: A prompt that uses context to ground an incoming question
 authors:
-  - "Jane Doe"
-tags:
-  - "nlp"
-  - "chat"
-
+  - Seth Juarez
 model:
   api: chat
   configuration:
     type: azure_openai
-    api_key: ${env:OPENAI_API_KEY}
-    api_version: "2023-05-15"
-    azure_deployment: "gpt4"
-    azure_endpoint: "https://my-endpoint.openai.azure.com"
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: <your-deployment>
+    api_version: 2024-07-01-preview
   parameters:
-    temperature: 0.7
-    max_tokens: 1000
-    frequency_penalty: 0.0
-    presence_penalty: 0.0
-  response: first
+    max_tokens: 3000
+sample:
+  firstName: Seth
+  context: >
+    The Alpine Explorer Tent boasts a detachable divider for privacy, 
+    numerous mesh windows and adjustable vents for ventilation, and 
+    a waterproof design. It even has a built-in gear loft for storing 
+    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    and convenience, making it your second home in the heart of nature!
+  question: What can you tell me about your tents?
+---
 
-template: jinja2
+system:
+You are an AI assistant who helps people find information. As the assistant, 
+you answer questions briefly, succinctly, and in a personable manner using 
+markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+# Context
+Use the following context to provide a more personalized response to {{firstName}}:
+{{context}}
+
+user:
+{{question}}
 ```
+
+---
+[Want to Contribute To the Project?](/docs/contributing/)
