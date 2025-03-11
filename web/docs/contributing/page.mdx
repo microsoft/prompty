@@ -26,4 +26,39 @@ Feedback can come in several forms:
 The easiest way to give us feedback is by [filing an issue](https://github.com/microsoft/prompty/issues/new?template=Blank+issue). **Please check previously logged issues (open and closed) to make sure the topic or bug has not already been raised.** If it does exist, weigh in on that discussion thread to add any additional context of value.
 
 ## Contributor guidelines
-The repository contains both the code and the documentation for the project. Each requires a different set of tools and processes to build and preview outcomes. We hope to document these soon - so check back for **contributor guidelines** that will cover the requirements in more detail.
+The repository contains both the code and the documentation for the project. Each requires a different set of tools and processes to build and preview outcomes. 
+
+### Documentation guidelines
+For contributing to the Prompty documentation:
+
+1. Local Setup
+    - Our documentation uses MDX (Markdown + JSX) and is built with a static site generator.
+    - Install dependencies with `npm install` in the `web` directory.
+    - Use Node.js 18+ for best compatibility.
+
+2. Making Changes
+    - Documentation files are located in the `docs` directory.
+    - Follow the existing folder structure and naming conventions.
+    - Use `.mdx` extension for all documentation files.
+
+3. Previewing Changes
+    - Start the local development server with `npm run dev` from the `web` directory.
+    - View your changes at [http://localhost:3000](http://localhost:3000).
+    - The site will hot-reload as you edit files.
+
+4. Building Documentation
+    - Test a production build with `npm run build` followed by `npm run start`.
+    - Check for any build errors or warnings before submitting your PR.
+
+### Code contribution guidelines
+
+..to be updated
+
+## Pull Requests Guidelines
+When submitting a pull request (PR) to the Prompty repository, please use the following guidelines:
+
+- Fork the Repository: Always fork the repository to your own account before making your modifications.
+- Separate pull requests (PR):
+  - Submit each type of change in its own pull request. For example, bug fixes and documentation updates should be submitted in separate PRs.
+  - Typo fixes and minor documentation updates can be combined into a single PR where appropriate.
+  - Handle merge conflicts: If your pull request shows merge conflicts, update your local main branch to mirror the main repository before making your modifications.
