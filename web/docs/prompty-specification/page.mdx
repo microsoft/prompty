@@ -3,477 +3,265 @@ title: Prompty Specification
 authors:
   - bethanyjep
   - nitya
-date: 2024-06-10
+date: 2025-03-06
 tags:
   - prompty-file-spec
   - documentation
 index: 3
 ---
 
-<details>
-<summary> Click to view the complete `Prompty.yaml` specification </summary>
+
+{/* This was generated using Claude Sonnet 3.5 using GitHub Copliot Chat
+
+Steps to regenerate:
+1. Head over to the Copilot Icon on your IDE to open up chat
+2. Open the ``prompty.yaml`` file, this ensures Copilot uses the file as reference
+3. Switch the model to Claude 3.5 Sonnet (Preview)
+4. Add the prompt below to regenerate documentation
+5. Once done, evaluate and check for any inconsistencies
+6. If everything is fine, update the .mdx file and create a PR to update changes
+
+Prompt to regenerate:
+Write comprehensive reference documentation for the provided YAML file. The documentation should be structured in Markdown format and include the following elements:
+- Clearly describe each attribute, including its purpose and expected values.
+- For sections containing multiple attributes, present them in a structured table format for readability.
+- Provide relevant usage examples showcasing different configurations of the YAML file.
+- Ensure proper mdx styling, including headers, code blocks, and bullet points where appropriate. */}
+
+
+
+The Prompty yaml file spec can be found [here](https://github.com/microsoft/prompty/blob/main/Prompty.yaml). Below you can find a brief description of each section and the attributes within it.
+
+## Prompty description attributes:
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>name</code></td>
+      <td>string</td>
+      <td>Name of the prompty</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>string</td>
+      <td>Description of the prompty</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>version</code></td>
+      <td>string</td>
+      <td>Version number</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>authors</code></td>
+      <td>array</td>
+      <td>List of prompty authors</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>tags</code></td>
+      <td>tags</td>
+      <td>Categorization tags</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
+
+## Input/Output Specifications
+
+### Inputs
+
+The `inputs` object defines the expected input format for the prompty:
 
 ```yaml
-# This schema represents the specification file for the prompty
-# _frontmatter_, not the content section.
+inputs:
+  type: object
+  description: "Input specification"
+```
 
-$schema: http://json-schema.org/draft-07/schema#  
-$id: http://azureml/sdk-2-0/Prompty.yaml  
-title: Prompty front matter schema specification  
-description: A specification that describes how to provision a new prompty using definition frontmatter.
+### Outputs
 
-type: object 
-properties:
-  $schema:
-    type: string
-  # metadata section
-  model:
-    type: object
-    additionalProperties: false
-    properties:
-      api:
-        type: string
-        enum: 
-        - chat
-        - completion
-        description: The API to use for the prompty -- this has implications on how the template is processed and how the model is called.
-        default: chat
+The `outputs` object defines the expected output format:
 
-      configuration:
-        oneOf:
-          - $ref: "#/definitions/azureOpenaiModel"
-          - $ref: "#/definitions/openaiModel"
-          - $ref: "#/definitions/maasModel"
-  
-      parameters:
-        $ref: "#/definitions/parameters"
+```yaml
+outputs:
+  type: object
+  description: "Output specification"
+```
 
-      response: 
-        type: string
-        description: This determines whether the full (raw) response or just the first response in the choice array is returned.
-        default: first 
-        enum:
-          - first
-          - full
+## Template Engine
 
+Currently supports:
+- `jinja2` (default) - Jinja2 template engine for text processing
 
-  name:
-    type: string
-    description: Name of the prompty
-  description:
-    type: string
-    description: Description of the prompty
-  version:
-    type: string
-    description: Version of the prompty
-  authors:
-    type: array
-    description: Authors of the prompty
-    items:
-      type: string
-  tags:
-    type: array
-    description: Tags of the prompty
-    items:
-      type: string
+### Model Configuration
 
-  # not yet supported -- might add later
-  # base:
-  #   type: string
-  #   description: The base prompty to use as a starting point
+The `model` section defines how the AI model should be configured and executed.
 
-  sample: 
-    oneOf:
-      - type: object
-        description: The sample to be used in the prompty test execution
-        additionalProperties: true
-      - type: string
-        description: The file to be loaded to be used in the prompty test execution
-
-  # the user can provide a single sample in a file or specify the data inline
-  # sample:
-  #   messages: 
-  #     - role: user
-  #       content: where is the nearest coffee shop?
-  #     - role: system
-  #       content: I'm sorry, I don't know that. Would you like me to look it up for you?
-  # or point to a file
-  # sample: sample.json
-  # also the user can specify the data on the command line
-  # pf flow test --flow p.prompty --input my_sample.json
-  # if the user runs this command, the sample from the prompty will be used
-  # pf flow test --flow p.prompty   
-    
-  inputs:
-    type: object
-    description: The inputs to the prompty
-
-  outputs:
-    type: object
-    description: The outputs of the prompty
-
-  # currently not supported -- might not be needed
-  # init_signature:
-  #   type: object
-  #   description: The signature of the init function
-
-  template:
-    type: string
-    description: The template engine to be used can be specified here. This is optional.
-    enum: [jinja2]
-    default: jinja2
-
-
-
-additionalProperties: false
-
-definitions:
-  # vanilla openai models
-  openaiModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: openai
-      name:
-        type: string
-        description: Name of the model
-      organization:
-        type: string
-        description: Name of the organization
-    additionalProperties: false
-
-  # azure openai models
-  azureOpenaiModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: azure_openai
-      api_version:
-        type: string
-        description: Version of the model
-      azure_deployment:
-        type: string
-        description: Deployment of the model
-      azure_endpoint:
-        type: string
-        description: Endpoint of the model
-    additionalProperties: false
-
-  # for maas models
-  maasModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: azure_serverless
-      azure_endpoint:
-        type: string
-        description: Endpoint of the model
-    additionalProperties: false
-
-  # parameters for the model -- for now these are not per model but the same for all models
+```yaml
+model:
+  api: chat
+  configuration:
+    # model-specific configuration
   parameters:
-    type: object
-    description: Parameters to be sent to the model 
-    additionalProperties: true
-    properties: 
-      response_format: 
-        type: object
-        description: >
-          An object specifying the format that the model must output. Compatible with
-          `gpt-4-1106-preview` and `gpt-3.5-turbo-1106`.
-          Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-          message the model generates is valid JSON.
-
-      seed:
-        type: integer
-        description: > 
-          This feature is in Beta. If specified, our system will make a best effort to
-          sample deterministically, such that repeated requests with the same `seed` and
-          parameters should return the same result. Determinism is not guaranteed, and you
-          should refer to the `system_fingerprint` response parameter to monitor changes
-          in the backend.
-
-      max_tokens:
-        type: integer
-        description: The maximum number of [tokens](/tokenizer) that can be generated in the chat completion.
-
-      temperature:
-        type: number
-        description: What sampling temperature to use, 0 means deterministic.
-
-      tools_choice:
-        oneOf:
-          - type: string
-          - type: object
-        
-        description: > 
-          Controls which (if any) function is called by the model. `none` means the model
-          will not call a function and instead generates a message. `auto` means the model
-          can pick between generating a message or calling a function. Specifying a
-          particular function via
-          `{"type": "function", "function": {"name": "my_function"}}` forces the model to
-          call that function.
-
-          `none` is the default when no functions are present. `auto` is the default if
-          functions are present.
-
-      tools:
-        type: array
-        items:
-          type: object
-
-      frequency_penalty:
-        type: number
-        description: What sampling frequency penalty to use. 0 means no penalty.
-      
-      presence_penalty:
-        type: number
-        description: What sampling presence penalty to use. 0 means no penalty.
-      
-      stop:
-        type: array
-        items:
-          type: string
-        description: > 
-          One or more sequences where the model should stop generating tokens. The model
-          will stop generating tokens if it generates one of the sequences. If the model
-          generates a sequence that is a prefix of one of the sequences, it will continue
-          generating tokens.
-      
-      top_p:
-        type: number
-        description: > 
-          What nucleus sampling probability to use. 1 means no nucleus sampling. 0 means
-          no tokens are generated.
-
+    # execution parameters
+  response: first
 ```
 
-</details>
+#### Model API Types
 
+- `chat` (default) - For chat-based interactions
+- `completion` - For text completion tasks
 
-The Prompty yaml file spec can be found [here](https://github.com/microsoft/prompty/blob/main/Prompty.yaml). Below if you can find a brief description of each section and the attributes within it.
+#### Response Types
 
-### Prompty description attributes:
+This determines whether the full (raw) response or just the first response in the choice array is returned.
+
+- `first` (default) - Returns only the first response
+- `all` - Returns all response choices
+
+## Model Providers
+
+### Azure OpenAI Configuration
+
 ```yaml
- name:
-    type: string
-    description: Name of the Prompty
-  description:
-    type: string
-    description: Description of the Prompty
-  version:
-    type: string
-    description: Version of the Prompty
-  authors:
-    type: array
-    description: Authors of the Prompty
-    items:
-      type: string
-  tags:
-    type: array
-    description: Tags of the Prompty
-    items:
-      type: string
+configuration:
+  type: azure_openai
+  api_key: ${env:OPENAI_API_KEY}
+  api_version: "2023-05-15"
+  azure_deployment: "my-deployment"
+  azure_endpoint: "https://my-endpoint.openai.azure.com"
 ```
-### Sample, inputs, outputs and template attributes:
+
+### OpenAI Configuration
+
 ```yaml
-  sample: 
-    oneOf:
-      - type: object
-        description: The sample to be used in the Prompty test execution
-        additionalProperties: true
-      - type: string
-        description: The file to be loaded to be used in the Prompty test execution
-
-
-  inputs:
-    type: object
-    description: The inputs of the Prompty
-
-  outputs:
-    type: object
-    description: The outputs of the Prompty
-
-  template:
-    type: string
-    description: The template engine to be used can be specified here. This is optional.
-    enum: [jinja2]
-    default: jinja2
-
+configuration:
+  type: openai
+  name: "gpt-4"
+  organization: "my-org"
 ```
-### Model attributes
+
+### MaaS Configuration
 
 ```yaml
-  model: string
-        enum: 
-        - chat
-        - completion
-        description: The API to use for the Prompty -- this has implications on how the template is processed and how the model is called.
-        default: chat
-
-      configuration:
-        oneOf:
-          - $ref: "#/definitions/azureOpenaiModel"
-          - $ref: "#/definitions/openaiModel"
-          - $ref: "#/definitions/maasModel"
-  
-      parameters:
-        $ref: "#/definitions/parameters"
-
-      response: 
-        type: string
-        description: This determines whether the full (raw) response or just the first response in the choice array is returned.
-        default: first 
-        enum:
-          - first
-          - full
-
+configuration:
+  type: azure_serverless
+  azure_endpoint: "https://my-endpoint.azureml.ms"
 ```
-###  Parameters for the model attribute:
+
+## Model Parameters
+
+Common parameters that can be configured for model execution:
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>response_format</code></td>
+      <td>object</td>
+      <td>An object specifying the format that the model must output.</td>
+    </tr>
+    <tr>
+      <td><code>seed</code></td>
+      <td>integer</td>
+      <td>For deterministic sampling. This feature is in Beta. If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result. Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend. </td>
+    </tr>
+    <tr>
+      <td><code>max_tokens</code></td>
+      <td>integer</td>
+      <td>The maximum number of [tokens](/tokenizer) that can be generated in the chat completion. </td>   
+    </tr>
+    <tr>
+      <td><code>temperature</code></td>
+      <td>number</td>
+      <td>Sampling temperature (0-1)</td>
+    </tr>
+    <tr>
+      <td><code>frequency_penalty</code></td>
+      <td>number</td>
+      <td>Penalty for frequent tokens</td>
+    </tr>
+    <tr>
+      <td><code>presence_penalty</code></td>
+      <td>number</td>
+      <td>Penalty for new tokens</td>
+    </tr>
+    <tr>
+      <td><code>top_p</code></td>
+      <td>number</td>
+      <td>Nucleus sampling probability</td>
+    </tr>
+    <tr>
+      <td><code>stop</code></td>
+      <td>array</td>
+      <td>Sequences to stop generation</td>
+    </tr>
+  </tbody>
+</table>
+
+> Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
+
+## Sample Prompty
+
 ```yaml
+---
+name: ExamplePrompt
+description: A prompt that uses context to ground an incoming question
+authors:
+  - Seth Juarez
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: <your-deployment>
+    api_version: 2024-07-01-preview
   parameters:
-    type: object
-    description: Parameters to be sent to the model 
-    additionalProperties: true
-    properties: 
-      response_format: 
-        type: object
-        description: >
-          An object specifying the format that the model must output. Compatible with
-          `gpt-4-1106-preview` and `gpt-3.5-turbo-1106`.
-          Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-          message the model generates is valid JSON.
+    max_tokens: 3000
+sample:
+  firstName: Seth
+  context: >
+    The Alpine Explorer Tent boasts a detachable divider for privacy, 
+    numerous mesh windows and adjustable vents for ventilation, and 
+    a waterproof design. It even has a built-in gear loft for storing 
+    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    and convenience, making it your second home in the heart of nature!
+  question: What can you tell me about your tents?
+---
 
-      seed:
-        type: integer
-        description: > 
-          This feature is in Beta. If specified, our system will make a best effort to
-          sample deterministically, such that repeated requests with the same `seed` and
-          parameters should return the same result. Determinism is not guaranteed, and you
-          should refer to the `system_fingerprint` response parameter to monitor changes
-          in the backend.
+system:
+You are an AI assistant who helps people find information. As the assistant, 
+you answer questions briefly, succinctly, and in a personable manner using 
+markdown and even add some personal flair with appropriate emojis.
 
-      max_tokens:
-        type: integer
-        description: The maximum number of [tokens](/tokenizer) that can be generated in the chat completion.
+# Customer
+You are helping {{firstName}} to find answers to their questions.
+Use their name to address them in your responses.
 
-      temperature:
-        type: number
-        description: What sampling temperature to use, 0 means deterministic.
+# Context
+Use the following context to provide a more personalized response to {{firstName}}:
+{{context}}
 
-      tools_choice:
-        oneOf:
-          - type: string
-          - type: object
-        
-        description: > 
-          Controls which (if any) function is called by the model. `none` means the model
-          will not call a function and instead generates a message. `auto` means the model
-          can pick between generating a message or calling a function. Specifying a
-          particular function via
-          `{"type": "function", "function": {"name": "my_function"}}` forces the model to
-          call that function.
-
-          `none` is the default when no functions are present. `auto` is the default if
-          functions are present.
-
-      tools:
-        type: array
-        items:
-          type: object
-
-      frequency_penalty:
-        type: number
-        description: What sampling frequency penalty to use. 0 means no penalty.
-      
-      presence_penalty:
-        type: number
-        description: What sampling presence penalty to use. 0 means no penalty.
-      
-      stop:
-        type: array
-        items:
-          type: string
-        description: > 
-          One or more sequences where the model should stop generating tokens. The model
-          will stop generating tokens if it generates one of the sequences. If the model
-          generates a sequence that is a prefix of one of the sequences, it will continue
-          generating tokens.
-      
-      top_p:
-        type: number
-        description: > 
-          What nucleus sampling probability to use. 1 means no nucleus sampling. 0 means
-          no tokens are generated.
-```
-### Definitions of OpenAI models
-
-```yaml
-
-  openaiModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: openai
-      name:
-        type: string
-        description: Name of the model
-      organization:
-        type: string
-        description: Name of the organization
-    additionalProperties: false
-```
-
-## Definition of Azure OpenAI models
-
-```yaml
-  azureOpenaiModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: azure_openai
-      api_version:
-        type: string
-        description: Version of the model
-      azure_deployment:
-        type: string
-        description: Deployment of the model
-      azure_endpoint:
-        type: string
-        description: Endpoint of the model
-    additionalProperties: false
-```
-### Definition of MaaS models
-
-```yaml
-  maasModel:
-    type: object
-    description: Model used to generate text
-    properties:
-      type:
-        type: string
-        description: Type of the model
-        const: azure_serverless
-      azure_endpoint:
-        type: string
-        description: Endpoint of the model
-    additionalProperties: false
+user:
+{{question}}
 ```
 
 ---
-[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
+[Want to Contribute To the Project?](/docs/contributing/)
