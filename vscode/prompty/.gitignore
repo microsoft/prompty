@@ -1,0 +1,5 @@
+language/prompty.tmLanguage.jsonnode_modules/
+out/
+*.vsix
+dist/
+language/prompty.tmLanguage.json
