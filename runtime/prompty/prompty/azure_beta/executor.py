@@ -77,7 +77,7 @@ class AzureOpenAIBetaExecutor(Invoker):
         super().__init__(prompty)
         self.kwargs = {
             key: value
-            for key, value in self.prompty.model.configuration.items()
+            for key, value in self.prompty.model.connection.items()
             if key != "type"
         }
 
@@ -104,9 +104,29 @@ class AzureOpenAIBetaExecutor(Invoker):
             )
 
         self.api = self.prompty.model.api
-        self.api_version = self.prompty.model.configuration["api_version"]
-        self.deployment = self.prompty.model.configuration["azure_deployment"]
-        self.parameters = self.prompty.model.parameters
+        self.api_version = self.prompty.model.connection["api_version"]
+        self.deployment = self.prompty.model.connection["azure_deployment"]
+        self.options = self.prompty.model.options
+
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
+        messages = data if isinstance(data, list) else [data]
+
+        if self.prompty.template.strict:
+            if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
+                raise ValueError("Nonce mismatch in messages array (strict mode)")
+
+        messages = [
+            {
+                **{
+                    "role": msg["role"],
+                    "content": msg["content"]
+                },
+                **({"name": msg["name"]} if "name" in msg else {}),
+            }
+            for msg in messages
+        ]
+
+        return messages
 
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Azure OpenAI API
@@ -152,7 +172,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "model": self.deployment,
                     "messages": data if isinstance(data, list) else [data],
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 if choose_beta:
@@ -166,7 +186,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "prompt": data,
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.completions.create(**args)
@@ -177,7 +197,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "input": data if isinstance(data, list) else [data],
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.embeddings.create(**args)
@@ -188,7 +208,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "prompt": data,
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.images.generate(**args)
@@ -239,8 +259,8 @@ class AzureOpenAIBetaExecutor(Invoker):
                 trace("signature", "AzureOpenAIAsync.chat.completions.create")
                 args = {
                     "model": self.deployment,
-                    "messages": data if isinstance(data, list) else [data],
-                    **self.parameters,
+                    "messages": self._sanitize_messages(data),
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = await client.chat.completions.create(**args)
@@ -251,7 +271,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "prompt": data,
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = await client.completions.create(**args)
@@ -262,7 +282,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "input": data if isinstance(data, list) else [data],
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = await client.embeddings.create(**args)
@@ -273,7 +293,7 @@ class AzureOpenAIBetaExecutor(Invoker):
                 args = {
                     "prompt": data,
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = await client.images.generate(**args)

@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import Union
@@ -13,7 +14,6 @@ from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
 
 load_dotenv()
-
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -46,7 +46,7 @@ def fake_azure_executor():
     ],
 )
 def test_basic_execution(prompt: Union[str, Path]):
-    result = prompty.execute(prompt)
+    result = prompty.execute(prompt, merge_sample=True)
     print(result)
 
 
@@ -67,7 +67,7 @@ def test_basic_execution(prompt: Union[str, Path]):
     ],
 )
 async def test_basic_execution_async(prompt: Union[str, Path]):
-    result = await prompty.execute_async(prompt)
+    result = await prompty.execute_async(prompt, merge_sample=True)
     print(result)
 
 
@@ -150,7 +150,12 @@ def evaluate(prompt, evalprompt, customerId, question):
 
     result = prompty.execute(
         evalprompt,
-        inputs=response,
+        inputs={
+            "question": response["question"],
+            "answer": response["answer"],
+            # expects string
+            "context": json.dumps(response["context"]),
+        },
     )
     return result
 
@@ -160,7 +165,12 @@ async def evaluate_async(prompt, evalprompt, customerId, question):
 
     result = await prompty.execute_async(
         evalprompt,
-        inputs=response,
+        inputs={
+            "question": response["question"],
+            "answer": response["answer"],
+            # expects string
+            "context": json.dumps(response["context"]),
+        },
     )
     return result
 
@@ -189,7 +199,7 @@ async def test_context_groundedness_async():
 def test_embedding_headless():
     p = prompty.headless(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content="hello world",
     )
     emb = prompty.execute(p)
@@ -200,7 +210,7 @@ def test_embedding_headless():
 async def test_embedding_headless_async():
     p = await prompty.headless_async(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content="hello world",
     )
     emb = await prompty.execute_async(p)
@@ -210,7 +220,7 @@ async def test_embedding_headless_async():
 def test_embeddings_headless():
     p = prompty.headless(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = prompty.execute(p)
@@ -221,7 +231,7 @@ def test_embeddings_headless():
 async def test_embeddings_headless_async():
     p = await prompty.headless_async(
         api="embedding",
-        configuration={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
+        connection={"type": "azure", "azure_deployment": "text-embedding-ada-002"},
         content=["hello world", "goodbye world", "hello again"],
     )
     emb = await prompty.execute_async(p)
@@ -231,12 +241,20 @@ async def test_embeddings_headless_async():
 def test_function_calling():
     result = prompty.execute(
         "prompts/functions.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     print(result)
 
 def test_structured_output():
     result = prompty.execute(
         "prompts/structured_output.prompty",
+        inputs={
+            "statement": "The quick brown fox jumps over the lazy dog",
+        }
     )
     print(result)
 
@@ -244,6 +262,11 @@ def test_structured_output():
 async def test_function_calling_async():
     result = await prompty.execute_async(
         "prompts/functions.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     print(result)
 
@@ -254,6 +277,11 @@ async def test_function_calling_async():
 def test_streaming():
     result = prompty.execute(
         "prompts/streaming.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     for item in result:
         print(item)
@@ -263,6 +291,11 @@ def test_streaming():
 async def test_streaming_async():
     result = await prompty.execute_async(
         "prompts/streaming.prompty",
+        inputs={
+            "firstName": "Sally",
+            "lastName": "Davis",
+            "question": "tell me about your jackets",
+        }
     )
     async for item in result:
         print(item)
@@ -271,7 +304,12 @@ async def test_streaming_async():
 def test_serverless():
     result = prompty.execute(
         "prompts/serverless.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        connection={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        inputs={
+            "firstName": "Sally",
+            "context": "Davis",
+            "question": "tell me about your jackets",
+        },
     )
     print(result)
 
@@ -280,7 +318,12 @@ def test_serverless():
 async def test_serverless_async():
     result = await prompty.execute_async(
         "prompts/serverless.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        connection={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        inputs={
+            "firstName": "Sally",
+            "context": "Davis",
+            "question": "tell me about your jackets",
+        },
     )
     print(result)
 
@@ -288,7 +331,12 @@ async def test_serverless_async():
 def test_serverless_streaming():
     result = prompty.execute(
         "prompts/serverless_stream.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        connection={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        inputs={
+            "firstName": "Sally",
+            "context": "Davis",
+            "question": "tell me about your jackets",
+        },
     )
     for item in result:
         print(item)
@@ -298,7 +346,12 @@ def test_serverless_streaming():
 async def test_serverless_streaming_async():
     result = await prompty.execute_async(
         "prompts/serverless_stream.prompty",
-        configuration={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        connection={"key": os.environ.get("SERVERLESS_KEY", "key")},
+        inputs={
+            "firstName": "Sally",
+            "context": "Davis",
+            "question": "tell me about your jackets",
+        },
     )
 
     async for item in result:

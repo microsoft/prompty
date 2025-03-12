@@ -5,24 +5,30 @@ metadata:
   authors:
     - sethjuarez
     - jietong
-    
+
 model:
   api: chat
   connection:
     azure_deployment: gpt-35-turbo
-  options:
-    stream: true
-    stream_options:
-      include_usage: true
 inputs:
-  firstName: Jane
-  lastName: Doe
+  firstName:
+    type: string
+    description: The first name of the customer
+  lastName:
+    type: string
+    default: Doe
+    description: The last name of the customer
   question: What is the meaning of life?
+
+template: mustache
 ---
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+
+# Attempt Partial
+{{> attempt_partial }}
 
 # Customer
 You are helping {{firstName}} {{lastName}} to find answers to their questions.
