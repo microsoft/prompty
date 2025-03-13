@@ -1,0 +1,64 @@
+name: 🐛 Bug Report
+description: Create a bug report to help us improve
+labels: [bug]
+assignees: 
+
+body:
+  - type: textarea
+    attributes:
+        label: 🐛 Bug Description
+        description: Provide a clear and concise description of the bug
+        placeholder: |
+          A clear and specific explanation of what the bug is. For example:
+          "The save button doesn't respond when clicked on the settings page"
+    validations: 
+        required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Help us recreate the issue by providing detailed steps
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error '....'
+
+        Pro tip: Include specific details like:
+        - Which page/screen you were on
+        - What you clicked/typed
+        - What data you entered
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen
+      placeholder: |
+        A clear and concise description of what you expected to happen. For example:
+        "I expected the save button to save my settings and show a success message"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include screenshots and error messages if applicable
+      placeholder: |
+        Example:
+        "The page freezes and shows a spinning loader indefinitely"
+        "Getting error: 'Cannot read property of undefined'"
+
+        Tip: You can paste images directly in this field
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Your environment
+      description: Provide details about your setup.
+      placeholder: |
+        - Operating System: [e.g., Windows 10, MacOS 12.1]
+        - Browser: [e.g., Chrome 98, Firefox 97]
+        - Version: [e.g., v1.2.3]
+        - Device: [e.g., Desktop, iPhone 13]
