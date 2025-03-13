@@ -69,6 +69,8 @@
     <None Update="prompty\basic.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <EmbeddedResource Include="prompty\basic.prompty" />
+
     <None Update="prompty\basic_mustache.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
