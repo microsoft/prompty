@@ -12,6 +12,14 @@ public class ClassWithResourceAttribute { }
 [Prompty("prompty/basic.prompty", IsResource = true, Configuration = "FAKE_TYPE", Params = new string[] { "firstName", "Caspar", "lastName", "Haglund", "question", "What is your name?" })]
 public class ClassWithResourceAttributeAndCofigAndParams { }
 
+[Prompty("prompty/basic.prompty")]
+[Prompty("prompty/context.prompty")]
+public class ClassWithMultipleAttributes { }
+
+[Prompty("prompty/basic.prompty", IsResource = true)]
+[Prompty("prompty/context.prompty", Configuration = "FAKE_TYPE")]
+public class ClassWithMultipleMixedAttributes { }
+
 public class PromptyAttributeTests
 {
     public PromptyAttributeTests()
@@ -99,5 +107,65 @@ public class PromptyAttributeTests
         Assert.Contains("Caspar", messages[0].Text);
         Assert.Contains("Haglund", messages[0].Text);
         Assert.Contains("What is your name?", messages[1].Text);
+    }
+
+    /// <summary>
+    /// Test retrieving multiple Prompty attributes from a class
+    /// </summary>
+    [Fact]
+    public void LoadMultipleAttributes()
+    {
+        var attrs = Attribute.GetCustomAttributes(
+            typeof(ClassWithMultipleAttributes), 
+            typeof(PromptyAttribute));
+
+        Assert.NotNull(attrs);
+        Assert.Equal(2, attrs.Length);
+        
+        var basicAttr = attrs[0] as PromptyAttribute;
+        var contextAttr = attrs[1] as PromptyAttribute;
+        
+        Assert.NotNull(basicAttr);
+        Assert.NotNull(contextAttr);
+        Assert.Equal("prompty/basic.prompty", basicAttr!.File);
+        Assert.Equal("prompty/context.prompty", contextAttr!.File);
+        
+        Assert.NotNull(basicAttr.Prompt);
+        Assert.NotNull(contextAttr.Prompt);
+        
+        Assert.NotNull(basicAttr.Messages);
+        Assert.NotNull(contextAttr.Messages);
+    }
+
+    /// <summary>
+    /// Test retrieving multiple Prompty attributes with different configurations
+    /// </summary>
+    [Fact]
+    public void LoadMultipleMixedAttributes()
+    {
+        var attrs = Attribute.GetCustomAttributes(
+            typeof(ClassWithMultipleMixedAttributes), 
+            typeof(PromptyAttribute));
+
+        Assert.NotNull(attrs);
+        Assert.Equal(2, attrs.Length);
+        
+        var basicAttr = attrs[0] as PromptyAttribute;
+        var contextAttr = attrs[1] as PromptyAttribute;
+        
+        Assert.NotNull(basicAttr);
+        Assert.NotNull(contextAttr);
+        
+        // First attribute with IsResource = true
+        Assert.Equal("prompty/basic.prompty", basicAttr!.File);
+        Assert.True(basicAttr.IsResource);
+        Assert.NotNull(basicAttr.Prompt);
+        Assert.NotNull(basicAttr.Messages);
+        
+        // Second attribute with specific configuration
+        Assert.Equal("prompty/context.prompty", contextAttr!.File);
+        Assert.Equal("FAKE_TYPE", contextAttr.Configuration);
+        Assert.NotNull(contextAttr.Prompt);
+        Assert.NotNull(contextAttr.Messages);
     }
 }

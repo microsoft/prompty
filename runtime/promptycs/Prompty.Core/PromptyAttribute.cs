@@ -17,6 +17,7 @@ namespace Prompty.Core;
 /// var messages = prompty.Messages;
 /// ...
 /// </usage>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public class PromptyAttribute : Attribute
 {
     /// <summary>
