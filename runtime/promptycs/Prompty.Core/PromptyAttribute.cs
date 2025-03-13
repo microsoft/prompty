@@ -8,7 +8,7 @@ namespace Prompty.Core;
 /// </summary>
 /// <usage>
 /// [Prompty("prompty/basic.prompty"]
-/// [Prompty("prompty/embedded-resource-path.prompty", IsResource = true)]
+/// [Prompty("prompty/embedded-resource-path.prompty", IsResource = true, Configuration = "FAKE_TYPE", Params = new string[] { "question", "answer" })]
 /// public class MyClass
 /// {...} 
 /// in a class or method then use the attribute to load the prompty
@@ -46,7 +46,7 @@ public class PromptyAttribute : Attribute
     /// <summary>
     /// The prepared messages
     /// </summary>
-    public ChatMessage[] Messages => (ChatMessage[])Prompt.Prepare();
+    public ChatMessage[] Messages => (ChatMessage[])Prompt.Prepare(GetParams(), mergeSample: true);
 
     public PromptyAttribute(string File, bool IsResource = false, string Configuration = "default", string[] Params = null!)
     {
@@ -54,6 +54,8 @@ public class PromptyAttribute : Attribute
         this.IsResource = IsResource;
         this.Configuration = Configuration;
         this.Params = Params;
+
+        InvokerFactory.AutoDiscovery();
 
         if (IsResource == true)
         {
@@ -75,6 +77,23 @@ public class PromptyAttribute : Attribute
             // load the file
             this.Prompt = Prompty.Load(File, Configuration);
         }
+    }
 
+    /// <summary>
+    /// convert the params to a dictionary
+    /// </summary>
+    /// <returns>Dictionary<string, string></returns>
+    public Dictionary<string, object> GetParams()
+    {
+        var dict = new Dictionary<string, object>();
+        if (Params != null)
+        {
+            for (int i = 0; i < Params.Length; i += 2)
+            {
+                if (i + 1 < Params.Length)
+                    dict.Add(Params[i], Params[i + 1]);
+            }
+        }
+        return dict;
     }
 }
