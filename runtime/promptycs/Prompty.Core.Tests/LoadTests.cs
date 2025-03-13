@@ -36,6 +36,34 @@ public class LoadTests
         Assert.Equal("FAKE_TYPE", prompty.Model?.Configuration.Type);
     }
 
+    /// <summary>
+    /// Test the Loading from a Stream
+    /// </summary>
+    [Fact]
+    public void LoadStream()
+    {
+        var path = "prompty/basic.prompty";
+        using var stream = File.OpenRead(path);
+        var prompty = Prompty.Load(stream);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
+    }
+
+    /// <summary>
+    /// Test the Loading from a Stream Async
+    /// </summary>
+    [Fact]
+    public async Task LoadStreamAsync()
+    {
+        var path = "prompty/basic.prompty";
+        using var stream = File.OpenRead(path);
+        var prompty = await Prompty.LoadAsync(stream);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
+    }
+
     [Fact]
     public void BasicSampleParameters()
     {
