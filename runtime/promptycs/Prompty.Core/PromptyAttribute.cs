@@ -42,49 +42,25 @@ public class PromptyAttribute : Attribute
     /// <summary>
     /// the loaded prompty
     /// </summary>
-    public Prompty Prompt { get; set; }
+    public Prompty? Prompt => GetPrompt();
 
     /// <summary>
     /// The prepared messages
     /// </summary>
-    public ChatMessage[] Messages => (ChatMessage[])Prompt.Prepare(GetParams(), mergeSample: true);
-
+    public ChatMessage[] Messages => GetMessages();
     public PromptyAttribute(string File, bool IsResource = false, string Configuration = "default", string[] Params = null!)
     {
         this.File = File;
         this.IsResource = IsResource;
         this.Configuration = Configuration;
         this.Params = Params;
-
-        InvokerFactory.AutoDiscovery();
-
-        if (IsResource == true)
-        {
-            // get the stream from the resource name
-            var assembly = Assembly.GetExecutingAssembly();
-            using var stream = assembly.GetManifestResourceStream(File);
-            if (stream == null)
-            {
-                throw new FileNotFoundException($"Resource {File} not found");
-            }
-            this.Prompt = Prompty.Load(stream, Configuration);
-        }
-        else
-        {
-            if (!System.IO.File.Exists(File))
-            {
-                throw new FileNotFoundException($"File {File} not found");
-            }
-            // load the file
-            this.Prompt = Prompty.Load(File, Configuration);
-        }
     }
 
     /// <summary>
     /// convert the params to a dictionary
     /// </summary>
     /// <returns>Dictionary<string, string></returns>
-    public Dictionary<string, object> GetParams()
+    private Dictionary<string, object> GetParams()
     {
         var dict = new Dictionary<string, object>();
         if (Params != null)
@@ -96,5 +72,109 @@ public class PromptyAttribute : Attribute
             }
         }
         return dict;
+    }
+
+    /// <summary>
+    /// Get the prompt from the file or resource
+    /// </summary>
+    /// <returns>Prompty</returns>
+    /// <exception cref="FileNotFoundException"></exception>
+    private Prompty GetPrompt()
+    {
+        Prompty? prompt = null;
+        if (IsResource == true)
+        {
+            // Try to get the resource from various assemblies
+            Stream? stream = FindResourceInAssemblies(File);
+            
+            if (stream == null)
+            {
+                throw new FileNotFoundException($"Resource {File} not found");
+            }
+            
+            using (stream)
+            {
+                prompt = Prompty.Load(stream, Configuration);
+            }
+        }
+        else
+        {
+            if (!System.IO.File.Exists(File))
+            {
+                throw new FileNotFoundException($"File {File} not found");
+            }
+            // load the file
+            prompt = Prompty.Load(File, Configuration);
+        }
+        return prompt;
+    }
+    
+    /// <summary>
+    /// Attempts to find a resource in multiple assemblies
+    /// </summary>
+    /// <param name="resourceName">The resource name to find</param>
+    /// <returns>A Stream for the resource if found, null otherwise</returns>
+    private Stream? FindResourceInAssemblies(string resourceName)
+    {
+        // Normalize resource name to handle different path formats
+        var normalizedName = resourceName.Replace('\\', '.').Replace('/', '.');
+        
+        // Helper function to check for resource in an assembly
+        Stream? TryGetResourceStream(Assembly assembly, string name)
+        {
+            // Try direct match
+            var stream = assembly.GetManifestResourceStream(name);
+            if (stream != null)
+                return stream;
+            
+            // Try assembly qualified name
+            stream = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{name}");
+            if (stream != null)
+                return stream;
+            
+            // Try suffix match with all manifest resources
+            var resourceNames = assembly.GetManifestResourceNames();
+            var matchingResource = resourceNames.FirstOrDefault(r => 
+                r.EndsWith(normalizedName, StringComparison.OrdinalIgnoreCase) || 
+                r.EndsWith(name, StringComparison.OrdinalIgnoreCase));
+                
+            if (!string.IsNullOrEmpty(matchingResource))
+                return assembly.GetManifestResourceStream(matchingResource);
+                
+            return null;
+        }
+        
+        // Try executing assembly (the assembly containing this code)
+        var executingAssembly = Assembly.GetExecutingAssembly();
+        var stream = TryGetResourceStream(executingAssembly, resourceName);
+        if (stream != null)
+            return stream;
+        
+        // Try entry assembly (the main application assembly)
+        var entryAssembly = Assembly.GetEntryAssembly();
+        if (entryAssembly != null && entryAssembly != executingAssembly)
+        {
+            stream = TryGetResourceStream(entryAssembly, resourceName);
+            if (stream != null)
+                return stream;
+        }
+        
+        // Try all other loaded assemblies
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => a != executingAssembly && a != entryAssembly)
+            .Select(a => TryGetResourceStream(a, resourceName))
+            .FirstOrDefault(s => s != null);
+    }
+    /// <summary>
+    /// Get the messages from the prompt
+    /// </summary>
+    /// <returns>ChatMessage[]</returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private ChatMessage[] GetMessages()
+    {
+        InvokerFactory.AutoDiscovery();
+        if (Prompt == null)
+            throw new InvalidOperationException("Prompt is null");
+        return (ChatMessage[])Prompt.Prepare(GetParams(), mergeSample: true);
     }
 }

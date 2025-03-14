@@ -36,12 +36,11 @@ public class PromptyAttributeTests
         var attr = (PromptyAttribute)Attribute.GetCustomAttribute(
             typeof(ClassWithAttribute), 
             typeof(PromptyAttribute))!;
-
+        Assert.NotNull(attr.Messages);
         Assert.NotNull(attr);
         Assert.Equal("prompty/basic.prompty", attr.File);
         Assert.False(attr.IsResource);
         Assert.NotNull(attr.Prompt);
-        Assert.NotNull(attr.Messages);
     }
 
     /// <summary>
@@ -53,26 +52,32 @@ public class PromptyAttributeTests
         var attr = (PromptyAttribute)Attribute.GetCustomAttribute(
             typeof(ClassWithResourceAttribute), 
             typeof(PromptyAttribute))!;
-
+        Assert.NotNull(attr.Messages);
         Assert.NotNull(attr);
         Assert.Equal("prompty/basic.prompty", attr.File);
         Assert.True(attr.IsResource);
         Assert.NotNull(attr.Prompt);
-        Assert.NotNull(attr.Messages);
     }
 
     [Fact]
     public void ThrowsOnInvalidFile()
     {
+
         Assert.Throws<FileNotFoundException>(() => 
-            new PromptyAttribute("nonexistent.prompty", false));
+            {
+                var fail = new PromptyAttribute("nonexistent.prompty", false);
+                var _ = fail.Prompt;
+            });
     }
 
     [Fact]
     public void ThrowsOnInvalidResource()
     {
         Assert.Throws<FileNotFoundException>(() => 
-            new PromptyAttribute("nonexistent.prompty", true));
+        {
+            var fail = new PromptyAttribute("nonexistent.prompty", true);
+            var _ = fail.Prompt;
+        });
     }
 
     /// <summary>
