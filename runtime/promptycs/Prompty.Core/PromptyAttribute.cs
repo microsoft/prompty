@@ -8,7 +8,7 @@ namespace Prompty.Core;
 /// </summary>
 /// <usage>
 /// [Prompty("prompty/basic.prompty"]
-/// [Prompty("prompty/embedded-resource-path.prompty", IsResource = true, Configuration = "FAKE_TYPE", Params = new string[] { "question", "answer" })]
+/// [Prompty("prompty/embedded-resource-path.prompty", IsResource = true, Configuration = "default", Params = new string[] { "question", "answer" })]
 /// public class MyClass
 /// {...} 
 /// in a class or method then use the attribute to load the prompty
