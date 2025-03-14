@@ -57,59 +57,6 @@ public class PromptyAttribute : Attribute
     }
 
     /// <summary>
-    /// convert the params to a dictionary
-    /// </summary>
-    /// <returns>Dictionary<string, string></returns>
-    private Dictionary<string, object> GetParams()
-    {
-        var dict = new Dictionary<string, object>();
-        if (Params != null)
-        {
-            for (int i = 0; i < Params.Length; i += 2)
-            {
-                if (i + 1 < Params.Length)
-                    dict.Add(Params[i], Params[i + 1]);
-            }
-        }
-        return dict;
-    }
-
-    /// <summary>
-    /// Get the prompt from the file or resource
-    /// </summary>
-    /// <returns>Prompty</returns>
-    /// <exception cref="FileNotFoundException"></exception>
-    private Prompty GetPrompt()
-    {
-        Prompty? prompt = null;
-        if (IsResource == true)
-        {
-            // Try to get the resource from various assemblies
-            Stream? stream = FindResourceInAssemblies(File);
-            
-            if (stream == null)
-            {
-                throw new FileNotFoundException($"Resource {File} not found");
-            }
-            
-            using (stream)
-            {
-                prompt = Prompty.Load(stream, Configuration);
-            }
-        }
-        else
-        {
-            if (!System.IO.File.Exists(File))
-            {
-                throw new FileNotFoundException($"File {File} not found");
-            }
-            // load the file
-            prompt = Prompty.Load(File, Configuration);
-        }
-        return prompt;
-    }
-    
-    /// <summary>
     /// Attempts to find a resource in multiple assemblies
     /// </summary>
     /// <param name="resourceName">The resource name to find</param>
@@ -165,6 +112,60 @@ public class PromptyAttribute : Attribute
             .Select(a => TryGetResourceStream(a, resourceName))
             .FirstOrDefault(s => s != null);
     }
+
+    /// <summary>
+    /// convert the params to a dictionary
+    /// </summary>
+    /// <returns>Dictionary<string, string></returns>
+    private Dictionary<string, object> GetParams()
+    {
+        var dict = new Dictionary<string, object>();
+        if (Params != null)
+        {
+            for (int i = 0; i < Params.Length; i += 2)
+            {
+                if (i + 1 < Params.Length)
+                    dict.Add(Params[i], Params[i + 1]);
+            }
+        }
+        return dict;
+    }
+
+    /// <summary>
+    /// Get the prompt from the file or resource
+    /// </summary>
+    /// <returns>Prompty</returns>
+    /// <exception cref="FileNotFoundException"></exception>
+    private Prompty GetPrompt()
+    {
+        Prompty? prompt = null;
+        if (IsResource == true)
+        {
+            // Try to get the resource from various assemblies
+            Stream? stream = FindResourceInAssemblies(File);
+            
+            if (stream == null)
+            {
+                throw new FileNotFoundException($"Resource {File} not found");
+            }
+            
+            using (stream)
+            {
+                prompt = Prompty.Load(stream, Configuration);
+            }
+        }
+        else
+        {
+            if (!System.IO.File.Exists(File))
+            {
+                throw new FileNotFoundException($"File {File} not found");
+            }
+            // load the file
+            prompt = Prompty.Load(File, Configuration);
+        }
+        return prompt;
+    }
+    
     /// <summary>
     /// Get the messages from the prompt
     /// </summary>
