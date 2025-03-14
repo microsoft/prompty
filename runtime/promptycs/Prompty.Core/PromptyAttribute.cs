@@ -18,26 +18,26 @@ namespace Prompty.Core;
 /// ...
 /// </usage>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public class PromptyAttribute : Attribute
+public class PromptyAttribute(string File, bool IsResource = false, string Configuration = "default", string[] Params = null!) : Attribute
 {
     /// <summary>
     /// The file name of the prompty file
-    public string File { get; set; }
+    public string File { get; set; } = File;
 
     /// <summary>
     /// Is the file a resource
     /// </summary>
-    public bool IsResource { get; set; } = false;
-    
+    public bool IsResource { get; set; } = IsResource;
+
     /// <summary>
     /// The configuration id to use
     /// </summary>
-    public string? Configuration { get; set; }
+    public string? Configuration { get; set; } = Configuration;
 
     /// <summary>
     /// The parameters for input
     /// </summary>
-    public string[]? Params { get; set; }
+    public string[]? Params { get; set; } = Params;
 
     /// <summary>
     /// the loaded prompty
@@ -48,13 +48,6 @@ public class PromptyAttribute : Attribute
     /// The prepared messages
     /// </summary>
     public ChatMessage[] Messages => GetMessages();
-    public PromptyAttribute(string File, bool IsResource = false, string Configuration = "default", string[] Params = null!)
-    {
-        this.File = File;
-        this.IsResource = IsResource;
-        this.Configuration = Configuration;
-        this.Params = Params;
-    }
 
     /// <summary>
     /// Attempts to find a resource in multiple assemblies
