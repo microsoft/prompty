@@ -2,24 +2,42 @@ using Microsoft.Extensions.AI;
 
 namespace Prompty.Core.Tests;
 
-
+/// <summary>
+/// Test class with a single Prompty attribute
+/// </summary>
 [Prompty("prompty/basic.prompty")]
 public class ClassWithAttribute { }
 
+/// <summary>
+/// Test class with a Prompty attribute that loads from an embedded resource
+/// </summary>
 [Prompty("prompty/basic.prompty", IsResource = true)]
 public class ClassWithResourceAttribute { }
 
+/// <summary>
+/// Test class with a Prompty attribute that loads from an embedded resource
+/// and has configuration and parameters
+/// </summary>
 [Prompty("prompty/basic.prompty", IsResource = true, Configuration = "FAKE_TYPE", Params = new string[] { "firstName", "Caspar", "lastName", "Haglund", "question", "What is your name?" })]
 public class ClassWithResourceAttributeAndCofigAndParams { }
 
+/// <summary>
+/// Test class with multiple Prompty attributes
+/// </summary>
 [Prompty("prompty/basic.prompty")]
 [Prompty("prompty/context.prompty")]
 public class ClassWithMultipleAttributes { }
 
+/// <summary>
+/// Test class with multiple Prompty attributes with mixed configurations
+/// </summary>
 [Prompty("prompty/basic.prompty", IsResource = true)]
 [Prompty("prompty/context.prompty", Configuration = "FAKE_TYPE")]
 public class ClassWithMultipleMixedAttributes { }
 
+/// <summary>
+/// Prompty Attribute Tests
+/// </summary>
 public class PromptyAttributeTests
 {
     public PromptyAttributeTests()
@@ -59,6 +77,9 @@ public class PromptyAttributeTests
         Assert.NotNull(attr.Prompt);
     }
 
+    /// <summary>
+    /// Test that inalid file paths result in exception
+    /// </summary>
     [Fact]
     public void ThrowsOnInvalidFile()
     {
@@ -70,6 +91,9 @@ public class PromptyAttributeTests
             });
     }
 
+    /// <summary>
+    /// Test that invalid resource paths result in exception
+    /// </summary>
     [Fact]
     public void ThrowsOnInvalidResource()
     {
