@@ -100,7 +100,7 @@
 		"lint": "eslint",
 		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
 		"postinstall": "cd ./packages/core && npm install && cd ../server && npm install && cd ..",
-		"package": "vsce package --no-dependencies --allow-missing-repository",
+		"package": "vsce package --no-dependencies --allow-missing-repository --out ./vsix",
 		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release"
 	},
 	"devDependencies": {

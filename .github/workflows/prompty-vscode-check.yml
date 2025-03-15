@@ -50,4 +50,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: vscode-vsix
-          path: ./vscode/prompty/prompty-$TAG.vsix
+          path: ./vscode/prompty/*.vsix
