@@ -45,10 +45,9 @@ jobs:
 
       - name: Build VSIX
         working-directory: ./vscode/prompty
-        run: npm run package-pre -- $TAG
+        run: npm run package-pre -- 1.$TAG
 
       - uses: actions/upload-artifact@v4
         with:
           name: vscode-vsix
-          path: ./vscode/prompty/prompty-$TAG.vsix
-
+          path: ./vscode/prompty/prompty-1.$TAG.vsix
