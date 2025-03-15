@@ -1,0 +1,64 @@
+name: 📖 Documentation Request
+description: Suggest an improvement or addition to the documentation
+labels: [documentation]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📖 Documentation Request
+        Thank you for helping improve our documentation! Please fill out this form carefully.
+
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: Before proceeding, please confirm the following
+      options:
+        - label: I have referenced the latest version of the documentation
+          required: true
+        - label: I have searched for similar documentation requests
+          required: true
+        - label: I have checked if this is documented elsewhere
+          required: true
+        - label: I have linked to related issues in my description (if applicable)
+          required: false
+
+  - type: dropdown
+    attributes:
+      label: Type of Documentation Issue
+      description: What kind of documentation improvement is needed?
+      options:
+        - Minor typo or formatting fix
+        - Major error correction
+        - Missing documentation
+        - Unclear documentation
+        - Documentation structure
+        - Example code issue
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Problem Description
+      description: What problem are you experiencing with the documentation?
+      placeholder: |
+        Please provide:
+        - Which page or section needs improvement
+        - What information is missing or incorrect
+        - Why the current documentation is insufficient
+        
+        Example:
+        "The installation guide at docs/getting-started.md is missing steps for Linux users.
+        It doesn't explain how to handle dependencies on Ubuntu 22.04."
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Documentation Link
+      description: Link to the page that needs improvement (if applicable)
+      placeholder: "https://docs.example.com/page-with-issue"
+    validations:
+      required: false
