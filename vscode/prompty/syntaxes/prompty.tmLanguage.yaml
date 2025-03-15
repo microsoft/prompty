@@ -46,14 +46,4 @@ repository:
       "0": { name: entity.name.type }
     contentName: content
     patterns:
-      - include: "#template"
       - include: text.html.markdown
-
-  template:
-    begin: ^(.*?)\{\{
-    end: \}\}
-    match: \{\{(.*?)\}\}
-    captures:
-      "0": { name: variable.parameter }
-      "1": { name: comment.line.percentage }
-    name: template

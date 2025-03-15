@@ -1,131 +1,115 @@
 {
-  "name": "prompty",
-  "displayName": "prompty",
-  "description": "",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.98.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/prompty.git"
-  },
-  "preview": true,
-  "categories": [
-    "Azure",
-    "Data Science",
-    "Machine Learning"
-  ],
-  "keywords": [
-    "Prompt",
-    "Prompt Engineering",
-    "Azure OpenAI",
-    "LLM",
-    "LLMOps"
-  ],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "languages": [
-      {
-        "id": "prompty",
-        "aliases": [
-          "Prompty",
-          "prompty"
-        ],
-        "icon": {
-          "light": "icons/prompty16x16.png",
-          "dark": "icons/prompty16x16.png"
-        },
-        "extensions": [
-          ".prompty"
-        ]
-      },
-      {
-        "id": "tracy",
-        "aliases": [
-          "tracy"
-        ],
-        "icon": {
-          "light": "icons/promptyTrace_light.svg",
-          "dark": "icons/promptyTrace_dark.svg"
-        },
-        "extensions": [
-          ".tracy"
-        ]
-      }
-    ],
-    "activationEvents": [
-      "onLanguage:prompty"
-    ],
-    "grammars": [
-      {
-        "path": "./language/prompty.tmLanguage.json",
-        "language": "prompty",
-        "scopeName": "source.prompty",
-        "embeddedLanguages": {
-          "meta.embedded.block.yaml": "yaml",
-          "meta.embedded.block.jinja": "jinja"
-        }
-      }
-    ],
-    "commands": [
-      {
-        "command": "prompty.deployAgent",
-        "title": "Deploy Agent"
-      },
-      {
-        "command": "prompty.executeAgent",
-        "title": "Execute Agent"
-      }
-    ],
-    "menus": {
-      "explorer/context": [
-        {
-          "group": "prompty@1",
-          "when": "resourceExtname == .prompty",
-          "command": "prompty.deployAgent",
-          "title": "Deploy Agent"
-        },
-        {
-          "group": "prompty@2",
-          "when": "resourceExtname == .prompty",
-          "command": "prompty.executeAgent",
-          "title": "Execute Agent"
-        }
-      ]
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "test": "vscode-test",
-    "generate-grammar": "js-yaml ./language/prompty.tmLanguage.yaml > ./language/prompty.tmLanguage.json",
-    "postinstall": "npm run generate-grammar",
-    "package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release"
-  },
-  "devDependencies": {
-    "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.98.0",
-    "@typescript-eslint/eslint-plugin": "^8.25.0",
-    "@typescript-eslint/parser": "^8.25.0",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.2.2",
-    "esbuild": "^0.25.0",
-    "eslint": "^9.21.0",
-    "js-yaml": "^4.1.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.7.3"
-  }
+	"name": "prompty",
+	"displayName": "prompty",
+	"description": "",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.98.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/prompty.git"
+	},
+	"preview": true,
+	"categories": [
+		"Azure",
+		"Data Science",
+		"Machine Learning"
+	],
+	"keywords": [
+		"Prompt",
+		"Prompt Engineering",
+		"Azure OpenAI",
+		"LLM",
+		"LLMOps"
+	],
+	"activationEvents": [
+		"onLanguage:plaintext"
+	],
+	"main": "./packages/core/out/extension",
+	"contributes": {
+		"configuration": {
+			"title": "Prompty",
+			"properties": {
+				"promptyLanguageServer.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"prompty.currentModelConfiguration": {
+					"type": "string",
+					"description": "Current configuration",
+					"default": "default"
+				}
+			}
+		},
+		"languages": [
+			{
+				"id": "prompty",
+				"aliases": [
+					"Prompty",
+					"prompty"
+				],
+				"icon": {
+					"light": "icons/prompty16x16.png",
+					"dark": "icons/prompty16x16.png"
+				},
+				"extensions": [
+					".prompty"
+				]
+			},
+			{
+				"id": "tracy",
+				"aliases": [
+					"tracy"
+				],
+				"icon": {
+					"light": "icons/promptyTrace_light.svg",
+					"dark": "icons/promptyTrace_dark.svg"
+				},
+				"extensions": [
+					".tracy"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"path": "./syntaxes/prompty.tmLanguage.json",
+				"language": "prompty",
+				"scopeName": "source.prompty",
+				"embeddedLanguages": {
+					"meta.embedded.block.yaml": "yaml",
+					"meta.embedded.block.jinja": "jinja"
+				}
+			}
+		],
+		"activationEvents": [
+			"onLanguage:prompty"
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint",
+		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
+		"postinstall": "cd ./packages/core && npm install && cd ../server && npm install && cd .."
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/mocha": "^10.0.6",
+		"@types/node": "^20",
+		"eslint": "^9.13.0",
+		"js-yaml": "^4.1.0",
+		"mocha": "^10.3.0",
+		"typescript": "^5.8.2",
+		"typescript-eslint": "^8.26.0"
+	}
 }
