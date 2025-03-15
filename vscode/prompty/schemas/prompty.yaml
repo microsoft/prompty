@@ -306,7 +306,7 @@ definitions:
         oneOf:
         - $ref: '#/definitions/parameterArray'
         - $ref: '#/definitions/parameterObject'
-  
+
   toolArray:
     type: array
     description: The array of tools of the prompty
