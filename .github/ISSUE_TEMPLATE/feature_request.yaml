@@ -1,0 +1,55 @@
+name: 🚀 Feature Request
+description: Suggest an idea to improve the project
+labels: [enhancement]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🚀 Feature Request
+        Please complete the following checklist and provide detailed information about your feature request.
+
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: Please ensure you've completed these steps before submitting
+      options:
+        - label: I have checked the latest documentationand this feature doesn't exist
+          required: true
+        - label: I have searched for similar feature requests and found none
+          required: true
+        - label: I have linked to related issues or discussions in the description (if any exist)
+          required: false
+          
+  - type: dropdown
+    attributes:
+      label: Type of Improvement
+      description: What category does your feature request fall into?
+      options:
+        - Documentation Enhancement
+        - User Interface Improvement
+        - Performance Optimization
+        - New Functionality
+        - Developer Experience
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: |
+        Please provide:
+        - Detailed description of the feature
+        - How it should work
+        - Expected user interaction
+        - Potential impact on existing features
+        
+        Examples:
+        - "Add a keyboard shortcut for..."
+        - "Implement auto-save functionality that..."
+        - "Create a new section in docs for..."
+    validations:
+      required: true
