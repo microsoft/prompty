@@ -5,10 +5,10 @@ from jinja2 import DictLoader, Environment
 from .mustache import render
 
 from .core import Prompty
-from .invoker import Invoker
+from .invoker import Renderer
 
 
-class Jinja2Renderer(Invoker):
+class Jinja2Renderer(Renderer):
     """Jinja2 Renderer"""
 
     def __init__(self, prompty: Prompty) -> None:
@@ -20,8 +20,8 @@ class Jinja2Renderer(Invoker):
             if isinstance(cur_prompt.file, str):
                 cur_prompt.file = Path(cur_prompt.file).resolve().absolute()
 
-            if isinstance(cur_prompt.content, str):
-                self.templates[cur_prompt.file.name] = cur_prompt.content
+            if isinstance(cur_prompt.template.content, str):
+                self.templates[cur_prompt.file.name] = cur_prompt.template.content
 
             cur_prompt = cur_prompt.basePrompty
 
@@ -52,7 +52,7 @@ class Jinja2Renderer(Invoker):
         return self.invoke(data)
 
 
-class MustacheRenderer(Invoker):
+class MustacheRenderer(Renderer):
     """Render a mustache template."""
 
     def __init__(self, prompty: Prompty) -> None:

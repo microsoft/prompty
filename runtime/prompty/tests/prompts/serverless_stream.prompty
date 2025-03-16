@@ -1,17 +1,20 @@
 ---
 name: ExamplePrompt
 description: A prompt that uses context to ground an incoming question
-authors:
-  - Seth Juarez
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-  configuration:
+  connection:
     type: serverless
     endpoint: https://models.inference.ai.azure.com
     model: Mistral-small
-  parameters:
+  options:
     stream: true
-sample:
+inputs:
   firstName: Seth
   context: >
     The Alpine Explorer Tent boasts a detachable divider for privacy, 

@@ -1,17 +1,20 @@
-import base64
 import re
+from typing import Any, Iterator
+import typing
+import yaml
+import base64
 from pathlib import Path
 
 from .core import Prompty
-from .invoker import Invoker
+from .invoker import Parser
 
 
-class PromptyChatParser(Invoker):
+class PromptyChatParser(Parser):
     """Prompty Chat Parser"""
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.roles = ["assistant", "function", "system", "user"]
+        self.roles = ["assistant", "function", "system", "user", "tools"]
         if isinstance(self.prompty.file, str):
             self.prompty.file = Path(self.prompty.file).resolve().absolute()
 
@@ -35,7 +38,10 @@ class PromptyChatParser(Invoker):
             return image_item
         # otherwise, it's a local file - need to base64 encode it
         else:
-            image_path = self.path / image_item
+            image_path = Path(image_item)
+            if not image_path.is_absolute():
+                image_path = self.path / image_item
+
             with open(image_path, "rb") as f:
                 base64_image = base64.b64encode(f.read()).decode("utf-8")
 
@@ -49,6 +55,44 @@ class PromptyChatParser(Invoker):
                 raise ValueError(
                     f"Invalid image format {image_path.suffix} - currently only .png and .jpg / .jpeg are supported."
                 )
+            
+    def parse_args(self, args: str) -> dict[str, str]:
+        """Parse args
+
+        Parameters
+        ----------
+        args : str
+            The args to parse
+
+        Returns
+        -------
+        dict[str, str]
+            The parsed args
+        """
+       
+        # regular expression to parse key-value pairs
+        string_match = r"\"([^\"]*)\""
+        bool_match = r"([Tt]rue|[Ff]alse)"
+        float_match = r"([0-9]+(\.[0-9]+))"
+        int_match = r"([0-9]+)"
+
+        s = f"({string_match}|{bool_match}|{float_match}|{int_match})"
+
+        patterns = r"(\w+)\s*=\s*(" + s + r")\s*(,?)\s*"
+
+        matches = re.findall(patterns, args)
+        full_args = {}
+        for m in matches:
+            if m[3] != "":
+                full_args[m[0]] = m[3]
+            elif m[4] != "":
+                full_args[m[0]] = m[4].lower() == "true"
+            elif m[5] != "":
+                full_args[m[0]] = float(m[5])
+            elif m[7] != "":
+                full_args[m[0]] = int(m[7])
+
+        return full_args
 
     def parse_content(self, content: str):
         """for parsing inline images
@@ -102,6 +146,51 @@ class PromptyChatParser(Invoker):
         else:
             return content
 
+    def parse(self, data: str) -> Iterator[dict[str, typing.Any]]:
+        """Stream the data
+
+        Parameters
+        ----------
+        data : str
+            The data to stream
+
+        Returns
+        -------
+        Iterator[str]
+            The streamed data
+        """
+        # regular expression to capture boundary roles with optional key-value pairs
+        boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
+        content_buffer: typing.List[str] = []
+        # first role is system (if not specified)
+        arg_buffer = {"role": "system"}
+
+        for line in data.splitlines():
+            # check if line is a boundary
+            if re.match(boundary, line):
+                # if content buffer is not empty, then add to messages
+                if len(content_buffer) > 0:                        
+                    yield arg_buffer | { "content": "\n".join(content_buffer) }
+                    content_buffer = []
+
+                # boundary check for args
+                if "[" in line and "]" in line:
+                    role, args = line[:-2].split("[", 2)
+                    arg_buffer = self.parse_args(args) | {
+                        "role": role.strip().lower(),
+                    }
+                # standard boundary
+                else:
+                    arg_buffer = {
+                        "role": line.replace(":", "").strip().lower(),
+                    }
+            else:
+                content_buffer.append(line)
+
+        # add last message
+        if len(content_buffer) > 0:                        
+            yield arg_buffer | { "content": "\n".join(content_buffer) }
+
     def invoke(self, data: str) -> list[dict[str, str]]:
         """Invoke the Prompty Chat Parser
 
@@ -115,34 +204,16 @@ class PromptyChatParser(Invoker):
         str
             The parsed data
         """
+
         messages = []
-        separator = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")\s*:\s*\n"
-
-        # get valid chunks - remove empty items
-        chunks = [
-            item
-            for item in re.split(separator, data, flags=re.MULTILINE)
-            if len(item.strip()) > 0
-        ]
-
-        # if no starter role, then inject system role
-        if chunks[0].strip().lower() not in self.roles:
-            chunks.insert(0, "system")
-
-        # if last chunk is role entry, then remove (no content?)
-        if chunks[-1].strip().lower() in self.roles:
-            chunks.pop()
-
-        if len(chunks) % 2 != 0:
-            raise ValueError("Invalid prompt format")
-
-        # create messages
-        for i in range(0, len(chunks), 2):
-            role = chunks[i].strip().lower()
-            content = chunks[i + 1].strip()
-            messages.append({"role": role, "content": self.parse_content(content)})
+        for item in self.parse(data):
+            item["content"] = self.parse_content(item["content"])
+            messages.append(item)
 
         return messages
+
+
+        
 
     async def invoke_async(self, data: str) -> list[dict[str, str]]:
         """Invoke the Prompty Chat Parser (Async)
@@ -158,3 +229,40 @@ class PromptyChatParser(Invoker):
             The parsed data
         """
         return self.invoke(data)
+    
+    def sanitize(self, data):
+        # gets template before rendering
+        # to clean up any sensitive data
+        sanitized_prompt = []
+        for item in self.parse(data):
+            # add nonce to pre-rendered roles
+            item["nonce"] = self.prompty.template.nonce
+            role = item.pop("role")
+            content = item.pop("content")
+            stringify = lambda x: f'"{str(x)}"' if isinstance(x, str) else str(x)
+            attr = [f"{k}={stringify(v)}" for k, v in item.items()]
+            boundary = ','.join(attr)
+            sanitized_prompt.append(f"{role}[{boundary}]:")
+            sanitized_prompt.append(content)
+
+        return "\n".join(sanitized_prompt)
+
+        
+    
+    def process(self, data):
+        # gets template after parse
+        # to manage any parsed prompty
+        # settings (in  this case, tools)
+        if len(data) > 0 and data[0]["role"] == "tools":
+            if self.prompty.template.strict and data[0]["nonce"] != self.prompty.template.nonce:
+                raise ValueError("Nonce mismatch. Dynamic tools section not allowed in strict mode.")
+
+            content = "tools:\n" + data[0]["content"]
+            tools_dict = yaml.load(content, Loader=yaml.FullLoader)
+            tools = Prompty.load_tools(tools_dict["tools"])
+            self.prompty.merge_tools(tools)
+
+            # remove first item from data
+            data = data[1:]
+            
+        return data

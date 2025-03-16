@@ -66,7 +66,6 @@ class AzureOpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, ImagesResponse):
-            self.prompty.model.parameters
             item: ImagesResponse = data
 
             if len(data.data) == 0:
@@ -129,7 +128,7 @@ class AzureOpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, ImagesResponse):
-            self.prompty.model.parameters
+            
             item: ImagesResponse = data
 
             if len(data.data) == 0:
