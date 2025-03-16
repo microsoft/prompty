@@ -14,9 +14,3 @@ packages/core/node_modules/**
 !packages/core/node_modules/{minimatch,brace-expansion,concat-map,balanced-match}/**
 !packages/core/node_modules/{semver,lru-cache,yallist}/**
 packages/server/node_modules/**
-!packages/server/node_modules/vscode-jsonrpc/**
-!packages/server/node_modules/vscode-languageclient/**
-!packages/server/node_modules/vscode-languageserver-protocol/**
-!packages/server/node_modules/vscode-languageserver-types/**
-!packages/server/node_modules/{minimatch,brace-expansion,concat-map,balanced-match}/**
-!packages/server/node_modules/{semver,lru-cache,yallist}/**
