@@ -251,18 +251,6 @@ definitions:
     additionalProperties:
       $ref: '#/definitions/tool'
 
-  idTool:
-    type: object
-    description: The tools of the prompty
-    additionalProperties: false
-    oneOf:
-      - $ref: '#/definitions/idFunctionTool'
-      - $ref: '#/definitions/idServerTool'
-    discriminator:
-      propertyName: type
-      mapping:
-        function: '#/definitions/idFunctionTool'
-
   idServerTool:
     type: object
     description: The server tool of the prompty
@@ -311,7 +299,9 @@ definitions:
     type: array
     description: The array of tools of the prompty
     items:
-      $ref: '#/definitions/idTool'
+      anyOf:
+        - $ref: '#/definitions/idFunctionTool'
+        - $ref: '#/definitions/idServerTool'
 
   input:
     type: object
