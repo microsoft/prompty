@@ -4,7 +4,7 @@ authors:
   - bethanyjep
   - nitya
   - aclerbois
-date: 2024-10-23
+date: 2025-03-14
 tags:
   - tutorials
   - semantic-kernel
@@ -14,16 +14,36 @@ index: 3
 
 This guide explains how to use Prompty templates within the Microsoft Semantic Kernel. The `Microsoft.SemanticKernel.Prompty` package (currently in alpha) allows for flexible use of Prompty files to define chat prompts and functions for AI-powered applications.
 
+---
+
+## What is Semantic Kernel?
+
+By [definition](https://learn.microsoft.com/en-us/semantic-kernel/overview/), Semantic Kernel is a lightweight, open-source development kit that lets you easily build AI agents and integrate the latest AI models into your C#, Python, or Java codebase. It serves as an **efficient middleware** that enables rapid delivery of enterprise-grade solutions.
+
+The [PromptyKernelExtensions](https://learn.microsoft.com/dotnet/api/microsoft.semantickernel.promptykernelextensions?view=semantic-kernel-dotnet) class provides methods for creating "kernel functions" that can be invoked as part of a Semantic Kernel workload. Currently, this supports two methods that create functions from a Prompty template:
+ - [CreateFunctionFromPrompty](https://learn.microsoft.com/dotnet/api/microsoft.semantickernel.promptykernelextensions.createfunctionfromprompty?view=semantic-kernel-dotnet) - loads Prompty template from an inline string
+ - [CreateFunctionFromPromptyFile](https://learn.microsoft.com/en-us/dotnet/api/microsoft.semantickernel.promptykernelextensions.createfunctionfrompromptyfile?view=semantic-kernel-dotnet) - loads Prompty template from an external file
+
+The two "Basic" code examples below explain how these methods can be used to create a Prompty-based kernel function.
+
+Once created, the function can be [invoked in different ways](https://learn.microsoft.com/dotnet/api/microsoft.semantickernel.kernelfunction?view=semantic-kernel-dotnet) - using [kernel arguments](https://learn.microsoft.com/dotnet/api/microsoft.semantickernel.kernelarguments?view=semantic-kernel-dotnet) to pass in required data or arguments for function execution.
+
+The "Advanced" code example below explains how this can be used to populate relevant data (documents or context) required by your Prompty template, providing support for patterns like Retrieval Augmented Generation.
+
+
+---
+
 ## Prerequisites
 
-1. **Install the NuGet package**: You need to install the `Microsoft.SemanticKernel.Prompty` package. It can be found on NuGet at the following link: [Microsoft.SemanticKernel.Prompty (Alpha)](https://www.nuget.org/packages/Microsoft.SemanticKernel.Prompty/1.24.1-alpha)
+1. **Install [Microsoft.SemanticKernel.Prompty (Alpha)](https://www.nuget.org/packages/Microsoft.SemanticKernel.Prompty/1.24.1-alpha) package** with this command:
 
    ```
    dotnet add package Microsoft.SemanticKernel.Prompty --version 1.24.1-alpha
    ```
 
-2. **Setup your Semantic Kernel**: Make sure you have the Semantic Kernel ready in your project by adding the necessary dependencies and configuring the kernel.
+1. **Setup Semantic Kernel and configure it**. Follow the [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/get-started/quick-start-guide?pivots=programming-language-csharp) quickstart for guidance if you are new to this framework.
 
+---
 
 ## Basic Example: Inline Function
 
@@ -76,6 +96,7 @@ public class PromptyExample
 - The `CreateFunctionFromPrompty` method is used to create a Semantic Kernel function from the Prompty template.
 - The function is invoked with `InvokeAsync`, and the result is printed.
 
+---
 
 ## Basic Example: Using a file
 
@@ -135,6 +156,8 @@ public class PromptyExample
    - The function is created and invoked just like in the previous examples, but this time the template is loaded from a file.
 
 This demonstrates how to handle external Prompty files in your Semantic Kernel setup.
+
+---
 
 ## Advanced Example: Using Variables
 
@@ -217,6 +240,8 @@ public class PromptyExample
 - This example uses dynamic variables such as `customer` and `history` within the Prompty template.
 - The template can be customized to include placeholders for values, which are filled when the prompt is executed.
 - The result reflects personalized responses based on the provided variables, such as the customer's name, membership level, and chat history.
+
+---
 
 ## Conclusion
 
