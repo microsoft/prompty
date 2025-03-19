@@ -144,7 +144,7 @@ public class PromptyAttribute(string File, bool IsResource = false, string Confi
             
             using (stream)
             {
-                prompt = Prompty.Load(stream, Configuration);
+                prompt = Prompty.Load(stream, Configuration ?? "default");
             }
         }
         else
@@ -154,7 +154,7 @@ public class PromptyAttribute(string File, bool IsResource = false, string Confi
                 throw new FileNotFoundException($"File {File} not found");
             }
             // load the file
-            prompt = Prompty.Load(File, Configuration);
+            prompt = Prompty.Load(File, Configuration ?? "default");
         }
         return prompt;
     }

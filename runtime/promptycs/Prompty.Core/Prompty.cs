@@ -192,7 +192,8 @@ namespace Prompty.Core
             string text = reader.ReadToEnd();
 
             var global_config = GlobalConfig.Load(System.IO.Path.GetDirectoryName(stream.ToString()) ?? string.Empty, configuration) ?? [];
-            global_config = Normalizer.Normalize(global_config, stream.ToString());
+            var streamPath = stream.ToString() ?? string.Empty;
+            global_config = Normalizer.Normalize(global_config, streamPath);
 
             var frontmatter = LoadRaw(text, global_config, stream.ToString());
             var prompty = Convert(frontmatter, stream.ToString());
@@ -210,7 +211,8 @@ namespace Prompty.Core
             string text = await reader.ReadToEndAsync();
 
             var global_config = await GlobalConfig.LoadAsync(System.IO.Path.GetDirectoryName(stream.ToString()) ?? string.Empty, configuration) ?? [];
-            global_config = Normalizer.Normalize(global_config, stream.ToString());
+            var streamPath = stream.ToString() ?? string.Empty;
+            global_config = Normalizer.Normalize(global_config, streamPath);
 
             var frontmatter = LoadRaw(text, global_config, stream.ToString());
             var prompty = Convert(frontmatter, stream.ToString());
