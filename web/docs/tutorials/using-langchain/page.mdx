@@ -83,10 +83,16 @@ Let's start with a basic LangChain application example [using Language models](h
 
 1. If you had not previously set the ``OPENAI_API_KEY` env variable in that terminal, you will now be prompted to enter it as the "Password" input interactively.
 
-On successful run, you should see a valid text response. Here's one sample:
+On successful run, you should see a valid text response. Here's some sample:
 
 ```txt
-Our tents are designed for durability, comfort, and ease of setup, catering to a variety of outdoor activities such as camping, hiking, and backpacking. They come in various styles and sizes, from lightweight backpacking tents to spacious family tents, ensuring options for every adventure. Constructed from weather-resistant materials, they provide reliable protection against the elements, while features like easy-pitch systems, ample ventilation, and interior pockets enhance usability. Whether you're a seasoned outdoor enthusiast or a casual camper, our tents offer a blend of functionality and comfort for a memorable experience in nature.
+Our tents are designed for durability, comfort, and ease of setup....
+```
+
+and
+
+```txt
+I don't sell products or own physical items, so I don't have any tents to offer.....
 ```
 
 This is a generic response to that question. What if we wanted to _customize_ the response with our template and data? This is where Prompty can help.
@@ -123,22 +129,30 @@ Let's use this to refactor our previous example to use Prompty.
     sample:
       firstName: Jane
       lastName: Doe
-      question: What is the meaning of life?
-      chat_history: []
+      question: Tell me about your tents
+      context: >
+        The Alpine Explorer Tent boasts a detachable divider for privacy, 
+        numerous mesh windows and adjustable vents for ventilation, and 
+        a waterproof design. It even has a built-in gear loft for storing 
+        your outdoor essentials. In short, it's a blend of privacy, comfort, and convenience, making it your second home in the heart of nature!
     ---
     system:
-    You are a helpful and friendly assistant with a great sense of humor.
-    You address users by name and always start with a joke or fun fact.
-    You then amswer their questions in a concise and personable manner
-    You even add some personal flair with appropriate emojis.
+    You are an AI assistant who helps people find information. As the assistant, 
+    you answer questions briefly, succinctly, and in a personable manner using 
+    markdown and even add some personal flair with appropriate emojis.
 
-    {% for item in chat_history %}
-    {{item.role}}:
-    {{item.content}}
-    {% endfor %}
+    Also add in dad jokes related to tents and outdoors when you begin your response to {{firstName}}.
+
+    # Customer
+    You are helping {{firstName}} to find answers to their questions.
+    Use their name to address them in your responses.
+
+    # Context
+    Use the following context to provide a more personalized response to {{firstName}}:
+    {{context}}
 
     user:
-    {{input}}
+    {{question}}
     ```
 
 1. Create a `hello_prompty.py` file in the same folder, with this code:
