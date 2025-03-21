@@ -116,7 +116,7 @@ class TemplateProperty:
     nonce: str = field(default="")
     content: Union[str, list[str], dict] = field(default="")
     strict: bool = field(default=False)
-    configuration: dict = field(default_factory=dict)
+    options: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -129,10 +129,10 @@ class ToolParameter:
 
 @dataclass
 class ToolProperty:
-    name: str
+    id: str
     type: str
     description: Optional[str] = field(default="")
-    configuration: dict[str, typing.Any] = field(default_factory=dict)
+    options: dict[str, typing.Any] = field(default_factory=dict)
     parameters: list[ToolParameter] = field(default_factory=list)
 
 
@@ -197,6 +197,8 @@ class Prompty:
     template: TemplateProperty = field(default_factory=TemplateProperty)
 
     file: Union[str, Path] = field(default="")
+    instructions: str = field(default="")
+    additional_instructions: str = field(default="")
     content: Union[str, list[str], dict] = field(default="")
 
     def get_input(self, name: str) -> InputProperty:
@@ -281,7 +283,7 @@ class Prompty:
         loaded_tools = []
 
         for t in tools:
-            configuration = t.pop("configuration") if "configuration" in t else {}
+            options = t.pop("options") if "options" in t else {}
             params = t.pop("parameters") if "parameters" in t else []
             parameters: dict[str, ToolParameter] = {}
             if isinstance(params, dict):
@@ -298,15 +300,15 @@ class Prompty:
                 raise ValueError("Parameters must be a list or dict")
 
             # hoist params from config if they exist
-            if "parameters" in configuration:
-                params = configuration.pop("parameters")
+            if "parameters" in options:
+                params = options.pop("parameters")
                 if isinstance(params, dict):
                     for k, v in params.items():
                         if k not in parameters:
                             parameters[k] = ToolParameter(name=k, **v)
                         else:
                             raise ValueError(
-                                f"Duplicate parameter {k} in configuration and parameters"
+                                f"Duplicate parameter {k} in options and parameters"
                             )
                 elif isinstance(params, list):
                     for p in params:
@@ -323,7 +325,9 @@ class Prompty:
                 # if function, need to have parameters
                 raise ValueError("Function tools must have parameters")
 
-            loaded_tools.append(ToolProperty(**t, parameters=[*parameters.values()], configuration=configuration))
+            loaded_tools.append(
+                ToolProperty(**t, parameters=[*parameters.values()], options=options)
+            )
 
         return loaded_tools
 

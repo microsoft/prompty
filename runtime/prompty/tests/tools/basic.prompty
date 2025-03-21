@@ -17,18 +17,18 @@ inputs:
   question: What is the meaning of life?
 
 tools:
-  - name: bing
+  - id: bing
     type: web_search
     description: A tool that can search the web for information.
-    configuration:
+    options:
       url: https://api.bing.microsoft.com/v7.0/search
-    parameters:
-      - name: query
-        type: string
-        description: The search query to use.
-      - name: count
-        type: number
-        description: The number of results to return.
+      parameters:
+        - name: query
+          type: string
+          description: The search query to use.
+        - name: count
+          type: number
+          description: The number of results to return.
 ---
 system[name="seth"]:
 You are an AI assistant who helps people find information.
