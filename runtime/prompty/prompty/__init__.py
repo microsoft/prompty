@@ -139,7 +139,6 @@ async def headless_async(
 
     return Prompty(model=modelProperty, template=templateProperty, content=content)
 
-
 @trace(description="Load a prompty file.")
 def load(prompty_file: str, config: str = "default") -> Prompty:
     """Load a prompty file.
@@ -172,22 +171,20 @@ def load(prompty_file: str, config: str = "default") -> Prompty:
     # load dictionary from prompty file
     matter = load_prompty(p)
 
-    attributes = matter["attributes"]
-    content = matter["body"]
+    # load global configuration
+    global_config = load_global_config(p.parent, config)
+
+    # expand ${file} includes
+    attributes = Prompty.normalize(matter.pop("attributes", {}), p.parent)
+
+    # load prompty dictionary from file
+    prompty_dictionary = Prompty.load_manifest(
+        attributes, matter["body"], global_config
+    )
 
     # normalize attribute dictionary resolve keys and files
-    attributes = Prompty.normalize(attributes, p.parent)
 
-    # load global configuration
-    global_config = Prompty.normalize(load_global_config(p.parent, config), p.parent)
-
-    prompty = Prompty.load_raw(attributes, content, p, global_config)
-
-    # recursive loading of base prompty
-    if "base" in attributes:
-        # load the base prompty from the same directory as the current prompty
-        base = load(p.parent / attributes["base"])
-        prompty = Prompty.hoist_base_prompty(prompty, base)
+    prompty = Prompty.load_raw(prompty_dictionary, p)
 
     return prompty
 
@@ -224,23 +221,18 @@ async def load_async(prompty_file: str, config: str = "default") -> Prompty:
     # load dictionary from prompty file
     matter = await load_prompty_async(p)
 
-    attributes = matter["attributes"]
-    content = matter["body"]
-
-    # normalize attribute dictionary resolve keys and files
-    attributes = await Prompty.normalize_async(attributes, p.parent)
-
     # load global configuration
-    configuration = await load_global_config_async(p.parent, config)
-    global_config = await Prompty.normalize_async(configuration, p.parent)
+    global_config = await load_global_config_async(p.parent, config)
 
-    prompty = Prompty.load_raw(attributes, content, p, global_config)
+    # expand ${file} includes
+    attributes = await Prompty.normalize_async(matter.pop("attributes", {}), p.parent)
 
-    # recursive loading of base prompty
-    if "base" in attributes:
-        # load the base prompty from the same directory as the current prompty
-        base = await load_async(p.parent / attributes["base"])
-        prompty = Prompty.hoist_base_prompty(prompty, base)
+    # load prompty dictionary from file
+    prompty_dictionary = Prompty.load_manifest(
+        attributes, matter["body"], global_config
+    )
+
+    prompty = Prompty.load_raw(prompty_dictionary, p)
 
     return prompty
 
@@ -347,6 +339,7 @@ def run(
     content: Union[dict, list, str],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -386,6 +379,8 @@ def run(
             options, prompt.model.options
         )
 
+    # resolve env variables
+
     result = InvokerFactory.run_executor(prompt, content)
     if not raw:
         result = InvokerFactory.run_processor(prompt, result)
@@ -399,6 +394,7 @@ async def run_async(
     content: Union[dict, list, str],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -451,6 +447,7 @@ def execute(
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
     merge_sample: bool = False,
     config_name: str = "default",
@@ -495,7 +492,7 @@ def execute(
     content = prepare(prompt, inputs, merge_sample)
 
     # run LLM model
-    result = run(prompt, content, connection, options, raw)
+    result = run(prompt, content, connection, options, env, raw)
 
     return result
 
@@ -506,6 +503,7 @@ async def execute_async(
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
     merge_sample: bool = False,
     config_name: str = "default",
@@ -550,6 +548,6 @@ async def execute_async(
     content = await prepare_async(prompt, inputs, merge_sample)
 
     # run LLM model
-    result = await run_async(prompt, content, connection, options, raw)
+    result = await run_async(prompt, content, connection, options, env, raw)
 
     return result

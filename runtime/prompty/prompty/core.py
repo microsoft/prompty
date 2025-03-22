@@ -6,7 +6,7 @@ import warnings
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Callable, Literal, Optional, Union
 
 from .tracer import Tracer, to_dict
 from .utils import get_json_type, load_json, load_json_async
@@ -49,6 +49,7 @@ class InputProperty:
     sample: typing.Any = field(default=None)
     strict: bool = field(default=True)
     json_schema: Optional[dict] = field(default_factory=dict)
+
 
 @dataclass
 class OutputProperty:
@@ -200,6 +201,8 @@ class Prompty:
     instructions: str = field(default="")
     additional_instructions: str = field(default="")
     content: Union[str, list[str], dict] = field(default="")
+    instructions = field(default="")
+    additional_instructions = field(default="")
 
     def get_input(self, name: str) -> InputProperty:
         """Get the property of the prompty
@@ -288,14 +291,10 @@ class Prompty:
             parameters: dict[str, ToolParameter] = {}
             if isinstance(params, dict):
                 # if parameters is a dict, convert to list of ToolParameter
-                parameters = {
-                    k: ToolParameter(name=k, **v) for k, v in params.items()
-                }
+                parameters = {k: ToolParameter(name=k, **v) for k, v in params.items()}
             elif isinstance(params, list):
                 # if parameters is a list, convert to list of ToolParameter
-                parameters = {
-                    p["name"]: ToolParameter(**p) for p in params
-                }
+                parameters = {p["name"]: ToolParameter(**p) for p in params}
             elif params:
                 raise ValueError("Parameters must be a list or dict")
 
@@ -332,167 +331,205 @@ class Prompty:
         return loaded_tools
 
     @staticmethod
-    def load_input_property(name: str, value: typing.Any) -> InputProperty:
+    def load_property(
+        value: typing.Any,
+        cls: type[typing.Any],
+        default: Union[Callable[[], dict[str, typing.Any]], None] = None,
+    ) -> dict[str, typing.Any]:
 
-        # if a dict, need to check if it's a InputProperty
-        if isinstance(value, dict):
-            # check if dict is a InputProperty
-            # needs to contain subset of type, default,
-            # sample, sanitize, description
-            if any([f.name in value for f in fields(InputProperty)]):
-                ip = InputProperty(**value)
-                if ip.name == "":
-                    ip.name = name
-                return ip
-            # otherwise, assume it's a sample value
-            else:
-                return InputProperty(type=get_json_type(type(value)), sample=value, name=name)
+        if isinstance(value, dict) and any([f.name in value for f in fields(cls)]):
+            return {**value}
         else:
-            return InputProperty(type=get_json_type(type(value)), sample=value, name=name)
+            if default is not None:
+                return {**default()}
+            else:
+                raise ValueError(f"{cls.__name__} parameters mismatch")
 
     @staticmethod
-    def load_output_property(name: str, value: typing.Any) -> OutputProperty:
-        # if a dict, need to check if it's a PropertySettings
-        if isinstance(value, dict):
-            # check if dict is a OutputProperty
-            # needs to contain subset of type, default,
-            # sample, sanitize, description
-            if any([f.name in value for f in fields(OutputProperty)]):
-                op = OutputProperty(**value)
-                if op.name == "":
-                    op.name = name
-                return op
-            # otherwise, assume it's a sample value
-            else:
-                return OutputProperty(type=get_json_type(type(value)), name=name)
+    def load_collection_property(
+        values: Union[dict, list],
+        materialize: Callable[[str, typing.Any], dict[str, typing.Any]],
+        error_message: str = "",
+    ) -> list[dict[str, typing.Any]]:
+        if isinstance(values, list):
+            return [materialize("", v) for v in values]
+        elif isinstance(values, dict):
+            return [materialize(k, v) for k, v in values.items()]
         else:
-            return OutputProperty(type=get_json_type(type(value)), name=name)
+            if error_message == "":
+                error_message = f"Collection must be a list or dict, got {type(values)}"
+            else:
+                error_message = f"{error_message}, got {type(values)}"
+            raise ValueError(error_message)
 
     @staticmethod
-    def load_raw(
-        attributes: dict, content: str, p: Path, global_config: dict
-    ) -> "Prompty":
+    def load_input_property(name: str, value: typing.Any) -> dict[str, typing.Any]:
+
+        def to_dict() -> dict[str, typing.Any]:
+            return {
+                "type": get_json_type(type(value)),
+                "sample": value,
+                "name": name,
+            }
+
+        prop = Prompty.load_property(value, InputProperty, to_dict)
+        if "name" not in prop or prop["name"] == "":
+            prop["name"] = name
+
+        return prop
+
+    @staticmethod
+    def load_output_property(name: str, value: typing.Any) -> dict[str, typing.Any]:
+
+        def to_dict() -> dict[str, typing.Any]:
+            return {
+                "type": get_json_type(type(value)),
+                "name": name,
+            }
+
+        prop = Prompty.load_property(value, OutputProperty, to_dict)
+        if "name" not in prop or prop["name"] == "":
+            prop["name"] = name
+
+        return prop
+
+    @staticmethod
+    def load_tool_param(name: str, value: typing.Any) -> dict[str, typing.Any]:
+
+        prop = Prompty.load_property(value, ToolParameter)
+        if "name" not in prop or prop["name"] == "":
+            prop["name"] = name
+
+        return prop
+
+    @staticmethod
+    def load_tool(id: str, tool: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        options = tool.pop("options") if "options" in tool else {}
+        parameters = Prompty.load_collection_property(
+            tool.pop("parameters") if "parameters" in tool else [],
+            Prompty.load_tool_param,
+            "Tool parameters must be a list or dict",
+        )
+
+        if "parameters" in options:
+            params = Prompty.load_collection_property(
+                options.pop("parameters"),
+                Prompty.load_tool_param,
+                "Tool parameters must be a list or dict",
+            )
+            parameters = [*parameters, *params]
+
+        t = {
+            **tool,
+            "options": options,
+            "parameters": parameters,
+        }
+
+        if "id" not in t:
+            t["id"] = id
+
+        return t
+
+    @staticmethod
+    def load_manifest(
+        attributes: dict, content: str, global_config: dict
+    ) -> dict[str, typing.Any]:
+
+        prompty: dict[str, typing.Any] = {}
+
+        if "base" in attributes:
+            attributes.pop("base")
+            warnings.warn(
+                "base prompty is currently not supported", DeprecationWarning
+            )
+
         if "model" not in attributes:
-            attributes["model"] = {}
+            prompty["model"] = {}
 
-        # pull model settings out of attributes
-        try:
-            model_props = attributes.pop("model")
-            if "configuration" in model_props:
-                warnings.warn(
-                    "Model configuration is deprecated, use connection instead",
-                    DeprecationWarning,
-                )
-                model_props["connection"] = model_props.pop("configuration")
+        model_props = attributes.pop("model")
+        if "configuration" in model_props:
+            warnings.warn(
+                "Model configuration is deprecated, use connection instead",
+                DeprecationWarning,
+            )
+            model_props["connection"] = model_props.pop("configuration")
 
-            if "parameters" in model_props:
-                warnings.warn(
-                    "Model parameters is deprecated, use options instead",
-                    DeprecationWarning,
-                )
-                model_props["options"] = model_props.pop("parameters")
+        if "parameters" in model_props:
+            warnings.warn(
+                "Model parameters is deprecated, use options instead",
+                DeprecationWarning,
+            )
+            model_props["options"] = model_props.pop("parameters")
 
-            # load connection settings
-            if "connection" not in model_props:
-                model_props["connection"] = global_config
-            else:
-                model_props["connection"] = param_hoisting(
-                    model_props["connection"],
-                    global_config,
-                )
+        # load connection settings
+        if "connection" not in model_props:
+            model_props["connection"] = global_config
+        else:
+            model_props["connection"] = param_hoisting(
+                model_props["connection"],
+                global_config,
+            )
 
-            model = ModelProperty(**model_props)
-        except Exception as e:
-            raise ValueError(f"Error in model settings: {e}")
+        prompty["model"] = model_props
 
         # pull template settings
-        try:
-            if "template" in attributes:
-                t = attributes.pop("template")
-                if "type" in t:
-                    warnings.warn(
-                        "Template type is deprecated, use format instead",
-                        DeprecationWarning,
-                    )
-                    t["format"] = t.pop("type")
 
-                if isinstance(t, dict):
-                    template = TemplateProperty(**t)
-                # has to be a string denoting the type
-                else:
-                    template = TemplateProperty(format=t, parser="prompty")
+        if "template" in attributes:
+            t = attributes.pop("template")
+            if "type" in t:
+                warnings.warn(
+                    "Template type is deprecated, use format instead",
+                    DeprecationWarning,
+                )
+                t["format"] = t.pop("type")
+
+            if isinstance(t, dict):
+                prompty["template"] = t
+            # has to be a string denoting the type
             else:
-                template = TemplateProperty(format="jinja2", parser="prompty")
-        except Exception as e:
-            raise ValueError(f"Error in template loader: {e}")
+                prompty["template"] = {"format": t, "parser": "prompty"}
+        else:
+            prompty["template"] = {"format": "jinja2", "parser": "prompty"}
 
         # formalize inputs and outputs
-        inputs: dict[str, InputProperty] = {}
+        inputs: list[dict[str, typing.Any]] = []
         if "inputs" in attributes:
             raw_inputs = attributes.pop("inputs")
-            if isinstance(raw_inputs, list):
-                inputs = {
-                    # name should be in list item
-                    i["name"]: Prompty.load_input_property(i["name"], i)
-                    for i in raw_inputs
-                }
-            elif isinstance(raw_inputs, dict):
-                inputs = {
-                    k: Prompty.load_input_property(k, v) for (k, v) in raw_inputs.items()
-                }
-            else:
-                raise ValueError("Inputs must be a list or dict")
+            inputs = Prompty.load_collection_property(
+                raw_inputs, Prompty.load_input_property, "Inputs must be a list or dict"
+            )
 
-        outputs: dict[str, OutputProperty] = {}
+        prompty["inputs"] = inputs
+
+        outputs: list[dict[str, typing.Any]] = []
         if "outputs" in attributes:
             raw_outputs = attributes.pop("outputs")
-            if isinstance(raw_outputs, list):
-                outputs = {
-                    # name should be in list item
-                    i["name"]: Prompty.load_output_property("", i)
-                    for i in raw_outputs
-                }
-            elif isinstance(raw_outputs, dict):
-                outputs = {
-                    k: Prompty.load_output_property(k, v) for (k, v) in raw_outputs.items()
-                }
-            else:
-                raise ValueError("Outputs must be a list or dict")
+            outputs = Prompty.load_collection_property(
+                raw_outputs,
+                Prompty.load_output_property,
+                "Outputs must be a list or dict",
+            )
+
+        prompty["outputs"] = outputs
 
         tools = []
         if "tools" in attributes:
             tools_attribute = attributes.pop("tools")
-            if isinstance(tools_attribute, list):
-                tools = Prompty.load_tools(tools_attribute)
-
-        # infer input types
-        # DEPRECATED: use inputs instead of sample
-        if "sample" in attributes:
-            warnings.warn(
-                "Sample is deprecated, use inputs instead", DeprecationWarning
+            tools = Prompty.load_collection_property(
+                tools_attribute, Prompty.load_tool, "Tools must be a list or dict"
             )
-            sample = attributes.pop("sample")
-            for k, v in sample.items():
-                # implicit input
-                # check if k is in inputs
-                if k not in inputs:
-                    # infer v type to json type
-                    inputs[k] = Prompty.load_input_property(k, v)
-                else:
-                    # explicit input (overwrite type?)
-                    if inputs[k].type is None:
-                        inputs[k].type = get_json_type(type(v))
-                    # type mismatch
-                    elif inputs[k].type != get_json_type(type(v)):
-                        raise ValueError(
-                            f"Type mismatch for input property {k}: input type ({inputs[k].type}) != sample type ({get_json_type(type(v))})"
-                        )
+
+        prompty["tools"] = tools
+
+        if "sample" in attributes:
+            raise ValueError("Sample is deprecated, use inputs instead")
 
         metadata = attributes.pop("metadata") if "metadata" in attributes else {}
         # DEPRECATED: authors and tags now in metadata
         if "authors" in attributes:
             warnings.warn(
-                "Authors is deprecated, add authors to metadata instead", DeprecationWarning
+                "Authors is deprecated, add authors to metadata instead",
+                DeprecationWarning,
             )
             authors = attributes.pop("authors")
             if isinstance(authors, list):
@@ -509,21 +546,36 @@ class Prompty:
             else:
                 raise ValueError("Tags must be a list")
 
+        prompty["metadata"] = metadata
+
+        if isinstance(content, str):
+            if "\n![thread]" in str(content):
+                # if the content contains a thread, split it
+                # into instructions and additional instructions
+                instructions = content.split("\n![thread]")
+                attributes["instructions"] = instructions[0]
+                attributes["additional_instructions"] = instructions[1]
+            else:
+                attributes["instructions"] = content
+                attributes["additional_instructions"] = ""
+
+        return {**attributes, **prompty, "content": content}
+
+    @staticmethod
+    def load_raw(attributes: dict, file: Path) -> "Prompty":
+
         prompty = Prompty(
-            model=model,
-            metadata=metadata,
-            inputs=[*inputs.values()],
-            outputs=[*outputs.values()],
-            tools=tools,
-            template=template,
-            content=content,
-            file=p,
+            model=ModelProperty(**attributes.pop("model")),
+            inputs=[InputProperty(**i) for i in attributes.pop("inputs", [])],
+            outputs=[OutputProperty(**i) for i in attributes.pop("outputs", [])],
+            tools=[ToolProperty(**i) for i in attributes.pop("tools", [])],
+            template=TemplateProperty(**attributes.pop("template")),
+            file=file,
             **attributes,
         )
 
         # setting template scratch pad
         prompty.template.content = prompty.content
-
         return prompty
 
     @staticmethod
@@ -597,19 +649,10 @@ class Prompty:
     def normalize(attribute: typing.Any, parent: Path, env_error=True) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
-            if attribute.startswith("${") and attribute.endswith("}"):
+            if attribute.startswith("${file") and attribute.endswith("}"):
                 # check if env or file
                 variable = attribute[2:-1].split(":")
-                if variable[0] == "env" and len(variable) > 1:
-                    return Prompty._process_env(
-                        variable[1],
-                        env_error,
-                        variable[2] if len(variable) > 2 else None,
-                    )
-                elif variable[0] == "file" and len(variable) > 1:
-                    return Prompty._process_file(variable[1], parent)
-                else:
-                    raise ValueError(f"Invalid attribute format ({attribute})")
+                return Prompty._process_file(variable[1], parent)
             else:
                 return attribute
         elif isinstance(attribute, list):
@@ -628,19 +671,9 @@ class Prompty:
     ) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
-            if attribute.startswith("${") and attribute.endswith("}"):
-                # check if env or file
+            if attribute.startswith("${file") and attribute.endswith("}"):
                 variable = attribute[2:-1].split(":")
-                if variable[0] == "env" and len(variable) > 1:
-                    return Prompty._process_env(
-                        variable[1],
-                        env_error,
-                        variable[2] if len(variable) > 2 else None,
-                    )
-                elif variable[0] == "file" and len(variable) > 1:
-                    return await Prompty._process_file_async(variable[1], parent)
-                else:
-                    raise ValueError(f"Invalid attribute format ({attribute})")
+                return Prompty._process_file(variable[1], parent)
             else:
                 return attribute
         elif isinstance(attribute, list):

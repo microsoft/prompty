@@ -1,9 +1,10 @@
-import re
-from typing import Any, Iterator
-import typing
-import yaml
 import base64
+import re
+import typing
+from collections.abc import Iterator
 from pathlib import Path
+
+import yaml
 
 from .core import Prompty
 from .invoker import Parser
@@ -161,7 +162,7 @@ class PromptyChatParser(Parser):
         """
         # regular expression to capture boundary roles with optional key-value pairs
         boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
-        content_buffer: typing.List[str] = []
+        content_buffer: list[str] = []
         # first role is system (if not specified)
         arg_buffer = {"role": "system"}
 
@@ -239,7 +240,8 @@ class PromptyChatParser(Parser):
             item["nonce"] = self.prompty.template.nonce
             role = item.pop("role")
             content = item.pop("content")
-            stringify = lambda x: f'"{str(x)}"' if isinstance(x, str) else str(x)
+            def stringify(x):
+                return f'"{str(x)}"' if isinstance(x, str) else str(x)
             attr = [f"{k}={stringify(v)}" for k, v in item.items()]
             boundary = ','.join(attr)
             sanitized_prompt.append(f"{role}[{boundary}]:")

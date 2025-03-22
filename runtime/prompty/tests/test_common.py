@@ -60,3 +60,9 @@ def test_complex_properties(prompt: str):
 async def test_load_async(prompt: str):
     p = await prompty.load_async(prompt)
     print(p)
+
+
+def test_thread_split():
+    p = prompty.load("properties/thread_split.prompty")
+    assert p.instructions.strip() == "before"
+    assert p.additional_instructions.strip() == "after"

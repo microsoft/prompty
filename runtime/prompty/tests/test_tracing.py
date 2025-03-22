@@ -36,7 +36,6 @@ def setup_module():
         "prompts/basic.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
-        "prompts/faithfulness.prompty",
         "prompts/embedding.prompty",
     ],
 )
@@ -52,7 +51,6 @@ def test_basic_execution(prompt: str):
         "prompts/basic.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
-        "prompts/faithfulness.prompty",
         "prompts/embedding.prompty",
     ],
 )

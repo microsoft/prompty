@@ -84,17 +84,17 @@ async def load_global_config_async(
     return {}
 
 def get_json_type(t: type) -> typing.Literal["string", "number", "array", "object", "boolean"]:
-    if t == str:
+    if t is str:
         return "string"
-    elif t == int:
+    elif t is int:
         return "number"
-    elif t == float:
+    elif t is float:
         return "number"
-    elif t == list:
+    elif t is list:
         return "array"
-    elif t == dict:
+    elif t is dict:
         return "object"
-    elif t == bool:
+    elif t is bool:
         return "boolean"
     else:
         raise ValueError(f"Unsupported type: {t}")

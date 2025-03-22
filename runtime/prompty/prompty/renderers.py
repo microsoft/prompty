@@ -1,11 +1,12 @@
 import typing
 from pathlib import Path
 
-from jinja2 import DictLoader, Environment
-from .mustache import render
+from jinja2 import DictLoader
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from .core import Prompty
 from .invoker import Renderer
+from .mustache import render
 
 
 class Jinja2Renderer(Renderer):
@@ -31,7 +32,7 @@ class Jinja2Renderer(Renderer):
         self.name = self.prompty.file.name
 
     def invoke(self, data: typing.Any) -> typing.Any:
-        env = Environment(loader=DictLoader(self.templates))
+        env = ImmutableSandboxedEnvironment(loader=DictLoader(self.templates))
         t = env.get_template(self.name)
         generated = t.render(**data)
         return generated
