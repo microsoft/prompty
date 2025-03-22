@@ -26,6 +26,19 @@ def test_load(prompt: str):
     print(p)
 
 
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "properties/basic_array.prompty",
+        "properties/basic_dictionary.prompty",
+        "properties/basic_mixed.prompty",
+    ],
+)
+def test_complex_properties(prompt: str):
+    p = prompty.load(prompt)
+    print(p)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "prompt",
@@ -47,3 +60,9 @@ def test_load(prompt: str):
 async def test_load_async(prompt: str):
     p = await prompty.load_async(prompt)
     print(p)
+
+
+def test_thread_split():
+    p = prompty.load("properties/thread_split.prompty")
+    assert p.instructions.strip() == "before"
+    assert p.additional_instructions.strip() == "after"

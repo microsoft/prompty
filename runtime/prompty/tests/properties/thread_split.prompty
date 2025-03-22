@@ -1,0 +1,44 @@
+---
+id: claim_buddy
+version: 1.0.0
+name: Claim Buddy
+description: Claim Buddy simplifies the claims process for patients, ensuring they understand their benefits, and helping them efficiently navigate the often-complex claim submission and resolution process.
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - basic
+    - gpt-4o
+
+model:
+  id: gpt-4o
+  options:
+    max_tokens: 150
+    temperature: 0.5
+    top_p: 1
+    frequency_penalty: 0
+    presence_penalty: 0
+
+outputs:
+  - name: response
+    type: string
+    description: The AI's response to the user's query, providing assistance with health insurance claims.
+  - name: follow_up
+    type: string
+    description: A follow-up question or prompt to gather more information from the user.
+  - name: documentation_needed
+    type: string
+    description: Information on the documentation required for claims submissions.
+  - name: claim_status
+    type: string
+    description: Status update on the submitted claim, if applicable.
+
+tools:
+  - id: file_search
+    type: file_search
+
+---
+before
+![thread]
+after

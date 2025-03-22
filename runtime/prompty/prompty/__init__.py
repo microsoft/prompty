@@ -1,13 +1,13 @@
 import traceback
 import typing
+import uuid
 from pathlib import Path
 from typing import Union
 
 from .core import (
-    ModelSettings,
+    ModelProperty,
     Prompty,
-    PropertySettings,
-    TemplateSettings,
+    TemplateProperty,
     param_hoisting,
 )
 from .invoker import InvokerFactory
@@ -15,6 +15,7 @@ from .parsers import PromptyChatParser
 from .renderers import Jinja2Renderer, MustacheRenderer
 from .tracer import trace
 from .utils import (
+    get_json_type,
     load_global_config,
     load_global_config_async,
     load_prompty,
@@ -30,9 +31,9 @@ InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
 def headless(
     api: str,
     content: Union[str, list[str], dict],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
-    connection: str = "default",
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
+    config: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
 
@@ -44,10 +45,10 @@ def headless(
         The content to process
     configuration : Dict[str, any], optional
         The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
-    connection : str, optional
-        The connection to use, by default "default"
+    options : Dict[str, any], optional
+        The options to use, by default {}
+    config : str, optional
+        The config to use, by default "default"
 
     Returns
     -------
@@ -68,28 +69,26 @@ def headless(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
-    modelSettings = ModelSettings(
+    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
+    modelProperty = ModelProperty(
         api=api,
-        configuration=Prompty.normalize(
-            param_hoisting(
-                configuration, load_global_config(caller.parent, connection)
-            ),
+        connection=Prompty.normalize(
+            param_hoisting(connection, load_global_config(caller.parent, config)),
             caller.parent,
         ),
-        parameters=parameters,
+        options=options,
     )
 
-    return Prompty(model=modelSettings, template=templateSettings, content=content)
+    return Prompty(model=modelProperty, template=templateProperty, content=content)
 
 
 @trace(description="Create a headless prompty object for programmatic use.")
 async def headless_async(
     api: str,
     content: Union[str, list[str], dict],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
-    connection: str = "default",
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
+    config: str = "default",
 ) -> Prompty:
     """Create a headless prompty object for programmatic use.
 
@@ -101,8 +100,8 @@ async def headless_async(
         The content to process
     configuration : Dict[str, any], optional
         The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     connection : str, optional
         The connection to use, by default "default"
 
@@ -125,97 +124,31 @@ async def headless_async(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
+    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
 
-    global_config = await load_global_config_async(caller.parent, connection)
+    global_config = await load_global_config_async(caller.parent, config)
     c = await Prompty.normalize_async(
-        param_hoisting(configuration, global_config), caller.parent
+        param_hoisting(connection, global_config), caller.parent
     )
 
-    modelSettings = ModelSettings(
+    modelProperty = ModelProperty(
         api=api,
-        configuration=c,
-        parameters=parameters,
+        connection=c,
+        options=options,
     )
 
-    return Prompty(model=modelSettings, template=templateSettings, content=content)
-
-
-def _load_raw_prompty(attributes: dict, content: str, p: Path, global_config: dict):
-    if "model" not in attributes:
-        attributes["model"] = {}
-
-    if "configuration" not in attributes["model"]:
-        attributes["model"]["configuration"] = global_config
-    else:
-        attributes["model"]["configuration"] = param_hoisting(
-            attributes["model"]["configuration"],
-            global_config,
-        )
-
-    # pull model settings out of attributes
-    try:
-        model = ModelSettings(**attributes.pop("model"))
-    except Exception as e:
-        raise ValueError(f"Error in model settings: {e}")
-
-    # pull template settings
-    try:
-        if "template" in attributes:
-            t = attributes.pop("template")
-            if isinstance(t, dict):
-                template = TemplateSettings(**t)
-            # has to be a string denoting the type
-            else:
-                template = TemplateSettings(type=t, parser="prompty")
-        else:
-            template = TemplateSettings(type="jinja2", parser="prompty")
-    except Exception as e:
-        raise ValueError(f"Error in template loader: {e}")
-
-    # formalize inputs and outputs
-    if "inputs" in attributes:
-        try:
-            inputs = {
-                k: PropertySettings(**v) for (k, v) in attributes.pop("inputs").items()
-            }
-        except Exception as e:
-            raise ValueError(f"Error in inputs: {e}")
-    else:
-        inputs = {}
-    if "outputs" in attributes:
-        try:
-            outputs = {
-                k: PropertySettings(**v) for (k, v) in attributes.pop("outputs").items()
-            }
-        except Exception as e:
-            raise ValueError(f"Error in outputs: {e}")
-    else:
-        outputs = {}
-
-    prompty = Prompty(
-        model=model,
-        inputs=inputs,
-        outputs=outputs,
-        template=template,
-        content=content,
-        file=p,
-        **attributes
-    )
-
-    return prompty
-
+    return Prompty(model=modelProperty, template=templateProperty, content=content)
 
 @trace(description="Load a prompty file.")
-def load(prompty_file: str, configuration: str = "default") -> Prompty:
+def load(prompty_file: str, config: str = "default") -> Prompty:
     """Load a prompty file.
 
     Parameters
     ----------
     prompty_file : str
         The path to the prompty file
-    configuration : str, optional
-        The configuration to use, by default "default"
+    config : str, optional
+        The config to use, by default "default"
 
     Returns
     -------
@@ -238,38 +171,34 @@ def load(prompty_file: str, configuration: str = "default") -> Prompty:
     # load dictionary from prompty file
     matter = load_prompty(p)
 
-    attributes = matter["attributes"]
-    content = matter["body"]
-
-    # normalize attribute dictionary resolve keys and files
-    attributes = Prompty.normalize(attributes, p.parent)
-
     # load global configuration
-    global_config = Prompty.normalize(
-        load_global_config(p.parent, configuration), p.parent
+    global_config = load_global_config(p.parent, config)
+
+    # expand ${file} includes
+    attributes = Prompty.normalize(matter.pop("attributes", {}), p.parent)
+
+    # load prompty dictionary from file
+    prompty_dictionary = Prompty.load_manifest(
+        attributes, matter["body"], global_config
     )
 
-    prompty = _load_raw_prompty(attributes, content, p, global_config)
+    # normalize attribute dictionary resolve keys and files
 
-    # recursive loading of base prompty
-    if "base" in attributes:
-        # load the base prompty from the same directory as the current prompty
-        base = load(p.parent / attributes["base"])
-        prompty = Prompty.hoist_base_prompty(prompty, base)
+    prompty = Prompty.load_raw(prompty_dictionary, p)
 
     return prompty
 
 
 @trace(description="Load a prompty file.")
-async def load_async(prompty_file: str, configuration: str = "default") -> Prompty:
+async def load_async(prompty_file: str, config: str = "default") -> Prompty:
     """Load a prompty file.
 
     Parameters
     ----------
     prompty_file : str
         The path to the prompty file
-    configuration : str, optional
-        The configuration to use, by default "default"
+    config : str, optional
+        The config to use, by default "default"
 
     Returns
     -------
@@ -292,31 +221,47 @@ async def load_async(prompty_file: str, configuration: str = "default") -> Promp
     # load dictionary from prompty file
     matter = await load_prompty_async(p)
 
-    attributes = matter["attributes"]
-    content = matter["body"]
-
-    # normalize attribute dictionary resolve keys and files
-    attributes = await Prompty.normalize_async(attributes, p.parent)
-
     # load global configuration
-    config = await load_global_config_async(p.parent, configuration)
-    global_config = await Prompty.normalize_async(config, p.parent)
+    global_config = await load_global_config_async(p.parent, config)
 
-    prompty = _load_raw_prompty(attributes, content, p, global_config)
+    # expand ${file} includes
+    attributes = await Prompty.normalize_async(matter.pop("attributes", {}), p.parent)
 
-    # recursive loading of base prompty
-    if "base" in attributes:
-        # load the base prompty from the same directory as the current prompty
-        base = await load_async(p.parent / attributes["base"])
-        prompty = Prompty.hoist_base_prompty(prompty, base)
+    # load prompty dictionary from file
+    prompty_dictionary = Prompty.load_manifest(
+        attributes, matter["body"], global_config
+    )
+
+    prompty = Prompty.load_raw(prompty_dictionary, p)
 
     return prompty
 
+
+def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False):
+    if merge_sample:
+        inputs = param_hoisting(inputs, prompt.get_sample())
+
+    clean_inputs = {}
+    for input in prompt.inputs:
+        if input.name in inputs:
+            if input.type != get_json_type(type(inputs[input.name])):
+                raise ValueError(
+                    f"Type mismatch for input property {input.name}: input type ({inputs[input.name].type}) != sample type ({input.type})"
+                )
+            clean_inputs[input.name] = inputs[input.name]
+        else:
+            if input.default is not None:
+                clean_inputs[input.name] = input.default
+            else:
+                raise ValueError(f"Missing input property {input.name}")
+
+    return clean_inputs
 
 @trace(description="Prepare the inputs for the prompt.")
 def prepare(
     prompt: Prompty,
     inputs: dict[str, typing.Any] = {},
+    merge_sample: bool = False,
 ):
     """Prepare the inputs for the prompt.
 
@@ -339,9 +284,12 @@ def prepare(
     >>> inputs = {"name": "John Doe"}
     >>> content = prompty.prepare(p, inputs)
     """
-    inputs = param_hoisting(inputs, prompt.sample)
+    values = _validate_inputs(prompt, inputs, merge_sample)
 
-    render = InvokerFactory.run_renderer(prompt, inputs, prompt.content)
+    # add nonce for this run
+    prompt.template.nonce = uuid.uuid4().hex
+
+    render = InvokerFactory.run_renderer(prompt, values, prompt.content)
     result = InvokerFactory.run_parser(prompt, render)
 
     return result
@@ -351,6 +299,7 @@ def prepare(
 async def prepare_async(
     prompt: Prompty,
     inputs: dict[str, typing.Any] = {},
+    merge_sample: bool = False,
 ):
     """Prepare the inputs for the prompt.
 
@@ -373,9 +322,12 @@ async def prepare_async(
     >>> inputs = {"name": "John Doe"}
     >>> content = await prompty.prepare_async(p, inputs)
     """
-    inputs = param_hoisting(inputs, prompt.sample)
+    values = _validate_inputs(prompt, inputs, merge_sample)
 
-    render = await InvokerFactory.run_renderer_async(prompt, inputs, prompt.content)
+    # add nonce for this run
+    prompt.template.nonce = uuid.uuid4().hex
+
+    render = await InvokerFactory.run_renderer_async(prompt, values, prompt.content)
     result = await InvokerFactory.run_parser_async(prompt, render)
 
     return result
@@ -385,8 +337,9 @@ async def prepare_async(
 def run(
     prompt: Prompty,
     content: Union[dict, list, str],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -397,10 +350,10 @@ def run(
         The prompty object
     content : dict | list | str
         The content to process
-    configuration : Dict[str, any], optional
-        The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    connection : Dict[str, any], optional
+        The connection to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     raw : bool, optional
         Whether to skip processing, by default False
 
@@ -418,13 +371,15 @@ def run(
     >>> result = prompty.run(p, content)
     """
 
-    if configuration != {}:
-        prompt.model.configuration = param_hoisting(
-            configuration, prompt.model.configuration
+    if connection != {}:
+        prompt.model.connection = param_hoisting(connection, prompt.model.connection)
+
+    if options != {}:
+        prompt.model.options = param_hoisting(
+            options, prompt.model.options
         )
 
-    if parameters != {}:
-        prompt.model.parameters = param_hoisting(parameters, prompt.model.parameters)
+    # resolve env variables
 
     result = InvokerFactory.run_executor(prompt, content)
     if not raw:
@@ -437,8 +392,9 @@ def run(
 async def run_async(
     prompt: Prompty,
     content: Union[dict, list, str],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -449,10 +405,10 @@ async def run_async(
         The prompty object
     content : dict | list | str
         The content to process
-    configuration : Dict[str, any], optional
-        The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    connection : Dict[str, any], optional
+        The connection to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     raw : bool, optional
         Whether to skip processing, by default False
 
@@ -470,13 +426,13 @@ async def run_async(
     >>> result = await prompty.run_async(p, content)
     """
 
-    if configuration != {}:
-        prompt.model.configuration = param_hoisting(
-            configuration, prompt.model.configuration
-        )
+    if connection != {}:
+        prompt.model.connection = param_hoisting(connection, prompt.model.connection)
 
-    if parameters != {}:
-        prompt.model.parameters = param_hoisting(parameters, prompt.model.parameters)
+    if options != {}:
+        prompt.model.options = param_hoisting(
+            options, prompt.model.options
+        )
 
     result = await InvokerFactory.run_executor_async(prompt, content)
     if not raw:
@@ -488,10 +444,12 @@ async def run_async(
 @trace(description="Execute a prompty")
 def execute(
     prompt: Union[str, Prompty],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
+    merge_sample: bool = False,
     config_name: str = "default",
 ):
     """Execute a prompty.
@@ -500,10 +458,10 @@ def execute(
     ----------
     prompt : Union[str, Prompty]
         The prompty object or path to the prompty file
-    configuration : Dict[str, any], optional
-        The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    connection : Dict[str, any], optional
+        The connection to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     inputs : Dict[str, any], optional
         The inputs to the prompt, by default {}
     raw : bool, optional
@@ -531,10 +489,10 @@ def execute(
         prompt = load(path, config_name)
 
     # prepare content
-    content = prepare(prompt, inputs)
+    content = prepare(prompt, inputs, merge_sample)
 
     # run LLM model
-    result = run(prompt, content, configuration, parameters, raw)
+    result = run(prompt, content, connection, options, env, raw)
 
     return result
 
@@ -542,10 +500,12 @@ def execute(
 @trace(description="Execute a prompty")
 async def execute_async(
     prompt: Union[str, Prompty],
-    configuration: dict[str, typing.Any] = {},
-    parameters: dict[str, typing.Any] = {},
+    connection: dict[str, typing.Any] = {},
+    options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
+    env: dict[str, typing.Any] = {},
     raw: bool = False,
+    merge_sample: bool = False,
     config_name: str = "default",
 ):
     """Execute a prompty.
@@ -554,10 +514,10 @@ async def execute_async(
     ----------
     prompt : Union[str, Prompty]
         The prompty object or path to the prompty file
-    configuration : Dict[str, any], optional
-        The configuration to use, by default {}
-    parameters : Dict[str, any], optional
-        The parameters to use, by default {}
+    connection : Dict[str, any], optional
+        The connection to use, by default {}
+    options : Dict[str, any], optional
+        The options to use, by default {}
     inputs : Dict[str, any], optional
         The inputs to the prompt, by default {}
     raw : bool, optional
@@ -585,9 +545,9 @@ async def execute_async(
         prompt = await load_async(path, config_name)
 
     # prepare content
-    content = await prepare_async(prompt, inputs)
+    content = await prepare_async(prompt, inputs, merge_sample)
 
     # run LLM model
-    result = await run_async(prompt, content, configuration, parameters, raw)
+    result = await run_async(prompt, content, connection, options, env, raw)
 
     return result
