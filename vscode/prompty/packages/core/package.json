@@ -10,7 +10,7 @@
 		"url": "https://github.com/Microsoft/prompty"
 	},
 	"engines": {
-		"vscode": "^1.88.0"
+		"vscode": "^1.98.0"
 	},
 	"dependencies": {
 		"glob": "^11.0.0",
@@ -18,6 +18,9 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.75.1",
-		"@vscode/test-electron": "^2.3.9"
+		"@vscode/test-electron": "^2.3.9",
+		"prettier": "^3.5.3",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.8.2"
 	}
 }
