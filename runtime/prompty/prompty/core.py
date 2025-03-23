@@ -1,5 +1,4 @@
 import copy
-import os
 import typing
 import uuid
 import warnings
@@ -203,6 +202,8 @@ class Prompty:
     content: Union[str, list[str], dict] = field(default="")
     instructions = field(default="")
     additional_instructions = field(default="")
+
+    slots: list[dict[str, str]] = field(default_factory=list)
 
     def get_input(self, name: str) -> InputProperty:
         """Get the property of the prompty
@@ -439,9 +440,7 @@ class Prompty:
 
         if "base" in attributes:
             attributes.pop("base")
-            warnings.warn(
-                "base prompty is currently not supported", DeprecationWarning
-            )
+            warnings.warn("base prompty is currently not supported", DeprecationWarning)
 
         if "model" not in attributes:
             prompty["model"] = {}
@@ -632,24 +631,55 @@ class Prompty:
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def _process_env(
-        variable: str, env_error=True, default: Union[str, None] = None
-    ) -> typing.Any:
-        if variable in os.environ.keys():
-            return os.environ[variable]
-        else:
-            if default:
-                return default
-            if env_error:
-                raise ValueError(f"Variable {variable} not found in environment")
+    def extract_slots(
+        root: str, attribute: typing.Any, acc: list[dict[str, str]]
+    ) -> list[dict[str, str]]:
 
-            return ""
+        if isinstance(attribute, str):
+            if attribute.startswith("${env"):
+                variable = attribute[2:-1].split(":")
+                if len(variable) < 2:
+                    raise ValueError(
+                        f"Invalid environment/slot variable {attribute}"
+                    )
+                if len(variable) == 2:
+                    return [{"name": root, "key": variable[1]}]
+                else:
+                    return [{"name": root, "key": variable[1], "default": variable[2]}]
+            else:
+                return acc
+
+        if isinstance(attribute, list):
+            params: list[dict[str, str]] = []
+            for i, v in enumerate(attribute):
+                if isinstance(v, dict) and "name" in v:
+                    params = [
+                        *params,
+                        *Prompty.extract_slots(f'{root}.{v["name"]}', v, acc),
+                    ]
+                elif isinstance(v, dict) and "id" in v:
+                    params = [
+                        *params,
+                        *Prompty.extract_slots(f'{root}.{v["id"]}', v, acc),
+                    ]
+                else:
+                    params = [*params, *Prompty.extract_slots(f"{root}.{i}", v, acc)]
+
+            return [*acc, *params]
+
+        if isinstance(attribute, dict):
+            params = []
+            for k, v in attribute.items():
+                params = [*params, *Prompty.extract_slots(f"{root}.{k}", v, acc)]
+            return [*acc, *params]
+
+        return acc
 
     @staticmethod
-    def normalize(attribute: typing.Any, parent: Path, env_error=True) -> typing.Any:
+    def normalize(attribute: typing.Any, parent: Path) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
-            if attribute.startswith("${file") and attribute.endswith("}"):
+            if attribute.startswith("${file:") and attribute.endswith("}"):
                 # check if env or file
                 variable = attribute[2:-1].split(":")
                 return Prompty._process_file(variable[1], parent)
@@ -666,9 +696,7 @@ class Prompty:
             return attribute
 
     @staticmethod
-    async def normalize_async(
-        attribute: typing.Any, parent: Path, env_error=True
-    ) -> typing.Any:
+    async def normalize_async(attribute: typing.Any, parent: Path) -> typing.Any:
         if isinstance(attribute, str):
             attribute = attribute.strip()
             if attribute.startswith("${file") and attribute.endswith("}"):

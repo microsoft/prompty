@@ -5,9 +5,7 @@ from pathlib import Path
 from typing import Union
 
 from .core import (
-    ModelProperty,
     Prompty,
-    TemplateProperty,
     param_hoisting,
 )
 from .invoker import InvokerFactory
@@ -25,6 +23,23 @@ from .utils import (
 InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
 InvokerFactory.add_renderer("mustache", MustacheRenderer)
 InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
+
+
+def _load_with_slots(
+    attributes: dict[str, typing.Any],
+    content: str,
+    global_config: dict[str, typing.Any],
+    p: Path,
+) -> Prompty:
+    # load prompty dictionary from file
+    prompty_dictionary = Prompty.load_manifest(attributes, content, global_config)
+
+    slots = Prompty.extract_slots("manifest", prompty_dictionary, [])
+
+    prompty = Prompty.load_raw(prompty_dictionary, p)
+    prompty.slots = slots
+
+    return prompty
 
 
 @trace(description="Create a headless prompty object for programmatic use.")
@@ -69,17 +84,26 @@ def headless(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
-    modelProperty = ModelProperty(
-        api=api,
-        connection=Prompty.normalize(
-            param_hoisting(connection, load_global_config(caller.parent, config)),
-            caller.parent,
-        ),
-        options=options,
-    )
 
-    return Prompty(model=modelProperty, template=templateProperty, content=content)
+    attributes = {
+        "template": {
+            "format": "NOOP",
+            "parser": "NOOP",
+        },
+        "model": {
+            "api": api,
+            "connection": connection,
+            "options": options,
+        },
+    }
+
+    # load global configuration
+    global_config = load_global_config(caller.parent, config)
+    prompty = _load_with_slots(attributes, "", global_config, caller.parent)
+    prompty.content = content
+    prompty.file = ""
+    
+    return prompty
 
 
 @trace(description="Create a headless prompty object for programmatic use.")
@@ -124,20 +148,27 @@ async def headless_async(
 
     # get caller's path (to get relative path for prompty.json)
     caller = Path(traceback.extract_stack()[-2].filename)
-    templateProperty = TemplateProperty(format="NOOP", parser="NOOP")
 
+    attributes = {
+        "template": {
+            "format": "NOOP",
+            "parser": "NOOP",
+        },
+        "model": {
+            "api": api,
+            "connection": connection,
+            "options": options,
+        },
+    }
+
+    # load global configuration
     global_config = await load_global_config_async(caller.parent, config)
-    c = await Prompty.normalize_async(
-        param_hoisting(connection, global_config), caller.parent
-    )
+    prompty = _load_with_slots(attributes, "", global_config, caller.parent)
+    prompty.content = content
+    prompty.file = ""
 
-    modelProperty = ModelProperty(
-        api=api,
-        connection=c,
-        options=options,
-    )
+    return prompty
 
-    return Prompty(model=modelProperty, template=templateProperty, content=content)
 
 @trace(description="Load a prompty file.")
 def load(prompty_file: str, config: str = "default") -> Prompty:
@@ -170,23 +201,14 @@ def load(prompty_file: str, config: str = "default") -> Prompty:
 
     # load dictionary from prompty file
     matter = load_prompty(p)
+    atttributes = matter.pop("attributes", {})
+    # expand ${file} includes
+    attributes = Prompty.normalize(atttributes, p.parent)
 
     # load global configuration
     global_config = load_global_config(p.parent, config)
 
-    # expand ${file} includes
-    attributes = Prompty.normalize(matter.pop("attributes", {}), p.parent)
-
-    # load prompty dictionary from file
-    prompty_dictionary = Prompty.load_manifest(
-        attributes, matter["body"], global_config
-    )
-
-    # normalize attribute dictionary resolve keys and files
-
-    prompty = Prompty.load_raw(prompty_dictionary, p)
-
-    return prompty
+    return _load_with_slots(attributes, matter["body"], global_config, p)
 
 
 @trace(description="Load a prompty file.")
@@ -220,24 +242,19 @@ async def load_async(prompty_file: str, config: str = "default") -> Prompty:
 
     # load dictionary from prompty file
     matter = await load_prompty_async(p)
+    atttributes = matter.pop("attributes", {})
+    # expand ${file} includes
+    attributes = await Prompty.normalize_async(atttributes, p.parent)
 
     # load global configuration
     global_config = await load_global_config_async(p.parent, config)
 
-    # expand ${file} includes
-    attributes = await Prompty.normalize_async(matter.pop("attributes", {}), p.parent)
-
-    # load prompty dictionary from file
-    prompty_dictionary = Prompty.load_manifest(
-        attributes, matter["body"], global_config
-    )
-
-    prompty = Prompty.load_raw(prompty_dictionary, p)
-
-    return prompty
+    return _load_with_slots(attributes, matter["body"], global_config, p)
 
 
-def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False):
+def _validate_inputs(
+    prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False
+):
     if merge_sample:
         inputs = param_hoisting(inputs, prompt.get_sample())
 
@@ -256,6 +273,7 @@ def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sampl
                 raise ValueError(f"Missing input property {input.name}")
 
     return clean_inputs
+
 
 @trace(description="Prepare the inputs for the prompt.")
 def prepare(
@@ -339,7 +357,7 @@ def run(
     content: Union[dict, list, str],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
-    env: dict[str, typing.Any] = {},
+    slots: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -375,11 +393,13 @@ def run(
         prompt.model.connection = param_hoisting(connection, prompt.model.connection)
 
     if options != {}:
-        prompt.model.options = param_hoisting(
-            options, prompt.model.options
-        )
+        prompt.model.options = param_hoisting(options, prompt.model.options)
 
-    # resolve env variables
+    # map slots (if any keys are in the slots)
+    if slots != {}:
+        for item in prompt.slots:
+            if item["key"] in slots:
+                item["value"] = slots[item["key"]]
 
     result = InvokerFactory.run_executor(prompt, content)
     if not raw:
@@ -394,7 +414,7 @@ async def run_async(
     content: Union[dict, list, str],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
-    env: dict[str, typing.Any] = {},
+    slots: dict[str, typing.Any] = {},
     raw: bool = False,
 ):
     """Run the prepared Prompty content.
@@ -430,9 +450,13 @@ async def run_async(
         prompt.model.connection = param_hoisting(connection, prompt.model.connection)
 
     if options != {}:
-        prompt.model.options = param_hoisting(
-            options, prompt.model.options
-        )
+        prompt.model.options = param_hoisting(options, prompt.model.options)
+
+    # map slots (if any keys are in the slots)
+    if slots != {}:
+        for item in prompt.slots:
+            if item["key"] in slots:
+                item["value"] = slots[item["key"]]
 
     result = await InvokerFactory.run_executor_async(prompt, content)
     if not raw:

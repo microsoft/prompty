@@ -1,12 +1,12 @@
 import importlib
 import json
 import os
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Optional
 
 import click
 from dotenv import load_dotenv
-from dataclasses import asdict, is_dataclass
 
 import prompty
 from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace

@@ -21,11 +21,16 @@ class AzureOpenAIExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
+
+        # resolve model connection and options
+        self.resolve_model()
+
         self.kwargs = {
             key: value
             for key, value in self.prompty.model.connection.items()
             if key != "type"
         }
+
 
         # no key, use default credentials
         if "api_key" not in self.kwargs:

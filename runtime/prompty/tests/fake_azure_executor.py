@@ -17,6 +17,7 @@ from prompty.invoker import Invoker
 class FakeAzureExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
+        self.resolve_model()
         self.api = self.prompty.model.api
         self.deployment = self.prompty.model.connection["azure_deployment"]
         self.options = self.prompty.model.options

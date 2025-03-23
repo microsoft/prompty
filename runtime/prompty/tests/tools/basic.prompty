@@ -8,8 +8,6 @@ metadata:
 
 model:
   api: chat
-  connection:
-    azure_deployment: gpt-35-turbo
 
 inputs:
   firstName: Jane
@@ -21,7 +19,9 @@ tools:
     type: web_search
     description: A tool that can search the web for information.
     options:
-      url: https://api.bing.microsoft.com/v7.0/search
+      url: ${env:BING_URL}
+      headers:
+        Ocp-Apim-Subscription-Key: ${env:BING_KEY}
       parameters:
         - name: query
           type: string

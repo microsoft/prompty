@@ -16,6 +16,9 @@ class FakeServerlessExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
+        # resolve model
+        self.resolve_model()
+
         # serverless configuration
         self.endpoint = self.prompty.model.connection["endpoint"]
         self.model = self.prompty.model.connection["model"]

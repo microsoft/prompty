@@ -28,7 +28,9 @@ def test_basic_load():
     assert p.tools[0].id == "bing"
     assert p.tools[0].type == "web_search"
     assert p.tools[0].description == "A tool that can search the web for information."
-    assert "url" in p.tools[0].options and p.tools[0].options["url"] == "https://api.bing.microsoft.com/v7.0/search"
+    assert (
+        "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
+    )
     assert len(p.tools[0].parameters) == 2
     print(p)
 
@@ -40,7 +42,9 @@ async def test_basic_async_load():
     assert p.tools[0].id == "bing"
     assert p.tools[0].type == "web_search"
     assert p.tools[0].description == "A tool that can search the web for information."
-    assert "url" in p.tools[0].options and p.tools[0].options["url"] == "https://api.bing.microsoft.com/v7.0/search"
+    assert (
+        "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
+    )
     assert len(p.tools[0].parameters) == 2
     print(p)
 
