@@ -28,7 +28,7 @@ jobs:
 
       - name: Create tag
         run: |
-          echo "TAG=1.$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S | sed 's/\.0/./g')" >> "$GITHUB_ENV"
+          echo "TAG=1.$(TZ='America/Los_Angeles' date +%Y%m%d.9%H%M%S | sed 's/\.0/./g')" >> "$GITHUB_ENV"
           echo "Using tag: $TAG"
 
       - name: Install dependencies
