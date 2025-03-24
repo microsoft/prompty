@@ -14,7 +14,7 @@ if __name__ == "__main__":
         exit(-1)
 
     # read the coverage file
-    with open(c) as f:
+    with open(c, encoding="utf-8") as f:
         cov = json.load(f)
 
     print("# Coverage report")

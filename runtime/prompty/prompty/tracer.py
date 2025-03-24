@@ -338,7 +338,7 @@ class PromptyTracer:
             "trace": frame,
         }
 
-        with open(trace_file, "w") as f:
+        with open(trace_file, "w", encoding="utf-8") as f:
             json.dump(enriched_frame, f, indent=4)
 
 
