@@ -25,12 +25,7 @@ class AzureOpenAIExecutor(Invoker):
         # resolve model connection and options
         self.resolve_model()
 
-        self.kwargs = {
-            key: value
-            for key, value in self.prompty.model.connection.items()
-            if key != "type"
-        }
-
+        self.kwargs = {key: value for key, value in self.prompty.model.connection.items() if key != "type"}
 
         # no key, use default credentials
         if "api_key" not in self.kwargs:
@@ -44,14 +39,10 @@ class AzureOpenAIExecutor(Invoker):
                 )
             # default credential
             else:
-                default_credential = azure.identity.DefaultAzureCredential(
-                    exclude_shared_token_cache_credential=True
-                )
+                default_credential = azure.identity.DefaultAzureCredential(exclude_shared_token_cache_credential=True)
 
-            self.kwargs["azure_ad_token_provider"] = (
-                azure.identity.get_bearer_token_provider(
-                    default_credential, "https://cognitiveservices.azure.com/.default"
-                )
+            self.kwargs["azure_ad_token_provider"] = azure.identity.get_bearer_token_provider(
+                default_credential, "https://cognitiveservices.azure.com/.default"
             )
 
         self.api = self.prompty.model.api
@@ -60,17 +51,14 @@ class AzureOpenAIExecutor(Invoker):
 
     def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
-                
+
         if self.prompty.template.strict:
             if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
                 raise ValueError("Nonce mismatch in messages array (strict mode)")
-            
+
         messages = [
             {
-                **{
-                    "role": msg["role"],
-                    "content": msg["content"]
-                },
+                **{"role": msg["role"], "content": msg["content"]},
                 **({"name": msg["name"]} if "name" in msg else {}),
             }
             for msg in messages
@@ -113,7 +101,7 @@ class AzureOpenAIExecutor(Invoker):
             if self.api == "chat":
                 trace("signature", "AzureOpenAI.chat.completions.create")
                 messages = self._sanitize_messages(data)
-                
+
                 args = {
                     "model": self.deployment,
                     "messages": messages,
@@ -214,7 +202,7 @@ class AzureOpenAIExecutor(Invoker):
                 trace("signature", "AzureOpenAIAsync.chat.completions.create")
 
                 messages = self._sanitize_messages(data)
-                
+
                 args = {
                     "model": self.deployment,
                     "messages": messages,
@@ -225,9 +213,7 @@ class AzureOpenAIExecutor(Invoker):
                 if "stream" in args and args["stream"]:
                     response = await client.chat.completions.create(**args)
                 else:
-                    raw: APIResponse = (
-                        await client.chat.completions.with_raw_response.create(**args)
-                    )
+                    raw: APIResponse = await client.chat.completions.with_raw_response.create(**args)
                     if raw is not None and raw.text is not None and isinstance(raw.text, str):
                         response = ChatCompletion.model_validate_json(raw.text)
 

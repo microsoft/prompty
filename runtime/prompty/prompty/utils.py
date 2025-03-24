@@ -38,11 +38,7 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, N
 
     if len(prompty_config) > 0:
         sorted_list = sorted(
-            [
-                c
-                for c in prompty_config
-                if len(c.parent.parts) <= len(prompty_path.parts)
-            ],
+            [c for c in prompty_config if len(c.parent.parts) <= len(prompty_path.parts)],
             key=lambda p: len(p.parts),
         )
         return sorted_list[-1] if len(sorted_list) > 0 else None
@@ -50,9 +46,7 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, N
         return None
 
 
-def load_global_config(
-    prompty_path: Path = Path.cwd(), configuration: str = "default"
-) -> dict[str, typing.Any]:
+def load_global_config(prompty_path: Path = Path.cwd(), configuration: str = "default") -> dict[str, typing.Any]:
     # prompty.config laying around?
     config = _find_global_config(prompty_path)
 
@@ -83,6 +77,7 @@ async def load_global_config_async(
 
     return {}
 
+
 def get_json_type(t: type) -> typing.Literal["string", "number", "array", "object", "boolean"]:
     if t is str:
         return "string"
@@ -98,6 +93,7 @@ def get_json_type(t: type) -> typing.Literal["string", "number", "array", "objec
         return "boolean"
     else:
         raise ValueError(f"Unsupported type: {t}")
+
 
 def load_prompty(file_path, encoding="utf-8"):
     contents = load_text(file_path, encoding=encoding)

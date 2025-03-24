@@ -255,11 +255,7 @@ class Prompty:
                 elif k == "inputs" or k == "outputs":
                     d[k] = copy.deepcopy(v)
                 elif k == "file":
-                    d[k] = (
-                        str(self.file.as_posix())
-                        if isinstance(self.file, Path)
-                        else self.file
-                    )
+                    d[k] = str(self.file.as_posix()) if isinstance(self.file, Path) else self.file
                 elif k == "tools":
                     d[k] = [asdict(t) for t in v]
                 elif k == "basePrompty":
@@ -307,17 +303,13 @@ class Prompty:
                         if k not in parameters:
                             parameters[k] = ToolParameter(name=k, **v)
                         else:
-                            raise ValueError(
-                                f"Duplicate parameter {k} in options and parameters"
-                            )
+                            raise ValueError(f"Duplicate parameter {k} in options and parameters")
                 elif isinstance(params, list):
                     for p in params:
                         if p["name"] not in parameters:
                             parameters[p["name"]] = ToolParameter(**p)
                         else:
-                            raise ValueError(
-                                f"Duplicate parameter {p['name']} in configuration and parameters"
-                            )
+                            raise ValueError(f"Duplicate parameter {p['name']} in configuration and parameters")
                 else:
                     raise ValueError("Parameters must be a list or dict")
 
@@ -325,9 +317,7 @@ class Prompty:
                 # if function, need to have parameters
                 raise ValueError("Function tools must have parameters")
 
-            loaded_tools.append(
-                ToolProperty(**t, parameters=[*parameters.values()], options=options)
-            )
+            loaded_tools.append(ToolProperty(**t, parameters=[*parameters.values()], options=options))
 
         return loaded_tools
 
@@ -432,9 +422,7 @@ class Prompty:
         return t
 
     @staticmethod
-    def load_manifest(
-        attributes: dict, content: str, global_config: dict
-    ) -> dict[str, typing.Any]:
+    def load_manifest(attributes: dict, content: str, global_config: dict) -> dict[str, typing.Any]:
 
         prompty: dict[str, typing.Any] = {}
 
@@ -514,9 +502,7 @@ class Prompty:
         tools = []
         if "tools" in attributes:
             tools_attribute = attributes.pop("tools")
-            tools = Prompty.load_collection_property(
-                tools_attribute, Prompty.load_tool, "Tools must be a list or dict"
-            )
+            tools = Prompty.load_collection_property(tools_attribute, Prompty.load_tool, "Tools must be a list or dict")
 
         prompty["tools"] = tools
 
@@ -536,9 +522,7 @@ class Prompty:
             else:
                 raise ValueError("Authors must be a list")
         if "tags" in attributes:
-            warnings.warn(
-                "Tags is deprecated, add tags to metadata instead", DeprecationWarning
-            )
+            warnings.warn("Tags is deprecated, add tags to metadata instead", DeprecationWarning)
             tags = attributes.pop("tags")
             if isinstance(tags, list):
                 metadata["tags"] = tags
@@ -585,9 +569,7 @@ class Prompty:
         top.version = base.version if top.version == "" else top.version
 
         top.model.api = base.model.api if top.model.api == "" else top.model.api
-        top.model.connection = param_hoisting(
-            top.model.connection, base.model.connection
-        )
+        top.model.connection = param_hoisting(top.model.connection, base.model.connection)
         top.model.options = param_hoisting(top.model.options, base.model.options)
 
         top.basePrompty = base
@@ -604,10 +586,7 @@ class Prompty:
             if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
-                return {
-                    key: Prompty.normalize(value, parent)
-                    for key, value in items.items()
-                }
+                return {key: Prompty.normalize(value, parent) for key, value in items.items()}
             else:
                 return items
         else:
@@ -621,27 +600,20 @@ class Prompty:
             if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):
-                return {
-                    key: Prompty.normalize(value, parent)
-                    for key, value in items.items()
-                }
+                return {key: Prompty.normalize(value, parent) for key, value in items.items()}
             else:
                 return items
         else:
             raise FileNotFoundError(f"File {file} not found")
 
     @staticmethod
-    def extract_slots(
-        root: str, attribute: typing.Any, acc: list[dict[str, str]]
-    ) -> list[dict[str, str]]:
+    def extract_slots(root: str, attribute: typing.Any, acc: list[dict[str, str]]) -> list[dict[str, str]]:
 
         if isinstance(attribute, str):
             if attribute.startswith("${env"):
                 variable = attribute[2:-1].split(":")
                 if len(variable) < 2:
-                    raise ValueError(
-                        f"Invalid environment/slot variable {attribute}"
-                    )
+                    raise ValueError(f"Invalid environment/slot variable {attribute}")
                 if len(variable) == 2:
                     return [{"name": root, "key": variable[1]}]
                 else:
@@ -688,10 +660,7 @@ class Prompty:
         elif isinstance(attribute, list):
             return [Prompty.normalize(value, parent) for value in attribute]
         elif isinstance(attribute, dict):
-            return {
-                key: Prompty.normalize(value, parent)
-                for key, value in attribute.items()
-            }
+            return {key: Prompty.normalize(value, parent) for key, value in attribute.items()}
         else:
             return attribute
 
@@ -707,10 +676,7 @@ class Prompty:
         elif isinstance(attribute, list):
             return [await Prompty.normalize_async(value, parent) for value in attribute]
         elif isinstance(attribute, dict):
-            return {
-                key: await Prompty.normalize_async(value, parent)
-                for key, value in attribute.items()
-            }
+            return {key: await Prompty.normalize_async(value, parent) for key, value in attribute.items()}
         else:
             return attribute
 

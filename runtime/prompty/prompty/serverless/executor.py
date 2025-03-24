@@ -32,21 +32,15 @@ class ServerlessExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.kwargs = {
-            key: value
-            for key, value in self.prompty.model.connection.items()
-            if key != "type"
-        }
+        self.kwargs = {key: value for key, value in self.prompty.model.connection.items() if key != "type"}
 
         self.endpoint = self.prompty.model.connection["endpoint"]
         self.model = self.prompty.model.connection["model"]
 
         # no key, use default credentials
         if "key" not in self.kwargs:
-            self.credential: typing.Union[
-                azure.identity.DefaultAzureCredential, AzureKeyCredential
-            ] = azure.identity.DefaultAzureCredential(
-                exclude_shared_token_cache_credential=True
+            self.credential: typing.Union[azure.identity.DefaultAzureCredential, AzureKeyCredential] = (
+                azure.identity.DefaultAzureCredential(exclude_shared_token_cache_credential=True)
             )
         else:
             self.credential = AzureKeyCredential(self.prompty.model.connection["key"])
@@ -58,9 +52,7 @@ class ServerlessExecutor(Invoker):
         # stream response
         if isinstance(response, Iterator):
             if isinstance(response, StreamingChatCompletions):
-                stream: typing.Union[PromptyStream, AsyncPromptyStream] = PromptyStream(
-                    "ServerlessExecutor", response
-                )
+                stream: typing.Union[PromptyStream, AsyncPromptyStream] = PromptyStream("ServerlessExecutor", response)
                 return stream
             elif isinstance(response, AsyncStreamingChatCompletions):
                 stream = AsyncPromptyStream("ServerlessExecutor", response)
@@ -81,10 +73,7 @@ class ServerlessExecutor(Invoker):
 
         messages = [
             {
-                **{
-                    "role": msg["role"],
-                    "content": msg["content"]
-                },
+                **{"role": msg["role"], "content": msg["content"]},
                 **({"name": msg["name"]} if "name" in msg else {}),
             }
             for msg in messages
@@ -115,9 +104,7 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("ChatCompletionsClient") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.ctor")
-                trace(
-                    "description", "Azure Unified Inference SDK Chat Completions Client"
-                )
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
                 trace("inputs", cargs)
                 client: typing.Any = ChatCompletionsClient(
                     user_agent=f"prompty/{VERSION}",
@@ -128,9 +115,7 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("complete") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
-                trace(
-                    "description", "Azure Unified Inference SDK Chat Completions Client"
-                )
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
                 eargs = {
                     "model": self.model,
                     "messages": self._sanitize_messages(data),
@@ -143,9 +128,7 @@ class ServerlessExecutor(Invoker):
             response = self._response(r)
 
         elif self.api == "completion":
-            raise NotImplementedError(
-                "Serverless Completions API is not implemented yet"
-            )
+            raise NotImplementedError("Serverless Completions API is not implemented yet")
 
         elif self.api == "embedding":
             with Tracer.start("EmbeddingsClient") as trace:
@@ -162,9 +145,7 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("complete") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
-                trace(
-                    "description", "Azure Unified Inference SDK Chat Completions Client"
-                )
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
                 eargs = {
                     "model": self.model,
                     "input": data if isinstance(data, list) else [data],
@@ -233,17 +214,13 @@ class ServerlessExecutor(Invoker):
             response = self._response(r)
 
         elif self.api == "completion":
-            raise NotImplementedError(
-                "Serverless Completions API is not implemented yet"
-            )
+            raise NotImplementedError("Serverless Completions API is not implemented yet")
 
         elif self.api == "embedding":
             with Tracer.start("EmbeddingsClient") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.aio.EmbeddingsClient.ctor")
-                trace(
-                    "description", "Azure Unified Inference SDK Async Embeddings Client"
-                )
+                trace("description", "Azure Unified Inference SDK Async Embeddings Client")
                 trace("inputs", cargs)
                 client = AsyncEmbeddingsClient(
                     user_agent=f"prompty/{VERSION}",
@@ -254,9 +231,7 @@ class ServerlessExecutor(Invoker):
             with Tracer.start("complete") as trace:
                 trace("type", "LLM")
                 trace("signature", "azure.ai.inference.ChatCompletionsClient.complete")
-                trace(
-                    "description", "Azure Unified Inference SDK Chat Completions Client"
-                )
+                trace("description", "Azure Unified Inference SDK Chat Completions Client")
                 eargs = {
                     "model": self.model,
                     "input": data if isinstance(data, list) else [data],

@@ -16,8 +16,9 @@ jobs:
     name: run unit tests on supported python versions
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python_version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         os: [ubuntu-latest, macOS-latest, windows-latest]
     permissions:
       # This permission is needed for private repositories.
@@ -27,21 +28,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pdm-project/setup-pdm@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python_version }}
 
       - name: install dependencies
         working-directory: ./runtime/prompty
-        run: pdm install
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e '.[dev]'
+
+      - name: Lint with ruff
+        working-directory: ./runtime/prompty
+        run: ruff check .
+
+      - name: Check formatting with black
+        working-directory: ./runtime/prompty
+        run: black . --check --verbose
 
       - name: test package
         working-directory: ./runtime/prompty
-        run: pdm run pytest
+        run: |
+          python3 -m pytest -s -vv --cov --cov-report=html:summary.html
+          cat summary.html >> $GITHUB_STEP_SUMMARY
 
       - name: mypy check
         working-directory: ./runtime/prompty
-        run: pdm run mypy . --check-untyped-defs
+        run: python3 -m run mypy . --check-untyped-defs
 
   publish-artifacts:
     name: publish artifacts
@@ -50,17 +64,33 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      - uses: pdm-project/setup-pdm@v4
+      - name: Create tag
+        run: |
+          echo "TAG=v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)" >> "$GITHUB_ENV"
+          echo "Using tag: ${TAG}"
+
+      - name: Rewrite version
+        working-directory: ./runtime/prompty
+        run: |
+          echo "VERSION = '$TAG'" > ./prompty/_version.py
+          cat ./prompty/_version.py
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v3
         with:
           python-version: 3.9
 
       - name: install dependencies
         working-directory: ./runtime/prompty
-        run: pdm install
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e '.[dev]'
 
       - name: Publish package distributions to PyPI
         working-directory: ./runtime/prompty
-        run: pdm build 
+        run: |
+          flit build --format wheel 
+          flit build --format sdist
 
       - uses: actions/upload-artifact@v4
         with:

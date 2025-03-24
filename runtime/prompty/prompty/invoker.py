@@ -90,9 +90,7 @@ class Invoker(abc.ABC):
         return await self.invoke_async(data)
 
     @staticmethod
-    def _process_env(
-        variable: str, env_error=True, default: Union[str, None] = None
-    ) -> typing.Any:
+    def _process_env(variable: str, env_error=True, default: Union[str, None] = None) -> typing.Any:
         if variable in os.environ.keys():
             return os.environ[variable]
         else:
@@ -109,14 +107,10 @@ class Invoker(abc.ABC):
         # only resolve once
         if self._resolved:
             return
-        
-        self.prompty.model.connection = self.resolve_slots(
-            "manifest.model.connection", self.prompty.model.connection
-        )
 
-        self.prompty.model.options = self.resolve_slots(
-            "manifest.model.options", self.prompty.model.options
-        )
+        self.prompty.model.connection = self.resolve_slots("manifest.model.connection", self.prompty.model.connection)
+
+        self.prompty.model.options = self.resolve_slots("manifest.model.options", self.prompty.model.options)
         self._resolved = True
 
     def resolve_slots(self, root: str, attribute: typing.Any) -> typing.Any:
@@ -137,9 +131,7 @@ class Invoker(abc.ABC):
                 )
 
                 if idx == -1:
-                    raise ValueError(
-                        f"Slot {key} not found in Prompty slots for {root}"
-                    )
+                    raise ValueError(f"Slot {key} not found in Prompty slots for {root}")
                 else:
                     # use value if it exists
                     if "value" in self.prompty.slots[idx]:
@@ -165,17 +157,11 @@ class Invoker(abc.ABC):
                 else:
                     return str(i)
 
-            return [
-                self.resolve_slots(f"{root}.{get_key(v, i)}", v)
-                for i, v in enumerate(attribute)
-            ]
+            return [self.resolve_slots(f"{root}.{get_key(v, i)}", v) for i, v in enumerate(attribute)]
 
         if isinstance(attribute, dict):
-            return {
-                key: self.resolve_slots(f"{root}.{key}", value)
-                for key, value in attribute.items()
-            }
-        
+            return {key: self.resolve_slots(f"{root}.{key}", value) for key, value in attribute.items()}
+
         return attribute
 
 
@@ -468,51 +454,35 @@ class InvokerFactory:
         return value
 
     @classmethod
-    def run_renderer(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    def run_renderer(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return cls.run("renderer", prompty, data, default)
 
     @classmethod
-    async def run_renderer_async(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    async def run_renderer_async(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return await cls.run_async("renderer", prompty, data, default)
 
     @classmethod
-    def run_parser(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    def run_parser(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return cls.run("parser", prompty, data, default)
 
     @classmethod
-    async def run_parser_async(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    async def run_parser_async(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return await cls.run_async("parser", prompty, data, default)
 
     @classmethod
-    def run_executor(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    def run_executor(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return cls.run("executor", prompty, data, default)
 
     @classmethod
-    async def run_executor_async(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    async def run_executor_async(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return await cls.run_async("executor", prompty, data, default)
 
     @classmethod
-    def run_processor(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    def run_processor(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return cls.run("processor", prompty, data, default)
 
     @classmethod
-    async def run_processor_async(
-        cls, prompty: Prompty, data: typing.Any, default: typing.Any = None
-    ) -> typing.Any:
+    async def run_processor_async(cls, prompty: Prompty, data: typing.Any, default: typing.Any = None) -> typing.Any:
         return await cls.run_async("processor", prompty, data, default)
 
 

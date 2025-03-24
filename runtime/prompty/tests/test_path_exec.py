@@ -30,17 +30,13 @@ async def test_prompty_config_global_async():
 
 
 def test_prompty_config_headless():
-    p = prompty.headless(
-        "embedding", ["this is the first line", "this is the second line"]
-    )
+    p = prompty.headless("embedding", ["this is the first line", "this is the second line"])
     assert p.model.connection["type"] == "FROM_CONTENT"
 
 
 @pytest.mark.asyncio
 async def test_prompty_config_headless_async():
-    p = await prompty.headless_async(
-        "embedding", ["this is the first line", "this is the second line"]
-    )
+    p = await prompty.headless_async("embedding", ["this is the first line", "this is the second line"])
     assert p.model.connection["type"] == "FROM_CONTENT"
 
 

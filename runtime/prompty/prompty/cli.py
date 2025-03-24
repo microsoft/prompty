@@ -47,15 +47,13 @@ def chat_mode(prompt_path: str):
     W = "\033[0m"  # white (normal)
     R = "\033[31m"  # red
     G = "\033[32m"  # green
-    #O = "\033[33m"  # orange
+    # O = "\033[33m"  # orange
     B = "\033[34m"  # blue
-    #P = "\033[35m"  # purple
+    # P = "\033[35m"  # purple
     print(f"Executing {str(prompt_path)} in chat mode...")
     p = prompty.load(str(prompt_path))
     if "chat_history" not in p.sample:
-        print(
-            f"{R}{str(prompt_path)} needs to have a chat_history input to work in chat mode{W}"
-        )
+        print(f"{R}{str(prompt_path)} needs to have a chat_history input to work in chat mode{W}")
         return
     else:
 
@@ -69,9 +67,7 @@ def chat_mode(prompt_path: str):
                     break
                 # reloadable prompty file
                 chat_history.append({"role": "user", "content": user_input})
-                result = prompty.execute(
-                    prompt_path, inputs={"chat_history": chat_history}
-                )
+                result = prompty.execute(prompt_path, inputs={"chat_history": chat_history})
                 print(f"\n{G}Assistant:{W} {result}")
                 chat_history.append({"role": "assistant", "content": result})
         except Exception as e:
@@ -94,18 +90,14 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
         if is_dataclass(result) and not isinstance(result, type):
             print("\n", json.dumps(asdict(result), indent=4), "\n")
         elif isinstance(result, list):
-            print(
-                "\n", json.dumps([asdict(item) for item in result], indent=4), "\n"
-            )
+            print("\n", json.dumps([asdict(item) for item in result], indent=4), "\n")
         else:
             print("\n", result, "\n")
     except Exception as e:
         print(f"{type(e).__qualname__}: {e}", "\n")
 
 
-def _attributes_to_dict(
-    ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]
-) -> dict[str, str]:
+def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]) -> dict[str, str]:
     """Click callback that converts attributes specified in the form `key=value` to a
     dictionary"""
     result = {}
@@ -122,7 +114,8 @@ def _attributes_to_dict(
     return result
 
 
-@click.command(epilog="""
+@click.command(
+    epilog="""
 \b
 INPUTS: key=value pairs
     The values can come from:
@@ -131,7 +124,8 @@ INPUTS: key=value pairs
     - stdin - e.g.: question=@-
 
 For more information, visit https://prompty.ai/
-""")
+"""
+)
 @click.option("--source", "-s", required=True)
 @click.option("--env", "-e", required=False)
 @click.option("--verbose", "-v", is_flag=True)

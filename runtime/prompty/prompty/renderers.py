@@ -1,12 +1,12 @@
 import typing
 from pathlib import Path
 
+from chevron import render
 from jinja2 import DictLoader
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from .core import Prompty
 from .invoker import Renderer
-from .mustache import render
 
 
 class Jinja2Renderer(Renderer):

@@ -21,6 +21,7 @@ def fake_azure_executor():
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
+
 def test_basic_load():
     prompt = "tools/basic.prompty"
     p = prompty.load(prompt)
@@ -28,11 +29,10 @@ def test_basic_load():
     assert p.tools[0].id == "bing"
     assert p.tools[0].type == "web_search"
     assert p.tools[0].description == "A tool that can search the web for information."
-    assert (
-        "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
-    )
+    assert "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
     assert len(p.tools[0].parameters) == 2
     print(p)
+
 
 @pytest.mark.asyncio
 async def test_basic_async_load():
@@ -42,9 +42,7 @@ async def test_basic_async_load():
     assert p.tools[0].id == "bing"
     assert p.tools[0].type == "web_search"
     assert p.tools[0].description == "A tool that can search the web for information."
-    assert (
-        "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
-    )
+    assert "url" in p.tools[0].options and p.tools[0].options["url"] == "${env:BING_URL}"
     assert len(p.tools[0].parameters) == 2
     print(p)
 
@@ -63,6 +61,7 @@ def test_dynamic_load():
     assert p.tools[1].id == "callable"
     assert p.tools[1].type == "function"
     print(p)
+
 
 @pytest.mark.asyncio
 async def test_dynamic_async_load():

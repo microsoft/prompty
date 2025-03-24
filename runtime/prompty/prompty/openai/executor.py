@@ -19,9 +19,7 @@ class OpenAIExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.kwargs = {
-            key: value
-            for key, value in self.prompty.model.connection.items()
-            if key != "type" and key != "name"
+            key: value for key, value in self.prompty.model.connection.items() if key != "type" and key != "name"
         }
 
         self.api = self.prompty.model.api
@@ -38,10 +36,7 @@ class OpenAIExecutor(Invoker):
 
         messages = [
             {
-                **{
-                    "role": msg["role"],
-                    "content": msg["content"]
-                },
+                **{"role": msg["role"], "content": msg["content"]},
                 **({"name": msg["name"]} if "name" in msg else {}),
             }
             for msg in messages

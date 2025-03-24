@@ -2,6 +2,8 @@ from prompty.core import Prompty
 from prompty.parsers import PromptyChatParser
 
 roles = ["assistant", "function", "system", "user"]
+
+
 def test_parse_with_args():
     content = 'system[key="value 1", post=false, great=True, other=3.2, pre = 2]:\nYou are an AI assistant\n who helps people find information.\nAs the assistant, you answer questions briefly, succinctly.\n\nuser:\nWhat is the meaning of life?'
     parser = PromptyChatParser(Prompty())
@@ -22,6 +24,8 @@ def test_parse_invalid_args():
     messages = parser.invoke(content)
     assert len(messages) == 2
     assert messages[0]["role"] == "system"
-    assert messages[0]["content"] == "You are an AI assistant\n who helps people find information.\nAs the assistant, you answer questions briefly, succinctly.\n"
+    assert (
+        messages[0]["content"]
+        == "You are an AI assistant\n who helps people find information.\nAs the assistant, you answer questions briefly, succinctly.\n"
+    )
     assert messages[1]["role"] == "user"
-

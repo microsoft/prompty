@@ -241,18 +241,20 @@ def test_function_calling():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     print(result)
+
 
 def test_structured_output():
     result = prompty.execute(
         "prompts/structured_output.prompty",
         inputs={
             "statement": "The quick brown fox jumps over the lazy dog",
-        }
+        },
     )
     print(result)
+
 
 @pytest.mark.asyncio
 async def test_function_calling_async():
@@ -262,7 +264,7 @@ async def test_function_calling_async():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     print(result)
 
@@ -277,7 +279,7 @@ def test_streaming():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     for item in result:
         print(item)
@@ -291,7 +293,7 @@ async def test_streaming_async():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     async for item in result:
         print(item)

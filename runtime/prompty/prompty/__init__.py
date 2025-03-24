@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 from typing import Union
 
+from ._version import VERSION
 from .core import (
     Prompty,
     param_hoisting,
@@ -19,6 +20,8 @@ from .utils import (
     load_prompty,
     load_prompty_async,
 )
+
+__version__ = VERSION
 
 InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
 InvokerFactory.add_renderer("mustache", MustacheRenderer)
@@ -102,7 +105,7 @@ def headless(
     prompty = _load_with_slots(attributes, "", global_config, caller.parent)
     prompty.content = content
     prompty.file = ""
-    
+
     return prompty
 
 
@@ -252,9 +255,7 @@ async def load_async(prompty_file: str, config: str = "default") -> Prompty:
     return _load_with_slots(attributes, matter["body"], global_config, p)
 
 
-def _validate_inputs(
-    prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False
-):
+def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sample: bool = False):
     if merge_sample:
         inputs = param_hoisting(inputs, prompt.get_sample())
 

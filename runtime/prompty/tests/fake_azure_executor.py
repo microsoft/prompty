@@ -26,11 +26,8 @@ class FakeAzureExecutor(Invoker):
         if self.prompty.file:
             if isinstance(self.prompty.file, str):
                 self.prompty.file = Path(self.prompty.file).resolve().absolute()
-                
-            p = (
-                Path(self.prompty.file.parent)
-                / f"{self.prompty.file.name}.execution.json"
-            )
+
+            p = Path(self.prompty.file.parent) / f"{self.prompty.file.name}.execution.json"
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
@@ -78,10 +75,7 @@ class FakeAzureExecutor(Invoker):
         if self.prompty.file:
             if isinstance(self.prompty.file, str):
                 self.prompty.file = Path(self.prompty.file).resolve().absolute()
-            p = (
-                Path(self.prompty.file.parent)
-                / f"{self.prompty.file.name}.execution.json"
-            )
+            p = Path(self.prompty.file.parent) / f"{self.prompty.file.name}.execution.json"
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 

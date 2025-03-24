@@ -79,10 +79,7 @@ class AzureOpenAIProcessor(Invoker):
 
             def generator():
                 for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 
@@ -128,7 +125,7 @@ class AzureOpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, ImagesResponse):
-            
+
             item: ImagesResponse = data
 
             if len(data.data) == 0:
@@ -142,10 +139,7 @@ class AzureOpenAIProcessor(Invoker):
 
             async def generator():
                 async for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 

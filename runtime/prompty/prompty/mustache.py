@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import logging
 from collections.abc import Iterator, Sequence
 from types import MappingProxyType
@@ -12,12 +13,13 @@ from typing import (
     Union,
     cast,
 )
+
 from typing_extensions import TypeAlias
 
 logger = logging.getLogger(__name__)
 
 
-Scopes: TypeAlias = List[Union[Literal[False, 0], Mapping[str, Any]]]
+Scopes: TypeAlias = list[Union[Literal[False, 0], Mapping[str, Any]]]
 
 
 # Globals

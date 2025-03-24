@@ -56,7 +56,7 @@ class PromptyChatParser(Parser):
                 raise ValueError(
                     f"Invalid image format {image_path.suffix} - currently only .png and .jpg / .jpeg are supported."
                 )
-            
+
     def parse_args(self, args: str) -> dict[str, str]:
         """Parse args
 
@@ -70,7 +70,7 @@ class PromptyChatParser(Parser):
         dict[str, str]
             The parsed args
         """
-       
+
         # regular expression to parse key-value pairs
         string_match = r"\"([^\"]*)\""
         bool_match = r"([Tt]rue|[Ff]alse)"
@@ -117,32 +117,20 @@ class PromptyChatParser(Parser):
             current_chunk = 0
             for i in range(len(content_chunks)):
                 # image entry
-                if (
-                    current_chunk < len(matches)
-                    and content_chunks[i] == matches[current_chunk][0]
-                ):
+                if current_chunk < len(matches) and content_chunks[i] == matches[current_chunk][0]:
                     content_items.append(
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": self.inline_image(
-                                    matches[current_chunk][1].split(" ")[0].strip()
-                                )
-                            },
+                            "image_url": {"url": self.inline_image(matches[current_chunk][1].split(" ")[0].strip())},
                         }
                     )
                 # second part of image entry
-                elif (
-                    current_chunk < len(matches)
-                    and content_chunks[i] == matches[current_chunk][1]
-                ):
+                elif current_chunk < len(matches) and content_chunks[i] == matches[current_chunk][1]:
                     current_chunk += 1
                 # text entry
                 else:
                     if len(content_chunks[i].strip()) > 0:
-                        content_items.append(
-                            {"type": "text", "text": content_chunks[i].strip()}
-                        )
+                        content_items.append({"type": "text", "text": content_chunks[i].strip()})
             return content_items
         else:
             return content
@@ -161,7 +149,9 @@ class PromptyChatParser(Parser):
             The streamed data
         """
         # regular expression to capture boundary roles with optional key-value pairs
-        boundary = r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
+        boundary = (
+            r"(?i)^\s*#?\s*(" + "|".join(self.roles) + r")(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$"
+        )
         content_buffer: list[str] = []
         # first role is system (if not specified)
         arg_buffer = {"role": "system"}
@@ -170,8 +160,8 @@ class PromptyChatParser(Parser):
             # check if line is a boundary
             if re.match(boundary, line):
                 # if content buffer is not empty, then add to messages
-                if len(content_buffer) > 0:                        
-                    yield arg_buffer | { "content": "\n".join(content_buffer) }
+                if len(content_buffer) > 0:
+                    yield arg_buffer | {"content": "\n".join(content_buffer)}
                     content_buffer = []
 
                 # boundary check for args
@@ -189,8 +179,8 @@ class PromptyChatParser(Parser):
                 content_buffer.append(line)
 
         # add last message
-        if len(content_buffer) > 0:                        
-            yield arg_buffer | { "content": "\n".join(content_buffer) }
+        if len(content_buffer) > 0:
+            yield arg_buffer | {"content": "\n".join(content_buffer)}
 
     def invoke(self, data: str) -> list[dict[str, str]]:
         """Invoke the Prompty Chat Parser
@@ -213,9 +203,6 @@ class PromptyChatParser(Parser):
 
         return messages
 
-
-        
-
     async def invoke_async(self, data: str) -> list[dict[str, str]]:
         """Invoke the Prompty Chat Parser (Async)
 
@@ -230,7 +217,7 @@ class PromptyChatParser(Parser):
             The parsed data
         """
         return self.invoke(data)
-    
+
     def sanitize(self, data):
         # gets template before rendering
         # to clean up any sensitive data
@@ -240,17 +227,17 @@ class PromptyChatParser(Parser):
             item["nonce"] = self.prompty.template.nonce
             role = item.pop("role")
             content = item.pop("content")
+
             def stringify(x):
                 return f'"{str(x)}"' if isinstance(x, str) else str(x)
+
             attr = [f"{k}={stringify(v)}" for k, v in item.items()]
-            boundary = ','.join(attr)
+            boundary = ",".join(attr)
             sanitized_prompt.append(f"{role}[{boundary}]:")
             sanitized_prompt.append(content)
 
         return "\n".join(sanitized_prompt)
 
-        
-    
     def process(self, data):
         # gets template after parse
         # to manage any parsed prompty
@@ -266,5 +253,5 @@ class PromptyChatParser(Parser):
 
             # remove first item from data
             data = data[1:]
-            
+
         return data

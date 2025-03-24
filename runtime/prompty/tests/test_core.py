@@ -20,8 +20,8 @@ class TestCore:
         prompt_file = "prompts/chat.prompty"
         p = prompty.load(prompt_file)
         p.basePrompty = p_base
-        p.inputs = { "key1": "value1", "key2": "value2" }
-        p.outputs = { "key3": "value3", "key4": "value4" }
+        p.inputs = {"key1": "value1", "key2": "value2"}
+        p.outputs = {"key3": "value3", "key4": "value4"}
         p.file = "/path/to/file"
         d = p.to_safe_dict()
         assert d["name"] == "Basic Prompt"

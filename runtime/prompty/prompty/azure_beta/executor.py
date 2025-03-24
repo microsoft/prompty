@@ -75,11 +75,7 @@ class AzureOpenAIBetaExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.kwargs = {
-            key: value
-            for key, value in self.prompty.model.connection.items()
-            if key != "type"
-        }
+        self.kwargs = {key: value for key, value in self.prompty.model.connection.items() if key != "type"}
 
         # no key, use default credentials
         if "api_key" not in self.kwargs:
@@ -93,14 +89,10 @@ class AzureOpenAIBetaExecutor(Invoker):
                 )
             # default credential
             else:
-                default_credential = azure.identity.DefaultAzureCredential(
-                    exclude_shared_token_cache_credential=True
-                )
+                default_credential = azure.identity.DefaultAzureCredential(exclude_shared_token_cache_credential=True)
 
-            self.kwargs["azure_ad_token_provider"] = (
-                azure.identity.get_bearer_token_provider(
-                    default_credential, "https://cognitiveservices.azure.com/.default"
-                )
+            self.kwargs["azure_ad_token_provider"] = azure.identity.get_bearer_token_provider(
+                default_credential, "https://cognitiveservices.azure.com/.default"
             )
 
         self.api = self.prompty.model.api
@@ -117,10 +109,7 @@ class AzureOpenAIBetaExecutor(Invoker):
 
         messages = [
             {
-                **{
-                    "role": msg["role"],
-                    "content": msg["content"]
-                },
+                **{"role": msg["role"], "content": msg["content"]},
                 **({"name": msg["name"]} if "name" in msg else {}),
             }
             for msg in messages

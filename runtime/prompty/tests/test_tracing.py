@@ -248,7 +248,7 @@ def test_function_calling():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     print(result)
 
@@ -262,7 +262,7 @@ async def test_function_calling_async():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     print(result)
 
@@ -273,7 +273,7 @@ def test_structured_output():
         "prompts/structured_output.prompty",
         inputs={
             "statement": "The quick brown fox jumps over the lazy dog",
-        }
+        },
     )
     print(result)
 
@@ -285,7 +285,7 @@ async def test_structured_output_async():
         "prompts/structured_output.prompty",
         inputs={
             "statement": "The quick brown fox jumps over the lazy dog",
-        }
+        },
     )
     print(result)
 
@@ -301,7 +301,7 @@ def test_streaming():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     r = []
     for item in result:
@@ -319,7 +319,7 @@ async def test_streaming_async():
             "firstName": "Sally",
             "lastName": "Davis",
             "question": "tell me about your jackets",
-        }
+        },
     )
     if isinstance(result, AsyncIterator):
         async for item in result:

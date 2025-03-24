@@ -65,7 +65,7 @@ def test_parser_invoker(markdown: str):
 )
 def test_executor_invoker(prompt: str):
     p = prompty.load(prompt)
-    
+
     result = InvokerFactory.run_renderer(p, p.get_sample())
     result = InvokerFactory.run_parser(p, result)
     result = InvokerFactory.run_executor(p, result)
