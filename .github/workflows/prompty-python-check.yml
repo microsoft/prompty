@@ -72,7 +72,7 @@ jobs:
       - name: Rewrite version
         working-directory: ./runtime/prompty
         run: |
-          echo "VERSION = '$TAG'" > ./prompty/_version.py
+          echo "VERSION = \"$TAG\"" > ./prompty/_version.py
           cat ./prompty/_version.py
 
       - name: Set up Python 3
