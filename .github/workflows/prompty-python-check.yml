@@ -51,8 +51,6 @@ jobs:
         working-directory: ./runtime/prompty
         run: |
           python3 -m pytest -s -vv --cov-report term --cov-report json --cov=prompty tests/
-          python ./tests/coverage.py coverage.json > coverage.md
-          cat coverage.md >> $GITHUB_STEP_SUMMARY
 
       - name: mypy check
         working-directory: ./runtime/prompty
@@ -87,7 +85,14 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -e '.[dev]'
 
-      - name: Publish package distributions to PyPI
+      - name: coverage report
+        working-directory: ./runtime/prompty
+        run: |
+          python3 -m pytest -s -vv --cov-report term --cov-report json --cov=prompty tests/
+          python ./tests/coverage.py coverage.json > coverage.md
+          cat coverage.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Publish package distributions
         working-directory: ./runtime/prompty
         run: |
           flit build --format wheel 
