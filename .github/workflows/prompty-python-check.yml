@@ -56,7 +56,7 @@ jobs:
 
       - name: mypy check
         working-directory: ./runtime/prompty
-        run: python3 -m run mypy . --check-untyped-defs
+        run: python3 -m mypy . --check-untyped-defs
 
   publish-artifacts:
     name: publish artifacts
