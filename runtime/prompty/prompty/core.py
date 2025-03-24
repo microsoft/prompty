@@ -69,7 +69,11 @@ class OutputProperty:
     type: Literal["string", "number", "array", "object", "boolean"]
     name: str = field(default="")
     description: str = field(default="")
-    default: typing.Any = field(default=None)
+    # update schema for required
+    required: bool = field(default=False)
+    # only for array type - need to update schema
+    items: list["OutputProperty"] = field(default_factory=list)
+
     json_schema: Optional[dict] = field(default_factory=dict)
 
 
@@ -125,6 +129,7 @@ class ToolParameter:
     type: Literal["string", "number", "array", "object", "boolean"]
     description: str = field(default="")
     required: bool = field(default=False)
+    enum: list[typing.Any] = field(default_factory=list)
 
 
 @dataclass

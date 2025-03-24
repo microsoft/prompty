@@ -57,7 +57,6 @@ line-length = 120
 target-version = ["py39"]
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.report]

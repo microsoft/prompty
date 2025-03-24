@@ -2,6 +2,7 @@
   "python.testing.pytestArgs": ["./tests"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
+  "debug.allowBreakpointsEverywhere": true,
   "mypy-type-checker.args": ["--check-untyped-defs"],
   "files.exclude": {
     ".coverage": true,
