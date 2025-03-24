@@ -29,12 +29,8 @@ if __name__ == "__main__":
     # print the coverage file
     print("\n## Files")
     if "files" in cov:
-        print(
-            "| file | covered_lines | num_statements | percent_covered | missing_lines | excluded_lines |"
-        )
-        print(
-            "| ---- | ------------: | -------------: | ---------------:| ------------: | ---------------: |"
-        )
+        print("| file | covered_lines | num_statements | percent_covered | missing_lines | excluded_lines |")
+        print("| ---- | ------------: | -------------: | ---------------:| ------------: | ---------------: |")
         for k, v in cov["files"].items():
             pct = int(v["summary"]["percent_covered_display"])
             pct_text = str(pct) + "%"
