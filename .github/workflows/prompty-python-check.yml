@@ -50,8 +50,9 @@ jobs:
       - name: test package
         working-directory: ./runtime/prompty
         run: |
-          python3 -m pytest -s -vv --cov --cov-report=html:summary.html
-          cat summary.html >> $GITHUB_STEP_SUMMARY
+          python3 -m pytest -s -vv --cov-report term --cov-report json --cov=prompty tests/
+          python ./tests/coverage.py coverage.json > coverage.md
+          cat coverage.md >> $GITHUB_STEP_SUMMARY
 
       - name: mypy check
         working-directory: ./runtime/prompty
