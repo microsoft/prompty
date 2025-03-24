@@ -1,13 +1,14 @@
 import json
+import sys
 from pathlib import Path
 
 if __name__ == "__main__":
-    # if len(sys.argv) < 2:
-    #    print("Invalid coverage file")
-    #    exit(-1)
+    if len(sys.argv) < 2:
+        print("Invalid coverage file")
+        exit(-1)
 
-    # c = Path(sys.argv[1])
-    c = Path("coverage.json")
+    c = Path(sys.argv[1])
+    # c = Path("coverage.json")
     if not c.exists():
         print("Invalid coverage file")
         exit(-1)
@@ -26,6 +27,7 @@ if __name__ == "__main__":
         print("----|------")
         for k, v in cov["totals"].items():
             print(f"{k} | {v}")
+
     # print the coverage file
     print("\n## Files")
     if "files" in cov:
@@ -35,7 +37,7 @@ if __name__ == "__main__":
             pct = int(v["summary"]["percent_covered_display"])
             pct_text = str(pct) + "%"
             if pct < 96:
-                pct_text = f'**{pct_text}**'
+                pct_text = f"**{pct_text}**"
 
             print(f"| `{k}` |", end="")
             print(f" {v['summary']['covered_lines']} |", end="")
