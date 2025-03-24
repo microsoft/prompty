@@ -540,7 +540,7 @@
     "choices": [
       {
         "delta": {
-          "content": " \ud83c\udf0d",
+          "content": " :)",
           "function_call": null,
           "role": null,
           "tool_calls": null
