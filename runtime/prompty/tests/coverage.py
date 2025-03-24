@@ -35,7 +35,7 @@ if __name__ == "__main__":
             pct = int(v["summary"]["percent_covered_display"])
             pct_text = str(pct) + "%"
             if pct < 96:
-                pct_text = f'<span style="color:red;">{pct_text}</span>'
+                pct_text = f'**{pct_text}**'
 
             print(f"| `{k}` |", end="")
             print(f" {v['summary']['covered_lines']} |", end="")
