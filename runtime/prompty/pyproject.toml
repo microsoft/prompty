@@ -36,6 +36,7 @@ dev = [
     "pytest-cov",
     "flit",
     "black",
+    "chevron",
 ]
 azure = ["azure-identity","openai"]
 openai = ["openai"]
