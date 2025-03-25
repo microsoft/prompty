@@ -78,6 +78,18 @@
 				]
 			}
 		],
+		"customEditors": [
+			{
+				"viewType": "prompty.traceViewer",
+				"displayName": "Prompty Trace",
+				"priority": "default",
+				"selector": [
+					{
+						"filenamePattern": "*.tracy"
+					}
+				]
+			}
+		],
 		"grammars": [
 			{
 				"path": "./syntaxes/prompty.tmLanguage.json",
@@ -95,11 +107,11 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile && cd ./packages/server && npm run bundle && cd ../..",
-		"compile": "tsc -b && cd ./packages/server && npm run esbuild-base && cd ..",
+		"compile": "tsc -b && cd ./packages/server && npm run esbuild-base && cd ../trace && npm run build && cd ..",
 		"watch": "tsc -b -w",
 		"lint": "eslint",
 		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
-		"postinstall": "cd ./packages/core && npm install && cd ../server && npm install && cd ..",
+		"postinstall": "cd ./packages/core && npm install && cd ../server && npm install && cd ../trace && npm install && cd ..",
 		"package": "vsce package --no-dependencies --allow-missing-repository",
 		"esbuild-base": "esbuild ./packages/core/src/extension.ts --bundle --outfile=packages/core/out/extension.js --external:vscode --format=cjs --platform=node",
 		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release"

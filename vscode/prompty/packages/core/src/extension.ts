@@ -12,10 +12,17 @@ import {
 	ServerOptions,
 	TransportKind
 } from 'vscode-languageclient/node';
+import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
+
+	context.subscriptions.push(
+		// Register the custom editor provider for the trace viewer
+		PromptyTraceProvider.register(context)
+	);
+
 	// The server is implemented in node
 	startLanguageServer(context);
 }
@@ -27,7 +34,8 @@ export function deactivate(): Thenable<void> | undefined {
 	return client.stop();
 }
 
-
+// ignore unused variable warning
+ 
 const startLanguageServer = (context: ExtensionContext) => {
 	const serverModule = context.asAbsolutePath(path.join("packages", "server", "out", "server.js"));
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
