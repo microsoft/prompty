@@ -65,6 +65,9 @@ Right-click on a `.prompty` file to quickly generate integration snippets.
 
 ![Orchestrator Integration](img/vscode/image-9.png)
 
+Prompty is also supported in:
+* [GenAIScript](https://microsoft.github.io/genaiscript/reference/scripts/prompty/)
+
 ## Feedback
 Submit your feedback about Prompty or the VS Code extension to the [Microsoft/prompty](https://github.com/microsoft/prompty/issues) GitHub repository.
 
