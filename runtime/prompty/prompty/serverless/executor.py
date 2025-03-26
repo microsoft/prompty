@@ -1,4 +1,3 @@
-import importlib.metadata
 import typing
 from collections.abc import Iterator
 
@@ -19,11 +18,10 @@ from azure.ai.inference.models import (
 )
 from azure.core.credentials import AzureKeyCredential
 
+from .._version import VERSION
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 from ..tracer import Tracer
-
-VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("serverless")

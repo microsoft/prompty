@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import { ExtensionContext } from 'vscode';
+import { commands, ExtensionContext, Uri } from 'vscode';
 
 import {
 	LanguageClient,
@@ -13,18 +13,22 @@ import {
 	TransportKind
 } from 'vscode-languageclient/node';
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
+import { PromptyController } from './controllers/promptyController';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-
+	
+	const promptyController = new PromptyController(context);
 	context.subscriptions.push(
+		promptyController,
+		commands.registerCommand("prompty.runPrompt", (uri: Uri) => promptyController.run(uri)),
 		// Register the custom editor provider for the trace viewer
 		PromptyTraceProvider.register(context)
 	);
 
 	// The server is implemented in node
-	startLanguageServer(context);
+	//startLanguageServer(context);
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -35,7 +39,7 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 // ignore unused variable warning
- 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const startLanguageServer = (context: ExtensionContext) => {
 	const serverModule = context.asAbsolutePath(path.join("packages", "server", "out", "server.js"));
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };

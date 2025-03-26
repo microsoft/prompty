@@ -1,4 +1,3 @@
-import importlib.metadata
 import typing
 from collections.abc import AsyncIterator, Iterator
 
@@ -8,10 +7,9 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 from prompty.tracer import Tracer
 
+from .._version import VERSION
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
-
-VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("azure")

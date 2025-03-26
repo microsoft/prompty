@@ -1,4 +1,3 @@
-import importlib.metadata
 import typing
 from collections.abc import Iterator
 
@@ -6,10 +5,9 @@ from openai import OpenAI
 
 from prompty.tracer import Tracer
 
+from .._version import VERSION
 from ..core import Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
-
-VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("openai")

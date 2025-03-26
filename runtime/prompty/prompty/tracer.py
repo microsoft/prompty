@@ -1,5 +1,4 @@
 import contextlib
-import importlib
 import inspect
 import json
 import os
@@ -11,6 +10,8 @@ from functools import partial, wraps
 from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Union
+
+from ._version import VERSION
 
 
 # clean up key value pairs for sensitive values
@@ -331,10 +332,9 @@ class PromptyTracer:
     def write_trace(self, frame: dict[str, Any]) -> None:
         trace_file = self.output / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
 
-        v = importlib.metadata.version("prompty")
         enriched_frame = {
             "runtime": "python",
-            "version": v,
+            "version": VERSION,
             "trace": frame,
         }
 

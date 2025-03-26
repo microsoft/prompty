@@ -1,4 +1,3 @@
-import importlib.metadata
 import re
 import typing
 from collections.abc import AsyncIterator, Iterator
@@ -9,6 +8,7 @@ from openai import AsyncAzureOpenAI, AzureOpenAI
 
 from prompty.tracer import Tracer
 
+from .._version import VERSION
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
@@ -63,9 +63,6 @@ def is_structured_output_available(api_version: str) -> bool:
     if api_version_date is not None and api_version_date >= threshold_api_version_date:
         return True
     return False
-
-
-VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("azure_beta")

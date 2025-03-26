@@ -78,6 +78,14 @@
 				]
 			}
 		],
+		"commands": [
+			{
+				"command": "prompty.runPrompt",
+				"category": "Prompty",
+				"title": "Run",
+				"icon": "$(play)"
+			}
+		],
 		"customEditors": [
 			{
 				"viewType": "prompty.traceViewer",
@@ -103,6 +111,22 @@
 		],
 		"activationEvents": [
 			"onLanguage:prompty"
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "prompty.runPrompt",
+					"when": "resourceExtname == .prompty",
+					"group": "navigation@1"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "prompty.runPrompt",
+				"key": "f5",
+				"when": "resourceExtname == .prompty"
+			}
 		]
 	},
 	"scripts": {

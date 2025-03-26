@@ -52,15 +52,15 @@ def chat_mode(prompt_path: str):
     # P = "\033[35m"  # purple
     print(f"Executing {str(prompt_path)} in chat mode...")
     p = prompty.load(str(prompt_path))
-    if "chat_history" not in p.sample:
+    if "chat_history" not in p.model.inputs:
         print(f"{R}{str(prompt_path)} needs to have a chat_history input to work in chat mode{W}")
         return
     else:
 
         try:
             # load executor / processor types
-            dynamic_import(p.model.configuration["type"])
-            chat_history = p.sample["chat_history"]
+            dynamic_import(p.model.connection["type"])
+            chat_history = p.get_input("chat_history")
             while True:
                 user_input = input(f"\n{B}User:{W} ")
                 if user_input == "exit":
@@ -76,7 +76,6 @@ def chat_mode(prompt_path: str):
     print(f"\n{R}Goodbye!{W}\n")
 
 
-@trace
 def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False):
     p = prompty.load(prompt_path)
 
@@ -84,9 +83,9 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
 
     try:
         # load executor / processor types
-        dynamic_import(p.model.configuration["type"])
+        dynamic_import(p.model.connection["type"])
 
-        result = prompty.execute(p, inputs=inputs, raw=raw)
+        result = prompty.execute(p, inputs=inputs, raw=raw, merge_sample=True)
         if is_dataclass(result) and not isinstance(result, type):
             print("\n", json.dumps(asdict(result), indent=4), "\n")
         elif isinstance(result, list):
@@ -152,7 +151,7 @@ def run(source, env, verbose, chat, inputs):
     if chat:
         chat_mode(str(prompt_path))
     else:
-        execute(str(prompt_path), inputs=inputs, raw=verbose)
+        execute(str(prompt_path), inputs=inputs)
 
 
 if __name__ == "__main__":
