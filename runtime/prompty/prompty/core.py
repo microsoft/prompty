@@ -229,7 +229,7 @@ class Prompty:
             if i.name == name:
                 return i
         return None
-    
+
     def set_input_value(self, name: str, value: typing.Any) -> None:
         """Set the value of the input property"""
         for i in self.inputs:
@@ -238,16 +238,15 @@ class Prompty:
                 return
 
         raise ValueError(f"Input {name} not found")
-    
+
     def set_tool_value(self, name: str, value: typing.Any) -> None:
         """Set the value of the input property"""
         for i in self.tools:
             if i.id == name:
                 i.value = value
                 return
-            
-        raise ValueError(f"Tool {name} not found")
 
+        raise ValueError(f"Tool {name} not found")
 
     def get_output(self, name: str) -> OutputProperty:
         """Get the output property of the prompty
@@ -565,13 +564,9 @@ class Prompty:
                 attributes["instructions"] = instructions[0]
                 attributes["additional_instructions"] = instructions[1]
                 # add thread input if it does not exist
-                prompty["inputs"].append({
-                    "type": "array",
-                    "name": "thread",
-                    "description": "Agent Thread",
-                    "default": [],
-                    "strict": False
-                })
+                prompty["inputs"].append(
+                    {"type": "array", "name": "thread", "description": "Agent Thread", "default": [], "strict": False}
+                )
             else:
                 attributes["instructions"] = content
                 attributes["additional_instructions"] = ""
