@@ -28,7 +28,7 @@ export function activate(context: ExtensionContext) {
 	);
 
 	// The server is implemented in node
-	//startLanguageServer(context);
+	startLanguageServer(context);
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -39,7 +39,6 @@ export function deactivate(): Thenable<void> | undefined {
 }
 
 // ignore unused variable warning
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const startLanguageServer = (context: ExtensionContext) => {
 	const serverModule = context.asAbsolutePath(path.join("packages", "server", "out", "server.js"));
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
