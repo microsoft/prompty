@@ -52,49 +52,55 @@ def chat_mode(prompt_path: str):
     # P = "\033[35m"  # purple
     print(f"Executing {str(prompt_path)} in chat mode...")
     p = prompty.load(str(prompt_path))
-    if "chat_history" not in p.model.inputs:
-        print(f"{R}{str(prompt_path)} needs to have a chat_history input to work in chat mode{W}")
+    if p.get_input("thread") is None:
+        print(f"{R}{str(prompt_path)} needs to have a thread input to work in chat mode{W}")
         return
     else:
 
         try:
             # load executor / processor types
             dynamic_import(p.model.connection["type"])
-            chat_history = p.get_input("chat_history")
+            thread = []
             while True:
                 user_input = input(f"\n{B}User:{W} ")
                 if user_input == "exit":
                     break
                 # reloadable prompty file
-                chat_history.append({"role": "user", "content": user_input})
-                result = prompty.execute(prompt_path, inputs={"chat_history": chat_history})
+                thread.append({"role": "user", "content": user_input})
+                result = prompty.execute(prompt_path, inputs={"thread": thread}, merge_sample=True)
                 print(f"\n{G}Assistant:{W} {result}")
-                chat_history.append({"role": "assistant", "content": result})
+                thread.append({"role": "assistant", "content": result})
         except Exception as e:
             print(f"{type(e).__qualname__}: {e}")
 
     print(f"\n{R}Goodbye!{W}\n")
 
 
-@trace
 def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False):
-    p = prompty.load(prompt_path)
-
+    name = Path(prompt_path).name.lower().replace(" ", "-").replace(".prompty", "")
     inputs = inputs or {}
+    with Tracer.start(name) as trace:
+        trace("type", "cli")
+        trace("signature", "prompty.cli.execute")
+        trace("description", "Prompty CLI Execution")
+        trace("inputs", {"prompt_path": prompt_path, "inputs": inputs})
 
-    try:
-        # load executor / processor types
-        dynamic_import(p.model.connection["type"])
+        p = prompty.load(prompt_path)
 
-        result = prompty.execute(p, inputs=inputs, raw=raw, merge_sample=True)
-        if is_dataclass(result) and not isinstance(result, type):
-            print("\n", json.dumps(asdict(result), indent=4), "\n")
-        elif isinstance(result, list):
-            print("\n", json.dumps([asdict(item) for item in result], indent=4), "\n")
-        else:
-            print("\n", result, "\n")
-    except Exception as e:
-        print(f"{type(e).__qualname__}: {e}", "\n")
+        try:
+            # load executor / processor types
+            dynamic_import(p.model.connection["type"])
+
+            result = prompty.execute(p, inputs=inputs, raw=raw, merge_sample=True)
+            trace("result", result)
+            if is_dataclass(result) and not isinstance(result, type):
+                print("\n", json.dumps(asdict(result), indent=4), "\n")
+            elif isinstance(result, list):
+                print("\n", json.dumps([asdict(item) for item in result], indent=4), "\n")
+            else:
+                print("\n", result, "\n")
+        except Exception as e:
+            print(f"{type(e).__qualname__}: {e}", "\n")
 
 
 def _attributes_to_dict(ctx: click.Context, attribute: click.Option, attributes: tuple[str, ...]) -> dict[str, str]:

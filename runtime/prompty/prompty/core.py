@@ -47,6 +47,8 @@ class InputProperty:
     default: typing.Any = field(default=None)
     sample: typing.Any = field(default=None)
     strict: bool = field(default=True)
+    # used internally
+    value: typing.Any = field(default=None)
     json_schema: Optional[dict] = field(default_factory=dict)
 
 
@@ -69,8 +71,6 @@ class OutputProperty:
     type: Literal["string", "number", "array", "object", "boolean"]
     name: str = field(default="")
     description: str = field(default="")
-    # update schema for required
-    required: bool = field(default=False)
     # only for array type - need to update schema
     items: list["OutputProperty"] = field(default_factory=list)
 
@@ -138,6 +138,8 @@ class ToolProperty:
     type: str
     description: Optional[str] = field(default="")
     options: dict[str, typing.Any] = field(default_factory=dict)
+    # used internally for assigning funcs
+    value: typing.Any = field(default=None)
     parameters: list[ToolParameter] = field(default_factory=list)
 
 
@@ -210,7 +212,7 @@ class Prompty:
 
     slots: list[dict[str, str]] = field(default_factory=list)
 
-    def get_input(self, name: str) -> InputProperty:
+    def get_input(self, name: str) -> Union[InputProperty, None]:
         """Get the property of the prompty
 
         Parameters
@@ -226,7 +228,26 @@ class Prompty:
         for i in self.inputs:
             if i.name == name:
                 return i
-        raise ValueError(f"Property {name} not found")
+        return None
+    
+    def set_input_value(self, name: str, value: typing.Any) -> None:
+        """Set the value of the input property"""
+        for i in self.inputs:
+            if i.name == name:
+                i.value = value
+                return
+
+        raise ValueError(f"Input {name} not found")
+    
+    def set_tool_value(self, name: str, value: typing.Any) -> None:
+        """Set the value of the input property"""
+        for i in self.tools:
+            if i.id == name:
+                i.value = value
+                return
+            
+        raise ValueError(f"Tool {name} not found")
+
 
     def get_output(self, name: str) -> OutputProperty:
         """Get the output property of the prompty
@@ -543,6 +564,14 @@ class Prompty:
                 instructions = content.split("\n![thread]")
                 attributes["instructions"] = instructions[0]
                 attributes["additional_instructions"] = instructions[1]
+                # add thread input if it does not exist
+                prompty["inputs"].append({
+                    "type": "array",
+                    "name": "thread",
+                    "description": "Agent Thread",
+                    "default": [],
+                    "strict": False
+                })
             else:
                 attributes["instructions"] = content
                 attributes["additional_instructions"] = ""

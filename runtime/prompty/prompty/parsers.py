@@ -157,8 +157,25 @@ class PromptyChatParser(Parser):
         arg_buffer = {"role": "system"}
 
         for line in data.splitlines():
+            # check of ![thread]
+            if line.strip().startswith("![thread]"):
+                # if content buffer is not empty, then add to messages
+                if len(content_buffer) > 0:
+                    yield arg_buffer | {"content": "\n".join(content_buffer)}
+                    content_buffer = []
+
+                arg_buffer = {
+                    "role": "thread",
+                }
+                yield {"role": "thread"}
+
             # check if line is a boundary
-            if re.match(boundary, line):
+            elif re.match(boundary, line):
+                # last entry was a thread, all content
+                # untile next boundry is ignored
+                if arg_buffer["role"] == "thread":
+                    content_buffer = []
+
                 # if content buffer is not empty, then add to messages
                 if len(content_buffer) > 0:
                     yield arg_buffer | {"content": "\n".join(content_buffer)}
@@ -198,7 +215,9 @@ class PromptyChatParser(Parser):
 
         messages = []
         for item in self.parse(data):
-            item["content"] = self.parse_content(item["content"])
+            if "content" in item:
+                item["content"] = self.parse_content(item["content"])
+
             messages.append(item)
 
         return messages
@@ -226,6 +245,9 @@ class PromptyChatParser(Parser):
             # add nonce to pre-rendered roles
             item["nonce"] = self.prompty.template.nonce
             role = item.pop("role")
+            if "content" not in item:
+                item["content"] = ""
+
             content = item.pop("content")
 
             def stringify(x):

@@ -308,6 +308,12 @@ def prepare(
     # add nonce for this run
     prompt.template.nonce = uuid.uuid4().hex
 
+    # thread is a special case that needs to be carried through
+    # the entire pipeline, so we set it here
+    if "thread" in values and prompt.get_input("thread") is not None:
+        # if thread is in the inputs, set it to the prompt input
+        prompt.set_input_value("thread", values["thread"])
+
     render = InvokerFactory.run_renderer(prompt, values, prompt.content)
     result = InvokerFactory.run_parser(prompt, render)
 

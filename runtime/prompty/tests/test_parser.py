@@ -1,3 +1,4 @@
+import prompty
 from prompty.core import Prompty
 from prompty.parsers import PromptyChatParser
 
@@ -29,3 +30,12 @@ def test_parse_invalid_args():
         == "You are an AI assistant\n who helps people find information.\nAs the assistant, you answer questions briefly, succinctly.\n"
     )
     assert messages[1]["role"] == "user"
+
+
+def test_thread_parse():
+    p = prompty.load("tools/basic.prompty")
+    content = prompty.prepare(p, merge_sample=True)
+    assert len(content) == 3
+    assert content[0]["role"] == "system"
+    assert content[1]["role"] == "thread"
+    assert content[2]["role"] == "user"

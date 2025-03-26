@@ -8,6 +8,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from prompty.tracer import Tracer
 
 from .._version import VERSION
+from ..common import convert_function_tools, convert_output_props
 from ..core import AsyncPromptyStream, Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
 
@@ -54,15 +55,108 @@ class AzureOpenAIExecutor(Invoker):
             if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
                 raise ValueError("Nonce mismatch in messages array (strict mode)")
 
-        messages = [
-            {
-                **{"role": msg["role"], "content": msg["content"]},
-                **({"name": msg["name"]} if "name" in msg else {}),
-            }
-            for msg in messages
-        ]
+        messages = []
+        for msg in data:
+            if msg["role"] == "thread":
+                thread = self.prompty.get_input("thread")
+                if thread is None:
+                    raise ValueError("thread requires thread input")
+                if isinstance(thread.value, list):
+                    messages = [*messages, *thread.value]
+                elif isinstance(thread.value, dict):
+                    messages.append(
+                        {
+                            **{"role": thread.value["role"], "content": thread.value["content"]},
+                            **({"name": thread.value["name"]} if "name" in thread.value else {}),
+                        }
+                    )
+                else:
+                    messages.append(thread.value)
+            else:
+                messages.append(
+                    {
+                        **{"role": msg["role"], "content": msg["content"]},
+                        **({"name": msg["name"]} if "name" in msg else {}),
+                    }
+                )
 
         return messages
+
+    def _get_ctor(self) -> AzureOpenAI:
+        with Tracer.start("AzureOpenAI") as trace:
+            trace("type", "LLM")
+            trace("signature", "AzureOpenAI.ctor")
+            trace("description", "Azure OpenAI Constructor")
+            trace("inputs", self.kwargs)
+            client = AzureOpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **self.kwargs,
+            )
+            trace("result", client)
+            return client
+
+    def _resolve_chat_args(self, data: typing.Any) -> dict:
+        messages = self._sanitize_messages(data)
+
+        args = {
+            "model": self.deployment,
+            "messages": messages,
+            **self.options,
+        }
+
+        if "tools" not in self.options and len(self.prompty.tools) > 0:
+            # add tools to options:
+            args = {**args, "tools": convert_function_tools(self.prompty.tools)}
+
+        if len(self.prompty.outputs) > 0:
+            # add outputs to options:
+            args = {
+                **args,
+                "response_format": convert_output_props(
+                    self.prompty.name.lower().replace(" ", "_"), self.prompty.outputs
+                ),
+            }
+
+        return args
+
+    def _create_chat(
+        self, client: AzureOpenAI, args: dict, trace: typing.Callable[[str, typing.Any], list[None]]
+    ) -> typing.Any:
+
+        if "stream" in args and args["stream"]:
+            response = client.chat.completions.create(**args)
+        else:
+            raw = client.chat.completions.with_raw_response.create(**args)
+
+            response = ChatCompletion.model_validate_json(raw.text)
+
+            for k, v in raw.headers.raw:
+                trace(k.decode("utf-8"), v.decode("utf-8"))
+
+            trace("request_id", raw.request_id)
+            trace("retries_taken", raw.retries_taken)
+
+        return response
+
+    async def _create_chat_async(
+        self, client: AsyncAzureOpenAI, args: dict, trace: typing.Callable[[str, typing.Any], list[None]]
+    ) -> typing.Any:
+        if "stream" in args and args["stream"]:
+            response = await client.chat.completions.create(**args)
+        else:
+            raw: APIResponse = await client.chat.completions.with_raw_response.create(**args)
+            if raw is not None and raw.text is not None and isinstance(raw.text, str):
+                response = ChatCompletion.model_validate_json(raw.text)
+
+            for k, v in raw.headers.raw:
+                trace(k.decode("utf-8"), v.decode("utf-8"))
+
+            trace("request_id", raw.request_id)
+            trace("retries_taken", raw.retries_taken)
+        return response
 
     def invoke(self, data: typing.Any) -> typing.Union[str, PromptyStream]:
         """Invoke the Azure OpenAI API
@@ -78,19 +172,7 @@ class AzureOpenAIExecutor(Invoker):
             The response from the Azure OpenAI API
         """
 
-        with Tracer.start("AzureOpenAI") as trace:
-            trace("type", "LLM")
-            trace("signature", "AzureOpenAI.ctor")
-            trace("description", "Azure OpenAI Constructor")
-            trace("inputs", self.kwargs)
-            client = AzureOpenAI(
-                default_headers={
-                    "User-Agent": f"prompty/{VERSION}",
-                    "x-ms-useragent": f"prompty/{VERSION}",
-                },
-                **self.kwargs,
-            )
-            trace("result", client)
+        client = self._get_ctor()
 
         with Tracer.start("create") as trace:
             trace("type", "LLM")
@@ -98,28 +180,9 @@ class AzureOpenAIExecutor(Invoker):
 
             if self.api == "chat":
                 trace("signature", "AzureOpenAI.chat.completions.create")
-                messages = self._sanitize_messages(data)
-
-                args = {
-                    "model": self.deployment,
-                    "messages": messages,
-                    **self.options,
-                }
+                args = self._resolve_chat_args(data)
                 trace("inputs", args)
-
-                if "stream" in args and args["stream"]:
-                    response = client.chat.completions.create(**args)
-                else:
-                    raw = client.chat.completions.with_raw_response.create(**args)
-
-                    response = ChatCompletion.model_validate_json(raw.text)
-
-                    for k, v in raw.headers.raw:
-                        trace(k.decode("utf-8"), v.decode("utf-8"))
-
-                    trace("request_id", raw.request_id)
-                    trace("retries_taken", raw.retries_taken)
-
+                response = self._create_chat(client, args, trace)
                 trace("result", response)
 
             elif self.api == "completion":
@@ -198,29 +261,9 @@ class AzureOpenAIExecutor(Invoker):
 
             if self.api == "chat":
                 trace("signature", "AzureOpenAIAsync.chat.completions.create")
-
-                messages = self._sanitize_messages(data)
-
-                args = {
-                    "model": self.deployment,
-                    "messages": messages,
-                    **self.options,
-                }
+                args = self._resolve_chat_args(data)
                 trace("inputs", args)
-
-                if "stream" in args and args["stream"]:
-                    response = await client.chat.completions.create(**args)
-                else:
-                    raw: APIResponse = await client.chat.completions.with_raw_response.create(**args)
-                    if raw is not None and raw.text is not None and isinstance(raw.text, str):
-                        response = ChatCompletion.model_validate_json(raw.text)
-
-                    for k, v in raw.headers.raw:
-                        trace(k.decode("utf-8"), v.decode("utf-8"))
-
-                    trace("request_id", raw.request_id)
-                    trace("retries_taken", raw.retries_taken)
-
+                response = await self._create_chat_async(client, args, trace)
                 trace("result", response)
 
             elif self.api == "completion":
