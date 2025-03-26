@@ -76,6 +76,7 @@ def chat_mode(prompt_path: str):
     print(f"\n{R}Goodbye!{W}\n")
 
 
+@trace
 def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False):
     p = prompty.load(prompt_path)
 
