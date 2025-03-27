@@ -167,15 +167,9 @@ class PromptyChatParser(Parser):
                 arg_buffer = {
                     "role": "thread",
                 }
-                yield {"role": "thread"}
 
             # check if line is a boundary
             elif re.match(boundary, line):
-                # last entry was a thread, all content
-                # untile next boundry is ignored
-                if arg_buffer["role"] == "thread":
-                    content_buffer = []
-
                 # if content buffer is not empty, then add to messages
                 if len(content_buffer) > 0:
                     yield arg_buffer | {"content": "\n".join(content_buffer)}
@@ -250,13 +244,19 @@ class PromptyChatParser(Parser):
 
             content = item.pop("content")
 
-            def stringify(x):
-                return f'"{str(x)}"' if isinstance(x, str) else str(x)
+            # no need to sanitize threads
+            if role == "thread":
+                sanitized_prompt.append("![thread]")
+                sanitized_prompt.append(content)
+            else:
 
-            attr = [f"{k}={stringify(v)}" for k, v in item.items()]
-            boundary = ",".join(attr)
-            sanitized_prompt.append(f"{role}[{boundary}]:")
-            sanitized_prompt.append(content)
+                def stringify(x):
+                    return f'"{str(x)}"' if isinstance(x, str) else str(x)
+
+                attr = [f"{k}={stringify(v)}" for k, v in item.items()]
+                boundary = ",".join(attr)
+                sanitized_prompt.append(f"{role}[{boundary}]:")
+                sanitized_prompt.append(content)
 
         return "\n".join(sanitized_prompt)
 

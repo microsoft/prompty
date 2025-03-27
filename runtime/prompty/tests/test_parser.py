@@ -38,4 +38,4 @@ def test_thread_parse():
     assert len(content) == 3
     assert content[0]["role"] == "system"
     assert content[1]["role"] == "thread"
-    assert content[2]["role"] == "user"
+    assert content[2]["role"] == "system"

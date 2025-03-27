@@ -152,6 +152,10 @@ definitions:
         description: The enum of the parameter
         items:
           type: string
+      required:
+        type: boolean
+        description: Whether the parameter is required or not
+        default: false
       description:
         type: string
         description: The description of the parameter
@@ -181,6 +185,10 @@ definitions:
         description: The enum of the parameter
         items:
           type: string
+      required:
+        type: boolean
+        description: Whether the parameter is required or not
+        default: false
       description:
         type: string
         description: The description of the parameter

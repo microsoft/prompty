@@ -230,6 +230,24 @@ class Prompty:
                 return i
         return None
 
+    def get_tool(self, name: str) -> Union[ToolProperty, None]:
+        """Get the property of the prompty
+
+        Parameters
+        ----------
+        name : str
+            The name of the property
+
+        Returns
+        -------
+        ToolProperty
+            The property of the prompty
+        """
+        for i in self.tools:
+            if i.id == name:
+                return i
+        return None
+
     def set_input_value(self, name: str, value: typing.Any) -> None:
         """Set the value of the input property"""
         for i in self.inputs:
@@ -580,7 +598,7 @@ class Prompty:
             model=ModelProperty(**attributes.pop("model")),
             inputs=[InputProperty(**i) for i in attributes.pop("inputs", [])],
             outputs=[OutputProperty(**i) for i in attributes.pop("outputs", [])],
-            tools=[ToolProperty(**i) for i in attributes.pop("tools", [])],
+            tools=Prompty.load_tools(attributes.pop("tools", [])),
             template=TemplateProperty(**attributes.pop("template")),
             file=file,
             **attributes,

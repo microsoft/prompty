@@ -26,6 +26,7 @@ __version__ = VERSION
 InvokerFactory.add_renderer("jinja2", Jinja2Renderer)
 InvokerFactory.add_renderer("mustache", MustacheRenderer)
 InvokerFactory.add_parser("prompty.chat", PromptyChatParser)
+InvokerFactory.add_parser("prompty.agent", PromptyChatParser)
 
 
 def _load_with_slots(
@@ -261,6 +262,10 @@ def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sampl
 
     clean_inputs = {}
     for input in prompt.inputs:
+        # thread managed seperately
+        if input.name == "thread":
+            continue
+
         if input.name in inputs:
             if input.type != get_json_type(type(inputs[input.name])):
                 raise ValueError(
@@ -272,6 +277,15 @@ def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sampl
                 clean_inputs[input.name] = input.default
             else:
                 raise ValueError(f"Missing input property {input.name}")
+
+    # check stra inputs
+    invalid: list[str] = []
+    for k, v in inputs.items():
+        if prompt.get_input(k) is None:
+            invalid.append(k)
+
+    if len(invalid) > 0:
+        raise ValueError(f"The following are not valid inputs: [{','.join(invalid)}]")
 
     return clean_inputs
 
@@ -307,12 +321,6 @@ def prepare(
 
     # add nonce for this run
     prompt.template.nonce = uuid.uuid4().hex
-
-    # thread is a special case that needs to be carried through
-    # the entire pipeline, so we set it here
-    if "thread" in values and prompt.get_input("thread") is not None:
-        # if thread is in the inputs, set it to the prompt input
-        prompt.set_input_value("thread", values["thread"])
 
     render = InvokerFactory.run_renderer(prompt, values, prompt.content)
     result = InvokerFactory.run_parser(prompt, render)

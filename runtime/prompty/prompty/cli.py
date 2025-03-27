@@ -55,21 +55,23 @@ def chat_mode(prompt_path: str):
     if p.get_input("thread") is None:
         print(f"{R}{str(prompt_path)} needs to have a thread input to work in chat mode{W}")
         return
+
+    if p.get_input("query") is None:
+        print(f"{R}{str(prompt_path)} needs to have a query input to work in chat mode{W}")
+        return
+
     else:
 
         try:
             # load executor / processor types
             dynamic_import(p.model.connection["type"])
-            thread = []
             while True:
                 user_input = input(f"\n{B}User:{W} ")
                 if user_input == "exit":
                     break
                 # reloadable prompty file
-                thread.append({"role": "user", "content": user_input})
-                result = prompty.execute(prompt_path, inputs={"thread": thread}, merge_sample=True)
+                result = prompty.execute(p, inputs={"query": user_input}, merge_sample=True)
                 print(f"\n{G}Assistant:{W} {result}")
-                thread.append({"role": "assistant", "content": result})
         except Exception as e:
             print(f"{type(e).__qualname__}: {e}")
 
