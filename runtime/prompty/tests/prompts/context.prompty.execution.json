@@ -6,7 +6,7 @@
       "index": 0,
       "logprobs": null,
       "message": {
-        "content": "Hi Sally! If you're looking for outdoor clothing suggestions, I can recommend a few options from MountainStyle. They have the RainGuard Hiking Jacket, Summit Breeze Jacket, and TrailBlaze Hiking Pants. Let me know if you'd like more information about any of these items! 😊",
+        "content": "Hi Sally! If you're looking for outdoor clothing suggestions, I can recommend a few options from MountainStyle. They have the RainGuard Hiking Jacket, Summit Breeze Jacket, and TrailBlaze Hiking Pants. Let me know if you'd like more information about any of these items!",
         "role": "assistant",
         "function_call": null,
         "tool_calls": null

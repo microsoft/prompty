@@ -1,0 +1,3961 @@
+{
+    "runtime": "python",
+    "version": "0.1.8.dev3+g3bb6c14.d20240812",
+    "trace": {
+        "name": "test_streaming",
+        "__time": {
+            "start": "2024-08-13T18:19:28.759673",
+            "end": "2024-08-13T18:19:28.784676",
+            "duration": 25
+        },
+        "signature": "test_tracing.test_streaming",
+        "inputs": {},
+        "__frames": [
+            {
+                "name": "execute",
+                "__time": {
+                    "start": "2024-08-13T18:19:28.759673",
+                    "end": "2024-08-13T18:19:28.780673",
+                    "duration": 21
+                },
+                "signature": "prompty.execute",
+                "description": "Execute a prompty",
+                "inputs": {
+                    "prompt": "prompts/streaming.prompty",
+                    "configuration": {},
+                    "parameters": {},
+                    "inputs": {},
+                    "raw": false,
+                    "connection": "default"
+                },
+                "__frames": [
+                    {
+                        "name": "load",
+                        "__time": {
+                            "start": "2024-08-13T18:19:28.760674",
+                            "end": "2024-08-13T18:19:28.777673",
+                            "duration": 16
+                        },
+                        "signature": "prompty.load",
+                        "description": "Load a prompty file.",
+                        "inputs": {
+                            "prompty_file": "D:\\projects\\microsoft\\prompty\\runtime\\prompty\\tests\\prompts\\streaming.prompty",
+                            "configuration": "default"
+                        },
+                        "result": {
+                            "name": "Basic Prompt",
+                            "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+                            "authors": [
+                                "sethjuarez",
+                                "jietong"
+                            ],
+                            "model": {
+                                "api": "chat",
+                                "configuration": {
+                                    "azure_deployment": "gpt-35-turbo",
+                                    "type": "azure",
+                                    "api_version": "2023-12-01-preview",
+                                    "azure_endpoint": "https://djefa-swiss.openai.azure.com/",
+                                    "api_key": "********************************"
+                                },
+                                "parameters": {
+                                    "stream": true,
+                                    "stream_options": {
+                                        "include_usage": true
+                                    }
+                                },
+                                "response": {}
+                            },
+                            "sample": {
+                                "firstName": "Jane",
+                                "lastName": "Doe",
+                                "question": "What is the meaning of life?"
+                            },
+                            "template": {
+                                "type": "jinja2",
+                                "parser": "prompty"
+                            },
+                            "file": "D:/projects/microsoft/prompty/runtime/prompty/tests/prompts/streaming.prompty",
+                            "content": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\nUse their name to address them in your responses.\n\nuser:\n{{question}}"
+                        }
+                    },
+                    {
+                        "name": "prepare",
+                        "__time": {
+                            "start": "2024-08-13T18:19:28.778674",
+                            "end": "2024-08-13T18:19:28.778674",
+                            "duration": 0
+                        },
+                        "signature": "prompty.prepare",
+                        "description": "Prepare the inputs for the prompt.",
+                        "inputs": {
+                            "prompt": {
+                                "name": "Basic Prompt",
+                                "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+                                "authors": [
+                                    "sethjuarez",
+                                    "jietong"
+                                ],
+                                "model": {
+                                    "api": "chat",
+                                    "configuration": {
+                                        "azure_deployment": "gpt-35-turbo",
+                                        "type": "azure",
+                                        "api_version": "2023-12-01-preview",
+                                        "azure_endpoint": "https://djefa-swiss.openai.azure.com/",
+                                        "api_key": "********************************"
+                                    },
+                                    "parameters": {
+                                        "stream": true,
+                                        "stream_options": {
+                                            "include_usage": true
+                                        }
+                                    },
+                                    "response": {}
+                                },
+                                "sample": {
+                                    "firstName": "Jane",
+                                    "lastName": "Doe",
+                                    "question": "What is the meaning of life?"
+                                },
+                                "template": {
+                                    "type": "jinja2",
+                                    "parser": "prompty"
+                                },
+                                "file": "D:/projects/microsoft/prompty/runtime/prompty/tests/prompts/streaming.prompty",
+                                "content": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\nUse their name to address them in your responses.\n\nuser:\n{{question}}"
+                            },
+                            "inputs": {}
+                        },
+                        "__frames": [
+                            {
+                                "name": "Jinja2Renderer",
+                                "__time": {
+                                    "start": "2024-08-13T18:19:28.778674",
+                                    "end": "2024-08-13T18:19:28.778674",
+                                    "duration": 0
+                                },
+                                "signature": "prompty.renderers.Jinja2Renderer.invoke",
+                                "inputs": {
+                                    "data": {
+                                        "firstName": "Jane",
+                                        "lastName": "Doe",
+                                        "question": "What is the meaning of life?"
+                                    }
+                                },
+                                "result": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses.\n\nuser:\nWhat is the meaning of life?"
+                            },
+                            {
+                                "name": "PromptyChatParser",
+                                "__time": {
+                                    "start": "2024-08-13T18:19:28.778674",
+                                    "end": "2024-08-13T18:19:28.778674",
+                                    "duration": 0
+                                },
+                                "signature": "prompty.parsers.PromptyChatParser.invoke",
+                                "inputs": {
+                                    "data": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses.\n\nuser:\nWhat is the meaning of life?"
+                                },
+                                "result": [
+                                    {
+                                        "role": "system",
+                                        "content": "You are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses."
+                                    },
+                                    {
+                                        "role": "user",
+                                        "content": "What is the meaning of life?"
+                                    }
+                                ]
+                            }
+                        ],
+                        "result": [
+                            {
+                                "role": "system",
+                                "content": "You are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses."
+                            },
+                            {
+                                "role": "user",
+                                "content": "What is the meaning of life?"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "run",
+                        "__time": {
+                            "start": "2024-08-13T18:19:28.778674",
+                            "end": "2024-08-13T18:19:28.780673",
+                            "duration": 1
+                        },
+                        "signature": "prompty.run",
+                        "description": "Run the prepared Prompty content against the model.",
+                        "inputs": {
+                            "prompt": {
+                                "name": "Basic Prompt",
+                                "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+                                "authors": [
+                                    "sethjuarez",
+                                    "jietong"
+                                ],
+                                "model": {
+                                    "api": "chat",
+                                    "configuration": {
+                                        "azure_deployment": "gpt-35-turbo",
+                                        "type": "azure",
+                                        "api_version": "2023-12-01-preview",
+                                        "azure_endpoint": "https://djefa-swiss.openai.azure.com/",
+                                        "api_key": "********************************"
+                                    },
+                                    "parameters": {
+                                        "stream": true,
+                                        "stream_options": {
+                                            "include_usage": true
+                                        }
+                                    },
+                                    "response": {}
+                                },
+                                "sample": {
+                                    "firstName": "Jane",
+                                    "lastName": "Doe",
+                                    "question": "What is the meaning of life?"
+                                },
+                                "template": {
+                                    "type": "jinja2",
+                                    "parser": "prompty"
+                                },
+                                "file": "D:/projects/microsoft/prompty/runtime/prompty/tests/prompts/streaming.prompty",
+                                "content": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\nUse their name to address them in your responses.\n\nuser:\n{{question}}"
+                            },
+                            "content": [
+                                {
+                                    "role": "system",
+                                    "content": "You are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses."
+                                },
+                                {
+                                    "role": "user",
+                                    "content": "What is the meaning of life?"
+                                }
+                            ],
+                            "configuration": {},
+                            "parameters": {},
+                            "raw": false
+                        },
+                        "__frames": [
+                            {
+                                "name": "FakeAzureExecutor",
+                                "__time": {
+                                    "start": "2024-08-13T18:19:28.779674",
+                                    "end": "2024-08-13T18:19:28.779674",
+                                    "duration": 0
+                                },
+                                "signature": "tests.fake_azure_executor.FakeAzureExecutor.invoke",
+                                "inputs": {
+                                    "data": [
+                                        {
+                                            "role": "system",
+                                            "content": "You are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly, \nand in a personable manner using markdown and even add some personal flair with appropriate emojis.\n\n# Customer\nYou are helping Jane Doe to find answers to their questions.\nUse their name to address them in your responses."
+                                        },
+                                        {
+                                            "role": "user",
+                                            "content": "What is the meaning of life?"
+                                        }
+                                    ]
+                                },
+                                "result": "PromptyStream"
+                            },
+                            {
+                                "name": "AzureOpenAIProcessor",
+                                "__time": {
+                                    "start": "2024-08-13T18:19:28.780673",
+                                    "end": "2024-08-13T18:19:28.780673",
+                                    "duration": 0
+                                },
+                                "signature": "prompty.azure.processor.AzureOpenAIProcessor.invoke",
+                                "inputs": {
+                                    "data": "PromptyStream"
+                                },
+                                "result": "PromptyStream"
+                            }
+                        ],
+                        "result": "PromptyStream"
+                    }
+                ],
+                "result": "PromptyStream"
+            },
+            {
+                "name": "FakeAzureExecutor.PromptyStream",
+                "__time": {
+                    "start": "2024-08-13T18:19:28.781676",
+                    "end": "2024-08-13T18:19:28.784676",
+                    "duration": 3
+                },
+                "result": [
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": null,
+                                    "function_call": null,
+                                    "role": "assistant",
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {}
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "Ah",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " the",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " age",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "-old",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " question",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " about",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " the",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " meaning",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " of",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " life",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "!",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " \ud83c\udf0d",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "\n",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "While",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " everyone",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " may",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " have",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " their",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " own",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " interpretation",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " some",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " philosoph",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "ies",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " suggest",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " that",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " the",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " meaning",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " of",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " life",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " is",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " subjective",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " and",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " can",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " vary",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " from",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " person",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " to",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " person",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ".",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " It",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " could",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " be",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " about",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " finding",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " happiness",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " pursuing",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " personal",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " goals",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " making",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " meaningful",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " connections",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " with",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " others",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " or",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " contributing",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " to",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " the",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " better",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "ment",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " of",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " society",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ".",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " Ultimately",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " it",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": "'s",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " up",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " to",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " you",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " Jane",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ",",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " to",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " define",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " what",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " gives",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " your",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " life",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " purpose",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " and",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " fulfillment",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": ".",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": " \ud83c\udf1f",
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": null,
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {
+                                    "hate": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "self_harm": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "sexual": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    },
+                                    "violence": {
+                                        "filtered": false,
+                                        "severity": "safe"
+                                    }
+                                }
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    },
+                    {
+                        "id": "chatcmpl-9lMM3cvvjJiBeUqFJpHHa7tMpDWeK",
+                        "choices": [
+                            {
+                                "delta": {
+                                    "content": null,
+                                    "function_call": null,
+                                    "role": null,
+                                    "tool_calls": null
+                                },
+                                "finish_reason": "stop",
+                                "index": 0,
+                                "logprobs": null,
+                                "content_filter_results": {}
+                            }
+                        ],
+                        "created": 1721074375,
+                        "model": "gpt-35-turbo",
+                        "object": "chat.completion.chunk",
+                        "service_tier": null,
+                        "system_fingerprint": null,
+                        "usage": null
+                    }
+                ]
+            },
+            {
+                "name": "AzureOpenAIProcessor.PromptyStream",
+                "__time": {
+                    "start": "2024-08-13T18:19:28.784676",
+                    "end": "2024-08-13T18:19:28.784676",
+                    "duration": 0
+                },
+                "result": [
+                    "Ah",
+                    ",",
+                    " the",
+                    " age",
+                    "-old",
+                    " question",
+                    " about",
+                    " the",
+                    " meaning",
+                    " of",
+                    " life",
+                    "!",
+                    " \ud83c\udf0d",
+                    "\n",
+                    "While",
+                    " everyone",
+                    " may",
+                    " have",
+                    " their",
+                    " own",
+                    " interpretation",
+                    ",",
+                    " some",
+                    " philosoph",
+                    "ies",
+                    " suggest",
+                    " that",
+                    " the",
+                    " meaning",
+                    " of",
+                    " life",
+                    " is",
+                    " subjective",
+                    " and",
+                    " can",
+                    " vary",
+                    " from",
+                    " person",
+                    " to",
+                    " person",
+                    ".",
+                    " It",
+                    " could",
+                    " be",
+                    " about",
+                    " finding",
+                    " happiness",
+                    ",",
+                    " pursuing",
+                    " personal",
+                    " goals",
+                    ",",
+                    " making",
+                    " meaningful",
+                    " connections",
+                    " with",
+                    " others",
+                    ",",
+                    " or",
+                    " contributing",
+                    " to",
+                    " the",
+                    " better",
+                    "ment",
+                    " of",
+                    " society",
+                    ".",
+                    " Ultimately",
+                    ",",
+                    " it",
+                    "'s",
+                    " up",
+                    " to",
+                    " you",
+                    ",",
+                    " Jane",
+                    ",",
+                    " to",
+                    " define",
+                    " what",
+                    " gives",
+                    " your",
+                    " life",
+                    " purpose",
+                    " and",
+                    " fulfillment",
+                    ".",
+                    " \ud83c\udf1f"
+                ]
+            }
+        ],
+        "result": "None"
+    }
+}

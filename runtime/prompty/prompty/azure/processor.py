@@ -1,3 +1,4 @@
+import json
 import typing
 from collections.abc import AsyncIterator, Iterator
 
@@ -41,6 +42,14 @@ class AzureOpenAIProcessor(Invoker):
         any
             The response from the OpenAI/Azure API
         """
+        # agent invocations return the thread
+        # and the last message is the response
+        if self.prompty.model.api == "agent" and isinstance(data, list):
+            if isinstance(data[-1], dict):
+                return data[-1]["content"]
+            else:
+                return data
+
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
             # tool calls available in response
@@ -54,7 +63,24 @@ class AzureOpenAIProcessor(Invoker):
                     for tool_call in response.tool_calls
                 ]
             else:
-                return response.content
+                if (
+                    len(self.prompty.outputs) > 0
+                    and response.content is not None
+                    and isinstance(response.content, str)
+                    and len(response.content) > 0
+                ):
+                    try:
+                        return json.loads(response.content)
+                    except json.JSONDecodeError:
+                        # If the response is not JSON, return the content as is
+                        return response.content
+                else:
+                    # add response to thread if it exists
+                    thread = self.prompty.get_input("thread")
+                    if thread is not None and isinstance(thread.value, list):
+                        thread.value.append({"role": "assistant", "content": response.content})
+
+                    return response.content
 
         elif isinstance(data, Completion):
             return data.choices[0].text
@@ -66,7 +92,6 @@ class AzureOpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, ImagesResponse):
-            self.prompty.model.parameters
             item: ImagesResponse = data
 
             if len(data.data) == 0:
@@ -80,10 +105,7 @@ class AzureOpenAIProcessor(Invoker):
 
             def generator():
                 for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 
@@ -104,6 +126,14 @@ class AzureOpenAIProcessor(Invoker):
         str
             The parsed data
         """
+        # agent invocations return the thread
+        # and the last message is the response
+        if self.prompty.model.api == "agent" and isinstance(data, list):
+            if isinstance(data[-1], dict):
+                return data[-1]["content"]
+            else:
+                return data
+
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
             # tool calls available in response
@@ -117,7 +147,19 @@ class AzureOpenAIProcessor(Invoker):
                     for tool_call in response.tool_calls
                 ]
             else:
-                return response.content
+                if (
+                    len(self.prompty.outputs) > 0
+                    and response.content is not None
+                    and isinstance(response.content, str)
+                    and len(response.content) > 0
+                ):
+                    try:
+                        return json.loads(response.content)
+                    except json.JSONDecodeError:
+                        # If the response is not JSON, return the content as is
+                        return response.content
+                else:
+                    return response.content
 
         elif isinstance(data, Completion):
             return data.choices[0].text
@@ -129,7 +171,7 @@ class AzureOpenAIProcessor(Invoker):
             else:
                 return [item.embedding for item in data.data]
         elif isinstance(data, ImagesResponse):
-            self.prompty.model.parameters
+
             item: ImagesResponse = data
 
             if len(data.data) == 0:
@@ -143,10 +185,7 @@ class AzureOpenAIProcessor(Invoker):
 
             async def generator():
                 async for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 

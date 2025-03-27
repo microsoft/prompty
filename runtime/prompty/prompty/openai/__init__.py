@@ -5,6 +5,4 @@ try:
     from .executor import OpenAIExecutor  # noqa
     from .processor import OpenAIProcessor  # noqa
 except ImportError as e:
-    raise InvokerException(
-        f"Error registering OpenAIExecutor and OpenAIProcessor: {e}", "openai"
-    )
+    raise InvokerException(f"Error registering OpenAIExecutor and OpenAIProcessor: {e}", "openai")

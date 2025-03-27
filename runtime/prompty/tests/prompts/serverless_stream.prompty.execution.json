@@ -84,7 +84,7 @@
     "choices": [
       {
         "delta": {
-          "content": "\ud83d\ude03 Our"
+          "content": "Our"
         },
         "finish_reason": null,
         "index": 0,
@@ -1396,7 +1396,7 @@
     "choices": [
       {
         "delta": {
-          "content": "\ud83c\udfde\ufe0f"
+          "content": " :)"
         },
         "finish_reason": null,
         "index": 0,
@@ -1412,7 +1412,7 @@
     "choices": [
       {
         "delta": {
-          "content": "\ud83c\udf32"
+          "content": ":)"
         },
         "finish_reason": "stop",
         "index": 0,
