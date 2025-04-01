@@ -107,7 +107,7 @@ namespace Prompty.Core
                 modelDict["configuration"] = global_config;
 
             if (modelDict.TryGetValue("parameters", out object? paramValue) && paramValue.GetType() == typeof(Dictionary<string, object>))
-                // model parameter normalization
+                // model parameter primitive type conversion
                 modelDict["parameters"] = ((Dictionary<string, object>)paramValue).ParamPrimitiveConversion();
 
             frontmatter["content"] = content;
