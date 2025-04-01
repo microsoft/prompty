@@ -63,6 +63,9 @@
     <None Update="prompty.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="prompty\basic_model_parameters.prompty">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="prompty\basic_props.prompty">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

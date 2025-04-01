@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -100,12 +99,16 @@ namespace Prompty.Core
 
             var modelDict = ((Dictionary<string, object>)frontmatter["model"]);
 
-            if (modelDict.TryGetValue("configuration", out object? value) && value.GetType() == typeof(Dictionary<string, object>))
-                // param hoisting
-                modelDict["configuration"] = ((Dictionary<string, object>)value).ParamHoisting(global_config);
+            if (modelDict.TryGetValue("configuration", out object? configValue) && configValue.GetType() == typeof(Dictionary<string, object>))
+                // configuration parameter hoisting
+                modelDict["configuration"] = ((Dictionary<string, object>)configValue).ParamHoisting(global_config);
             else
                 // empty - use global configuration
                 modelDict["configuration"] = global_config;
+
+            if (modelDict.TryGetValue("parameters", out object? paramValue) && paramValue.GetType() == typeof(Dictionary<string, object>))
+                // model parameter normalization
+                modelDict["parameters"] = ((Dictionary<string, object>)paramValue).ParamPrimitiveConversion();
 
             frontmatter["content"] = content;
 
@@ -129,7 +132,7 @@ namespace Prompty.Core
             prompty.Model = new Model(frontmatter.GetConfig("model") ?? []);
 
             // sample
-            // DEPRECAED
+            // DEPRECATED
             //prompty.Sample = frontmatter.GetConfig("sample") ?? [];
 
             // properties
@@ -218,10 +221,10 @@ namespace Prompty.Core
 
             if (inputs != null)
                 cleanInputs = inputs.ToParamDictionary();
-            
+
             if (mergeSample)
                 cleanInputs = cleanInputs.ParamHoisting(GetSample());
-            
+
 
             foreach (var key in Inputs.Keys)
                 if (!cleanInputs.ContainsKey(key))

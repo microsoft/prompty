@@ -1,5 +1,3 @@
-using System.Transactions;
-
 namespace Prompty.Core.Tests;
 
 
@@ -48,7 +46,7 @@ public class LoadTests
             string? item = props[i];
             Assert.NotNull(prompty.Inputs[item]);
             Assert.Equal(PropertyType.String, prompty.Inputs[item].Type);
-            Assert.Equal(samples[i], prompty.Inputs[item].Sample);   
+            Assert.Equal(samples[i], prompty.Inputs[item].Sample);
         }
     }
 
@@ -58,10 +56,10 @@ public class LoadTests
         var p = "prompty/basic_props.prompty";
         var prompty = Prompty.Load(p);
         string[] props = { "firstName", "lastName", "question", "age", "pct", "valid", "items" };
-        PropertyType[] types = { PropertyType.String, 
-                                PropertyType.String, 
-                                PropertyType.String, 
-                                PropertyType.Number, 
+        PropertyType[] types = { PropertyType.String,
+                                PropertyType.String,
+                                PropertyType.String,
+                                PropertyType.Number,
                                 PropertyType.Number,
                                 PropertyType.Boolean,
                                 PropertyType.Array };
@@ -89,8 +87,21 @@ public class LoadTests
             {
                 Assert.Equal(samples[i], prompty.Inputs[item].Sample);
                 Assert.Equal(defaults[i], prompty.Inputs[item].Default);
-            }            
+            }
             Assert.Equal($"The {item} description", prompty.Inputs[item].Description);
         }
+    }
+
+    [Fact]
+    public void BasicModelParameters()
+    {
+        var p = "prompty/basic_model_parameters.prompty";
+        var prompty = Prompty.Load(p);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty?.Model?.Parameters);
+        Assert.IsType<bool>(prompty?.Model?.Parameters?.Items["logprobs"]);
+        Assert.IsType<int>(prompty?.Model?.Parameters?.Items["top_logprobs"]);
+        Assert.IsType<double>(prompty?.Model?.Parameters?.Items["top_p"]);
     }
 }

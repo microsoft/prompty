@@ -160,5 +160,29 @@ namespace Prompty.Core
 
             return dict;
         }
+
+        public static Dictionary<string, object> ParamPrimitiveConversion(this Dictionary<string, object> parameters)
+        {
+            foreach (var key in parameters.Keys)
+            {
+                var value = parameters[key] as string;
+                if (value == null) continue;
+
+                if (bool.TryParse(value, out bool boolValue))
+                {
+                    parameters[key] = boolValue;
+                }
+                else if (int.TryParse(value, out int intValue))
+                {
+                    parameters[key] = intValue;
+                }
+                else if (double.TryParse(value, out double doubleValue))
+                {
+                    parameters[key] = doubleValue;
+                }
+            }
+
+            return parameters;
+        }
     }
 }
