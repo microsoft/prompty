@@ -2,6 +2,7 @@
   "default": {
     "type": "FROM_CONTENT",
     "api_version": "2023-07-01-preview",
+    "azure_deployment": "${env:AZURE_DEPLOYMENT:gpt-35-turbo}",
     "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
     "api_key": "${env:AZURE_OPENAI_KEY}"
   }

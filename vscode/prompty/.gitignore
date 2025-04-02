@@ -1,0 +1,6 @@
+out
+node_modules
+client/server
+.vscode-test
+syntaxes/prompty.tmLanguage.json
+*.vsix

@@ -13,6 +13,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "click>=8.1.7",
     "aiofiles>=24.1.0",
+    "chevron>=0.14.0",
 ]
 
 [project.urls]
@@ -21,30 +22,26 @@ Documentation = "https://prompty.ai/docs"
 Issues = "https://github.com/microsoft/prompty/issues"
 
 [project.optional-dependencies]
-azure = ["azure-identity>=1.17.1","openai>=1.43.0"]
-openai = ["openai>=1.43.0"]
-serverless = ["azure-identity>=1.17.1","azure-ai-inference>=1.0.0b3"]
-
-
-[tool.pdm]
-distribution = true
-
-
-[tool.pdm.dev-dependencies]
 dev = [
-    "pytest>=8.2.2",
-    "openai>=1.43.0",
-    "azure-ai-inference>=1.0.0b3",
-    "pytest-asyncio>=0.24.0",
-    "azure-identity>=1.17.1",
-    "ruff>=0.9.1",
-    "mypy>=1.15.0",
-    "types-aiofiles>=21.1.0",
-    "types-PyYAML>=6.0.12"
+    "pytest",
+    "openai",
+    "azure-ai-inference",
+    "pytest-asyncio",
+    "azure-identity",
+    "ruff",
+    "mypy",
+    "types-aiofiles",
+    "types-PyYAML",
+    "types-chevron",
+    "pytest-cov",
+    "flit",
+    "black",
+    "chevron",
 ]
+azure = ["azure-identity","openai"]
+openai = ["openai"]
+serverless = ["azure-identity","azure-ai-inference"]
 
-[tool.pytest.ini_options]
-asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 120
@@ -55,19 +52,19 @@ output-format = "full"
 select = ["E", "F", "I", "UP"]
 ignore = ["D203", "E501"]
 
+[tool.black]
+line-length = 120
+target-version = ["py39"]
 
-[tool.pdm.version]
-source = "scm"
-tag_filter = "python/*"
-tag_regex = '^python/(?:\D*)?(?P<version>([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|c|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$)$'
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
 
-[tool.pdm.scripts]
-prompty = { call = "prompty.cli:run" }
+[tool.coverage.report]
+show_missing = true
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
 
 [project.scripts]
 prompty = "prompty.cli:run"

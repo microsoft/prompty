@@ -170,3 +170,6 @@ trace.json
 
 # ruff
 .ruff_cache/
+
+coverage.json
+coverage.md
