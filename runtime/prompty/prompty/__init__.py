@@ -67,7 +67,7 @@ def headless(
     """
 
     # get caller's path (to get relative path for prompty.json)
-    caller = Path(traceback.extract_stack()[-2].filename)
+    caller = Path(traceback.extract_stack()[-3].filename)
     templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
     modelSettings = ModelSettings(
         api=api,
@@ -124,7 +124,7 @@ async def headless_async(
     """
 
     # get caller's path (to get relative path for prompty.json)
-    caller = Path(traceback.extract_stack()[-2].filename)
+    caller = Path(traceback.extract_stack()[-3].filename)
     templateSettings = TemplateSettings(type="NOOP", parser="NOOP")
 
     global_config = await load_global_config_async(caller.parent, connection)
