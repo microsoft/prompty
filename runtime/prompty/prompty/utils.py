@@ -32,6 +32,7 @@ async def load_json_async(file_path, encoding="utf-8"):
     content = await load_text_async(file_path, encoding=encoding)
     return json.loads(content)
 
+
 def _walk_up_path(path: Path) -> typing.Union[Path, None]:
     """Walk up the path to find a prompty.json file.
 
@@ -47,6 +48,7 @@ def _walk_up_path(path: Path) -> typing.Union[Path, None]:
         path = path.parent
     return None
 
+
 def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, None]:
     """Find the prompty.json file in the current directory or any parent directory.
     Args:
@@ -56,7 +58,6 @@ def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, N
         return Path(prompty_path / "prompty.json")
     else:
         return _walk_up_path(prompty_path)
-
 
 
 def load_global_config(prompty_path: Path = Path.cwd(), configuration: str = "default") -> dict[str, typing.Any]:
