@@ -87,7 +87,7 @@ def headless(
     """
 
     # get caller's path (to get relative path for prompty.json)
-    caller = Path(traceback.extract_stack()[-2].filename)
+    caller = Path(traceback.extract_stack()[-3].filename)
 
     attributes = {
         "template": {
@@ -151,7 +151,7 @@ async def headless_async(
     """
 
     # get caller's path (to get relative path for prompty.json)
-    caller = Path(traceback.extract_stack()[-2].filename)
+    caller = Path(traceback.extract_stack()[-3].filename)
 
     attributes = {
         "template": {

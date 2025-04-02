@@ -32,18 +32,31 @@ async def load_json_async(file_path, encoding="utf-8"):
     content = await load_text_async(file_path, encoding=encoding)
     return json.loads(content)
 
+def _walk_up_path(path: Path) -> typing.Union[Path, None]:
+    """Walk up the path to find a prompty.json file.
+
+    Args:
+        path (Path): The path to start searching from.
+    """
+    while path != path.parent:
+        # Check if the prompty.json file exists in the current directory
+        prompty_config = path / "prompty.json"
+        if prompty_config.exists():
+            return prompty_config
+        # Move up to the parent directory
+        path = path.parent
+    return None
 
 def _find_global_config(prompty_path: Path = Path.cwd()) -> typing.Union[Path, None]:
-    prompty_config = list(Path.cwd().glob("**/prompty.json"))
-
-    if len(prompty_config) > 0:
-        sorted_list = sorted(
-            [c for c in prompty_config if len(c.parent.parts) <= len(prompty_path.parts)],
-            key=lambda p: len(p.parts),
-        )
-        return sorted_list[-1] if len(sorted_list) > 0 else None
+    """Find the prompty.json file in the current directory or any parent directory.
+    Args:
+        prompty_path (Path): The path to start searching from.
+    """
+    if Path(prompty_path / "prompty.json").exists():
+        return Path(prompty_path / "prompty.json")
     else:
-        return None
+        return _walk_up_path(prompty_path)
+
 
 
 def load_global_config(prompty_path: Path = Path.cwd(), configuration: str = "default") -> dict[str, typing.Any]:
