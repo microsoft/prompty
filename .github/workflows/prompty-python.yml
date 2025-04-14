@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Create tag
         run: |
-          echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
+          echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/python\///')" >> "$GITHUB_ENV"
           echo "Using version: ${{ env.VERSION }}"
 
       - name: Rewrite version
