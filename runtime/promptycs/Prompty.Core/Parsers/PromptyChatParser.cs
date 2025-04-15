@@ -50,9 +50,9 @@ namespace Prompty.Core.Parsers
                                 return new TextContent(c.Content);
                             case ContentType.LocalImage:
                                 var image = GetImageContent(c.Content, c.Media);
-                                return new ImageContent(image, c.Media);
+                                return new DataContent(data: image, mediaType: c.Media);
                             case ContentType.RemoteImage:
-                                return new ImageContent(c.Content, c.Media);
+                                return new UriContent(uri: c.Content, mediaType: c.Media);
                             default:
                                 throw new Exception("Invalid content type!");
                         }
@@ -87,9 +87,9 @@ namespace Prompty.Core.Parsers
                                 return new TextContent(c.Content);
                             case ContentType.LocalImage:
                                 var image = await GetImageContentAsync(c.Content, c.Media);
-                                return new ImageContent(image, c.Media);
+                                return new DataContent(data: image, mediaType: c.Media);
                             case ContentType.RemoteImage:
-                                return new ImageContent(c.Content, c.Media);
+                                return new UriContent(uri: c.Content, mediaType: c.Media);
                             default:
                                 throw new Exception("Invalid content type!");
                         }
