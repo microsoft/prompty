@@ -182,6 +182,44 @@ namespace Prompty.Core
         }
 
         /// <summary>
+        /// Load a prompty file from a Stream
+        /// </summary>
+        /// <param name="stream">Stream to read the prompty file from.</param>
+        /// <param name="configuration">Id of the configuration to use.</param>
+        public static Prompty Load(Stream stream, string configuration = "default")
+        {
+            using var reader = new StreamReader(stream);
+            string text = reader.ReadToEnd();
+
+            var global_config = GlobalConfig.Load(System.IO.Path.GetDirectoryName(stream.ToString()) ?? string.Empty, configuration) ?? [];
+            var streamPath = stream.ToString() ?? string.Empty;
+            global_config = Normalizer.Normalize(global_config, streamPath);
+
+            var frontmatter = LoadRaw(text, global_config, stream.ToString());
+            var prompty = Convert(frontmatter, stream.ToString());
+            return prompty;
+        }
+
+        /// <summary>
+        /// Load a prompty file from a Stream Asynchronously
+        /// </summary>
+        /// <param name="stream">Stream to read the prompty file from.</param>
+        /// <param name="configuration">Id of the configuration to use.</param>
+        public static async Task<Prompty> LoadAsync(Stream stream, string configuration = "default")
+        {
+            using var reader = new StreamReader(stream);
+            string text = await reader.ReadToEndAsync();
+
+            var global_config = await GlobalConfig.LoadAsync(System.IO.Path.GetDirectoryName(stream.ToString()) ?? string.Empty, configuration) ?? [];
+            var streamPath = stream.ToString() ?? string.Empty;
+            global_config = Normalizer.Normalize(global_config, streamPath);
+
+            var frontmatter = LoadRaw(text, global_config, stream.ToString());
+            var prompty = Convert(frontmatter, stream.ToString());
+            return prompty;
+        }
+
+        /// <summary>
         /// Load a prompty file using the provided text content.
         /// </summary>
         /// <param name="text">Id of the configuration to use.</param>

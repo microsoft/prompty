@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Transactions;
 
 namespace Prompty.Core.Tests;
@@ -34,6 +35,76 @@ public class LoadTests
         var prompty = Prompty.Load(path, "fake");
 
         Assert.Equal("FAKE_TYPE", prompty.Model?.Configuration.Type);
+    }
+
+    /// <summary>
+    /// Test the Loading from a Stream
+    /// </summary>
+    [Fact]
+    public void LoadStream()
+    {
+        var path = "prompty/basic.prompty";
+        using var stream = File.OpenRead(path);
+        var prompty = Prompty.Load(stream);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
+    }
+
+    /// <summary>
+    /// Test the Loading from an embedded resource
+    /// </summary>
+    [Fact]
+    public void LoadEmbeddedResource()
+    {
+        // Get the fully qualified name of the embedded resource
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceNames = assembly.GetManifestResourceNames();
+        var resourceName = resourceNames.FirstOrDefault(r => r.EndsWith("basic.prompty"));
+        
+        Assert.NotNull(resourceName); // Ensure we found the resource
+        
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        Assert.NotNull(stream);
+        var prompty = Prompty.Load(stream!);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
+    }
+
+    /// <summary>
+    /// Test the Loading from an embedded resource with config
+    /// </summary>
+    [Fact]
+    public void LoadEmbeddedResourceWithConfig()
+    {
+        // Get the fully qualified name of the embedded resource
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceNames = assembly.GetManifestResourceNames();
+        var resourceName = resourceNames.FirstOrDefault(r => r.EndsWith("basic.prompty"));
+        
+        Assert.NotNull(resourceName); // Ensure we found the resource
+        
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        Assert.NotNull(stream);
+        var prompty = Prompty.Load(stream!, "fake");
+
+        Assert.Equal("FAKE_TYPE", prompty.Model?.Configuration.Type);
+    }
+
+
+    /// <summary>
+    /// Test the Loading from a Stream Async
+    /// </summary>
+    [Fact]
+    public async Task LoadStreamAsync()
+    {
+        var path = "prompty/basic.prompty";
+        using var stream = File.OpenRead(path);
+        var prompty = await Prompty.LoadAsync(stream);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
     }
 
     [Fact]
