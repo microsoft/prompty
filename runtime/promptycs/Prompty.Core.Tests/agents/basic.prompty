@@ -1,0 +1,78 @@
+---
+id: my_agent_21
+name: Basic Agent
+description: A basic prompt that uses the gpt-4o chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - basic
+    - gpt-4o
+model:
+  api: chat
+  connection:
+    type: azure_openai
+    azure_deployment: gpt-4o
+  options:
+    max_tokens: 150
+    temperature: 0.5
+    top_p: 1
+    frequency_penalty: 0
+    presence_penalty: 0
+inputs:
+  firstName:
+    type: string
+    default: User
+    sample: April
+    description: The first name of the customer
+  lastName:
+    type: string
+    sample: Kwong
+    required: true
+    strict: false
+    description: The last name of the customer
+  question:
+    type: string
+    description: The question to answer
+    required: true
+outputs:
+  work:
+    type: object
+    json_schema: ${file:schema.json}
+    description: The thing to output
+
+tools:
+  - id: coder
+    type: openai.CodeInterpreter
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      other: "other"
+  
+template:
+  format: mustache
+  parser: prompty
+---
+tools:
+  - id: query
+    type: dataverse
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      query: SELECT * FROM Customers WHERE firstName = '{{firstName}}' AND lastName = '{{lastName}}'
+    
+  - id: search
+    type: bing
+    options:
+      parameters: [{{question}}]
+
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, 
+and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+user[name="{{firstName}} {{lastName}}"]:
+{{question}}
