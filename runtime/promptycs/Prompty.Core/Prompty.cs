@@ -113,11 +113,13 @@ public partial class Prompty
         object? parameters = null,
         bool raw = false)
     {
-        if (configuration != null)
-            Model!.Configuration = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Configuration.Items ?? []));
+        // TODO
+        //if (configuration != null)
+        //    Model!.Connection = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Connection.Items ?? []));
 
-        if (parameters != null)
-            Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+        // TODO
+        //if (parameters != null)
+        //    Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
 
         object executed = RunInvoker(InvokerType.Executor, content);
 
@@ -133,11 +135,13 @@ public partial class Prompty
         object? parameters = null,
         bool raw = false)
     {
+        /* TODO
         if (configuration != null)
             Model!.Configuration = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Configuration.Items ?? []));
 
         if (parameters != null)
             Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+        */
 
         object executed = await RunInvokerAsync(InvokerType.Executor, content);
 
@@ -201,8 +205,8 @@ public partial class Prompty
         {
             InvokerType.Renderer => Template?.Format,
             InvokerType.Parser => $"{Template?.Parser}.{Model?.Api}",
-            InvokerType.Executor => Model?.Configuration?.Type,
-            InvokerType.Processor => Model?.Configuration?.Type,
+            InvokerType.Executor => Model?.Connection?.Type,
+            InvokerType.Processor => Model?.Connection?.Type,
             _ => throw new NotImplementedException(),
         };
     }
@@ -309,7 +313,7 @@ public partial class Prompty
             Metadata = ConvertToMetadata(frontmatter),
 
             // model settings from hoisted params
-            Model = new Model(frontmatter.GetConfig("model") ?? []),
+            Model = ConvertToModel(frontmatter.GetValue<Dictionary<string, object>>("model")),
 
             // properties
             Inputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("inputs") ?? []),
@@ -348,6 +352,39 @@ public partial class Prompty
             Tags = [.. dictionary.GetList<string>("tags")]
         };
     }
-    #endregion
 
+    private static Model? ConvertToModel(Dictionary<string, object>? dictionary)
+    {
+        if (dictionary == null)
+            return null;
+
+        return new()
+        {
+            Id = dictionary.GetValue<string>("id"),
+            Api = dictionary.GetValue<string>("api") ?? "chat",
+            Options = dictionary.GetConfig("options") ?? [],
+            Connection = ConvertToConnection(dictionary)
+        };
+    }
+
+    private static Connection? ConvertToConnection(Dictionary<string, object> model)
+    {
+        var dictionary = model.GetConfig("connection");
+        if (dictionary is null)
+        {
+            dictionary = model.GetConfig("configuration");
+        }
+        if (dictionary is null)
+        {
+            return null;
+        }
+
+        return new()
+        {
+            Type = dictionary.GetValue<string>("type"),
+            ServiceId = dictionary.GetValue<string>("service_id"),
+            ExtensionData = dictionary.Where(kvp => kvp.Key != "type" && kvp.Key != "service_id").ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value)
+        };
+    }
+    #endregion
 }
