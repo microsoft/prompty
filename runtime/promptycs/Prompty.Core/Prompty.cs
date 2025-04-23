@@ -63,6 +63,9 @@ public partial class Prompty
     public Dictionary<string, object> GetSample()
     {
         Dictionary<string, object> sample = new Dictionary<string, object>();
+        if (Inputs is null)
+            return sample;
+
         foreach (var key in Inputs.Keys)
         {
             if (Inputs[key].Sample != null)
@@ -316,7 +319,7 @@ public partial class Prompty
             Model = ConvertToModel(frontmatter.GetValue<Dictionary<string, object>>("model")),
 
             // properties
-            Inputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("inputs") ?? []),
+            Inputs = ConvertToInputs(frontmatter.GetValue<Dictionary<string, object>>("inputs")),
             Outputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("outputs") ?? []),
 
             // template
@@ -384,6 +387,94 @@ public partial class Prompty
             Type = dictionary.GetValue<string>("type"),
             ServiceId = dictionary.GetValue<string>("service_id"),
             ExtensionData = dictionary.Where(kvp => kvp.Key != "type" && kvp.Key != "service_id").ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value)
+        };
+    }
+
+    private static IList<Output>? ConvertToOutputs(Dictionary<string, object>? dictionary)
+    {
+        if (dictionary == null)
+            return null;
+
+        var outputs = new List<Output>();
+        foreach (var kvp in dictionary)
+        {
+            var key = kvp.Key;
+            var value = dictionary.GetConfig(kvp.Key);
+            Output output = CreateOutput(kvp.Key, value);
+            outputs.Add(output);
+        }
+
+        return outputs;
+    }
+
+    private static IDictionary<string, Input>? ConvertToInputs(Dictionary<string, object>? dictionary)
+    {
+        if (dictionary == null)
+            return null;
+
+        var inputs = new Dictionary<string, Input>();
+        foreach (var kvp in dictionary)
+        {
+            var key = kvp.Key;
+            var value = dictionary[kvp.Key];
+            Input input = CreateInput(kvp.Key, kvp.Value);
+            inputs[key] = input;
+        }
+
+        return inputs;
+    }
+
+    private static Input CreateInput(string key, object value)
+    {
+        if (value == null)
+            return new() { Name = key };
+
+        if (value is Dictionary<string, object> dictionary)
+        {
+            // check is this a input definition
+            if (IsInput(dictionary))
+            {
+                var propertyType = Property.GetPropertyType(dictionary);
+
+                return new()
+                {
+                    Name = key,
+                    Type = propertyType,
+                    Description = dictionary.GetValue<string>("description"),
+                    Default = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("default")),
+                    Sample = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("sample")),
+                    Required = dictionary.GetValue<bool>("required"),
+                    Strict = dictionary.GetValue<bool>("strict"),
+                    JsonSchema = dictionary.GetValue<string>("json_schema"),
+                };
+            }
+        }
+
+        return new()
+        {
+            Name = key,
+            Type = Property.GetPropertyTypeFromValue(value),
+            Sample = value
+        };
+    }
+
+    private static bool IsInput(Dictionary<string, object> dictionary)
+    {
+        // TODO
+        string[] props = { "type", "default", "sample", "description" };
+        return dictionary.Keys.Any(k => props.Contains(k));
+    }
+
+    private static Output CreateOutput(string key, Dictionary<string, object>? value)
+    {
+        if (value == null)
+            return new() { Name = key };
+
+        return new()
+        {
+            Name = key,
+            Description = value?.GetValue<string>("description"),
+            JsonSchema = value?.GetValue<string>("json_schema"),
         };
     }
     #endregion

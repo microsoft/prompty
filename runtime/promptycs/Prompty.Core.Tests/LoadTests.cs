@@ -44,6 +44,7 @@ public class LoadTests
         for (int i = 0; i < props.Length; i++)
         {
             string? item = props[i];
+            Assert.NotNull(prompty.Inputs);
             Assert.NotNull(prompty.Inputs[item]);
             Assert.Equal(PropertyType.String, prompty.Inputs[item].Type);
             Assert.Equal(samples[i], prompty.Inputs[item].Sample);

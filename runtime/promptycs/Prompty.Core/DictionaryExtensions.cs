@@ -62,11 +62,15 @@ namespace Prompty.Core
         }
         public static T? GetValue<T>(this Dictionary<string, object> dict, string key)
         {
-            // try to see if dictionary has key and can map to type
-            if (dict.ContainsKey(key) && dict[key].GetType() == typeof(T))
-                return (T)dict[key];
-            else
-                return default;
+            if (dict.TryGetValue(key, out var value))
+            {
+                if (typeof(T).IsAssignableFrom(value.GetType()))
+                {
+                    return (T)value;
+                }
+            }
+
+            return default;
 
         }
 
