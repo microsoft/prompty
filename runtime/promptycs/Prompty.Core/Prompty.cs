@@ -47,7 +47,7 @@ public partial class Prompty
     /// Load a prompty file using the provided text content.
     /// </summary>
     /// <param name="text">Id of the configuration to use.</param>
-    /// <param name="gloablConfig">Global configuration to use.</param>
+    /// <param name="globalConfig">Global configuration to use.</param>
     /// <param name="path">Optional: File path to the prompty file.</param>
     public static Prompty Load(string text, Dictionary<string, object> globalConfig, string? path = null)
     {
