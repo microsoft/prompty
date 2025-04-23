@@ -410,7 +410,7 @@ public partial class Prompty
         {
             Type = dictionary.GetValue<string>("type"),
             ServiceId = dictionary.GetValue<string>("service_id"),
-            ExtensionData = dictionary.Where(kvp => kvp.Key != "type" && kvp.Key != "service_id").ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value)
+            ExtensionData = dictionary.Where(kvp => kvp.Key != "type" && kvp.Key != "service_id").ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
         };
     }
 
@@ -471,7 +471,7 @@ public partial class Prompty
         return dictionary.Keys.Any(k => props.Contains(k));
     }
 
-    private static IDictionary<string, Output>? ConvertToOutputs(object value)
+    private static IDictionary<string, Output>? ConvertToOutputs(object? value)
     {
         var outputs = new Dictionary<string, Output>();
         if (value == null)
