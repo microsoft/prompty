@@ -28,17 +28,21 @@ public sealed class Connection
     /// Used to store model specific connection e.g., the deployment name, endpoint, etc.
     /// </remarks>
     [JsonExtensionData]
-    public IDictionary<string, object?> ExtensionData
+    public Dictionary<string, object> ExtensionData
     {
-        get => this._extensionData ??= new Dictionary<string, object?>();
+        get => this._extensionData;
         set
         {
-            //Verify.NotNull(value);
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             this._extensionData = value;
         }
     }
 
     #region private
-    private IDictionary<string, object?>? _extensionData;
+    private Dictionary<string, object> _extensionData = [];
     #endregion
 }

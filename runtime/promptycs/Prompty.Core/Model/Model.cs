@@ -56,6 +56,10 @@ public sealed class Model
     /// </remarks>
     public Connection? Connection { get; set; }
 
+    public Settings Parameters { get; set; } = new Settings();
+
+    public Settings Response { get; set; } = new Settings();
+
     #region
     private string? _api;
     #endregion

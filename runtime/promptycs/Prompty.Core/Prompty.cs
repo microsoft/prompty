@@ -116,13 +116,23 @@ public partial class Prompty
         object? parameters = null,
         bool raw = false)
     {
-        // TODO
-        //if (configuration != null)
-        //    Model!.Connection = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Connection.Items ?? []));
+        if (configuration is not null && parameters is not null && Model is null)
+        {
+            this.Model = new Model();
+        }
 
-        // TODO
-        //if (parameters != null)
-        //    Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+        if (configuration is not null)
+        {
+            Model!.Connection = new()
+            {
+                ExtensionData = configuration.ToParamDictionary().ParamHoisting(Model?.Connection?.ExtensionData ?? [])
+            };
+        }
+
+        if (parameters is not null)
+        {
+            Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+        }
 
         object executed = RunInvoker(InvokerType.Executor, content);
 
@@ -138,13 +148,23 @@ public partial class Prompty
         object? parameters = null,
         bool raw = false)
     {
-        /* TODO
-        if (configuration != null)
-            Model!.Configuration = new Configuration(configuration.ToParamDictionary().ParamHoisting(Model?.Configuration.Items ?? []));
+        if (configuration is not null && parameters is not null && Model is null)
+        {
+            this.Model = new Model();
+        }
 
-        if (parameters != null)
+        if (configuration is not null)
+        {
+            Model!.Connection = new()
+            {
+                ExtensionData = configuration.ToParamDictionary().ParamHoisting(Model?.Connection?.ExtensionData ?? [])
+            };
+        }
+
+        if (parameters is not null)
+        {
             Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
-        */
+        }
 
         object executed = await RunInvokerAsync(InvokerType.Executor, content);
 
@@ -445,7 +465,8 @@ public partial class Prompty
 
     private static bool IsInput(Dictionary<string, object> dictionary)
     {
-        // TODO
+        // TODO - Check do we want to maintain this behavior, the down-side is you cannot define a sparse input.
+        // The alternative would be to disallow using Dictionaries with the shorthand sample setting syntax.
         string[] props = { "type", "default", "sample", "description" };
         return dictionary.Keys.Any(k => props.Contains(k));
     }

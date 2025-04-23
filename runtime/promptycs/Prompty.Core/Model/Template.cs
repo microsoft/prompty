@@ -3,7 +3,7 @@
 /// <summary>
 /// The options for defining a template format and parser.
 /// </summary>
-public class Template
+public sealed class Template
 {
     /// <summary>
     /// The default format.
@@ -27,8 +27,9 @@ public class Template
         get => this._format;
         set
         {
-            // TODO
-            //Verify.NotNull(value);
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
             this._format = value;
         }
     }
@@ -49,8 +50,9 @@ public class Template
         get => this._parser;
         set
         {
-            // TODO
-            //Verify.NotNull(value);
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
             this._parser = value;
         }
     }
