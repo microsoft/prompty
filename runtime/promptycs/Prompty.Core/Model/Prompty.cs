@@ -70,11 +70,10 @@ public partial class Prompty
     /// </summary>
     public IDictionary<string, Output>? Outputs { get; set; }
 
-    // properties
-    //public Dictionary<string, Property> Inputs { get; set; } = new Dictionary<string, Property>();
-    //public Dictionary<string, Property> Outputs { get; set; } = new Dictionary<string, Property>();
-    // template
-    public Template? Template { get; set; } = null;
+    /// <summary>
+    /// Gets or sets the template options used by the Prompty file, including its type and parser.
+    /// </summary>
+    public Template? Template { get; set; }
 
     // base
     public string Base { get; set; } = string.Empty;

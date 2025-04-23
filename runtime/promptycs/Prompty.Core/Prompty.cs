@@ -323,7 +323,7 @@ public partial class Prompty
             Outputs = ConvertToOutputs(frontmatter.GetValue<Dictionary<string, object>>("outputs")),
 
             // template
-            Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template(null),
+            Template = ConvertToTemplate(frontmatter.GetConfig("template")),
 
             // base
             Base = frontmatter.GetValue<string>("base") ?? string.Empty,
@@ -472,6 +472,18 @@ public partial class Prompty
             Name = name,
             Description = value?.GetValue<string>("description"),
             JsonSchema = value?.GetValue<string>("json_schema"),
+        };
+    }
+
+    private static Template ConvertToTemplate(Dictionary<string, object>? dictionary)
+    {
+        if (dictionary == null)
+            return new Template();
+
+        return new()
+        {
+            Format = dictionary.GetValue<string>("format"),
+            Parser = dictionary.GetValue<string>("parser")
         };
     }
     #endregion
