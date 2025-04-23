@@ -58,16 +58,21 @@ public partial class Prompty
     public Model? Model { get; set; } = null;
 
     /// <summary>
-    /// Gets or sets the collection of inputs used by the agent, including their type, default value, and description.
+    /// Gets or sets the collection of inputs used by the Prompty file, including their type, default value, and description.
     /// </summary>
     /// <remarks>
     /// This is typically a set of inputs that will be used as parameters that participate in the template rendering.
     /// </remarks>
     public IDictionary<string, Input>? Inputs { get; set; }
 
+    /// <summary>
+    /// Gets or sets the collection of outputs supported by the Prompty file, including their type and description.
+    /// </summary>
+    public IDictionary<string, Output>? Outputs { get; set; }
+
     // properties
     //public Dictionary<string, Property> Inputs { get; set; } = new Dictionary<string, Property>();
-    public Dictionary<string, Property> Outputs { get; set; } = new Dictionary<string, Property>();
+    //public Dictionary<string, Property> Outputs { get; set; } = new Dictionary<string, Property>();
     // template
     public Template? Template { get; set; } = null;
 

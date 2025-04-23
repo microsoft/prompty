@@ -320,7 +320,7 @@ public partial class Prompty
 
             // properties
             Inputs = ConvertToInputs(frontmatter.GetValue<Dictionary<string, object>>("inputs")),
-            Outputs = Property.CreatePropertyDictionary(frontmatter.GetConfig("outputs") ?? []),
+            Outputs = ConvertToOutputs(frontmatter.GetValue<Dictionary<string, object>>("outputs")),
 
             // template
             Template = frontmatter.GetConfig("template", d => new Template(d)) ?? new Template(null),
@@ -390,44 +390,25 @@ public partial class Prompty
         };
     }
 
-    private static IList<Output>? ConvertToOutputs(Dictionary<string, object>? dictionary)
-    {
-        if (dictionary == null)
-            return null;
-
-        var outputs = new List<Output>();
-        foreach (var kvp in dictionary)
-        {
-            var key = kvp.Key;
-            var value = dictionary.GetConfig(kvp.Key);
-            Output output = CreateOutput(kvp.Key, value);
-            outputs.Add(output);
-        }
-
-        return outputs;
-    }
-
     private static IDictionary<string, Input>? ConvertToInputs(Dictionary<string, object>? dictionary)
     {
-        if (dictionary == null)
-            return null;
-
         var inputs = new Dictionary<string, Input>();
+        if (dictionary == null)
+            return inputs;
+
         foreach (var kvp in dictionary)
         {
-            var key = kvp.Key;
-            var value = dictionary[kvp.Key];
             Input input = CreateInput(kvp.Key, kvp.Value);
-            inputs[key] = input;
+            inputs[kvp.Key] = input;
         }
 
         return inputs;
     }
 
-    private static Input CreateInput(string key, object value)
+    private static Input CreateInput(string name, object value)
     {
         if (value == null)
-            return new() { Name = key };
+            return new() { Name = name };
 
         if (value is Dictionary<string, object> dictionary)
         {
@@ -438,7 +419,7 @@ public partial class Prompty
 
                 return new()
                 {
-                    Name = key,
+                    Name = name,
                     Type = propertyType,
                     Description = dictionary.GetValue<string>("description"),
                     Default = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("default")),
@@ -452,7 +433,7 @@ public partial class Prompty
 
         return new()
         {
-            Name = key,
+            Name = name,
             Type = Property.GetPropertyTypeFromValue(value),
             Sample = value
         };
@@ -465,14 +446,30 @@ public partial class Prompty
         return dictionary.Keys.Any(k => props.Contains(k));
     }
 
-    private static Output CreateOutput(string key, Dictionary<string, object>? value)
+    private static IDictionary<string, Output>? ConvertToOutputs(Dictionary<string, object>? dictionary)
+    {
+        var outputs = new Dictionary<string, Output>();
+        if (dictionary == null)
+            return outputs;
+
+        foreach (var kvp in dictionary)
+        {
+            var value = dictionary.GetConfig(kvp.Key);
+            Output output = CreateOutput(kvp.Key, value);
+            outputs[kvp.Key] = output;
+        }
+
+        return outputs;
+    }
+
+    private static Output CreateOutput(string name, Dictionary<string, object>? value)
     {
         if (value == null)
-            return new() { Name = key };
+            return new() { Name = name };
 
         return new()
         {
-            Name = key,
+            Name = name,
             Description = value?.GetValue<string>("description"),
             JsonSchema = value?.GetValue<string>("json_schema"),
         };
