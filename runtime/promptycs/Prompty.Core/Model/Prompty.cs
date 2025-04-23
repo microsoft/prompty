@@ -63,7 +63,7 @@ public partial class Prompty
     /// <remarks>
     /// This is typically a set of inputs that will be used as parameters that participate in the template rendering.
     /// </remarks>
-    public IDictionary<string, Input>? Inputs { get; set; }
+    public IDictionary<string, Input> Inputs { get; set; } = new Dictionary<string, Input>();
 
     /// <summary>
     /// Gets or sets the collection of outputs supported by the Prompty file, including their type and description.

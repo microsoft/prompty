@@ -310,6 +310,7 @@ public partial class Prompty
         Prompty prompty = new()
         {
             // metadata
+            Id = frontmatter.GetValue<string>("id"),
             Version = frontmatter.GetValue<string>("version") ?? string.Empty,
             Name = frontmatter.GetValue<string>("name") ?? string.Empty,
             Description = frontmatter.GetValue<string>("description") ?? string.Empty,
@@ -393,7 +394,7 @@ public partial class Prompty
         };
     }
 
-    private static IDictionary<string, Input>? ConvertToInputs(Dictionary<string, object>? dictionary)
+    private static IDictionary<string, Input> ConvertToInputs(Dictionary<string, object>? dictionary)
     {
         var inputs = new Dictionary<string, Input>();
         if (dictionary == null)
@@ -427,8 +428,8 @@ public partial class Prompty
                     Description = dictionary.GetValue<string>("description"),
                     Default = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("default")),
                     Sample = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("sample")),
-                    Required = dictionary.GetValue<bool>("required"),
-                    Strict = dictionary.GetValue<bool>("strict"),
+                    Required = dictionary.GetValue<bool>("required", true),
+                    Strict = dictionary.GetValue<bool>("strict", true),
                     JsonSchema = dictionary.GetValue<string>("json_schema"),
                 };
             }
@@ -485,8 +486,8 @@ public partial class Prompty
 
         return new()
         {
-            Format = dictionary.GetValue<string>("format"),
-            Parser = dictionary.GetValue<string>("parser")
+            Format = dictionary.GetValue<string>("format") ?? Template.DefaultFormat,
+            Parser = dictionary.GetValue<string>("parser") ?? Template.DefaultParser,
         };
     }
 

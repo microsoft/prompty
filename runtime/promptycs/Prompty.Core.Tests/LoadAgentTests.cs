@@ -6,7 +6,6 @@ public class LoadAgentTests
     {
         Environment.SetEnvironmentVariable("AZURE_OPENAI_ENDPOINT", "ENDPOINT_VALUE");
     }
-    /*
 
     [Theory]
     [InlineData("agents/basic.prompty")]
@@ -17,136 +16,108 @@ public class LoadAgentTests
     [InlineData("agents/openapi.prompty")]
     [InlineData("agents/rag-teams-agent.prompty")]
     [InlineData("agents/web-search.prompty")]
-    public void ItCanLoadAgent(string path)
+    public void ItCanLoad(string path)
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent(path);
+        var prompty = Prompty.Load(path);
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Instructions);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithMetadata()
+    public void ItCanLoadWithMetadata()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.Equal("my_agent_21", agent.Id);
-        Assert.Equal("Basic Agent", agent.Name);
-        Assert.Equal("A basic prompt that uses the gpt-4o chat API to answer questions", agent.Description);
-        Assert.NotNull(agent.Metadata);
-        Assert.NotNull(agent.Metadata.Authors);
-        Assert.Equal(2, agent.Metadata.Authors.Count);
-        Assert.NotNull(agent.Metadata.Tags);
-        Assert.Equal(2, agent.Metadata.Tags.Count);
+        Assert.NotNull(prompty);
+        Assert.Equal("my_agent_21", prompty.Id);
+        Assert.Equal("Basic Agent", prompty.Name);
+        Assert.Equal("A basic prompt that uses the gpt-4o chat API to answer questions", prompty.Description);
+        Assert.NotNull(prompty.Metadata);
+        Assert.NotNull(prompty.Metadata.Authors);
+        Assert.Equal(2, prompty.Metadata.Authors.Count);
+        Assert.NotNull(prompty.Metadata.Tags);
+        Assert.Equal(2, prompty.Metadata.Tags.Count);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithModel()
+    public void ItCanLoadWithModel()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Model);
-        Assert.Equal("chat", agent.Model.Api);
-        Assert.NotNull(agent.Model.Connection);
-        Assert.Equal("azure_openai", agent.Model.Connection.Type);
-        Assert.Equal("gpt-4o", agent.Model.Connection.ExtensionData["azure_deployment"]);
-        Assert.NotNull(agent.Model.Options);
-        Assert.Equal("150", agent.Model.Options["max_tokens"]);
-        Assert.Equal("0.5", agent.Model.Options["temperature"]);
-        Assert.Equal("1", agent.Model.Options["top_p"]);
-        Assert.Equal("0", agent.Model.Options["frequency_penalty"]);
-        Assert.Equal("0", agent.Model.Options["presence_penalty"]);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Model);
+        Assert.Equal("chat", prompty.Model.Api);
+        Assert.NotNull(prompty.Model.Connection);
+        Assert.Equal("azure_openai", prompty.Model.Connection.Type);
+        Assert.Equal("gpt-4o", prompty.Model.Connection.ExtensionData["azure_deployment"]);
+        Assert.NotNull(prompty.Model.Options);
+        Assert.Equal("150", prompty.Model.Options["max_tokens"]);
+        Assert.Equal("0.5", prompty.Model.Options["temperature"]);
+        Assert.Equal("1", prompty.Model.Options["top_p"]);
+        Assert.Equal("0", prompty.Model.Options["frequency_penalty"]);
+        Assert.Equal("0", prompty.Model.Options["presence_penalty"]);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithInputs()
+    public void ItCanLoadWithInputs()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Inputs);
-        Assert.Equal(2, agent.Inputs.Count);
-        Assert.NotNull(agent.Inputs["firstName"]);
-        Assert.NotNull(agent.Inputs["lastName"]);
-        Assert.NotNull(agent.Inputs["question"]);
-        Assert.Equal("", agent.Inputs["firstName"].Name);
-        Assert.Equal("", agent.Inputs["firstName"].Type);
-        Assert.Equal("", agent.Inputs["firstName"].Name);
-        Assert.Equal("", agent.Inputs["firstName"].Name);
-        Assert.Equal("", agent.Inputs["firstName"].Name);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Inputs);
+        Assert.Equal(3, prompty.Inputs.Count);
+        Assert.NotNull(prompty.Inputs["firstName"]);
+        Assert.NotNull(prompty.Inputs["lastName"]);
+        Assert.NotNull(prompty.Inputs["question"]);
+        Assert.Equal("firstName", prompty.Inputs["firstName"].Name);
+        Assert.Equal(PropertyType.String, prompty.Inputs["firstName"].Type);
+        Assert.Equal("User", prompty.Inputs["firstName"].Default);
+        Assert.Equal("April", prompty.Inputs["firstName"].Sample);
+        Assert.Equal("The first name of the customer", prompty.Inputs["firstName"].Description);
+        Assert.True(prompty.Inputs["firstName"].Strict);
+        Assert.True(prompty.Inputs["firstName"].Required);
+        Assert.Null(prompty.Inputs["firstName"].JsonSchema);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithOutputs()
+    public void ItCanLoadWithOutputs()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Model);
-        Assert.Equal("chat", agent.Model.Api);
-        Assert.NotNull(agent.Model.Connection);
-        Assert.Equal("azure_openai", agent.Model.Connection.Type);
-        Assert.Equal("gpt-4o", agent.Model.Connection.ExtensionData["azure_deployment"]);
-        Assert.NotNull(agent.Model.Options);
-        Assert.Equal("150", agent.Model.Options["max_tokens"]);
-        Assert.Equal("0.5", agent.Model.Options["temperature"]);
-        Assert.Equal("1", agent.Model.Options["top_p"]);
-        Assert.Equal("0", agent.Model.Options["frequency_penalty"]);
-        Assert.Equal("0", agent.Model.Options["presence_penalty"]);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Outputs);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithTools()
+    public void ItCanLoadWithTools()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Model);
-        Assert.Equal("chat", agent.Model.Api);
-        Assert.NotNull(agent.Model.Connection);
-        Assert.Equal("azure_openai", agent.Model.Connection.Type);
-        Assert.Equal("gpt-4o", agent.Model.Connection.ExtensionData["azure_deployment"]);
-        Assert.NotNull(agent.Model.Options);
-        Assert.Equal("150", agent.Model.Options["max_tokens"]);
-        Assert.Equal("0.5", agent.Model.Options["temperature"]);
-        Assert.Equal("1", agent.Model.Options["top_p"]);
-        Assert.Equal("0", agent.Model.Options["frequency_penalty"]);
-        Assert.Equal("0", agent.Model.Options["presence_penalty"]);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Tools);
     }
 
     [Fact]
-    public void ItCanLoadAgentWithTemplate()
+    public void ItCanLoadWithTemplate()
     {
         // Arrange & Act
-        var agent = Prompty.LoadAgent("agents/basic.prompty");
+        var prompty = Prompty.Load("agents/basic.prompty");
 
         // Assert
-        Assert.NotNull(agent);
-        Assert.NotNull(agent.Model);
-        Assert.Equal("chat", agent.Model.Api);
-        Assert.NotNull(agent.Model.Connection);
-        Assert.Equal("azure_openai", agent.Model.Connection.Type);
-        Assert.Equal("gpt-4o", agent.Model.Connection.ExtensionData["azure_deployment"]);
-        Assert.NotNull(agent.Model.Options);
-        Assert.Equal("150", agent.Model.Options["max_tokens"]);
-        Assert.Equal("0.5", agent.Model.Options["temperature"]);
-        Assert.Equal("1", agent.Model.Options["top_p"]);
-        Assert.Equal("0", agent.Model.Options["frequency_penalty"]);
-        Assert.Equal("0", agent.Model.Options["presence_penalty"]);
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Template);
     }
-    */
 }

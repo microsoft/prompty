@@ -71,7 +71,19 @@ namespace Prompty.Core
             }
 
             return default;
+        }
 
+        public static T? GetValue<T>(this Dictionary<string, object> dict, string key, T? defaultValue)
+        {
+            if (dict.TryGetValue(key, out var value))
+            {
+                if (typeof(T).IsAssignableFrom(value.GetType()))
+                {
+                    return (T)value;
+                }
+            }
+
+            return defaultValue;
         }
 
         public static IEnumerable<T> GetList<T>(this Dictionary<string, object> dict, string key)

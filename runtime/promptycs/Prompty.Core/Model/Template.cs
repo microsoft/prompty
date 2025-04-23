@@ -6,13 +6,23 @@
 public class Template
 {
     /// <summary>
+    /// The default format.
+    /// </summary>
+    public const string DefaultFormat = "liquid";
+
+    /// <summary>
+    /// The default parser.
+    /// </summary>
+    public const string DefaultParser = "prompty";
+
+    /// <summary>
     /// The format of the template.
     /// </summary>
     /// <remarks>
     /// The default is 'liquid'.
     /// Used to identify which templating language is being used e.g., semantic-kernel, handlebars.
     /// </remarks>
-    public string? Format
+    public string Format
     {
         get => this._format;
         set
@@ -34,7 +44,7 @@ public class Template
     /// In this example, since the prompty parser is used, the runtime will look for a prompty.chat parser to convert the block of text into the corresponding messages array.
     /// Essentially, the engine looks for the {{template.parser}}.{{model.api}} to find the appropriate parser.
     /// </remarks>
-    public string? Parser
+    public string Parser
     {
         get => this._parser;
         set
@@ -60,17 +70,7 @@ public class Template
     #endregion
 
     #region private
-    /// <summary>
-    /// The default format.
-    /// </summary>
-    private const string DefaultFormat = "liquid";
-
-    /// <summary>
-    /// The default parser.
-    /// </summary>
-    private const string DefaultParser = "prompty";
-
-    private string? _format = DefaultFormat;
-    private string? _parser = DefaultParser;
+    private string _format = DefaultFormat;
+    private string _parser = DefaultParser;
     #endregion
 }
