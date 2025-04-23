@@ -325,6 +325,9 @@ public partial class Prompty
             // template
             Template = ConvertToTemplate(frontmatter.GetConfig("template")),
 
+            // tools
+            Tools = ConvertToTools(frontmatter.GetList<Dictionary<string, object>>("tools")),
+
             // base
             Base = frontmatter.GetValue<string>("base") ?? string.Empty,
 
@@ -485,6 +488,27 @@ public partial class Prompty
             Format = dictionary.GetValue<string>("format"),
             Parser = dictionary.GetValue<string>("parser")
         };
+    }
+
+    private static List<Tool>? ConvertToTools(IEnumerable<Dictionary<string, object>>? list)
+    {
+        List<Tool> tools = [];
+        if (list == null)
+            return tools;
+
+        foreach (var item in list)
+        {
+            var tool = new Tool()
+            {
+                Id = item.GetValue<string>("id"),
+                Description = item.GetValue<string>("description"),
+                Type = item.GetValue<string>("type"),
+                Options = item.GetConfig("options")?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value)
+            };
+            tools.Add(tool);
+        }
+
+        return tools;
     }
     #endregion
 }

@@ -75,6 +75,11 @@ public partial class Prompty
     /// </summary>
     public Template? Template { get; set; }
 
+    /// <summary>
+    /// Gets or sets the collection of tools used by the agent.
+    /// </summary>
+    public IList<Tool>? Tools { get; set; }
+
     // base
     public string Base { get; set; } = string.Empty;
     public Prompty? BasePrompty { get; set; } = null;
