@@ -6,6 +6,11 @@
 public sealed class Output
 {
     /// <summary>
+    /// Gets or sets the type of the output.
+    /// </summary>
+    public PropertyType? Type { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the output.
     /// </summary>
     public string? Name { get; set; }
@@ -18,6 +23,6 @@ public sealed class Output
     /// <summary>
     /// Gets or sets JSON Schema describing this output.
     /// </summary>
-    public string? JsonSchema { get; set; }
+    public object? JsonSchema { get; set; }
 }
 

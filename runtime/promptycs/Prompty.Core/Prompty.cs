@@ -321,7 +321,7 @@ public partial class Prompty
 
             // properties
             Inputs = ConvertToInputs(frontmatter.GetValue<Dictionary<string, object>>("inputs")),
-            Outputs = ConvertToOutputs(frontmatter.GetValue<Dictionary<string, object>>("outputs")),
+            Outputs = ConvertToOutputs(frontmatter.GetValue<object>("outputs")),
 
             // template
             Template = ConvertToTemplate(frontmatter.GetConfig("template")),
@@ -430,7 +430,7 @@ public partial class Prompty
                     Sample = Property.GetPropertyValue(propertyType, dictionary.GetValue<object>("sample")),
                     Required = dictionary.GetValue<bool>("required", true),
                     Strict = dictionary.GetValue<bool>("strict", true),
-                    JsonSchema = dictionary.GetValue<string>("json_schema"),
+                    JsonSchema = dictionary.GetValue<object>("json_schema"),
                 };
             }
         }
@@ -450,17 +450,39 @@ public partial class Prompty
         return dictionary.Keys.Any(k => props.Contains(k));
     }
 
-    private static IDictionary<string, Output>? ConvertToOutputs(Dictionary<string, object>? dictionary)
+    private static IDictionary<string, Output>? ConvertToOutputs(object value)
     {
         var outputs = new Dictionary<string, Output>();
-        if (dictionary == null)
+        if (value == null)
             return outputs;
 
-        foreach (var kvp in dictionary)
+        if (value is Dictionary<string, object> dictionary)
         {
-            var value = dictionary.GetConfig(kvp.Key);
-            Output output = CreateOutput(kvp.Key, value);
-            outputs[kvp.Key] = output;
+            if (dictionary == null)
+                return outputs;
+
+            foreach (var kvp in dictionary)
+            {
+                var outputDict = dictionary.GetConfig(kvp.Key);
+                Output output = CreateOutput(kvp.Key, outputDict);
+                outputs[kvp.Key] = output;
+            }
+        }
+        else if (value is IEnumerable<object> list)
+        {
+            foreach (var item in list)
+            {
+                if (item is Dictionary<string, object> outputDict)
+                {
+                    var name = outputDict["name"] as string ?? throw new ArgumentException("Output name is required");
+                    Output output = CreateOutput(name, outputDict);
+                    outputs[name] = output;
+                }
+            }
+        }
+        else
+        {
+            throw new ArgumentException("Outputs must be a dictionary or a list of dictionaries");
         }
 
         return outputs;
@@ -473,9 +495,10 @@ public partial class Prompty
 
         return new()
         {
+            Type = Property.GetPropertyType(value),
             Name = name,
             Description = value?.GetValue<string>("description"),
-            JsonSchema = value?.GetValue<string>("json_schema"),
+            JsonSchema = value?.GetValue<object>("json_schema"),
         };
     }
 

@@ -97,6 +97,11 @@ public class LoadAgentTests
         // Assert
         Assert.NotNull(prompty);
         Assert.NotNull(prompty.Outputs);
+        Assert.NotNull(prompty.Outputs["work"]);
+        Assert.Equal("work", prompty.Outputs["work"].Name);
+        Assert.Equal(PropertyType.Object, prompty.Outputs["work"].Type);
+        Assert.Equal("The thing to output", prompty.Outputs["work"].Description);
+        Assert.NotNull(prompty.Outputs["work"].JsonSchema);
     }
 
     [Fact]
@@ -108,6 +113,12 @@ public class LoadAgentTests
         // Assert
         Assert.NotNull(prompty);
         Assert.NotNull(prompty.Tools);
+        Assert.Single(prompty.Tools);
+        Assert.Equal("coder", prompty.Tools[0].Id);
+        Assert.Equal("openai.CodeInterpreter", prompty.Tools[0].Type);
+        Assert.NotNull(prompty.Tools[0].Options);
+        Assert.NotNull(prompty.Tools[0].Options?["connection"]);
+        Assert.NotNull(prompty.Tools[0].Options?["other"]);
     }
 
     [Fact]
@@ -119,5 +130,7 @@ public class LoadAgentTests
         // Assert
         Assert.NotNull(prompty);
         Assert.NotNull(prompty.Template);
+        Assert.Equal("mustache", prompty.Template.Format);
+        Assert.Equal("prompty", prompty.Template.Parser);
     }
 }

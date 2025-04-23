@@ -22,16 +22,16 @@ model:
 
 outputs:
   - name: response
-    type: text
+    type: string
     description: The AI's response to the user's query, providing assistance with health insurance claims.
   - name: follow_up
-    type: text
+    type: string
     description: A follow-up question or prompt to gather more information from the user.
   - name: documentation_needed
-    type: text
+    type: string
     description: Information on the documentation required for claims submissions.
   - name: claim_status
-    type: text
+    type: string
     description: Status update on the submitted claim, if applicable.
 
 tools:
