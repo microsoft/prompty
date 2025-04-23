@@ -60,14 +60,33 @@ namespace Prompty.Core
         {
             return JsonConverter.ConvertJsonElementToDictionary(obj);
         }
-        public static T? GetValue<T>(this Dictionary<string, object> dict, string key)
-        {
-            // try to see if dictionary has key and can map to type
-            if (dict.ContainsKey(key) && dict[key].GetType() == typeof(T))
-                return (T)dict[key];
-            else
-                return default;
 
+        public static T? GetValue<T>(this Dictionary<string, object> dict, string key, T? defaultValue = default)
+        {
+            if (dict.TryGetValue(key, out var value))
+            {
+                if (value is null)
+                {
+                    return defaultValue;
+                }
+                else if (typeof(T) == typeof(bool))
+                {
+                    if (Boolean.TryParse(value.ToString(), out var result))
+                    {
+                        return (T?)(object?)result;
+                    }
+                }
+                else if (typeof(T).IsAssignableFrom(value.GetType()))
+                {
+                    return (T)value;
+                }
+                else
+                {
+                    throw new ArgumentException($"Cannot convert value {value} of type {value.GetType()} to {typeof(T)} for key '{key}'");
+                }
+            }
+
+            return defaultValue;
         }
 
         public static IEnumerable<T> GetList<T>(this Dictionary<string, object> dict, string key)

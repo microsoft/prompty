@@ -1,0 +1,55 @@
+---
+id: my_agent_21
+name: Basic Agent
+description: A basic prompt that uses the gpt-4o chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - mwhalin
+  tags:
+    - basic
+    - gpt-4o
+
+model:
+  id: gpt-4o
+
+inputs:
+  name:
+    type: string
+    sample: User
+    description: The name of the customer
+  question:
+    type: string
+    sample: How is the S&P doing today?
+    required: true
+    description: The question to answer
+
+tools:
+  - id: stock_finder
+    runtime: server
+    type: openapi
+    options:
+      schema: ${file:schema.json}
+  
+template:
+  format: mustache
+  parser: prompty
+---
+system:
+You are an AI assistant that helps with stock related questions.
+
+Heres some example tool calls:
+
+user:
+how is MSFT doing today?
+
+tool[name="find_price", tool_call_id="example"]:
+$521.00
+
+assistant:
+MSFT is currently trading at $521.00
+
+user[name="{{name}}"]:
+{{question}}
+
+![thread]
