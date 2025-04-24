@@ -120,7 +120,7 @@ The trace output is divided into three: _load, prepare_ and _run_. Load refers t
 ![Trace Output](trace-output.png)
 
 
-From the trace output, you can see the inputs, outputs and metrics such as time to execute the prompt and tokens. This information can be used to debug and fix any issues in your code. For example, we can see output has been truncated and the `Completion Tokens` count is less than 1000, which might not be sufficent for the prompt to generate different outputs. We can increase the `max_tokens` in our Prompty to 1000 to generate more tokens. Once done, run the code again and confirm you get 5 examples of the short message inviting friends to a Game Night.
+From the trace output, you can see the inputs, outputs and metrics such as time to execute the prompt and tokens. This information can be used to debug and fix any issues in your code. For example, we can see output has been truncated and the `Completion Tokens` count is less than 1000, which might not be sufficient for the prompt to generate different outputs. We can increase the `max_tokens` in our Prompty to 1000 to generate more tokens. Once done, run the code again and confirm you get 5 examples of the short message inviting friends to a Game Night.
 
 ![updated trace output](trace-bug-fixed.png)
 
