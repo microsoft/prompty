@@ -11,9 +11,17 @@ public class LoadTests
 
     [Theory]
     [InlineData("prompty/basic.prompty")]
+    [InlineData("prompty/basic_json_output.prompty")]
+    [InlineData("prompty/basic_mustache.prompty")]
     [InlineData("prompty/basic_props.prompty")]
+    [InlineData("prompty/basic_with_obsolete.prompty")]
     [InlineData("prompty/context.prompty")]
     [InlineData("prompty/functions.prompty")]
+    [InlineData("prompty/chat.prompty")]
+    [InlineData("prompty/chatNew.prompty")]
+    [InlineData("prompty/chatJsonObject.prompty")]
+    [InlineData("prompty/chatNoOptions.prompty")]
+    [InlineData("prompty/relativeFileReference.prompty")]
     public void LoadRaw(string path)
     {
         var prompty = Prompty.Load(path);
@@ -119,13 +127,45 @@ public class LoadTests
         Assert.NotNull(prompty);
     }
 
-    [Fact]
-    public void LoadWithParentPath()
+    [Theory]
+    [InlineData("prompty/basic.prompty")]
+    [InlineData("prompty/basic_json_output.prompty")]
+    [InlineData("prompty/basic_mustache.prompty")]
+    [InlineData("prompty/basic_props.prompty")]
+    [InlineData("prompty/basic_with_obsolete.prompty")]
+    [InlineData("prompty/context.prompty")]
+    [InlineData("prompty/functions.prompty")]
+    [InlineData("prompty/chat.prompty")]
+    [InlineData("prompty/chatNew.prompty")]
+    [InlineData("prompty/chatJsonObject.prompty")]
+    [InlineData("prompty/chatNoOptions.prompty")]
+    [InlineData("prompty/relativeFileReference.prompty")]
+    public void LoadWithParentPath(string path)
     {
-        var path = Path.Combine("prompty", "context.prompty");
         string text = File.ReadAllText(path);
         var prompty = Prompty.Load(text, [], Path.GetDirectoryName(path));
 
         Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
+    }
+
+    [Theory]
+    [InlineData("prompty/basic.prompty")]
+    [InlineData("prompty/basic_json_output.prompty")]
+    [InlineData("prompty/basic_mustache.prompty")]
+    [InlineData("prompty/basic_props.prompty")]
+    [InlineData("prompty/basic_with_obsolete.prompty")]
+    [InlineData("prompty/functions.prompty")]
+    [InlineData("prompty/chat.prompty")]
+    [InlineData("prompty/chatNew.prompty")]
+    [InlineData("prompty/chatJsonObject.prompty")]
+    [InlineData("prompty/chatNoOptions.prompty")]
+    public void LoadWithNoParentPath(string path)
+    {
+        string text = File.ReadAllText(path);
+        var prompty = Prompty.Load(text, [], null);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Content);
     }
 }
