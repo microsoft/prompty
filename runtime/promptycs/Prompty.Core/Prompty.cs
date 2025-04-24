@@ -51,9 +51,7 @@ public partial class Prompty
     /// <param name="path">Optional: File path to the prompty file.</param>
     public static Prompty Load(string text, Dictionary<string, object> globalConfig, string? path = null)
     {
-        var parentPath = System.IO.Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
-
-        var frontmatter = LoadRaw(text, globalConfig, parentPath);
+        var frontmatter = LoadRaw(text, globalConfig, path);
         var prompty = Convert(frontmatter, path);
         return prompty;
     }

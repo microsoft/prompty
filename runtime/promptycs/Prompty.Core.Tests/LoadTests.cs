@@ -108,4 +108,24 @@ public class LoadTests
         Assert.NotNull(prompty.Model.Options);
         Assert.Equal("0.0", prompty.Model.Options["temperature"]);
     }
+
+    [Fact]
+    public void LoadWithPath()
+    {
+        var path = Path.Combine("prompty", "context.prompty");
+        string text = File.ReadAllText(path);
+        var prompty = Prompty.Load(text, [], path);
+
+        Assert.NotNull(prompty);
+    }
+
+    [Fact]
+    public void LoadWithParentPath()
+    {
+        var path = Path.Combine("prompty", "context.prompty");
+        string text = File.ReadAllText(path);
+        var prompty = Prompty.Load(text, [], Path.GetDirectoryName(path));
+
+        Assert.NotNull(prompty);
+    }
 }
