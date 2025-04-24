@@ -22,7 +22,7 @@ namespace Prompty.Core
                 return Normalize(config, parentPath);
             }
             else
-                throw new InvalidOperationException($"File {file} not found");
+                throw new InvalidOperationException($"File {fullFile} not found.");
         }
 
         internal static string? ProcessEnvironmentVariable(string variable, bool throwIfNotExists, string? defaultValue)

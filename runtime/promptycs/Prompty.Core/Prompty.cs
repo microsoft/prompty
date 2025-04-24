@@ -125,13 +125,15 @@ public partial class Prompty
         {
             Model!.Connection = new()
             {
+                Type = Model?.Connection?.Type,
+                ServiceId = Model?.Connection?.ServiceId,
                 ExtensionData = configuration.ToParamDictionary().ParamHoisting(Model?.Connection?.ExtensionData ?? [])
             };
         }
 
         if (parameters is not null)
         {
-            Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+            Model!.Options = parameters.ToParamDictionary().ParamHoisting(Model?.Options ?? []);
         }
 
         object executed = RunInvoker(InvokerType.Executor, content);
@@ -157,13 +159,15 @@ public partial class Prompty
         {
             Model!.Connection = new()
             {
+                Type = Model?.Connection?.Type,
+                ServiceId = Model?.Connection?.ServiceId,
                 ExtensionData = configuration.ToParamDictionary().ParamHoisting(Model?.Connection?.ExtensionData ?? [])
             };
         }
 
         if (parameters is not null)
         {
-            Model!.Parameters = new Settings(parameters.ToParamDictionary().ParamHoisting(Model?.Parameters.Items ?? []));
+            Model!.Options = parameters.ToParamDictionary().ParamHoisting(Model?.Options ?? []);
         }
 
         object executed = await RunInvokerAsync(InvokerType.Executor, content);
@@ -385,11 +389,14 @@ public partial class Prompty
         if (dictionary == null)
             return null;
 
+        var options = dictionary.GetConfig("options") ?? dictionary.GetConfig("parameters") ?? [];
+        var modelId = options.GetValue<string>("model_id");
+
         return new()
         {
-            Id = dictionary.GetValue<string>("id"),
-            Api = dictionary.GetValue<string>("api") ?? "chat",
-            Options = dictionary.GetConfig("options") ?? [],
+            Id = dictionary.GetValue<string>("id") ?? modelId,
+            Api = dictionary.GetValue<string>("api") ?? Model.DefaultApi,
+            Options = options,
             Connection = ConvertToConnection(dictionary)
         };
     }
