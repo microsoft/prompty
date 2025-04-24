@@ -92,4 +92,20 @@ public class LoadTests
             Assert.Equal($"The {item} description", prompty.Inputs[item].Description);
         }
     }
+
+    [Fact]
+    public void BasicWithObsolete()
+    {
+        var p = "prompty/basic_with_obsolete.prompty";
+        var prompty = Prompty.Load(p);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Model);
+        Assert.Equal("gpt-4o", prompty.Model.Id);
+        Assert.NotNull(prompty.Model.Connection);
+        Assert.Equal("gpt-4o", prompty.Model.Connection.ServiceId);
+        Assert.Equal("eastus-gpt-4o", prompty.Model.Connection.ExtensionData["azure_deployment"]);
+        Assert.NotNull(prompty.Model.Options);
+        Assert.Equal("0.0", prompty.Model.Options["temperature"]);
+    }
 }

@@ -8,7 +8,7 @@ public sealed class Model
     /// <summary>
     /// The default API type.
     /// </summary>
-    private const string DefaultApi = "chat";
+    public const string DefaultApi = "chat";
 
     /// <summary>
     /// Gets or sets the unique identifier of the model.
@@ -31,7 +31,11 @@ public sealed class Model
         get => this._api ?? DefaultApi;
         set
         {
-            //Verify.NotNullOrWhiteSpace(value);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentException("API cannot be null or empty.", nameof(value));
+            }
+
             this._api = value;
         }
     }
@@ -44,7 +48,7 @@ public sealed class Model
     /// This optional section is used to specify the options to be used when executing the Prompty file.
     /// If this section is not included, the runtime will use the default options for the API and connection used by the Prompty file.
     /// </remarks>
-    public IDictionary<string, object>? Options { get; set; }
+    public Dictionary<string, object>? Options { get; set; }
 
     /// <summary>
     /// Gets or sets the connection used by the Prompty file.
@@ -55,10 +59,6 @@ public sealed class Model
     /// The deployment parameter, in this example, is used to tell the runtime which deployment to use when executing against Azure OpenAI.
     /// </remarks>
     public Connection? Connection { get; set; }
-
-    public Settings Parameters { get; set; } = new Settings();
-
-    public Settings Response { get; set; } = new Settings();
 
     #region
     private string? _api;
