@@ -1085,7 +1085,7 @@
       "prompty.core": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.AI.Abstractions": "[9.4.0-preview.1.25207.5, )",
+          "Microsoft.Extensions.AI.Abstractions": "[9.4.4-preview.1.25259.16, )",
           "Microsoft.Extensions.Configuration": "[8.0.0, )",
           "Microsoft.Extensions.Configuration.Json": "[8.0.0, )",
           "Scriban": "[5.12.1, )",
@@ -1095,9 +1095,9 @@
       },
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "CentralTransitive",
-        "requested": "[9.4.0-preview.1.25207.5, )",
-        "resolved": "9.4.0-preview.1.25207.5",
-        "contentHash": "CptQvHk8wY+qb+AA3SoKlc5NQcXSoFNbt8Z+bAkt/tEZ61JMxFZ0dMG1AwCn14hRCUinFbxyPYXr5Zrjp99m3g=="
+        "requested": "[9.4.4-preview.1.25259.16, )",
+        "resolved": "9.4.4-preview.1.25259.16",
+        "contentHash": "GD1O+Fe7aJ8Kj/vqg3NAQYvbzSczxub72qrP3v4P+40oAcrIq/O1//fIsQSDX/a815pUS3C86FnpujZ7+VFUtw=="
       },
       "Microsoft.Extensions.Configuration": {
         "type": "CentralTransitive",
