@@ -2,7 +2,7 @@
 	"name": "prompty",
 	"displayName": "prompty",
 	"description": "",
-	"version": "1.20250316.73921",
+	"version": "1.20250513.100500",
 	"engines": {
 		"vscode": "^1.98.0"
 	},
@@ -130,14 +130,22 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run compile && cd ./packages/server && npm run bundle && cd ../..",
-		"compile": "tsc -b && cd ./packages/server && npm run esbuild-base && cd ../trace && npm run build && cd ..",
+		"install:core": "cd packages/core && npm install && cd ../..",
+		"install:trace": "cd packages/trace && npm install && cd ../..",
+		"install:server": "cd packages/server && npm install && cd ../..",
+		"install:all": "npm run install:core && npm run install:trace && npm run install:server",
+		"install": "npm run install:all",
+		"build:trace": "cd packages/trace && npm run build && cd ../..",
+		"build:server": "cd packages/server && npm run bundle && cd ../..",
+		"build:all": "npm run build:trace && npm run build:server",
+		"build": "npm run build:all",
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"lint": "eslint",
+		"postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",
 		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
-		"postinstall": "cd ./packages/core && npm install && cd ../server && npm install && cd ../trace && npm install && cd ..",
 		"package": "vsce package --no-dependencies --allow-missing-repository",
-		"esbuild-base": "esbuild ./packages/core/src/extension.ts --bundle --outfile=packages/core/out/extension.js --external:vscode --format=cjs --platform=node",
 		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release"
 	},
 	"devDependencies": {
@@ -145,7 +153,7 @@
 		"@stylistic/eslint-plugin": "^2.9.0",
 		"@types/mocha": "^10.0.6",
 		"@types/node": "^20",
-		"@vscode/vsce": "^3.2.2",
+		"@vscode/vsce": "^3.3.2",
 		"eslint": "^9.13.0",
 		"js-yaml": "^4.1.0",
 		"mocha": "^10.3.0",

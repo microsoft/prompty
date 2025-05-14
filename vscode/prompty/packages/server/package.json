@@ -1,43 +1,28 @@
 {
-  "name": "prompty-language-server",
-  "description": "Prompty language server",
-  "version": "0.1.0",
-  "author": "Microsoft Corporation",
-  "license": "MIT",
-  "engines": {
-    "node": "*"
-  },
-  "dependencies": {
-    "jsonc-parser": "^3.0.0",
-    "vscode-json-languageservice": "^4.1.8",
-    "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.11",
-    "vscode-uri": "^3.0.8",
-    "yaml-language-server": "^1.14.0"
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run bundle",
-    "bundle": "webpack --mode=production",
-    "esbuild-base": "esbuild ./src/server.ts --bundle --outfile=out/server.js --external:vscode --format=cjs --main-fields=module,main --platform=node",
-    "build": "tsc -p tsconfig.json",
-    "watch": "tsc -watch -p .",
-    "clean": "rimraf out",
-    "format": "prettier --write src tests",
-    "lint": "eslint --ext .ts src tests"
-  },
-  "devDependencies": {
-    "@types/webpack": "^5.28.5",
-    "esbuild": "^0.20.1",
-    "globals": "^15.1.0",
-    "prettier": "^3.2.5",
-    "rimraf": "^6.0.1",
-    "ts-loader": "^9.5.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.4.5",
-    "typescript-eslint": "^7.8.0",
-    "umd-compat-loader": "^2.1.2",
-    "vitest": "^3.0.8",
-    "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
-  }
+	"name": "prompty-language-server",
+	"description": "Prompty language server",
+	"version": "1.0.0",
+	"author": "Microsoft Corporation",
+	"license": "MIT",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"jsonc-parser": "^3.0.0",
+		"vscode-json-languageservice": "^5.5.0",
+		"vscode-languageserver": "^9.0.1",
+		"vscode-languageserver-textdocument": "^1.0.11",
+		"vscode-uri": "^3.0.8",
+		"yaml-language-server": "^1.18.0"
+	},
+	"scripts": {
+		"bundle": "webpack --mode=production"
+	},
+	"devDependencies": {
+		"ts-loader": "^9.5.2",
+		"ts-node": "^10.9.2",
+		"umd-compat-loader": "^2.1.2",
+		"webpack": "^5.99.8",
+		"webpack-cli": "^6.0.1"
+	}
 }

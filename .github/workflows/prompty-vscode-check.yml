@@ -43,6 +43,10 @@ jobs:
         working-directory: ./vscode/prompty
         run: npm run generate-grammar
 
+      - name: Build
+        working-directory: ./vscode/prompty
+        run: npm run build
+
       - name: Build VSIX
         working-directory: ./vscode/prompty
         run: npm run package-pre -- $TAG

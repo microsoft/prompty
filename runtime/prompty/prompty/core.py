@@ -371,7 +371,14 @@ class Prompty:
         default: Union[Callable[[], dict[str, typing.Any]], None] = None,
     ) -> dict[str, typing.Any]:
 
-        if isinstance(value, dict) and any([f.name in value for f in fields(cls)]):
+        if isinstance(value, dict):
+            # check for minimal set of properties
+            if "type" not in value:
+                if "sample" in value:
+                    # if sample is present, type is not required
+                    value["type"] = get_json_type(type(value["sample"]))
+                else:
+                    raise ValueError(f"{cls.__name__} type is required or must be inferred from sample")
             return {**value}
         else:
             if default is not None:

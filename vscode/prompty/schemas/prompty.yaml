@@ -69,19 +69,6 @@ properties:
         description: The options for the model -- this is the options for the model that will be used to generate text.
         additionalProperties: true
 
-
-      # These properties are deprecated and will be removed in future versions.
-      configuration:
-        type: object
-        deprecated: true
-        description: Configuration is no longer used. This has been replaced by the connection property and will be removed in future versions.
-        additionalProperties: true
-      parameters:
-        type: object
-        deprecated: true
-        description: Parameters is no longer used. This has been replaced by the options property and will be removed in future versions.
-        additionalProperties: true
-
   # inputs section
   inputs:
     oneOf:
@@ -326,6 +313,7 @@ definitions:
           - object
           - boolean
         default: string
+        
       default:
         description: The default value of the input
         anyOf:

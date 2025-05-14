@@ -1,1 +1,1 @@
-{"root":["./src/server.ts","./src/languages/index.ts","./src/languages/jinja.ts","./src/languages/markdown.ts","./src/languages/yaml.ts","./src/util/document-metadata.ts","./src/util/logger.ts","./src/util/semantic-tokens.ts","./src/util/virtual-document.ts"],"version":"5.8.2"}
+{"root":["./src/server.ts","./src/utils/document-metadata.ts","./src/utils/logger.ts","./src/utils/semantic-tokens.ts"],"version":"5.8.2"}

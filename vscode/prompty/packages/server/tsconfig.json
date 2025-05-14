@@ -1,16 +1,15 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "module": "ESNext",
+	"compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020"],
+    "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
-    "declaration": true,
     "strict": true,
     "outDir": "out",
     "rootDir": "src",
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", ".vscode-test"]
+	"include": ["src"],
+	"exclude": ["node_modules", ".vscode-test"]
 }

@@ -482,7 +482,7 @@ async def run_async(
 
 @trace(description="Execute a prompty")
 def execute(
-    prompt: Union[str, Prompty],
+    prompt: Union[str, Path, Prompty],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
@@ -525,7 +525,7 @@ def execute(
             # get caller's path (take into account trace frame)
             caller = Path(traceback.extract_stack()[-3].filename)
             path = Path(caller.parent / path).resolve().absolute()
-        prompt = load(path, config_name)
+        prompt = load(str(path), config_name)
 
     # prepare content
     content = prepare(prompt, inputs, merge_sample)
@@ -538,7 +538,7 @@ def execute(
 
 @trace(description="Execute a prompty")
 async def execute_async(
-    prompt: Union[str, Prompty],
+    prompt: Union[str, Path, Prompty],
     connection: dict[str, typing.Any] = {},
     options: dict[str, typing.Any] = {},
     inputs: dict[str, typing.Any] = {},
@@ -581,7 +581,7 @@ async def execute_async(
             # get caller's path (take into account trace frame)
             caller = Path(traceback.extract_stack()[-3].filename)
             path = Path(caller.parent / path).resolve().absolute()
-        prompt = await load_async(path, config_name)
+        prompt = await load_async(str(path), config_name)
 
     # prepare content
     content = await prepare_async(prompt, inputs, merge_sample)
