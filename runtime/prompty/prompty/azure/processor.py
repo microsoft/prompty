@@ -94,7 +94,7 @@ class AzureOpenAIProcessor(Invoker):
         elif isinstance(data, ImagesResponse):
             item: ImagesResponse = data
 
-            if len(item.data) == 0:
+            if item.data is None or len(item.data) == 0:
                 raise ValueError("Invalid data")
             elif len(item.data) == 1:
                 return item.data[0].url if item.data[0].url else item.data[0].b64_json
