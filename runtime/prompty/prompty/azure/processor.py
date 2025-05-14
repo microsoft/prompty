@@ -94,12 +94,12 @@ class AzureOpenAIProcessor(Invoker):
         elif isinstance(data, ImagesResponse):
             item: ImagesResponse = data
 
-            if len(data.data) == 0:
+            if len(item.data) == 0:
                 raise ValueError("Invalid data")
-            elif len(data.data) == 1:
-                return data.data[0].url if item.data[0].url else item.data[0].b64_json
+            elif len(item.data) == 1:
+                return item.data[0].url if item.data[0].url else item.data[0].b64_json
             else:
-                return [item.url if item.url else item.b64_json for item in data.data]
+                return [i.url if i.url else i.b64_json for i in item.data]
 
         elif isinstance(data, Iterator):
 
