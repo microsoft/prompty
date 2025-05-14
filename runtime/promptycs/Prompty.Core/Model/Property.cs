@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Prompty.Core
+﻿namespace Prompty.Core
 {
     public class Number
     {
@@ -52,9 +45,34 @@ namespace Prompty.Core
 
         public Property() { }
 
-        internal object GetPropertyValue(PropertyType type, object value)
+        internal Property(Dictionary<string, object>? property)
         {
-            if (value == null) throw new Exception("Invalid property");
+            if (property == null) return;
+
+            Description = property.GetValue<string>("description") ?? string.Empty;
+
+
+            if (!property.ContainsKey("type"))
+            {
+                if (Sample == null) throw new Exception("Cannot infer property type from configuration");
+                Type = Property.GetPropertyTypeFromValue(Sample);
+            }
+            else
+            {
+                var pType = property.GetValue<string>("type");
+                if (pType == null || !_propertyTypes.ContainsKey(pType)) throw new Exception("Invalid property type");
+                Type = _propertyTypes[pType];
+            }
+
+            if (property.ContainsKey("default") && property["default"] != null)
+                Default = GetPropertyValue(Type, property["default"]);
+            if (property.ContainsKey("sample") && property["sample"] != null)
+                Sample = GetPropertyValue(Type, property["sample"]);
+        }
+
+        internal static object? GetPropertyValue(PropertyType type, object? value)
+        {
+            if (value == null) return null;
             switch (type)
             {
                 case PropertyType.Object:
@@ -83,51 +101,34 @@ namespace Prompty.Core
             }
         }
 
-        internal Property(Dictionary<string, object>? property)
+        internal static PropertyType GetPropertyType(Dictionary<string, object> dictionary)
         {
-            if (property == null) return;
-
-            Description = property.GetValue<string>("description") ?? string.Empty;
-
-
-            if (!property.ContainsKey("type"))
+            if (!dictionary.ContainsKey("type"))
             {
-                if (Sample == null) throw new Exception("Cannot infer property type from configuration");
-                Type = Property.GetPropertyType(Sample);
+                var value = dictionary.GetValue<object>("default") ?? dictionary.GetValue<object>("sample");
+                return Property.GetPropertyTypeFromValue(value);
             }
             else
             {
-                var pType = property.GetValue<string>("type");
+                var pType = dictionary.GetValue<string>("type");
                 if (pType == null || !_propertyTypes.ContainsKey(pType)) throw new Exception("Invalid property type");
-                Type = _propertyTypes[pType];
+                return _propertyTypes[pType];
             }
-
-            if (property.ContainsKey("default") && property["default"] != null)
-                Default = GetPropertyValue(Type, property["default"]);
-            if (property.ContainsKey("sample") && property["sample"] != null)
-                Sample = GetPropertyValue(Type, property["sample"]);
         }
 
-        public static PropertyType GetPropertyType(object o)
+        internal static PropertyType GetPropertyTypeFromValue(object? o)
         {
-            switch (o)
+            if (o == null) return PropertyType.String; // default to string
+
+            return o switch
             {
-                case string:
-                    return PropertyType.String;
-                case int:
-                case double:
-                case float:
-                    return PropertyType.Number;
-                case bool:
-                    return PropertyType.Boolean;
-                case List<object>:
-                case Array:
-                    return PropertyType.Array;
-                case Dictionary<string, object>:
-                    return PropertyType.Object;
-                default:
-                    throw new Exception($"Unknown property type: {o.GetType()}");
-            }
+                string => PropertyType.String,
+                int or double or float => PropertyType.Number,
+                bool => PropertyType.Boolean,
+                List<object> or Array => PropertyType.Array,
+                Dictionary<string, object> => PropertyType.Object,
+                _ => throw new Exception($"Unknown property type: {o.GetType()}"),
+            };
         }
 
         internal static Dictionary<string, Property> CreatePropertyDictionary(Dictionary<string, object> config)
@@ -139,7 +140,7 @@ namespace Prompty.Core
                 if (config[key] == null) continue;
 
                 // check type
-                var t = Property.GetPropertyType(config[key]);
+                var t = Property.GetPropertyTypeFromValue(config[key]);
 
                 // passing in a sample
                 if (t != PropertyType.Object)

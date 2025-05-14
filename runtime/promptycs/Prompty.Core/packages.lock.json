@@ -4,9 +4,9 @@
     ".NETStandard,Version=v2.0": {
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Direct",
-        "requested": "[9.1.0-preview.1.25064.3, )",
-        "resolved": "9.1.0-preview.1.25064.3",
-        "contentHash": "qxGgo8ipnJz9viMQBMrnmYymi9cZWV0kep/wNTHgLhieYBCVvkMnOskaoNzRjCMl9hwEkXnZTQIwYk2WbpmmWA==",
+        "requested": "[9.4.0-preview.1.25207.5, )",
+        "resolved": "9.4.0-preview.1.25207.5",
+        "contentHash": "CptQvHk8wY+qb+AA3SoKlc5NQcXSoFNbt8Z+bAkt/tEZ61JMxFZ0dMG1AwCn14hRCUinFbxyPYXr5Zrjp99m3g==",
         "dependencies": {
           "System.Text.Json": "8.0.5"
         }
@@ -208,9 +208,9 @@
     "net8.0": {
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Direct",
-        "requested": "[9.1.0-preview.1.25064.3, )",
-        "resolved": "9.1.0-preview.1.25064.3",
-        "contentHash": "qxGgo8ipnJz9viMQBMrnmYymi9cZWV0kep/wNTHgLhieYBCVvkMnOskaoNzRjCMl9hwEkXnZTQIwYk2WbpmmWA=="
+        "requested": "[9.4.0-preview.1.25207.5, )",
+        "resolved": "9.4.0-preview.1.25207.5",
+        "contentHash": "CptQvHk8wY+qb+AA3SoKlc5NQcXSoFNbt8Z+bAkt/tEZ61JMxFZ0dMG1AwCn14hRCUinFbxyPYXr5Zrjp99m3g=="
       },
       "Microsoft.Extensions.Configuration": {
         "type": "Direct",
@@ -231,8 +231,7 @@
           "Microsoft.Extensions.Configuration": "8.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Configuration.FileExtensions": "8.0.0",
-          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
-          "System.Text.Json": "8.0.0"
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
         }
       },
       "Scriban": {

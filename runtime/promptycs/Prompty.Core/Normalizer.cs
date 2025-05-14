@@ -14,7 +14,8 @@ namespace Prompty.Core
 
         internal static Dictionary<string, object> ProcessFile(string file, string parentPath)
         {
-            var fullFile = FileUtils.GetFullPath(file, Path.GetDirectoryName(parentPath) ?? "");
+            var directory = File.Exists(parentPath) ? Path.GetDirectoryName(parentPath) : parentPath;
+            var fullFile = FileUtils.GetFullPath(file, directory ?? string.Empty);
             if (File.Exists(fullFile))
             {
                 string json = File.ReadAllText(fullFile);
@@ -22,7 +23,7 @@ namespace Prompty.Core
                 return Normalize(config, parentPath);
             }
             else
-                throw new InvalidOperationException($"File {file} not found");
+                throw new InvalidOperationException($"File {file} not found.");
         }
 
         internal static string? ProcessEnvironmentVariable(string variable, bool throwIfNotExists, string? defaultValue)
