@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 namespace Prompty.Core
 {
@@ -23,7 +17,7 @@ namespace Prompty.Core
 
         public void RegisterInvoker(string name, InvokerType invokerType, Type type)
         {
-            switch(invokerType)
+            switch (invokerType)
             {
                 case InvokerType.Renderer:
                     _renderers.AddOrUpdate(name, type, (key, oldValue) => type);
@@ -62,7 +56,8 @@ namespace Prompty.Core
             if (!IsRegistered(name, invokerType))
                 throw new Exception($"{invokerType.ToString()}.{name} not found!");
 
-            switch (invokerType) {
+            switch (invokerType)
+            {
                 case InvokerType.Renderer:
                     return _renderers[name];
                 case InvokerType.Parser:
@@ -109,7 +104,7 @@ namespace Prompty.Core
 
         public Invoker CreateRenderer(Prompty prompty)
         {
-            if(prompty?.Template?.Format == null)
+            if (prompty?.Template?.Format == null)
                 throw new Exception("Template type not found!");
 
             return CreateInvoker(prompty?.Template?.Format!, InvokerType.Renderer, prompty!);
@@ -136,10 +131,10 @@ namespace Prompty.Core
 
         public Invoker CreateExecutor(Prompty prompty)
         {
-            if(prompty?.Model?.Configuration?.Type == null)
+            if (prompty?.Model?.Connection?.Type == null)
                 throw new Exception("Model Configuration type not found!");
 
-            return CreateInvoker(prompty?.Model?.Configuration?.Type!, InvokerType.Executor, prompty!);
+            return CreateInvoker(prompty?.Model?.Connection?.Type!, InvokerType.Executor, prompty!);
         }
 
         public Invoker CreateProcessor(string name, Prompty prompty)
@@ -157,7 +152,7 @@ namespace Prompty.Core
             {
                 var attributes = (IEnumerable<InvokerAttribute>)type.GetCustomAttributes(typeof(InvokerAttribute), true)!;
                 foreach (var attribute in attributes)
-                   Instance.RegisterInvoker(attribute.Name, attribute.Type, type);
+                    Instance.RegisterInvoker(attribute.Name, attribute.Type, type);
             }
         }
     }

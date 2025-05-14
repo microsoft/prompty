@@ -1,0 +1,41 @@
+---
+id: my_agent_21
+name: Basic Agent
+description: A basic prompt that uses the gpt-4o chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - mwhalin
+  tags:
+    - basic
+    - gpt-4o
+
+model:
+  id: gpt-4o
+
+inputs:
+  name:
+    type: string
+    sample: User
+    description: The name of the customer
+  question:
+    type: string
+    sample: What is (1+3)/2?
+    required: true
+    description: The question to answer
+
+tools:
+  - id: coder
+    type: code_interpreter
+
+template:
+  format: mustache
+  parser: prompty
+---
+system:
+You are an AI assistant that can write code to help answer math questions.
+
+user[name="{{name}}"]:
+{{question}}
+
+![thread]
