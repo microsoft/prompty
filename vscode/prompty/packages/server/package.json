@@ -1,0 +1,28 @@
+{
+	"name": "prompty-language-server",
+	"description": "Prompty language server",
+	"version": "1.0.0",
+	"author": "Microsoft Corporation",
+	"license": "MIT",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"jsonc-parser": "^3.0.0",
+		"vscode-json-languageservice": "^5.5.0",
+		"vscode-languageserver": "^9.0.1",
+		"vscode-languageserver-textdocument": "^1.0.11",
+		"vscode-uri": "^3.0.8",
+		"yaml-language-server": "^1.18.0"
+	},
+	"scripts": {
+		"bundle": "webpack --mode=production"
+	},
+	"devDependencies": {
+		"ts-loader": "^9.5.2",
+		"ts-node": "^10.9.2",
+		"umd-compat-loader": "^2.1.2",
+		"webpack": "^5.99.8",
+		"webpack-cli": "^6.0.1"
+	}
+}

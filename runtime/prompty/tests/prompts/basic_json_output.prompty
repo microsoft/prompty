@@ -1,12 +1,14 @@
 ---
 name: Basic Prompt
 description: A basic prompt that uses the GPT-3 chat API to answer questions
-authors:
-  - sethjuarez
-  - jietong
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-sample:
+inputs:
   firstName: Jane
   lastName: Doe
   question: What is the meaning of life?

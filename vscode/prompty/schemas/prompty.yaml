@@ -1,0 +1,521 @@
+# This schema represents the specification file for the prompty
+# _frontmatter_, not the content section.
+
+$schema: http://json-schema.org/draft-07/schema#  
+$id: http://azureml/sdk-2-0/Prompty.yaml  
+title: Prompty front matter schema specification  
+description: A specification that describes how to provision a new prompty using definition frontmatter.
+
+type: object 
+additionalProperties: false
+properties:
+  $schema:
+    type: string
+
+  # metadata section
+  id:
+    type: string
+    description: The asset identifier
+  name:
+    type: string
+    description: Name of the prompty
+  description:
+    type: string
+    description: Description of the prompty
+  version:
+    type: string
+    description: Version of the prompty
+  metadata:
+    type: object
+    description: Metadata of the prompty
+    additionalProperties: true
+    properties:
+      authors:
+        type: array
+        description: Authors of the prompty
+        items:
+          type: string
+      tags:
+        type: array
+        description: Tags of the prompty
+        items:
+          type: string
+
+  # model section
+  model:
+    type: object
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        description: The ID of the model -- this is the ID of the model that will be used to generate text.
+        example: gpt-3.5-turbo
+      api:
+        type: string
+        description: The API to use for the prompty -- this has implications on how the template is processed and how the model is called.
+        default: chat
+
+      connection:
+        type: object
+        description: The connection to the model -- this is the connection to the model that will be used to generate text.
+        additionalProperties: true
+        properties:
+          type:
+            type: string
+            description: The type of the model -- this has implications on how the template is processed and how the model is called.
+
+      options:
+        type: object
+        description: The options for the model -- this is the options for the model that will be used to generate text.
+        additionalProperties: true
+
+  # inputs section
+  inputs:
+    oneOf:
+      - $ref: '#/definitions/inputArray'
+      - $ref: '#/definitions/inputObject'
+
+  # outputs section
+  outputs:
+    oneOf:
+      - $ref: '#/definitions/outputArray'
+      - $ref: '#/definitions/outputObject'
+
+  # tools section
+  tools:
+    oneOf:
+      - $ref: '#/definitions/toolArray'
+      - $ref: '#/definitions/toolObject'
+
+  # template section
+  template:
+    type: object
+    description: Model used to generate text
+    additionalProperties: false
+    properties:
+      format:
+        type: string
+        description: The template engine to be used can be specified here. This is optional.
+        default: mustache
+      
+      # The template property is deprecated and will be removed in future versions.
+      template:
+        type: string
+        deprecated: true
+        description: The template property has been deprecated. Use format instead.
+
+      parser:
+        type: string
+        description: The parser
+        default: prompty
+      strict:
+        type: boolean
+        description: Whether to use strict mode or not. This is optional.
+        default: false
+      options:
+        type: object
+        description: The options for the template engine -- this is the options for the template engine that will be used to generate text.
+        additionalProperties: true
+
+
+definitions:
+  parameter:
+    type: object
+    description: The parameters of the prompty
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+        description: The type of the parameter
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+      enum:
+        type: array
+        description: The enum of the parameter
+        items:
+          type: string
+      required:
+        type: boolean
+        description: Whether the parameter is required or not
+        default: false
+      description:
+        type: string
+        description: The description of the parameter
+
+  namedParameter:
+    type: object
+    description: The parameters of the prompty
+    additionalProperties: false
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: The name of the parameter
+      type:
+        type: string
+        description: The type of the parameter
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+      enum:
+        type: array
+        description: The enum of the parameter
+        items:
+          type: string
+      required:
+        type: boolean
+        description: Whether the parameter is required or not
+        default: false
+      description:
+        type: string
+        description: The description of the parameter
+
+  parameterArray:
+    type: array
+    description: The array of parameters of the prompty
+    items:
+      $ref: '#/definitions/namedParameter'
+
+  parameterObject:
+    type: object
+    description: The object of parameters of the prompty
+    additionalProperties:
+      $ref: '#/definitions/parameter'
+
+  tool:
+    type: object
+    description: The tools of the prompty
+    additionalProperties: true
+    oneOf:
+      - $ref: '#/definitions/functionTool'
+      - $ref: '#/definitions/serverTool'
+    discriminator:
+      propertyName: type
+      mapping:
+        function: '#/definitions/functionTool'
+
+  serverTool:
+    type: object
+    description: The server tool of the prompty
+    required:
+      - type
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+        description: Tool type
+      description:
+        type: string
+        description: Tool description
+      options:
+        type: object
+        description: Tool options
+        additionalProperties: true
+
+  functionTool:
+    type: object
+    description: The function tool of the prompty
+    required:
+      - type
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+        description: Function tool type
+      description:
+        type: string
+        description: Tool description
+      parameters:
+        oneOf:
+        - $ref: '#/definitions/parameterArray'
+        - $ref: '#/definitions/parameterObject'
+
+  toolObject:
+    type: object
+    description: The object of tools of the prompty
+    additionalProperties:
+      $ref: '#/definitions/tool'
+
+  idServerTool:
+    type: object
+    description: The server tool of the prompty
+    required:
+      - type
+      - id
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        description: The ID of the server tool -- this is the ID of the server tool that will be used to generate text.
+      type:
+        type: string
+        description: Tool type
+      description:
+        type: string
+        description: Tool description
+      options:
+        type: object
+        description: Tool options
+        additionalProperties: true
+
+  idFunctionTool:
+    type: object
+    description: The function tool of the prompty
+    required:
+      - type
+      - id
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        description: The ID of the function tool -- this is the ID of the function tool that will be used to generate text.
+      type:
+        type: string
+        description: Function tool type
+      description:
+        type: string
+        description: Tool description
+      parameters:
+        oneOf:
+        - $ref: '#/definitions/parameterArray'
+        - $ref: '#/definitions/parameterObject'
+
+  toolArray:
+    type: array
+    description: The array of tools of the prompty
+    items:
+      anyOf:
+        - $ref: '#/definitions/idFunctionTool'
+        - $ref: '#/definitions/idServerTool'
+
+  input:
+    type: object
+    description: The full input of the prompty
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+        description: The type of the input
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+        
+      default:
+        description: The default value of the input
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+
+      sample:
+        description: The sample value of the input
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+        
+      required:
+        type: boolean
+        description: Whether the input is required or not
+        default: false
+      strict:
+        type: boolean
+        description: Whether the input is strict or not
+        default: false
+      description:
+        type: string
+        description: The description of the input
+      json_schema:
+        type: object
+        description: The JSON schema of the input
+        additionalProperties: true
+
+  namedInput:
+    type: object
+    description: The full input of the prompty
+    additionalProperties: false
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: The name of the input
+      type:
+        type: string
+        description: The type of the input
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+      default:
+        description: The default value of the input
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+
+      sample:
+        description: The sample value of the input
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+        
+      required:
+        type: boolean
+        description: Whether the input is required or not
+        default: false
+      strict:
+        type: boolean
+        description: Whether the input is strict or not
+        default: false
+      description:
+        type: string
+        description: The description of the input
+      json_schema:
+        type: object
+        description: The JSON schema of the input
+        additionalProperties: true
+
+  inputArray:
+    type: array
+    description: The array input of the prompty
+    items:
+      $ref: '#/definitions/namedInput'
+
+  inputObject:
+    type: object
+    description: The object input of the prompty
+    additionalProperties:
+      oneOf:
+        - $ref: '#/definitions/input'
+        - type: string
+          description: Sample input value
+        - type: number
+          description: Sample input value
+        - type: boolean
+          description: Sample input value
+        - type: array
+          description: Sample input value
+          items: {}
+
+  output:
+    type: object
+    description: The output of the prompty
+    additionalProperties: false
+    properties:
+      type:
+        type: string
+        description: The type of the output
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+      default:
+        description: The default value of the output
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+      description:
+        type: string
+        description: The description of the output
+      json_schema:
+        type: object
+        description: The JSON schema of the output
+        additionalProperties: true
+
+  namedOutput:
+    type: object
+    description: The output of the prompty
+    additionalProperties: false
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: The name of the output
+      type:
+        type: string
+        description: The type of the output
+        enum:
+          - string
+          - number
+          - array
+          - object
+          - boolean
+        default: string
+      default:
+        description: The default value of the output
+        anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items: {}
+        - type: object
+      description:
+        type: string
+        description: The description of the output
+      json_schema:
+        type: object
+        description: The JSON schema of the output
+        additionalProperties: true
+
+  outputArray:
+    type: array
+    description: The array output of the prompty
+    items:
+      $ref: '#/definitions/namedOutput'
+
+  outputObject:
+    type: object
+    description: The object output of the prompty
+    additionalProperties:
+      oneOf:
+        - $ref: '#/definitions/output'
+        - type: string
+          description: Default output value
+        - type: number
+          description: Default output value
+        - type: boolean
+          description: Default output value
+        - type: array
+          description: Default output value
+          items: {}
+        

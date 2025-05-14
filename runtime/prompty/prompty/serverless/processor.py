@@ -14,9 +14,7 @@ class ServerlessProcessor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
-    def invoke(
-        self, data: typing.Any
-    ) -> typing.Any:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
 
         Parameters
@@ -55,10 +53,7 @@ class ServerlessProcessor(Invoker):
 
             def generator():
                 for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 
@@ -105,10 +100,7 @@ class ServerlessProcessor(Invoker):
 
             async def generator():
                 async for chunk in data:
-                    if (
-                        len(chunk.choices) == 1
-                        and chunk.choices[0].delta.content is not None
-                    ):
+                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 
