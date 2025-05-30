@@ -23,7 +23,6 @@ class OpenAIExecutor(Invoker):
         self.api = self.prompty.model.api
         self.options = self.prompty.model.options
         self.model = self.prompty.model.connection["name"]
-        self.deployment = self.prompty.model.connection["deployment"]
 
     def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
         messages = data if isinstance(data, list) else [data]
@@ -87,7 +86,7 @@ class OpenAIExecutor(Invoker):
                 trace("signature", "OpenAI.completions.create")
                 args = {
                     "prompt": data.item,
-                    "model": self.deployment,
+                    "model": self.model,
                     **self.options,
                 }
                 trace("inputs", args)
@@ -97,7 +96,7 @@ class OpenAIExecutor(Invoker):
                 trace("signature", "OpenAI.embeddings.create")
                 args = {
                     "input": data if isinstance(data, list) else [data],
-                    "model": self.deployment,
+                    "model": self.model,
                     **self.options,
                 }
                 trace("inputs", args)

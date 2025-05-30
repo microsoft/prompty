@@ -57,7 +57,7 @@ class OpenAIProcessor(Invoker):
 
             def generator():
                 for chunk in data:
-                    if len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
+                    if chunk.choices and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         yield content
 
