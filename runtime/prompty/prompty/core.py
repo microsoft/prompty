@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable, Literal, Optional, Union
 
 from .tracer import Tracer, to_dict
-from .utils import get_json_type, load_json, load_json_async
+from .utils import get_json_type, load_json, load_json_async, load_text, load_yaml
 
 
 @dataclass
@@ -636,7 +636,13 @@ class Prompty:
     def _process_file(file: str, parent: Path) -> typing.Any:
         f = Path(parent / Path(file)).resolve().absolute()
         if f.exists():
-            items = load_json(f)
+            if f.suffix == ".json":
+                items = load_json(f)
+            elif f.suffix in [".yaml", ".yml"]:
+                items = load_yaml(f)
+            else:
+                return load_text(f)
+
             if isinstance(items, list):
                 return [Prompty.normalize(value, parent) for value in items]
             elif isinstance(items, dict):

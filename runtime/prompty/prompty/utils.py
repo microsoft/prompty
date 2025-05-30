@@ -33,6 +33,15 @@ async def load_json_async(file_path, encoding="utf-8"):
     return json.loads(content)
 
 
+def load_yaml(file_path, encoding="utf-8"):
+    return yaml.load(load_text(file_path, encoding=encoding), Loader=yaml.FullLoader)
+
+
+async def load_yaml_async(file_path, encoding="utf-8"):
+    content = await load_text_async(file_path, encoding=encoding)
+    return yaml.load(content, Loader=yaml.FullLoader)
+
+
 def _walk_up_path(path: Path) -> typing.Union[Path, None]:
     """Walk up the path to find a prompty.json file.
 
