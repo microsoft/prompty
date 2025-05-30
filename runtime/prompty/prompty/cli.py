@@ -1,6 +1,7 @@
 import importlib
 import json
 import os
+from collections.abc import Iterator
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -99,6 +100,10 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
                 print("\n", json.dumps(asdict(result), indent=4), "\n")
             elif isinstance(result, list):
                 print("\n", json.dumps([asdict(item) for item in result], indent=4), "\n")
+            elif isinstance(result, Iterator):
+                for item in result:
+                    print(item, end="")
+
             else:
                 print("\n", result, "\n")
         except Exception as e:
