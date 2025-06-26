@@ -27,7 +27,7 @@ The Prompty implementation consists of three core components - the _specificatio
 
 ### 1.1 The Prompty Specification
 
-The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Prompty.yaml) defines the core `.prompty` asset file format. We'll look at this in more detail in the [Prompty File Spec](/docs/prompty-file-spec) section of the documentation. For now, click to expand the section below to see a _basic.prompty_ sample and get an intuitive sense for what an asset file looks like.
+The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Prompty.yaml) defines the core `.prompty` asset file format. We'll look at this in more detail in the [Prompty Specification](/docs/prompty-specification) section of the documentation. For now, click to expand the section below to see a _basic.prompty_ sample and get an intuitive sense for what an asset file looks like.
 
 <details>
 <summary> **Learn More**: The `basic.prompty` asset file </summary>
@@ -67,7 +67,7 @@ The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Promp
 
 ### 1.2 The Prompty Tooling
 
-The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty) helps you create, manage, and execute, your `.prompty` assets - effectively giving you a _playground_ right in your editor, to streamline your prompt engineering workflow and speed up your prototype iterations. We'll get hands-on experience with this in the [Tutorials](/docs/tutorials) section. For now, click to expand the section and get an intutive sense for how this enhances your developer experience.
+The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty) helps you create, manage, and execute your `.prompty` assets - effectively giving you a _playground_ right in your editor, to streamline your prompt engineering workflow and speed up your prototype iterations. We'll get hands-on experience with this in the [Tutorials](/docs/tutorials) section. For now, click to expand the section and get an intuitive sense for how this enhances your developer experience.
 
 <details>
 <summary> **Learn More**: The Prompty Visual Studio Code Extension </summary>
@@ -76,7 +76,7 @@ The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/
 - Create a default `basic.prompty` starter asset - then configure models and customize content.
 - Create the "pre-configured" starter assets for [GitHub Marketplace Models](https://github.com/marketplace/models) in _serverless_ mode.
 - Create "starter code" from the asset for popular frameworks (e.g., LangChain)
-- Use the _prompty_ commandline tool to execute a `.prompty` asset and "chat" with your model.
+- Use the _prompty_ command-line tool to execute a `.prompty` asset and "chat" with your model.
 - Use _settings_ to create _named_ model configurations for reuse
 - Use toolbar icon to view and switch quickly between named configurations
 - View the "runs" history, and drill down into a run with a built-in trace viewer.
@@ -112,8 +112,25 @@ Prompty is ideal for rapid prototyping and iteration of a new generative AI appl
 
 ![How do we use prompty?](02-build-with-prompty.png)
 
+## 3. Supported Model Providers
 
-## 3. Developer Mindset
+Prompty supports multiple AI model providers to give you flexibility in choosing the right model for your use case:
+
+### Enterprise, Cloud and ISV Providers
+- **Azure OpenAI** - Enterprise-grade OpenAI models with data residency and compliance
+- **OpenAI** - Direct integration with OpenAI's latest models
+- **Snowflake Cortex** - Fully managed LLM functions within your Snowflake environment
+- **Azure Model-as-a-Service (MaaS)** - Serverless models from various providers
+
+### Model Selection Considerations
+- **Azure OpenAI**: Best for enterprise applications requiring data governance and compliance
+- **OpenAI**: Ideal for development and applications needing the latest model capabilities  
+- **Snowflake Cortex**: Ideal for executing within the Snowflake environment with the Data in Snowflake
+- **Azure MaaS**: Great for experimenting with diverse models in a serverless environment
+
+Each provider offers different models, capabilities, and pricing structures. See the [Prompty Specification](/docs/prompty-specification) for detailed configuration options.
+
+## 4. Developer Mindset
 
 As an AI application developer, you are likely already using a number of tools and frameworks to enhance your developer experience. So, where does Prompty fit into you developer toolchain? 
 

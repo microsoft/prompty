@@ -160,6 +160,41 @@ configuration:
   azure_endpoint: "https://my-endpoint.azureml.ms"
 ```
 
+### Snowflake Cortex Configuration
+
+```yaml
+configuration:
+  type: snowflake_cortex
+  account: "my-account"
+  user: "my-username"
+  password: ${env:SNOWFLAKE_PASSWORD}
+  warehouse: "my-warehouse"
+  database: "my-database"
+  schema: "PUBLIC"
+  model: "llama3.1-8b"
+```
+
+**Required Properties:**
+- `account` - Snowflake account identifier
+- `user` - Snowflake username  
+- `warehouse` - Snowflake warehouse to use
+- `database` - Snowflake database to use
+
+**Authentication Options:**
+- Password: `password`
+- Key-pair: `private_key` or `private_key_path`
+- SSO: `authenticator: externalbrowser`
+- OAuth: `authenticator: oauth` with `token`
+
+**Optional Properties:**
+- `schema` - Schema to use (default user schema will be assumed)
+- `role` - Snowflake role to assume (default use role will be assumed)
+- `model` - Cortex model name (default: "llama3.1-8b")
+
+**Supported Models:**
+- List of models supported by [Snowflake Cortex](https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql#availability)
+
+
 ## Model Parameters
 
 Common parameters that can be configured for model execution:
@@ -207,16 +242,33 @@ Common parameters that can be configured for model execution:
       <td><code>top_p</code></td>
       <td>number</td>
       <td>Nucleus sampling probability</td>
-    </tr>
-    <tr>
+    </tr>    <tr>
       <td><code>stop</code></td>
       <td>array</td>
       <td>Sequences to stop generation</td>
+    </tr>
+    <tr>
+      <td><code>guardrails</code></td>
+      <td>object</td>
+      <td>Content safety guardrails configuration (Snowflake Cortex)</td>
     </tr>
   </tbody>
 </table>
 
 > Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
+
+### Snowflake Cortex Guardrails
+
+For Snowflake Cortex models, you can configure content safety guardrails:
+
+```yaml
+parameters:
+  guardrails: true    # Enable content safety guardrails
+```
+
+The guardrails parameter can be set to:
+- `true` - Enable content safety guardrails
+- `false` - Disable content safety guardrails (default)
 
 ## Sample Prompty
 

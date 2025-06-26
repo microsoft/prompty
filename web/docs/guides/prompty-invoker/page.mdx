@@ -17,12 +17,12 @@ _In this section, we cover the different built-in Prompty Invokers and walk you 
 ## 1. Prompty invokers
 
 The Prompty runtime comes with a set of built-in invokers that can be used to execute external models and APIs. 
-Invokers trigger a call to a the different models and return its output ensuring standardization when it comes to handling models. The invokers currently supported are:
+Invokers trigger a call to the different models and return its output ensuring standardization when it comes to handling models. The invokers currently supported are:
 
 1. **azure**: Invokes the Azure OpenAI API
-2. **openai**: Invokes the OpenAI API
+2. **openai**: Invokes the OpenAI API  
 3. **serverless**: Invokes serverless models (e.g. GitHub Models) using the Azure AI Inference client library (currently only key based authentication is supported with more managed identity support coming soon)
-
+4. **snowflake**: Invokes Snowflake Cortex COMPLETE function for enterprise AI applications with built-in data governance and security.
 
 TODO: Explain how invokers work and how to build a custom invoker
 
