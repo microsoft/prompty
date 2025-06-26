@@ -1,0 +1,27 @@
+---
+name: Snowflake Cortex Completion Test
+description: Test Snowflake Cortex with completion API
+authors:
+  - prompty-team
+model:
+  api: completion
+  configuration:
+    type: snowflake_cortex
+    account: test-account.snowflakecomputing.com
+    user: test-user
+    password: test-password
+    warehouse: test-warehouse
+    database: test-database
+    schema: PUBLIC
+    model: mistral-large
+  parameters:
+    temperature: 0.8
+    max_tokens: 200
+    stop: ["###", "END"]
+sample:
+  topic: "machine learning"
+  context: "enterprise applications"
+---
+Write a brief overview of {{topic}} in {{context}}:
+
+Machine learning in enterprise applications
