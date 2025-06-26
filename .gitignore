@@ -8,3 +8,5 @@ runtime/promptycs/Prompty.Core/obj/
 runtime/promptycs/Tests/bin/
 runtime/promptycs/Tests/obj/
 .env
+tck/csharp/obj
+tck/csharp/bin

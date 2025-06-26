@@ -1,0 +1,584 @@
+name: Prompty TCK (Test Compatibility Kit)
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'runtime/**'
+      - 'tck/**'
+      - '.github/workflows/tck.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'runtime/**'
+      - 'tck/**'
+      - '.github/workflows/tck.yml'
+  schedule:
+    # Run TCK daily at 2 AM UTC to catch compatibility regressions
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      runtime:
+        description: 'Runtime to test (all, python, csharp)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - python
+          - csharp
+      generate_report:
+        description: 'Generate detailed compatibility report'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  DOTNET_VERSION: '9.0'
+
+jobs:
+  tck-matrix:
+    name: TCK Tests (${{ matrix.runtime }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        runtime: [python, csharp]
+        exclude:
+          # Skip some combinations to reduce CI time while maintaining coverage
+          - os: macos-latest
+            runtime: csharp
+        include:
+          # Add specific configurations if needed
+          - os: ubuntu-latest
+            runtime: python
+            python_version: '3.9'
+          - os: ubuntu-latest  
+            runtime: python
+            python_version: '3.12'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      if: matrix.runtime == 'python' || matrix.runtime == 'all'
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python_version || env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: Setup .NET
+      if: matrix.runtime == 'csharp' || matrix.runtime == 'all'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install Python dependencies
+      if: matrix.runtime == 'python' || matrix.runtime == 'all'
+      run: |
+        python -m pip install --upgrade pip
+        cd runtime/prompty
+        pip install -e .
+        if [ -f "requirements-dev.txt" ]; then
+          pip install -r requirements-dev.txt
+        fi
+
+    - name: Build C# Runtime
+      if: matrix.runtime == 'csharp' || matrix.runtime == 'all'
+      run: |
+        cd runtime/promptycs
+        dotnet restore
+        dotnet build --configuration Release --no-restore
+
+    - name: Build C# TCK
+      if: matrix.runtime == 'csharp' || matrix.runtime == 'all'
+      run: |
+        cd tck/csharp
+        dotnet build --configuration Release
+
+    - name: Make TCK scripts executable (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cd tck
+        chmod +x run-tck.sh
+        chmod +x python/run-tck.sh
+        chmod +x csharp/run-tck.sh
+
+    - name: Run TCK (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cd tck
+        ./run-tck.sh --runtime ${{ matrix.runtime }}
+
+    - name: Run TCK (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        cd tck
+        pwsh -File run-tck.ps1 -Runtime ${{ matrix.runtime }}
+
+    - name: Upload TCK Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: tck-results-${{ matrix.runtime }}-${{ matrix.os }}
+        path: |
+          tck/results/${{ matrix.runtime }}-results.json
+          tck/reports/
+        retention-days: 30
+
+    - name: Upload TCK Logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: tck-logs-${{ matrix.runtime }}-${{ matrix.os }}
+        path: |
+          tck/logs/
+        retention-days: 7
+
+    - name: Display TCK Summary
+      if: always()
+      run: |
+        echo "## TCK Results Summary for ${{ matrix.runtime }} on ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
+        if [ -f "tck/results/${{ matrix.runtime }}-results.json" ]; then
+          python -c "
+          import json
+          import sys
+          try:
+            with open('tck/results/${{ matrix.runtime }}-results.json', 'r') as f:
+              results = json.load(f)
+            total = len(results)
+            passed = len([r for r in results if r.get('result') == 'pass'])
+            failed = len([r for r in results if r.get('result') == 'fail'])
+            errors = len([r for r in results if r.get('result') == 'error'])
+            skipped = len([r for r in results if r.get('result') == 'skip'])
+            
+            print(f'- **Total Tests**: {total}')
+            print(f'- **Passed**: {passed} ✅')
+            print(f'- **Failed**: {failed} ❌')
+            print(f'- **Errors**: {errors} 🚨')
+            print(f'- **Skipped**: {skipped} ⏭️')
+            
+            if failed > 0 or errors > 0:
+              print()
+              print('### Failed/Error Tests:')
+              for result in results:
+                if result.get('result') in ['fail', 'error']:
+                  test_id = result.get('test_id', 'unknown')
+                  error_msg = result.get('error_message', 'No details')
+                  print(f'- **{test_id}**: {error_msg}')
+          except Exception as e:
+            print(f'Error reading results: {e}')
+          " >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ No results file found" >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
+
+  compatibility-report:
+    name: Generate Compatibility Report
+    runs-on: ubuntu-latest
+    needs: tck-matrix
+    if: always() && (github.event.inputs.generate_report != 'false')
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install comparison tools dependencies
+      run: |
+        cd tck
+        if [ -f "tools/requirements.txt" ]; then
+          pip install -r tools/requirements.txt
+        else
+          pip install json-diff
+        fi
+
+    - name: Download all TCK results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: tck-results-*
+        path: tck/downloaded-results/
+        merge-multiple: true
+
+    - name: Organize results
+      run: |
+        cd tck
+        mkdir -p results
+        find downloaded-results -name "*-results.json" -exec cp {} results/ \;
+        ls -la results/
+
+    - name: Generate compatibility report
+      run: |
+        cd tck
+        if [ -f results/python-results.json ] && [ -f results/csharp-results.json ]; then
+          python tools/compare_runtimes.py \
+            results/python-results.json \
+            results/csharp-results.json \
+            --output reports/compatibility-report.md
+          
+          python tools/compare_runtimes.py \
+            results/python-results.json \
+            results/csharp-results.json \
+            --format json \
+            --output reports/compatibility-report.json
+        else
+          echo "Missing result files for compatibility comparison"
+          echo "Available files:"
+          ls -la results/
+          
+          # Create a minimal report if files are missing
+          mkdir -p reports
+          echo "# TCK Compatibility Report" > reports/compatibility-report.md
+          echo "" >> reports/compatibility-report.md
+          echo "⚠️ **Warning**: Could not generate full compatibility report due to missing result files." >> reports/compatibility-report.md
+          echo "" >> reports/compatibility-report.md
+          echo "Available results:" >> reports/compatibility-report.md
+          ls results/ | sed 's/^/- /' >> reports/compatibility-report.md
+        fi
+
+    - name: Check compatibility threshold
+      id: compatibility_check
+      run: |
+        cd tck
+        if [ -f reports/compatibility-report.json ]; then
+          COMPATIBILITY_RATE=$(python -c "
+          import json
+          import sys
+          try:
+            with open('reports/compatibility-report.json', 'r') as f:
+              report = json.load(f)
+            rate = report.get('overall_compatibility_rate', 0) * 100
+            print(f'{rate:.1f}')
+            
+            # Set threshold - can be configured
+            threshold = 80.0
+            if rate < threshold:
+              print(f'COMPATIBILITY_WARNING=true', file=sys.stderr)
+              sys.exit(1)
+            else:
+              print(f'COMPATIBILITY_WARNING=false', file=sys.stderr)
+              sys.exit(0)
+          except Exception as e:
+            print(f'Error: {e}', file=sys.stderr)
+            print(f'COMPATIBILITY_WARNING=true', file=sys.stderr)
+            sys.exit(1)
+          ")
+          echo "rate=$COMPATIBILITY_RATE" >> $GITHUB_OUTPUT
+        else
+          echo "No compatibility report generated"
+          echo "rate=0" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+
+    - name: Add compatibility report to summary
+      run: |
+        echo "## 🔄 Cross-Runtime Compatibility Report" >> $GITHUB_STEP_SUMMARY
+        if [ -f "tck/reports/compatibility-report.md" ]; then
+          cat tck/reports/compatibility-report.md >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Failed to generate compatibility report" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload compatibility report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: tck-compatibility-report
+        path: |
+          tck/reports/compatibility-report.md
+          tck/reports/compatibility-report.json
+        retention-days: 90
+
+    - name: Comment PR with compatibility report
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          try {
+            const reportPath = 'tck/reports/compatibility-report.md';
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf8');
+              
+              const body = `## 🔄 Prompty TCK Compatibility Report
+          
+              ${report}
+              
+              ---
+              📊 *This report was automatically generated by the Prompty TCK workflow*`;
+          
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '## 🧪 Prompty TCK\n\n❌ TCK compatibility report could not be generated. Check the logs for details.'
+              });
+            }
+          } catch (error) {
+            console.log('Failed to post comment:', error);
+          }
+
+    - name: Create issue for compatibility regression
+      if: steps.compatibility_check.outcome == 'failure' && github.ref == 'refs/heads/main'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const compatibilityRate = '${{ steps.compatibility_check.outputs.rate }}';
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 TCK Compatibility Regression Detected (${compatibilityRate}%)`,
+            body: `## Compatibility Issue Detected
+          
+          The Prompty TCK has detected a compatibility regression between runtime implementations.
+          
+          **Current Compatibility Rate**: ${compatibilityRate}%  
+          **Required Threshold**: 80%
+          
+          ### Action Required
+          
+          1. Review the [compatibility report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          2. Identify which tests are failing across runtimes
+          3. Fix compatibility issues in the affected runtimes
+          4. Re-run the TCK to verify fixes
+          
+          ### Related
+          
+          - Commit: ${{ github.sha }}
+          - Workflow: [TCK Run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          This issue was automatically created by the Prompty TCK workflow.`,
+            labels: ['bug', 'tck', 'compatibility', 'priority-high']
+          });
+
+  runtime-specific-tests:
+    name: Runtime-Specific Validation
+    runs-on: ubuntu-latest
+    needs: tck-matrix
+    if: always()
+    
+    strategy:
+      matrix:
+        runtime: [python, csharp]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Setup .NET
+      if: matrix.runtime == 'csharp'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Download TCK results
+      uses: actions/download-artifact@v4
+      with:
+        name: tck-results-${{ matrix.runtime }}-ubuntu-latest
+        path: tck/results/
+
+    - name: Validate runtime-specific requirements
+      run: |
+        cd tck
+        echo "## Runtime-Specific Validation: ${{ matrix.runtime }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ ! -f "results/${{ matrix.runtime }}-results.json" ]; then
+          echo "❌ Results file not found" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        # Validate JSON format
+        python -c "
+        import json
+        import sys
+        
+        try:
+          with open('results/${{ matrix.runtime }}-results.json', 'r') as f:
+            results = json.load(f)
+          
+          print('✅ Valid JSON format')
+          
+          # Check required fields
+          required_fields = ['test_id', 'result', 'runtime', 'execution_time_ms']
+          missing_fields = []
+          
+          for i, result in enumerate(results):
+            for field in required_fields:
+              if field not in result:
+                missing_fields.append(f'Result {i}: missing {field}')
+          
+          if missing_fields:
+            print('❌ Missing required fields:')
+            for missing in missing_fields[:5]:  # Show first 5
+              print(f'  - {missing}')
+            if len(missing_fields) > 5:
+              print(f'  - ... and {len(missing_fields) - 5} more')
+            sys.exit(1)
+          else:
+            print('✅ All required fields present')
+          
+          # Check runtime consistency
+          runtimes = set(r.get('runtime') for r in results)
+          if len(runtimes) != 1 or '${{ matrix.runtime }}' not in runtimes:
+            print(f'❌ Runtime inconsistency: {runtimes}')
+            sys.exit(1)
+          else:
+            print(f'✅ Runtime consistently reported as ${{ matrix.runtime }}')
+          
+        except json.JSONDecodeError as e:
+          print(f'❌ Invalid JSON: {e}')
+          sys.exit(1)
+        except Exception as e:
+          print(f'❌ Validation error: {e}')
+          sys.exit(1)
+        " >> $GITHUB_STEP_SUMMARY
+
+  publish-results:
+    name: Publish TCK Results
+    runs-on: ubuntu-latest
+    needs: [tck-matrix, compatibility-report]
+    if: github.ref == 'refs/heads/main' && always()
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download compatibility report
+      uses: actions/download-artifact@v4
+      with:
+        name: tck-compatibility-report
+        path: tck-reports
+
+    - name: Deploy to GitHub Pages
+      if: github.repository_owner == 'microsoft' # Adjust to your org
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: tck-reports
+        destination_dir: tck
+        keep_files: true
+
+    - name: Create GitHub Release on schedule
+      if: github.event_name == 'schedule'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: tck-${{ github.run_number }}
+        name: TCK Results ${{ github.run_number }}
+        body: |
+          Automated TCK compatibility report
+          
+          Generated on: ${{ github.event.head_commit.timestamp }}
+          Commit: ${{ github.sha }}
+        files: tck-reports/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notification:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [tck-matrix, compatibility-report]
+    if: always()
+
+    steps:
+    - name: Determine overall status
+      id: status
+      run: |
+        TCK_STATUS="${{ needs.tck-matrix.result }}"
+        COMPAT_STATUS="${{ needs.compatibility-report.result }}"
+        
+        if [ "$TCK_STATUS" = "success" ] && [ "$COMPAT_STATUS" = "success" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=✅ All TCK tests passed with good compatibility" >> $GITHUB_OUTPUT
+        elif [ "$TCK_STATUS" = "success" ]; then
+          echo "status=warning" >> $GITHUB_OUTPUT  
+          echo "message=⚠️ TCK tests passed but compatibility issues detected" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=❌ TCK tests failed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create status summary
+      run: |
+        echo "## 📋 Prompty TCK Workflow Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Status**: ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow**: [TCK Run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.status.outputs.status }}" = "failure" ]; then
+          echo "1. 🔍 Review failed test results in the artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🔧 Fix failing tests in the affected runtimes" >> $GITHUB_STEP_SUMMARY
+          echo "3. 🧪 Re-run TCK locally to verify fixes" >> $GITHUB_STEP_SUMMARY
+          echo "4. 📤 Push fixes and re-run workflow" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ steps.status.outputs.status }}" = "warning" ]; then
+          echo "1. 📊 Review compatibility report for details" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🔄 Harmonize runtime implementations" >> $GITHUB_STEP_SUMMARY
+          echo "3. 📈 Aim for >90% compatibility rate" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "1. 🎉 All tests passing - great work!" >> $GITHUB_STEP_SUMMARY
+          echo "2. 📈 Monitor compatibility in future changes" >> $GITHUB_STEP_SUMMARY
+          echo "3. 🔄 Consider adding more test coverage" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Send Slack notification on failure
+      if: steps.status.outputs.status == 'failure' && (github.ref == 'refs/heads/main' || github.event_name == 'schedule') && env.SLACK_WEBHOOK_URL != ''
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"🚨 Prompty TCK Failed\n\nRepository: ${{ github.repository }}\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+          $SLACK_WEBHOOK_URL
+
+    - name: Send Teams notification on failure
+      if: steps.status.outputs.status == 'failure' && (github.ref == 'refs/heads/main' || github.event_name == 'schedule') && env.TEAMS_WEBHOOK_URL != ''
+      env:
+        TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "@type": "MessageCard",
+            "@context": "http://schema.org/extensions",
+            "summary": "Prompty TCK Failed",
+            "themeColor": "ff0000",
+            "sections": [{
+              "activityTitle": "🚨 Prompty TCK Failed",
+              "facts": [
+                {"name": "Repository", "value": "${{ github.repository }}"},
+                {"name": "Branch", "value": "${{ github.ref }}"},
+                {"name": "Commit", "value": "${{ github.sha }}"}
+              ],
+              "potentialAction": [{
+                "@type": "OpenUri",
+                "name": "View Workflow",
+                "targets": [{"os": "default", "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
+              }]
+            }]
+          }' \
+          $TEAMS_WEBHOOK_URL

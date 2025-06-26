@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prompty TCK Test Specification",
+  "description": "Schema for defining TCK test cases",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "TCK specification version"
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/test"
+      }
+    }
+  },
+  "required": ["version", "tests"],
+  "definitions": {
+    "test": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique test identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable test name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Test description"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["specification", "functional", "integration", "error-handling", "performance"],
+          "description": "Test category"
+        },
+        "prompty_file": {
+          "type": "string",
+          "description": "Path to the .prompty file to test"
+        },
+        "input_data": {
+          "type": "object",
+          "description": "Input data for template rendering"
+        },
+        "environment_vars": {
+          "type": "object",
+          "description": "Environment variables to set for the test"
+        },
+        "expected_parsing": {
+          "type": "object",
+          "description": "Expected parsed structure"
+        },
+        "expected_rendering": {
+          "type": "array",
+          "description": "Expected rendered messages"
+        },
+        "expected_errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "message_pattern": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Expected error conditions"
+        },
+        "skip_runtimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Runtimes to skip for this test"
+        }
+      },
+      "required": ["id", "name", "category", "prompty_file"]
+    }
+  }
+}

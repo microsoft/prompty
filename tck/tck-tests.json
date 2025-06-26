@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "tests": [
+    {
+      "id": "basic-parsing",
+      "name": "Basic YAML Frontmatter Parsing",
+      "description": "Verify that all runtimes parse YAML frontmatter identically",
+      "category": "specification",
+      "prompty_file": "testdata/basic.prompty",
+      "expected_parsing": "expected/basic.prompty.parsed.json"
+    },
+    {
+      "id": "basic-rendering",
+      "name": "Basic Template Rendering",
+      "description": "Verify that template rendering produces identical output",
+      "category": "functional",
+      "prompty_file": "testdata/basic.prompty",
+      "input_data": {
+        "name": "Alice",
+        "age": 30,
+        "question": "What is the meaning of life?"
+      },
+      "expected_rendering": "expected/basic.prompty.rendered.json"
+    },
+    {
+      "id": "env-var-resolution",
+      "name": "Environment Variable Resolution",
+      "description": "Test that environment variables are resolved consistently",
+      "category": "functional",
+      "prompty_file": "testdata/env-vars.prompty",
+      "environment_vars": {
+        "AZURE_OPENAI_ENDPOINT": "https://test.openai.azure.com",
+        "AZURE_OPENAI_DEPLOYMENT": "gpt-4",
+        "MAX_TOKENS": "200"
+      },
+      "input_data": {
+        "context": "The weather is sunny today.",
+        "question": "What's the weather like?"
+      }
+    },
+    {
+      "id": "complex-template",
+      "name": "Complex Jinja2 Template Processing",
+      "description": "Test complex template features like loops and conditionals",
+      "category": "functional",
+      "prompty_file": "testdata/complex-template.prompty",
+      "input_data": {
+        "user_name": "Bob",
+        "items": [
+          {"name": "Apple", "price": 1.50},
+          {"name": "Banana", "price": 0.75}
+        ],
+        "show_prices": true,
+        "currency": "USD"
+      }
+    },
+    {
+      "id": "function-calling-parsing",
+      "name": "Function Calling Configuration",
+      "description": "Test that function calling configuration is parsed correctly",
+      "category": "specification",
+      "prompty_file": "testdata/function-calling.prompty"
+    },
+    {
+      "id": "missing-required-input",
+      "name": "Missing Required Input Error",
+      "description": "Test error handling for missing required inputs",
+      "category": "error-handling",
+      "prompty_file": "testdata/basic.prompty",
+      "input_data": {
+        "age": 30
+      },
+      "expected_errors": [
+        {
+          "type": "ValidationError",
+          "message_pattern": ".*required.*name.*"
+        }
+      ]
+    },
+    {
+      "id": "invalid-yaml",
+      "name": "Invalid YAML Frontmatter",
+      "description": "Test error handling for malformed YAML",
+      "category": "error-handling",
+      "prompty_file": "testdata/invalid-yaml.prompty",
+      "expected_errors": [
+        {
+          "type": "YAMLError",
+          "message_pattern": ".*invalid.*yaml.*"
+        }
+      ]
+    },
+    {
+      "id": "conditional-rendering",
+      "name": "Conditional Template Rendering",
+      "description": "Test conditional template logic with Jinja2",
+      "category": "functional", 
+      "prompty_file": "testdata/conditional-template.prompty",
+      "input_data": {
+        "user_name": "Bob",
+        "show_details": false,
+        "items": ["Item 1", "Item 2", "Item 3"]
+      }
+    },
+    {
+      "id": "missing-required-input",
+      "name": "Missing Required Input",
+      "description": "Test validation of required inputs",
+      "category": "error-handling",
+      "prompty_file": "testdata/missing-input.prompty",
+      "input_data": {},
+      "expected_errors": [
+        {
+          "type": "ValidationError",
+          "message_pattern": ".*required.*"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "env-vars",
+  "description": "Test environment variable handling",
+  "version": "1.0",
+  "model": {
+    "api": "openai",
+    "configuration": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "api_version": "2024-02-15-preview"
+    },
+    "parameters": {
+      "model": "gpt-35-turbo",
+      "max_tokens": 100,
+      "temperature": 0.2
+    }
+  },
+  "inputs": {
+    "question": {
+      "type": "string",
+      "description": "The user's question"
+    }
+  },
+  "template": {
+    "type": "jinja2",
+    "parser": "prompty"
+  },
+  "content": "Answer this question: {{question}}\n\nContext: This is running in environment with endpoint: ${env:AZURE_OPENAI_ENDPOINT}\n"
+}
