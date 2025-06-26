@@ -1,6 +1,6 @@
 [project]
 name = "prompty"
-dynamic = ["version"]
+version = "0.1.0-dev"
 readme = "README.md"
 description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
 authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
@@ -55,19 +55,12 @@ output-format = "full"
 select = ["E", "F", "I", "UP"]
 ignore = ["D203", "E501"]
 
-
-[tool.pdm.version]
-source = "scm"
-tag_filter = "python/*"
-tag_regex = '^python/(?:\D*)?(?P<version>([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|c|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$)$'
-
 [tool.pdm.scripts]
 prompty = { call = "prompty.cli:run" }
 
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
-
 
 [project.scripts]
 prompty = "prompty.cli:run"
