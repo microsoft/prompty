@@ -37,6 +37,11 @@ class SnowflakeCortexProcessor(Invoker):
         if data is None:
             return None
 
+        # Handle streaming responses
+        from ..core import AsyncPromptyStream, PromptyStream
+        if isinstance(data, (PromptyStream, AsyncPromptyStream)):
+            return data
+
         # Handle different response formats based on API type
         api = self.prompty.model.api
         response_mode = self.prompty.model.response
