@@ -30,14 +30,16 @@ def test_snowflake_imports():
             "executor", 
             Path(__file__).parent.parent / "prompty" / "snowflake" / "executor.py"
         )
-        executor_module = importlib.util.module_from_spec(executor_spec)
+        if executor_spec is not None:
+            executor_module = importlib.util.module_from_spec(executor_spec)
         
         # Load processor module  
         processor_spec = importlib.util.spec_from_file_location(
             "processor",
             Path(__file__).parent.parent / "prompty" / "snowflake" / "processor.py"
         )
-        processor_module = importlib.util.module_from_spec(processor_spec)
+        if processor_spec is not None:
+            processor_module = importlib.util.module_from_spec(processor_spec)
         
         print("✓ Snowflake modules can be loaded")
         

@@ -1,7 +1,7 @@
 import typing
 from typing import Any, Dict, List, Union
 
-from ..core import Prompty, ToolCall
+from ..core import Prompty, PromptyStream, AsyncPromptyStream, ToolCall
 from ..invoker import Invoker, InvokerFactory
 
 
@@ -19,6 +19,8 @@ class SnowflakeCortexProcessor(Invoker):
         List[ToolCall],
         List[float],
         List[List[float]],
+        PromptyStream,
+        AsyncPromptyStream,
         None,
     ]:
         """
@@ -38,13 +40,12 @@ class SnowflakeCortexProcessor(Invoker):
             return None
 
         # Handle streaming responses
-        from ..core import AsyncPromptyStream, PromptyStream
         if isinstance(data, (PromptyStream, AsyncPromptyStream)):
             return data
 
         # Handle different response formats based on API type
         api = self.prompty.model.api
-        response_mode = self.prompty.model.response
+        response_mode = getattr(self.prompty.model, 'response', 'first')
 
         if api == "chat":
             return self._process_chat_response(data, response_mode)
@@ -56,7 +57,7 @@ class SnowflakeCortexProcessor(Invoker):
             # Default to returning the content as string
             return self._extract_content(data)
 
-    def _process_chat_response(self, data: Dict[str, Any], response_mode: str) -> Union[str, List[str]]:
+    def _process_chat_response(self, data: Dict[str, Any], response_mode: str) -> Union[str, List[typing.Union[str, None]]]:
         """Process chat completion response"""
         if "choices" in data and len(data["choices"]) > 0:
             if response_mode == "first":
@@ -67,7 +68,7 @@ class SnowflakeCortexProcessor(Invoker):
                 return ""
             elif response_mode == "all":
                 # Return all choices as a list
-                results = []
+                results: List[typing.Union[str, None]] = []
                 for choice in data["choices"]:
                     if "message" in choice and "content" in choice["message"]:
                         results.append(choice["message"]["content"])
@@ -78,7 +79,7 @@ class SnowflakeCortexProcessor(Invoker):
         # Fallback: try to extract content directly
         return self._extract_content(data)
 
-    def _process_completion_response(self, data: Dict[str, Any], response_mode: str) -> Union[str, List[str]]:
+    def _process_completion_response(self, data: Dict[str, Any], response_mode: str) -> Union[str, List[typing.Union[str, None]]]:
         """Process text completion response"""
         if "choices" in data and len(data["choices"]) > 0:
             if response_mode == "first":
@@ -91,7 +92,7 @@ class SnowflakeCortexProcessor(Invoker):
                 return ""
             elif response_mode == "all":
                 # Return all choices as a list
-                results = []
+                results: List[typing.Union[str, None]] = []
                 for choice in data["choices"]:
                     if "text" in choice:
                         results.append(choice["text"])
@@ -151,6 +152,8 @@ class SnowflakeCortexProcessor(Invoker):
         List[ToolCall],
         List[float],
         List[List[float]],
+        PromptyStream,
+        AsyncPromptyStream,
         None,
     ]:
         """

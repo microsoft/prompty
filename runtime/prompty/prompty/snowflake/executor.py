@@ -21,7 +21,7 @@ class SnowflakeCortexExecutor(Invoker):
 
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
-        self.connection = None
+        self.connection: typing.Optional[snowflake.connector.SnowflakeConnection] = None
         self._setup_connection()
 
     def _setup_connection(self) -> None:
@@ -64,7 +64,7 @@ class SnowflakeCortexExecutor(Invoker):
         except Exception as e:
             raise ConnectionError(f"Failed to connect to Snowflake: {str(e)}")
 
-    def _build_cortex_query(self, messages: List[Dict[str, Any]]) -> tuple[str, Dict[str, Any]]:
+    def _build_cortex_query(self, messages: List[Dict[str, Any]]) -> tuple[str, List[str]]:
         """Build CORTEX.COMPLETE SQL query from messages"""
         config = self.prompty.model.configuration
         params = self.prompty.model.parameters
@@ -169,7 +169,7 @@ class SnowflakeCortexExecutor(Invoker):
                     
                     trace("result", result)
                 
-                if result and ("response" in result or "RESPONSE" in result):
+                if result and isinstance(result, dict) and ("response" in result or "RESPONSE" in result):
                     # Handle both lowercase and uppercase response field names
                     response_text = result.get("response") or result.get("RESPONSE")
                       # Return in OpenAI-compatible format for consistency
