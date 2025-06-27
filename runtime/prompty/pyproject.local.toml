@@ -40,7 +40,8 @@ dev = [
     "ruff>=0.9.1",
     "mypy>=1.15.0",
     "types-aiofiles>=21.1.0",
-    "types-PyYAML>=6.0.12"
+    "types-PyYAML>=6.0.12",
+    "snowflake-connector-python>=3.0.0"
 ]
 
 [tool.pytest.ini_options]
