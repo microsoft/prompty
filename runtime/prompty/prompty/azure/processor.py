@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator, Iterator
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.completion import Completion
 from openai.types.create_embedding_response import CreateEmbeddingResponse
+from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
 
 from ..core import AsyncPromptyStream, Prompty, PromptyStream, ToolCall
@@ -69,10 +70,10 @@ class AzureOpenAIProcessor(Invoker):
             self.prompty.model.parameters
             item: ImagesResponse = data
 
-            if len(data.data) == 0:
+            if data.data is None or len(data.data) == 0:
                 raise ValueError("Invalid data")
             elif len(data.data) == 1:
-                return data.data[0].url if item.data[0].url else item.data[0].b64_json
+                return data.data[0].url if data.data[0].url else data.data[0].b64_json
             else:
                 return [item.url if item.url else item.b64_json for item in data.data]
 
@@ -132,10 +133,10 @@ class AzureOpenAIProcessor(Invoker):
             self.prompty.model.parameters
             item: ImagesResponse = data
 
-            if len(data.data) == 0:
+            if data.data is None or len(data.data) == 0:
                 raise ValueError("Invalid data")
             elif len(data.data) == 1:
-                return data.data[0].url if item.data[0].url else item.data[0].b64_json
+                return data.data[0].url if data.data[0].url else data.data[0].b64_json
             else:
                 return [item.url if item.url else item.b64_json for item in data.data]
 
