@@ -1,0 +1,143 @@
+---
+title: Overview
+sidebar:
+  order: 1
+---
+
+An **Agent** definition contains two distinct sections:
+
+1. **Agent Definition**: This section contains the agent's metadata, including its name, 
+  description, execution settings - all static definitions more suited to a structured
+  format like JSON or YAML.
+
+2. **Agent Prompt**: This section contains the agent's prompt, which is typically a 
+  natural language description of the agent's capabilities and instructions for how to use it.
+  The prompt is typically a single string, but can also be a structured document with multiple
+  sections.
+
+Given the structured definitions as well as the unstructured prompt, the asset format best 
+suited for this dual representation (in our estimation) is Markdown. Markdown is a lightweight
+markup language that is easy to read and write, and is widely used for documentation and
+content creation. It also contains a structured format for metadata (yaml), which is ideal for
+representing the agent's definition.
+
+## Format
+The prompty format is a simple, human-readable format for defining agents. It consists of
+a single file with two sections: the agent definition and the agent prompt. The agent
+definition is written in YAML, and the agent prompt is written in Markdown.
+
+The following is an [example definition](basic.prompty) 
+of an agent:
+
+```markdown
+---
+id: my_agent_21
+version: 1.0
+name: Basic Agent
+description: A basic prompt that uses the gpt-4o chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - basic
+    - gpt-4o
+model:
+  id: gpt-4o
+  api: chat
+  connection:
+    type: azure_openai
+    azure_deployment: gpt-4o
+  options:
+    max_tokens: 150
+    temperature: 0.5
+    top_p: 1
+    frequency_penalty: 0
+    presence_penalty: 0
+inputs:
+  firstName:
+    type: string
+    default: User
+    sample: April
+    description: The first name of the customer
+  lastName:
+    type: string
+    sample: Kwong
+    required: true
+    strict: false
+    description: The last name of the customer
+  question:
+    type: string
+    description: The question to answer
+    required: true
+  connection:
+    type: string
+    default: "https://api.bing.com"
+    description: The connection to use
+outputs:
+  work:
+    type: object
+    json_schema: ${file:schema.json}
+    description: The thing to output
+
+tools:
+  - name: coder
+    type: code_interpreter
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      other: "other"
+  
+template:
+  format: mustache
+  parser: promptytools:
+  - name: query
+    type: dataverse
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      query: SELECT * FROM Customers WHERE firstName = '{{firstName}}' AND lastName = '{{lastName}}'
+    
+  - name: search
+    type: bing
+    options:
+      connection: {{connection}}
+---
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, 
+and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+user[name="{{firstName}} {{lastName}}"]:
+{{question}}
+```
+
+We will look at each section in turn to provide more detail. The agent definition can be broken
+down into the following sections:
+
+- Metadata
+  - `id`: The unique identifier of the agent.
+  - `version`: The version of the agent.
+  - `name`: The name of the agent.
+  - `description`: A short description of the agent.
+  - `metadata`: A set of metadata about the agent, including its authors and tags as specific metadata but
+    can accept any optional metadata that can be  handled by the provider.
+    - `authors`: A list of authors of the agent.
+    - `tags`: A list of tags for the agent.
+- Model Execution
+  - `model`: The model used by the agent, including the API, connection, and options.
+- Inputs and Outputs
+  - `inputs`: A list of inputs to the agent, including their type, default value, and description.
+  - `outputs`: A list of outputs from the agent, including their type and description.
+- Tools available to te Agent
+  - `tools`: A list of tools used by the agent, including their name, type, and options.
+- Template Settings
+  - `template`: The template used by the agent, including its type and parser.
+- Prompt
+  - `tools`: A list of tools used by the agent, including their name, type, and options.
+  - Text prompt: The text prompt used by the agent formatted to take advantage of the template engine
+    and parser specified in the template section (used to shape the block of text that is sent to the model).
+
+Any element within the prompt section, including tools, can be utilized by the template engine to dynamically configure the tools, text prompt, and other elements of the agent.

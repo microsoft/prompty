@@ -1,0 +1,48 @@
+---
+title: Model Execution
+sidebar:
+  order: 3
+---
+
+The model execution section is used to describe the model used by the agent, including the
+API, connection, and options. The model execution section is typically written in YAML,
+and is included at the top of the agent definition. Let's look at this section in more detail.
+
+```yaml
+model:
+  id: gpt-4o
+  api: chat
+  connection:
+    type: azure_openai
+    azure_deployment: gpt-4o
+  options:
+    max_tokens: 150
+    temperature: 0.5
+    top_p: 1
+    frequency_penalty: 0
+    presence_penalty: 0
+```
+
+In order to provide the maximum flexibility, the model execution section is broken down into three
+sections:
+- `id`: The unique identifier of the model. This is typically a short string, but can be any string
+  that is compatible with the agent. Typically, depending on the provider, this can replace the entire `connection` settings if
+  the provider has a way to resolve the model connection from the `id`.
+- `api`: The API used by the agent. This is typically a chat or completion API, but can be any
+  API that is compatible with the agent.
+- `connection`: The connection used by the agent. This is typically a type and deployment,
+  but can be any connection that is compatible with the agent. The `type` parameter is used to
+  tell the runtime how to load and execute the agent. The `deployment` parameter, in this example, 
+  is used to tell the runtime which deployment to use when executing against Azure OpenAI
+- `options`: The options used by the agent. This is typically a set of options that are
+  compatible with the API and connection used by the agent. This optional section is used to
+  specify the options to be used when executing the agent. If this section is not included, the
+  runtime will use the default options for the API and connection used by the agent.
+
+The `options` section is used to specify the options to be used when executing the agent against the desired type. A good example of additional options needed are in the case of a function calling loop executor. The `options` section can be used to specify the maximum number of iterations to run the function before stopping using a `retry` option in that section. 
+
+```yaml
+options:
+  retry: 5
+  ...
+```

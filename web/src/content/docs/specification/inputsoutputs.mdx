@@ -1,0 +1,82 @@
+---
+title: Inputs and Outputs
+sidebar:
+  order: 4
+---
+
+The inputs and outputs section is used to describe the inputs and outputs of the agent. The
+inputs and outputs section is typically written in YAML, and is included at the top of the agent
+definition. Let's look at this section in more detail.
+
+```yaml
+inputs:
+  firstName:
+    type: string
+    default: User
+    description: The first name of the customer
+  lastName:
+    type: string
+    description: The last name of the customer
+  question:
+    type: string
+    description: The question to answer
+outputs:
+  thing:
+    type: string
+    description: The thing to output
+```
+The inputs and outputs section is broken down into two sections:
+- `inputs`: The inputs to the agent. This is typically a set of inputs that will be used as parameters
+  that participate in the template rendering. Each input is broken down into three sections:
+  - `type`: The type of the input. This can be either a `string`, `number`, `array`, `object`, or `boolean`.
+  - `default`: The default value of the input. 
+  - `sample`: A sample value of the input. This is used to provide examples to the user of the agent.
+     They can also be used to provide examples to the tooling that will be used to load and execute the
+      agent. If this section is not included, the runtime will use the default value for the input.
+  - `required`: A boolean value that indicates whether the input is required. If this section is not
+    included, the runtime will assume that the input is required.
+  - `strict`: A boolean value that indicates whether the input can emit structural text used when parsing
+    the output. If this section is not included, the runtime will assume that the input cannot emit structural text
+    by defaulting `strict` to `true`. If `strict` is set to `false`, the runtime will assume that the input can emit
+    structural text. 
+  - `description`: A short description of the input. This is typically a short string, but can be
+    any string that is compatible with the agent.
+  - [optional] `json_schema`: A JSON schema that describes the input if the type is `object`.
+
+- `outputs`: The outputs of the agent. This represents the expected output type of the agent (the output,
+   however, is governed by the provider - sometimes this section can be ignored). Each output is 
+   broken down into two sections:
+  - `type`: The type of the output. This can be either a `string`, `number`, `array`, `object`, or `boolean`.
+  - `default`: The default value of the output. 
+  - `description`: A short description of the output. This is typically a short string, but can be
+    any string that is compatible with the agent.
+  - [optional] `json_schema`: A JSON schema that describes the input if the type is `object`.
+
+  The `json_schema` section is used to specify the JSON schema that describes the input or output. This
+is typically a JSON schema that is compatible with the input or output type. If this section is not included, the runtime will assume that the input or output is a simple type (e.g. `string`, `number`, `array`, `object`, or `boolean`).
+
+A shorthand for the outputs section could be something like:
+
+```yaml
+outputs: ${file:schema.json}
+```
+
+This would expand the json schema into the outputs section.
+
+A note on the inputs, outpus, and tool sections with respect to configuration. The current approach uses a "keyed"
+naming approach when delcaring inputs, outpus, as well as tool parameters (more on tools below). This approach may not
+be the desired approach by some providers. This preference will also be honored by allowing an array of properties as well:
+
+```yaml
+inputs:
+  - name: firstName
+    type: string
+    default: User
+    description: The first name of the customer
+  - name: lastName
+    type: string
+    description: The last name of the customer
+  - name: question
+    type: string
+    description: The question to answer
+``` 

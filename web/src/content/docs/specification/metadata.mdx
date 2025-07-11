@@ -1,0 +1,13 @@
+---
+title: Metadata
+sidebar:
+  order: 2
+---
+
+The agent metadata is used to describe the agent and its capabilities. It is typically a
+short description of the agent, its authors, and its tags. The metadata is typically written in
+YAML, and is included at the top of the agent definition. `id`, `version`, `name`, and `description` are top level
+fields, while `metadata` is optional and can contain any dictionary
+of items. Two metadata fields that are included in the current implementation
+are `authors` and `tags`. This does not preclude the addition of other metadata fields that can be
+handled by the provider.

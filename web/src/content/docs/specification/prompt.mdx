@@ -1,0 +1,260 @@
+---
+title: Prompt Section
+sidebar:
+  order: 7
+---
+
+The prompt section is used to describe the prompt used by the agent, including its tools and text
+that will be sent to the model. It builds upon the formatting language used in legacy PromptFlow applications as well as the latest Prompty format.
+
+
+## Prompty Format
+The prompt section is typically written in Markdown, and is included
+at the bottom of the agent definition. Let's look at this section in more detail.
+
+```markdown
+tools:
+  - id: query
+    type: dataverse
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      query: SELECT * FROM {{table}} WHERE firstName = '{{firstName}}' AND lastName = '{{lastName}}'
+    
+  - id: search
+    type: bing
+    options:
+      parameters: [{{question}}]
+      location: {{location}}
+
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly, 
+and in a personable manner using markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+thread[key="value"]:
+content
+
+user[name="{{firstName}} {{lastName}}"]:
+{{question}}
+```
+
+## Syntax
+The only value that is treated differently in this case are `tools`.
+
+## Tools
+The tools used by the agent. This is typically a set of tools that will be used as
+  parameters that participate in the template rendering. Each tool is broken down into three
+  sections:
+- `id`: The id of the tool. This is typically a short string, but can be any string that is
+  compatible with the agent and unique across the agent. The id is used to identify the tool in the
+  template and is used to render the tool in the template.
+- `type`: The type of the tool. This is typically a short string, but can be any string that is
+  compatible with the tool type.
+- `options`: The options of the tool. This is typically a set of parameters that are
+  compatible with the tool type.
+
+The reason the `tools` section is included in the prompt section is to allow the template engine
+to dynamically configure the tools used by the agent. This allows the agent to be more flexible
+and adaptable to different situations. After the Agent is deployed, for example, additional tools 
+can be provided when it is invoked. These can be configured dynamically by the runtime.
+
+If a dynamic `tools` section is included in the prompt section, it **MUST** be included before the
+text prompt.
+
+## Text Prompt
+The text prompt used by the agent. This is typically a block of text that will be
+  sent to the model. The text prompt is typically written in Markdown, and is included at the
+  bottom of the agent definition. The text prompt can be any string that is compatible with the 
+  rendering and parsing engine used by the runtime.
+
+As part of the chat API, a regular system of breaking
+up the text prompt into individual messages is needed. The general purpose of this syntax is to create boundaries between each message in a message array.
+
+```
+system:
+You are a helpful assistant
+
+user[name="Seth"]:
+What is the meaning of life?
+```
+This has the effect of producing:
+```
+[{ "role": "system", "content": "You are a helpful assistant" },
+ { "role": "user", "name": "Seth", "content": "What is the meaning of life?"}]
+ ```
+In general, any arbitrary key/value pair can be added to the role definition and will be included in the output when
+parsed. It is up to the execution invoker, however, to determine what to do with those values.
+
+The accepted values using the `item:` syntax are:
+- assistant
+- function/tool
+- system
+- user
+- tools
+- thread
+
+As described above, the `tools` is treated differently as it is:
+- rendered (since it is a part of the prompt)
+- parsed and hosisted into the agent's collection of available tools
+
+## Assistant
+The assistant section is used to define the assistant that is used to process the conversation. This is passed as part of the messages collection to the runtime. For example, this fragment:
+
+```markdown
+assistant:
+The weather in Seattle is 72 degrees and sunny.
+```
+will produce an assistant item in the messages collection. The runtime
+can then use this information to dynamically inject the assistant into the conversation.
+
+The message will look like:
+```json
+{
+    role: "assistant",
+    content: "The weather in Seattle is 72 degrees and sunny."
+}
+```
+
+When an assistant contains specific content types, this should be defined as follows (in this example, the assistant issued a tool call message):
+
+```markdown
+assistant[type="tool_call"]:
+id: tool_call_123
+type: function
+function:
+  name: get_account_info
+  arguments:
+    account_number: 123456
+```
+
+When an assistant uses a specific content type, the type will determine how the `content` section of the message is treated. In this 
+case, a `tool_call` type is used, which expects structured yaml. This will produce a message that looks like this:
+
+```json
+{
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_call",
+        "tool_call": {
+            "id": "tool_call_123",
+            "type": "function",
+            "function": {
+              "name": "get_account_info",
+              "arguments": {
+                  "account_number": 123456
+              }
+            }
+        }
+    }
+  ]
+}
+```
+
+
+## Funtion / Tool
+The function/tool section is used to define a function that is used to process the conversation. This is passed as part of the messages collection to the runtime. For example, this fragment:
+
+```markdown
+tool[name="ask_database", tool_call_id="12323"]:
+The album with the most tracks is titled "Greatest Hits," which contains 57 tracks.
+```
+will produce a tool item in the messages collection. The runtime
+can then use this information to dynamically inject the tool into the conversation.
+
+The message will look like:
+```json
+{
+    "role": "tool",
+    "tool_call_id": "12323",
+    "content": [
+        { "type": "tool_result", "tool_result": "The album with the most tracks is titled \"Greatest Hits,\" which contains 57 tracks." }
+    ]
+}
+```
+
+## Thread
+The thread section is used to define a thread that is used to store the state of the conversation. This is passed as part of the messages collection to the runtime. For example, this fragment:
+
+```
+![thread]
+```
+will produce a thread item in the messages collection. The runtime
+can then use this information to dynamically inject the thread into the conversation.
+
+## Content
+The content in a messages array can range from a simple string to a full file. The current prompty
+format supports images by using the markdown syntax for images. For example, this fragment:
+
+```markdown
+user:
+This is an image:
+![image](https://example.com/image.png)
+you should consider it in your response.
+```
+will produce:
+```json
+{
+    role: "user",
+    content: [
+        { type: "text", text: "This is an image:" },
+        {
+            type: "image_url",
+            image_url: {
+                "url": "https://example.com/image.png",
+            },
+        },
+        { type: "text", text: "you should consider it in your response." }
+    ]
+}
+```
+
+Leaning into that approach, files, videos, recordings, or other media can be included in the content of a message. The runtime will need to be able to handle these different types of content.
+
+This allows for embedding files, images, and other media in the content of a message like so:
+
+```markdown
+user:
+This is a file:
+![file](https://example.com/file.pdf)
+you should consider it in your response.
+```
+
+By default, the the value inside `![here]` described the object
+type. The runtime will need to be able to handle these different types of content. If additional attributes are required for this
+content type, they can be added as additional key/value pairs as 
+follows:
+
+```markdown
+![type="image", quality="high"](https://example.com/file.jpg)
+```
+
+In this case, this will produce:
+```json
+{
+    role: "user",
+    content: [
+        {
+            type: "image_url",
+            image_url: {
+                "url": "https://example.com/file.jpg",
+                "quality": "high"
+            },
+        }
+    ]
+}
+```
+Having said that, the provider will define what happens with the additional attributes. The example above is specific to the image_url type in OpenAI's ChatGPT.
+
+## Replacement Constructs
+The replacement constructions allow a developer to "hoist" values into the agent definition by doing value substitution. This is done by using the following syntax: `${PROTOCOL:VARIABLE}`. The `PROTOCOL` is the protocol used to access the variable, and the `VARIABLE` is the name of the variable. The following protocols are supported:
+
+- `env`: The variable is accessed from the environment variables. For example, `${env:MY_ENV_VAR}` will access the environment variable `MY_ENV_VAR`.
+- `file`: The variable is accessed from a file. For example, `${file:my_file.json}` will access the file `my_file.json` and will load the key/value pairs from the file. The file can be in JSON or YAML format. The file will be loaded and the key/value pairs will be hoisted into the spot in the template.
+- `params`: The variable is accessed from the parameters passed to the agent. For example, `${params:my_param}` will access the parameter `my_param` passed to the agent. The parameter will be hoisted into the spot in the template.
+
+Other protocols can be added in the future, but these are the most common ones used in the current implementation.

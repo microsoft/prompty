@@ -1,31 +1,21 @@
 ---
 title: Concepts
-authors:
-  - sethjuarez
-  - wayliums
-  - cassiebreviu
-  - bethanyjep
-  - nitya
-date: 2024-10-09
-tags:
-  - getting-started
-  - documentation
-  - overview
-index: 2
+sidebar:
+  order: 1
 ---
 
 _In this section, we cover the core building blocks of Prompty (specification, tooling, and runtime) and walk you through the developer flow and mindset for going from "prompt" to "prototype"_.
 
 
 
-## 1. Prompty Components
+## Prompty Components
 
 The Prompty implementation consists of three core components - the _specification_ (file format), the _tooling_ (developer experience) and the _runtime_ (executable code). Let's review these briefly.
 
 ![What is Prompty?](concepts/01-what-is-prompty.png)
 
 
-### 1.1 The Prompty Specification
+### The Prompty Specification
 
 The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Prompty.yaml) defines the core `.prompty` asset file format. We'll look at this in more detail in the [Prompty File Spec](/docs/prompty-file-spec) section of the documentation. For now, click to expand the section below to see a _basic.prompty_ sample and get an intuitive sense for what an asset file looks like.
 
@@ -65,7 +55,7 @@ The [Prompty specification](https://github.com/microsoft/prompty/blob/main/Promp
 
 </details>
 
-### 1.2 The Prompty Tooling
+### The Prompty Tooling
 
 The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty) helps you create, manage, and execute, your `.prompty` assets - effectively giving you a _playground_ right in your editor, to streamline your prompt engineering workflow and speed up your prototype iterations. We'll get hands-on experience with this in the [Tutorials](/docs/tutorials) section. For now, click to expand the section and get an intutive sense for how this enhances your developer experience.
 
@@ -83,7 +73,7 @@ The [Prompty Visual Studio Code Extension](https://marketplace.visualstudio.com/
 
 </details>
 
-### 1.3 The Prompty Runtime
+### The Prompty Runtime
 
 The Prompty Runtime helps you make the transition from _static asset_ (`.prompty` file) to _executable code_ (using a preferred language and framework) that you can test interactively from the commandline, and integrate seamlessly into end-to-end development workflows for automation. We'll have a dedicated documentation on this **soon**. In the meantime, click to expand the section below to learn about **supported runtimes** today, and check back for updates on new runtime releases.
 
@@ -102,7 +92,7 @@ Enhanced runtimes add support for orchestration frameworks, enabling complex wor
 </details>
 
 
-## 2. Developer Workflow
+## Developer Workflow
 
 Prompty is ideal for rapid prototyping and iteration of a new generative AI application, using rich developer tooling and a local development runtime. It fits best into the _ideation_ and _evaluation_ phases of the GenAIOps application lifecycle as shown:
 
@@ -113,7 +103,7 @@ Prompty is ideal for rapid prototyping and iteration of a new generative AI appl
 ![How do we use prompty?](concepts/02-build-with-prompty.png)
 
 
-## 3. Developer Mindset
+## Developer Mindset
 
 As an AI application developer, you are likely already using a number of tools and frameworks to enhance your developer experience. So, where does Prompty fit into you developer toolchain? 
 

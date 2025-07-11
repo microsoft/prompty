@@ -1,0 +1,48 @@
+---
+title: Tools
+sidebar:
+  order: 5
+---
+
+The tools section is used to describe the tools used by the agent, including their name, type,
+and options. The tools section is typically written in YAML, and is included at the top of
+the agent definition. Let's look at this section in more detail.
+
+```yaml
+tools:
+  - name: coder
+    type: Microsoft.CodeInterpreter
+    options:
+      connection: "https://contoso.crm.dynamics.com"
+      other: "other"
+```
+
+The tools section is broken down into three sections:
+- `name`: The name of the tool. This is typically a short string, but can be any string that is
+  compatible with the agent.
+- `type`: The type of the tool. This is typically a short string, but can be any string that is
+  compatible with the tool type.
+- `description`: An optional short description of the tool for metadata purposes. This is typically a short string,
+  but can be any string that is compatible with the tool type.
+- `options`: The options of the tool. This is typically a set of parameters that are
+  compatible with the tool type.
+
+If a tool type is a local function, the following allowance will be made in the interests of clarity
+and brevity:
+
+```yaml
+tools:
+  - name: menu-reader
+    type: function
+    patameters:
+      menu:
+        type: string
+        description: The menu to display
+      drinks:
+        type: array
+        description: The drinks to display
+```
+
+
+Since this section is in the frontmatter, it is not dynamic and cannot be used by the template engine
+to configure dynamically. This is a static options of the tools used by the agent.

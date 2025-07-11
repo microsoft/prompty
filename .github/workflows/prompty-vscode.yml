@@ -1,0 +1,55 @@
+name: prompty VSCode Extension build and test
+
+on:
+  push:
+    paths:
+      - 'vscode/prompty/**'
+    branches:
+      - 'main'
+
+jobs:
+  extension-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Create tag
+        run: |
+          echo "TAG=1.$(TZ='America/Los_Angeles' date +%Y%m%d.9%H%M%S | sed 's/\.0/./g')" >> "$GITHUB_ENV"
+          echo "Using tag: $TAG"
+
+      - name: Install dependencies
+        working-directory: ./vscode/prompty
+        run: npm install
+
+      - name: Compile
+        working-directory: ./vscode/prompty
+        run: npm run compile
+
+      - name: Generate Grammar
+        working-directory: ./vscode/prompty
+        run: npm run generate-grammar
+
+      - name: Build
+        working-directory: ./vscode/prompty
+        run: npm run build
+
+      - name: Build VSIX
+        working-directory: ./vscode/prompty
+        run: npm run package-pre -- $TAG
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-vsix
+          path: ./vscode/prompty/*.vsix
+
+      - name: Publish
+        run: npm run publish-pre
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

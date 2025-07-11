@@ -3,6 +3,7 @@ import { defineConfig, passthroughImageService } from "astro/config";
 import starlight from "@astrojs/starlight";
 import devtoolsJson from "vite-plugin-devtools-json";
 import starlightAutoSidebar from "starlight-auto-sidebar";
+import mermaid from "astro-mermaid";
 
 export default defineConfig({
   site: "https://prompty.ai/",
@@ -14,6 +15,10 @@ export default defineConfig({
     service: passthroughImageService(),
   },
   integrations: [
+    mermaid({
+      theme: 'forest',
+      autoTheme: true
+    }),
     starlight({
       title: "Prompty",
       logo: {
