@@ -1,0 +1,54 @@
+:root {
+  --pagefind-ui-font: ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol,
+    Noto Color Emoji;
+  --sl-font-system: var(--pagefind-ui-font);
+  --prompty-blue: #75beec;
+  --sl-hue-blue: 100;
+  --sl-hue-purple: 281;
+  --sl-hue-red: 339;
+  --sl-hue-orange: 41;
+  --sl-hue-green: 101;
+  --sl-color-accent-low: hsl(224, 41%, 19%);
+  --sl-color-accent: var(--prompty-blue);
+  --sl-color-accent-high: var(--prompty-blue);
+}
+
+@keyframes easeInOut {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.hero img {
+  overflow: visible;
+  animation: easeInOut 6s ease-in-out infinite;
+}
+
+.hero h1 {
+  color: rgba(0, 0, 0, 0);
+  background: linear-gradient(
+    to bottom,
+    var(--sl-color-white) 65%,
+    var(--prompty-blue)
+  );
+  background-clip: text;
+  padding-bottom: 0.2rem;
+  font-weight: 400;
+  padding-block: 0.2rem;
+}
+
+@media (min-width: 50rem) {
+  .hero {
+    padding-block: 4rem;
+  }
+}

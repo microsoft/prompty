@@ -1,0 +1,28 @@
+---
+
+---
+
+<div class="info-wrapper not-content" data-pagefind-ignore>
+  <slot />
+</div>
+
+<style>
+  .info-wrapper {
+    margin-block: 2.5rem 2.5rem !important;
+    font-size: clamp(
+      var(--sl-text-sm),
+      calc(0.5rem + 1vw),
+      var(--sl-text-body)
+    );
+  }
+
+  @media (min-width: 50rem) {
+    .info-wrapper {
+      margin-block: 5rem 2.5rem !important;
+      font-size: clamp(
+        var(--sl-text-sm),
+        calc(0.5rem + 1vw),
+        var(--sl-text-body)
+      );
+  }
+</style>

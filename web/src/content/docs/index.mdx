@@ -1,0 +1,123 @@
+---
+title: prompty.ai
+head:
+  - tag: title
+    content: prompty.ai
+description: |
+  Prompty is a new asset class and format for LLM prompts that 
+  aims to provide observability, understandability, and portability 
+  for developers.
+template: splash
+editUrl: false
+lastUpdated: false
+header: false
+next: false
+hero:
+  title: Agency with observability
+  tagline: |
+    Prompty is a new asset class and format for LLM prompts that 
+    aims to provide observability, understandability, and portability 
+    for developers.
+  image:
+    file: ~/assets/prompty_p.svg
+  actions:
+    - text: Get started
+      icon: right-arrow
+      link: /welcome/
+    - text: View on GitHub
+      icon: external
+      variant: minimal
+      link: https://github.com/microsoft/prompty
+sidebar:
+  hidden: true
+---
+import InfoGrid from '~/components/info-grid.astro';
+import Info from '~/components/info.astro';
+import NumberGrid from '~/components/number-grid.astro';
+import Number from '~/components/number.astro';
+import AboutPrompty from '~/components/about-prompty.astro';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { ContributorList } from "starlight-contributor-list";
+
+
+
+<InfoGrid>
+  <Info reversed={false} title="What is Prompty?" image="/images/prompty-venn.svg">
+    Prompty is an asset class and format for LLM prompts that aims to
+    provide observability, understandability, and portability for
+    developers - the primary goal is to speed up the developer inner
+    loop.
+
+    Prompty is comprised of 3 things
+    
+      - the specification,
+      - its tooling,
+      - and runtime.
+  </Info>
+  <Info reversed={true} title="The specification" image="/images/spec.png">
+  Prompty is intended to be a language agnostic asset class for 
+  creating and managing prompts.
+  
+    - Uses common markdown format
+    - Modified front-matter to specify metadata, model settings, sample data (among other things)
+    - Content in a standard template format
+  </Info>
+  <Info reversed={false} title="The tooling" image="/images/tools.png">
+  Given the standard specification, there's a lot of nice things we can
+  give developers in their environment.
+  
+  - Front matter autocompletion
+  - Colorization / syntax highlighting
+  - Validation (with red squiggles for undefined variables)
+  - Quick run
+  - Code generation
+  - Evaluation generation
+  </Info>
+  <Info reversed={true} title="The runtime" image="/images/runtime.png">
+    Prompty runtime is the whatever engine that understands and 
+    can execute the format. As a standalone file, it can't really 
+    do anything without the help of the extension (when developing) 
+    or the runtime (when running).
+    
+      - Works in Python
+      - Works in C#
+      - (In progress) works in TypeScript/JavaScript
+  </Info>
+</InfoGrid>
+
+<NumberGrid>
+ <Number number={1} title="Feel confident while building">
+    Understand what's coming in and going out and how to manage it effectively.
+  </Number>
+  <Number number={2} title="Language agnostic">
+    Use with any language or framework you are familiar with.
+  </Number>
+  <Number number={3} title="Flexible and simple">
+    Integrate into whatever development environments or workflows you have.
+  </Number>
+</NumberGrid>
+
+<InfoGrid>
+  <Info reversed={false} title="Standards open doors" image="/images/prompty-graph.png">
+    By working in a common format we open up opportunities for new improvements.
+    
+    - By default all prompty executions will produce tracing for each prompty called
+    - Developers can add additional tracing via simple SDK functions
+    - Tracing output uses OpenTelemetry so any/all existing tooling around that standard can be used to visualize the tracing output.
+  </Info>
+  <Info reversed={true} title="Works for everyone" image="/images/prompty-ascii-art-globe.png">
+    Prompty is built on the premise that even with increasing complexity in AI, a 
+    fundamental unit remains prompts. And understanding this can lead to more innovative 
+    developments in AI applications, for everyone.
+  </Info>
+</InfoGrid>
+
+<CardGrid>
+<LinkCard title="Jump In!" href="/welcome/" />
+<LinkCard title="Concepts" href="/getting-started/concepts/" />
+</CardGrid>
+
+<AboutPrompty title="Sponsored by:">
+  Thanks to all of our amazing contributors:
+  <ContributorList githubRepo="microsoft/prompty"/>
+</AboutPrompty>

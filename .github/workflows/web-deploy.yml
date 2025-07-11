@@ -28,16 +28,6 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: rewrite version
-      run: |
-        echo "export const VERSION = '$TAG';" > web/src/lib/version.ts
-        cat web/src/lib/version.ts
-
-    - name: rewrite base
-      run: |
-        echo "export const BASE = 'https://prompty.ai';" > web/src/lib/base.ts
-        cat web/src/lib/base.ts
-
     - name: Log in to registry
       uses: docker/login-action@v3
       with:
@@ -58,7 +48,7 @@ jobs:
         az containerapp up --name prompty-web \
                             --image ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG} \
                             --ingress external \
-                            --target-port 3000 \
+                            --target-port 8080 \
                             --resource-group prompty \
                             --registry-server ${{ secrets.REGISTRY_ENDPOINT }} \
                             --registry-username ${{ secrets.REGISTRY_USERNAME }} \
