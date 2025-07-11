@@ -51,7 +51,7 @@ Reference other items purchased specifically by name and description that
 would go well with the items found above. Be brief and concise and use appropriate emojis.
 
 assistant:
-How can I help you today, Jane? 🌟?
+How can I help you today, Jane??
 
 user:
 What can you tell me about your jackets?
@@ -59,6 +59,6 @@ Please be brief, use my name in the response, reference
 previous purchases, and add emojis for personalization and flair.
 
 assistant:
-Hi Jane Doe! 🎉 As a Gold member, you have excellent taste in outdoor gear. 🏕️ We have two jackets that are perfect for your adventures: the Summit Breeze Jacket and the RainGuard Hiking Jacket. The Summit Breeze Jacket is lightweight, windproof, water-resistant, and has reflective accents for enhanced visibility at night. The RainGuard Hiking Jacket is waterproof, breathable, has ventilation zippers, and adjustable cuffs and hem. 🔥 Based on your TrekReady Hiking Boots purchase, I'd recommend pairing them with either jacket for maximum comfort and style on your next hike. 🌲
+Hi Jane Doe! As a Gold member, you have excellent taste in outdoor gear. We have two jackets that are perfect for your adventures: the Summit Breeze Jacket and the RainGuard Hiking Jacket. The Summit Breeze Jacket is lightweight, windproof, water-resistant, and has reflective accents for enhanced visibility at night. The RainGuard Hiking Jacket is waterproof, breathable, has ventilation zippers, and adjustable cuffs and hem. Based on your TrekReady Hiking Boots purchase, I'd recommend pairing them with either jacket for maximum comfort and style on your next hike.
 
 user:

@@ -1,0 +1,833 @@
+[
+	{
+		"name": "id",
+		"kind": 15,
+		"range": {
+			"start": {
+				"line": 1,
+				"character": 0
+			},
+			"end": {
+				"line": 1,
+				"character": 13
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 1,
+				"character": 0
+			},
+			"end": {
+				"line": 1,
+				"character": 2
+			}
+		},
+		"children": [],
+		"detail": "chatagent"
+	},
+	{
+		"name": "name",
+		"kind": 15,
+		"range": {
+			"start": {
+				"line": 2,
+				"character": 0
+			},
+			"end": {
+				"line": 2,
+				"character": 17
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 2,
+				"character": 0
+			},
+			"end": {
+				"line": 2,
+				"character": 4
+			}
+		},
+		"children": [],
+		"detail": "Basic Agent"
+	},
+	{
+		"name": "description",
+		"kind": 15,
+		"range": {
+			"start": {
+				"line": 3,
+				"character": 0
+			},
+			"end": {
+				"line": 3,
+				"character": 77
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 3,
+				"character": 0
+			},
+			"end": {
+				"line": 3,
+				"character": 11
+			}
+		},
+		"children": [],
+		"detail": "A basic prompt that uses the gpt-4o chat API to answer questions"
+	},
+	{
+		"name": "model",
+		"kind": 2,
+		"range": {
+			"start": {
+				"line": 5,
+				"character": 0
+			},
+			"end": {
+				"line": 11,
+				"character": 18
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 5,
+				"character": 0
+			},
+			"end": {
+				"line": 5,
+				"character": 5
+			}
+		},
+		"children": [
+			{
+				"name": "api",
+				"kind": 15,
+				"range": {
+					"start": {
+						"line": 6,
+						"character": 2
+					},
+					"end": {
+						"line": 6,
+						"character": 11
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 6,
+						"character": 2
+					},
+					"end": {
+						"line": 6,
+						"character": 5
+					}
+				},
+				"children": [],
+				"detail": "chat"
+			},
+			{
+				"name": "connection",
+				"kind": 2,
+				"range": {
+					"start": {
+						"line": 7,
+						"character": 2
+					},
+					"end": {
+						"line": 9,
+						"character": 33
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 7,
+						"character": 2
+					},
+					"end": {
+						"line": 7,
+						"character": 12
+					}
+				},
+				"children": [
+					{
+						"name": "type",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 8,
+								"character": 4
+							},
+							"end": {
+								"line": 8,
+								"character": 19
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 8,
+								"character": 4
+							},
+							"end": {
+								"line": 8,
+								"character": 8
+							}
+						},
+						"children": [],
+						"detail": "moveworks"
+					},
+					{
+						"name": "azure_deployment",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 9,
+								"character": 4
+							},
+							"end": {
+								"line": 9,
+								"character": 33
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 9,
+								"character": 4
+							},
+							"end": {
+								"line": 9,
+								"character": 20
+							}
+						},
+						"children": [],
+						"detail": "gpt-4o-mini"
+					}
+				]
+			},
+			{
+				"name": "options",
+				"kind": 2,
+				"range": {
+					"start": {
+						"line": 10,
+						"character": 2
+					},
+					"end": {
+						"line": 11,
+						"character": 18
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 10,
+						"character": 2
+					},
+					"end": {
+						"line": 10,
+						"character": 9
+					}
+				},
+				"children": [
+					{
+						"name": "agent",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 11,
+								"character": 4
+							},
+							"end": {
+								"line": 11,
+								"character": 18
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 11,
+								"character": 4
+							},
+							"end": {
+								"line": 11,
+								"character": 9
+							}
+						},
+						"children": [],
+						"detail": "service"
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "inputs",
+		"kind": 2,
+		"range": {
+			"start": {
+				"line": 15,
+				"character": 0
+			},
+			"end": {
+				"line": 31,
+				"character": 18
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 15,
+				"character": 0
+			},
+			"end": {
+				"line": 15,
+				"character": 6
+			}
+		},
+		"children": [
+			{
+				"name": "firstName",
+				"kind": 2,
+				"range": {
+					"start": {
+						"line": 16,
+						"character": 2
+					},
+					"end": {
+						"line": 20,
+						"character": 47
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 16,
+						"character": 2
+					},
+					"end": {
+						"line": 16,
+						"character": 11
+					}
+				},
+				"children": [
+					{
+						"name": "type",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 17,
+								"character": 4
+							},
+							"end": {
+								"line": 17,
+								"character": 16
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 17,
+								"character": 4
+							},
+							"end": {
+								"line": 17,
+								"character": 8
+							}
+						},
+						"children": [],
+						"detail": "string"
+					},
+					{
+						"name": "default",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 18,
+								"character": 4
+							},
+							"end": {
+								"line": 18,
+								"character": 17
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 18,
+								"character": 4
+							},
+							"end": {
+								"line": 18,
+								"character": 11
+							}
+						},
+						"children": [],
+						"detail": "User"
+					},
+					{
+						"name": "sample",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 19,
+								"character": 4
+							},
+							"end": {
+								"line": 19,
+								"character": 17
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 19,
+								"character": 4
+							},
+							"end": {
+								"line": 19,
+								"character": 10
+							}
+						},
+						"children": [],
+						"detail": "April"
+					},
+					{
+						"name": "description",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 20,
+								"character": 4
+							},
+							"end": {
+								"line": 20,
+								"character": 47
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 20,
+								"character": 4
+							},
+							"end": {
+								"line": 20,
+								"character": 15
+							}
+						},
+						"children": [],
+						"detail": "The first name of the customer"
+					}
+				]
+			},
+			{
+				"name": "lastName",
+				"kind": 2,
+				"range": {
+					"start": {
+						"line": 21,
+						"character": 2
+					},
+					"end": {
+						"line": 26,
+						"character": 46
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 21,
+						"character": 2
+					},
+					"end": {
+						"line": 21,
+						"character": 10
+					}
+				},
+				"children": [
+					{
+						"name": "type",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 22,
+								"character": 4
+							},
+							"end": {
+								"line": 22,
+								"character": 16
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 22,
+								"character": 4
+							},
+							"end": {
+								"line": 22,
+								"character": 8
+							}
+						},
+						"children": [],
+						"detail": "string"
+					},
+					{
+						"name": "sample",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 23,
+								"character": 4
+							},
+							"end": {
+								"line": 23,
+								"character": 17
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 23,
+								"character": 4
+							},
+							"end": {
+								"line": 23,
+								"character": 10
+							}
+						},
+						"children": [],
+						"detail": "Kwong"
+					},
+					{
+						"name": "required",
+						"kind": 17,
+						"range": {
+							"start": {
+								"line": 24,
+								"character": 4
+							},
+							"end": {
+								"line": 24,
+								"character": 18
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 24,
+								"character": 4
+							},
+							"end": {
+								"line": 24,
+								"character": 12
+							}
+						},
+						"children": [],
+						"detail": "true"
+					},
+					{
+						"name": "strict",
+						"kind": 17,
+						"range": {
+							"start": {
+								"line": 25,
+								"character": 4
+							},
+							"end": {
+								"line": 25,
+								"character": 17
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 25,
+								"character": 4
+							},
+							"end": {
+								"line": 25,
+								"character": 10
+							}
+						},
+						"children": [],
+						"detail": "false"
+					},
+					{
+						"name": "description",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 26,
+								"character": 4
+							},
+							"end": {
+								"line": 26,
+								"character": 46
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 26,
+								"character": 4
+							},
+							"end": {
+								"line": 26,
+								"character": 15
+							}
+						},
+						"children": [],
+						"detail": "The last name of the customer"
+					}
+				]
+			},
+			{
+				"name": "question",
+				"kind": 2,
+				"range": {
+					"start": {
+						"line": 27,
+						"character": 2
+					},
+					"end": {
+						"line": 31,
+						"character": 18
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 27,
+						"character": 2
+					},
+					"end": {
+						"line": 27,
+						"character": 10
+					}
+				},
+				"children": [
+					{
+						"name": "type",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 28,
+								"character": 4
+							},
+							"end": {
+								"line": 28,
+								"character": 16
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 28,
+								"character": 4
+							},
+							"end": {
+								"line": 28,
+								"character": 8
+							}
+						},
+						"children": [],
+						"detail": "string"
+					},
+					{
+						"name": "description",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 29,
+								"character": 4
+							},
+							"end": {
+								"line": 29,
+								"character": 39
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 29,
+								"character": 4
+							},
+							"end": {
+								"line": 29,
+								"character": 15
+							}
+						},
+						"children": [],
+						"detail": "The question to answer"
+					},
+					{
+						"name": "sample",
+						"kind": 15,
+						"range": {
+							"start": {
+								"line": 30,
+								"character": 4
+							},
+							"end": {
+								"line": 30,
+								"character": 55
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 30,
+								"character": 4
+							},
+							"end": {
+								"line": 30,
+								"character": 10
+							}
+						},
+						"children": [],
+						"detail": "What are the best sleeping bags for winter?"
+					},
+					{
+						"name": "required",
+						"kind": 17,
+						"range": {
+							"start": {
+								"line": 31,
+								"character": 4
+							},
+							"end": {
+								"line": 31,
+								"character": 18
+							}
+						},
+						"selectionRange": {
+							"start": {
+								"line": 31,
+								"character": 4
+							},
+							"end": {
+								"line": 31,
+								"character": 12
+							}
+						},
+						"children": [],
+						"detail": "true"
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "template",
+		"kind": 2,
+		"range": {
+			"start": {
+				"line": 35,
+				"character": 0
+			},
+			"end": {
+				"line": 37,
+				"character": 19
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 35,
+				"character": 0
+			},
+			"end": {
+				"line": 35,
+				"character": 8
+			}
+		},
+		"children": [
+			{
+				"name": "format",
+				"kind": 15,
+				"range": {
+					"start": {
+						"line": 36,
+						"character": 2
+					},
+					"end": {
+						"line": 36,
+						"character": 16
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 36,
+						"character": 2
+					},
+					"end": {
+						"line": 36,
+						"character": 8
+					}
+				},
+				"children": [],
+				"detail": "jinja2"
+			},
+			{
+				"name": "parser",
+				"kind": 15,
+				"range": {
+					"start": {
+						"line": 37,
+						"character": 2
+					},
+					"end": {
+						"line": 37,
+						"character": 17
+					}
+				},
+				"selectionRange": {
+					"start": {
+						"line": 37,
+						"character": 2
+					},
+					"end": {
+						"line": 37,
+						"character": 8
+					}
+				},
+				"children": [],
+				"detail": "prompty"
+			}
+		]
+	},
+	{
+		"name": "system",
+		"kind": 13,
+		"range": {
+			"start": {
+				"line": 39,
+				"character": 0
+			},
+			"end": {
+				"line": 39,
+				"character": 7
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 39,
+				"character": 0
+			},
+			"end": {
+				"line": 39,
+				"character": 6
+			}
+		},
+		"children": [],
+		"detail": "null"
+	},
+	{
+		"name": "You are helping {{firstName}} {{lastName}} to find answers to their questions. Use their name to address them in your responses.\nYou should decide if its a SUPPORT or a SALES question. Please respond with SUPPORT or SALES.\nuser",
+		"kind": 2,
+		"range": {
+			"start": {
+				"line": 46,
+				"character": 0
+			},
+			"end": {
+				"line": 53,
+				"character": 11
+			}
+		},
+		"selectionRange": {
+			"start": {
+				"line": 46,
+				"character": 0
+			},
+			"end": {
+				"line": 52,
+				"character": 4
+			}
+		},
+		"children": []
+	}
+]

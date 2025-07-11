@@ -18,6 +18,7 @@ jobs:
     name: run unit tests on supported python versions
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         os: [ubuntu-latest, macOS-latest, windows-latest]
@@ -29,21 +30,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pdm-project/setup-pdm@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: install dependencies
         working-directory: ./runtime/prompty
-        run: pdm install
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e '.[dev]'
+
+      - name: Lint with ruff
+        working-directory: ./runtime/prompty
+        run: ruff check .
+
+      - name: Check formatting with black
+        working-directory: ./runtime/prompty
+        run: black . --check --verbose
 
       - name: test package
         working-directory: ./runtime/prompty
-        run: pdm run pytest
+        run: |
+          python3 -m pytest -s -vv --cov-report term --cov-report json --cov=prompty tests/
 
       - name: mypy check
         working-directory: ./runtime/prompty
-        run: pdm run mypy . --check-untyped-defs
+        run: python3 -m mypy . --check-untyped-defs
 
   pypi-publish:
     name: upload release to PyPI
@@ -58,14 +71,42 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      - uses: pdm-project/setup-pdm@v4
+      - name: Create tag
+        run: |
+          echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/python\///')" >> "$GITHUB_ENV"
+          echo "Using version: ${{ env.VERSION }}"
+
+      - name: Rewrite version
+        working-directory: ./runtime/prompty
+        run: |
+          echo "VERSION = \"$VERSION\"" > ./prompty/_version.py
+          cat ./prompty/_version.py
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v3
         with:
           python-version: 3.9
 
       - name: install dependencies
         working-directory: ./runtime/prompty
-        run: pdm install
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e '.[dev]'
+
+      - name: coverage report
+        working-directory: ./runtime/prompty
+        run: |
+          python3 -m pytest -s -vv --cov-report term --cov-report json --cov=prompty tests/
+          python ./tests/coverage.py coverage.json > coverage.md
+          cat coverage.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Build package distributions
+        working-directory: ./runtime/prompty
+        run: |
+          flit build --format wheel 
+          flit build --format sdist
 
       - name: Publish package distributions to PyPI
-        working-directory: ./runtime/prompty
-        run: pdm publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: ./runtime/prompty/dist
