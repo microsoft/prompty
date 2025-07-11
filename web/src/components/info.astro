@@ -1,0 +1,83 @@
+---
+interface Props {
+  reversed?: boolean;
+  title?: string;
+  image?: string;
+}
+
+const { reversed, title, image } = Astro.props;
+const flexStyle = reversed ? "row-reverse" : "row";
+---
+
+<div>
+  {
+    title && (
+      <div class="info-title">
+        <h1>{title}</h1>
+      </div>
+    )
+  }
+  <div class="info-grid">
+    <div class="info">
+      {image && <img src={image} alt={title} />}
+    </div>
+    <div class="tagline info">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style define:vars={{ flexStyle }}>
+  .info-title h1 {
+    color: rgba(0, 0, 0, 0);
+    background: linear-gradient(
+      to bottom,
+      var(--sl-color-white) 30%,
+      var(--prompty-blue)
+    );
+    background-clip: text;
+    padding-bottom: 0.2rem;
+    font-weight: 400;
+    padding-block: 0.2rem;
+    text-align: center;
+    font-size: clamp(
+      var(--sl-text-2xl),
+      calc(0.25rem + 5vw),
+      var(--sl-text-4xl)
+    );
+  }
+
+  .info-grid {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding-inline-start: 0;
+    margin-bottom: 5rem;
+  }
+  
+  @media (min-width: 50rem) {
+    .info-grid {
+      flex-direction: var(--flexStyle);
+      gap: 5em;
+    }
+  }
+
+  .info {
+    display: flex;
+    font-size: larger;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  @media (min-width: 50rem) {
+    .info {
+      width: 50%;
+      gap: 1em;
+    }
+  }
+
+  .info img {
+    max-height: 300px;
+    object-fit: scale-down;
+  }
+</style>

@@ -1,7 +1,5 @@
 {
-  "files.associations": {
-    "*.css": "tailwindcss",
-    "*.mdx": "markdown"
-  },
-  "jest.enable": false
+  "jest.enable": false,
+  "recommendations": ["astro-build.astro-vscode"],
+  "unwantedRecommendations": [],
 }

@@ -1,86 +1,110 @@
-# Prompty Website
+# Prompty Documentation
 
-The Prompty website is built with [Next.js](https://nextjs.org) and hosted on the GitHub Pages endpoint of this repository. You can view the production deployment at [https://prompty.ai](https://prompty.ai).
+[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+[![GitHub](https://img.shields.io/badge/GitHub-microsoft%2Fprompty-blue?logo=github)](https://github.com/microsoft/prompty)
 
+This repository contains the official documentation website for [Prompty](https://github.com/microsoft/prompty), a Microsoft project that provides an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers.
 
-## Install Node.js and npm
+## About Prompty
 
-You must have a local development environment with Node.js installed. You can use a pre-built environment in the cloud (with dev containers) or manually configure your local dev environment. _Pick one of these paths_.
+Prompty is designed to accelerate the developer inner loop of prompt engineering and prompt source management in a cross-language and cross-platform implementation. It helps developers build, test, and deploy generative AI applications more efficiently.
 
+## Documentation Overview
 
-1. (Option 1) **Launch in GitHub Codepsaces**. This will give you a development container in the cloud with one click.
-    1. Click the button to launch the dev container.
+This documentation covers:
 
-        [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/microsoft/prompty)
+- **Getting Started**: Core concepts, setup instructions, and your first Prompty
+- **Tutorials**: Step-by-step guides for using Prompty with popular frameworks like LangChain and Semantic Kernel
+- **Specification**: Technical specifications and format details
+- **Guides**: In-depth guides for advanced usage and best practices
+- **Contributing**: How to contribute to the Prompty project
 
-    1. This will open a new browser tab with a Visual Studio Code Editor. Wait till loading completes and you see the terminal active in the editor.
+Visit the live documentation at **[prompty.ai](https://prompty.ai/)**
 
-1. (Option 2) **Install dependencies manually**. This lets you use your preferred local dev environment instead.
-    1. Install [Node Version Manager (nvm)](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating). We recommend using this approach for flexibility in managing different Node.js requirements across projects.
-    1. Use nvm to install a Node.js version 18.0 or higher if required - for instance, you can install the latest stable version using :
+## 🚀 Project Structure
 
-        ```
-        nvm install --lts
-        ```
-    1. You can now activate the required version of Node.js using nvm - for instance, activate LTS version as:
+This is an Astro + Starlight documentation site with the following structure:
 
-        ```
-        nvm use --lts
-        ```
-    1. This should also make the `npm` tooling available.
-
-Verify your development environment is ready:
-
-```bash
-# Check Node.js version
-node --version
-
-# Check npm version
-npm --version
+```
+.
+├── public/                    # Static assets (images, favicons)
+├── src/
+│   ├── assets/               # Shared assets (logos, images)
+│   ├── components/           # Astro components
+│   ├── content/
+│   │   └── docs/            # Documentation content (.md/.mdx files)
+│   │       ├── getting-started/
+│   │       ├── tutorials/
+│   │       ├── specification/
+│   │       ├── guides/
+│   │       └── contributing/
+│   └── styles/              # Custom CSS styles
+├── astro.config.mjs         # Astro configuration
+├── package.json
+└── tsconfig.json
 ```
 
+Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name and directory structure.
 
-## Build & Preview Locally
+## 🧞 Development Commands
 
-We assume you have cloned the repo and completed the install step above, to get the development environment ready.
+All commands are run from the root of the project:
 
-1. The Prompty website source is in the `web/` folder of the repo. Open your terminal to that folder
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`     |
+| `npm run build`           | Build your production site to `./dist/`         |
+| `npm run preview`         | Preview your build locally, before deploying    |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check`|
 
-    ```bash
-    cd web
-    ```
+## 📝 Contributing to Documentation
 
-1.  Install the package dependencies with this command. 
+We welcome contributions to improve the Prompty documentation! Here's how you can help:
 
-    ```bash
-    npm install
-    ```
+### Content Guidelines
 
-1. Start a local dev server to preview the website. 
+1. **File Organization**: Add new documentation files to the appropriate directory in `src/content/docs/`
+2. **Frontmatter**: Include proper frontmatter with title, description, authors, and date
+3. **Markdown Format**: Use `.mdx` format for enhanced capabilities with React components
+4. **Images**: Place images in the appropriate subdirectory alongside your content
 
-    ```bash
-    npm run dev
-    ```
-1. This should open a local dev server on port 3000 with _hot-reload_ functionality. Any changes you now make to the documentation will be reflected in the preview.
+### Example Frontmatter
 
+```yaml
+---
+title: Your Page Title
+description: Brief description of the page content
+authors:
+  - yourusername
+date: 2025-01-10
+tags:
+  - relevant
+  - tags
+sidebar:
+  order: 1  # Optional: control sidebar ordering
+---
+```
 
-## Build & Preview Production Version
+### Local Development
 
-Once you complete your changes, you may want to verify that the _production_ build reflects behaviors correctly.
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Start the dev server: `npm run dev`
+4. Open your browser to `http://localhost:4321`
+5. Make your changes and see them live-reload
 
-1. Run the command below to get a production build
+### Sidebar Navigation
 
-    ```bash
-    npm run build
-    ```
+The sidebar is automatically generated using the `starlight-auto-sidebar` plugin based on the directory structure in `src/content/docs/`. You can also manually configure sections in `astro.config.mjs`.
 
-1. Preview this build in your browser with this command:
+## 🔗 Related Links
 
-    ```bash
-    npm run start
-    ```
+- **Main Prompty Repository**: [microsoft/prompty](https://github.com/microsoft/prompty)
+- **Live Documentation**: [prompty.ai](https://prompty.ai/)
+- **Astro Documentation**: [docs.astro.build](https://docs.astro.build)
+- **Starlight Documentation**: [starlight.astro.build](https://starlight.astro.build/)
 
+## 📄 License
 
-## Contributing To Documentation
-
-Read the [Contributing](https://www.prompty.ai/docs/contributing) section of the documentation for details.
+This project follows the same license as the main Prompty project. Please refer to the [main repository](https://github.com/microsoft/prompty) for license details.
