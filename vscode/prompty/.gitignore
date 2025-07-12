@@ -4,3 +4,4 @@ client/server
 .vscode-test
 syntaxes/prompty.tmLanguage.json
 *.vsix
+schemas/

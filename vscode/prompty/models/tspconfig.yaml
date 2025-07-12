@@ -1,0 +1,8 @@
+emit:
+  - "@typespec/json-schema"
+options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{cwd}/schemas"
+    emitAllModels: true
+    emitAllRefs: true
+    file-type: yaml

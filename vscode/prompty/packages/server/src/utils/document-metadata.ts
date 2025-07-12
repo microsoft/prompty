@@ -30,7 +30,7 @@ export class DocumentMetadataStore {
 
 	private parseDocument(document: TextDocument): DocumentMetadata {
 		//this.logger.debug(`Parsing document ${document.uri}...`);
-		console.log(`Parsing document ${document.uri}...`);
+		//console.log(`Parsing document ${document.uri}...`);
 		const text = document.getText();
 		const lines = text.split(/\n|\r\n/);
 		let inFrontMatter = false;
@@ -53,6 +53,7 @@ export class DocumentMetadataStore {
 	}
 
 	public set(document: TextDocument) {
+		this.logger.debug(`Setting metadata for document ${document.uri}...`);
 		const metadata = this.parseDocument(document);
 
 		this.store.set(document.uri, metadata);
