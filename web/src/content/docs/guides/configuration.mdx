@@ -1,0 +1,543 @@
+---
+title: Configuration
+description: Learn how to configure Prompty for different environments, models, and deployment scenarios
+authors:
+  - sethjuarez
+  - nitya
+date: 2024-06-10
+tags:
+  - configuration
+  - deployment
+  - models
+sidebar:
+  order: 5
+---
+
+Prompty provides flexible configuration options to work with different AI models, environments, and deployment scenarios. This guide covers all configuration aspects from basic setup to advanced scenarios.
+
+## Configuration Sources
+
+Prompty loads configuration from multiple sources in this order of precedence:
+
+1. **Runtime parameters** (highest priority)
+2. **Environment variables**
+3. **Configuration files** (`prompty.json`)
+4. **Prompty file frontmatter**
+5. **Default values** (lowest priority)
+
+## Prompty File Configuration
+
+### Basic Structure
+
+Every prompty file includes configuration in the frontmatter:
+
+```yaml
+---
+name: Customer Support Bot
+description: Helps customers with common questions
+model:
+  api: chat
+  connection:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT}
+    api_version: "2024-10-21"
+  options:
+    temperature: 0.7
+    max_tokens: 1000
+inputs:
+  customer_name:
+    type: string
+    default: "John Doe"
+  question:
+    type: string
+    default: "What are your hours?"
+---
+system:
+You are a helpful customer support assistant.
+
+user:
+Customer: {{customer_name}}
+Question: {{question}}
+```
+
+### Model Configuration Options
+
+#### Azure OpenAI
+
+```yaml
+model:
+  api: chat
+  connection:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-35-turbo
+    api_version: "2024-10-21"
+  options:
+    temperature: 0.7
+    max_tokens: 1000
+    top_p: 1.0
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
+```
+
+#### OpenAI
+
+```yaml
+model:
+  api: chat
+  connection:
+    type: openai
+    api_key: ${env:OPENAI_API_KEY}
+  id: gpt-3.5-turbo
+  options:
+    temperature: 0.7
+    max_tokens: 1000
+```
+
+#### Serverless Models
+
+```yaml
+model:
+  api: chat
+  connection:
+    type: serverless
+    endpoint: https://models.inference.ai.azure.com
+    api_key: ${env:GITHUB_TOKEN}
+  id: gpt-4o-mini
+  options:
+    temperature: 0.7
+```
+
+## Environment Variables
+
+### Azure OpenAI Setup
+
+```bash
+# .env file
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo
+AZURE_OPENAI_API_VERSION=2024-10-21
+```
+
+### OpenAI Setup
+
+```bash
+# .env file
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_ORG_ID=org-your-org-id  # Optional
+```
+
+### GitHub Models Setup
+
+```bash
+# .env file
+GITHUB_TOKEN=ghp_your-token
+```
+
+## Global Configuration Files
+
+### prompty.json
+
+Create a `prompty.json` file in your project root for shared configurations:
+
+```json
+{
+  "connections": {
+    "default": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "api_version": "2024-10-21"
+    },
+    "production": {
+      "type": "azure_openai",
+      "azure_endpoint": "https://prod-endpoint.openai.azure.com/",
+      "api_version": "2024-10-21"
+    },
+    "development": {
+      "type": "azure_openai",
+      "azure_endpoint": "https://dev-endpoint.openai.azure.com/",
+      "api_version": "2024-10-21"
+    }
+  },
+  "defaults": {
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "top_p": 1.0
+  }
+}
+```
+
+### Using Named Connections
+
+Reference connections in your prompty files:
+
+```yaml
+---
+name: Production Bot
+model:
+  api: chat
+  connection: production  # References the "production" connection
+  options:
+    azure_deployment: gpt-4
+    temperature: 0.5
+---
+```
+
+Or specify at runtime:
+
+```python
+import prompty
+
+response = prompty.execute(
+    "prompt.prompty",
+    connection="production"
+)
+```
+
+## Runtime Configuration
+
+### Python Runtime
+
+Override configuration programmatically:
+
+```python
+import prompty
+
+# Override individual settings
+response = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "temperature": 0.9,
+        "max_tokens": 500
+    }
+)
+
+# Override connection
+response = prompty.execute(
+    "prompt.prompty",
+    connection="production"
+)
+
+# Complete configuration override
+response = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "openai",
+        "api_key": "sk-different-key",
+        "model": "gpt-4",
+        "temperature": 0.3
+    }
+)
+```
+
+### CLI Runtime
+
+Override configuration via command line:
+
+```bash
+# Override specific settings
+prompty -s prompt.prompty \
+  --config '{"temperature": 0.9, "max_tokens": 500}' \
+  -e .env
+
+# Use different connection
+prompty -s prompt.prompty --connection production -e .env
+```
+
+## Advanced Configuration
+
+### Multiple Model Types
+
+Configure different APIs in the same project:
+
+```json
+{
+  "connections": {
+    "chat": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "azure_deployment": "gpt-35-turbo"
+    },
+    "embeddings": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "azure_deployment": "text-embedding-ada-002"
+    },
+    "vision": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "azure_deployment": "gpt-4-vision"
+    }
+  }
+}
+```
+
+### Environment-Specific Configuration
+
+Use different configurations per environment:
+
+```bash
+# Development
+prompty -s prompt.prompty -e .env.dev
+
+# Staging  
+prompty -s prompt.prompty -e .env.staging
+
+# Production
+prompty -s prompt.prompty -e .env.prod
+```
+
+Example environment files:
+
+```bash
+# .env.dev
+AZURE_OPENAI_ENDPOINT=https://dev-endpoint.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo
+PROMPTY_CONNECTION=development
+
+# .env.prod
+AZURE_OPENAI_ENDPOINT=https://prod-endpoint.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-4
+PROMPTY_CONNECTION=production
+```
+
+### Custom Invokers
+
+Register custom invokers for specialized models:
+
+```python
+import prompty
+from prompty.invoker import InvokerFactory
+
+class CustomInvoker:
+    def invoke(self, prompt, configuration, **kwargs):
+        # Custom invocation logic
+        pass
+
+# Register custom invoker
+InvokerFactory.add_invoker("custom", CustomInvoker)
+
+# Use in configuration
+response = prompty.execute(
+    prompt,
+    configuration={"type": "custom", "custom_param": "value"}
+)
+```
+
+## Security Best Practices
+
+### Environment Variable Management
+
+:::caution[Never Hardcode Secrets]
+Never put API keys or secrets directly in prompty files or configuration files committed to version control.
+:::
+
+```yaml
+# ✅ Good - Use environment variables
+model:
+  connection:
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    api_key: ${env:AZURE_OPENAI_API_KEY}
+
+# ❌ Bad - Hardcoded secrets
+model:
+  connection:
+    azure_endpoint: https://my-endpoint.openai.azure.com/
+    api_key: sk-1234567890abcdef  # Never do this!
+```
+
+### Key Rotation
+
+Support key rotation with fallback configurations:
+
+```python
+import prompty
+import os
+
+def get_api_key():
+    # Try new key first, fall back to old key
+    return os.getenv("AZURE_OPENAI_API_KEY_NEW") or os.getenv("AZURE_OPENAI_API_KEY")
+
+response = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "api_key": get_api_key()
+    }
+)
+```
+
+### Role-Based Configuration
+
+Use different configurations based on user roles:
+
+```python
+def get_config_for_user(user_role: str):
+    if user_role == "admin":
+        return "production"
+    elif user_role == "developer":
+        return "development"
+    else:
+        return "default"
+
+connection = get_config_for_user(user.role)
+response = prompty.execute("prompt.prompty", connection=connection)
+```
+
+## Performance Configuration
+
+### Connection Pooling
+
+Configure connection pooling for high-throughput scenarios:
+
+```json
+{
+  "connections": {
+    "default": {
+      "type": "azure_openai",
+      "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+      "connection_pool_size": 10,
+      "timeout": 30,
+      "retry_count": 3
+    }
+  }
+}
+```
+
+### Caching Configuration
+
+Enable response caching:
+
+```python
+import prompty
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def cached_execute(prompt_path: str, inputs_hash: str):
+    return prompty.execute(prompt_path, inputs=json.loads(inputs_hash))
+
+# Use with hashable inputs
+import json
+inputs = {"name": "Alice", "topic": "AI"}
+inputs_hash = json.dumps(inputs, sort_keys=True)
+result = cached_execute("prompt.prompty", inputs_hash)
+```
+
+## Monitoring and Logging
+
+### Configuration Logging
+
+Log configuration for debugging:
+
+```python
+import prompty
+import logging
+
+# Enable configuration logging
+logging.basicConfig(level=logging.DEBUG)
+
+# This will log the resolved configuration
+response = prompty.execute("prompt.prompty")
+```
+
+### Configuration Validation
+
+Validate configuration at startup:
+
+```python
+import prompty
+
+def validate_config():
+    try:
+        # Test configuration with a simple prompt
+        test_prompt = prompty.headless(
+            api="chat",
+            content="Test",
+            connection="default"
+        )
+        prompty.execute(test_prompt)
+        print("✅ Configuration valid")
+    except Exception as e:
+        print(f"❌ Configuration error: {e}")
+
+validate_config()
+```
+
+## Troubleshooting
+
+### Common Configuration Issues
+
+**Missing environment variables:**
+```bash
+# Check which variables are loaded
+prompty -s prompt.prompty -e .env --verbose
+```
+
+**Invalid JSON configuration:**
+```python
+import json
+
+try:
+    config = json.loads(config_string)
+except json.JSONDecodeError as e:
+    print(f"Invalid JSON: {e}")
+```
+
+**Connection issues:**
+```python
+import prompty
+
+try:
+    response = prompty.execute("prompt.prompty")
+except Exception as e:
+    print(f"Connection error: {e}")
+    # Check endpoint, API key, deployment name
+```
+
+### Debug Configuration Loading
+
+```python
+import prompty
+from prompty.utils import load_global_config
+
+# Load and inspect global configuration
+config = load_global_config()
+print("Global config:", config)
+
+# Load and inspect prompty file
+prompt = prompty.load("prompt.prompty")
+print("Prompt config:", prompt.model.configuration)
+```
+
+## Best Practices
+
+:::tip[Configuration Management]
+- Use environment-specific configuration files
+- Validate configuration at application startup
+- Use named connections for different environments
+- Keep sensitive data in environment variables only
+:::
+
+:::note[Development Workflow]
+- Use `development` connection for local testing
+- Use `staging` connection for integration testing  
+- Use `production` connection for live deployments
+- Version control your `prompty.json` but not your `.env` files
+:::
+
+:::caution[Production Considerations]
+- Always use HTTPS endpoints in production
+- Implement proper error handling for configuration failures
+- Monitor configuration changes and their impacts
+- Use secrets management systems for API keys
+:::
+
+## Next Steps
+
+- Learn about [Observability & Tracing](/docs/guides/observability/) for monitoring
+- Explore [CLI Usage](/docs/guides/cli/) for command-line operations
+- Check out [Deployment Best Practices](/docs/guides/deployment/) for production setups
+
+---
+[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

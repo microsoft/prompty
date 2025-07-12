@@ -97,14 +97,14 @@ async function validateYAMLDocument(textDocument: VirtualDocument) {
 			};
 		});
 
-	console.log(`YAML Diagnostics: ${JSON.stringify(yamlDiagnostics)}`);
+	//console.log(`YAML Diagnostics: ${JSON.stringify(yamlDiagnostics)}`);
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: yamlDiagnostics });
 }
 
 connection.onInitialize((params: InitializeParams) => {
 	//const capabilities = params.capabilities;
 	//logger.debug(`Initializing server for ${params.clientInfo?.name || "unknown"}`);
-	console.log(`Initializing server for ${params.clientInfo?.name || "unknown"}`);
+	//console.log(`Initializing server for ${params.clientInfo?.name || "unknown"}`);
 
 
 	documents.onDidOpen((e) => {
@@ -230,7 +230,7 @@ connection.onCompletion(async (textDocumentPosition) => {
 
 connection.onHover(async (textDocumentPosition) => {
 	//logger.debug(`Received hover request for ${textDocumentPosition.textDocument.uri}`);
-	console.log(`Received hover request for ${textDocumentPosition.textDocument.uri}`);
+	//console.log(`Received hover request for ${textDocumentPosition.textDocument.uri}`);
 	// Here you would implement the logic to return hover information for the document.
 	const document = documents.get(textDocumentPosition.textDocument.uri);
 	if (!document) {

@@ -9,6 +9,7 @@ const Frame = styled.div`
   border-radius: 8px;
   flex-wrap: wrap;
   margin: 18px;
+	overflow: hidden;
 `;
 
 const DetailItem = styled.div`
@@ -30,7 +31,7 @@ const DetailLabel = styled.div`
 const DetailValue = styled.div`
   font-weight: 600;
   font-size: larger;
-  margin-top: 4px;
+  
 `;
 
 const Measure = styled.span`
@@ -42,10 +43,10 @@ const Unit = styled.span`
   color: var(--vscode-descriptionForeground);
 `;
 
-type Props = {
+interface Props {
   time: Time;
   usage?: Usage;
-};
+}
 
 const TokenItem = ({ title, value }: { title: string; value: number }) => {
   const tokens = formatTokens(value);
@@ -61,7 +62,6 @@ const TokenItem = ({ title, value }: { title: string; value: number }) => {
 };
 
 const Detail = ({ time, usage }: Props) => {
-
   const duration = formatDuration(time.duration);
 
   return (
@@ -77,7 +77,12 @@ const Detail = ({ time, usage }: Props) => {
       {usage && (
         <>
           <TokenItem title="Prompt Tokens" value={usage.prompt_tokens} />
-          {usage.completion_tokens && <TokenItem title="Completion Tokens" value={usage.completion_tokens} /> }
+          {usage.completion_tokens && (
+            <TokenItem
+              title="Completion Tokens"
+              value={usage.completion_tokens}
+            />
+          )}
           <TokenItem title="Total Tokens" value={usage.total_tokens} />
         </>
       )}

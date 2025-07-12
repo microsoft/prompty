@@ -9,9 +9,9 @@ const ItemCollection = styled.div`
   height: 100%;
 `;
 
-type Props = {
+interface Props {
   trace: TraceItem;
-};
+}
 
 const TraceDetail = ({ trace }: Props) => {
   return (

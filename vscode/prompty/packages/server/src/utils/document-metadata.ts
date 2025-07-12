@@ -47,8 +47,8 @@ export class DocumentMetadataStore {
 				}
 			}
 		}
-		const metadata = { frontMatterStart, frontMatterEnd };
-		console.log(`Parsed document metadata: ${JSON.stringify(metadata)}`);
+		//const metadata = { frontMatterStart, frontMatterEnd };
+		//console.log(`Parsed document metadata: ${JSON.stringify(metadata)}`);
 		return { frontMatterStart, frontMatterEnd, variables: [] };
 	}
 

@@ -18,7 +18,6 @@ const ModalWrapper = styled.div`
   backdrop-filter: blur(2px);
 `;
 
-
 const ModalFrame = styled.div<{
   $index?: number;
   $count?: number;
@@ -34,8 +33,12 @@ const ModalFrame = styled.div<{
   position: fixed;
   top: ${(props) => (props.$index ?? 0) * modalMargin + modalPadding}px;
   left: ${(props) => (props.$index ?? 0) * modalMargin + modalPadding}px;
-  width: calc(100vw - ${(props) => modalPadding * 2 + (props.$count ?? 0) * modalMargin}px);
-  height: calc(100vh - ${(props) => modalPadding * 2 + (props.$count ?? 0) * modalMargin}px);
+  width: calc(
+    100vw - ${(props) => modalPadding * 2 + (props.$count ?? 0) * modalMargin}px
+  );
+  height: calc(
+    100vh - ${(props) => modalPadding * 2 + (props.$count ?? 0) * modalMargin}px
+  );
 `;
 
 const Header = styled.div`
@@ -71,21 +74,19 @@ const Close = styled.div`
   }
 `;
 
-type Props = {
+interface Props {
   title: string;
   children: React.ReactNode;
   index: number;
   count: number;
-};
+}
 
 const Modal = ({ title, children, index, count }: Props) => {
   const popModal = useModalStore((state) => state.popModal);
   return (
     <ModalFrame $index={index} $count={count}>
       <Header>
-        <Title>
-          {title}
-        </Title>
+        <Title>{title}</Title>
         <Grow />
         <Close onClick={() => popModal()}>
           <VscClose />

@@ -10,9 +10,17 @@ const Expander = ({
   setExpanded: (value: boolean) => void;
 }) => {
   return expanded ? (
-    <VscTriangleDown size={16} onClick={() => setExpanded(false)} color={color} />
+    <VscTriangleDown
+      size={16}
+      onClick={() => setExpanded(false)}
+      color={color}
+    />
   ) : (
-    <VscTriangleRight size={16} onClick={() => setExpanded(true)} color={color} />
+    <VscTriangleRight
+      size={16}
+      onClick={() => setExpanded(true)}
+      color={color}
+    />
   );
 };
 

@@ -1,30 +1,556 @@
 ---
-title: Prompty Invoker
+title: Model Invokers
+description: Learn about the different AI model providers and how to configure them with Prompty
 authors:
-  - bethanyjep
-  - nitya
   - sethjuarez
+  - nitya
 date: 2024-06-10
 tags:
-  - guides
-  - documentation
   - invokers
-index: 1
+  - models
+  - providers
+sidebar:
+  order: 6
 ---
 
-_In this section, we cover the different built-in Prompty Invokers and walk you through how you can build your own custom invoker._
+Prompty supports multiple AI model providers through its invoker system. Each invoker handles the specifics of communicating with different AI services, making it easy to switch between providers or use multiple providers in the same application.
 
-## 1. Prompty invokers
+## Available Invokers
 
-The Prompty runtime comes with a set of built-in invokers that can be used to execute external models and APIs. 
-Invokers trigger a call to a the different models and return its output ensuring standardization when it comes to handling models. The invokers currently supported are:
+Prompty comes with built-in support for major AI providers:
 
-1. **azure**: Invokes the Azure OpenAI API
-2. **openai**: Invokes the OpenAI API
-3. **serverless**: Invokes serverless models (e.g. GitHub Models) using the Azure AI Inference client library (currently only key based authentication is supported with more managed identity support coming soon)
+- **Azure OpenAI** - Microsoft's managed OpenAI service
+- **OpenAI** - Direct integration with OpenAI's API
+- **Serverless** - GitHub Models and other serverless endpoints
 
+## Azure OpenAI Invoker
 
-TODO: Explain how invokers work and how to build a custom invoker
+### Installation
+
+```bash
+pip install "prompty[azure]"
+```
+
+### Basic Configuration
+
+```python
+import prompty.azure
+
+# In your prompty file
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-35-turbo
+    api_version: "2024-10-21"
+```
+
+### Environment Setup
+
+```bash
+# .env file
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo
+```
+
+### Authentication Methods
+
+#### API Key Authentication
+
+```yaml
+model:
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    api_key: ${env:AZURE_OPENAI_API_KEY}
+    azure_deployment: gpt-35-turbo
+```
+
+#### Azure AD Authentication
+
+```python
+from azure.identity import DefaultAzureCredential
+import prompty.azure
+
+# Configure with Azure AD
+response = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "azure_openai",
+        "azure_endpoint": "https://your-resource.openai.azure.com/",
+        "azure_deployment": "gpt-35-turbo",
+        "credential": DefaultAzureCredential()
+    }
+)
+```
+
+### Available Models
+
+Azure OpenAI supports various model types:
+
+#### Chat Models
+
+```yaml
+# GPT-3.5 Turbo
+model:
+  api: chat
+  configuration:
+    azure_deployment: gpt-35-turbo
+    temperature: 0.7
+    max_tokens: 1000
+
+# GPT-4
+model:
+  api: chat
+  configuration:
+    azure_deployment: gpt-4
+    temperature: 0.7
+    max_tokens: 2000
+
+# GPT-4 Vision
+model:
+  api: chat
+  configuration:
+    azure_deployment: gpt-4-vision
+    max_tokens: 1000
+```
+
+#### Embedding Models
+
+```yaml
+model:
+  api: embedding
+  configuration:
+    azure_deployment: text-embedding-ada-002
+```
+
+### Advanced Configuration
+
+```yaml
+model:
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-4
+    api_version: "2024-10-21"
+    temperature: 0.7
+    max_tokens: 2000
+    top_p: 0.9
+    frequency_penalty: 0.1
+    presence_penalty: 0.1
+    stop: ["###", "END"]
+```
+
+## OpenAI Invoker
+
+### Installation
+
+```bash
+pip install "prompty[openai]"
+```
+
+### Basic Configuration
+
+```python
+import prompty.openai
+
+# In your prompty file
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-3.5-turbo
+    api_key: ${env:OPENAI_API_KEY}
+```
+
+### Environment Setup
+
+```bash
+# .env file
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_ORG_ID=org-your-org-id  # Optional
+```
+
+### Available Models
+
+#### Chat Models
+
+```yaml
+# GPT-3.5 Turbo
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-3.5-turbo
+    temperature: 0.7
+
+# GPT-4
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-4
+    temperature: 0.7
+
+# GPT-4 Turbo
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-4-turbo-preview
+    temperature: 0.7
+```
+
+#### Embedding Models
+
+```yaml
+model:
+  api: embedding
+  configuration:
+    type: openai
+    model: text-embedding-3-small
+```
+
+### Advanced Configuration
+
+```yaml
+model:
+  configuration:
+    type: openai
+    model: gpt-4
+    temperature: 0.7
+    max_tokens: 2000
+    top_p: 0.9
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
+    stream: false
+    logit_bias: {}
+    user: "user-123"
+```
+
+## Serverless Invoker
+
+### Installation
+
+```bash
+pip install "prompty[serverless]"
+```
+
+### GitHub Models
+
+```python
+import prompty.serverless
+
+# Configure for GitHub Models
+model:
+  api: chat
+  configuration:
+    type: serverless
+    endpoint: https://models.inference.ai.azure.com
+    model: gpt-4o-mini
+    api_key: ${env:GITHUB_TOKEN}
+```
+
+### Environment Setup for GitHub Models
+
+```bash
+# .env file
+GITHUB_TOKEN=ghp_your-personal-access-token
+```
+
+### Available GitHub Models
+
+```yaml
+# GPT-4o Mini
+model:
+  configuration:
+    type: serverless
+    endpoint: https://models.inference.ai.azure.com
+    model: gpt-4o-mini
+
+# Phi-3 Mini
+model:
+  configuration:
+    type: serverless
+    endpoint: https://models.inference.ai.azure.com
+    model: Phi-3-mini-4k-instruct
+
+# Llama Models
+model:
+  configuration:
+    type: serverless
+    endpoint: https://models.inference.ai.azure.com
+    model: Meta-Llama-3-8B-Instruct
+```
+
+### Custom Serverless Endpoints
+
+```yaml
+model:
+  configuration:
+    type: serverless
+    endpoint: https://your-custom-endpoint.com/v1
+    model: your-custom-model
+    api_key: ${env:CUSTOM_API_KEY}
+    headers:
+      Custom-Header: value
+```
+
+## Programmatic Usage
+
+### Switching Between Invokers
+
+```python
+import prompty
+import prompty.azure
+import prompty.openai
+import prompty.serverless
+
+# Use Azure OpenAI
+response1 = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "azure_openai",
+        "azure_endpoint": "https://your-resource.openai.azure.com/",
+        "azure_deployment": "gpt-35-turbo"
+    }
+)
+
+# Use OpenAI
+response2 = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "openai",
+        "model": "gpt-3.5-turbo"
+    }
+)
+
+# Use GitHub Models
+response3 = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "serverless",
+        "endpoint": "https://models.inference.ai.azure.com",
+        "model": "gpt-4o-mini"
+    }
+)
+```
+
+### Multiple Invokers in One Application
+
+```python
+# Configure different invokers for different purposes
+chat_config = {
+    "type": "azure_openai",
+    "azure_deployment": "gpt-4"
+}
+
+embedding_config = {
+    "type": "openai",
+    "model": "text-embedding-3-small"
+}
+
+summary_config = {
+    "type": "serverless",
+    "endpoint": "https://models.inference.ai.azure.com",
+    "model": "gpt-4o-mini"
+}
+
+# Use for different operations
+chat_response = prompty.execute("chat.prompty", configuration=chat_config)
+embeddings = prompty.execute("embed.prompty", configuration=embedding_config)
+summary = prompty.execute("summarize.prompty", configuration=summary_config)
+```
+
+## Custom Invokers
+
+### Creating a Custom Invoker
+
+```python
+from prompty.invoker import InvokerFactory
+from prompty.core import Prompty
+from typing import Any, Dict
+
+class CustomInvoker:
+    def invoke(
+        self, 
+        prompt: Prompty, 
+        configuration: Dict[str, Any], 
+        **kwargs
+    ) -> Any:
+        # Implement your custom logic
+        endpoint = configuration.get("endpoint")
+        model = configuration.get("model")
+        api_key = configuration.get("api_key")
+        
+        # Make API call to your custom service
+        response = self._call_custom_api(
+            endpoint=endpoint,
+            model=model,
+            api_key=api_key,
+            messages=prompt.content,
+            **configuration
+        )
+        
+        return response
+    
+    def _call_custom_api(self, **kwargs):
+        # Implement your API call logic
+        pass
+
+# Register the custom invoker
+InvokerFactory.add_invoker("custom", CustomInvoker)
+```
+
+### Using Custom Invokers
+
+```python
+# Use your custom invoker
+response = prompty.execute(
+    "prompt.prompty",
+    configuration={
+        "type": "custom",
+        "endpoint": "https://your-api.com/v1",
+        "model": "your-model",
+        "api_key": "your-key"
+    }
+)
+```
+
+## Error Handling
+
+### Common Error Patterns
+
+```python
+import prompty
+
+try:
+    response = prompty.execute("prompt.prompty")
+except Exception as e:
+    if "unauthorized" in str(e).lower():
+        print("Check your API key")
+    elif "not found" in str(e).lower():
+        print("Check your model/deployment name")
+    elif "quota" in str(e).lower():
+        print("API quota exceeded")
+    else:
+        print(f"Unexpected error: {e}")
+```
+
+### Invoker-Specific Error Handling
+
+```python
+from azure.core.exceptions import ClientAuthenticationError
+from openai import AuthenticationError
+
+try:
+    response = prompty.execute("prompt.prompty")
+except ClientAuthenticationError:
+    print("Azure authentication failed")
+except AuthenticationError:
+    print("OpenAI authentication failed")
+except Exception as e:
+    print(f"General error: {e}")
+```
+
+## Performance Considerations
+
+### Connection Pooling
+
+```python
+# Reuse connections for better performance
+import prompty.azure
+
+# Load prompt once
+prompt = prompty.load("prompt.prompty")
+
+# Execute multiple times with same connection
+for inputs in input_list:
+    response = prompty.execute(prompt, inputs=inputs)
+```
+
+### Async Support
+
+```python
+import asyncio
+import prompty
+
+async def process_prompts():
+    tasks = [
+        prompty.execute_async("prompt1.prompty"),
+        prompty.execute_async("prompt2.prompty"),
+        prompty.execute_async("prompt3.prompty")
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    return results
+
+# Run async
+results = asyncio.run(process_prompts())
+```
+
+## Best Practices
+
+:::tip[Invoker Selection]
+- Use **Azure OpenAI** for enterprise scenarios with compliance requirements
+- Use **OpenAI** for direct access to latest models and features
+- Use **Serverless** for cost-effective experimentation and lightweight applications
+:::
+
+:::note[Model Selection]
+- Choose models based on your specific use case requirements
+- Consider token costs and response times
+- Test different models to find the best performance/cost balance
+:::
+
+:::caution[Rate Limits]
+- Each provider has different rate limits and quotas
+- Implement retry logic with exponential backoff
+- Monitor usage to avoid hitting limits
+:::
+
+## Troubleshooting
+
+### Connection Issues
+
+```bash
+# Test connection with CLI
+prompty -s test.prompty --verbose -e .env
+```
+
+### Authentication Problems
+
+```python
+# Verify credentials
+import os
+print(f"Azure Endpoint: {os.getenv('AZURE_OPENAI_ENDPOINT')}")
+print(f"API Key: {'***' if os.getenv('AZURE_OPENAI_API_KEY') else 'Not set'}")
+```
+
+### Model Availability
+
+```python
+# Test model availability
+try:
+    response = prompty.execute(
+        prompty.headless(
+            api="chat",
+            content="Test",
+            configuration={"type": "azure_openai", "azure_deployment": "gpt-35-turbo"}
+        )
+    )
+    print("Model is available")
+except Exception as e:
+    print(f"Model not available: {e}")
+```
+
+## Next Steps
+
+- Learn about [Configuration](/docs/guides/configuration/) for advanced setup
+- Explore [Observability & Tracing](/docs/guides/observability/) for monitoring
+- Check out [CLI Usage](/docs/guides/cli/) for command-line operations
 
 ---
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

@@ -78,16 +78,26 @@ const Gap = styled.div`
   margin-right: 10px;
 `;
 
-type Props = {
+interface Props {
   title: string;
   signature: string;
   value: unknown;
   level: number;
   expand?: boolean;
-};
+  expandLevel?: number;
+}
 
-const Inspector = ({ title, signature, value, level, expand }: Props) => {
-  const [expanded, setExpanded] = useState(expand ?? false);
+const Inspector = ({
+  title,
+  signature,
+  value,
+  level,
+  expand,
+  expandLevel,
+}: Props) => {
+  const [expanded, setExpanded] = useState(
+    expand ?? (expandLevel === level ? true : false)
+  );
   const pushModal = useModalStore((state) => state.pushModal);
 
   const isString = typeof value === "string";
@@ -104,10 +114,21 @@ const Inspector = ({ title, signature, value, level, expand }: Props) => {
   const isExpandableValue = isExpandable(title, value);
 
   const handleExpand: MouseEventHandler<HTMLDivElement> = () => {
-    if (!isExpandableValue) return;
+    if (!isExpandableValue) {
+      return;
+    }
     pushModal({
       title: signature,
-      children: <Inspector title={title} value={value} signature={signature} level={0} expand={true} />,
+      children: (
+        <Inspector
+          title={title}
+          value={value}
+          signature={signature}
+          level={0}
+          expand={expand}
+          expandLevel={expandLevel}
+        />
+      ),
     });
   };
 
@@ -136,7 +157,10 @@ const Inspector = ({ title, signature, value, level, expand }: Props) => {
               <ItemColon $hidden={level === 0}>:</ItemColon>
             </ItemKey>
             <ItemString>{valueString}</ItemString>
-            <ItemIcon $hidden={level === 0 || !isExpandableValue} onClick={handleExpand}>
+            <ItemIcon
+              $hidden={level === 0 || !isExpandableValue}
+              onClick={handleExpand}
+            >
               <VscSearch size={16} />
             </ItemIcon>
             <Gap />
@@ -145,7 +169,9 @@ const Inspector = ({ title, signature, value, level, expand }: Props) => {
             {isString ? (
               <ItemValue $level={level}>
                 {isExpandableValue ? (
-                  <Markdown remarkPlugins={[remarkGfm]}>{isString ? value : ""}</Markdown>
+                  <Markdown remarkPlugins={[remarkGfm]}>
+                    {isString ? value : ""}
+                  </Markdown>
                 ) : (
                   <></>
                 )}
@@ -159,6 +185,7 @@ const Inspector = ({ title, signature, value, level, expand }: Props) => {
                   level={level + 1}
                   signature={`${signature}.${k}`}
                   expand={expand}
+                  expandLevel={expandLevel}
                 />
               ))
             )}

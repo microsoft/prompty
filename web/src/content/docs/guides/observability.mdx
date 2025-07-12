@@ -1,128 +1,376 @@
 ---
-title: Prompty Observability
+title: Observability & Tracing
+description: Learn how to trace and monitor your Prompty executions for debugging and optimization
 authors:
-  - bethanyjep
-  - nitya
   - sethjuarez
-date: 2025-03-06
+  - nitya
+date: 2024-06-10
 tags:
-  - tutorials
-  - runtime
-index: 4
+  - observability
+  - tracing
+  - debugging
+sidebar:
+  order: 3
 ---
 
-## Using Tracing in Prompty
+Observability is crucial for understanding how your prompts execute, debugging issues, and optimizing performance. Prompty provides a flexible tracing system that helps you monitor every aspect of prompt execution.
 
-Prompty supports tracing to help you understand the execution of your prompts. This functionality is customizable and can be used to trace the execution of your prompts in a way that makes sense to you. Prompty has two default traces built in: `console_tracer` and `PromptyTracer`. The `console_tracer` writes the trace to the console, and the `PromptyTracer` writes the trace to a JSON file. You can also create your own tracer by creating your own hook.
+## Overview
+
+Prompty's tracing system captures detailed information about:
+- Prompt loading and parsing
+- Template rendering with inputs
+- Model API calls and responses
+- Execution timing and performance
+- Custom function executions
+
+## Built-in Tracers
+
+### Console Tracer
+
+The simplest tracer outputs traces directly to the console:
 
 ```python
 import prompty
-# import invoker
 import prompty.azure
-from prompty.tracer import trace, Tracer, console_tracer, PromptyTracer
+from prompty.tracer import Tracer, console_tracer
 
-# add console tracer
+# Add console tracer
 Tracer.add("console", console_tracer)
 
-# add PromptyTracer
-json_tracer = PromptyTracer(output_dir="path/to/output")
-Tracer.add("console", json_tracer.tracer)
-
-# execute the prompt
-response = prompty.execute("path/to/prompty/file")
-
-print(response)
+# Execute with tracing
+response = prompty.execute("path/to/prompt.prompty")
 ```
 
-You can also bring your own tracer by your own tracing hook. The `console_tracer` is the simplest example of a tracer. It writes the trace to the console.
-This is what it looks like:
+**Output example:**
+```
+Starting execute
+inputs:
+{
+    "customer_name": "John Doe",
+    "question": "What are your hours?"
+}
+result:
+{
+    "content": "Our business hours are 9 AM to 5 PM, Monday through Friday."
+}
+Ending execute
+```
+
+### JSON File Tracer
+
+The `PromptyTracer` writes detailed traces to JSON files:
 
 ```python
+from prompty.tracer import PromptyTracer, Tracer
+
+# Create JSON tracer
+json_tracer = PromptyTracer(output_dir="./traces")
+Tracer.add("json", json_tracer.tracer)
+
+# Execute with file tracing
+response = prompty.execute("prompt.prompty")
+```
+
+This creates timestamped `.tracy` files containing complete execution traces.
+
+## Custom Tracers
+
+### Simple Custom Tracer
+
+Create your own tracer using context managers:
+
+```python
+import contextlib
+import json
+from typing import Any, Callable, Iterator
+
 @contextlib.contextmanager
-def console_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
+def custom_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
+    print(f"🚀 Starting {name}")
+    traces = {}
+    
     try:
-        print(f"Starting {name}")
-        yield lambda key, value: print(f"{key}:\n{json.dumps(value, indent=4)}")
+        yield lambda key, value: traces.update({key: value})
     finally:
-        print(f"Ending {name}")
-
+        print(f"📊 {name} completed with {len(traces)} traces")
+        # Custom processing of traces here
+        
+# Register the tracer
+Tracer.add("custom", custom_tracer)
 ```
 
-It uses a context manager to define the start and end of the trace so you can do whatever setup and teardown you need. The `yield` statement returns a function that you can use to write the trace. The `console_tracer` writes the trace to the console using the `print` function.
+### Class-Based Tracer
 
-The `PromptyTracer` is a more complex example of a tracer. This tracer manages its internal state using a full class. Here's an example of the class based approach that writes each function trace to a JSON file:
+For more complex tracing logic:
 
 ```python
-class SimplePromptyTracer:
-    def __init__(self, output_dir: str):
-        self.output_dir = output_dir
+import os
+import json
+from datetime import datetime
+
+class DatabaseTracer:
+    def __init__(self, connection_string: str):
+        self.connection_string = connection_string
         self.tracer = self._tracer
-
+    
     @contextlib.contextmanager
-    def tracer(self, name: str) -> Iterator[Callable[[str, Any], None]]:
-        trace = {}
+    def _tracer(self, name: str):
+        trace_id = datetime.now().isoformat()
+        trace_data = {"id": trace_id, "name": name, "data": {}}
+        
         try:
-            yield lambda key, value: trace.update({key: value})
+            yield lambda key, value: trace_data["data"].update({key: value})
         finally:
-            with open(os.path.join(self.output_dir, f"{name}.json"), "w") as f:
-                json.dump(trace, f, indent=4)
+            # Save to database
+            self._save_trace(trace_data)
+    
+    def _save_trace(self, trace_data):
+        # Implement database saving logic
+        pass
+
+# Use the tracer
+db_tracer = DatabaseTracer("sqlite://traces.db")
+Tracer.add("database", db_tracer.tracer)
 ```
 
-The tracing mechanism is supported for all of the prompty runtime internals and can be used to trace the execution of the prompt along with all of the paramters. There is also a `@trace` decorator that can be used to trace the execution of any function external to the runtime. This is provided as a facility to trace the execution of the prompt and whatever supporting code you have.
+## Function Tracing
+
+Use the `@trace` decorator to trace your custom functions:
 
 ```python
-import prompty
-# import invoker
-import prompty.azure
-from prompty.tracer import trace, Tracer, PromptyTracer
-
-json_tracer = PromptyTracer(output_dir="path/to/output")
-Tracer.add("PromptyTracer", json_tracer.tracer)
+from prompty.tracer import trace
 
 @trace
-def get_customer(customerId):
-    return {"id": customerId, "firstName": "Sally", "lastName": "Davis"}
+def get_customer_data(customer_id: str):
+    # Simulate database lookup
+    return {
+        "id": customer_id,
+        "name": "Alice Johnson",
+        "tier": "Premium"
+    }
 
 @trace
-def get_response(customerId, prompt):
-    customer = get_customer(customerId)
-
-    result = prompty.execute(
-        prompt,
-        inputs={"question": question, "customer": customer},
+def process_request(customer_id: str, prompt_path: str):
+    # Get customer data (traced)
+    customer = get_customer_data(customer_id)
+    
+    # Execute prompt (traced)
+    response = prompty.execute(
+        prompt_path,
+        inputs={"customer": customer}
     )
-    return {"question": question, "answer": result}
+    
+    return {"customer_id": customer_id, "response": response}
 
+# Execute - all functions will be traced
+result = process_request("123", "customer_support.prompty")
 ```
 
-In this case, whenever this code is executed, a `.tracy` file will be created in the `path/to/output` directory. This file will contain the trace of the execution of the `get_response` function, the execution of the `get_customer` function, and the prompty internals that generated the response.
+## OpenTelemetry Integration
 
-## OpenTelemetry Tracing
-You can add OpenTelemetry tracing to your application using the same hook mechanism. In your application, you might create something like `trace_span` to trace the execution of your prompts:
+Integrate with OpenTelemetry for distributed tracing:
 
 ```python
+import contextlib
+import json
 from opentelemetry import trace as oteltrace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from prompty.tracer import Tracer
 
-_tracer = "prompty"
+# Setup OpenTelemetry
+trace.set_tracer_provider(TracerProvider())
+jaeger_exporter = JaegerExporter(
+    agent_host_name="localhost",
+    agent_port=6831,
+)
+span_processor = BatchSpanProcessor(jaeger_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
 @contextlib.contextmanager
-def trace_span(name: str):
-    tracer = oteltrace.get_tracer(_tracer)
+def otel_tracer(name: str):
+    tracer = oteltrace.get_tracer("prompty")
     with tracer.start_as_current_span(name) as span:
         yield lambda key, value: span.set_attribute(
             key, json.dumps(value).replace("\n", "")
         )
 
-# adding this hook to the prompty runtime
-Tracer.add("OpenTelemetry", trace_span)
-
+# Add to Prompty tracing
+Tracer.add("opentelemetry", otel_tracer)
 ```
 
-This will produce spans during the execution of the prompt that can be sent to an OpenTelemetry collector for further analysis.
+## Trace Data Structure
 
+Traces contain structured information about execution:
 
-To get started with Observability at refer [debugging Prompty](/docs/getting-started/debugging-prompty) in the Getting Started section.
+```json
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "signature": {
+    "function": "execute",
+    "args": ["prompt.prompty"],
+    "kwargs": {"inputs": {"name": "Alice"}}
+  },
+  "inputs": {
+    "name": "Alice",
+    "context": "customer_support"
+  },
+  "result": {
+    "content": "Hello Alice! How can I help you today?",
+    "usage": {
+      "prompt_tokens": 45,
+      "completion_tokens": 12,
+      "total_tokens": 57
+    }
+  },
+  "duration_ms": 1250,
+  "model_config": {
+    "type": "azure_openai",
+    "deployment": "gpt-35-turbo",
+    "temperature": 0.7
+  }
+}
+```
 
+## Filtering and Sampling
+
+Control tracing overhead with filtering:
+
+```python
+import random
+from prompty.tracer import Tracer
+
+@contextlib.contextmanager
+def sampling_tracer(name: str):
+    # Only trace 10% of requests
+    if random.random() < 0.1:
+        print(f"Tracing {name}")
+        yield lambda key, value: print(f"{key}: {value}")
+    else:
+        # No-op tracer
+        yield lambda key, value: None
+
+Tracer.add("sampling", sampling_tracer)
+```
+
+## Security Considerations
+
+Prompty automatically sanitizes sensitive data in traces:
+
+```python
+# Sensitive keys are automatically masked
+configuration = {
+    "api_key": "sk-1234567890",  # Will be masked as "**********"
+    "secret": "my-secret",       # Will be masked as "**********"
+    "model": "gpt-3.5-turbo"     # Will remain visible
+}
+```
+
+Override sanitization if needed:
+
+```python
+from prompty.tracer import sanitize
+
+def custom_sanitize(key: str, value: Any) -> Any:
+    if "internal" in key.lower():
+        return "[REDACTED]"
+    return sanitize(key, value)  # Use default sanitization
+```
+
+## Performance Monitoring
+
+Monitor execution performance:
+
+```python
+import time
+from prompty.tracer import trace
+
+@trace
+def timed_execution(prompt_path: str):
+    start_time = time.time()
+    
+    result = prompty.execute(prompt_path)
+    
+    execution_time = time.time() - start_time
+    print(f"Execution took {execution_time:.2f} seconds")
+    
+    return result
+```
+
+## Debugging with Traces
+
+Use traces for debugging prompt issues:
+
+```python
+# Enable detailed tracing for debugging
+Tracer.add("debug", console_tracer)
+
+try:
+    response = prompty.execute("problematic_prompt.prompty")
+except Exception as e:
+    print(f"Error occurred: {e}")
+    # Check trace output for debugging information
+```
+
+## Best Practices
+
+:::tip[Development vs Production]
+- Use `console_tracer` during development for immediate feedback
+- Use `PromptyTracer` or custom tracers in production for persistent storage
+- Consider sampling in high-volume production environments
+:::
+
+:::note[Trace Storage]
+- JSON traces can grow large - implement rotation or cleanup policies
+- Consider using time-based directories for organization
+- Store traces in persistent storage for production analysis
+:::
+
+:::caution[Performance Impact]
+- Tracing adds overhead - measure impact in your specific use case
+- Use sampling for high-throughput applications
+- Disable tracing in performance-critical paths if needed
+:::
+
+## Trace Analysis
+
+Analyze traces to optimize your prompts:
+
+```python
+import json
+import glob
+from collections import defaultdict
+
+def analyze_traces(trace_dir: str):
+    traces = []
+    for file in glob.glob(f"{trace_dir}/*.tracy"):
+        with open(file) as f:
+            traces.append(json.load(f))
+    
+    # Analyze token usage
+    total_tokens = sum(t.get("result", {}).get("usage", {}).get("total_tokens", 0) for t in traces)
+    avg_tokens = total_tokens / len(traces) if traces else 0
+    
+    print(f"Analyzed {len(traces)} traces")
+    print(f"Average tokens per request: {avg_tokens:.2f}")
+    
+    # Analyze response times
+    durations = [t.get("duration_ms", 0) for t in traces]
+    avg_duration = sum(durations) / len(durations) if durations else 0
+    
+    print(f"Average response time: {avg_duration:.2f}ms")
+
+# Run analysis
+analyze_traces("./traces")
+```
+
+## Next Steps
+
+- Learn about [debugging Prompty](/docs/getting-started/debugging-prompty/) for troubleshooting
+- Explore [CLI Usage](/docs/guides/cli/) for command-line tracing options
+- Check out [Advanced Configuration](/docs/guides/configuration/) for complex setups
 
 ---
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

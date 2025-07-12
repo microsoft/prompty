@@ -3,11 +3,11 @@ import { TraceItem } from "../store";
 import PromptyIcon from "./prompty";
 import AzureModelIcon from "./azureModelIcon";
 
-type Props = {
+interface Props {
   trace: TraceItem;
   size: number;
   color?: string;
-};
+}
 
 const NodeIcon = ({ trace, size, color }: Props) => {
   if (trace.type && trace.type.toLowerCase() === "llm") {

@@ -1,169 +1,218 @@
 {
-  "name": "prompty",
-  "displayName": "Prompty",
-  "icon": "icons/prompty128x128.png",
-  "version": "0.1.0",
-  "engines": {
-    "vscode": "^1.98.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/prompty.git"
-  },
-  "preview": true,
-  "categories": [
-    "Azure",
-    "Data Science",
-    "Machine Learning"
-  ],
-  "keywords": [
-    "Prompt",
-    "Prompt Engineering",
-    "Azure OpenAI",
-    "LLM",
-    "LLMOps"
-  ],
-  "activationEvents": [
-    "onLanguage:plaintext"
-  ],
-  "main": "./packages/core/out/extension",
-  "contributes": {
-    "configuration": {
-      "title": "Prompty",
-      "properties": {
-        "promptyLanguageServer.trace.server": {
-          "scope": "window",
-          "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
-        },
-        "prompty.currentModelConfiguration": {
-          "type": "string",
-          "description": "Current configuration",
-          "default": "default"
-        }
-      }
-    },
-    "languages": [
-      {
-        "id": "prompty",
-        "aliases": [
-          "Prompty",
-          "prompty"
-        ],
-        "icon": {
-          "light": "icons/prompty16x16.png",
-          "dark": "icons/prompty16x16.png"
-        },
-        "extensions": [
-          ".prompty"
-        ]
-      },
-      {
-        "id": "tracy",
-        "aliases": [
-          "tracy"
-        ],
-        "icon": {
-          "light": "icons/promptyTrace_light.svg",
-          "dark": "icons/promptyTrace_dark.svg"
-        },
-        "extensions": [
-          ".tracy"
-        ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "prompty.runPrompt",
-        "category": "Prompty",
-        "title": "Run",
-        "icon": "$(play)"
-      }
-    ],
-    "customEditors": [
-      {
-        "viewType": "prompty.traceViewer",
-        "displayName": "Prompty Trace",
-        "priority": "default",
-        "selector": [
-          {
-            "filenamePattern": "*.tracy"
-          }
-        ]
-      }
-    ],
-    "grammars": [
-      {
-        "path": "./syntaxes/prompty.tmLanguage.json",
-        "language": "prompty",
-        "scopeName": "source.prompty",
-        "embeddedLanguages": {
-          "meta.embedded.block.yaml": "yaml",
-          "meta.embedded.block.jinja": "jinja"
-        }
-      }
-    ],
-    "activationEvents": [
-      "onLanguage:prompty"
-    ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "prompty.runPrompt",
-          "when": "resourceExtname == .prompty",
-          "group": "navigation@1"
-        }
-      ]
-    },
-    "keybindings": [
-      {
-        "command": "prompty.runPrompt",
-        "key": "f5",
-        "when": "resourceExtname == .prompty"
-      }
-    ]
-  },
-  "scripts": {
-    "install:core": "cd packages/core && npm install && cd ../..",
-    "install:trace": "cd packages/trace && npm install && cd ../..",
-    "install:server": "cd packages/server && npm install && cd ../..",
-    "install:all": "npm run install:core && npm run install:trace && npm run install:server",
-    "install": "npm run install:all",
-    "build:trace": "cd packages/trace && npm run build && cd ../..",
-    "build:server": "cd packages/server && npm run bundle && cd ../..",
-    "build:all": "npm run build:trace && npm run build:server",
-    "build": "npm run build:all",
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "lint": "eslint",
-    "postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",
-    "generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
+	"name": "prompty",
+	"displayName": "Prompty",
+	"description": "Prompty Extension",
+	"publisher": "ms-toolsai",
+	"icon": "icons/prompty128x128.png",
+	"version": "1.20250712.2000",
+	"engines": {
+		"vscode": "^1.98.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/prompty.git"
+	},
+	"preview": true,
+	"categories": [
+		"Azure",
+		"Data Science",
+		"Machine Learning"
+	],
+	"keywords": [
+		"Prompt",
+		"Prompt Engineering",
+		"Azure OpenAI",
+		"LLM",
+		"LLMOps"
+	],
+	"activationEvents": [
+		"onLanguage:plaintext"
+	],
+	"main": "./packages/core/out/extension",
+	"contributes": {
+		"configuration": {
+			"title": "Prompty",
+			"properties": {
+				"promptyLanguageServer.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"prompty.currentModelConfiguration": {
+					"type": "string",
+					"description": "Current configuration",
+					"default": "default"
+				}
+			}
+		},
+		"languages": [
+			{
+				"id": "prompty",
+				"aliases": [
+					"Prompty",
+					"prompty"
+				],
+				"icon": {
+					"light": "icons/prompty16x16.png",
+					"dark": "icons/prompty16x16.png"
+				},
+				"extensions": [
+					".prompty"
+				]
+			},
+			{
+				"id": "tracy",
+				"aliases": [
+					"tracy"
+				],
+				"icon": {
+					"light": "icons/promptyTrace_light.svg",
+					"dark": "icons/promptyTrace_dark.svg"
+				},
+				"extensions": [
+					".tracy"
+				]
+			}
+		],
+		"commands": [
+			{
+				"command": "prompty.runPrompt",
+				"category": "Prompty",
+				"title": "Run",
+				"icon": "$(play)"
+			},
+			{
+				"command": "prompty.refreshTraces",
+				"category": "Prompty",
+				"title": "Refresh Traces",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "prompty.viewTrace",
+				"category": "Prompty",
+				"title": "View Trace",
+				"icon": {
+					"light": "icons/promptyTrace_light.svg",
+					"dark": "icons/promptyTrace_dark.svg"
+				}
+			}
+		],
+		"customEditors": [
+			{
+				"viewType": "prompty.traceViewer",
+				"displayName": "Prompty Trace",
+				"priority": "default",
+				"selector": [
+					{
+						"filenamePattern": "*.tracy"
+					}
+				]
+			}
+		],
+		"grammars": [
+			{
+				"path": "./syntaxes/prompty.tmLanguage.json",
+				"language": "prompty",
+				"scopeName": "source.prompty",
+				"embeddedLanguages": {
+					"meta.embedded.block.yaml": "yaml",
+					"meta.embedded.block.jinja": "jinja"
+				}
+			}
+		],
+		"activationEvents": [
+			"onLanguage:prompty"
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "prompty.runPrompt",
+					"when": "resourceExtname == .prompty",
+					"group": "navigation@1"
+				}
+			],
+			"view/title": [
+				{
+					"command": "prompty.refreshTraces",
+					"when": "view == view-traces",
+					"group": "navigation@1"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "prompty.viewTrace",
+					"when": "view == view-traces && viewItem == trace",
+					"group": "inline"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "prompty-explorer",
+					"title": "Prompty",
+					"icon": "icons/prompty-sidebar.svg"
+				}
+			]
+		},
+		"views": {
+			"prompty-explorer": [
+				{
+					"id": "view-traces",
+					"name": "Traces",
+					"icon": "icons/prompty-sidebar.svg"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "prompty.runPrompt",
+				"key": "f5",
+				"when": "resourceExtname == .prompty"
+			}
+		]
+	},
+	"scripts": {
+		"install:core": "cd packages/core && npm install && cd ../..",
+		"install:trace": "cd packages/trace && npm install && cd ../..",
+		"install:server": "cd packages/server && npm install && cd ../..",
+		"install:all": "npm run install:core && npm run install:trace && npm run install:server",
+		"install": "npm run install:all",
+		"build:trace": "cd packages/trace && npm run build && cd ../..",
+		"build:server": "cd packages/server && npm run bundle && cd ../..",
+		"build:all": "npm run build:trace && npm run build:server",
+		"build": "npm run build:all",
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint",
+		"postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",
+		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
 		"generate-schemas": "tsp compile models/prompty.tsp --config models/tspconfig.yaml",
-    "package": "vsce package --no-dependencies --allow-missing-repository",
-    "publish": "vsce publish",
-    "package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release",
-    "publish-pre": "vsce publish --pre-release"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.13.0",
-    "@stylistic/eslint-plugin": "^2.9.0",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^20",
-    "@vscode/vsce": "^3.3.2",
-    "eslint": "^9.13.0",
-    "js-yaml": "^4.1.0",
-    "mocha": "^10.3.0",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.0"
-  },
-  "dependencies": {
-    "@typespec/json-schema": "^1.1.0"
-  }
+		"package": "vsce package --no-dependencies --allow-missing-repository",
+		"publish": "vsce publish",
+		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release",
+		"publish-pre": "vsce publish --pre-release"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/mocha": "^10.0.6",
+		"@types/node": "^20",
+		"@vscode/vsce": "^3.6.0",
+		"eslint": "^9.13.0",
+		"js-yaml": "^4.1.0",
+		"mocha": "^10.3.0",
+		"typescript": "^5.8.2",
+		"typescript-eslint": "^8.26.0"
+	},
+	"dependencies": {
+		"@typespec/json-schema": "^1.1.0"
+	}
 }

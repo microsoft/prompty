@@ -46,10 +46,10 @@ const Expand = styled.div`
   }
 `;
 
-type Props = {
+interface Props {
   title: string;
   item: unknown;
-};
+}
 
 const Group = ({ title, item }: Props) => {
   const pushModal = useModalStore((state) => state.pushModal);
@@ -63,7 +63,7 @@ const Group = ({ title, item }: Props) => {
           value={item}
           level={0}
           signature={title.toLowerCase()}
-          expand={true}
+					expand={true}
         />
       ),
     });
@@ -84,7 +84,7 @@ const Group = ({ title, item }: Props) => {
           value={item}
           level={0}
           signature={title.toLowerCase()}
-          expand={false}
+          expandLevel={0}
         />
       </Item>
     </Frame>

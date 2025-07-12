@@ -36,11 +36,11 @@ const Grow = styled.div`
   flex-grow: 1;
 `;
 
-type Props = {
-  trace: TraceItem
-  runtime: string
-  version: string
-};
+interface Props {
+  trace: TraceItem;
+  runtime: string;
+  version: string;
+}
 
 const Header = ({ trace, runtime, version }: Props) => {
   return (

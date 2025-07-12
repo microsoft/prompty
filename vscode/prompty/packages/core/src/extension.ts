@@ -9,15 +9,23 @@ import {
 } from 'vscode-languageclient/node';
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 import { PromptyController } from './controllers/promptyController';
+import { TraceFileProvider, TraceItem } from './providers/traceFileProvider';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-	
+
 	const promptyController = new PromptyController(context);
+	TraceFileProvider.createTreeView(context, "view-traces", "prompty.refreshTraces");
 	context.subscriptions.push(
 		promptyController,
 		commands.registerCommand("prompty.runPrompt", (uri: Uri) => promptyController.run(uri)),
+		commands.registerCommand("prompty.viewTrace", async (traceItem: TraceItem) => {
+			if (!traceItem.trace.uri) {
+				return;
+			}
+			commands.executeCommand("vscode.open", traceItem.trace.uri);
+		}),
 		// Register the custom editor provider for the trace viewer
 		PromptyTraceProvider.register(context)
 	);

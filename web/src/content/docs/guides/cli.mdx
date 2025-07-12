@@ -1,0 +1,399 @@
+---
+title: CLI Usage
+description: Learn how to use the Prompty command-line interface for executing and debugging prompts
+authors:
+  - sethjuarez
+  - nitya
+date: 2024-06-10
+tags:
+  - cli
+  - command-line
+  - debugging
+sidebar:
+  order: 4
+---
+
+The Prompty CLI provides a convenient way to execute prompts, debug issues, and integrate Prompty into scripts and CI/CD pipelines. It comes built-in with the Python runtime installation.
+
+## Installation
+
+The CLI is automatically installed with the Prompty Python package:
+
+```bash
+pip install "prompty[azure]"
+```
+
+Verify the installation:
+
+```bash
+prompty --version
+```
+
+## Basic Usage
+
+### Execute a Prompt
+
+Run a prompty file with the basic command:
+
+```bash
+prompty -s path/to/your/prompt.prompty
+```
+
+### Using Environment Files
+
+Load environment variables from a file:
+
+```bash
+prompty -s prompt.prompty -e .env
+```
+
+Example `.env` file:
+```bash
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo
+```
+
+### Passing Input Variables
+
+Pass input variables using JSON:
+
+```bash
+prompty -s prompt.prompty --inputs '{"name": "Alice", "topic": "AI"}'
+```
+
+Or from a JSON file:
+
+```bash
+# inputs.json
+{
+  "customer_name": "John Doe",
+  "question": "What are your business hours?"
+}
+
+prompty -s prompt.prompty --inputs-file inputs.json
+```
+
+## Advanced Options
+
+### Specify Model Configuration
+
+Override model configuration from the command line:
+
+```bash
+prompty -s prompt.prompty \
+  --config '{"type": "azure_openai", "azure_deployment": "gpt-4"}' \
+  -e .env
+```
+
+### Enable Detailed Tracing
+
+The CLI includes tracing by default. Control trace output:
+
+```bash
+# Basic tracing (default)
+prompty -s prompt.prompty -e .env
+
+# Verbose tracing
+prompty -s prompt.prompty -e .env --verbose
+
+# Save traces to file
+prompty -s prompt.prompty -e .env --trace-dir ./traces
+```
+
+### Streaming Output
+
+Enable streaming for real-time output:
+
+```bash
+prompty -s prompt.prompty --stream -e .env
+```
+
+## Interactive Chat Mode
+
+Use the CLI in interactive chat mode for multi-turn conversations:
+
+```bash
+prompty -s chat_prompt.prompty --chat -e .env
+```
+
+In chat mode:
+- Type your messages and press Enter
+- Use `/exit` to quit
+- Use `/clear` to clear conversation history
+- Use `/help` for available commands
+
+## CLI Options Reference
+
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--source` | `-s` | Path to prompty file | `-s prompt.prompty` |
+| `--env` | `-e` | Environment file path | `-e .env` |
+| `--inputs` | `-i` | JSON input variables | `-i '{"name": "Alice"}'` |
+| `--inputs-file` | | Input variables from file | `--inputs-file inputs.json` |
+| `--config` | `-c` | Model configuration JSON | `-c '{"temperature": 0.7}'` |
+| `--connection` | | Connection name | `--connection production` |
+| `--stream` | | Enable streaming output | `--stream` |
+| `--chat` | | Interactive chat mode | `--chat` |
+| `--verbose` | `-v` | Verbose output | `-v` |
+| `--trace-dir` | | Directory for trace files | `--trace-dir ./traces` |
+| `--output` | `-o` | Output file path | `-o result.txt` |
+| `--format` | `-f` | Output format (json, text) | `-f json` |
+| `--help` | `-h` | Show help message | `-h` |
+| `--version` | | Show version | `--version` |
+
+## Output Formats
+
+### Text Output (Default)
+
+```bash
+prompty -s prompt.prompty -e .env
+# Output: Hello! How can I help you today?
+```
+
+### JSON Output
+
+```bash
+prompty -s prompt.prompty -e .env --format json
+```
+
+JSON output includes metadata:
+```json
+{
+  "content": "Hello! How can I help you today?",
+  "usage": {
+    "prompt_tokens": 45,
+    "completion_tokens": 12,
+    "total_tokens": 57
+  },
+  "model": "gpt-35-turbo",
+  "finish_reason": "stop"
+}
+```
+
+### Save to File
+
+```bash
+prompty -s prompt.prompty -e .env -o response.txt
+```
+
+## Working with Different Invokers
+
+### Azure OpenAI
+
+```bash
+# Set up environment
+export AZURE_OPENAI_ENDPOINT="https://your-endpoint.openai.azure.com/"
+export AZURE_OPENAI_API_KEY="your-api-key"
+export AZURE_OPENAI_DEPLOYMENT="gpt-35-turbo"
+
+# Execute
+prompty -s prompt.prompty -e .env
+```
+
+### OpenAI
+
+```bash
+# Set up environment
+export OPENAI_API_KEY="sk-your-api-key"
+
+# Execute with OpenAI configuration
+prompty -s prompt.prompty \
+  --config '{"type": "openai", "model": "gpt-3.5-turbo"}' \
+  -e .env
+```
+
+### Serverless Models
+
+```bash
+# GitHub Models example
+export GITHUB_TOKEN="your-github-token"
+
+prompty -s prompt.prompty \
+  --config '{"type": "serverless", "endpoint": "https://models.inference.ai.azure.com", "model": "gpt-4o-mini"}' \
+  -e .env
+```
+
+## Debugging with CLI
+
+### Common Issues
+
+**File not found:**
+```bash
+prompty -s nonexistent.prompty
+# Error: File 'nonexistent.prompty' not found
+```
+
+**Invalid JSON inputs:**
+```bash
+prompty -s prompt.prompty --inputs '{"name": "Alice"'
+# Error: Invalid JSON in inputs
+```
+
+**Missing environment variables:**
+```bash
+prompty -s prompt.prompty -e .env --verbose
+# Will show which environment variables are missing
+```
+
+### Verbose Mode for Troubleshooting
+
+```bash
+prompty -s prompt.prompty -e .env --verbose
+```
+
+Verbose output includes:
+- Environment variable loading
+- Prompt parsing details
+- Model configuration
+- Request/response details
+- Execution timing
+
+## Scripting and Automation
+
+### Batch Processing
+
+Process multiple prompts:
+
+```bash
+#!/bin/bash
+# process_prompts.sh
+
+for prompt in prompts/*.prompty; do
+    echo "Processing $prompt..."
+    prompty -s "$prompt" -e .env -o "results/$(basename "$prompt" .prompty).txt"
+done
+```
+
+### CI/CD Integration
+
+Use in GitHub Actions:
+
+```yaml
+# .github/workflows/test-prompts.yml
+name: Test Prompts
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+          
+      - name: Install Prompty
+        run: pip install "prompty[azure]"
+        
+      - name: Test prompts
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: |
+          for prompt in tests/*.prompty; do
+            prompty -s "$prompt" --format json -o "results/$(basename "$prompt" .prompty).json"
+          done
+```
+
+### Exit Codes
+
+The CLI returns appropriate exit codes for scripting:
+
+- `0`: Success
+- `1`: General error (file not found, invalid JSON, etc.)
+- `2`: Configuration error
+- `3`: Authentication error
+- `4`: API error
+
+## Performance Considerations
+
+### Batch Operations
+
+For multiple prompts, consider connection reuse:
+
+```bash
+# Instead of multiple CLI calls, use Python script
+python batch_process.py
+```
+
+```python
+# batch_process.py
+import prompty
+import prompty.azure
+
+prompts = ["prompt1.prompty", "prompt2.prompty", "prompt3.prompty"]
+
+for prompt_file in prompts:
+    result = prompty.execute(prompt_file)
+    print(f"{prompt_file}: {result}")
+```
+
+### Large Outputs
+
+For large responses, use file output instead of console:
+
+```bash
+prompty -s large_prompt.prompty -e .env -o large_response.txt
+```
+
+## Best Practices
+
+:::tip[Environment Management]
+- Use `.env` files for different environments (dev, staging, prod)
+- Never commit API keys to version control
+- Use environment-specific configuration files
+:::
+
+:::note[Error Handling]
+- Always check exit codes in scripts
+- Use `--verbose` for debugging issues
+- Save outputs to files for later analysis
+:::
+
+:::caution[API Limits]
+- Be mindful of rate limits when processing multiple prompts
+- Consider adding delays between requests in batch operations
+- Monitor token usage with JSON output format
+:::
+
+## Examples
+
+### Customer Support Bot
+
+```bash
+# Interactive customer support
+prompty -s customer_support.prompty --chat -e .env
+```
+
+### Document Summarization
+
+```bash
+# Summarize with custom inputs
+prompty -s summarize.prompty \
+  --inputs '{"document": "path/to/document.txt", "max_length": 200}' \
+  -e .env \
+  -o summary.txt
+```
+
+### Code Review
+
+```bash
+# Review code changes
+prompty -s code_review.prompty \
+  --inputs-file review_context.json \
+  --format json \
+  -o review_results.json \
+  -e .env
+```
+
+## Next Steps
+
+- Learn about [Python Runtime](/docs/guides/prompty-runtime/) for programmatic usage
+- Explore [Observability & Tracing](/docs/guides/observability/) for monitoring
+- Check out [Advanced Configuration](/docs/guides/configuration/) for complex setups
+
+---
+[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

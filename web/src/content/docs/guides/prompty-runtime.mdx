@@ -1,5 +1,6 @@
 ---
-title: Prompty Runtime
+title: Python Runtime
+description: Complete guide to using the Prompty Python runtime for executing prompts programmatically
 authors:
   - bethanyjep
   - nitya
@@ -8,28 +9,259 @@ date: 2024-06-10
 tags:
   - tutorials
   - runtime
+  - python
 index: 2
+sidebar:
+  order: 2
 ---
 
-## Using this Prompty Runtime
-The Python runtime is a simple way to run your prompts in Python. The runtime is available as a Python package and can be installed using pip. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
+The Prompty Python runtime provides a powerful and flexible way to execute prompts programmatically. It's designed to be extensible, observable, and easy to integrate into your AI applications.
+
+## Installation
+
+Install the Prompty runtime using pip. Choose the appropriate extras based on your needs:
 
 ```bash
+# Basic installation
+pip install prompty
+
+# With Azure OpenAI support
 pip install "prompty[azure]"
+
+# With OpenAI support
+pip install "prompty[openai]"
+
+# With all invokers
+pip install "prompty[azure,openai,serverless]"
 ```
 
-Simple usage example:
+## Basic Usage
+
+### Executing Prompty Files
+
+The simplest way to use the runtime is with the `execute()` function:
 
 ```python
 import prompty
-# import invoker
-import prompty.azure
+import prompty.azure  # Import the invoker you need
 
-# execute the prompt
-response = prompty.execute("path/to/prompty/file")
-
+# Execute a prompty file
+response = prompty.execute("path/to/your/prompt.prompty")
 print(response)
 ```
+
+### Passing Input Variables
+
+You can pass variables to your prompts using the `inputs` parameter:
+
+```python
+response = prompty.execute(
+    "path/to/your/prompt.prompty",
+    inputs={
+        "customer_name": "John Doe",
+        "question": "What are your business hours?"
+    }
+)
+```
+
+## Core Functions
+
+### `execute()`
+
+The main function for running prompts. It combines loading, preparing, and executing in one call.
+
+```python
+def execute(
+    prompt: Union[str, Prompty],
+    *,
+    inputs: dict[str, Any] = {},
+    connection: str = "default",
+    configuration: dict[str, Any] = {},
+    options: dict[str, Any] = {},
+    stream: bool = False
+) -> Any
+```
+
+**Parameters:**
+- `prompt`: Path to prompty file or Prompty object
+- `inputs`: Variables to pass to the prompt template
+- `connection`: Configuration connection name
+- `configuration`: Model configuration overrides
+- `options`: Additional options for execution
+- `stream`: Whether to stream the response
+
+### `load()`
+
+Load a prompty file into a Prompty object:
+
+```python
+prompt = prompty.load("path/to/prompt.prompty")
+print(f"Loaded prompt: {prompt.name}")
+```
+
+### `prepare()`
+
+Prepare inputs and render the prompt template:
+
+```python
+prepared = prompty.prepare(
+    prompt,
+    inputs={"name": "Alice", "topic": "AI"}
+)
+```
+
+### `run()`
+
+Execute a prepared prompt against the model:
+
+```python
+result = prompty.run(prepared)
+```
+
+## Headless Usage
+
+For programmatic prompt creation without files:
+
+```python
+# Create a headless prompt
+prompt = prompty.headless(
+    api="chat",
+    content="Hello, {{name}}! Tell me about {{topic}}.",
+    connection={
+        "type": "azure_openai",
+        "azure_endpoint": "https://your-endpoint.openai.azure.com/",
+        "azure_deployment": "gpt-35-turbo"
+    }
+)
+
+# Execute it
+response = prompty.execute(prompt, inputs={"name": "Bob", "topic": "Python"})
+```
+
+## Available Invokers
+
+The runtime supports multiple AI service providers:
+
+### Azure OpenAI
+
+```python
+import prompty.azure
+
+# Configuration in prompty file or programmatically
+response = prompty.execute(
+    prompt,
+    configuration={
+        "type": "azure_openai",
+        "azure_endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+        "azure_deployment": "gpt-35-turbo",
+        "api_version": "2024-10-21"
+    }
+)
+```
+
+### OpenAI
+
+```python
+import prompty.openai
+
+response = prompty.execute(
+    prompt,
+    configuration={
+        "type": "openai",
+        "api_key": "${env:OPENAI_API_KEY}",
+        "model": "gpt-3.5-turbo"
+    }
+)
+```
+
+### Serverless Models
+
+Support for GitHub Models and other serverless endpoints:
+
+```python
+import prompty.serverless
+
+response = prompty.execute(
+    prompt,
+    configuration={
+        "type": "serverless",
+        "endpoint": "https://models.inference.ai.azure.com",
+        "model": "gpt-4o-mini"
+    }
+)
+```
+
+## Streaming Responses
+
+Enable streaming for real-time response processing:
+
+```python
+# Get streaming response
+stream = prompty.execute("prompt.prompty", stream=True)
+
+# Process chunks as they arrive
+for chunk in stream:
+    print(chunk, end="")
+```
+
+## Async Support
+
+The runtime provides async versions of all main functions:
+
+```python
+import asyncio
+import prompty
+
+async def main():
+    # Async execution
+    response = await prompty.execute_async("prompt.prompty")
+    
+    # Async loading
+    prompt = await prompty.load_async("prompt.prompty")
+    
+    # Async streaming
+    async for chunk in await prompty.execute_async("prompt.prompty", stream=True):
+        print(chunk, end="")
+
+asyncio.run(main())
+```
+
+## Error Handling
+
+Handle common runtime errors:
+
+```python
+try:
+    response = prompty.execute("prompt.prompty")
+except FileNotFoundError:
+    print("Prompty file not found")
+except ValueError as e:
+    print(f"Invalid configuration: {e}")
+except Exception as e:
+    print(f"Execution failed: {e}")
+```
+
+## Best Practices
+
+:::tip[Performance Tips]
+- Reuse loaded Prompty objects when executing the same prompt multiple times
+- Use connection pooling for high-throughput scenarios
+- Enable tracing in development for debugging
+:::
+
+:::note[Environment Variables]
+Store sensitive configuration like API keys in environment variables and reference them in your prompty files using `${env:VARIABLE_NAME}` syntax.
+:::
+
+:::caution[Rate Limits]
+Be mindful of API rate limits when making multiple requests. Consider implementing retry logic with exponential backoff.
+:::
+
+## Next Steps
+
+- Learn about [Observability & Tracing](/docs/guides/observability/) to monitor your prompts
+- Explore the [CLI Usage](/docs/guides/cli/) for command-line operations
+- Check out [Advanced Configuration](/docs/guides/configuration/) for complex scenarios
 
 ---
 [Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.

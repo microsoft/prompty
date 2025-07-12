@@ -5,12 +5,12 @@ import { MouseEventHandler, useState } from "react";
 import { formatDuration, formatTokens } from "../utilities/format";
 import NodeIcon from "./nodeIcon";
 
-type Props = {
+interface Props {
   trace: TraceItem;
   level: number;
   hidden: boolean;
   setTraceItem: (trace: TraceItem) => void;
-};
+}
 
 const TreeItem = styled.div`
   padding: 0px;
