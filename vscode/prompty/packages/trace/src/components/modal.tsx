@@ -1,6 +1,7 @@
 import { VscClose, VscCloseAll } from "react-icons/vsc";
 import styled from "styled-components";
 import { useModalStore } from "../store";
+import usePersistStore from '../store/usepersiststore';
 
 const modalPadding = 32;
 const modalMargin = 6;
@@ -119,19 +120,24 @@ const CloseAll = styled.div`
 `;
 
 const ModalCollection = () => {
-  const [modals, isEmpty, closeAll] = useModalStore((state) => [
-    state.modals,
-    state.isEmpty,
-    state.closeAll,
-  ]);
+
+	const modalStore = usePersistStore(useModalStore, (state) => state);
 
   return (
-    <ModalWrapper hidden={isEmpty}>
-      <CloseAll onClick={() => closeAll()} hidden={modals.length < 2}>
+    <ModalWrapper hidden={modalStore?.isEmpty}>
+      <CloseAll
+        onClick={() => modalStore?.closeAll()}
+        hidden={modalStore?.modals && modalStore?.modals.length < 2}
+      >
         <VscCloseAll size={20} />
       </CloseAll>
-      {modals.map((modal, index) => (
-        <Modal key={index} index={index} count={modals.length} {...modal} />
+      {modalStore?.modals.map((modal, index) => (
+        <Modal
+          key={index}
+          index={index}
+          count={modalStore.modals.length}
+          {...modal}
+        />
       ))}
     </ModalWrapper>
   );

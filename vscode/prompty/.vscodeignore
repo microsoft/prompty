@@ -14,3 +14,4 @@ packages/core/node_modules/**
 !packages/core/node_modules/{minimatch,brace-expansion,concat-map,balanced-match}/**
 !packages/core/node_modules/{semver,lru-cache,yallist}/**
 packages/server/node_modules/**
+packages/**/src/

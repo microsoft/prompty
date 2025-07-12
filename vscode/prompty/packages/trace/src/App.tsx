@@ -10,9 +10,11 @@ import Header from "./components/header";
 import TraceTree from "./components/tracetree";
 import TraceDetail from "./components/tracedetail";
 import ModalCollection from "./components/modal";
-import { TraceItem, useTraceStore, useCurrentStore } from "./store";
+import { TraceItem, useTraceStore, useCurrentStore, Trace } from "./store";
 import { GlobalStyle } from "./utilities/styles";
 import Collapser from "./components/collapser";
+import usePersistStore from "./store/usepersiststore";
+import { vscode } from "./utilities/vscode";
 
 const Frame = styled.div`
   display: flex;
@@ -65,9 +67,20 @@ const HeaderFrame = styled.div`
 const CollapserDiv = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding-bottom: 8px;
-	
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  &:hover {
+    color: var(--vscode-focusBorder);
+    border: solid 1px var(--vscode-focusBorder);
+  }
+  bottom: 8px;
+  left: 8px;
+  position: absolute;
+  border-radius: 9999px;
+  border: solid 1px var(--vscode-foreground);
+  height: 32px;
+  width: 32px;
 `;
 
 const BodyFrame = styled.div`
@@ -104,41 +117,80 @@ function App() {
   const [width, setWidth] = useState(500);
   const [treeWidth, setTreeWidth] = useState<number | undefined>(undefined);
   const [collapsed, setCollapsed] = useState(false);
-  const [trace, setTrace] = useTraceStore((state) => [
-    state.trace,
-    state.setTrace,
-  ]);
-  const [traceItem, setTraceItem] = useCurrentStore((state) => [
-    state.traceItem,
-    state.setTraceItem,
-  ]);
+
+  const traceStore = usePersistStore(useTraceStore, (state) => state);
+  const traceItemStore = usePersistStore(useCurrentStore, (state) => state);
 
   const treeRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (typeof acquireVsCodeApi !== "function") {
-      fetch("/example.tracy")
-        .then((response) => response.json())
-        .then((t) => {
-          // add ids to trace
-          ensureIds(t.trace);
-          setTrace(t);
-          setTraceItem(t.trace);
-        });
+  const refreshView = (trace: object) => {
+    // Ensure trace is of type Trace
+    if (!("trace" in trace) || typeof trace.trace !== "object") {
+      vscode.postMessage({
+        command: "error",
+        text: "Invalid trace data structure.",
+      });
+      return;
     }
 
-    window.addEventListener("message", (event) => {
-      const message = event.data;
-      if (message.command === "trace") {
-        // add ids to trace
-        const t = JSON.parse(message.text);
-        ensureIds(t.trace);
-        setTrace(t);
-        setTraceItem(t.trace);
-      }
+    if (!trace || !trace.trace) {
+      vscode.postMessage({
+        command: "error",
+        text: "No trace data available.",
+      });
+      return;
+    }
+
+    const t = trace as Trace;
+    ensureIds(t.trace);
+    traceStore?.setTrace(t);
+    traceItemStore?.setTraceItem(t.trace);
+
+    vscode.postMessage({
+      command: "trace",
+      text: "Loaded trace data successfully.",
     });
-  }, [setTrace, setTraceItem]);
+  };
+
+  const fetchLocalTrace = () => {
+    fetch("/example.tracy")
+      .then((response) => response.json())
+      .then((trace) => {
+        refreshView(trace);
+      })
+      .catch((error) => {
+        vscode.postMessage({
+          command: "error",
+          text: `Failed to fetch local trace: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      });
+  };
+
+  const handleMessage = (event: MessageEvent) => {
+    const message = event.data;
+    if (message.command === "trace") {
+      const t = JSON.parse(message.text);
+      refreshView(t);
+    } else if (message.command === "error") {
+      vscode.postMessage({
+        command: "error",
+        text: message.text,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (vscode.isVSCodeContext()) {
+      vscode.registerCallback(handleMessage);
+      vscode.postMessage({
+        command: "ready",
+      });
+    } else {
+      console.warn(vscode.warningMessage);
+      fetchLocalTrace();
+    }
+  }, [traceStore?.setTrace, traceItemStore?.setTraceItem]);
 
   const handleResize = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (isDragging) {
@@ -163,17 +215,16 @@ function App() {
     }
   }, [width, treeRef, sidebarRef]);
 
-
-	useEffect(() => {
-		if(collapsed) {
-			setWidth(38);
-			if(sidebarRef.current) {
-				sidebarRef.current.style.cursor = "pointer";
-			}
-		} else {
-			setWidth(treeWidth ? treeWidth : 500);
-		}
-	}, [collapsed]);
+  useEffect(() => {
+    if (collapsed) {
+      setWidth(48);
+      if (sidebarRef.current) {
+        sidebarRef.current.style.cursor = "pointer";
+      }
+    } else {
+      setWidth(treeWidth ? treeWidth + 18 : 500);
+    }
+  }, [collapsed]);
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -183,14 +234,14 @@ function App() {
     setIsDragging(true);
   };
 
-	function activateSidebar(): void {
-		if(collapsed && sidebarRef.current) {
-			if (sidebarRef.current) {
+  function activateSidebar(): void {
+    if (collapsed && sidebarRef.current) {
+      if (sidebarRef.current) {
         sidebarRef.current.style.cursor = "default";
       }
-			setCollapsed(false);
-		}
-	}
+      setCollapsed(false);
+    }
+  }
 
   return (
     <>
@@ -198,18 +249,18 @@ function App() {
       <Frame onMouseUp={handleMouseUp} onMouseMove={handleResize}>
         <Sidebar ref={sidebarRef} size={width} onClick={activateSidebar}>
           <Tree ref={treeRef} size={treeWidth}>
-            <CollapserDiv>
-              <Collapser collapsed={collapsed} setCollapsed={setCollapsed} />
-            </CollapserDiv>
-            {!collapsed && trace && trace.trace && (
+            {!collapsed && traceStore?.trace && traceStore?.trace.trace && (
               <TraceTree
-                trace={trace?.trace}
+                trace={traceStore?.trace.trace}
                 level={0}
                 hidden={false}
-                setTraceItem={(t) => setTraceItem(t)}
+                setTraceItem={(t) => traceItemStore?.setTraceItem(t)}
               />
             )}
           </Tree>
+          <CollapserDiv onClick={() => setCollapsed(!collapsed)}>
+            <Collapser collapsed={collapsed} setCollapsed={setCollapsed} />
+          </CollapserDiv>
         </Sidebar>
         {!collapsed && (
           <SideBarResizer size={4} onMouseDown={handleMouseDown} />
@@ -217,17 +268,19 @@ function App() {
         <Content size={width}>
           <HeaderFrame>
             <Container>
-              {trace && traceItem && (
+              {traceStore?.trace && traceItemStore?.traceItem && (
                 <Header
-                  trace={traceItem}
-                  runtime={trace?.runtime}
-                  version={trace?.version}
+                  trace={traceItemStore?.traceItem}
+                  runtime={traceStore?.trace.runtime}
+                  version={traceStore?.trace.version}
                 />
               )}
             </Container>
           </HeaderFrame>
           <BodyFrame>
-            {traceItem && <TraceDetail trace={traceItem!} />}
+            {traceItemStore?.traceItem && (
+              <TraceDetail trace={traceItemStore?.traceItem} />
+            )}
           </BodyFrame>
         </Content>
         <ModalCollection />
