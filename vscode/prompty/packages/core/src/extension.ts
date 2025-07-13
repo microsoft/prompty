@@ -1,6 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri } from 'vscode';
-
+import { commands, ExtensionContext, Uri /*, languages */ } from 'vscode';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -10,6 +9,8 @@ import {
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 import { PromptyController } from './controllers/promptyController';
 import { TraceFileProvider, TraceItem } from './providers/traceFileProvider';
+//import { PromptySymbolProvider } from './providers/promptySymbolProvider';
+//import { TracySymbolProvider } from './providers/tracySymbolProvider';
 
 let client: LanguageClient;
 
@@ -27,8 +28,11 @@ export function activate(context: ExtensionContext) {
 			commands.executeCommand("vscode.open", traceItem.trace.uri);
 		}),
 		// Register the custom editor provider for the trace viewer
-		PromptyTraceProvider.register(context)
+		PromptyTraceProvider.register(context),
+		//languages.registerDocumentSymbolProvider({ language: 'prompty' }, new PromptySymbolProvider()),
+		//languages.registerDocumentSymbolProvider({ language: 'tracy' }, new TracySymbolProvider())
 	);
+
 
 	// The server is implemented in node
 	startLanguageServer(context);

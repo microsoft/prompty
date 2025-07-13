@@ -30,11 +30,42 @@ namespace Prompty {
 		sample?: unknown = null;
 	}
 
-	model Output {
-		...Property;
+	@discriminator("type")
+	model OutputProperty {
+		@doc("The name of the output property")
+		name: string = "";
 
-		@doc("Array of nested output items for complex output types")
-		items?: Output[] = #[];
+		@doc("The data type of the output property")
+		type: "string" | "number" | "boolean" | "array" | "object" = "string";
+
+		@doc("A short description of the output property")
+		description?: string = "";
+
+		@doc("Whether the output property is required")
+		required?: boolean = false;
+	}
+
+	model ArrayOutput extends OutputProperty {
+		type: "array";
+
+		@doc("The type of items contained in the array")
+		items: OutputProperty[] | Record<OutputProperty> = #[];
+	}
+
+	model ObjectOutput extends OutputProperty {
+		type: "object";
+
+		@doc("The properties contained in the object")
+		properties: OutputProperty[] | Record<OutputProperty> = #[];
+	}
+
+	union Output {
+		@doc("Simple output property with a specific type")
+		output: OutputProperty,
+		@doc("Array output containing multiple items of a specific type")
+		array: ArrayOutput,
+		@doc("Object output containing multiple named properties")
+		object: ObjectOutput,
 	}
 
 	model Connection {
