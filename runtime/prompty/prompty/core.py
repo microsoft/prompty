@@ -71,10 +71,13 @@ class OutputProperty:
     type: Literal["string", "number", "array", "object", "boolean"]
     name: str = field(default="")
     description: str = field(default="")
-    # only for array type - need to update schema
-    items: list["OutputProperty"] = field(default_factory=list)
+    required: bool = field(default=True)
+    enum: list[typing.Any] = field(default_factory=list)
 
-    json_schema: Optional[dict] = field(default_factory=dict)
+    # for array types, items is a type of OutputProperty
+    items: Optional["OutputProperty"] = field(default=None)
+    # for object types, properties is a list of OutputProperty
+    properties: list["OutputProperty"] = field(default_factory=list)
 
 
 @dataclass
@@ -265,25 +268,6 @@ class Prompty:
                 return
 
         raise ValueError(f"Tool {name} not found")
-
-    def get_output(self, name: str) -> OutputProperty:
-        """Get the output property of the prompty
-
-        Parameters
-        ----------
-        name : str
-            The name of the property
-
-        Returns
-        -------
-        OutputProperty
-            The property of the prompty
-        """
-
-        for i in self.outputs:
-            if i.name == name:
-                return i
-        raise ValueError(f"Property {name} not found")
 
     def to_safe_dict(self) -> dict[str, typing.Any]:
         d: dict[str, typing.Any] = {}
@@ -599,12 +583,35 @@ class Prompty:
         return {**attributes, **prompty, "content": content}
 
     @staticmethod
+    def _load_output(attributes: dict) -> OutputProperty:
+        if "type" in attributes and attributes["type"] == "array":
+            items = attributes.pop("items", [])
+            attributes["items"] = Prompty._load_output({"name": "item", **items})
+
+        elif "type" in attributes and attributes["type"] == "object":
+            p = attributes.pop("properties", [])
+            if isinstance(p, dict):
+                p = [{"name": k, **v} for k, v in p.items()]
+
+            properties = [Prompty._load_output(i) for i in p]
+            attributes["properties"] = properties
+
+        return OutputProperty(**attributes)
+    
+
+    @staticmethod
     def load_raw(attributes: dict, file: Path) -> "Prompty":
+        # normalize outputs
+        outputs = []
+        if "outputs" in attributes:
+            outputs = attributes.pop("outputs")
+            if isinstance(outputs, dict):
+                outputs = [{"name": k, **v} for k, v in outputs.items()]
 
         prompty = Prompty(
             model=ModelProperty(**attributes.pop("model")),
             inputs=[InputProperty(**i) for i in attributes.pop("inputs", [])],
-            outputs=[OutputProperty(**i) for i in attributes.pop("outputs", [])],
+            outputs=[Prompty._load_output(i) for i in outputs],
             tools=Prompty.load_tools(attributes.pop("tools", [])),
             template=TemplateProperty(**attributes.pop("template")),
             file=file,

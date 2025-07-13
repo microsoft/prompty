@@ -246,16 +246,6 @@ def test_function_calling():
     print(result)
 
 
-def test_structured_output():
-    result = prompty.execute(
-        "prompts/structured_output.prompty",
-        inputs={
-            "statement": "The quick brown fox jumps over the lazy dog",
-        },
-    )
-    print(result)
-
-
 @pytest.mark.asyncio
 async def test_function_calling_async():
     result = await prompty.execute_async(

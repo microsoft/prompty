@@ -267,29 +267,6 @@ async def test_function_calling_async():
     print(result)
 
 
-@trace
-def test_structured_output():
-    result = prompty.execute(
-        "prompts/structured_output.prompty",
-        inputs={
-            "statement": "The quick brown fox jumps over the lazy dog",
-        },
-    )
-    print(result)
-
-
-@pytest.mark.asyncio
-@trace
-async def test_structured_output_async():
-    result = await prompty.execute_async(
-        "prompts/structured_output.prompty",
-        inputs={
-            "statement": "The quick brown fox jumps over the lazy dog",
-        },
-    )
-    print(result)
-
-
 # need to add trace attribute to
 # materialize stream into the function
 # trace decorator

@@ -42,14 +42,14 @@ namespace Prompty {
 		description?: string = "";
 
 		@doc("Whether the output property is required")
-		required?: boolean = false;
+		required?: boolean = true;
 	}
 
 	model ArrayOutput extends OutputProperty {
 		type: "array";
 
 		@doc("The type of items contained in the array")
-		items: OutputProperty[] | Record<OutputProperty> = #[];
+		items: OutputProperty;
 	}
 
 	model ObjectOutput extends OutputProperty {
@@ -62,8 +62,10 @@ namespace Prompty {
 	union Output {
 		@doc("Simple output property with a specific type")
 		output: OutputProperty,
+
 		@doc("Array output containing multiple items of a specific type")
 		array: ArrayOutput,
+
 		@doc("Object output containing multiple named properties")
 		object: ObjectOutput,
 	}

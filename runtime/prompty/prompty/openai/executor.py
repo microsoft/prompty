@@ -55,6 +55,8 @@ class OpenAIExecutor(Invoker):
         any
             The response from the OpenAI API
         """
+
+        response = None
         with Tracer.start("OpenAI") as trace:
             trace("type", "LLM")
             trace("signature", "OpenAI.ctor")

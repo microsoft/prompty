@@ -9,6 +9,7 @@ metadata:
 model:
   api: embedding
   connection:
+    type: azure
     azure_deployment: text-embedding-ada-002
 inputs:
   text: embedding text

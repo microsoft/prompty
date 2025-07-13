@@ -42,13 +42,6 @@ class AzureOpenAIProcessor(Invoker):
         any
             The response from the OpenAI/Azure API
         """
-        # agent invocations return the thread
-        # and the last message is the response
-        if self.prompty.model.api == "agent" and isinstance(data, list):
-            if isinstance(data[-1], dict):
-                return data[-1]["content"]
-            else:
-                return data
 
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
@@ -113,7 +106,7 @@ class AzureOpenAIProcessor(Invoker):
         else:
             return data
 
-    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
+    async def invoke_async(self, data: str) -> typing.Any:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -126,13 +119,6 @@ class AzureOpenAIProcessor(Invoker):
         str
             The parsed data
         """
-        # agent invocations return the thread
-        # and the last message is the response
-        if self.prompty.model.api == "agent" and isinstance(data, list):
-            if isinstance(data[-1], dict):
-                return data[-1]["content"]
-            else:
-                return data
 
         if isinstance(data, ChatCompletion):
             response = data.choices[0].message
@@ -179,7 +165,7 @@ class AzureOpenAIProcessor(Invoker):
             elif len(data.data) == 1:
                 return data.data[0].url if item.data[0].url else item.data[0].b64_json
             else:
-                return [item.url if item.url else item.b64_json for item in data.data]
+                return [str(item.url) if item.url else item.b64_json for item in data.data]
 
         elif isinstance(data, AsyncIterator):
 

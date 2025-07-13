@@ -178,6 +178,8 @@ class AzureOpenAIExecutor(Invoker):
             trace("signature", "AzureOpenAIAsync.chat.completions.create")
             args = self._resolve_chat_args(data, ignore_thread_content)
             trace("inputs", args)
+
+            response = None
             if "stream" in args and args["stream"]:
                 response = await client.chat.completions.create(**args)
             else:
@@ -374,26 +376,29 @@ class AzureOpenAIExecutor(Invoker):
 
         client = self._get_ctor()
 
+        r = None
         if self.api == "chat":
-            response = self._create_chat(client, data)
-        elif self.api == "agent":
-            response = self._execute_agent(client, data)
+            r = self._create_chat(client, data)
+        #elif self.api == "agent":
+        #    r = self._execute_agent(client, data)
         elif self.api == "completion":
-            response = self._create_completion(client, data)
+            r = self._create_completion(client, data)
         elif self.api == "embedding":
-            response = self._create_embedding(client, data)
+            r = self._create_embedding(client, data)
         elif self.api == "image":
-            response = self._create_image(client, data)
+            r = self._create_image(client, data)
 
         # stream response
-        if isinstance(response, Iterator):
+        if isinstance(r, Iterator):
             if self.api == "chat":
                 # TODO: handle the case where there might be no usage in the stream
-                return PromptyStream("AzureOpenAIExecutor", response)
+                return PromptyStream("AzureOpenAIExecutor", r)
             else:
-                return PromptyStream("AzureOpenAIExecutor", response)
+                return PromptyStream("AzureOpenAIExecutor", r)
+        elif isinstance(r, str):
+            return r
         else:
-            return response
+            raise ValueError(f"Unexpected response type: {type(r)}")
 
     async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
         """Invoke the Prompty Chat Parser (Async)
@@ -410,23 +415,26 @@ class AzureOpenAIExecutor(Invoker):
         """
         client = self._get_async_ctor()
 
+        r = None
         if self.api == "chat":
-            response = await self._create_chat_async(client, data)
-        elif self.api == "agent":
-            response = await self._execute_agent_async(client, data)
+            r = await self._create_chat_async(client, data)
+        #elif self.api == "agent":
+        #    r = await self._execute_agent_async(client, data)
         elif self.api == "completion":
-            response = await self._create_completion_async(client, data)
+            r = await self._create_completion_async(client, data)
         elif self.api == "embedding":
-            response = await self._create_embedding_async(client, data)
+            r = await self._create_embedding_async(client, data)
         elif self.api == "image":
-            response = await self._create_image_async(client, data)
+            r = await self._create_image_async(client, data)
 
         # stream response
-        if isinstance(response, AsyncIterator):
+        if isinstance(r, AsyncIterator):
             if self.api == "chat":
                 # TODO: handle the case where there might be no usage in the stream
-                return AsyncPromptyStream("AzureOpenAIExecutorAsync", response)
+                return AsyncPromptyStream("AzureOpenAIExecutorAsync", r)
             else:
-                return AsyncPromptyStream("AzureOpenAIExecutorAsync", response)
+                return AsyncPromptyStream("AzureOpenAIExecutorAsync", r)
+        elif isinstance(r, str):
+            return r
         else:
-            return response
+            raise ValueError(f"Unexpected response type: {type(r)}")

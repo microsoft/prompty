@@ -9,7 +9,9 @@ metadata:
 model:
   api: chat
   connection:
+    type: azure_openai
     azure_deployment: gpt-35-turbo
+    
 inputs:
   firstName: Jane
   lastName: Doe
