@@ -270,6 +270,7 @@ class Parser(Invoker):
         """
         pass
 
+    @trace
     def run(self, data: typing.Any) -> typing.Any:
         """Method to run the invoker
 
@@ -287,6 +288,7 @@ class Parser(Invoker):
         parsed = self.invoke(data)
         return self.process(parsed)
 
+    @trace
     async def run_async(self, data: typing.Any) -> typing.Any:
         """Method to run the invoker asynchronously
 
@@ -302,6 +304,10 @@ class Parser(Invoker):
         """
         parsed = await self.invoke_async(data)
         return self.process(parsed)
+
+
+
+InvokerTypes = Literal["renderer", "parser", "executor", "processor"]
 
 
 class InvokerFactory:
@@ -327,6 +333,7 @@ class InvokerFactory:
     @classmethod
     def add_processor(cls, name: str, invoker: type[Invoker]) -> None:
         cls._processors[name] = invoker
+
 
     @classmethod
     def register_renderer(cls, name: str) -> Callable:
@@ -364,10 +371,11 @@ class InvokerFactory:
 
         return inner_wrapper
 
+
     @classmethod
     def _get_name(
         cls,
-        type: Literal["renderer", "parser", "executor", "processor"],
+        type: InvokerTypes,
         prompty: Prompty,
     ) -> str:
         if type == "renderer":
@@ -384,7 +392,7 @@ class InvokerFactory:
     @classmethod
     def _get_invoker(
         cls,
-        type: Literal["renderer", "parser", "executor", "processor"],
+        type: InvokerTypes,
         prompty: Prompty,
     ) -> Invoker:
         if type == "renderer":
@@ -421,7 +429,7 @@ class InvokerFactory:
     @classmethod
     def run(
         cls,
-        type: Literal["renderer", "parser", "executor", "processor"],
+        type: InvokerTypes,
         prompty: Prompty,
         data: typing.Any,
         default: typing.Any = None,
@@ -439,7 +447,7 @@ class InvokerFactory:
     @classmethod
     async def run_async(
         cls,
-        type: Literal["renderer", "parser", "executor", "processor"],
+        type: InvokerTypes,
         prompty: Prompty,
         data: typing.Any,
         default: typing.Any = None,

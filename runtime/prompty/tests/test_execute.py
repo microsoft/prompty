@@ -15,17 +15,15 @@ from tests.fake_serverless_executor import FakeServerlessExecutor
 
 load_dotenv()
 
+BASE_PATH = Path(__file__).parent
+
 
 @pytest.fixture(scope="module", autouse=True)
 def fake_azure_executor():
     InvokerFactory.add_executor("azure", FakeAzureExecutor)
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
-    InvokerFactory.add_executor("azure_beta", FakeAzureExecutor)
-    InvokerFactory.add_executor("azure_openai_beta", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
-    InvokerFactory.add_executor("azure_beta", AzureOpenAIProcessor)
-    InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
@@ -257,6 +255,33 @@ async def test_function_calling_async():
         },
     )
     print(result)
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "response/structured_inline.prompty",
+        "response/structured_complex.prompty",
+        "response/structured_complex_other.prompty",
+    ],
+)
+def test_complex_outputs(prompt: str):
+    p = prompty.execute(prompt, merge_sample=True)
+    print(p)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "response/structured_inline.prompty",
+        "response/structured_complex.prompty",
+        "response/structured_complex_other.prompty",
+    ],
+)
+async def test_complex_outputs_async(prompt: str):
+    p = await prompty.execute_async(prompt, merge_sample=True)
+    print(p)
 
 
 # need to add trace attribute to

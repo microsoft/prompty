@@ -1,0 +1,92 @@
+{
+  "id": "chatcmpl-BszmSwYHl6QJpIskBwbVu7Lp5vlwZ",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "{\"name\":\"Science Fair\",\"date\":\"Friday\",\"location\":{\"city\":\"Springfield\",\"state\":\"Illinois\",\"country\":\"United States\"},\"activities\":[{\"activityName\":\"Rocket Launch Demonstration\",\"description\":\"Witness an exhilarating live demonstration of model rockets being launched into the sky, performed by members of the Springfield Astronomical Society.\",\"duration\":\"1 hour\"},{\"activityName\":\"Physics Puzzle Workshop\",\"description\":\"Participants collaborate to solve engaging physics puzzles that challenge their understanding of mechanics and thermodynamics.\",\"duration\":\"30 minutes\"},{\"activityName\":\"Science Trivia Contest\",\"description\":\"Test your science knowledge and compete for prizes in a fun and interactive trivia game.\",\"duration\":\"45 minutes\"},{\"activityName\":\"Biology Station Exploration\",\"description\":\"Explore various hands-on exhibits related to biology, including microscope work and ecosystem models.\",\"duration\":\"2 hours\"}]}",
+        "refusal": null,
+        "role": "assistant",
+        "audio": null,
+        "function_call": null,
+        "tool_calls": null,
+        "annotations": []
+      },
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        }
+      }
+    }
+  ],
+  "created": 1752446896,
+  "model": "gpt-4o-2024-11-20",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "fp_ee1d74bde0",
+  "usage": {
+    "completion_tokens": 164,
+    "prompt_tokens": 256,
+    "total_tokens": 420,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
+    }
+  },
+  "prompt_filter_results": [
+    {
+      "prompt_index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        }
+      }
+    }
+  ]
+}

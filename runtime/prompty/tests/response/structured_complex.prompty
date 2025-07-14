@@ -8,11 +8,8 @@ metadata:
 model:
   api: chat
   connection:
-      # OpenAI beta API required for structured output
-    type: azure_openai
-    # Minimal model version required for structured output
-    azure_deployment: gpt-4o-2024-08-06
-    # Minimal API version required for structured output
+    type: azure
+    azure_deployment: gpt-4o
     api_version: 2024-08-01-preview
 
 inputs:
@@ -49,6 +46,7 @@ outputs:
 system:
 Extract the event information. Also, provide a list of activities that could take place at the event.
 Feel free to use creative and descriptive language to make the output engaging.
+Also, feel free to make up a potential location for the event, including city, state, and country.
 
 user:
 {{statement}}

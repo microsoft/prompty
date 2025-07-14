@@ -1,16 +1,17 @@
+import inspect
 import json
 import typing
 from collections.abc import AsyncIterator, Iterator
 
 import azure.identity
-from openai import APIResponse, AsyncAzureOpenAI, AzureOpenAI
+from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 
 from prompty.tracer import Tracer
 
 from .._version import VERSION
 from ..common import convert_function_tools, convert_output_props
-from ..core import AsyncPromptyStream, Prompty, PromptyStream
+from ..core import AsyncPromptyStream, InputProperty, Prompty, PromptyStream, ToolProperty
 from ..invoker import Invoker, InvokerFactory
 
 
@@ -146,6 +147,22 @@ class AzureOpenAIExecutor(Invoker):
 
         return args
 
+    def _execute_chat_completion(self, client: AzureOpenAI, args: dict, trace) -> typing.Any:
+        if "stream" in args and args["stream"]:
+            response = client.chat.completions.create(**args)
+        else:
+            raw = client.chat.completions.with_raw_response.create(**args)
+
+            response = ChatCompletion.model_validate_json(raw.text)
+
+            for k, v in raw.headers.raw:
+                trace(k.decode("utf-8"), v.decode("utf-8"))
+
+            trace("request_id", raw.request_id)
+            trace("retries_taken", raw.retries_taken)
+
+        return response
+
     def _create_chat(self, client: AzureOpenAI, data: typing.Any, ignore_thread_content=False) -> typing.Any:
         with Tracer.start("create") as trace:
             trace("type", "LLM")
@@ -153,20 +170,25 @@ class AzureOpenAIExecutor(Invoker):
             trace("signature", "AzureOpenAI.chat.completions.create")
             args = self._resolve_chat_args(data, ignore_thread_content)
             trace("inputs", args)
-            if "stream" in args and args["stream"]:
-                response = client.chat.completions.create(**args)
-            else:
-                raw = client.chat.completions.with_raw_response.create(**args)
-
-                response = ChatCompletion.model_validate_json(raw.text)
-
-                for k, v in raw.headers.raw:
-                    trace(k.decode("utf-8"), v.decode("utf-8"))
-
-                trace("request_id", raw.request_id)
-                trace("retries_taken", raw.retries_taken)
+            response = self._execute_chat_completion(client, args, trace)
             trace("result", response)
             return response
+
+    async def _execute_chat_completion_async(self, client: AsyncAzureOpenAI, args: dict, trace) -> typing.Any:
+        if "stream" in args and args["stream"]:
+            response = await client.chat.completions.create(**args)
+        else:
+            raw = await client.chat.completions.with_raw_response.create(**args)
+
+            response = ChatCompletion.model_validate_json(raw.text)
+
+            for k, v in raw.headers.raw:
+                trace(k.decode("utf-8"), v.decode("utf-8"))
+
+            trace("request_id", raw.request_id)
+            trace("retries_taken", raw.retries_taken)
+
+        return response
 
     async def _create_chat_async(
         self, client: AsyncAzureOpenAI, data: typing.Any, ignore_thread_content=False
@@ -178,84 +200,130 @@ class AzureOpenAIExecutor(Invoker):
             trace("signature", "AzureOpenAIAsync.chat.completions.create")
             args = self._resolve_chat_args(data, ignore_thread_content)
             trace("inputs", args)
-
-            response = None
-            if "stream" in args and args["stream"]:
-                response = await client.chat.completions.create(**args)
-            else:
-                raw: APIResponse = await client.chat.completions.with_raw_response.create(**args)
-                if raw is not None and raw.text is not None and isinstance(raw.text, str):
-                    response = ChatCompletion.model_validate_json(raw.text)
-
-                for k, v in raw.headers.raw:
-                    trace(k.decode("utf-8"), v.decode("utf-8"))
-
-                trace("request_id", raw.request_id)
-                trace("retries_taken", raw.retries_taken)
+            response = await self._execute_chat_completion_async(client, args, trace)
             trace("result", response)
 
             return response
+
+    def _get_thread(self) -> InputProperty:
+        thread = self.prompty.get_input("thread")
+        if thread is None:
+            raise ValueError("thread requires thread input")
+
+        return thread
+
+    def _retrieve_tool(self, tool_name: str) -> ToolProperty:
+        tool = self.prompty.get_tool(tool_name)
+        if tool is None:
+            raise ValueError(f"Tool {tool_name} does not exist")
+
+        if tool.type != "function":
+            raise ValueError(f"Server tool ({tool_name}) is currently not supported")
+
+        if tool.value is None:
+            raise ValueError(f"Tool {tool_name} has not been initialized")
+
+        return tool
 
     def _execute_agent(self, client: AzureOpenAI, data: typing.Any) -> typing.Any:
         with Tracer.start("create") as trace:
             trace("type", "LLM")
             trace("description", "Azure OpenAI Client")
-
             trace("signature", "AzureOpenAI.chat.agent.create")
+
             trace("inputs", data)
 
             response = self._create_chat(client, data)
-            if isinstance(response, ChatCompletion):
-                message = response.choices[0].message
-                if message.tool_calls:
-                    thread = self.prompty.get_input("thread")
-                    if thread is None:
-                        raise ValueError("thread requires thread input")
+
+            # execute tool calls if any (until no more tool calls)
+            while (
+                isinstance(response, ChatCompletion)
+                and response.choices[0].finish_reason == "tool_calls"
+                and response.choices[0].message.tool_calls is not None
+                and len(response.choices[0].message.tool_calls) > 0
+            ):
+
+                tool_calls = response.choices[0].message.tool_calls
+                thread = self._get_thread()
+                thread.value.append(
+                    {
+                        "role": "assistant",
+                        "tool_calls": [t.model_dump() for t in tool_calls],
+                    }
+                )
+
+                for tool_call in tool_calls:
+                    tool = self._retrieve_tool(tool_call.function.name)
+                    function_args = json.loads(tool_call.function.arguments)
+
+                    if inspect.iscoroutinefunction(tool.value):
+                        raise ValueError("Cannot execute async tool in sync mode")
+
+                    r = tool.value(**function_args)
 
                     thread.value.append(
                         {
-                            "role": "assistant",
-                            "tool_calls": [t.model_dump() for t in message.tool_calls],
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.function.name,
+                            "content": r,
                         }
                     )
 
-                    for tool_call in message.tool_calls:
-                        tool = self.prompty.get_tool(tool_call.function.name)
-                        if tool is None:
-                            raise ValueError(f"Tool {tool_call.function.name} does not exist")
+                response = self._create_chat(client, data, True)
 
-                        function_args = json.loads(tool_call.function.arguments)
-
-                        if tool.value is None:
-                            raise ValueError(f"Tool {tool_call.function.name} does not have a value")
-
-                        r = tool.value(**function_args)
-
-                        thread.value.append(
-                            {
-                                "role": "tool",
-                                "tool_call_id": tool_call.id,
-                                "name": tool_call.function.name,
-                                "content": r,
-                            }
-                        )
-                else:
-                    trace("result", response)
-                    return response
-
-            response = self._create_chat(client, data, True)
             trace("result", response)
-
             return response
 
     async def _execute_agent_async(self, client: AsyncAzureOpenAI, data: typing.Any) -> typing.Any:
         with Tracer.start("create") as trace:
             trace("type", "LLM")
             trace("description", "Azure OpenAI Client")
-            trace("signature", "AzureOpenAI.chat.agent.create")
-            args = self._resolve_chat_args(data)
-            trace("inputs", args)
-            response = 5
+            trace("signature", "AzureOpenAIAsync.chat.agent.create")
+
+            trace("inputs", data)
+
+            response = await self._create_chat_async(client, data)
+
+            # execute tool calls if any (until no more tool calls)
+            while (
+                isinstance(response, ChatCompletion)
+                and response.choices[0].finish_reason == "tool_calls"
+                and response.choices[0].message.tool_calls is not None
+                and len(response.choices[0].message.tool_calls) > 0
+            ):
+
+                tool_calls = response.choices[0].message.tool_calls
+                thread = self._get_thread()
+                thread.value.append(
+                    {
+                        "role": "assistant",
+                        "tool_calls": [t.model_dump() for t in tool_calls],
+                    }
+                )
+
+                for tool_call in tool_calls:
+                    tool = self._retrieve_tool(tool_call.function.name)
+                    function_args = json.loads(tool_call.function.arguments)
+
+                    if inspect.iscoroutinefunction(tool.value):
+                        # if the tool is async, we need to await it
+                        r = await tool.value(**function_args)
+                    else:
+                        # if the tool is not async, we can call it directly
+                        r = tool.value(**function_args)
+
+                    thread.value.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.function.name,
+                            "content": r,
+                        }
+                    )
+
+                response = await self._create_chat_async(client, data, True)
+
             trace("result", response)
             return response
 
@@ -360,7 +428,7 @@ class AzureOpenAIExecutor(Invoker):
 
             return response
 
-    def invoke(self, data: typing.Any) -> typing.Union[str, PromptyStream]:
+    def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the Azure OpenAI API
 
         Parameters
@@ -379,8 +447,8 @@ class AzureOpenAIExecutor(Invoker):
         r = None
         if self.api == "chat":
             r = self._create_chat(client, data)
-        #elif self.api == "agent":
-        #    r = self._execute_agent(client, data)
+        elif self.api == "agent":
+            r = self._execute_agent(client, data)
         elif self.api == "completion":
             r = self._create_completion(client, data)
         elif self.api == "embedding":
@@ -395,12 +463,10 @@ class AzureOpenAIExecutor(Invoker):
                 return PromptyStream("AzureOpenAIExecutor", r)
             else:
                 return PromptyStream("AzureOpenAIExecutor", r)
-        elif isinstance(r, str):
-            return r
         else:
-            raise ValueError(f"Unexpected response type: {type(r)}")
+            return r
 
-    async def invoke_async(self, data: str) -> typing.Union[str, AsyncPromptyStream]:
+    async def invoke_async(self, data: str) -> typing.Any:
         """Invoke the Prompty Chat Parser (Async)
 
         Parameters
@@ -418,8 +484,8 @@ class AzureOpenAIExecutor(Invoker):
         r = None
         if self.api == "chat":
             r = await self._create_chat_async(client, data)
-        #elif self.api == "agent":
-        #    r = await self._execute_agent_async(client, data)
+        elif self.api == "agent":
+            r = await self._execute_agent_async(client, data)
         elif self.api == "completion":
             r = await self._create_completion_async(client, data)
         elif self.api == "embedding":
@@ -434,7 +500,5 @@ class AzureOpenAIExecutor(Invoker):
                 return AsyncPromptyStream("AzureOpenAIExecutorAsync", r)
             else:
                 return AsyncPromptyStream("AzureOpenAIExecutorAsync", r)
-        elif isinstance(r, str):
-            return r
         else:
-            raise ValueError(f"Unexpected response type: {type(r)}")
+            return r
