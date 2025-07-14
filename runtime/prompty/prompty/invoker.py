@@ -306,7 +306,6 @@ class Parser(Invoker):
         return self.process(parsed)
 
 
-
 InvokerTypes = Literal["renderer", "parser", "executor", "processor"]
 
 
@@ -333,7 +332,6 @@ class InvokerFactory:
     @classmethod
     def add_processor(cls, name: str, invoker: type[Invoker]) -> None:
         cls._processors[name] = invoker
-
 
     @classmethod
     def register_renderer(cls, name: str) -> Callable:
@@ -370,7 +368,6 @@ class InvokerFactory:
             return wrapped_class
 
         return inner_wrapper
-
 
     @classmethod
     def _get_name(

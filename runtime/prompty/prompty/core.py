@@ -597,7 +597,6 @@ class Prompty:
             attributes["properties"] = properties
 
         return OutputProperty(**attributes)
-    
 
     @staticmethod
     def load_raw(attributes: dict, file: Path) -> "Prompty":

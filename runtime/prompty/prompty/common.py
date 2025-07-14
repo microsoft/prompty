@@ -74,11 +74,11 @@ def _convert_output_object(output: OutputProperty) -> dict[str, typing.Any]:
     if output.type == "array":
         if output.items is None:
             raise ValueError("Array type must have items defined")
-        
+
         o = _convert_output_object(output.items)
         if "name" in o:
             o.pop("name")
-            
+
         return {
             "type": "array",
             "items": o,
