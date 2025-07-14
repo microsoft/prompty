@@ -206,7 +206,6 @@ class Prompty:
     # template
     template: TemplateProperty = field(default_factory=TemplateProperty)
 
-
     # yaml based instructions
     instructions: str = field(default="")
     additional_instructions: str = field(default="")
