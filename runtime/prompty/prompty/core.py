@@ -206,13 +206,14 @@ class Prompty:
     # template
     template: TemplateProperty = field(default_factory=TemplateProperty)
 
-    file: Union[str, Path] = field(default="")
+
+    # yaml based instructions
     instructions: str = field(default="")
     additional_instructions: str = field(default="")
-    content: Union[str, list[str], dict] = field(default="")
-    instructions = field(default="")
-    additional_instructions = field(default="")
 
+    # internal properties
+    file: Union[str, Path] = field(default="")
+    content: Union[str, list[str], dict] = field(default="")
     slots: list[dict[str, str]] = field(default_factory=list)
 
     def get_input(self, name: str) -> Union[InputProperty, None]:

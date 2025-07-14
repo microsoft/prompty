@@ -180,6 +180,7 @@ class Renderer(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
+    @trace
     def run(self, data: typing.Any) -> typing.Any:
         """Method to run the invoker
 
@@ -201,6 +202,7 @@ class Renderer(Invoker):
 
         return self.invoke(data)
 
+    @trace
     async def run_async(self, data: typing.Any) -> typing.Any:
         """Method to run the invoker asynchronously
 

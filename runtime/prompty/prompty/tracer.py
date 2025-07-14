@@ -107,7 +107,9 @@ def _name(func: Callable, args):
         signature = f"{func.__module__}.{func.__name__}"
 
     # core invoker gets special treatment prompty.invoker.Invoker
-    core_invoker = signature.startswith("prompty.invoker.Invoker.run")
+    core_invoker = signature.startswith("prompty.invoker.") and (
+        signature.endswith("run") or signature.endswith("run_async")
+    )
     if core_invoker:
         name = type(args[0]).__name__
         if signature.endswith("async"):

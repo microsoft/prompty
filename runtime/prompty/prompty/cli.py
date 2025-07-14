@@ -99,6 +99,8 @@ def execute(prompt_path: str, inputs: Optional[dict[str, Any]] = None, raw=False
                 print("\n", json.dumps(asdict(result), indent=4), "\n")
             elif isinstance(result, list):
                 print("\n", json.dumps([asdict(item) for item in result], indent=4), "\n")
+            elif isinstance(result, dict):
+                print("\n", json.dumps(result, indent=4), "\n")
             else:
                 print("\n", result, "\n")
         except Exception as e:
