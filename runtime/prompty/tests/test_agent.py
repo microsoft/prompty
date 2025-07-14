@@ -10,7 +10,7 @@ import prompty
 from prompty.azure import AzureOpenAIProcessor
 from prompty.invoker import InvokerFactory
 from prompty.serverless import ServerlessProcessor
-from prompty.tracer import trace
+from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
 from tests.fake_serverless_executor import FakeServerlessExecutor
 
 load_dotenv()
@@ -40,7 +40,11 @@ def fake_azure_executor():
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
 
+    Tracer.add("console", console_tracer)
+    json_tracer = PromptyTracer()
+    Tracer.add("PromptyTracer", json_tracer.tracer)
 
+@trace
 @pytest.mark.parametrize(
     "prompt",
     [
@@ -59,6 +63,7 @@ def test_execute_agent(prompt: str):
     return result
 
 
+@trace
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "prompt",

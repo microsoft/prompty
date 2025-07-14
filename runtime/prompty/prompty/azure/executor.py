@@ -226,10 +226,10 @@ class AzureOpenAIExecutor(Invoker):
         return tool
 
     def _execute_agent(self, client: AzureOpenAI, data: typing.Any) -> typing.Any:
-        with Tracer.start("create") as trace:
-            trace("type", "LLM")
+        with Tracer.start("AgentLoop") as trace:
+            trace("type", "agent")
             trace("description", "Azure OpenAI Client")
-            trace("signature", "AzureOpenAI.chat.agent.create")
+            trace("signature", "prompty.azure.AzureOpenAIExecutor.AgentLoop")
 
             trace("inputs", data)
 
@@ -276,10 +276,10 @@ class AzureOpenAIExecutor(Invoker):
             return response
 
     async def _execute_agent_async(self, client: AsyncAzureOpenAI, data: typing.Any) -> typing.Any:
-        with Tracer.start("create") as trace:
-            trace("type", "LLM")
+        with Tracer.start("AgentLoopAsync") as trace:
+            trace("type", "agent")
             trace("description", "Azure OpenAI Client")
-            trace("signature", "AzureOpenAIAsync.chat.agent.create")
+            trace("signature", "prompty.azure.AzureOpenAIExecutor.AgentLoopAsync")
 
             trace("inputs", data)
 
