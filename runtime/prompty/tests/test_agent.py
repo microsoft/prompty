@@ -44,6 +44,7 @@ def fake_azure_executor():
     json_tracer = PromptyTracer()
     Tracer.add("PromptyTracer", json_tracer.tracer)
 
+
 @trace
 @pytest.mark.parametrize(
     "prompt",
