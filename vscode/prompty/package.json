@@ -4,7 +4,7 @@
 	"description": "Prompty Extension",
 	"publisher": "ms-toolsai",
 	"icon": "icons/prompty128x128.png",
-	"version": "1.20250713.212132",
+	"version": "1.20250714.152700",
 	"engines": {
 		"vscode": "^1.98.0"
 	},

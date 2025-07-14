@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri /*, languages */ } from 'vscode';
+import { commands, ExtensionContext, Uri, workspace /*, languages */ } from 'vscode';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -17,7 +17,8 @@ let client: LanguageClient;
 export function activate(context: ExtensionContext) {
 
 	const promptyController = new PromptyController(context);
-	TraceFileProvider.createTreeView(context, "view-traces", "prompty.refreshTraces");
+	const traceFileProvider = new TraceFileProvider();
+	TraceFileProvider.createTreeView(context, traceFileProvider, "view-traces", "prompty.refreshTraces");
 	context.subscriptions.push(
 		promptyController,
 		commands.registerCommand("prompty.runPrompt", (uri: Uri) => promptyController.run(uri)),
@@ -33,6 +34,20 @@ export function activate(context: ExtensionContext) {
 		//languages.registerDocumentSymbolProvider({ language: 'tracy' }, new TracySymbolProvider())
 	);
 
+	workspace.onDidDeleteFiles((event) => {
+		if (!event.files || event.files.length === 0) {
+			return;
+		}
+		if (event.files.some((file) => file.fsPath.endsWith(".tracy")) || event.files.some((file) => file.fsPath.endsWith(".runs"))) {
+			traceFileProvider.refresh();
+		}
+	});
+
+	workspace.createFileSystemWatcher("**/*.tracy").onDidCreate((uri) => {
+		if (uri.fsPath.endsWith(".tracy") || uri.fsPath.endsWith(".runs")) {
+			traceFileProvider.refresh();
+		}
+	});
 
 	// The server is implemented in node
 	startLanguageServer(context);

@@ -66,6 +66,8 @@ export class TraceItem extends vscode.TreeItem {
 						? vscode.TreeItemCollapsibleState.None
 						: vscode.TreeItemCollapsibleState.Collapsed
 				);
+			}).sort((a, b) => {
+				return a.trace.name.localeCompare(b.trace.name);
 			});
 		} else {
 			return [];
@@ -76,17 +78,21 @@ export class TraceItem extends vscode.TreeItem {
 export class TraceFileProvider implements vscode.TreeDataProvider<TraceItem> {
 	public static createTreeView(
 		context: vscode.ExtensionContext,
+		provider: TraceFileProvider,
 		viewId: string,
 		refreshCommand: string
 	): vscode.TreeView<TraceItem> {
-		const traceFileProvider = new TraceFileProvider();
+		//const traceFileProvider = new TraceFileProvider();
 		const treeView = vscode.window.createTreeView(viewId, {
-			treeDataProvider: traceFileProvider,
+			treeDataProvider: provider,
 			canSelectMany: true,
 			showCollapseAll: true,
 		});
-		vscode.commands.registerCommand(refreshCommand, () => traceFileProvider.refresh());
+		vscode.commands.registerCommand(refreshCommand, () => provider.refresh());
+		// Register file creation event listener
 		context.subscriptions.push(treeView);
+		provider.refresh();
+
 		return treeView;
 	}
 
@@ -106,7 +112,8 @@ export class TraceFileProvider implements vscode.TreeDataProvider<TraceItem> {
 							? vscode.TreeItemCollapsibleState.Collapsed
 							: vscode.TreeItemCollapsibleState.None
 					);
-				});
+				})
+				.sort((a, b) => a.trace.name.localeCompare(b.trace.name));
 		} else {
 			return [];
 		}
