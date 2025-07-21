@@ -330,7 +330,7 @@ namespace Prompty.Core.Parsers
                 throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
             mediaType = $"image/{media}";
 
-            // Check is the image path local or remote 
+            // Check if the image path is local or remote 
             isRemote = imagePath.StartsWith("http://") || imagePath.StartsWith("https://");
         }
     }
