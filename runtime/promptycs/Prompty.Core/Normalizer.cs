@@ -12,7 +12,7 @@ namespace Prompty.Core
             return dict;
         }
 
-        internal static Dictionary<string, object> ProcessFile(string file, string parentPath)
+        internal static Dictionary<string, object> ProcessFile(string file, string parentPath, bool strict = false)
         {
             var directory = File.Exists(parentPath) ? Path.GetDirectoryName(parentPath) : parentPath;
             var fullFile = FileUtils.GetFullPath(file, directory ?? string.Empty);
@@ -22,8 +22,10 @@ namespace Prompty.Core
                 var config = JsonDocument.Parse(json).RootElement.ToDictionary();
                 return Normalize(config, parentPath);
             }
-            else
+            else if (strict)
                 throw new InvalidOperationException($"File {file} not found.");
+
+            return [];
         }
 
         internal static string? ProcessEnvironmentVariable(string variable, bool throwIfNotExists, string? defaultValue)
