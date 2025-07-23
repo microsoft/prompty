@@ -2,7 +2,7 @@ emit:
   - "@typespec/json-schema"
 options:
   "@typespec/json-schema":
-    emitter-output-dir: "{cwd}/schemas"
+    emitter-output-dir: "{cwd}/tsp-output/json-schema"
     emitAllModels: true
     emitAllRefs: true
     file-type: yaml

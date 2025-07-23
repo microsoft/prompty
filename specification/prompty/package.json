@@ -1,0 +1,12 @@
+{
+  "name": "prompty",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate": "tsp compile ./model/main.tsp --config ./tspconfig.yaml"
+  },
+  "dependencies": {
+    "@typespec/json-schema": "^1.1.0"
+  }
+}

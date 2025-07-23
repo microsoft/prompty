@@ -5,3 +5,4 @@ client/server
 syntaxes/prompty.tmLanguage.json
 *.vsix
 schemas/
+mypy_cache/

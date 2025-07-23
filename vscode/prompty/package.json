@@ -194,7 +194,6 @@
 		"lint": "eslint",
 		"postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",
 		"generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
-		"generate-schemas": "tsp compile models/prompty.tsp --config models/tspconfig.yaml",
 		"package": "vsce package --no-dependencies --allow-missing-repository",
 		"publish": "vsce publish",
 		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release",
@@ -211,8 +210,5 @@
 		"mocha": "^10.3.0",
 		"typescript": "^5.8.2",
 		"typescript-eslint": "^8.26.0"
-	},
-	"dependencies": {
-		"@typespec/json-schema": "^1.1.0"
 	}
 }
