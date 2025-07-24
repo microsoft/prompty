@@ -4,9 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "generate": "tsp compile ./model/main.tsp --config ./tspconfig.yaml"
+    "generate": "tsp compile ./model/main.tsp --config ./tspconfig.yaml",
+    "generate-objects": "tsp compile ./model/prompty.tsp --config ./tspconfig.yaml"
   },
   "dependencies": {
+    "@prompty/documentation": "file:../prompty-doc",
     "@typespec/json-schema": "^1.1.0"
+  },
+  "peerDependencies": {
+    "@alloy-js/markdown": "^0.18.0"
   }
 }

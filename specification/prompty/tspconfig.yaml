@@ -1,8 +1,11 @@
 emit:
   - "@typespec/json-schema"
+  - "@prompty/documentation"
 options:
   "@typespec/json-schema":
     emitter-output-dir: "{cwd}/tsp-output/json-schema"
     emitAllModels: true
     emitAllRefs: true
     file-type: yaml
+  "@prompty/documentation":
+    emitter-output-dir: "{cwd}/tsp-output/documentation"

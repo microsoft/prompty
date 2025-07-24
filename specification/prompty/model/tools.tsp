@@ -30,7 +30,7 @@ namespace Prompty.Core {
     description?: string = "";
 
     @doc("Hard coded values that the tool can use for execution")
-    inputs?: Record<Value> | Named<Value>[] = #{};
+    inputs?: Record<Value> | Named<Value>[] = #[];
 
     @doc("Parameters accepted by the function tool")
     parameters: Record<FunctionToolParameter> | Named<FunctionToolParameter>[] = #[
@@ -45,7 +45,7 @@ namespace Prompty.Core {
     description?: string = "";
 
     @doc("Hard coded values that the server tool can use for execution")
-    inputs?: Record<Value> | Named<Value>[] = #{};
+    inputs?: Record<Value> | Named<Value>[] = #[];
 
     @doc("Configuration options for the server tool")
     options: Record<unknown> = #{};

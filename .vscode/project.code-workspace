@@ -5,6 +5,10 @@
       "name": "repository"
     },
     {
+      "path": "../specification",
+      "name": "specification"
+    },
+    {
       "path": "../web",
       "name": "website"
     },
