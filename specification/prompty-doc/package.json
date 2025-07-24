@@ -15,7 +15,6 @@
   },
   "peerDependencies": {
     "@alloy-js/core": "^0.18.2",
-    "@alloy-js/typescript": "^0.18.0",
     "@typespec/compiler": "latest",
     "@typespec/emitter-framework": "^0.9.0"
   },
@@ -23,6 +22,7 @@
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
+    "@typespec/asset-emitter": "^0.72.1",
     "@typespec/compiler": "latest",
     "eslint": "^9.15.0",
     "prettier": "^3.3.3",
@@ -30,7 +30,7 @@
     "typescript-eslint": "^8.38.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npx alloy build",
     "watch": "tsc --watch",
     "test": "node --test 'dist/test**/*.test.js'",
     "lint": "eslint src/ test/ --report-unused-disable-directives --max-warnings=0",
@@ -41,6 +41,7 @@
   "private": true,
   "packageManager": "npm@11.4.2+sha512.f90c1ec8b207b625d6edb6693aef23dacb39c38e4217fe8c46a973f119cab392ac0de23fe3f07e583188dae9fd9108b3845ad6f525b598742bd060ebad60bff3",
   "dependencies": {
-    "@typespec/asset-emitter": "^0.72.1"
+    "@alloy-js/cli": "^0.18.0",
+    "@alloy-js/typescript": "^0.18.0"
   }
 }
