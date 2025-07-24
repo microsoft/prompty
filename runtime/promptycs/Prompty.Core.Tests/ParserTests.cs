@@ -20,6 +20,7 @@ namespace Prompty.Core.Tests
         [InlineData("generated/basic.prompty.md")]
         [InlineData("generated/context.prompty.md")]
         [InlineData("generated/contoso_multi.md")]
+        [InlineData("generated/contoso_multi_data_uri.md")]
         [InlineData("generated/faithfulness.prompty.md")]
         [InlineData("generated/groundedness.prompty.md")]
         public void TestParser(string path)
@@ -36,7 +37,7 @@ namespace Prompty.Core.Tests
         }
 
         [Fact]
-        public void TestParseWithArgs() 
+        public void TestParseWithArgs()
         {
             var content = "system[key=\"value 1\", post=false, great=True, other=3.2, pre = 2]:\nYou are an AI assistant\n who helps people find information.\nAs the assistant, you answer questions briefly, succinctly.\n\nuser:\nWhat is the meaning of life?";
             var parser = new PromptyChatParser(new Prompty());
