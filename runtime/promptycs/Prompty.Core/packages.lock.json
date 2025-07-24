@@ -4,11 +4,11 @@
     ".NETStandard,Version=v2.0": {
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Direct",
-        "requested": "[9.4.0-preview.1.25207.5, )",
-        "resolved": "9.4.0-preview.1.25207.5",
-        "contentHash": "CptQvHk8wY+qb+AA3SoKlc5NQcXSoFNbt8Z+bAkt/tEZ61JMxFZ0dMG1AwCn14hRCUinFbxyPYXr5Zrjp99m3g==",
+        "requested": "[9.7.1, )",
+        "resolved": "9.7.1",
+        "contentHash": "fcAMMDxGgdl7vgkiFQ2yojdEwvGIkIpxsv6SQ33enA+q2iGuv3jsFUZmq6ZJ0YvMgrce7mG6GHFkEVcNxjIl0A==",
         "dependencies": {
-          "System.Text.Json": "8.0.5"
+          "System.Text.Json": "8.0.6"
         }
       },
       "Microsoft.Extensions.Configuration": {
@@ -45,9 +45,9 @@
       },
       "Scriban": {
         "type": "Direct",
-        "requested": "[5.12.1, )",
-        "resolved": "5.12.1",
-        "contentHash": "zezB4VyYSALWvveki0IAdqxrx2r0wHqwQqP5LldFSHZ3U12YZCvt1nwJb6TZVLkerHZLP2FJIkemubLfOihdBQ==",
+        "requested": "[6.2.1, )",
+        "resolved": "6.2.1",
+        "contentHash": "jauX7gvreKvlD1+tkQ9D1i0kNg2p3P1ZqkDftJeTB7JAF7zKtafpyKTtr3m5Kr6d4GYw0CDfRcm2P07/efwdqQ==",
         "dependencies": {
           "Microsoft.CSharp": "4.5.0",
           "System.Threading.Tasks.Extensions": "4.5.0"
@@ -66,9 +66,9 @@
       },
       "YamlDotNet": {
         "type": "Direct",
-        "requested": "[15.3.0, )",
-        "resolved": "15.3.0",
-        "contentHash": "F93japYa9YrJ59AZGhgdaUGHN7ITJ55FBBg/D/8C0BDgahv/rQD6MOSwHxOJJpon1kYyslVbeBrQ2wcJhox01w=="
+        "requested": "[16.3.0, )",
+        "resolved": "16.3.0",
+        "contentHash": "SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA=="
       },
       "Microsoft.Bcl.AsyncInterfaces": {
         "type": "Transitive",
@@ -185,8 +185,8 @@
       },
       "System.Text.Json": {
         "type": "Transitive",
-        "resolved": "8.0.5",
-        "contentHash": "0f1B50Ss7rqxXiaBJyzUu9bWFOO2/zSlifZ/UNMdiIpDYe4cY4LQQicP4nirK1OS31I43rn062UIJ1Q9bpmHpg==",
+        "resolved": "8.0.6",
+        "contentHash": "BvSpVBsVN9b+Y+wONbvJOHd1HjXQf33+XiC28ZMOwRsYb42mz3Q8YHnpTSwpwJLqYCMqM+0UUVC3V+pi25XfkQ==",
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "8.0.0",
           "System.Buffers": "4.5.1",
@@ -208,9 +208,9 @@
     "net8.0": {
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Direct",
-        "requested": "[9.4.0-preview.1.25207.5, )",
-        "resolved": "9.4.0-preview.1.25207.5",
-        "contentHash": "CptQvHk8wY+qb+AA3SoKlc5NQcXSoFNbt8Z+bAkt/tEZ61JMxFZ0dMG1AwCn14hRCUinFbxyPYXr5Zrjp99m3g=="
+        "requested": "[9.7.1, )",
+        "resolved": "9.7.1",
+        "contentHash": "fcAMMDxGgdl7vgkiFQ2yojdEwvGIkIpxsv6SQ33enA+q2iGuv3jsFUZmq6ZJ0YvMgrce7mG6GHFkEVcNxjIl0A=="
       },
       "Microsoft.Extensions.Configuration": {
         "type": "Direct",
@@ -231,14 +231,15 @@
           "Microsoft.Extensions.Configuration": "8.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Configuration.FileExtensions": "8.0.0",
-          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0"
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "System.Text.Json": "8.0.0"
         }
       },
       "Scriban": {
         "type": "Direct",
-        "requested": "[5.12.1, )",
-        "resolved": "5.12.1",
-        "contentHash": "zezB4VyYSALWvveki0IAdqxrx2r0wHqwQqP5LldFSHZ3U12YZCvt1nwJb6TZVLkerHZLP2FJIkemubLfOihdBQ=="
+        "requested": "[6.2.1, )",
+        "resolved": "6.2.1",
+        "contentHash": "jauX7gvreKvlD1+tkQ9D1i0kNg2p3P1ZqkDftJeTB7JAF7zKtafpyKTtr3m5Kr6d4GYw0CDfRcm2P07/efwdqQ=="
       },
       "Stubble.Core": {
         "type": "Direct",
@@ -253,9 +254,9 @@
       },
       "YamlDotNet": {
         "type": "Direct",
-        "requested": "[15.3.0, )",
-        "resolved": "15.3.0",
-        "contentHash": "F93japYa9YrJ59AZGhgdaUGHN7ITJ55FBBg/D/8C0BDgahv/rQD6MOSwHxOJJpon1kYyslVbeBrQ2wcJhox01w=="
+        "requested": "[16.3.0, )",
+        "resolved": "16.3.0",
+        "contentHash": "SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA=="
       },
       "Microsoft.CSharp": {
         "type": "Transitive",
