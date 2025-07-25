@@ -10,8 +10,5 @@
   "dependencies": {
     "@prompty/documentation": "file:../prompty-doc",
     "@typespec/json-schema": "^1.1.0"
-  },
-  "peerDependencies": {
-    "@alloy-js/markdown": "^0.18.0"
   }
 }

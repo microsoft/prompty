@@ -6,5 +6,9 @@ namespace Prompty.Core {
     ...Item;
   }
 
+  model Options {
+    ...Record<unknown>;
+  }
+
   alias SimpleTypes = "string" | "number" | "array" | "object" | "boolean";
 }

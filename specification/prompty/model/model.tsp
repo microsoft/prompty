@@ -1,9 +1,11 @@
+import "./core.tsp";
+
 namespace Prompty.Core {
   model Connection {
     @doc("The type of connection used to tell the runtime how to load and execute the agent")
     type: string;
 
-    ...Record<unknown>;
+    ...Options;
   }
 
   model Model {
@@ -17,6 +19,6 @@ namespace Prompty.Core {
     connection: Connection;
 
     @doc("Additional options for model execution")
-    options?: Record<unknown> = #{};
+    options?: Options = #{};
   }
 }

@@ -1,7 +1,6 @@
 import "./core.tsp";
 
 namespace Prompty.Core {
-  @discriminator("type")
   model OutputProperty {
     @doc("The data type of the output property")
     type: SimpleTypes = "string";
@@ -24,17 +23,8 @@ namespace Prompty.Core {
     type: "object";
 
     @doc("The properties contained in the object")
-    properties: Record<OutputProperty> | Named<OutputProperty>[];
+    properties: Outputs;
   }
 
-  union Outputs {
-    @doc("Simple output property with a specific type")
-    output: Record<OutputProperty> | Named<OutputProperty>[],
-
-    @doc("Array output containing multiple items of a specific type")
-    array: Record<ArrayOutput> | Named<ArrayOutput>[],
-
-    @doc("Object output containing multiple named properties")
-    object: Record<ObjectOutput> | Named<ObjectOutput>[],
-  }
+  alias Outputs  = Record<OutputProperty> | Named<OutputProperty>[];
 }

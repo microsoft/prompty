@@ -1,5 +1,16 @@
 import * as ay from "@alloy-js/core";
-import { EmitContext, Model, ModelProperty } from "@typespec/compiler";
+import {
+  EmitContext,
+  getDoc,
+  getDocData,
+  getEffectiveModelType,
+  getEntityName,
+  getPropertyType,
+  getTypeName,
+  Model,
+  ModelProperty,
+  Program,
+} from "@typespec/compiler";
 import { writeOutput } from "@typespec/emitter-framework";
 
 export async function $onEmit(context: EmitContext) {
@@ -14,22 +25,47 @@ export async function $onEmit(context: EmitContext) {
     context.program,
     <ay.Output>
       <ay.SourceDirectory path="src" />
-      {emitModel(model)}
+      {emitModel(context.program, model)}
     </ay.Output>,
     context.emitterOutputDir
   );
 }
 
-const emitModel = (model: Model) => {
+const emitModel = (program: Program, model: Model) => {
+  const modelDocs = getDocData(program, model);
+  if (!modelDocs) {
+    throw new Error(
+      `Model ${model.name} does not have documentation. Please add documentation to the model.`
+    );
+  }
   return (
     <ay.SourceFile path={`${model.name}.md`} filetype="md">
       <>{`# ${model.name}`}</>
-      <br/>
+      <br />
+      <>{modelDocs.value}</>
+      <br />
+      <br />
+      <>{`## Properties`}</>
+      <br />
+      <>{"| Property | Type | Description |"}</>
+      <br />
+      <>{`| --- | --- | --- |`}</>
+      <br />
       <ay.For each={model.properties}>
-        {(key: string, value: ModelProperty) => (
-          <ay.Prose>{`${key}: ${value.node?.docs}`}</ay.Prose>
-        )}
+        {(key: string, value: ModelProperty) => {
+          const type = getPropertyType(value);
+          const options = {
+            nameOnly: true,
+            printable: true,
+          };
+          const typeName = getTypeName(type, options)
+            .replaceAll("|", " or")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+
+          return <>{`| ${key} | (**${type.kind}**) ${typeName}  | ${getDoc(program, value)} |`}</>;
+        }}
       </ay.For>
     </ay.SourceFile>
   );
-}
+};
