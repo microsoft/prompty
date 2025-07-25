@@ -1,0 +1,21 @@
+{
+  "inputs": {
+    "user_name": "Alice",
+    "include_details": true,
+    "items": [
+      {
+        "name": "Laptop",
+        "category": "Electronics",
+        "description": "High-performance laptop for developers",
+        "price": 1299.99
+      },
+      {
+        "name": "Mouse",
+        "category": "Accessories", 
+        "description": "Ergonomic wireless mouse",
+        "price": 49.99
+      }
+    ]
+  },
+  "expected_content": "Hello Alice!\n\nHere are the detailed items:\n- Item 1: Laptop (Electronics)\n  Description: High-performance laptop for developers\n  Price: $1299.99\n- Item 2: Mouse (Accessories)\n  Description: Ergonomic wireless mouse\n  Price: $49.99\n\nTotal items: 2\n"
+}

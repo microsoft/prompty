@@ -1,0 +1,36 @@
+{
+  "name": "complex-template",
+  "description": "Complex template with loops and conditionals",
+  "version": "1.0",
+  "model": {
+    "api": "openai",
+    "configuration": {
+      "type": "azure_openai",
+      "azure_endpoint": "https://api.openai.com/v1"
+    },
+    "parameters": {
+      "model": "gpt-4",
+      "max_tokens": 500,
+      "temperature": 0.7
+    }
+  },
+  "inputs": {
+    "items": {
+      "type": "array",
+      "description": "List of items to process"
+    },
+    "include_details": {
+      "type": "boolean",
+      "description": "Whether to include detailed information"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user"
+    }
+  },
+  "template": {
+    "type": "jinja2",
+    "parser": "prompty"
+  },
+  "content": "Hello {{user_name}}!\n\n{% if include_details %}\nHere are the detailed items:\n{% for item in items %}\n- Item {{loop.index}}: {{item.name}} ({{item.category}})\n  Description: {{item.description}}\n  Price: ${{item.price}}\n{% endfor %}\n{% else %}\nItem summary:\n{% for item in items %}\n- {{item.name}}: ${{item.price}}\n{% endfor %}\n{% endif %}\n\nTotal items: {{items|length}}\n"
+}

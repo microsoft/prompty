@@ -1,0 +1,10 @@
+{
+  "expected_error": "Required input missing",
+  "expected_error_type": "ValidationError",
+  "error_message_contains": [
+    "required",
+    "missing",
+    "required_field"
+  ],
+  "should_fail": true
+}

@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "question": "What is the capital of France?"
+  },
+  "environment": {
+    "AZURE_OPENAI_ENDPOINT": "https://test-endpoint.openai.azure.com/"
+  },
+  "expected_content": "Answer this question: What is the capital of France?\n\nContext: This is running in environment with endpoint: https://test-endpoint.openai.azure.com/\n"
+}
