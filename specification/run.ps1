@@ -1,7 +1,7 @@
-cd prompty-doc
-Remove-Item -Path "./dist" -Recurse -Force
+Remove-Item -Path "./prompty-doc/dist" -Recurse -Force
+Remove-Item -Path "./prompty/tsp-output" -Recurse -Force
+Set-Location -Path "./prompty-doc"
 npm run build
-cd ..
-cd prompty
+Set-Location -Path "../prompty"
 npm run generate
-cd ..
+Set-Location -Path "../"

@@ -1,6 +1,9 @@
 import "./core.tsp";
 
 namespace Prompty.Core {
+  /**
+   * Model for defining the connection configuration for AI agents.
+   */
   model Connection {
     @doc("The type of connection used to tell the runtime how to load and execute the agent")
     type: string;
