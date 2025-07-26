@@ -1,0 +1,16 @@
+{
+  "choices": [
+    {
+      "text": " provides powerful capabilities for automating complex business processes, predicting customer behavior, and optimizing operations. Companies leverage ML algorithms for fraud detection, recommendation systems, predictive maintenance, and intelligent automation. Key benefits include improved decision-making through data-driven insights, reduced operational costs, enhanced customer experiences, and competitive advantages through advanced analytics. Modern enterprise ML platforms offer scalable infrastructure, MLOps capabilities, and integration with existing business systems to deploy models at scale across the organization.",
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ],
+  "model": "mistral-large",
+  "object": "text_completion",
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 89,
+    "total_tokens": 104
+  }
+}

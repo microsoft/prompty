@@ -7,9 +7,11 @@ import prompty
 from prompty.azure import AzureOpenAIProcessor
 from prompty.invoker import InvokerFactory
 from prompty.serverless.processor import ServerlessProcessor
+from prompty.snowflake import SnowflakeCortexProcessor
 from prompty.tracer import PromptyTracer, Tracer, console_tracer, trace
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
+from tests.fake_snowflake_executor import FakeSnowflakeExecutor
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -24,6 +26,10 @@ def setup_module():
     InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
+    InvokerFactory.add_executor("snowflake", FakeSnowflakeExecutor)
+    InvokerFactory.add_executor("snowflake_cortex", FakeSnowflakeExecutor)
+    InvokerFactory.add_processor("snowflake", SnowflakeCortexProcessor)
+    InvokerFactory.add_processor("snowflake_cortex", SnowflakeCortexProcessor)
 
     Tracer.add("console", console_tracer)
     json_tracer = PromptyTracer()
@@ -37,6 +43,10 @@ def setup_module():
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         "prompts/embedding.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
     ],
 )
 def test_basic_execution(prompt: str):
@@ -52,6 +62,10 @@ def test_basic_execution(prompt: str):
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         "prompts/embedding.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
     ],
 )
 async def test_basic_execution_async(prompt: str):
@@ -352,3 +366,55 @@ async def test_named_tracer_async():
     with Tracer.start("Test1", {Tracer.SIGNATURE: "test1", "two": 2}) as trace:
         trace(Tracer.INPUTS, 3)
         trace(Tracer.RESULT, 4)
+
+
+@trace
+def test_snowflake_basic():
+    result = prompty.execute("prompts/snowflake_basic.prompty")
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_snowflake_basic_async():
+    result = await prompty.execute_async("prompts/snowflake_basic.prompty")
+    print(result)
+
+
+@trace
+def test_snowflake_guardrails():
+    result = prompty.execute("prompts/snowflake_guardrails.prompty")
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_snowflake_guardrails_async():
+    result = await prompty.execute_async("prompts/snowflake_guardrails.prompty")
+    print(result)
+
+
+@trace
+def test_snowflake_completion():
+    result = prompty.execute("prompts/snowflake_completion.prompty")
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_snowflake_completion_async():
+    result = await prompty.execute_async("prompts/snowflake_completion.prompty")
+    print(result)
+
+
+@trace
+def test_snowflake_streaming():
+    result = prompty.execute("prompts/snowflake_streaming.prompty")
+    print(result)
+
+
+@pytest.mark.asyncio
+@trace
+async def test_snowflake_streaming_async():
+    result = await prompty.execute_async("prompts/snowflake_streaming.prompty")
+    print(result)

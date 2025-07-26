@@ -10,8 +10,10 @@ import prompty
 from prompty.azure import AzureOpenAIProcessor
 from prompty.invoker import InvokerFactory
 from prompty.serverless import ServerlessProcessor
+from prompty.snowflake import SnowflakeCortexProcessor
 from tests.fake_azure_executor import FakeAzureExecutor
 from tests.fake_serverless_executor import FakeServerlessExecutor
+from tests.fake_snowflake_executor import FakeSnowflakeExecutor
 
 load_dotenv()
 
@@ -28,6 +30,10 @@ def fake_azure_executor():
     InvokerFactory.add_executor("azure_openai_beta", AzureOpenAIProcessor)
     InvokerFactory.add_executor("serverless", FakeServerlessExecutor)
     InvokerFactory.add_processor("serverless", ServerlessProcessor)
+    InvokerFactory.add_executor("snowflake", FakeSnowflakeExecutor)
+    InvokerFactory.add_executor("snowflake_cortex", FakeSnowflakeExecutor)
+    InvokerFactory.add_processor("snowflake", SnowflakeCortexProcessor)
+    InvokerFactory.add_processor("snowflake_cortex", SnowflakeCortexProcessor)
 
 
 @pytest.mark.parametrize(
@@ -37,10 +43,18 @@ def fake_azure_executor():
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         "prompts/embedding.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
         Path("prompts/basic.prompty"),
         Path("prompts/context.prompty"),
         Path("prompts/groundedness.prompty"),
         Path("prompts/embedding.prompty"),
+        Path("prompts/snowflake_basic.prompty"),
+        Path("prompts/snowflake_guardrails.prompty"),
+        Path("prompts/snowflake_completion.prompty"),
+        Path("prompts/snowflake_streaming.prompty"),
     ],
 )
 def test_basic_execution(prompt: Union[str, Path]):
@@ -56,10 +70,18 @@ def test_basic_execution(prompt: Union[str, Path]):
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
         "prompts/embedding.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
         Path("prompts/basic.prompty"),
         Path("prompts/context.prompty"),
         Path("prompts/groundedness.prompty"),
         Path("prompts/embedding.prompty"),
+        Path("prompts/snowflake_basic.prompty"),
+        Path("prompts/snowflake_guardrails.prompty"),
+        Path("prompts/snowflake_completion.prompty"),
+        Path("prompts/snowflake_streaming.prompty"),
     ],
 )
 async def test_basic_execution_async(prompt: Union[str, Path]):

@@ -1,0 +1,226 @@
+---
+title: Snowflake Cortex Tutorial
+authors:
+  - prompty-team
+date: 2025-06-22
+tags:
+  - tutorial
+  - snowflake
+  - cortex
+  - quickstart
+index: 3
+---
+
+# Snowflake Cortex Tutorial
+
+This tutorial will walk you through setting up and running your first Prompty with Snowflake Cortex in just a few minutes.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Snowflake account with Cortex enabled
+- Visual Studio Code with the Prompty extension installed
+- Access to a Snowflake warehouse, database, and schema
+- Snowflake credentials (user, password, etc.)
+
+## Step 1: Set Up Environment Variables
+
+First, configure your Snowflake connection details as environment variables for security:
+
+### Windows (Command Prompt)
+```cmd
+set SNOWFLAKE_ACCOUNT=your-account.snowflakecomputing.com
+set SNOWFLAKE_USER=your-username
+set SNOWFLAKE_PASSWORD=your-password
+set SNOWFLAKE_WAREHOUSE=your-warehouse
+set SNOWFLAKE_DATABASE=your-database
+```
+
+### Windows (PowerShell)
+```powershell
+$env:SNOWFLAKE_ACCOUNT="your-account.snowflakecomputing.com"
+$env:SNOWFLAKE_USER="your-username"
+$env:SNOWFLAKE_PASSWORD="your-password"
+$env:SNOWFLAKE_WAREHOUSE="your-warehouse"
+$env:SNOWFLAKE_DATABASE="your-database"
+```
+
+### macOS/Linux
+```bash
+export SNOWFLAKE_ACCOUNT="your-account.snowflakecomputing.com"
+export SNOWFLAKE_USER="your-username"
+export SNOWFLAKE_PASSWORD="your-password"
+export SNOWFLAKE_WAREHOUSE="your-warehouse"
+export SNOWFLAKE_DATABASE="your-database"
+```
+
+## Step 2: Create Your First Snowflake Cortex Prompty
+
+Create a new file called `hello-snowflake.prompty` in VS Code:
+
+```yaml
+---
+name: Hello Snowflake Cortex
+description: My first Snowflake Cortex prompty
+authors:
+  - Your Name
+model:
+  api: chat
+  configuration:
+    type: snowflake_cortex
+    account: ${env:SNOWFLAKE_ACCOUNT}
+    user: ${env:SNOWFLAKE_USER}
+    password: ${env:SNOWFLAKE_PASSWORD}
+    warehouse: ${env:SNOWFLAKE_WAREHOUSE}
+    database: ${env:SNOWFLAKE_DATABASE}
+    schema: PUBLIC
+    model: llama3.1-8b
+  parameters:
+    temperature: 0.7
+    max_tokens: 500
+sample:
+  topic: "artificial intelligence"
+---
+
+system:
+You are a helpful AI assistant that provides clear and concise explanations.
+
+user:
+Explain {{topic}} in simple terms that a beginner could understand.
+```
+
+## Step 3: Install Required Dependencies
+
+If you haven't already, install the Prompty Python runtime with Snowflake support:
+
+```bash
+pip install prompty[snowflake]
+```
+
+## Step 4: Run Your Prompty
+
+### Option A: Using VS Code Extension
+
+1. Open your `hello-snowflake.prompty` file in VS Code
+2. Click the "Run" button (play icon) in the editor toolbar
+3. View the output in the VS Code terminal
+
+### Option B: Using Command Line
+
+```bash
+prompty run hello-snowflake.prompty
+```
+
+### Option C: Using Python Code
+
+Create a Python script `run_snowflake.py`:
+
+```python
+from prompty import Prompty
+
+# Load and run the prompty
+prompty = Prompty.load("hello-snowflake.prompty")
+result = prompty.invoke({"topic": "machine learning"})
+print(result)
+```
+
+Run the script:
+```bash
+python run_snowflake.py
+```
+
+## Step 5: Experiment with Advanced Features
+
+Now let's try a more advanced example with guardrails and JSON output:
+
+Create `advanced-snowflake.prompty`:
+
+```yaml
+---
+name: Advanced Snowflake Cortex
+description: Using guardrails and JSON output
+model:
+  api: chat
+  configuration:
+    type: snowflake_cortex
+    account: ${env:SNOWFLAKE_ACCOUNT}
+    user: ${env:SNOWFLAKE_USER}
+    password: ${env:SNOWFLAKE_PASSWORD}    warehouse: ${env:SNOWFLAKE_WAREHOUSE}
+    database: ${env:SNOWFLAKE_DATABASE}
+    model: llama3.1-70b  parameters:
+    temperature: 0.3
+    max_tokens: 1000
+    guardrails: true
+    response_format:
+      type: "json_object"
+sample:
+  company: "TechCorp"
+  role: "Data Scientist"
+---
+
+system:
+You are a helpful HR assistant. Always respond in valid JSON format with the following structure:
+{
+  "job_description": "detailed description",
+  "requirements": ["requirement1", "requirement2"],
+  "benefits": ["benefit1", "benefit2"],
+  "experience_level": "entry/mid/senior"
+}
+
+user:
+Create a job posting for a {{role}} position at {{company}}.
+```
+
+## Step 6: Understanding the Output
+
+When you run your Prompty, you'll see:
+
+1. **Connection Details**: Confirmation that Prompty connected to your Snowflake account
+2. **SQL Query**: The CORTEX.COMPLETE query being executed  
+3. **Model Response**: The AI-generated content
+4. **Execution Metadata**: Information about token usage, timing, etc.
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**"Connection failed" error:**
+- Verify your Snowflake credentials are correct
+- Ensure your account identifier includes the full domain
+- Check that your user has access to the specified warehouse and database
+
+**"Model not found" error:**
+- Verify Cortex is enabled in your Snowflake account
+- Check available models with: `SHOW FUNCTIONS LIKE 'CORTEX.COMPLETE'`
+- Try using a different model like `mistral-large` or `llama3.1-70b`
+
+**Permission errors:**
+```sql
+-- Grant necessary permissions
+GRANT USAGE ON WAREHOUSE your_warehouse TO ROLE your_role;
+GRANT USAGE ON DATABASE your_database TO ROLE your_role; 
+GRANT USAGE ON SCHEMA your_database.your_schema TO ROLE your_role;
+```
+
+## Next Steps
+
+Now that you have Snowflake Cortex working with Prompty:
+
+1. **Explore Models**: Try different Cortex models like `mistral-large`, `reka-flash`
+2. **Add Guardrails**: Experiment with different safety configurations
+3. **Build Applications**: Integrate Prompty into your data pipelines
+4. **Monitor Usage**: Use Snowflake's query history to track AI usage
+5. **Scale Up**: Move to production with key-pair authentication
+
+## Additional Resources
+
+- [Snowflake Cortex Integration Guide](/docs/guides/snowflake-cortex)
+- [Prompty Specification](/docs/prompty-specification)
+- [Snowflake Cortex Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex)
+
+---
+
+Congratulations! You've successfully created and run your first Prompty with Snowflake Cortex. The combination provides a powerful platform for building enterprise AI applications with data governance and security built-in.
+
+[Want to Contribute To the Project?](/docs/contributing/)

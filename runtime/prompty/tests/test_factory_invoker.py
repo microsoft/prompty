@@ -5,7 +5,9 @@ import pytest
 import prompty
 from prompty.azure import AzureOpenAIProcessor
 from prompty.invoker import InvokerFactory
+from prompty.snowflake import SnowflakeCortexProcessor
 from tests.fake_azure_executor import FakeAzureExecutor
+from tests.fake_snowflake_executor import FakeSnowflakeExecutor
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -14,6 +16,10 @@ def fake_azure_executor():
     InvokerFactory.add_executor("azure_openai", FakeAzureExecutor)
     InvokerFactory.add_processor("azure", AzureOpenAIProcessor)
     InvokerFactory.add_processor("azure_openai", AzureOpenAIProcessor)
+    InvokerFactory.add_executor("snowflake", FakeSnowflakeExecutor)
+    InvokerFactory.add_executor("snowflake_cortex", FakeSnowflakeExecutor)
+    InvokerFactory.add_processor("snowflake", SnowflakeCortexProcessor)
+    InvokerFactory.add_processor("snowflake_cortex", SnowflakeCortexProcessor)
 
 
 BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
@@ -26,6 +32,10 @@ BASE_PATH = str(Path(__file__).absolute().parent.as_posix())
         "prompts/basic_mustache.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
     ],
 )
 def test_renderer_invoker(prompt: str):
@@ -61,6 +71,10 @@ def test_parser_invoker(markdown: str):
         "prompts/basic.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
     ],
 )
 def test_executor_invoker(prompt: str):
@@ -78,6 +92,10 @@ def test_executor_invoker(prompt: str):
         "prompts/basic.prompty",
         "prompts/context.prompty",
         "prompts/groundedness.prompty",
+        "prompts/snowflake_basic.prompty",
+        "prompts/snowflake_guardrails.prompty",
+        "prompts/snowflake_completion.prompty",
+        "prompts/snowflake_streaming.prompty",
     ],
 )
 def test_processor_invoker(prompt: str):

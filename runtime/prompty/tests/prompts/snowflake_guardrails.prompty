@@ -1,0 +1,41 @@
+---
+name: Snowflake Cortex Guardrails Test
+description: Test Snowflake Cortex with guardrails and JSON output
+authors:
+  - prompty-team
+model:
+  api: chat
+  configuration:
+    type: snowflake_cortex
+    account: test-account.snowflakecomputing.com
+    user: test-user
+    password: test-password
+    warehouse: test-warehouse
+    database: test-database
+    schema: PUBLIC
+    model: llama3.1-70b
+  parameters:
+    temperature: 0.3
+    max_tokens: 1000
+    top_p: 0.9
+    top_k: 50
+    guardrails: true
+    response_format:
+      type: "json_object"
+sample:
+  company: "DataCorp"
+  role: "Senior Data Engineer"
+  experience: "5+ years"
+---
+system:
+You are an HR assistant creating job descriptions. Always respond in valid JSON format with the following structure:
+{
+  "title": "job title",
+  "description": "detailed job description", 
+  "requirements": ["requirement1", "requirement2"],
+  "benefits": ["benefit1", "benefit2"],
+  "experience_level": "entry/mid/senior"
+}
+
+user:
+Create a job posting for a {{role}} position at {{company}} requiring {{experience}} of experience.
