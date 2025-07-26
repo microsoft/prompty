@@ -7,7 +7,8 @@ namespace Prompty.Core.Parsers
     {
         Text,
         LocalImage,
-        RemoteImage
+        RemoteImage,
+        DataImage,
     }
 
     struct RawMessage
@@ -53,6 +54,8 @@ namespace Prompty.Core.Parsers
                                 return new DataContent(data: image, mediaType: c.Media);
                             case ContentType.RemoteImage:
                                 return new UriContent(uri: c.Content, mediaType: c.Media);
+                            case ContentType.DataImage:
+                                return new DataContent(uri: c.Content, mediaType: c.Media);
                             default:
                                 throw new Exception("Invalid content type!");
                         }
@@ -248,15 +251,16 @@ namespace Prompty.Core.Parsers
                 // image entry
                 else if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["filename"].Value)
                 {
-                    var img = matches[current_chunk].Groups[2].Value.Split(' ')[0].Trim();
-                    var media = img.Split('.').Last().Trim().ToLower();
-                    if (media != "jpg" && media != "jpeg" && media != "png")
-                        throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
-
-                    if (img.StartsWith("http://") || img.StartsWith("https://"))
-                        yield return new RawContent { ContentType = ContentType.RemoteImage, Content = img, Media = $"image/{media}" };
+                    if (chunk.StartsWith("data:image"))
+                    {
+                        SplitDataUri(chunk, out var mediaType, out var data);
+                        yield return new RawContent { ContentType = ContentType.DataImage, Content = chunk, Media = mediaType };
+                    }
                     else
-                        yield return new RawContent { ContentType = ContentType.LocalImage, Content = img, Media = $"image/{media}" };
+                    {
+                        SplitImageUri(chunk, out var imagePath, out var mediaType, out var isRemote);
+                        yield return new RawContent { ContentType = isRemote ? ContentType.RemoteImage : ContentType.LocalImage, Content = imagePath, Media = mediaType };
+                    }
 
                     current_chunk++;
                 }
@@ -281,6 +285,53 @@ namespace Prompty.Core.Parsers
             var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
             var bytes = await FileUtils.ReadAllBytesAsync(path);
             return bytes;
+        }
+
+        private void SplitDataUri(string dataUri, out string mediaType, out string data)
+        {
+            if (string.IsNullOrWhiteSpace(dataUri) || !dataUri.StartsWith("data:"))
+            {
+                throw new ArgumentException("Invalid Data URI");
+            }
+
+            // Find the first comma  
+            int commaIndex = dataUri.IndexOf(',');
+            if (commaIndex == -1)
+            {
+                throw new ArgumentException("Invalid Data URI: no data found");
+            }
+
+            // Split the metadata and data  
+            string metadata = dataUri.Substring(0, commaIndex);
+            data = dataUri.Substring(commaIndex + 1); // Extract data after the comma  
+
+            // Now split the metadata  
+            string[] metadataParts = metadata.Split(new[] { ';' }, 2);
+            mediaType = metadataParts[0].Substring(5); // Remove 'data:'  
+        }
+
+        private void SplitImageUri(string imageUri, out string imagePath, out string mediaType, out bool isRemote)
+        {
+            if (string.IsNullOrWhiteSpace(imageUri))
+            {
+                throw new ArgumentException("Invalid Image URI");
+            }
+
+            // Find the first space  
+            imagePath = imageUri.Split(' ')[0].Trim();
+            if (string.IsNullOrWhiteSpace(imagePath))
+            {
+                throw new ArgumentException("Invalid Image URI: no image path found");
+            }
+
+            // Find the file extension and convert to media type
+            var media = imagePath.Split('.').Last().Trim().ToLower();
+            if (media != "jpg" && media != "jpeg" && media != "png")
+                throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
+            mediaType = $"image/{media}";
+
+            // Check if the image path is local or remote 
+            isRemote = imagePath.StartsWith("http://") || imagePath.StartsWith("https://");
         }
     }
 }

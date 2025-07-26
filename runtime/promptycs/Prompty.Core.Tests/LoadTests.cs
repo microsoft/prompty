@@ -22,6 +22,7 @@ public class LoadTests
     [InlineData("prompty/chatJsonObject.prompty")]
     [InlineData("prompty/chatNoOptions.prompty")]
     [InlineData("prompty/relativeFileReference.prompty")]
+    [InlineData("prompty/structured_output.prompty")]
     public void LoadRaw(string path)
     {
         var prompty = Prompty.Load(path);
@@ -115,6 +116,28 @@ public class LoadTests
         Assert.Equal("eastus-gpt-4o", prompty.Model.Connection.ExtensionData["azure_deployment"]);
         Assert.NotNull(prompty.Model.Options);
         Assert.Equal("0.0", prompty.Model.Options["temperature"]);
+    }
+
+    [Fact]
+    public void BasicWithFile()
+    {
+        var p = "prompty/basic_with_file.prompty";
+        var prompty = Prompty.Load(p);
+
+        Assert.NotNull(prompty);
+        Assert.NotNull(prompty.Model);
+        Assert.NotNull(prompty.Model.Connection);
+        Assert.Equal("gpt-4o", prompty.Model.Connection.ServiceId);
+        Assert.Equal("eastus-gpt-4o", prompty.Model.Connection.ExtensionData["azure_deployment"]);
+        Assert.NotNull(prompty.Model.Options);
+        Assert.Equal(0D, prompty.Model.Options["temperature"]);
+    }
+
+    [Fact]
+    public void BasicWithMissingFileThrowsInvalidOperationException()
+    {
+        var p = "prompty/basic_with_missing_file.prompty";
+        Assert.Throws<InvalidOperationException>(() => Prompty.Load(p));
     }
 
     [Fact]
