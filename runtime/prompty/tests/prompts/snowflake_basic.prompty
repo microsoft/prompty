@@ -1,0 +1,36 @@
+---
+name: Snowflake Cortex Basic Test
+description: A basic test prompty using Snowflake Cortex
+authors:
+  - prompty-team
+model:
+  api: chat
+  configuration:
+    type: snowflake_cortex
+    account: test-account.snowflakecomputing.com
+    user: test-user
+    password: test-password
+    warehouse: test-warehouse
+    database: test-database
+    schema: PUBLIC
+    model: llama3.1-8b
+  parameters:
+    temperature: 0.7
+    max_tokens: 500
+    top_p: 0.9
+    guardrails: true
+sample:
+  firstName: Alice
+  lastName: Smith
+  question: What are the benefits of using Snowflake for data analytics?
+---
+system:
+You are a helpful AI assistant specialized in data analytics and cloud platforms.
+Provide clear, concise, and informative responses about data technologies.
+
+# Customer
+You are helping {{firstName}} {{lastName}} understand data analytics concepts.
+Address them by name in your response.
+
+user:
+{{question}}

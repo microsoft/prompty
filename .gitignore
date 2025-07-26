@@ -8,3 +8,6 @@ runtime/promptycs/Prompty.Core/obj/
 runtime/promptycs/Tests/bin/
 runtime/promptycs/Tests/obj/
 .env
+# Snowflake Connection Testing
+runtime/prompty/prompty/snowflake/snowflake_example.py
+runtime/prompty/prompty/snowflake/snowflake_example.prompty

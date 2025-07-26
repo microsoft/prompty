@@ -10,24 +10,23 @@ type: object
 properties:
   $schema:
     type: string
-  # metadata section
-  model:
+  # metadata section  model:
     type: object
     additionalProperties: false
     properties:
       api:
         type: string
-        enum: 
+        enum:
         - chat
         - completion
         description: The API to use for the prompty -- this has implications on how the template is processed and how the model is called.
         default: chat
-
       configuration:
         oneOf:
           - $ref: "#/definitions/azureOpenaiModel"
           - $ref: "#/definitions/openaiModel"
           - $ref: "#/definitions/maasModel"
+          - $ref: "#/definitions/snowflakeModel"
   
       parameters:
         $ref: "#/definitions/parameters"
@@ -152,7 +151,6 @@ definitions:
         type: string
         description: Endpoint of the model
     additionalProperties: false
-
   # for maas models
   maasModel:
     type: object
@@ -165,6 +163,64 @@ definitions:
       azure_endpoint:
         type: string
         description: Endpoint of the model
+    additionalProperties: false
+
+  # for snowflake cortex models
+  snowflakeModel:
+    type: object
+    description: Snowflake Cortex model configuration
+    properties:
+      type:
+        type: string
+        description: Type of the model
+        enum: [snowflake, snowflake_cortex]
+      account:
+        type: string
+        description: Snowflake account identifier
+      user:
+        type: string
+        description: Snowflake username
+      password:
+        type: string
+        description: Snowflake password (consider using environment variables)
+      warehouse:
+        type: string
+        description: Snowflake warehouse to use
+      database:
+        type: string
+        description: Snowflake database to use
+      schema:
+        type: string
+        description: Snowflake schema to use
+        default: PUBLIC
+      role:
+        type: string
+        description: Snowflake role to assume
+      model:
+        type: string
+        description: Cortex model name (e.g., llama3.1-8b, llama3.1-70b, mistral-large)
+        default: llama3.1-8b
+      authenticator:
+        type: string
+        description: Authentication method (password, externalbrowser, oauth, etc.)
+      token:
+        type: string
+        description: OAuth token for token-based authentication
+      private_key:
+        type: string
+        description: Private key content for key-pair authentication
+      private_key_path:
+        type: string
+        description: Path to private key file for key-pair authentication
+      session_parameters:
+        type: object
+        description: Additional session parameters
+        additionalProperties: true
+      cortex_options:
+        type: object
+        description: Additional options passed to CORTEX.COMPLETE function
+        additionalProperties: true
+    required: [type, account, user, warehouse, database]
     additionalProperties: false
 
   # parameters for the model -- for now these are not per model but the same for all models
@@ -226,8 +282,7 @@ definitions:
       presence_penalty:
         type: number
         description: What sampling presence penalty to use. 0 means no penalty.
-      
-      stop:
+        stop:
         type: array
         items:
           type: string
@@ -241,4 +296,9 @@ definitions:
         type: number
         description: > 
           What nucleus sampling probability to use. 1 means no nucleus sampling. 0 means
-          no tokens are generated.
+          no tokens are generated.      
+          
+      guardrails:
+        type: boolean
+        description: >
+          Enable or disable content safety guardrails. Specific to Snowflake Cortex. True to enable all guardrails, False to disable (default).

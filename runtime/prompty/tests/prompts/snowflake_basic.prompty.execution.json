@@ -1,0 +1,19 @@
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Hello Alice! I'd be happy to explain the benefits of using Snowflake for data analytics. Here are the key advantages:\n\n🏢 **Enterprise-Grade Architecture**: Snowflake provides a cloud-native, fully managed platform that separates compute from storage, allowing you to scale each independently.\n\n⚡ **Performance**: With features like automatic clustering and result caching, Snowflake delivers fast query performance even on large datasets.\n\n🔒 **Security & Governance**: Built-in data governance, encryption at rest and in transit, and comprehensive access controls help ensure your data is secure and compliant.\n\n💰 **Cost-Effective**: Pay only for what you use with automatic scaling and hibernation of compute resources when not needed.\n\n🤝 **Data Sharing**: Easily share data across different organizations and cloud platforms without copying or moving data.\n\n🛠️ **Multi-Cloud**: Works seamlessly across AWS, Azure, and Google Cloud, preventing vendor lock-in.\n\nThese features make Snowflake an excellent choice for modern data analytics workloads, Alice!"
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ],
+  "model": "llama3.1-8b",
+  "object": "chat.completion",
+  "usage": {
+    "prompt_tokens": 95,
+    "completion_tokens": 185,
+    "total_tokens": 280
+  }
+}

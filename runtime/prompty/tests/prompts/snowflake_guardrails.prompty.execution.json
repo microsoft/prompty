@@ -1,0 +1,19 @@
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"title\": \"Senior Data Engineer\",\n  \"description\": \"DataCorp is seeking a Senior Data Engineer to design, build, and maintain our data infrastructure. You will work with large-scale data processing systems, implement ETL pipelines, and collaborate with data scientists and analysts to ensure reliable data delivery. This role involves working with cloud platforms, big data technologies, and modern data architectures.\",\n  \"requirements\": [\n    \"Bachelor's degree in Computer Science, Engineering, or related field\",\n    \"5+ years of experience in data engineering or software development\",\n    \"Proficiency in Python, SQL, and data pipeline frameworks\",\n    \"Experience with cloud platforms (AWS, Azure, or GCP)\",\n    \"Knowledge of big data technologies (Spark, Kafka, Airflow)\",\n    \"Understanding of data modeling and database design\",\n    \"Experience with data warehousing solutions\",\n    \"Strong problem-solving and communication skills\"\n  ],\n  \"benefits\": [\n    \"Competitive salary and equity package\",\n    \"Comprehensive health, dental, and vision insurance\",\n    \"401(k) with company matching\",\n    \"Flexible work arrangements and remote options\",\n    \"Professional development budget\",\n    \"Unlimited PTO policy\",\n    \"Modern tech stack and tools\",\n    \"Collaborative and innovative work environment\"\n  ],\n  \"experience_level\": \"senior\"\n}"
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ],
+  "model": "llama3.1-70b",
+  "object": "chat.completion",
+  "usage": {
+    "prompt_tokens": 125,
+    "completion_tokens": 312,
+    "total_tokens": 437
+  },  "guardrails_applied": true
+}
