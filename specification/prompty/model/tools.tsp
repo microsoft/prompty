@@ -13,6 +13,7 @@ namespace Prompty.Core {
   }
 
   model Value {
+    @doc("Hardcoded value for the tool to use")
     value: unknown;
 
     @doc("A short description of the value for metadata purposes")

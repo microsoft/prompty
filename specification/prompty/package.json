@@ -9,6 +9,11 @@
   },
   "dependencies": {
     "@prompty/documentation": "file:../prompty-doc",
-    "@typespec/json-schema": "^1.1.0"
+    "@typespec/json-schema": "^1.1.0",
+    "@alloy-js/core": "^0.18.2",
+    "@alloy-js/typescript": "^0.18.0",
+    "@typespec/emitter-framework": "^0.9.0",
+    "@typespec/asset-emitter": "^0.72.1",
+    "@typespec/compiler": "latest"
   }
 }

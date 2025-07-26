@@ -1,4 +1,5 @@
 import "./core.tsp";
+import "./metadata.tsp";
 import "./model.tsp";
 import "./inputs.tsp";
 import "./outputs.tsp";
@@ -116,7 +117,7 @@ namespace Prompty.Core {
     description?: string = "";
 
     @doc("Additional metadata including authors, tags, and other arbitrary properties")
-    metadata?: Options = #{};
+    metadata?: Metadata = #{};
 
     // model execution
     @doc("Model configuration used for execution")
