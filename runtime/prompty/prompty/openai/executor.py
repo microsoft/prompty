@@ -1,4 +1,3 @@
-import importlib.metadata
 import typing
 from collections.abc import Iterator
 
@@ -6,10 +5,9 @@ from openai import OpenAI
 
 from prompty.tracer import Tracer
 
+from .._version import VERSION
 from ..core import Prompty, PromptyStream
 from ..invoker import Invoker, InvokerFactory
-
-VERSION = importlib.metadata.version("prompty")
 
 
 @InvokerFactory.register_executor("openai")
@@ -19,15 +17,30 @@ class OpenAIExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
         self.kwargs = {
-            key: value
-            for key, value in self.prompty.model.configuration.items()
-            if key != "type" and key != "name"
+            key: value for key, value in self.prompty.model.connection.items() if key != "type" and key != "name"
         }
 
         self.api = self.prompty.model.api
-        self.parameters = self.prompty.model.parameters
-        self.model = self.prompty.model.configuration["name"]
-        self.deployment = self.prompty.model.configuration["deployment"]
+        self.options = self.prompty.model.options
+        self.model = self.prompty.model.connection["name"]
+        self.deployment = self.prompty.model.connection["deployment"]
+
+    def _sanitize_messages(self, data: typing.Any) -> list[dict[str, str]]:
+        messages = data if isinstance(data, list) else [data]
+
+        if self.prompty.template.strict:
+            if not all([msg["nonce"] == self.prompty.template.nonce for msg in messages]):
+                raise ValueError("Nonce mismatch in messages array (strict mode)")
+
+        messages = [
+            {
+                **{"role": msg["role"], "content": msg["content"]},
+                **({"name": msg["name"]} if "name" in msg else {}),
+            }
+            for msg in messages
+        ]
+
+        return messages
 
     def invoke(self, data: typing.Any) -> typing.Any:
         """Invoke the OpenAI API
@@ -64,8 +77,8 @@ class OpenAIExecutor(Invoker):
                 trace("signature", "OpenAI.chat.completions.create")
                 args = {
                     "model": self.model,
-                    "messages": data if isinstance(data, list) else [data],
-                    **self.parameters,
+                    "messages": self._sanitize_messages(data),
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.chat.completions.create(**args)
@@ -75,7 +88,7 @@ class OpenAIExecutor(Invoker):
                 args = {
                     "prompt": data.item,
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.completions.create(**args)
@@ -85,7 +98,7 @@ class OpenAIExecutor(Invoker):
                 args = {
                     "input": data if isinstance(data, list) else [data],
                     "model": self.deployment,
-                    **self.parameters,
+                    **self.options,
                 }
                 trace("inputs", args)
                 response = client.embeddings.create(**args)

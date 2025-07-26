@@ -1,5 +1,4 @@
 import contextlib
-import importlib
 import inspect
 import json
 import os
@@ -12,12 +11,12 @@ from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Union
 
+from ._version import VERSION
+
 
 # clean up key value pairs for sensitive values
 def sanitize(key: str, value: Any) -> Any:
-    if isinstance(value, str) and any(
-        [s in key.lower() for s in ["key", "secret", "password", "credential"]]
-    ):
+    if isinstance(value, str) and any([s in key.lower() for s in ["key", "secret", "password", "credential"]]):
         return 10 * "*"
     elif isinstance(value, dict):
         return {k: sanitize(k, v) for k, v in value.items()}
@@ -28,9 +27,7 @@ def sanitize(key: str, value: Any) -> Any:
 class Tracer:
     _tracers: dict[
         str,
-        Callable[
-            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
-        ],
+        Callable[[str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]],
     ] = {}
 
     SIGNATURE = "signature"
@@ -41,9 +38,7 @@ class Tracer:
     def add(
         cls,
         name: str,
-        tracer: Callable[
-            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
-        ],
+        tracer: Callable[[str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]],
     ) -> None:
         cls._tracers[name] = tracer
 
@@ -116,9 +111,7 @@ def _name(func: Callable, args):
     if core_invoker:
         name = type(args[0]).__name__
         if signature.endswith("async"):
-            signature = (
-                f"{args[0].__module__}.{args[0].__class__.__name__}.invoke_async"
-            )
+            signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke_async"
         else:
             signature = f"{args[0].__module__}.{args[0].__class__.__name__}.invoke"
     else:
@@ -175,11 +168,7 @@ def _trace_sync(func: Callable, **okwargs: Any) -> Callable:
                     {
                         "exception": {
                             "type": type(e),
-                            "traceback": (
-                                traceback.format_tb(tb=e.__traceback__)
-                                if e.__traceback__
-                                else None
-                            ),
+                            "traceback": (traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
@@ -226,11 +215,7 @@ def _trace_async(func: Callable, **okwargs: Any) -> Callable:
                     {
                         "exception": {
                             "type": type(e),
-                            "traceback": (
-                                traceback.format_tb(tb=e.__traceback__)
-                                if e.__traceback__
-                                else None
-                            ),
+                            "traceback": (traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
@@ -305,11 +290,7 @@ class PromptyTracer:
             # streamed results may have usage as well
             if "result" in frame and isinstance(frame["result"], list):
                 for result in frame["result"]:
-                    if (
-                        isinstance(result, dict)
-                        and "usage" in result
-                        and isinstance(result["usage"], dict)
-                    ):
+                    if isinstance(result, dict) and "usage" in result and isinstance(result["usage"], dict):
                         frame["__usage"] = self.hoist_item(
                             result["usage"],
                             frame["__usage"] if "__usage" in frame else {},
@@ -349,19 +330,15 @@ class PromptyTracer:
         return cur
 
     def write_trace(self, frame: dict[str, Any]) -> None:
-        trace_file = (
-            self.output
-            / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
-        )
+        trace_file = self.output / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
 
-        v = importlib.metadata.version("prompty")
         enriched_frame = {
             "runtime": "python",
-            "version": v,
+            "version": VERSION,
             "trace": frame,
         }
 
-        with open(trace_file, "w") as f:
+        with open(trace_file, "w", encoding="utf-8") as f:
             json.dump(enriched_frame, f, indent=4)
 
 
@@ -369,8 +346,6 @@ class PromptyTracer:
 def console_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
     try:
         print(f"Starting {name}")
-        yield lambda key, value: print(
-            f"{key}:\n{json.dumps(to_dict(value), indent=4)}"
-        )
+        yield lambda key, value: print(f"{key}:\n{json.dumps(to_dict(value), indent=4)}")
     finally:
         print(f"Ending {name}")

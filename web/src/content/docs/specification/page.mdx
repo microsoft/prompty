@@ -1,0 +1,267 @@
+---
+title: Prompty Specification
+authors:
+  - bethanyjep
+  - nitya
+date: 2025-03-06
+tags:
+  - prompty-file-spec
+  - documentation
+index: 3
+---
+
+
+{/* This was generated using Claude Sonnet 3.5 using GitHub Copliot Chat
+
+Steps to regenerate:
+1. Head over to the Copilot Icon on your IDE to open up chat
+2. Open the ``prompty.yaml`` file, this ensures Copilot uses the file as reference
+3. Switch the model to Claude 3.5 Sonnet (Preview)
+4. Add the prompt below to regenerate documentation
+5. Once done, evaluate and check for any inconsistencies
+6. If everything is fine, update the .mdx file and create a PR to update changes
+
+Prompt to regenerate:
+Write comprehensive reference documentation for the provided YAML file. The documentation should be structured in Markdown format and include the following elements:
+- Clearly describe each attribute, including its purpose and expected values.
+- For sections containing multiple attributes, present them in a structured table format for readability.
+- Provide relevant usage examples showcasing different configurations of the YAML file.
+- Ensure proper mdx styling, including headers, code blocks, and bullet points where appropriate. */}
+
+
+
+The Prompty yaml file spec can be found [here](https://github.com/microsoft/prompty/blob/main/Prompty.yaml). Below you can find a brief description of each section and the attributes within it.
+
+## Prompty description attributes:
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>name</code></td>
+      <td>string</td>
+      <td>Name of the prompty</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>string</td>
+      <td>Description of the prompty</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>version</code></td>
+      <td>string</td>
+      <td>Version number</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>authors</code></td>
+      <td>array</td>
+      <td>List of prompty authors</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>tags</code></td>
+      <td>tags</td>
+      <td>Categorization tags</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
+
+## Input/Output Specifications
+
+### Inputs
+
+The `inputs` object defines the expected input format for the prompty:
+
+```yaml
+inputs:
+  type: object
+  description: "Input specification"
+```
+
+### Outputs
+
+The `outputs` object defines the expected output format:
+
+```yaml
+outputs:
+  type: object
+  description: "Output specification"
+```
+
+## Template Engine
+
+Currently supports:
+- `jinja2` (default) - Jinja2 template engine for text processing
+
+### Model Configuration
+
+The `model` section defines how the AI model should be configured and executed.
+
+```yaml
+model:
+  api: chat
+  configuration:
+    # model-specific configuration
+  parameters:
+    # execution parameters
+  response: first
+```
+
+#### Model API Types
+
+- `chat` (default) - For chat-based interactions
+- `completion` - For text completion tasks
+
+#### Response Types
+
+This determines whether the full (raw) response or just the first response in the choice array is returned.
+
+- `first` (default) - Returns only the first response
+- `all` - Returns all response choices
+
+## Model Providers
+
+### Azure OpenAI Configuration
+
+```yaml
+configuration:
+  type: azure_openai
+  api_key: ${env:OPENAI_API_KEY}
+  api_version: "2023-05-15"
+  azure_deployment: "my-deployment"
+  azure_endpoint: "https://my-endpoint.openai.azure.com"
+```
+
+### OpenAI Configuration
+
+```yaml
+configuration:
+  type: openai
+  name: "gpt-4"
+  organization: "my-org"
+```
+
+### MaaS Configuration
+
+```yaml
+configuration:
+  type: azure_serverless
+  azure_endpoint: "https://my-endpoint.azureml.ms"
+```
+
+## Model Parameters
+
+Common parameters that can be configured for model execution:
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>response_format</code></td>
+      <td>object</td>
+      <td>An object specifying the format that the model must output.</td>
+    </tr>
+    <tr>
+      <td><code>seed</code></td>
+      <td>integer</td>
+      <td>For deterministic sampling. This feature is in Beta. If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result. Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend. </td>
+    </tr>
+    <tr>
+      <td><code>max_tokens</code></td>
+      <td>integer</td>
+      <td>The maximum number of [tokens](/tokenizer) that can be generated in the chat completion. </td>   
+    </tr>
+    <tr>
+      <td><code>temperature</code></td>
+      <td>number</td>
+      <td>Sampling temperature (0-1)</td>
+    </tr>
+    <tr>
+      <td><code>frequency_penalty</code></td>
+      <td>number</td>
+      <td>Penalty for frequent tokens</td>
+    </tr>
+    <tr>
+      <td><code>presence_penalty</code></td>
+      <td>number</td>
+      <td>Penalty for new tokens</td>
+    </tr>
+    <tr>
+      <td><code>top_p</code></td>
+      <td>number</td>
+      <td>Nucleus sampling probability</td>
+    </tr>
+    <tr>
+      <td><code>stop</code></td>
+      <td>array</td>
+      <td>Sequences to stop generation</td>
+    </tr>
+  </tbody>
+</table>
+
+> Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
+
+## Sample Prompty
+
+```yaml
+---
+name: ExamplePrompt
+description: A prompt that uses context to ground an incoming question
+authors:
+  - Seth Juarez
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: <your-deployment>
+    api_version: 2024-07-01-preview
+  parameters:
+    max_tokens: 3000
+sample:
+  firstName: Seth
+  context: >
+    The Alpine Explorer Tent boasts a detachable divider for privacy, 
+    numerous mesh windows and adjustable vents for ventilation, and 
+    a waterproof design. It even has a built-in gear loft for storing 
+    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    and convenience, making it your second home in the heart of nature!
+  question: What can you tell me about your tents?
+---
+
+system:
+You are an AI assistant who helps people find information. As the assistant, 
+you answer questions briefly, succinctly, and in a personable manner using 
+markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+# Context
+Use the following context to provide a more personalized response to {{firstName}}:
+{{context}}
+
+user:
+{{question}}
+```
+
+---
+[Want to Contribute To the Project?](/docs/contributing/)

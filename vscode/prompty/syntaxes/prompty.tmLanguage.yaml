@@ -1,0 +1,49 @@
+scopeName: source.prompty
+patterns:
+  - include: "#prelude"
+  - include: "#thread"
+  - include: "#prompt-tools"
+  - include: "#assistant-tool-call"
+  - include: "#prompt"
+
+repository:
+  prelude:
+    begin: ^---$
+    end: ^---$
+    contentName: frontmatter
+    patterns:
+      - include: source.yaml
+
+  thread:
+    begin: \!\[\s*thread\s*\]
+    end: \!\[\s*thread\s*\]
+    contentName: thread
+    beginCaptures:
+      "0": { name: entity.name.type }
+
+  assistant-tool-call:
+    begin: ^\s*#?\s*(assistant)\s*(\[(\s*type\s*=\s*\"tool_call\")\])\s*:\s*$
+    end: ^(?=\s*#?\s*(assistant|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    beginCaptures:
+      "0": { name: entity.name.type }
+    contentName: tool-call
+    patterns:
+      - include: source.yaml
+
+  prompt-tools:
+    begin: ^\s*#?\s*(tools)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$
+    end: ^(?=\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    beginCaptures:
+      "0": { name: entity.name.type }
+    contentName: tools
+    patterns:
+      - include: source.yaml
+      
+  prompt:
+    begin: ^\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$
+    end: ^(?=\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    beginCaptures:
+      "0": { name: entity.name.type }
+    contentName: content
+    patterns:
+      - include: text.html.markdown

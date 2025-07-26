@@ -1,39 +1,35 @@
 ---
 name: Basic Prompt
 description: A basic prompt that uses the GPT-3 chat API to answer questions
-authors:
-  - sethjuarez
-  - jietong
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: chat
-  configuration:
+  connection:
     azure_deployment: gpt-35-turbo
 inputs:
-  table:
-    type: string
-    default: sample
-    description: The name of the sample
   firstName:
     type: string
+    sample: Jane
     description: The first name of the customer
   lastName:
     type: string
+    sample: Doe
     default: Doe
     description: The last name of the customer
+  question:
+    type: string
+    sample: What is the meaning of life?
+    description: The question the customer is asking
 template: mustache
-
-sample:
-  firstName: Jane
-  lastName: Doe
-  question: What is the meaning of life?
-  top_n: 5
-  table: customers
 ---
 system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly, 
 and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-{{ query }}
 
 {{! ignore this line from Mustache }}
 

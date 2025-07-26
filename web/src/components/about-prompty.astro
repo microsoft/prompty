@@ -1,0 +1,56 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<article class="sl-flex" aria-labelledby="about-astro-heading">
+  <small id="about-astro-heading">
+    {title}
+    <span class="sr-only">prompty.ai</span>
+  </small>
+  <img src="/images/microsoft-dark.png" alt="Microsoft logo" class="darkIcon" />
+  <img
+    src="/images/microsoft-light.png"
+    alt="Microsoft logo"
+    class="lightIcon"
+  />
+  <slot />
+</article>
+
+<style>
+  article {
+    max-width: 40rem;
+    margin-inline: auto;
+    padding-block: 5rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  article > :global(*) {
+    max-width: 50ch;
+    margin-top: 0 !important;
+  }
+  small {
+    color: var(--sl-color-gray-3);
+  }
+
+  .darkIcon {
+    display: block;
+  }
+
+  .lightIcon {
+    display: block;
+  }
+
+  :root[data-theme="light"] .darkIcon {
+    display: none;
+  }
+
+  :root[data-theme="dark"] .lightIcon {
+    display: none;
+  }
+</style>

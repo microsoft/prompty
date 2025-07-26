@@ -1,14 +1,16 @@
 ---
 name: Basic Embedding
 description: Embedding Example (completely overwrought but wanted to test the concept)
-authors:
-  - sethjuarez
-  - jietong
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+    
 model:
   api: embedding
-  configuration:
+  connection:
     azure_deployment: text-embedding-ada-002
-sample:
+inputs:
   text: embedding text
 ---
 {{text}}

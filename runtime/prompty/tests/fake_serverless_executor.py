@@ -16,28 +16,28 @@ class FakeServerlessExecutor(Invoker):
     def __init__(self, prompty: Prompty) -> None:
         super().__init__(prompty)
 
+        # resolve model
+        self.resolve_model()
+
         # serverless configuration
-        self.endpoint = self.prompty.model.configuration["endpoint"]
-        self.model = self.prompty.model.configuration["model"]
-        self.key = self.prompty.model.configuration["key"]
+        self.endpoint = self.prompty.model.connection["endpoint"]
+        self.model = self.prompty.model.connection["model"]
+        self.key = self.prompty.model.connection["key"]
 
         # api type
         self.api = self.prompty.model.api
-        self.parameters = self.prompty.model.parameters
+        self.options = self.prompty.model.options
 
     def invoke(self, data: typing.Any) -> typing.Any:
         if self.prompty.file:
             if isinstance(self.prompty.file, str):
                 self.prompty.file = Path(self.prompty.file).resolve().absolute()
 
-            p = (
-                Path(self.prompty.file.parent)
-                / f"{self.prompty.file.name}.execution.json"
-            )
+            p = Path(self.prompty.file.parent) / f"{self.prompty.file.name}.execution.json"
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 def generator():
@@ -68,14 +68,11 @@ class FakeServerlessExecutor(Invoker):
             if isinstance(self.prompty.file, str):
                 self.prompty.file = Path(self.prompty.file).resolve().absolute()
 
-            p = (
-                Path(self.prompty.file.parent)
-                / f"{self.prompty.file.name}.execution.json"
-            )
+            p = Path(self.prompty.file.parent) / f"{self.prompty.file.name}.execution.json"
             with open(p, encoding="utf-8") as f:
                 j = f.read()
 
-            if self.parameters.get("stream", False):
+            if self.options.get("stream", False):
                 items = json.loads(j)
 
                 async def generator():

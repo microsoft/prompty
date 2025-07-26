@@ -1,0 +1,33 @@
+---
+
+---
+
+<div class="number-wrapper not-content" data-pagefind-ignore>
+  <slot />
+</div>
+
+<style>
+  .number-wrapper {
+    margin-block: 2.5rem 2.5rem !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: clamp(
+      var(--sl-text-sm),
+      calc(0.5rem + 1vw),
+      var(--sl-text-body)
+    );
+  }
+
+  @media (min-width: 50rem) {
+    .number-wrapper {
+      margin-block: 5rem 2.5rem !important;
+      display: flex;
+      flex-direction: row;
+      font-size: clamp(
+        var(--sl-text-sm),
+        calc(0.5rem + 1vw),
+        var(--sl-text-body)
+      );
+  }
+</style>
