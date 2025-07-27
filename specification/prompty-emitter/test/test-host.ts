@@ -4,21 +4,21 @@ import {
   createTestWrapper,
   expectDiagnosticEmpty,
 } from "@typespec/compiler/testing";
-import { PromptyDocTestLibrary } from "../src/testing/index.js";
+import { PromptyEmitTestLibrary } from "../src/testing/index.js";
 
-export async function createPromptyDocTestHost() {
+export async function createPromptyEmitTestHost() {
   return createTestHost({
-    libraries: [PromptyDocTestLibrary],
+    libraries: [PromptyEmitTestLibrary],
   });
 }
 
-export async function createPromptyDocTestRunner() {
-  const host = await createPromptyDocTestHost();
+export async function createPromptyEmitTestRunner() {
+  const host = await createPromptyEmitTestHost();
 
   return createTestWrapper(host, {
     compilerOptions: {
       noEmit: false,
-      emit: ["prompty-doc"],
+      emit: ["prompty-emit"],
     },
   });
 }
@@ -26,11 +26,11 @@ export async function createPromptyDocTestRunner() {
 export async function emitWithDiagnostics(
   code: string
 ): Promise<[Record<string, string>, readonly Diagnostic[]]> {
-  const runner = await createPromptyDocTestRunner();
+  const runner = await createPromptyEmitTestRunner();
   await runner.compileAndDiagnose(code, {
     outputDir: "tsp-output",
   });
-  const emitterOutputDir = "./tsp-output/prompty-doc";
+  const emitterOutputDir = "./tsp-output/prompty-emit";
   const files = await runner.program.host.readDir(emitterOutputDir);
 
   const result: Record<string, string> = {};

@@ -8,6 +8,7 @@ namespace Prompty.Core {
     @doc("A short description of the tool for metadata purposes")
     description?: string = "";
 
+    @resolve("Input", Named<Value>)
     @doc("Hard coded values that the tool can use for execution")
     inputs?: Record<Value> | Named<Value>[] = #[];
   }
@@ -38,6 +39,7 @@ namespace Prompty.Core {
     @doc("The type identifier for function tools")
     type: "function";
 
+    @resolve("FunctionToolParameter", Named<FunctionToolParameter>)
     @doc("Parameters accepted by the function tool")
     parameters: Record<FunctionToolParameter> | Named<FunctionToolParameter>[] = #[
     ];

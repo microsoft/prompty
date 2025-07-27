@@ -2,7 +2,7 @@ import { resolvePath } from "@typespec/compiler";
 import { createTestLibrary, TypeSpecTestLibrary } from "@typespec/compiler/testing";
 import { fileURLToPath } from "url";
 
-export const PromptyDocTestLibrary: TypeSpecTestLibrary = createTestLibrary({
-  name: "prompty-doc",
+export const PromptyEmitTestLibrary: TypeSpecTestLibrary = createTestLibrary({
+  name: "prompty-emit",
   packageRoot: resolvePath(fileURLToPath(import.meta.url), "../../../../"),
 });

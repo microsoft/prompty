@@ -1,6 +1,11 @@
 import "./core.tsp";
 
 namespace Prompty.Core {
+
+  /**
+   * Represents the output properties of an AI agent.
+   * Each output property can be a simple type, an array, or an object.
+   */
   model OutputProperty {
     @doc("The data type of the output property")
     type: SimpleTypes = "string";
@@ -15,6 +20,7 @@ namespace Prompty.Core {
   model ArrayOutput extends OutputProperty {
     type: "array";
 
+    @resolve("OutputProperty", Named<OutputProperty>, true)
     @doc("The type of items contained in the array")
     items: OutputProperty | Named<OutputProperty>
   }
