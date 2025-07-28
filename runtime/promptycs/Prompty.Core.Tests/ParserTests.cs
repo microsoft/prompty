@@ -75,7 +75,7 @@ namespace Prompty.Core.Tests
             Assert.Equal(ChatRole.User, messages[1].Role);
             Assert.Equal("Describe the contents of this image.", ((TextContent)messages[1].Contents[0]).Text);
             Assert.True(messages[1].Contents[1] is DataContent);
-            Assert.True(((DataContent)messages[1].Contents[1]).Uri.StartsWith("data:image/"));
+            Assert.StartsWith("data:image/", ((DataContent)messages[1].Contents[1]).Uri);
         }
 
         [Theory]
@@ -94,7 +94,7 @@ namespace Prompty.Core.Tests
             Assert.Equal(ChatRole.System, messages[0].Role);
             Assert.Equal(ChatRole.User, messages[1].Role);
             Assert.True(messages[1].Contents[0] is TextContent);
-            Assert.True(((TextContent)messages[1].Contents[0]).Text.StartsWith("![alt text dfdv](dummy-image.jpg"));
+            Assert.StartsWith("![alt text dfdv](dummy-image.jpg", ((TextContent)messages[1].Contents[0]).Text);
         }
 
         [Theory]
