@@ -93,6 +93,8 @@ namespace Prompty.Core.Tests
             Assert.Equal(2, messages.Count());
             Assert.Equal(ChatRole.System, messages[0].Role);
             Assert.Equal(ChatRole.User, messages[1].Role);
+            Assert.True(messages[1].Contents[0] is TextContent);
+            Assert.True(((TextContent)messages[1].Contents[0]).Text.StartsWith("![alt text dfdv](dummy-image.jpg"));
         }
 
         [Theory]
