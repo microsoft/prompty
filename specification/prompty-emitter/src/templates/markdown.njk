@@ -1,0 +1,17 @@
+{% if not depth -%}
+{% set depth = 0 -%}
+{% endif -%}
+{% macro heading(title, depth=0) -%}
+#{% for i in range(0, depth) -%}#{%- endfor %} {{title}}
+{% endmacro -%}
+{{ heading(node.name, depth) }}
+{{ node.description }}
+{% if node.children %}
+{{ heading('Properties', depth+1) }}
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+{% for child in node.children -%}
+| {{ child.name }} | {{ child.typeName }} | {{ child.description }} |
+{% endfor -%}
+{% endif %}

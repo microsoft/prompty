@@ -1,9 +1,11 @@
-import { EmitContext, emitFile, getDoc, getPropertyType, isTemplateInstance, Model, Program, resolvePath, Type } from "@typespec/compiler";
+import { EmitContext, emitFile, getDoc, getEntityName, getPropertyType, getTypeName, isTemplateInstance, Program, resolvePath } from "@typespec/compiler";
 import { PromptyNode } from "./ast.js";
 import { getUnionResolution } from "./decorators.js";
-import { StateKeys } from "./lib.js";
+import { PromptyEmitterOptions } from "./lib.js";
+import * as nunjucks from "nunjucks";
 
-export async function $onEmit(context: EmitContext) {
+export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
+
   // resolving top level Prompty model
   // this is the "Model" entry point for the emitter
   const m = context.program.resolveTypeReference("Prompty.Core.Prompty");
@@ -18,8 +20,25 @@ export async function $onEmit(context: EmitContext) {
   const children = resolveProperties(context.program, ast);
   ast.addChildren(children);
 
+  console.log(`OPTIONS: ${JSON.stringify(context.options)}`);
+
+  // set up template environment
+  var env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates'));
+
+  // markdown output
+  if (true) {
+    const markdown = env.render('markdown.njk', {
+      node: ast,
+      depth: 0,
+    });
+    await emitFile(context.program, {
+      path: resolvePath(context.emitterOutputDir, "markdown", "output.md"),
+      content: markdown,
+    });
+  }
+
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "output.json"),
+    path: resolvePath(context.emitterOutputDir, "json", "output.json"),
     content: JSON.stringify(ast.getSanitizedObject(), null, 2),
   });
 }
@@ -39,6 +58,11 @@ const resolveProperties = (program: Program, node: PromptyNode): PromptyNode[] =
     if (type.kind === "Model") {
       // recurse
       child.addChildren(resolveProperties(program, child));
+      child.fullTypeName = getTypeName(type);
+      child.typeName = getTypeName(type, {
+        nameOnly: true,
+        printable: true,
+      });
     } else if (type.kind === "Union") {
       // handle union types
       const resolutions = getUnionResolution(program, value);
@@ -52,17 +76,27 @@ const resolveProperties = (program: Program, node: PromptyNode): PromptyNode[] =
             templateType.entityKind === "Type"
           ) {
             resolutionNode.appendDescription(getDoc(program, templateType) || "");
+            resolutionNode.fullTypeName = getEntityName(templateType);
+            resolutionNode.typeName = getTypeName(templateType, {
+              nameOnly: true,
+              printable: true,
+            });
           }
         } else {
           resolutionNode.appendDescription(getDoc(program, resolution.type) || "");
         }
+        //resolutionNode.typeName = value.name;
         // add the resolution node as a sibling
         child.addSibling(resolutionNode);
-        if (!resolution.onlyDocs) {
-          // if not onlyDocs, resolve properties of the type
-          resolutionNode.addChildren(resolveProperties(program, resolutionNode));
-        }
+        // resolve properties of the type
+        resolutionNode.addChildren(resolveProperties(program, resolutionNode));
       }
+    } else {
+      child.fullTypeName = getTypeName(type);
+      child.typeName = getTypeName(type, {
+        nameOnly: true,
+        printable: true,
+      });
     }
     properties.push(child);
   }

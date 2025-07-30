@@ -1,9 +1,11 @@
-import { Model, ModelProperty, Type } from "@typespec/compiler";
+import { Model, ModelProperty, Type, getPropertyType, getTypeName } from "@typespec/compiler";
 
 
 export class PromptyNode {
   public children: PromptyNode[] = [];
   public siblings: PromptyNode[] = [];
+  public fullTypeName: string = "";
+  public typeName: string = "";
   public docsOnly: boolean = false;
   public description: string = "";
   constructor(public name: string, public model: Type, docsOnly?: boolean) {
@@ -37,6 +39,8 @@ export class PromptyNode {
       name: this.name,
       //model: this.model,
       description: this.description,
+      fullTypeName: this.fullTypeName,
+      typeName: this.typeName,
       children: this.children.map(child => child.getSanitizedObject()),
       siblings: this.siblings.map(sibling => sibling.getSanitizedObject()),
       docsOnly: this.docsOnly,
