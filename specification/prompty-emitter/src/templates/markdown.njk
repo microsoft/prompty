@@ -2,12 +2,12 @@
 #{% for i in range(0, depth) -%}#{%- endfor %} {{title}}
 {%- endmacro -%}
 
-{{ heading(node.name, depth) }}
+{{ heading(node.name, 0) }}
 
 {{ node.description }}
-{% if node.children %}
+{% if node.children.length > 0 %}
 
-{{ heading('Properties', depth+1) }}
+{{ heading('Properties', 1) }}
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

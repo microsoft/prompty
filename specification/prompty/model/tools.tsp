@@ -7,18 +7,6 @@ namespace Prompty.Core {
 
     @doc("A short description of the tool for metadata purposes")
     description?: string = "";
-
-    @resolve("Input", Named<Value>)
-    @doc("Hard coded values that the tool can use for execution")
-    inputs?: Record<Value> | Named<Value>[] = #[];
-  }
-
-  model Value {
-    @doc("Hardcoded value for the tool to use")
-    value: unknown;
-
-    @doc("A short description of the value for metadata purposes")
-    description?: string = "";
   }
 
   model FunctionToolParameter {
@@ -39,12 +27,18 @@ namespace Prompty.Core {
     @doc("The type identifier for function tools")
     type: "function";
 
-    @resolve("FunctionToolParameter", Named<FunctionToolParameter>)
     @doc("Parameters accepted by the function tool")
     parameters: Record<FunctionToolParameter> | Named<FunctionToolParameter>[] = #[
     ];
   }
 
+  /**
+   * Represents a tool that runs on a server
+   * This tool type is designed for operations that require server-side execution
+   * It may include features such as authentication, data storage, and long-running processes
+   * This tool type is ideal for tasks that involve complex computations or access to secure resources
+   * Server tools can be used to offload heavy processing from client applications
+   */
   model ServerTool extends Tool {
     @doc("The type identifier for server tools")
     type: string;

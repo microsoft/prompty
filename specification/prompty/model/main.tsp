@@ -62,4 +62,21 @@ namespace Prompty {
 		mergeSample: boolean = true,
 		config?: string = "default",
 	): unknown;
+
+
+
+  /**
+   * Publish Prompty document as a provider agent.
+   * This method allows the Prompty document to be used as a standalone agent.
+   * @param prompty The Prompty model or its identifier to publish.
+   * @param connection Optional connection configuration for hoisting into the Model connection.
+   * @param options Optional execution options for hoisting into the Model options.
+   * @returns The result of the publication.
+   */
+  op publish(
+    prompty: Prompty.Core.Prompty | string,
+    connection?: Record<unknown> = #{},
+    options?: Record<unknown> = #{},
+    config?: string = "default",
+  ): unknown;
 }

@@ -11,6 +11,9 @@ namespace Prompty.Core {
     ...Options;
   }
 
+  /**
+   * Model for defining the structure and behavior of AI agents.
+   */
   model Model {
     @doc("The unique identifier of the model")
     id?: string = "";

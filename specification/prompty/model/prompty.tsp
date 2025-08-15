@@ -124,20 +124,13 @@ namespace Prompty.Core {
     `model`: Model;
 
     // Inputs and Outputs
-    @resolve("InputProperty", Named<InputProperty>)
     @doc("Input parameters that participate in template rendering")
     inputs?: Inputs = #[];
 
-    @resolve("OutputProperty", Named<OutputProperty>, true)
-    @resolve("ArrayOutput", Named<ArrayOutput>)
-    @resolve("ObjectOutput", Named<ObjectOutput>)
     @doc("Expected output format and structure from the agent")
     outputs?: Outputs = #[];
 
     // tools
-    @resolve("Tool", Named<Tool>, true)
-    @resolve("FunctionTool", Named<FunctionTool>)
-    @resolve("ServerTool", Named<ServerTool>)
     @doc("Tools available to the agent for extended functionality")
     tools?: Tools = #[];
 

@@ -1,5 +1,5 @@
-import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { generateAst } from "./ast.js";
+import { EmitContext, emitFile, Model, resolvePath } from "@typespec/compiler";
+import { resolveType } from "./ast.js";
 import { PromptyEmitterOptions } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
 
@@ -15,7 +15,7 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     );
   }
   const model = m[0];
-  const ast = generateAst(context, model);
+  const ast = resolveType(context.program, model, new Set());
 
   console.log(`OPTIONS: ${JSON.stringify(context.options)}`);
 
@@ -27,4 +27,5 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     content: JSON.stringify(ast.getSanitizedObject(), null, 2),
   });
 }
+
 

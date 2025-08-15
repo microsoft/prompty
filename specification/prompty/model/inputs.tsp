@@ -1,6 +1,13 @@
 import "./core.tsp";
 
 namespace Prompty.Core {
+
+  model Binding {
+    tool: string;
+    argument: string;
+  }
+
+  
   /**
    * Represents a single input property for a prompt.
    * * This model defines the structure of input properties that can be used in prompts,
@@ -33,6 +40,9 @@ namespace Prompty.Core {
 
     @doc("A sample value of the input for examples and tooling")
     sample?: unknown = null;
+
+    @doc("Tool binding information if using property for tool calling")
+    binding?: Binding;
   }
 
   alias Inputs = Record<InputProperty> | Named<InputProperty>[];
