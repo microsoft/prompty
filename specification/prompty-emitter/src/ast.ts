@@ -1,6 +1,4 @@
-import { EmitContext, getDoc, getEntityName, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Type } from "@typespec/compiler";
-import { getUnionResolution } from "./decorators.js";
-import { PromptyEmitterOptions } from "./lib.js";
+import { getDoc, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Type } from "@typespec/compiler";
 
 export class PropertyNode {
   public name: string;
@@ -97,7 +95,7 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   prop.model = type;
   //prop.isCollection = property.defaultValue?.valueKind === "ArrayValue";
 
-  if (type.kind === "Model" && !visited.has(type.name)) {
+  if (type.kind === "Model" && !visited.has(type.name) && !typeName.includes("unknown") && !typeName.includes('"')) {
     prop.type = [resolveType(program, type, visited)];
   } else if (type.kind === "Union") {
     const variants = Array.from(type.variants).map(([, v]) => v.type);
@@ -160,7 +158,6 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   return prop;
 };
 
-
 const getTemplateType = (type: Type): Model | undefined => {
   if (isTemplateInstance(type)) {
     const t = type.templateMapper?.args.at(0);
@@ -170,81 +167,3 @@ const getTemplateType = (type: Type): Model | undefined => {
   }
   return undefined;
 };
-
-/*
-export const generateAst = (context: EmitContext<PromptyEmitterOptions>, model: Model): TypeNode => {
-  const ast = new TypeNode("Prompty", model);
-  ast.appendDescription(getDoc(context.program, model) || "");
-  const children = resolveProperties(context.program, ast);
-  ast.typeName = getTypeName(model, {
-    nameOnly: true,
-    printable: true,
-  });
-  ast.fullTypeName = getTypeName(model);
-  ast.kind = model.kind;
-  ast.addChildren(children);
-  return ast;
-}
-*/
-
-/*
-const resolveTypePropertiesN = (program: Program, node: TypeNode): TypeNode[] => {
-  const properties: TypeNode[] = [];
-  // can only operate on Model types
-  if (node.model.kind !== "Model") {
-    return properties;
-  }
-
-  for (const [_, value] of node.model.properties) {
-    const type = getPropertyType(value);
-    const child = new TypeNode(value.name, type);
-    child.appendDescription(getDoc(program, value) || "");
-    child.kind = type.kind;
-    if (type.kind === "Model") {
-      // recurse
-      child.addChildren(resolveProperties(program, child));
-      child.fullTypeName = getTypeName(type);
-      child.typeName = getTypeName(type, {
-        nameOnly: true,
-        printable: true,
-      });
-    } else if (type.kind === "Union") {
-      // handle union types
-      const resolutions = getUnionResolution(program, value);
-      for (const resolution of resolutions) {
-        const resolutionNode = new TypeNode(resolution.name, resolution.type, resolution.onlyDocs);
-        if (isTemplateInstance(resolution.type)) {
-          const templateType = resolution.type.templateMapper?.args.at(0);
-          if (
-            resolution.type.templateMapper?.args.length === 1 &&
-            templateType !== undefined &&
-            templateType.entityKind === "Type"
-          ) {
-            resolutionNode.appendDescription(getDoc(program, templateType) || "");
-            resolutionNode.fullTypeName = getEntityName(templateType);
-            resolutionNode.typeName = getTypeName(templateType, {
-              nameOnly: true,
-              printable: true,
-            });
-          }
-        } else {
-          resolutionNode.appendDescription(getDoc(program, resolution.type) || "");
-        }
-        // add the resolution node as a sibling
-        child.addSibling(resolutionNode);
-        // resolve properties of the type
-        resolutionNode.addChildren(resolveProperties(program, resolutionNode));
-      }
-    } else {
-      child.fullTypeName = getTypeName(type);
-      child.typeName = getTypeName(type, {
-        nameOnly: true,
-        printable: true,
-      });
-    }
-    properties.push(child);
-  }
-
-  return properties;
-}
-*/

@@ -5,7 +5,7 @@ namespace Prompty.Core {
    * Represents the output properties of an AI agent.
    * Each output property can be a simple type, an array, or an object.
    */
-  model OutputProperty {
+  model Output {
     @doc("The data type of the output property")
     type: SimpleTypes = "string";
 
@@ -16,19 +16,19 @@ namespace Prompty.Core {
     required?: boolean = true;
   }
 
-  model ArrayOutput extends OutputProperty {
+  model ArrayOutput extends Output {
     type: "array";
 
     @doc("The type of items contained in the array")
-    items: OutputProperty | Named<OutputProperty>;
+    items: Output | Named<Output>;
   }
 
-  model ObjectOutput extends OutputProperty {
+  model ObjectOutput extends Output {
     type: "object";
 
     @doc("The properties contained in the object")
     properties: Outputs;
   }
 
-  alias Outputs = Record<OutputProperty> | Named<OutputProperty>[];
+  alias Outputs = Record<Output> | Named<Output>[];
 }

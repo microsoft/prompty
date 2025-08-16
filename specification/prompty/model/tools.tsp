@@ -1,6 +1,9 @@
 import "./core.tsp";
 
 namespace Prompty.Core {
+  /**
+   * Represents a tool that can be used in prompts.
+   */
   model Tool {
     @doc("The type identifier for the tool")
     type: string;
@@ -9,7 +12,10 @@ namespace Prompty.Core {
     description?: string = "";
   }
 
-  model FunctionToolParameter {
+  /**
+   * Represents a parameter for a tool.
+   */
+  model ToolParameter {
     @doc("The data type of the tool parameter")
     type: SimpleTypes = "string";
 
@@ -23,13 +29,15 @@ namespace Prompty.Core {
     `enum`?: unknown[] = #[];
   }
 
+  /**
+   * Represents a local function tool.
+   */
   model FunctionTool extends Tool {
     @doc("The type identifier for function tools")
     type: "function";
 
     @doc("Parameters accepted by the function tool")
-    parameters: Record<FunctionToolParameter> | Named<FunctionToolParameter>[] = #[
-    ];
+    parameters: Record<ToolParameter> | Named<ToolParameter>[] = #[];
   }
 
   /**

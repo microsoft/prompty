@@ -2,12 +2,20 @@ import "./core.tsp";
 
 namespace Prompty.Core {
 
+  /**
+   * This allows for inputs to be bound to tool parameters.
+   * It is used to specify which input property corresponds to which tool parameter
+   * So it can participate in the tool's execution context as passed in parameters.
+   */
   model Binding {
+    @doc("The name of the tool to bind the input to")
     tool: string;
+
+    @doc("The name of the argument in the tool's parameter list")
     argument: string;
   }
 
-  
+
   /**
    * Represents a single input property for a prompt.
    * * This model defines the structure of input properties that can be used in prompts,
@@ -22,7 +30,7 @@ namespace Prompty.Core {
    *   property3: boolean
    * ```
    */
-  model InputProperty {
+  model Input {
     @doc("The data type of the input property")
     type: SimpleTypes = "string";
 
@@ -45,5 +53,5 @@ namespace Prompty.Core {
     binding?: Binding;
   }
 
-  alias Inputs = Record<InputProperty> | Named<InputProperty>[];
+  alias Inputs = Record<Input> | Named<Input>[];
 }
