@@ -16,7 +16,8 @@ Each output property can be a simple type, an array, or an object.
 
 # ArrayOutput
 
-
+Represents an array output property.
+This extends the base Output model to represent an array of items.
 
 
 ## Properties
@@ -29,7 +30,8 @@ Each output property can be a simple type, an array, or an object.
 
 # ObjectOutput
 
-
+Represents an object output property.
+This extends the base Output model to represent a structured object.
 
 
 ## Properties

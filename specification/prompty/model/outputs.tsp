@@ -16,6 +16,10 @@ namespace Prompty.Core {
     required?: boolean = true;
   }
 
+  /**
+   * Represents an array output property.
+   * This extends the base Output model to represent an array of items.
+   */
   model ArrayOutput extends Output {
     type: "array";
 
@@ -23,6 +27,10 @@ namespace Prompty.Core {
     items: Output | Named<Output>;
   }
 
+  /**
+   * Represents an object output property.
+   * This extends the base Output model to represent a structured object.
+   */
   model ObjectOutput extends Output {
     type: "object";
 
