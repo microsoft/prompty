@@ -7,6 +7,7 @@ export class PropertyNode {
   public description: string;
   public fullTypeName: string;
   public isCollection: boolean = false;
+  public isOptional: boolean = false;
   public model?: Type;
   public type: TypeNode[];
 
@@ -27,6 +28,7 @@ export class PropertyNode {
       typeName: this.typeName,
       description: this.description,
       fullTypeName: this.fullTypeName,
+      isOptional: this.isOptional,
       isCollection: this.isCollection,
       type: this.type ? this.type.map(t => t.getSanitizedObject()) : [],
     };
@@ -38,11 +40,14 @@ export class TypeNode {
   public fullTypeName: string = "";
   public typeName: string = "";
   public kind: string = "";
-  public abstract: boolean = false;
+  public baseType: string = "";
+  public fullBaseType: string = "";
 
   public description: string = "";
   constructor(public model: Type) {
     this.model = model;
+    this.baseType = "";
+    this.fullBaseType = "";
   }
 
   getSanitizedObject(): Record<string, any> {
@@ -50,8 +55,9 @@ export class TypeNode {
       kind: this.kind,
       typeName: this.typeName,
       fullTypeName: this.fullTypeName,
+      baseType: this.baseType,
+      fullBaseType: this.fullBaseType,
       description: this.description,
-      abstract: this.abstract,
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
   }
@@ -66,6 +72,14 @@ export const resolveType = (program: Program, model: Model, visited: Set<string>
   });
   node.fullTypeName = getTypeName(model);
   node.kind = model.kind;
+  if(model.baseModel) {
+    node.baseType = getTypeName(model.baseModel, {
+      nameOnly: true,
+      printable: true,
+    });
+    node.fullBaseType = getTypeName(model.baseModel);
+  }
+
 
   if (model.name !== "Named" && model.name !== "Options") {
     visited.add(model.name);
@@ -93,7 +107,7 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   });
   const prop = new PropertyNode(property.name, kind, typeName, description, fullTypeName);
   prop.model = type;
-  //prop.isCollection = property.defaultValue?.valueKind === "ArrayValue";
+  prop.isOptional = property.optional;
 
   if (type.kind === "Model" && !visited.has(type.name) && !typeName.includes("unknown") && !typeName.includes('"')) {
     prop.type = [resolveType(program, type, visited)];
@@ -153,6 +167,9 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
         }
       }
     }
+  } else if (typeName.includes("unknown")) {
+    prop.isCollection = typeName.includes("[") && typeName.includes("]");
+    prop.typeName = "unknown";
   }
 
   return prop;

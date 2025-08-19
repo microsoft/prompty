@@ -1,0 +1,19 @@
+
+@dataclass
+class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}){%- endif -%}:
+    """{%- for line in node.description.split('\n') -%}
+    {{ line }}
+    {% endfor -%}
+    {% if node.properties.length > 0 %}
+    Attributes
+    ----------
+    {% for prop in node.properties -%}
+    {{ prop.name }} : {{ renderType(prop) | safe }}
+        {{ prop.description }}
+    {% endfor %}
+    {% endif -%}
+    """ 
+
+    {% for prop in node.properties -%}
+    {{ prop.name }}: {{ renderType(prop) | safe }}
+    {% endfor -%}
