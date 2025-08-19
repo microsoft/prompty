@@ -15,7 +15,7 @@ namespace Prompty.Core {
   /**
    * Represents a parameter for a tool.
    */
-  model ToolParameter {
+  model Parameter {
     @doc("The data type of the tool parameter")
     type: SimpleTypes = "string";
 
@@ -30,6 +30,28 @@ namespace Prompty.Core {
   }
 
   /**
+   * Represents an object parameter for a tool.
+   */
+  model ObjectParameter extends Parameter {
+    type: "object";
+
+    @doc("The properties of the object parameter")
+    properties: Parameters = #[];
+  }
+
+  /**
+   * Represents an array parameter for a tool.
+   */
+  model ArrayParameter extends Parameter {
+    type: "array";
+
+    @doc("The type of items contained in the array")
+    items: Parameter | Named<Parameter>;
+  }
+
+  alias Parameters = Record<Parameter> | Named<Parameter>[];
+
+  /**
    * Represents a local function tool.
    */
   model FunctionTool extends Tool {
@@ -37,7 +59,7 @@ namespace Prompty.Core {
     type: "function";
 
     @doc("Parameters accepted by the function tool")
-    parameters: Record<ToolParameter> | Named<ToolParameter>[] = #[];
+    parameters: Parameters = #[];
   }
 
   /**

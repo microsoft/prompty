@@ -15,9 +15,9 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
 
 const typeLink = (name: string) => name.toLowerCase().replaceAll(' ', '-');
 
-const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>, 
-                            template: nunjucks.Template, 
-                            node: TypeNode, inline: boolean = false): Promise<string> => {
+const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
+  template: nunjucks.Template,
+  node: TypeNode, inline: boolean = false): Promise<string> => {
   const markdown = template.render({
     node: node,
     renderType: renderType(inline),
@@ -25,10 +25,11 @@ const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
 
   if (inline) {
     const props = await Promise.all(node.properties.flatMap(async (p) => {
-      return await Promise.all(p.type.map(async (t) => {return await emitMarkdown(context, template, t, true) }));
+      return await Promise.all(p.type.map(async (t) => { return await emitMarkdown(context, template, t, true) }));
     }));
 
-    return markdown + props.filter(p => p && p.length > 0).join("\n");
+    const content = markdown + props.flatMap(p => p).filter(p => p && p.length > 0).join("\n");
+    return content;
 
   } else {
     // return root
@@ -47,7 +48,7 @@ const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
 }
 
 const renderType = (inline: boolean) => (prop: PropertyNode): string => {
-  const text = `${prop.typeName}${prop.isCollection ? " Collection" : ""}`.split(" | ").join(", ");
+  const text = `${prop.typeName}${prop.isCollection ? " Collection" : ""}`.replaceAll(" | ", ", ");
   if (prop.kind !== "Scalar" && !prop.typeName.includes("unknown") && !prop.typeName.includes('"')) {
     if (inline) {
       return `[${text}](#${typeLink(prop.typeName)})`

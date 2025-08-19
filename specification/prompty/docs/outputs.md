@@ -14,6 +14,7 @@ Each output property can be a simple type, an array, or an object.
 | required |  boolean | Whether the output property is required |
 
 
+
 # ArrayOutput
 
 Represents an array output property.
@@ -28,6 +29,7 @@ This extends the base Output model to represent an array of items.
 | items |  [Output](#output) | The type of items contained in the array |
 
 
+
 # ObjectOutput
 
 Represents an object output property.
@@ -40,4 +42,5 @@ This extends the base Output model to represent a structured object.
 | ---- | ---- | ----------- |
 | type |  &quot;object&quot; |  |
 | properties |  [Output Collection](#output) | The properties contained in the object |
+
 

@@ -1,13 +1,9 @@
-{%- macro heading(title, depth=0) -%}
-#{% for i in range(0, depth) -%}#{%- endfor %} {{title}}
-{%- endmacro -%}
-
-{{ heading(node.typeName, 0) }}
+# {{ node.typeName }}
 
 {{ node.description }}
 {% if node.properties.length > 0 %}
 
-{{ heading('Properties', 1) }}
+## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -15,3 +11,4 @@
 | {{ prop.name }} |  {{ renderType(prop) }} | {{ prop.description }} |
 {% endfor -%}
 {% endif %}
+

@@ -26,6 +26,7 @@ template:
 | strict |  boolean | Whether the template can emit structural text for parsing output |
 | options |  [Options](#options) | Additional options for the template engine |
 
+
 # Options
 
 Generic options available for certain models, configurations, or tools.
@@ -39,4 +40,5 @@ options:
   timeout: 5000
   retryAttempts: 3
  ```
+
 

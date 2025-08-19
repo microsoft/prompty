@@ -12,6 +12,7 @@ Model for defining the structure and behavior of AI agents.
 | connection |  [Connection](#connection) | The connection configuration for the model |
 | options |  [Options](#options) | Additional options for model execution |
 
+
 # Connection
 
 Model for defining the connection configuration for AI agents.
@@ -23,6 +24,7 @@ Model for defining the connection configuration for AI agents.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type |  string | The type of connection used to tell the runtime how to load and execute the agent |
+
 
 
 # Options
@@ -38,4 +40,5 @@ options:
   timeout: 5000
   retryAttempts: 3
  ```
+
 

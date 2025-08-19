@@ -12,6 +12,7 @@ Represents a tool that can be used in prompts.
 | description |  string | A short description of the tool for metadata purposes |
 
 
+
 # FunctionTool
 
 Represents a local function tool.
@@ -22,9 +23,10 @@ Represents a local function tool.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type |  &quot;function&quot; | The type identifier for function tools |
-| parameters |  [ToolParameter Collection](#toolparameter) | Parameters accepted by the function tool |
+| parameters |  [Parameter Collection](#parameter) | Parameters accepted by the function tool |
 
-# ToolParameter
+
+# Parameter
 
 Represents a parameter for a tool.
 
@@ -38,6 +40,35 @@ Represents a parameter for a tool.
 | description |  string | A short description of the property |
 | required |  boolean | Whether the tool parameter is required |
 | enum |  unknown[] | Allowed enumeration values for the parameter |
+
+
+
+# ObjectParameter
+
+Represents an object parameter for a tool.
+
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type |  &quot;object&quot; |  |
+| properties |  [Parameter Collection](#parameter) | The properties of the object parameter |
+
+
+
+# ArrayParameter
+
+Represents an array parameter for a tool.
+
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type |  &quot;array&quot; |  |
+| items |  [Parameter](#parameter) | The type of items contained in the array |
+
 
 
 # ServerTool
@@ -56,6 +87,7 @@ Server tools can be used to offload heavy processing from client applications
 | type |  string | The type identifier for server tools |
 | options |  [Options](#options) | Configuration options for the server tool |
 
+
 # Options
 
 Generic options available for certain models, configurations, or tools.
@@ -69,4 +101,5 @@ options:
   timeout: 5000
   retryAttempts: 3
  ```
+
 

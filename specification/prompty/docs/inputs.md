@@ -27,6 +27,7 @@ inputs:
 | sample |  unknown | A sample value of the input for examples and tooling |
 | binding |  [Binding](#binding) | Tool binding information if using property for tool calling |
 
+
 # Binding
 
 This allows for inputs to be bound to tool parameters.
@@ -40,4 +41,5 @@ So it can participate in the tool&#39;s execution context as passed in parameter
 | ---- | ---- | ----------- |
 | tool |  string | The name of the tool to bind the input to |
 | argument |  string | The name of the argument in the tool&#39;s parameter list |
+
 
