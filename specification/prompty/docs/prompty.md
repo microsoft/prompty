@@ -19,9 +19,11 @@ metadata:
     - jietong
 
 model:
-  api: chat
-  connection:
-    azure_deployment: gpt-35-turbo
+ id: gpt-35-turbo
+ connection:
+   provider: azure
+   type: chat
+   endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 inputs:
   firstName:
@@ -61,9 +63,11 @@ metadata:
     - jietong
 
 model:
-  api: chat
-  connection:
-    azure_deployment: gpt-35-turbo
+ id: gpt-35-turbo
+ connection:
+   provider: azure
+   type: chat
+   endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 inputs:
   firstName:
