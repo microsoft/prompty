@@ -1,6 +1,32 @@
 # Model
 
 Model for defining the structure and behavior of AI agents.
+Yaml Example:
+```yaml
+name: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+model:
+  id: gpt-35-turbo
+  connection:
+    provider: azure
+    type: chat
+    endpoint: https://{your-custom-endpoint}.openai.azure.com/
+```
+
+A shorthand representation of the model configuration can also be constructed as
+follows:
+```yaml
+name: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+model: gpt-35-turbo
+```
+This will be expanded as follows:
+```yaml
+name: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+model:
+  id: gpt-35-turbo
+```
 
 
 ## Properties
@@ -8,22 +34,24 @@ Model for defining the structure and behavior of AI agents.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id |  string | The unique identifier of the model |
-| api |  string | The API used by the agent (e.g., chat, completion) |
 | connection |  [Connection](#connection) | The connection configuration for the model |
 | options |  [Options](#options) | Additional options for model execution |
 
 
 # Connection
 
-Model for defining the connection configuration for AI agents.
-`type` is a required property here, but this section can accept additional properties as needed.
+Connection configuration for AI agents.
+`provider`, `type`, and `endpoint` are required properties here, 
+but this section can accept additional properties as needed.
 
 
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| provider |  string | The unique provider of the connection |
 | type |  string | The type of connection used to tell the runtime how to load and execute the agent |
+| endpoint |  string | The endpoint URL for the connection |
 
 
 

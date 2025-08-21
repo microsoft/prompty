@@ -1,0 +1,34 @@
+import "../core.tsp";
+import "../tools.tsp";
+
+namespace Prompty.ServerTools {
+  /**
+   * Options for ranking file search results.
+   */
+  model FileSearchRankingOptions {
+    @doc("File search ranker.")
+    ranker: string;
+
+    @doc("Ranker search threshold.")
+    scoreThreshold: float32;
+  }
+
+  /**
+   * Options for file search.
+   */
+  model FileSearchOptions extends Prompty.Core.Options {
+    @doc("The maximum number of search results to return.")
+    maxNumResults?: int32;
+
+    @doc("Options for ranking file search results.")
+    rankingOptions?: FileSearchRankingOptions;
+  }
+
+  model FileSearchTool extends Prompty.Core.Tool {
+    @doc("The type identifier for file search tools")
+    type: "file_search";
+
+    @doc("The options for the file search tool")
+    options: FileSearchOptions;
+  }
+}

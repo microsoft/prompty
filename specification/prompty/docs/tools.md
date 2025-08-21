@@ -39,7 +39,7 @@ Represents a parameter for a tool.
 | type |  &quot;string&quot;, &quot;number&quot;, &quot;array&quot;, &quot;object&quot;, &quot;boolean&quot; | The data type of the tool parameter |
 | description |  string | A short description of the property |
 | required |  boolean | Whether the tool parameter is required |
-| enum |  unknown[] | Allowed enumeration values for the parameter |
+| enum |  unknown Collection | Allowed enumeration values for the parameter |
 
 
 

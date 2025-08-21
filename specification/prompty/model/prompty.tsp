@@ -121,7 +121,7 @@ namespace Prompty.Core {
 
     // model execution
     @doc("Model configuration used for execution")
-    `model`: Model;
+    `model`: Model; //| string;
 
     // Inputs and Outputs
     @doc("Input parameters that participate in template rendering")
