@@ -158,63 +158,68 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
 
     // check for Record/Array types for collections
     // check for Model/Named for single items
-    if (variants && variants.length === 2 && variants.every(v => v.kind === "Model")) {
-      const typeNames = variants.map(v => v.name);
-      if (typeNames.includes("Record") && typeNames.includes("Array")) {
+    if (variants && variants.length === 2) {
+      if (variants.every(v => v.kind === "Model")) {
+        const typeNames = variants.map(v => v.name);
+        if (typeNames.includes("Record") && typeNames.includes("Array")) {
 
-        const recordType = getTemplateType(variants[typeNames.indexOf("Record")]);
-        const arrayType = getTemplateType(variants[typeNames.indexOf("Array")]);
-        if (recordType && arrayType) {
-          const arraySubType = getTemplateType(arrayType);
-          // Named type and record Type need to be the same
-          if (arraySubType && arraySubType.name === recordType.name) {
-            // subtype names
-            const subFullTypeName = getTypeName(arraySubType);
-            const subTypeName = getTypeName(arraySubType, {
-              nameOnly: true,
-              printable: true,
-            });
-            prop.typeName = subTypeName;
-            prop.fullTypeName = subFullTypeName;
-            prop.isCollection = true;
+          const recordType = getTemplateType(variants[typeNames.indexOf("Record")]);
+          const arrayType = getTemplateType(variants[typeNames.indexOf("Array")]);
+          if (recordType && arrayType) {
+            const arraySubType = getTemplateType(arrayType);
+            // Named type and record Type need to be the same
+            if (arraySubType && arraySubType.name === recordType.name) {
+              // subtype names
+              const subFullTypeName = getTypeName(arraySubType);
+              const subTypeName = getTypeName(arraySubType, {
+                nameOnly: true,
+                printable: true,
+              });
+              prop.typeName = subTypeName;
+              prop.fullTypeName = subFullTypeName;
+              prop.isCollection = true;
 
-            if (!visited.has(arraySubType.name)) {
-              const mainType = resolveType(program, arrayType, visited);
-              mainType.typeName = subTypeName;
-              mainType.fullTypeName = subFullTypeName;
-              mainType.description = getDoc(program, arraySubType) || "";
-              visited.add(subTypeName);
-              prop.type = [mainType];
-              if (arraySubType.derivedModels.length > 0) {
-                const derivedTypes = arraySubType.derivedModels.map(m => resolveType(program, m, visited));
-                prop.type.push(...derivedTypes);
+              if (!visited.has(arraySubType.name)) {
+                const mainType = resolveType(program, arrayType, visited);
+                mainType.typeName = subTypeName;
+                mainType.fullTypeName = subFullTypeName;
+                mainType.description = getDoc(program, arraySubType) || "";
+                visited.add(subTypeName);
+                prop.type = [mainType];
+                if (arraySubType.derivedModels.length > 0) {
+                  const derivedTypes = arraySubType.derivedModels.map(m => resolveType(program, m, visited));
+                  prop.type.push(...derivedTypes);
 
-                // add child types
-                mainType.childTypes.push(...derivedTypes.map(d => ({
-                  name: d.typeName,
-                  fullName: d.fullTypeName,
-                })));
+                  // add child types
+                  mainType.childTypes.push(...derivedTypes.map(d => ({
+                    name: d.typeName,
+                    fullName: d.fullTypeName,
+                  })));
+                }
               }
             }
           }
-        }
-      } else {
-        prop.isCollection = false;
-        if (typeNames.includes("Named")) {
-          const namedIdx = typeNames.indexOf("Named");
-          const namedType = getTemplateType(variants[namedIdx]);
-          if (namedType && namedType.name === variants[(namedIdx + 1) % 2].name) {
-            const subFullTypeName = getTypeName(namedType);
-            const subTypeName = getTypeName(namedType, {
-              nameOnly: true,
-              printable: true,
-            });
-            prop.fullTypeName = subFullTypeName;
-            prop.typeName = subTypeName;
+        } else {
+          prop.isCollection = false;
+          if (typeNames.includes("Named")) {
+            const namedIdx = typeNames.indexOf("Named");
+            const namedType = getTemplateType(variants[namedIdx]);
+            if (namedType && namedType.name === variants[(namedIdx + 1) % 2].name) {
+              const subFullTypeName = getTypeName(namedType);
+              const subTypeName = getTypeName(namedType, {
+                nameOnly: true,
+                printable: true,
+              });
+              prop.fullTypeName = subFullTypeName;
+              prop.typeName = subTypeName;
+            }
           }
         }
       }
-    } else {
+    } 
+    // consider fast replacements of Scalars -> Model
+    
+    else {
       prop.isVariant = true;
       prop.variants = variants.map((v: { [key: string]: any }) => {
         return {
