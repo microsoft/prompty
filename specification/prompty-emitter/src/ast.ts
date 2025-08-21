@@ -1,5 +1,11 @@
 import { getDoc, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Type } from "@typespec/compiler";
 
+
+export interface Variant {
+  kind: string;
+  value: string | number | boolean | null;
+}
+
 export class PropertyNode {
   public name: string;
   public kind: string;
@@ -8,6 +14,8 @@ export class PropertyNode {
   public fullTypeName: string;
   public isCollection: boolean = false;
   public isOptional: boolean = false;
+  public isVariant: boolean = false;
+  public variants: Variant[] = [];
   public model?: Type;
   public type: TypeNode[];
 
@@ -30,6 +38,8 @@ export class PropertyNode {
       fullTypeName: this.fullTypeName,
       isOptional: this.isOptional,
       isCollection: this.isCollection,
+      isVariant: this.isVariant,
+      variants: this.variants,
       type: this.type ? this.type.map(t => t.getSanitizedObject()) : [],
     };
   }
@@ -42,6 +52,7 @@ export class TypeNode {
   public kind: string = "";
   public baseType: string = "";
   public fullBaseType: string = "";
+  public childTypes: { name: string; fullName: string }[] = [];
 
   public description: string = "";
   constructor(public model: Type) {
@@ -57,6 +68,7 @@ export class TypeNode {
       fullTypeName: this.fullTypeName,
       baseType: this.baseType,
       fullBaseType: this.fullBaseType,
+      childTypes: this.childTypes,
       description: this.description,
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
@@ -100,7 +112,6 @@ export const resolveType = (program: Program, model: Model, visited: Set<string>
     node.fullBaseType = getTypeName(model.baseModel);
   }
 
-
   if (model.name !== "Named" && model.name !== "Options") {
     visited.add(model.name);
   }
@@ -128,6 +139,17 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   const prop = new PropertyNode(property.name, kind, typeName, description, fullTypeName);
   prop.model = type;
   prop.isOptional = property.optional;
+
+  // TODO: need to account for default values
+
+  // sneaky variant
+  if (typeName.includes('"')) {
+    prop.isVariant = true;
+    prop.variants = [{
+      kind: "String",
+      value: typeName.replace(/"/g, ''),
+    }];
+  }
 
   if (type.kind === "Model" && !visited.has(type.name) && !typeName.includes("unknown") && !typeName.includes('"')) {
     prop.type = [resolveType(program, type, visited)];
@@ -166,6 +188,12 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
               if (arraySubType.derivedModels.length > 0) {
                 const derivedTypes = arraySubType.derivedModels.map(m => resolveType(program, m, visited));
                 prop.type.push(...derivedTypes);
+
+                // add child types
+                mainType.childTypes.push(...derivedTypes.map(d => ({
+                  name: d.typeName,
+                  fullName: d.fullTypeName,
+                })));
               }
             }
           }
@@ -186,6 +214,14 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
           }
         }
       }
+    } else {
+      prop.isVariant = true;
+      prop.variants = variants.map((v: { [key: string]: any }) => {
+        return {
+          kind: v.kind,
+          value: v.value,
+        };
+      });
     }
   } else if (typeName.includes("unknown")) {
     prop.isCollection = typeName.includes("[") && typeName.includes("]");

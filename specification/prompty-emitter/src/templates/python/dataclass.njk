@@ -6,15 +6,13 @@
 ##########################################
 
 {%- if typingIncludes and typingIncludes.length > 0 %}
-from typing import {% for item in typingIncludes -%}{{ comma() }} {{ item }}{% endfor %}
+from typing import{% for item in typingIncludes -%}{{ comma() }} {{ item }}{% endfor %}
 {%- endif %}
 from dataclasses import dataclass, field
-
-{% for prop in node.properties -%}
-{%- if prop.kind != 'Scalar' -%}
-from ._{{ formatFile(prop.typeName) }} import {{ prop.typeName }}
-{% endif -%}
+{%- for import in imports %}
+{{ import }}
 {%- endfor %}
+
 
 @dataclass
 class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}){%- endif -%}:

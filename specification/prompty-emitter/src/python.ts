@@ -16,53 +16,77 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/python'));
   const classTemplate = env.getTemplate('dataclass.njk', true);
+  const initTemplate = env.getTemplate('init.njk', true);
 
   const types = Array.from(enumerateTypes(node));
 
+  const init = initTemplate.render({
+    types: types,
+    formatFile: typeLink,
+  });
+
+  await emitPythonFile(context, node, init, `__init__.py`);
+
   for (const type of types) {
     const includes: string[] = [];
-    if(type.properties.some(prop => prop.typeName.includes("|"))) {
+    if (type.properties.some(prop => prop.isVariant)) {
       includes.push("Literal");
     }
-    if(type.properties.some(prop => prop.isOptional)) {
+    if (type.properties.some(prop => prop.isOptional)) {
       includes.push("Optional");
+    }
+    if (type.properties.some(prop => prop.typeName.includes("unknown"))) {
+      includes.push("Any");
     }
     const python = classTemplate.render({
       node: type,
+      imports: getImports(type),
       typingIncludes: includes,
       formatFile: typeLink,
-      renderType: renderType,
-      renderDefault: renderDefault,
+      renderType: renderType(types),
+      renderDefault: renderDefault(types),
     });
 
-    await emitPythonFile(context, type.typeName, python);
+    await emitPythonFile(context, type, python, `_${typeLink(type.typeName)}.py`);
   }
 }
 
 const typeLink = (name: string) => name.toLowerCase().replaceAll(' ', '-');
 
 
-const renderType = (prop: PropertyNode): string => {
+const getImports = (node: TypeNode): string[] => {
+  const imports: string[] = [];
+  if (node.baseType.length > 0) {
+    imports.push(node.baseType);
+  }
+  for (const prop of node.properties) {
+    if (prop.kind !== "Scalar" && !prop.isVariant && !prop.typeName.includes("unknown") && !imports.includes(prop.typeName)) {
+      imports.push(prop.typeName);
+    }
+  }
+  return imports.map(name => `from ._${typeLink(name)} import ${name}`);
+};
+
+const renderType = (types: TypeNode[]) => (prop: PropertyNode): string => {
   if (prop.kind === "Scalar") {
     return renderOptionalList(`${pythonTypeMapper[prop.typeName]}`, prop.isCollection, prop.isOptional);
   } else {
-    if (prop.typeName.includes('"')) {
-      return `Literal[${prop.typeName.replaceAll(" | ", ", ")}]`;
+    if (prop.isVariant) {
+      return `Literal[${prop.variants.map(v => v.kind === "String" ? `"${v.value}"` : v.value).join(", ")}]`;
     } else {
       return renderOptionalList(prop.typeName, prop.isCollection, prop.isOptional);
     }
   }
 };
 
-const renderDefault = (prop: PropertyNode): string => {
+const renderDefault = (types: TypeNode[]) => (prop: PropertyNode): string => {
   if (prop.isCollection) {
     return ' = field(default_factory=list)';
   } else if (prop.kind === "Intrinsic") {
     return ' = field(default=None)';
   } else if (prop.kind === "Model" || prop.kind === "Union") {
-    if (prop.typeName.includes("|")) {
-      const props = prop.typeName.split("|");
-      return ` = field(default=${props[0].trim()})`;
+    if (prop.isVariant) {
+      return ` = field(default=${prop.variants[0].kind === "String" ? `"${prop.variants[0].value}"` : prop.variants[0].value})`;
     } else {
       return ` = field(default_factory=${prop.typeName})`;
     }
@@ -84,9 +108,14 @@ const renderOptionalList = (name: string, isCollection: boolean, isOptional: boo
   return `${optional}${collection}${name.includes("unknown") ? "Any" : name}${collection ? `]` : ``}${optional ? `]` : ``}`;
 };
 
-const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, python: string) => {
+const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string) => {
+  const typePath = type.fullTypeName.split(".").map(part => typeLink(part));
+  // remove typename
+  typePath.pop();
+  // replace typename with file
+  typePath.push(filename);
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "python", `_${typeLink(name)}.py`),
+    path: resolvePath(context.emitterOutputDir, "python", ...typePath),
     content: python,
   });
 }
