@@ -63,6 +63,26 @@ export class TypeNode {
   }
 }
 
+export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = new Set()): IterableIterator<TypeNode> {
+  for (const prop of node.properties) {
+    if (prop.type && prop.type.length > 0) {
+      for (const t of prop.type) {
+        for (const subNode of enumerateTypes(t, visited)) {
+          if (!visited.has(subNode.typeName)) {
+            yield subNode;
+            visited.add(subNode.typeName);
+          }
+        }
+      }
+    }
+  }
+
+  if (!visited.has(node.typeName)) {
+    yield node;
+    visited.add(node.typeName);
+  }
+};
+
 export const resolveType = (program: Program, model: Model, visited: Set<string>): TypeNode => {
   const node = new TypeNode(model);
   node.description = getDoc(program, model) || "";
@@ -72,7 +92,7 @@ export const resolveType = (program: Program, model: Model, visited: Set<string>
   });
   node.fullTypeName = getTypeName(model);
   node.kind = model.kind;
-  if(model.baseModel) {
+  if (model.baseModel) {
     node.baseType = getTypeName(model.baseModel, {
       nameOnly: true,
       printable: true,

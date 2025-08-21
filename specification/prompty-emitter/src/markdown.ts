@@ -7,7 +7,7 @@ import * as nunjucks from "nunjucks";
 
 export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
   // set up template environment
-  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates'));
+  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/markdown'));
   const template = env.getTemplate('markdown.njk', true);
 
   emitMarkdown(context, template, node, false);
