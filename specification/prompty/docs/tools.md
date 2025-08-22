@@ -10,6 +10,20 @@ Represents a tool that can be used in prompts.
 | name |  string | The name of the item |
 | type |  string | The type identifier for the tool |
 | description |  string | A short description of the tool for metadata purposes |
+| binding |  [Binding Collection](#binding) | Tool argument bindings to input properties |
+
+
+# Binding
+
+Represents a binding between an input property and a tool parameter.
+
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name |  string | The name of the item |
+| input |  string | The input property that will be bound to the tool parameter argument |
 
 
 
@@ -22,7 +36,7 @@ Represents a local function tool.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type |  &quot;function&quot; | The type identifier for function tools |
+| type |  string | The type identifier for function tools |
 | parameters |  [Parameter Collection](#parameter) | Parameters accepted by the function tool |
 
 

@@ -35,14 +35,13 @@ model:
 | ---- | ---- | ----------- |
 | id |  string | The unique identifier of the model |
 | connection |  [Connection](#connection) | The connection configuration for the model |
-| options |  [Options](#options) | Additional options for model execution |
 
 
 # Connection
 
 Connection configuration for AI agents.
-`provider`, `type`, and `endpoint` are required properties here, 
-but this section can accept additional properties as needed.
+`provider`, `type`, and `endpoint` are required properties here,
+but this section can accept additional via options.
 
 
 ## Properties
@@ -52,7 +51,7 @@ but this section can accept additional properties as needed.
 | provider |  string | The unique provider of the connection |
 | type |  string | The type of connection used to tell the runtime how to load and execute the agent |
 | endpoint |  string | The endpoint URL for the connection |
-
+| options |  [Options](#options) | Additional options for model execution |
 
 
 # Options

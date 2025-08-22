@@ -25,21 +25,5 @@ inputs:
 | strict |  boolean | Whether the input property can emit structural text when parsing output |
 | default |  unknown | The default value of the input |
 | sample |  unknown | A sample value of the input for examples and tooling |
-| binding |  [Binding](#binding) | Tool binding information if using property for tool calling |
-
-
-# Binding
-
-This allows for inputs to be bound to tool parameters.
-It is used to specify which input property corresponds to which tool parameter
-So it can participate in the tool&#39;s execution context as passed in parameters.
-
-
-## Properties
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tool |  string | The name of the tool to bind the input to |
-| argument |  string | The name of the argument in the tool&#39;s parameter list |
 
 
