@@ -3,6 +3,7 @@ import { resolveType } from "./ast.js";
 import { PromptyEmitterOptions } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
 import { generatePython } from "./python.js";
+import { generateCsharp } from "./csharp.js";
 
 
 export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
@@ -24,6 +25,8 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   await generateMarkdown(context, ast);
 
   await generatePython(context, ast);
+
+  await generateCsharp(context, ast);
 
   await emitFile(context.program, {
     path: resolvePath(context.emitterOutputDir, "json", "output.json"),

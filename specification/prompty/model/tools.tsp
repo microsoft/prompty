@@ -2,6 +2,16 @@ import "./core.tsp";
 
 namespace Prompty.Core {
   /**
+   * Represents a binding between an input property and a tool parameter.
+   */
+  model Binding {
+    @doc("The input property that will be bound to the tool parameter argument")
+    input: string;
+  }
+
+  alias Bindings = Record<Binding> | Named<Binding>[];
+
+  /**
    * Represents a tool that can be used in prompts.
    */
   model Tool {
@@ -10,6 +20,9 @@ namespace Prompty.Core {
 
     @doc("A short description of the tool for metadata purposes")
     description?: string = "";
+
+    @doc("Tool argument bindings to input properties")
+    binding?: Bindings = #[];
   }
 
   /**
@@ -56,7 +69,7 @@ namespace Prompty.Core {
    */
   model FunctionTool extends Tool {
     @doc("The type identifier for function tools")
-    type: "function";
+    type: string = "function";
 
     @doc("Parameters accepted by the function tool")
     parameters: Parameters = #[];

@@ -23,13 +23,13 @@ class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}
     Attributes
     ----------
     {% for prop in node.properties -%}
-    {{ prop.name }} : {{ renderType(prop) | safe }}
+    {{ prop.name }} : {{ renderType(node, prop) | safe }}
         {{ prop.description }}
     {% endfor %}
     """ 
 
     {% for prop in node.properties -%}
-    {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
+    {{ prop.name }}: {{ renderType(node, prop) | safe }}{{ renderDefault(node, prop) | safe }}
     {% endfor -%}
     {% else %}
     """

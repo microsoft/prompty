@@ -3,8 +3,8 @@ import "./core.tsp";
 namespace Prompty.Core {
   /**
    * Connection configuration for AI agents.
-   * `provider`, `type`, and `endpoint` are required properties here, 
-   * but this section can accept additional properties as needed.
+   * `provider`, `type`, and `endpoint` are required properties here,
+   * but this section can accept additional via options.
    */
   model Connection {
     @doc("The unique provider of the connection")
@@ -16,7 +16,8 @@ namespace Prompty.Core {
     @doc("The endpoint URL for the connection")
     endpoint: string;
 
-    ...Options;
+    @doc("Additional options for model execution")
+    options?: Options = #{};
   }
 
   /**
@@ -54,8 +55,5 @@ namespace Prompty.Core {
 
     @doc("The connection configuration for the model")
     connection?: Connection;
-
-    @doc("Additional options for model execution")
-    options?: Options = #{};
   }
 }

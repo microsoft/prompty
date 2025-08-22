@@ -1,0 +1,18 @@
+
+namespace {{ namespace }} {
+  public partial class {{ node.typeName }}{% if node.baseType.length > 0 -%} : {{ node.baseType }}{% endif %}
+  {
+    public {{ node.typeName }}() 
+    {
+    }
+
+    public {{ node.typeName }}(Dictionary<string, object> init) : this()
+    {
+      // loader logic here
+    }
+
+    {% for prop in node.properties -%}
+    public {{ renderType(prop) }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
+    {% endfor %}
+  }
+}

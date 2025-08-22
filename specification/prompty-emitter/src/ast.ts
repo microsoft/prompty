@@ -15,6 +15,7 @@ export class PropertyNode {
   public isCollection: boolean = false;
   public isOptional: boolean = false;
   public isVariant: boolean = false;
+  public defaultValue: string | number | boolean | null = null;
   public variants: Variant[] = [];
   public model?: Type;
   public type: TypeNode[];
@@ -53,6 +54,8 @@ export class TypeNode {
   public baseType: string = "";
   public fullBaseType: string = "";
   public childTypes: { name: string; fullName: string }[] = [];
+  public hasSimpleConstructor: boolean = false;
+  public constructorTypes: string[] = [];
 
   public description: string = "";
   constructor(public model: Type) {
@@ -140,10 +143,25 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   prop.model = type;
   prop.isOptional = property.optional;
 
-  // TODO: need to account for default values
+  if (property.defaultValue) {
+    // only handle these things
+    switch (property.defaultValue.valueKind) {
+      case "StringValue":
+        prop.defaultValue = property.defaultValue.value;
+        break;
+      case "BooleanValue":
+        prop.defaultValue = property.defaultValue.value;
+        break;
+      case "NumericValue":
+        prop.defaultValue = property.defaultValue.value.asNumber();
+        break;
+      default:
+        prop.defaultValue = null;
+    }
+  }
 
-  // sneaky variant
-  if (typeName.includes('"')) {
+  // sneaky default type
+  if (prop.kind !== "Union" && typeName.includes('"')) {
     prop.isVariant = true;
     prop.variants = [{
       kind: "String",
@@ -215,10 +233,24 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
             }
           }
         }
+      } else if (variants.filter(v => v.kind === "Model").length === 1 && variants.filter(v => v.kind === "Scalar").length === 1) {
+        // if only one Model, then we can use that as the type
+        const modelType = variants.find(v => v.kind === "Model");
+        if (modelType) {
+          const subFullTypeName = getTypeName(modelType);
+          const subTypeName = getTypeName(modelType, {
+            nameOnly: true,
+            printable: true,
+          });
+          prop.fullTypeName = subFullTypeName;
+          prop.typeName = subTypeName;
+          const typeNode = resolveType(program, modelType, visited);
+          typeNode.hasSimpleConstructor = true;
+          typeNode.constructorTypes.push(getTypeName(variants.filter(v => v.kind === "Scalar")[0]));
+          prop.type = [typeNode];
+        }
       }
-    } 
-    // consider fast replacements of Scalars -> Model
-    
+    }
     else {
       prop.isVariant = true;
       prop.variants = variants.map((v: { [key: string]: any }) => {

@@ -67,19 +67,37 @@ const getImports = (node: TypeNode): string[] => {
   return imports.map(name => `from ._${typeLink(name)} import ${name}`);
 };
 
-const renderType = (types: TypeNode[]) => (prop: PropertyNode): string => {
+const renderType = (types: TypeNode[]) => (node: TypeNode, prop: PropertyNode): string => {
   if (prop.kind === "Scalar") {
     return renderOptionalList(`${pythonTypeMapper[prop.typeName]}`, prop.isCollection, prop.isOptional);
   } else {
     if (prop.isVariant) {
-      return `Literal[${prop.variants.map(v => v.kind === "String" ? `"${v.value}"` : v.value).join(", ")}]`;
+      if (prop.variants.length === 1) {
+        // if single variant and has base type, should override
+        const parent = types.find(t => t.typeName === node.baseType);
+        if (parent) {
+          // get same parent prop
+          const parentProp = parent.properties.find(p => p.name === prop.name);
+          const parentVariants = parentProp?.variants || [];
+          if (parentVariants.length === 0) {
+            return renderOptionalList(pythonTypeMapper[prop.variants[0].kind.toLowerCase()], prop.isCollection, prop.isOptional);
+          } else {
+            return `Literal[${parentVariants.map(v => v.kind === "String" ? `"${v.value}"` : v.value).join(", ")}]`;
+          }
+        } else {
+          return renderOptionalList(pythonTypeMapper[prop.variants[0].kind.toLowerCase()], prop.isCollection, prop.isOptional);
+        }
+      } else {
+        // full variant listing
+        return `Literal[${prop.variants.map(v => v.kind === "String" ? `"${v.value}"` : v.value).join(", ")}]`;
+      }
     } else {
       return renderOptionalList(prop.typeName, prop.isCollection, prop.isOptional);
     }
   }
 };
 
-const renderDefault = (types: TypeNode[]) => (prop: PropertyNode): string => {
+const renderDefault = (types: TypeNode[]) => (node: TypeNode, prop: PropertyNode): string => {
   if (prop.isCollection) {
     return ' = field(default_factory=list)';
   } else if (prop.kind === "Intrinsic") {
@@ -92,12 +110,14 @@ const renderDefault = (types: TypeNode[]) => (prop: PropertyNode): string => {
     }
   } else if (prop.kind === "Scalar") {
     if (prop.typeName === "string") {
-      return ' = field(default="")';
+      return ` = field(default="${prop.defaultValue || ''}")`;
     } else if (prop.typeName === "number") {
-      return ' = field(default=0)';
+      return ` = field(default=${prop.defaultValue || 0})`;
     } else if (prop.typeName === "boolean") {
-      return ' = field(default=False)';
+      return ` = field(default=${prop.defaultValue ? "True" : "False"})`;
     }
+  } else if (prop.isVariant) {
+    return ` = field(default=${prop.variants[0].kind === "String" ? `"${prop.variants[0].value}"` : prop.variants[0].value})`;
   }
   return "";
 };
