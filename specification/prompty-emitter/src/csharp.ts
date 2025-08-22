@@ -18,6 +18,13 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/csharp'));
   const classTemplate = env.getTemplate('dataclass.njk', true);
+  const utilsTemplate = env.getTemplate('utils.njk', true);
+
+  const utils = utilsTemplate.render({
+    namespace: getNamespace(node),
+  });
+
+  await emitCsharpFile(context, node, utils, "Utils.cs");
 
   const types = Array.from(enumerateTypes(node));
 
@@ -33,6 +40,10 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
     await emitCsharpFile(context, type, csharp, `${type.typeName}.cs`);
   }
 }
+
+const isClass = (node: TypeNode): boolean => {
+  return node.kind === "Model" && node.properties.length > 0;
+};
 
 const renderPropertyName = (prop: PropertyNode): string => {
   // convert snake_case to PascalCase

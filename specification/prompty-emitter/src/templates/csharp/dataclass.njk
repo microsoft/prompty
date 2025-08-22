@@ -1,3 +1,4 @@
+using static {{namespace}}.Utils;
 
 namespace {{ namespace }} {
   public partial class {{ node.typeName }}{% if node.baseType.length > 0 -%} : {{ node.baseType }}{% endif %}
@@ -6,9 +7,11 @@ namespace {{ namespace }} {
     {
     }
 
-    public {{ node.typeName }}(Dictionary<string, object> init) : this()
+    internal {{ node.typeName }}(Dictionary<string, object> init) : this()
     {
-      // loader logic here
+      {% for prop in node.properties -%}
+      {{ renderPropertyName(prop) }} = init.GetValueOrDefault<{{ renderType(prop) }}>("{{prop.name}}");
+      {% endfor %}
     }
 
     {% for prop in node.properties -%}
