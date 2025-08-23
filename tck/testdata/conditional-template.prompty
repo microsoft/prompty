@@ -1,0 +1,37 @@
+---
+name: conditional-template
+description: Test conditional rendering
+version: 1.0
+model:
+  api: openai
+  configuration:
+    type: azure_openai
+    azure_endpoint: https://api.openai.com/v1
+  parameters:
+    model: gpt-4
+    max_tokens: 200
+    temperature: 0.3
+inputs:
+  show_details:
+    type: boolean
+    description: Whether to show detailed information
+  user_name:
+    type: string
+    description: Name of the user
+  items:
+    type: array
+    description: List of items
+template:
+  type: jinja2
+  parser: prompty
+---
+Hello {{user_name}}!
+
+{% if show_details %}
+Detailed view:
+{% for item in items %}
+- {{item}}
+{% endfor %}
+{% else %}
+Simple view: {{items|length}} items
+{% endif %}

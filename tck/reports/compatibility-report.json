@@ -1,0 +1,248 @@
+[
+  {
+    "test_id": "basic-parsing",
+    "compatible": false,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [
+      {
+        "type": "result_status",
+        "runtime1": "python",
+        "runtime2": "csharp",
+        "runtime1_status": "pass",
+        "runtime2_status": "fail"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "test_id": "basic-rendering",
+    "compatible": true,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [],
+    "notes": null
+  },
+  {
+    "test_id": "complex-template",
+    "compatible": true,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [],
+    "notes": null
+  },
+  {
+    "test_id": "conditional-rendering",
+    "compatible": true,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [],
+    "notes": null
+  },
+  {
+    "test_id": "env-var-resolution",
+    "compatible": true,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [],
+    "notes": null
+  },
+  {
+    "test_id": "function-calling-parsing",
+    "compatible": false,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [
+      {
+        "path": "version",
+        "type": "missing_key",
+        "runtime1_value": null,
+        "runtime2_value": "1.0",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "name",
+        "type": "missing_key",
+        "runtime1_value": null,
+        "runtime2_value": "Function Calling Test",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "metadata",
+        "type": "extra_key",
+        "runtime1_value": {
+          "authors": [],
+          "description": "Test function calling capabilities",
+          "name": "Function Calling Test",
+          "tags": [],
+          "version": "1.0"
+        },
+        "runtime2_value": null,
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "frontmatter",
+        "type": "extra_key",
+        "runtime1_value": {
+          "description": "Test function calling capabilities",
+          "inputs": {
+            "question": {
+              "required": true,
+              "type": "string"
+            }
+          },
+          "model": {
+            "api": "chat",
+            "configuration": {
+              "model": "gpt-4",
+              "type": "openai"
+            },
+            "parameters": {
+              "max_tokens": 300,
+              "temperature": 0.0,
+              "tools": [
+                {
+                  "function": {
+                    "description": "Get current weather for a location",
+                    "name": "get_weather",
+                    "parameters": {
+                      "properties": {
+                        "location": {
+                          "description": "City name",
+                          "type": "string"
+                        },
+                        "unit": {
+                          "default": "celsius",
+                          "enum": [
+                            "celsius",
+                            "fahrenheit"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "location"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "function"
+                }
+              ]
+            }
+          },
+          "name": "Function Calling Test",
+          "sample": {
+            "question": "What's the weather like in Paris?"
+          },
+          "version": "1.0"
+        },
+        "runtime2_value": null,
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "sample",
+        "type": "extra_key",
+        "runtime1_value": {
+          "question": "What's the weather like in Paris?"
+        },
+        "runtime2_value": null,
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "template.format",
+        "type": "value_difference",
+        "runtime1_value": "jinja2",
+        "runtime2_value": "liquid",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "raw_frontmatter",
+        "type": "extra_key",
+        "runtime1_value": "\nname: \"Function Calling Test\"\ndescription: \"Test function calling capabilities\"\nversion: \"1.0\"\nmodel:\n  api: chat\n  configuration:\n    type: openai\n    model: gpt-4\n  parameters:\n    max_tokens: 300\n    temperature: 0.0\n    tools:\n      - type: function\n        function:\n          name: get_weather\n          description: Get current weather for a location\n          parameters:\n            type: object\n            properties:\n              location:\n                type: string\n                description: City name\n              unit:\n                type: string\n                enum: [\"celsius\", \"fahrenheit\"]\n                default: \"celsius\"\n            required: [\"location\"]\nsample:\n  question: \"What's the weather like in Paris?\"\ninputs:\n  question:\n    type: string\n    required: true\n",
+        "runtime2_value": null,
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "description",
+        "type": "missing_key",
+        "runtime1_value": null,
+        "runtime2_value": "Test function calling capabilities",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "model.configuration.type",
+        "type": "extra_key",
+        "runtime1_value": "openai",
+        "runtime2_value": null,
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "model.parameters.max_tokens",
+        "type": "value_difference",
+        "runtime1_value": 300,
+        "runtime2_value": "300",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      },
+      {
+        "path": "model.parameters.temperature",
+        "type": "value_difference",
+        "runtime1_value": 0.0,
+        "runtime2_value": "0.0",
+        "runtime1": "python",
+        "runtime2": "csharp"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "test_id": "invalid-yaml",
+    "compatible": false,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [
+      {
+        "type": "result_status",
+        "runtime1": "python",
+        "runtime2": "csharp",
+        "runtime1_status": "pass",
+        "runtime2_status": "error"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "test_id": "missing-required-input",
+    "compatible": true,
+    "runtimes_tested": [
+      "python",
+      "csharp"
+    ],
+    "differences": [],
+    "notes": null
+  }
+]

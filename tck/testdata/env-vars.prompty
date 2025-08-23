@@ -1,0 +1,34 @@
+---
+name: "Environment Variable Test"
+description: "Test environment variable resolution"
+version: "1.0"
+authors:
+  - "tck-team"
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT:gpt-35-turbo}
+    api_version: "2024-07-01-preview"
+  parameters:
+    max_tokens: ${env:MAX_TOKENS:150}
+    temperature: 0.0
+sample:
+  context: "The weather is sunny today."
+  question: "What's the weather like?"
+inputs:
+  context:
+    type: string
+    description: "Context information"
+  question:
+    type: string
+    description: "User's question"
+---
+system:
+You are a helpful assistant. Use the following context to answer questions.
+
+Context: {{context}}
+
+user:
+{{question}}

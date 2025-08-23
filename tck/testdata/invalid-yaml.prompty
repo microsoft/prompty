@@ -1,0 +1,8 @@
+---
+name: "Invalid YAML Test"
+description: "Test with malformed YAML frontmatter"
+invalid_yaml: [unclosed array
+model:
+  api: chat
+---
+This should fail to parse.

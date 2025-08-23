@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "name": "Basic Compatibility Test",
+    "description": "Simple test for basic functionality",
+    "version": "1.0",
+    "authors": ["tck-team"],
+    "tags": ["basic", "compatibility"]
+  },
+  "model": {
+    "api": "chat",
+    "configuration": {
+      "type": "openai",
+      "model": "gpt-3.5-turbo"
+    },
+    "parameters": {
+      "max_tokens": 100,
+      "temperature": 0.0
+    },
+    "response": "first"
+  },
+  "inputs": {
+    "name": {
+      "type": "string",
+      "description": "User's name",
+      "required": true
+    },
+    "age": {
+      "type": "number", 
+      "description": "User's age",
+      "default": 25
+    },
+    "question": {
+      "type": "string",
+      "description": "Question to ask",
+      "required": true
+    }
+  },
+  "sample": {
+    "name": "Alice",
+    "age": 30,
+    "question": "What is the meaning of life?"
+  },
+  "template": {
+    "format": "jinja2",
+    "parser": "prompty"
+  },
+  "content": "system:\nYou are a helpful assistant. Answer questions for {{name}} who is {{age}} years old.\n\nuser:\n{{question}}"
+}

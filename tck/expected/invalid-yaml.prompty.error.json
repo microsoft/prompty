@@ -1,0 +1,10 @@
+{
+  "expected_error": "YAML parsing error",
+  "expected_error_type": "ParseError",
+  "error_message_contains": [
+    "yaml",
+    "invalid",
+    "parse"
+  ],
+  "should_fail": true
+}

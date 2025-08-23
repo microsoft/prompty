@@ -1,0 +1,29 @@
+# Prompty TCK Tools Requirements
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+pyyaml>=6.0
+jinja2>=3.1.0
+jsonschema>=4.17.0
+
+# Data analysis and reporting
+pandas>=1.5.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# CLI and utilities
+click>=8.1.0
+rich>=13.0.0
+tabulate>=0.9.0
+
+# Testing and validation
+requests>=2.28.0
+jsonpath-ng>=1.5.0
+
+# Optional: Performance monitoring
+psutil>=5.9.0
+memory-profiler>=0.60.0
+
+# Optional: Advanced reporting
+plotly>=5.11.0
+jinja2>=3.1.0

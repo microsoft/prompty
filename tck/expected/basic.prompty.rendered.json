@@ -1,0 +1,10 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant. Answer questions for Alice who is 30 years old."
+  },
+  {
+    "role": "user", 
+    "content": "What is the meaning of life?"
+  }
+]
