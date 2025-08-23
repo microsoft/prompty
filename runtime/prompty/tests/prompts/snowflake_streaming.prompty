@@ -1,0 +1,31 @@
+---
+name: Snowflake Cortex Streaming Test
+description: Test Snowflake Cortex with streaming parameters
+authors:
+  - prompty-team
+model:
+  api: chat
+  configuration:
+    type: snowflake_cortex
+    account: test-account.snowflakecomputing.com
+    user: test-user
+    password: test-password
+    warehouse: test-warehouse
+    database: test-database
+    schema: PUBLIC
+    model: llama3.1-8b
+  parameters:
+    temperature: 0.7
+    max_tokens: 500
+    stream: true
+sample:
+  firstName: Alice
+  lastName: Johnson
+  question: What are the benefits of using Snowflake for data analytics?
+---
+
+# System
+You are a helpful assistant that explains technical concepts clearly and concisely.
+
+# User
+Hello {{firstName}} {{lastName}}! {{question}}
