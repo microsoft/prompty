@@ -1,31 +1,196 @@
-import { getDoc, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Type } from "@typespec/compiler";
+import { getDiscriminator, getDoc, getEntityName, getNamespaceFullName, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Type } from "@typespec/compiler";
 
+
+export interface TypeName {
+  namespace: string;
+  typeName: string;
+  fullTypeName: string
+}
+
+const getModelType = (model: Model, rootNamespace: string = "Prompty"): TypeName => {
+  let namespace = model.namespace ? getNamespaceFullName(model.namespace) : "";
+  if (namespace.includes(".")) {
+    const parts = namespace.split(".");
+    parts[0] = rootNamespace.trim();
+    namespace = parts.join(".");
+  }
+  return {
+    namespace: namespace === "" ? rootNamespace : namespace,
+    typeName: getTypeName(model, {
+      nameOnly: true,
+      printable: true,
+    }),
+    fullTypeName: getEntityName(model),
+  };
+};
+
+
+export interface Alternative {
+  simple: any;
+  complex: {
+    [key: string]: any;
+  };
+}
+
+
+export class TypeNode {
+  public name: TypeName;
+  public description: string;
+  public base: { namespace: string; typeName: string; fullTypeName: string } | null = null;
+  public childTypes: { name: string; fullName: string; discriminator: string; value: string | number | boolean | null }[] = [];
+  public alternatives: Alternative[] = [];
+  public properties: PropertyNode[] = [];
+
+  constructor(public model: Model, description: string) {
+    this.model = model;
+    this.name = getModelType(model);
+    this.description = description;
+  }
+
+  getSanitizedObject(): Record<string, any> {
+    return {
+      name: this.name,
+      description: this.description,
+      base: this.base || {},
+      childTypes: this.childTypes,
+      alternatives: this.alternatives,
+      properties: this.properties.map(prop => prop.getSanitizedObject()),
+    };
+  }
+}
+
+export class PropertyNode {
+  public name: string;
+  public type: TypeName;
+
+  
+  public description: string;
+
+  public samples: { title?: string; description?: string; sample: any }[] = [];
+  public alternatives: Alternative[] = []; 
+
+  public isScalar: boolean = false;
+  public isOptional: boolean = false;
+  public isCollection: boolean = false;
+
+
+  public defaultValue: string | number | boolean | null = null;
+  public allowedValues: string[] = [];
+  public model: ModelProperty;
+
+  constructor(modelProperty: ModelProperty, description: string) {
+    this.name = modelProperty.name;
+    this.description = description;
+    this.model = modelProperty;
+    if(modelProperty.type.kind === "Model") {
+      this.type = getModelType(modelProperty.type);
+    } else {
+      this.type = {
+        namespace: "",
+        typeName: getTypeName(modelProperty.type, { nameOnly: true }),
+        fullTypeName: getEntityName(modelProperty.type),
+      };
+    }
+    
+  }
+
+  getSanitizedObject(): Record<string, any> {
+    return {
+      name: this.name,
+      description: this.description,
+      isCollection: this.isCollection,
+      isOptional: this.isOptional,
+      defaultValue: this.defaultValue,
+      type: this.type,
+    };
+  }
+}
 
 export interface Variant {
   kind: string;
   value: string | number | boolean | null;
 }
 
-export class PropertyNode {
-  public name: string;
-  public kind: string;
-  public typeName: string;
-  public description: string;
-  public fullTypeName: string;
-  public isCollection: boolean = false;
-  public isOptional: boolean = false;
-  public isVariant: boolean = false;
-  public defaultValue: string | number | boolean | null = null;
-  public variants: Variant[] = [];
-  public model?: Type;
-  public type: TypeNode[];
 
-  constructor(name: string, kind: string, typeName: string, description: string, fullTypeName: string, model?: Type, type?: TypeNode[]) {
-    this.name = name;
-    this.kind = kind;
-    this.typeName = typeName;
+export class TypeNodeEx {
+  public name: TypeName;
+  public base: { namespace: string; typeName: string; fullTypeName: string } | null = null;
+  public description: string = "";
+  public childTypes: { name: string; fullName: string; discriminator: string; value: string | number | boolean | null }[] = [];
+  public alternatives: Alternative[] = [];
+  public properties: PropertyNodeEx[] = [];
+
+
+
+
+  public namespace: string = "";
+  public typeName: string = "";
+  public fullTypeName: string = "";
+  public baseType: string = "";
+  public fullBaseType: string = "";
+  public hasSimpleConstructor: boolean = false;
+  public constructorTypes: string[] = [];
+  public kind: string = "";
+
+  constructor(public model: Model, description: string) {
+    this.model = model;
+    this.name = getModelType(model);
+    this.kind = model.kind;
     this.description = description;
+  }
+
+  getSanitizedObject(): Record<string, any> {
+    return {
+      name: this.name,
+      base: this.base || {},
+      namespace: this.namespace,
+      typeName: this.typeName,
+      fullTypeName: this.fullTypeName,
+      baseType: this.baseType,
+      fullBaseType: this.fullBaseType,
+      description: this.description,
+      alternatives: this.alternatives,
+      childTypes: this.childTypes,
+      properties: this.properties.map(prop => prop.getSanitizedObject()),
+
+
+      kind: this.kind,
+      hasSimpleConstructor: this.hasSimpleConstructor,
+      constructorTypes: this.constructorTypes,
+    };
+  }
+}
+
+
+export class PropertyNodeEx {
+  public name: string;
+  public typeName: string;
+  public fullTypeName: string;
+  public description: string;
+
+  public samples: { title?: string; description?: string; sample: any }[] = [];
+  public alternatives: Alternative[] = [];
+
+  public isScalar: boolean = false;
+  public isOptional: boolean = false;
+  public isCollection: boolean = false;
+  public defaultValue: string | number | boolean | null = null;
+  public allowedValues: (string | number | boolean | null)[] = [];
+
+
+
+  public isVariant: boolean = false;
+  public variants: Variant[] = [];
+  public type: TypeNodeEx[];
+  public kind: string;
+  public model?: Type;
+
+  constructor(name: string, kind: string, typeName: string, description: string, fullTypeName: string, model?: Type, type?: TypeNodeEx[]) {
+    this.name = name;
+    this.typeName = typeName;
     this.fullTypeName = fullTypeName;
+    this.description = description;
+    this.kind = kind;
     this.type = type || [];
     this.model = model;
   }
@@ -33,52 +198,21 @@ export class PropertyNode {
   getSanitizedObject(): Record<string, any> {
     return {
       name: this.name,
-      kind: this.kind,
       typeName: this.typeName,
-      description: this.description,
       fullTypeName: this.fullTypeName,
-      isOptional: this.isOptional,
+      description: this.description,
       isCollection: this.isCollection,
+      isOptional: this.isOptional,
       isVariant: this.isVariant,
+      defaultValue: this.defaultValue,
       variants: this.variants,
       type: this.type ? this.type.map(t => t.getSanitizedObject()) : [],
-    };
-  }
-}
-
-export class TypeNode {
-  public properties: PropertyNode[] = [];
-  public fullTypeName: string = "";
-  public typeName: string = "";
-  public kind: string = "";
-  public baseType: string = "";
-  public fullBaseType: string = "";
-  public childTypes: { name: string; fullName: string }[] = [];
-  public hasSimpleConstructor: boolean = false;
-  public constructorTypes: string[] = [];
-
-  public description: string = "";
-  constructor(public model: Type) {
-    this.model = model;
-    this.baseType = "";
-    this.fullBaseType = "";
-  }
-
-  getSanitizedObject(): Record<string, any> {
-    return {
       kind: this.kind,
-      typeName: this.typeName,
-      fullTypeName: this.fullTypeName,
-      baseType: this.baseType,
-      fullBaseType: this.fullBaseType,
-      childTypes: this.childTypes,
-      description: this.description,
-      properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
   }
 }
 
-export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = new Set()): IterableIterator<TypeNode> {
+export const enumerateTypes = function* (node: TypeNodeEx, visited: Set<string> = new Set()): IterableIterator<TypeNodeEx> {
   for (const prop of node.properties) {
     if (prop.type && prop.type.length > 0) {
       for (const t of prop.type) {
@@ -99,20 +233,10 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
 };
 
 export const resolveType = (program: Program, model: Model, visited: Set<string>): TypeNode => {
-  const node = new TypeNode(model);
-  node.description = getDoc(program, model) || "";
-  node.typeName = getTypeName(model, {
-    nameOnly: true,
-    printable: true,
-  });
-  node.fullTypeName = getTypeName(model);
-  node.kind = model.kind;
+
+  const node = new TypeNode(model, getDoc(program, model) || "");
   if (model.baseModel) {
-    node.baseType = getTypeName(model.baseModel, {
-      nameOnly: true,
-      printable: true,
-    });
-    node.fullBaseType = getTypeName(model.baseModel);
+    node.base = getModelType(model.baseModel);
   }
 
   if (model.name !== "Named" && model.name !== "Options") {
@@ -130,7 +254,46 @@ export const resolveType = (program: Program, model: Model, visited: Set<string>
   return node;
 };
 
-const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>): PropertyNode => {
+
+
+export const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>): PropertyNode => {
+  return new PropertyNode(
+    property,
+    getDoc(program, property) || ""
+  );
+}
+
+export const resolveTypeEx = (program: Program, model: Model, visited: Set<string>): TypeNodeEx => {
+
+  const node = new TypeNodeEx(model, getDoc(program, model) || "");
+
+  /****** REMOVE **************/
+  const { namespace, typeName, fullTypeName } = getModelType(model);
+  node.namespace = namespace;
+  node.typeName = typeName;
+  node.fullTypeName = fullTypeName;
+  /****** REMOVE **************/
+
+  if (model.baseModel) {
+    node.base = getModelType(model.baseModel);
+  }
+
+  if (model.name !== "Named" && model.name !== "Options") {
+    visited.add(model.name);
+  }
+  // resolve properties if model
+  if (model.kind === "Model") {
+    const properties: PropertyNodeEx[] = [];
+    for (const [_, value] of model.properties) {
+      properties.push(resolvePropertEx(program, value, visited));
+    }
+    node.properties = properties;
+  }
+
+  return node;
+};
+
+const resolvePropertEx = (program: Program, property: ModelProperty, visited: Set<string>): PropertyNodeEx => {
   const type = getPropertyType(property);
   const description = getDoc(program, property) || "";
   const kind = type.kind;
@@ -139,7 +302,7 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
     nameOnly: true,
     printable: true,
   });
-  const prop = new PropertyNode(property.name, kind, typeName, description, fullTypeName);
+  const prop = new PropertyNodeEx(property.name, kind, typeName, description, fullTypeName);
   prop.model = type;
   prop.isOptional = property.optional;
 
@@ -170,7 +333,7 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
   }
 
   if (type.kind === "Model" && !visited.has(type.name) && !typeName.includes("unknown") && !typeName.includes('"')) {
-    prop.type = [resolveType(program, type, visited)];
+    prop.type = [resolveTypeEx(program, type, visited)];
   } else if (type.kind === "Union") {
     const variants = Array.from(type.variants).map(([, v]) => v.type);
 
@@ -198,20 +361,22 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
               prop.isCollection = true;
 
               if (!visited.has(arraySubType.name)) {
-                const mainType = resolveType(program, arrayType, visited);
+                const mainType = resolveTypeEx(program, arrayType, visited);
                 mainType.typeName = subTypeName;
                 mainType.fullTypeName = subFullTypeName;
                 mainType.description = getDoc(program, arraySubType) || "";
                 visited.add(subTypeName);
                 prop.type = [mainType];
                 if (arraySubType.derivedModels.length > 0) {
-                  const derivedTypes = arraySubType.derivedModels.map(m => resolveType(program, m, visited));
+                  const derivedTypes = arraySubType.derivedModels.map(m => resolveTypeEx(program, m, visited));
                   prop.type.push(...derivedTypes);
 
                   // add child types
                   mainType.childTypes.push(...derivedTypes.map(d => ({
                     name: d.typeName,
                     fullName: d.fullTypeName,
+                    discriminator: "type",
+                    value: "",
                   })));
                 }
               }
@@ -244,7 +409,7 @@ const resolveProperty = (program: Program, property: ModelProperty, visited: Set
           });
           prop.fullTypeName = subFullTypeName;
           prop.typeName = subTypeName;
-          const typeNode = resolveType(program, modelType, visited);
+          const typeNode = resolveTypeEx(program, modelType, visited);
           typeNode.hasSimpleConstructor = true;
           typeNode.constructorTypes.push(getTypeName(variants.filter(v => v.kind === "Scalar")[0]));
           prop.type = [typeNode];

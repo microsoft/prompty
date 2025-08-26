@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNodeEx, TypeNodeEx } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const pythonTypeMapper: Record<string, string> = {
@@ -12,7 +12,7 @@ const pythonTypeMapper: Record<string, string> = {
 }
 
 
-export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
+export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNodeEx) => {
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/python'));
   const classTemplate = env.getTemplate('dataclass.njk', true);
@@ -28,12 +28,9 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   await emitPythonFile(context, node, init, `__init__.py`);
 
   for (const type of types) {
-    const includes: string[] = [];
+    const includes: string[] = ["Optional"]; // all classes have option .ctor dict
     if (type.properties.some(prop => prop.isVariant)) {
       includes.push("Literal");
-    }
-    if (type.properties.some(prop => prop.isOptional)) {
-      includes.push("Optional");
     }
     if (type.properties.some(prop => prop.typeName.includes("unknown"))) {
       includes.push("Any");
@@ -54,7 +51,7 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
 const typeLink = (name: string) => name.toLowerCase().replaceAll(' ', '-');
 
 
-const getImports = (node: TypeNode): string[] => {
+const getImports = (node: TypeNodeEx): string[] => {
   const imports: string[] = [];
   if (node.baseType.length > 0) {
     imports.push(node.baseType);
@@ -67,7 +64,7 @@ const getImports = (node: TypeNode): string[] => {
   return imports.map(name => `from ._${typeLink(name)} import ${name}`);
 };
 
-const renderType = (types: TypeNode[]) => (node: TypeNode, prop: PropertyNode): string => {
+const renderType = (types: TypeNodeEx[]) => (node: TypeNodeEx, prop: PropertyNodeEx): string => {
   if (prop.kind === "Scalar") {
     return renderOptionalList(`${pythonTypeMapper[prop.typeName]}`, prop.isCollection, prop.isOptional);
   } else {
@@ -97,7 +94,7 @@ const renderType = (types: TypeNode[]) => (node: TypeNode, prop: PropertyNode): 
   }
 };
 
-const renderDefault = (types: TypeNode[]) => (node: TypeNode, prop: PropertyNode): string => {
+const renderDefault = (types: TypeNodeEx[]) => (node: TypeNodeEx, prop: PropertyNodeEx): string => {
   if (prop.isCollection) {
     return ' = field(default_factory=list)';
   } else if (prop.kind === "Intrinsic") {
@@ -128,7 +125,7 @@ const renderOptionalList = (name: string, isCollection: boolean, isOptional: boo
   return `${optional}${collection}${name.includes("unknown") ? "Any" : name}${collection ? `]` : ``}${optional ? `]` : ``}`;
 };
 
-const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string) => {
+const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNodeEx, python: string, filename: string) => {
   const typePath = type.fullTypeName.split(".").map(part => typeLink(part));
   // remove typename
   typePath.pop();

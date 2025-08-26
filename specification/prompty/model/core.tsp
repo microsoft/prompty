@@ -1,6 +1,6 @@
 namespace Prompty.Core {
-  model Named<Item> {
-    @doc("The name of the item")
+  model Named<Item, StringValue extends valueof string = "Name of the item"> {
+    @doc(StringValue)
     name: string = "";
 
     ...Item;
@@ -23,5 +23,5 @@ namespace Prompty.Core {
     ...Record<unknown>;
   }
 
-  alias SimpleTypes = "string" | "number" | "array" | "object" | "boolean";
+  //alias SimpleTypes = "string" | "number" | "array" | "object" | "boolean";
 }

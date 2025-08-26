@@ -7,3 +7,4 @@ dist/
 
 # Dependency directories
 node_modules/
+.mypy_cache/

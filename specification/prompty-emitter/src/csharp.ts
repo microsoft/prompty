@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNodeEx, TypeNodeEx } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const csharpTypeMapper: Record<string, string> = {
@@ -14,7 +14,7 @@ const csharpTypeMapper: Record<string, string> = {
 }
 
 
-export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNodeEx) => {
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/csharp'));
   const classTemplate = env.getTemplate('dataclass.njk', true);
@@ -41,18 +41,14 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   }
 }
 
-const isClass = (node: TypeNode): boolean => {
-  return node.kind === "Model" && node.properties.length > 0;
-};
-
-const renderPropertyName = (prop: PropertyNode): string => {
+const renderPropertyName = (prop: PropertyNodeEx): string => {
   // convert snake_case to PascalCase
   const pascal = prop.name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   // capitalize the first letter
   return pascal.charAt(0).toUpperCase() + pascal.slice(1);
 };
 
-const renderType = (prop: PropertyNode): string => {
+const renderType = (prop: PropertyNodeEx): string => {
   const nameRender = (name: string): string => {
     return `${name}${prop.isOptional && !prop.isCollection ? "?" : ""}${prop.isCollection ? "[]" : ""}`;
   };
@@ -75,14 +71,14 @@ const renderType = (prop: PropertyNode): string => {
   }
 };
 
-const renderDefault = (prop: PropertyNode): string => {
+const renderDefault = (prop: PropertyNodeEx): string => {
   if (prop.isCollection) {
     return " = [];";
   }
   return "";
 };
 
-const getNamespace = (node: TypeNode): string => {
+const getNamespace = (node: TypeNodeEx): string => {
   const parts = node.fullTypeName.split(".");
   parts.pop(); // remove the last part (the type name)
   return parts.join(".");
@@ -90,7 +86,7 @@ const getNamespace = (node: TypeNode): string => {
 
 
 
-const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string) => {
+const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNodeEx, python: string, filename: string) => {
   const typePath = type.fullTypeName.split(".");
   // remove typename
   typePath.pop();

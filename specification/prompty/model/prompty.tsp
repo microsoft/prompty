@@ -109,29 +109,87 @@ namespace Prompty.Core {
   model Prompty {
     // Prompty metadata
     @doc("Unique identifier for the Prompty document")
+    @sample(#{ id: "unique-agent-id" })
     id?: string = "";
 
     @doc("Version of the Prompty specification")
+    @sample(#{ version: "1.0.0" })
     version?: string = "";
 
     @doc("Human-readable name of the agent")
+    @sample(#{ name: "basic-prompt" })
     name: string = "";
 
     @doc("Description of the agent's capabilities and purpose")
+    @sample(#{
+      id: "A basic prompt that uses the GPT-3 chat API to answer questions",
+    })
     description?: string = "";
 
     @doc("Additional metadata including authors, tags, and other arbitrary properties")
+    @sample(#{
+      metadata: #{
+        authors: #["sethjuarez", "jietong"],
+        tags: #["example", "prompt"],
+      },
+    })
     metadata?: Metadata = #{};
 
     // model execution
     @doc("Model configuration used for execution")
+    @sample(#{
+      `model`: #{
+        id: "gpt-35-turbo",
+        connection: #{
+          provider: "azure",
+          type: "chat",
+          endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+        },
+      },
+    })
+    @alternate(#{ `model`: "{value}" }, #{ `model`: #{ id: "{value}" } })
     `model`: Model | string;
 
     // Inputs and Outputs
     @doc("Input parameters that participate in template rendering")
+    @sample(#{
+      inputs: #[
+        #{ name: "firstName", type: "string", sample: "Jane" },
+        #{ name: "lastName", type: "string", sample: "Doe" },
+        #{
+          name: "question",
+          type: "string",
+          sample: "What is the meaning of life?",
+        }
+      ],
+    })
+    @sample(#{
+      inputs: #{
+        firstName: #{ type: "string", sample: "Jane" },
+        lastName: #{ type: "string", sample: "Doe" },
+        question: #{ type: "string", sample: "What is the meaning of life?" },
+      },
+    })
     inputs?: Inputs = #[];
 
     @doc("Expected output format and structure from the agent")
+    @sample(#{
+      outputs: #[
+        #{
+          name: "answer",
+          type: "string",
+          description: "The answer to the user's question.",
+        }
+      ],
+    })
+    @sample(#{
+      outputs: #{
+        answer: #{
+          type: "string",
+          description: "The answer to the user's question.",
+        },
+      },
+    })
     outputs?: Outputs = #[];
 
     // tools
@@ -140,9 +198,11 @@ namespace Prompty.Core {
 
     // template values
     @doc("Template configuration for prompt rendering")
+    @sample(#{ template: #{ format: "handlebars", parser: "prompty" } })
     template?: Template;
 
     @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")
+    @sample(#{ instructions: "You are a helpful assistant." })
     instructions?: string = "";
 
     @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")

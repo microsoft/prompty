@@ -9,4 +9,10 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output/prompty"
-    target-name: "Prompty"
+    target-name: "single"
+    emit-targets:
+      - CSharp
+      - Python
+      - TypeScript
+    root-namespace: "Microsoft.Agent.Single"
+    root-object: "Agent"

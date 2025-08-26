@@ -27,12 +27,31 @@ class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}
         {{ prop.description }}
     {% endfor %}
     """ 
-
     {% for prop in node.properties -%}
     {{ prop.name }}: {{ renderType(node, prop) | safe }}{{ renderDefault(node, prop) | safe }}
-    {% endfor -%}
+    {% endfor %}
+
+    def load(self, data: Optional[dict] = None):
+        {% for prop in node.properties -%}
+        if data is not None and "{{ prop.name }}" in data:
+            self.{{ prop.name }} = {% if prop.kind == "Scalar" %}data["{{ prop.name }}"]{% else %}self.load_{{ prop.name }}(data["{{ prop.name }}"]){% endif %}
+        {% endfor -%}
+
+    {% for prop in node.properties | selectattr("isCollection") %}
+    def load_{{ prop.name }}(self, data: Optional[dict] = None) -> list[{{ prop.typeName }}]:
+        if data is not None and "{{ prop.name }}" in data:
+            return [{{ prop.typeName | safe }}(item) for item in data["{{ prop.name }}"]]
+        else:
+            return []
+    {% endfor %}
     {% else %}
     """
+
+    def __init__(self, data: Optional[dict] = None):
+        if data is None:
+            data = {}
+        else:
+            self.data = data
     
     # Fallback for unknown properties
     data: dict = field(default_factory=dict)

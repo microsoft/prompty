@@ -9,28 +9,16 @@ namespace Prompty.Core {
     input: string;
   }
 
-  alias Bindings = Record<Binding> | Named<Binding>[];
-
-  /**
-   * Represents a tool that can be used in prompts.
-   */
-  model Tool {
-    @doc("The type identifier for the tool")
-    type: string;
-
-    @doc("A short description of the tool for metadata purposes")
-    description?: string = "";
-
-    @doc("Tool argument bindings to input properties")
-    binding?: Bindings = #[];
-  }
+  alias Bindings = Record<Binding> | Named<Binding, "Name of the binding">[];
 
   /**
    * Represents a parameter for a tool.
    */
+  @discriminator("type")
   model Parameter {
     @doc("The data type of the tool parameter")
-    type: SimpleTypes = "string";
+    @allowed(#["string", "number", "array", "object", "boolean"])
+    type: string;
 
     @doc("A short description of the property")
     description?: string = "";
@@ -62,14 +50,30 @@ namespace Prompty.Core {
     items: Parameter | Named<Parameter>;
   }
 
-  alias Parameters = Record<Parameter> | Named<Parameter>[];
+  alias Parameters = Record<Parameter> | Named<Parameter, "Name of the parameter">[];
+
+  /**
+   * Represents a tool that can be used in prompts.
+   */
+  @discriminator("type")
+  model Tool {
+    @doc("The type identifier for the tool")
+    @allowed(#["function", "*"])
+    type: string;
+
+    @doc("A short description of the tool for metadata purposes")
+    description?: string = "";
+
+    @doc("Tool argument bindings to input properties")
+    bindings?: Bindings = #[];
+  }
 
   /**
    * Represents a local function tool.
    */
   model FunctionTool extends Tool {
     @doc("The type identifier for function tools")
-    type: string = "function";
+    type: "function";
 
     @doc("Parameters accepted by the function tool")
     parameters: Parameters = #[];
@@ -84,7 +88,7 @@ namespace Prompty.Core {
    */
   model ServerTool extends Tool {
     @doc("The type identifier for server tools")
-    type: string;
+    type: "*";
 
     @doc("Configuration options for the server tool")
     options: Options = #{};

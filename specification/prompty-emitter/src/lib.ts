@@ -6,12 +6,12 @@ export interface PromptyEmitterOptions {
 
 const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
   type: "object",
-  additionalProperties: false,
+  additionalProperties: true,
   properties: {
     "target-name": {
       type: "string",
-      nullable: true,
       default: "test-package",
+      nullable: true,
       description: "Name of the package as it will be in package.json",
     },
   },
@@ -20,10 +20,8 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
 
 export const $lib = createTypeSpecLibrary({
   name: "@prompty/emitter",
-  emitter: {
-    options: PromptyEmitterOptionsSchema,
-  },
   diagnostics: {},
+  emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     unionResolution: { description: "Types resolved by @resolve'd Union types" },
   }

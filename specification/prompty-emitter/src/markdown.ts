@@ -1,11 +1,11 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { PropertyNodeEx, TypeNodeEx } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 
 
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNodeEx) => {
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/markdown'));
   const template = env.getTemplate('markdown.njk', true);
@@ -17,7 +17,7 @@ const typeLink = (name: string) => name.toLowerCase().replaceAll(' ', '-');
 
 const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
   template: nunjucks.Template,
-  node: TypeNode, inline: boolean = false): Promise<string> => {
+  node: TypeNodeEx, inline: boolean = false): Promise<string> => {
   const markdown = template.render({
     node: node,
     renderType: renderType(inline),
@@ -47,7 +47,7 @@ const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
 
 }
 
-const renderType = (inline: boolean) => (prop: PropertyNode): string => {
+const renderType = (inline: boolean) => (prop: PropertyNodeEx): string => {
   const text = `${prop.typeName}${prop.isCollection ? " Collection" : ""}`.replaceAll(" | ", ", ");
   if (prop.kind !== "Scalar" && !prop.typeName.includes("unknown") && !prop.typeName.includes('"')) {
     if (inline) {
