@@ -29,7 +29,9 @@ export default defineConfig({
           href: "https://github.com/microsoft/prompty",
         },
       ],
-      plugins: [starlightAutoSidebar(), starlightLinksValidator()],
+      plugins: [starlightAutoSidebar(), starlightLinksValidator({
+        exclude: ["http://localhost:4321"]
+      })],
       sidebar: [
         {
           label: "Welcome",
