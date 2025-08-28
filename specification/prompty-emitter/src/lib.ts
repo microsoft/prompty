@@ -24,6 +24,9 @@ export const $lib = createTypeSpecLibrary({
   emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     unionResolution: { description: "Types resolved by @resolve'd Union types" },
+    samples: { description: "Sample values for properties" },
+    alternates: { description: "Alternate values for properties" },
+    allowedValues: { description: "Allowed values for properties" },
   }
 });
 

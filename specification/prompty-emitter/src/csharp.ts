@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNodeEx, TypeNodeEx } from "./ast.js";
+import { enumerateTypesEx, PropertyNodeEx, TypeNodeEx } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const csharpTypeMapper: Record<string, string> = {
@@ -26,7 +26,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   await emitCsharpFile(context, node, utils, "Utils.cs");
 
-  const types = Array.from(enumerateTypes(node));
+  const types = Array.from(enumerateTypesEx(node));
 
   for (const type of types) {
     const csharp = classTemplate.render({

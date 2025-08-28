@@ -1,50 +1,61 @@
 import { type BooleanLiteral, type StringLiteral, type DecoratorContext, type Model, type Union, getTypeName, Program, Type, ModelProperty } from "@typespec/compiler";
 import { StateKeys } from "./lib.js";
 
-export function $resolve(context: DecoratorContext, target: Union, name: string | StringLiteral, type: Model, abstract?: boolean | undefined | BooleanLiteral) {
-  const typeName = typeof name === 'object' && 'value' in name ? name.value : name;
-  const isAbstract = typeof abstract === 'object' && 'value' in abstract ? abstract.value : abstract ?? false;
-  //console.debug(`Resolving Union: ${target.name} with name: ${typeName} and type: ${type.name}, isAbstract: ${isAbstract}`);
-  appendUnionResolution(context, target, typeName, type, isAbstract);
-}
-
-export function getUnionResolution(program: Program, target: Type): Resolution[] {
-  return program.stateMap(StateKeys.unionResolution).get(target) || [];
-}
-
-export function appendUnionResolution(context: DecoratorContext, target: Type, name: string, type: Model, abstract: boolean) {
-  // Append the resolution information to the target's state
-  const state = context.program.stateMap(StateKeys.unionResolution).get(target) || [];
-  const newState = [{ name, type, abstract }, ...state];
-  context.program.stateMap(StateKeys.unionResolution).set(target, newState);
-}
-
 
 export interface SampleOptions {
   title?: string;
   description?: string;
 }
 
-export interface Resolution {
-  name: string;
-  type: Type;
-  abstract: boolean;
+export const appendStateValue = <T>(context: DecoratorContext, key: symbol, target: Type, value: T | T[]) => {
+  const state = context.program.stateMap(key).get(target) || [];
+  // check if value is array
+  if (Array.isArray(value)) {
+    const newState = [...state, ...value];
+    context.program.stateMap(key).set(target, newState);
+  } else {
+    const newState = [...state, value];
+    context.program.stateMap(key).set(target, newState);
+  }
+};
+
+export const getStateValue = <T>(program: Program, key: symbol, target: Type): T[] => {
+  return program.stateMap(key).get(target) || [];
+};
+
+export interface SampleEntry {
+  sample: unknown;
+  title?: string;
+  description?: string;
 }
 
 export function $sample(context: DecoratorContext, target: ModelProperty, sample: unknown, options?: SampleOptions) {
-  //const sampleValue = typeof sample === 'object' && 'value' in sample ? sample.value : sample;
-  const title = options?.title ?? `Sample for ${target.name}`;
-  const description = options?.description ?? `A sample value for ${target.name}`;
-  //console.debug(`Adding sample to Union: ${target.name} with sample: ${sampleValue}`);
+  const entry: SampleEntry = {
+    sample,
+    title: options?.title ?? "",
+    description: options?.description ?? "",
+  }
+  appendStateValue<SampleEntry>(context, StateKeys.samples, target, entry);
+}
+
+export interface AlternateEntry {
+  alternate: unknown;
+  expansion: unknown;
+  title?: string;
+  description?: string;
 }
 
 export function $alternate(context: DecoratorContext, target: ModelProperty, sample: unknown, expansion: unknown, options?: SampleOptions) {
-  const title = options?.title ?? `Alternate for ${target.name}`;
-  const description = options?.description ?? `An alternate value for ${target.name}`;
-  //console.debug(`Adding sample to Union: ${target.name} with sample: ${sampleValue} and expansion: ${expansionValue}`);
+  const entry: AlternateEntry = {
+    alternate: sample,
+    expansion: expansion,
+    title: options?.title ?? "",
+    description: options?.description ?? "",
+  }
+  appendStateValue<AlternateEntry>(context, StateKeys.alternates, target, entry);
 }
 
 
 export function $allowed(context: DecoratorContext, target: ModelProperty, values: string[]) {
-  console.debug(`Adding allowed values to Union: ${target.name} with values: ${values}`);
+  appendStateValue<string>(context, StateKeys.allowedValues, target, values);
 }

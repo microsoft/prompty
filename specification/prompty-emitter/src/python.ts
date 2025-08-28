@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNodeEx, TypeNodeEx } from "./ast.js";
+import { enumerateTypesEx, PropertyNodeEx, TypeNodeEx } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const pythonTypeMapper: Record<string, string> = {
@@ -18,7 +18,7 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const initTemplate = env.getTemplate('init.njk', true);
 
-  const types = Array.from(enumerateTypes(node));
+  const types = Array.from(enumerateTypesEx(node));
 
   const init = initTemplate.render({
     types: types,

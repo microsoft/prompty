@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { enumerateTypes, resolveType, resolveTypeEx } from "./ast.js";
+import { enumerateTypesEx, resolveModel, resolveTypeEx } from "./ast.js";
 import { PromptyEmitterOptions } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
 import { generatePython } from "./python.js";
@@ -19,7 +19,7 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   const model = m[0];
   const ast = resolveTypeEx(context.program, model, new Set());
 
-  const alt = resolveType(context.program, model, new Set());
+  const alt = resolveModel(context.program, model, new Set());
 
   const options = {
     emitterOutputDir: context.emitterOutputDir,
@@ -27,6 +27,8 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   }
 
   console.log(`OPTIONS: ${JSON.stringify(options)}`);
+  const sanitize = alt.getSanitizedObject();
+  const str = JSON.stringify(sanitize, null, 2);
 
 
   await generateMarkdown(context, ast);
@@ -35,11 +37,9 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
 
   await generateCsharp(context, ast);
 
-  const flat = Array.from(enumerateTypes(ast.getSanitizedObject() as any));
-
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "json", "output_flat_redefined.json"),
-    content: JSON.stringify(flat, null, 2),
+    path: resolvePath(context.emitterOutputDir, "json", "new_structure.json"),
+    content: str,
   });
 }
 
