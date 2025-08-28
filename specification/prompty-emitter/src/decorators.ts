@@ -1,5 +1,6 @@
-import { type BooleanLiteral, type StringLiteral, type DecoratorContext, type Model, type Union, getTypeName, Program, Type, ModelProperty } from "@typespec/compiler";
+import { type BooleanLiteral, type StringLiteral, type DecoratorContext, type Model, type Union, getTypeName, Program, Type, ModelProperty, Value, ObjectValue, ArrayValue, Diagnostic, serializeValueAsJson } from "@typespec/compiler";
 import { StateKeys } from "./lib.js";
+import { serialize } from "v8";
 
 
 export interface SampleOptions {
@@ -29,9 +30,11 @@ export interface SampleEntry {
   description?: string;
 }
 
-export function $sample(context: DecoratorContext, target: ModelProperty, sample: unknown, options?: SampleOptions) {
+export function $sample(context: DecoratorContext, target: ModelProperty, sample: ObjectValue, options?: SampleOptions) {
+  const s = serializeValueAsJson(context.program, sample, sample.type);
+  
   const entry: SampleEntry = {
-    sample,
+    sample: s,
     title: options?.title ?? "",
     description: options?.description ?? "",
   }
@@ -45,10 +48,12 @@ export interface AlternateEntry {
   description?: string;
 }
 
-export function $alternate(context: DecoratorContext, target: ModelProperty, sample: unknown, expansion: unknown, options?: SampleOptions) {
+export function $alternate(context: DecoratorContext, target: ModelProperty, sample: ObjectValue, expansion: ObjectValue, options?: SampleOptions) {
+  const alt = serializeValueAsJson(context.program, sample, sample.type);
+  const exp = serializeValueAsJson(context.program, expansion, expansion.type);
   const entry: AlternateEntry = {
-    alternate: sample,
-    expansion: expansion,
+    alternate: alt,
+    expansion: exp,
     title: options?.title ?? "",
     description: options?.description ?? "",
   }
@@ -56,6 +61,18 @@ export function $alternate(context: DecoratorContext, target: ModelProperty, sam
 }
 
 
-export function $allowed(context: DecoratorContext, target: ModelProperty, values: string[]) {
-  appendStateValue<string>(context, StateKeys.allowedValues, target, values);
+export function $allowed(context: DecoratorContext, target: ModelProperty, values: ArrayValue) {
+
+  if (!values.values.every(v => v.valueKind === "StringValue")) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-allowed-string-only",
+      message: `@allowed only supports string values for now.`,
+      severity: "error",
+      target: values,
+    });
+    return;
+  }
+
+  const targetValues = values.values.map(v => v.value as string);
+  appendStateValue<string>(context, StateKeys.allowedValues, target, targetValues);
 }

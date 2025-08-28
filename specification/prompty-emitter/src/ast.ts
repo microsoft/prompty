@@ -1,4 +1,4 @@
-import { getDiscriminator, getDoc, getEntityName, getNamespaceFullName, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Scalar, Type, Union } from "@typespec/compiler";
+import { getDiscriminator, getDoc, getEntityName, getNamespaceFullName, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, Scalar, serializeValueAsJson, Type, Union } from "@typespec/compiler";
 import { Node } from "@typespec/compiler/ast";
 import { AlternateEntry, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
@@ -166,7 +166,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
       const prop = resolveProperty(program, value, visited);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
-      
+
       // alternatives
       //prop.alternatives = getStateValue<AlternateEntry>(program, StateKeys.alternates, value);
       // allowed values
