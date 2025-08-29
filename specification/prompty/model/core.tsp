@@ -23,5 +23,5 @@ namespace Prompty.Core {
     ...Record<unknown>;
   }
 
-  //alias SimpleTypes = "string" | "number" | "array" | "object" | "boolean";
+  alias SimpleTypes = "string" | "number" | "array" | "object" | "boolean" | string;
 }

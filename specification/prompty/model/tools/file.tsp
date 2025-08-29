@@ -1,7 +1,7 @@
 import "../core.tsp";
 import "../tools.tsp";
 
-namespace Prompty.ServerTools {
+namespace Prompty.Core {
   /**
    * Options for ranking file search results.
    */
@@ -16,7 +16,7 @@ namespace Prompty.ServerTools {
   /**
    * Options for file search.
    */
-  model FileSearchOptions extends Prompty.Core.Options {
+  model FileSearchOptions extends Options {
     @doc("The maximum number of search results to return.")
     maxNumResults?: int32;
 
@@ -24,7 +24,11 @@ namespace Prompty.ServerTools {
     rankingOptions?: FileSearchRankingOptions;
   }
 
-  model FileSearchTool extends Prompty.Core.Tool {
+  /**
+   * A tool for searching files.
+   * This tool allows an AI agent to search for files based on a query.
+   */
+  model FileSearchTool extends Tool {
     @doc("The type identifier for file search tools")
     type: "file_search";
 

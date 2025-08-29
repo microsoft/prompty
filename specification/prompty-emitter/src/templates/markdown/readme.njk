@@ -1,0 +1,23 @@
+# Class Diagram
+
+The following diagram illustrates the classes and their relationships for declarative agents.
+
+```mermaid
+---
+title: Declarative Agents
+---
+classDiagram
+    {%- for type in types %}
+    class {{ type.typeName.name }} {
+      {%- for prop in type.properties %}
+        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+      {%- endfor %}
+    }
+    {%- endfor -%}
+    {%- for child in childTypes %}
+    {{ child.source }} <|-- {{ child.target }}
+    {%- endfor -%}
+    {%- for comp in compositionTypes %}
+    {{ comp.source }} *-- {{ comp.target }}
+    {%- endfor %}
+```

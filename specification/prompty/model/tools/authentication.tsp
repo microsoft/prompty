@@ -1,6 +1,6 @@
 import "../core.tsp";
 
-namespace Prompty.ServerTools {
+namespace Prompty.Core {
   @doc("""
       Authentication types. Allowed types are:
       - Anonymous (no authentication required)
@@ -19,6 +19,6 @@ namespace Prompty.ServerTools {
     type: AuthType;
 
     @doc("The credentials to use for authentication")
-    credentials: Prompty.Core.Options
+    credentials: Options
   }
 }

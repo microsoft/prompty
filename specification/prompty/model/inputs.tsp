@@ -18,8 +18,7 @@ namespace Prompty.Core {
    */
   model Input {
     @doc("The data type of the input property")
-    @allowed(#["string", "number", "array", "object", "boolean"])
-    type: string = "string";
+    type: SimpleTypes;
 
     @doc("A short description of the input property")
     description?: string = "";

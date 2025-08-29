@@ -7,104 +7,16 @@ import "./outputs.tsp";
 import "./tools.tsp";
 import "./template.tsp";
 
+
 namespace Prompty.Core {
   /**
-   * Prompty is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
+   * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
    * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
    * The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
    * available tools, and template configurations for prompt rendering.
    *
    * These can be written in a markdown format or in a pure YAML format.
    *
-   * ## Markdown Example
-   *
-   * ```markdown
-   * ---
-   * name: Basic Prompt
-   * description: A basic prompt that uses the GPT-3 chat API to answer questions
-   * metadata:
-   *   authors:
-   *     - sethjuarez
-   *     - jietong
-   *
-   * model:
-   *  id: gpt-35-turbo
-   *  connection:
-   *    provider: azure
-   *    type: chat
-   *    endpoint: https://{your-custom-endpoint}.openai.azure.com/
-   *
-   * inputs:
-   *   firstName:
-   *     type: string
-   *     description: The first name of the customer.
-   *     sample: Jane
-   *     default: Jane
-   *     required: true
-   *   lastName: Doe
-   *   question: What is the meaning of life?
-   *
-   * template:
-   *   format: jinja2
-   *   parser: prompty
-   * ---
-   * system:
-   * You are an AI assistant who helps people find information.
-   * As the assistant, you answer questions briefly, succinctly,
-   * and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-   *
-   * # Customer
-   * You are helping {{firstName}} {{lastName}} to find answers to their questions.
-   * Use their name to address them in your responses.
-   *
-   * user:
-   * {{question}}
-   * ```
-   *
-   * ## Yaml Example
-   *
-   * ```yaml
-   * name: Basic Prompt
-   * description: A basic prompt that uses the GPT-3 chat API to answer questions
-   * metadata:
-   *   authors:
-   *     - sethjuarez
-   *     - jietong
-   *
-   * model:
-   *  id: gpt-35-turbo
-   *  connection:
-   *    provider: azure
-   *    type: chat
-   *    endpoint: https://{your-custom-endpoint}.openai.azure.com/
-   *
-   * inputs:
-   *   firstName:
-   *     type: string
-   *     description: The first name of the customer.
-   *     sample: Jane
-   *     default: Jane
-   *     required: true
-   *   lastName: Doe
-   *   question: What is the meaning of life?
-   *
-   * template:
-   *   format: jinja2
-   *   parser: prompty
-   *
-   * instructions: |
-   *   system:
-   *   You are an AI assistant who helps people find information.
-   *   As the assistant, you answer questions briefly, succinctly,
-   *   and in a personable manner using markdown and even add some personal flair with appropriate emojis.
-   *
-   *   # Customer
-   *   You are helping {{firstName}} {{lastName}} to find answers to their questions.
-   *   Use their name to address them in your responses.
-   *
-   *   user:
-   *   {{question}}
-   * ```
    */
   model Prompty {
     // Prompty metadata
@@ -122,7 +34,7 @@ namespace Prompty.Core {
 
     @doc("Description of the agent's capabilities and purpose")
     @sample(#{
-      id: "A basic prompt that uses the GPT-3 chat API to answer questions",
+      description: "A basic prompt that uses the GPT-3 chat API to answer questions",
     })
     description?: string = "";
 
@@ -202,7 +114,20 @@ namespace Prompty.Core {
     template?: Template;
 
     @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")
-    @sample(#{ instructions: "You are a helpful assistant." })
+    @sample(#{ instructions: 
+    """
+    system:
+    You are an AI assistant who helps people find information.
+    As the assistant, you answer questions briefly, succinctly,
+    and in a personable manner using markdown and even add some 
+    personal flair with appropriate emojis.
+
+    # Customer
+    You are helping {{firstName}} {{lastName}} to find answers to 
+    their questions. Use their name to address them in your responses.
+    user:
+    {{question}}
+    """})
     instructions?: string = "";
 
     @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")

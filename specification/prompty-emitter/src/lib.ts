@@ -1,19 +1,47 @@
 import { createTypeSpecLibrary, JSONSchemaType } from "@typespec/compiler";
 
+export interface EmitTarget {
+  "type": string;
+  "output-dir"?: string;
+}
 export interface PromptyEmitterOptions {
-  "target-name"?: string;
+  "emit-targets"?: EmitTarget[];
+  "root-namespace"?: string;
+  "root-object"?: string;
 }
 
 const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
   type: "object",
-  additionalProperties: true,
+  additionalProperties: false,
   properties: {
-    "target-name": {
-      type: "string",
-      default: "test-package",
+    "emit-targets": {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          "type": {
+            type: "string"
+          },
+          "output-dir": {
+            type: "string",
+            nullable: true
+          }
+        },
+        required: ["type"]
+      },
       nullable: true,
-      description: "Name of the package as it will be in package.json",
+      description: "List of target languages to emit code for"
     },
+    "root-namespace": {
+      type: "string",
+      nullable: true,
+      description: "Root namespace for the emitted code"
+    },
+    "root-object": {
+      type: "string",
+      nullable: true,
+      description: "Root object for the emitted code"
+    }
   },
   required: [],
 };
@@ -23,10 +51,8 @@ export const $lib = createTypeSpecLibrary({
   diagnostics: {},
   emitter: { options: PromptyEmitterOptionsSchema },
   state: {
-    unionResolution: { description: "Types resolved by @resolve'd Union types" },
     samples: { description: "Sample values for properties" },
-    alternates: { description: "Alternate values for properties" },
-    allowedValues: { description: "Allowed values for properties" },
+    alternates: { description: "Alternate values for properties" }
   }
 });
 

@@ -1,6 +1,14 @@
-# {{ node.typeName }}
+# {{ node.typeName.name }}
 
 {{ node.description }}
+
+{% if yml %}
+## Yaml Example
+```yaml
+{{ yml | safe }}
+```
+{% endif %}
+
 {% if node.properties.length > 0 %}
 
 ## Properties
@@ -8,7 +16,8 @@
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {% for prop in node.properties -%}
-| {{ prop.name }} |  {{ renderType(prop) }} | {{ prop.description }} |
+| {{ prop.name }} | {{ renderType(prop) }} | {{ prop.description }} |
 {% endfor -%}
 {% endif %}
+
 

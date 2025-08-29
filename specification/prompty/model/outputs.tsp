@@ -9,8 +9,7 @@ namespace Prompty.Core {
   @discriminator("type")
   model Output {
     @doc("The data type of the output property")
-    @allowed(#["string", "number", "array", "object", "boolean"])
-    type: string;
+    type: SimpleTypes;
 
     @doc("A short description of the output property")
     description?: string = "";

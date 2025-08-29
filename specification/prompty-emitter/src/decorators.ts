@@ -25,14 +25,31 @@ export const getStateValue = <T>(program: Program, key: symbol, target: Type): T
 };
 
 export interface SampleEntry {
-  sample: unknown;
+  sample: object;
   title?: string;
   description?: string;
 }
 
 export function $sample(context: DecoratorContext, target: ModelProperty, sample: ObjectValue, options?: SampleOptions) {
   const s = serializeValueAsJson(context.program, sample, sample.type);
-  
+  if (!s) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-sample-serialization",
+      message: `Failed to serialize sample value.`,
+      severity: "error",
+      target: sample,
+    });
+    return;
+  }
+  if (!s.hasOwnProperty(target.name)) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-sample-name-mismatch",
+      message: `Sample object must have a property named '${target.name}' to match the target property.`,
+      severity: "error",
+      target: sample,
+    });
+    return;
+  }
   const entry: SampleEntry = {
     sample: s,
     title: options?.title ?? "",
@@ -42,15 +59,51 @@ export function $sample(context: DecoratorContext, target: ModelProperty, sample
 }
 
 export interface AlternateEntry {
-  alternate: unknown;
-  expansion: unknown;
+  alternate: object;
+  expansion: object;
   title?: string;
   description?: string;
 }
 
 export function $alternate(context: DecoratorContext, target: ModelProperty, sample: ObjectValue, expansion: ObjectValue, options?: SampleOptions) {
   const alt = serializeValueAsJson(context.program, sample, sample.type);
+  if (!alt) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-alternate-serialization",
+      message: `Failed to serialize alternate value.`,
+      severity: "error",
+      target: target,
+    });
+    return;
+  }
+  if (!alt.hasOwnProperty(target.name)) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-alternate-name-mismatch",
+      message: `Alternate object must have a property named '${target.name}' to match the target property.`,
+      severity: "error",
+      target: target,
+    });
+    return;
+  }
   const exp = serializeValueAsJson(context.program, expansion, expansion.type);
+  if (!exp) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-expansion-serialization",
+      message: `Failed to serialize expansion value.`,
+      severity: "error",
+      target: target,
+    });
+    return;
+  }
+  if (!exp.hasOwnProperty(target.name)) {
+    context.program.reportDiagnostic({
+      code: "prompty-emitter-expansion-name-mismatch",
+      message: `Expansion object must have a property named '${target.name}' to match the target property.`,
+      severity: "error",
+      target: target,
+    });
+    return;
+  }
   const entry: AlternateEntry = {
     alternate: alt,
     expansion: exp,
@@ -58,21 +111,4 @@ export function $alternate(context: DecoratorContext, target: ModelProperty, sam
     description: options?.description ?? "",
   }
   appendStateValue<AlternateEntry>(context, StateKeys.alternates, target, entry);
-}
-
-
-export function $allowed(context: DecoratorContext, target: ModelProperty, values: ArrayValue) {
-
-  if (!values.values.every(v => v.valueKind === "StringValue")) {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-allowed-string-only",
-      message: `@allowed only supports string values for now.`,
-      severity: "error",
-      target: values,
-    });
-    return;
-  }
-
-  const targetValues = values.values.map(v => v.value as string);
-  appendStateValue<string>(context, StateKeys.allowedValues, target, targetValues);
 }

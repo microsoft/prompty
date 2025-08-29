@@ -1,4 +1,6 @@
+import "@prompty/emitter";
 import "./core.tsp";
+import "./tools";
 
 namespace Prompty.Core {
   /**
@@ -14,11 +16,9 @@ namespace Prompty.Core {
   /**
    * Represents a parameter for a tool.
    */
-  @discriminator("type")
   model Parameter {
     @doc("The data type of the tool parameter")
-    @allowed(#["string", "number", "array", "object", "boolean"])
-    type: string;
+    type: SimpleTypes;
 
     @doc("A short description of the property")
     description?: string = "";
@@ -52,14 +52,18 @@ namespace Prompty.Core {
 
   alias Parameters = Record<Parameter> | Named<Parameter, "Name of the parameter">[];
 
+  union ToolTypes {
+    functionType: "function",
+    string
+  };
+
   /**
    * Represents a tool that can be used in prompts.
    */
-  @discriminator("type")
+ 
   model Tool {
     @doc("The type identifier for the tool")
-    @allowed(#["function", "*"])
-    type: string;
+    type: ToolTypes;
 
     @doc("A short description of the tool for metadata purposes")
     description?: string = "";
@@ -80,7 +84,7 @@ namespace Prompty.Core {
   }
 
   /**
-   * Represents a tool that runs on a server
+   * Represents a generic server tool that runs on a server
    * This tool type is designed for operations that require server-side execution
    * It may include features such as authentication, data storage, and long-running processes
    * This tool type is ideal for tasks that involve complex computations or access to secure resources
@@ -88,7 +92,7 @@ namespace Prompty.Core {
    */
   model ServerTool extends Tool {
     @doc("The type identifier for server tools")
-    type: "*";
+    type: string;
 
     @doc("Configuration options for the server tool")
     options: Options = #{};
