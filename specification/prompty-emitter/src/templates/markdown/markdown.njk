@@ -14,6 +14,14 @@ classDiagram
         +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}
     }
+    {%- for type in node.childTypes %}
+    class {{ type.typeName.name }} {
+      {%- for prop in type.properties %}
+        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+      {%- endfor %}
+    }
+    {{ node.typeName.name }} <|-- {{ type.typeName.name }}
+    {%- endfor %}
 ```
 
 {% if yml %}
@@ -34,3 +42,11 @@ classDiagram
 {% endfor -%}
 {% endif %}
 
+{% if node.childTypes.length > 0 %}
+## Child Types
+
+The following types extend `{{ node.typeName.name }}`:
+{% for type in node.childTypes -%}
+- [{{ type.typeName.name }}]({{ type.typeName.name }}.md)
+{% endfor -%}
+{% endif %}

@@ -33,3 +33,4 @@ classDiagram
 | options | [Options](Options.md) | Additional options for model execution <p>Related Types:<ul><li>[BingSearchOptions](BingSearchOptions.md)</li><li>[FileSearchOptions](FileSearchOptions.md)</li><li>[McpToolOptions](McpToolOptions.md)</li></ul></p> |
 
 
+

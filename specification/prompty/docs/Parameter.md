@@ -16,6 +16,16 @@ classDiagram
         +boolean required
         +unknown[] enum
     }
+    class ObjectParameter {
+        +string type
+        +Parameter[] properties
+    }
+    Parameter <|-- ObjectParameter
+    class ArrayParameter {
+        +string type
+        +Parameter items
+    }
+    Parameter <|-- ArrayParameter
 ```
 
 
@@ -32,4 +42,11 @@ classDiagram
 | required | boolean | Whether the tool parameter is required  |
 | enum | unknown Collection | Allowed enumeration values for the parameter  |
 
+
+
+## Child Types
+
+The following types extend `Parameter`:
+- [ObjectParameter](ObjectParameter.md)
+- [ArrayParameter](ArrayParameter.md)
 

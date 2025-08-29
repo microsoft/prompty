@@ -27,3 +27,4 @@ classDiagram
 | options | [BingSearchOptions](BingSearchOptions.md) | The options for the Bing search tool  |
 
 
+

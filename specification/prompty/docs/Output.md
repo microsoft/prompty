@@ -16,6 +16,16 @@ classDiagram
         +string description
         +boolean required
     }
+    class ArrayOutput {
+        +string type
+        +Output items
+    }
+    Output <|-- ArrayOutput
+    class ObjectOutput {
+        +string type
+        +Output[] properties
+    }
+    Output <|-- ObjectOutput
 ```
 
 
@@ -31,4 +41,11 @@ classDiagram
 | description | string | A short description of the output property  |
 | required | boolean | Whether the output property is required  |
 
+
+
+## Child Types
+
+The following types extend `Output`:
+- [ArrayOutput](ArrayOutput.md)
+- [ObjectOutput](ObjectOutput.md)
 

@@ -27,3 +27,4 @@ classDiagram
 | rankingOptions | [FileSearchRankingOptions](FileSearchRankingOptions.md) | Options for ranking file search results.  |
 
 
+

@@ -28,3 +28,4 @@ classDiagram
 | options | [FileSearchOptions](FileSearchOptions.md) | The options for the file search tool  |
 
 
+

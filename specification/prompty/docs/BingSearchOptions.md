@@ -25,3 +25,4 @@ classDiagram
 | configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |   |
 
 
+
