@@ -9,6 +9,10 @@ Represents a tool that can be used in prompts.
 title: Tool
 ---
 classDiagram
+    class Binding {
+        +string name
+        +string input
+    }
     class Tool {
         +string name
         +string type

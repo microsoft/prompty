@@ -9,6 +9,8 @@
 title: Authentication
 ---
 classDiagram
+    class Options {
+    }
     class Authentication {
         +string type
         +Options credentials

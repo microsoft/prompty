@@ -9,6 +9,14 @@ Options for the Bing search tool.
 title: BingSearchOptions
 ---
 classDiagram
+    class BingSearchConfiguration {
+        +string connectionId
+        +string instanceName
+        +string market
+        +string setLang
+        +int64 count
+        +string freshness
+    }
     class BingSearchOptions {
         +BingSearchConfiguration[] configurations
     }

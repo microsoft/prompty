@@ -9,6 +9,12 @@ Configuration options for the MCP tool.
 title: McpToolOptions
 ---
 classDiagram
+    class Options {
+    }
+    class Authentication {
+        +string type
+        +Options credentials
+    }
     class McpToolOptions {
         +string name
         +string url

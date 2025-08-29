@@ -9,6 +9,10 @@ Options for file search.
 title: FileSearchOptions
 ---
 classDiagram
+    class FileSearchRankingOptions {
+        +string ranker
+        +float32 scoreThreshold
+    }
     class FileSearchOptions {
         +int32 maxNumResults
         +FileSearchRankingOptions rankingOptions

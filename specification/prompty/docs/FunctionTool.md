@@ -9,11 +9,28 @@ Represents a local function tool.
 title: FunctionTool
 ---
 classDiagram
+    class Parameter {
+        +string name
+        +string type
+        +string description
+        +boolean required
+        +unknown[] enum
+    }
+    class ArrayParameter {
+        +string type
+        +Parameter items
+    }
+    class ObjectParameter {
+        +string type
+        +Parameter[] properties
+    }
     class FunctionTool {
         +string type
         +Parameter[] parameters
     }
     FunctionTool *-- Parameter
+    Parameter *-- ObjectParameter
+    Parameter *-- ArrayParameter
 ```
 
 

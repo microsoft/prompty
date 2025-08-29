@@ -1,8 +1,9 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeName, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import { stringify } from 'yaml'
+import { get } from "http";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -55,7 +56,8 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       renderType: renderType,
       renderChildTypes: renderChildTypes,
       getChildTypes: getChildTypes,
-      getCompositionTypes: getCompositionTypes
+      getCompositionTypes: getCompositionTypes,
+      enumerateTypes: enumerateTypes
     });
 
     await emitMarkdownFile(context, node.typeName.name, md, outputDir);
@@ -87,15 +89,17 @@ export const renderChildTypes = (node: PropertyNode) => {
 };
 
 export const getChildTypes = (node: TypeNode): { source: string, target: string }[] => {
-  return node.childTypes.map(c => {
-    return { source: node.typeName.name, target: c.typeName.name };
-  });
+  return node.childTypes.flatMap(c => [{
+    source: node.typeName.name,
+    target: c.typeName.name
+  }, ...getChildTypes(c)]);
 };
 
 export const getCompositionTypes = (node: TypeNode): { source: string, target: string }[] => {
-  return node.properties.filter(p => !p.isScalar).map(c => {
-    return { source: node.typeName.name, target: c.typeName.name };
-  });
+  return node.properties.filter(p => !p.isScalar).flatMap(c => [{
+    source: node.typeName.name,
+    target: c.typeName.name
+  }, ...(c.type ? getChildTypes(c.type) : [])]);
 };
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {

@@ -10,11 +10,21 @@ This extends the base Output model to represent an array of items.
 title: ArrayOutput
 ---
 classDiagram
+    class Output {
+        +string type
+        +string description
+        +boolean required
+    }
+    class ObjectOutput {
+        +string type
+        +Output[] properties
+    }
     class ArrayOutput {
         +string type
         +Output items
     }
     ArrayOutput *-- Output
+    Output *-- ObjectOutput
 ```
 
 

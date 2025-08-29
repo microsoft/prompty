@@ -9,11 +9,13 @@
 title: {{ node.typeName.name }}
 ---
 classDiagram
-    class {{ node.typeName.name }} {
-      {%- for prop in node.properties %}
+    {%- for type in enumerateTypes(node) %}
+    class {{ type.typeName.name }} {
+      {%- for prop in type.properties %}
         +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}
     }
+    {%- endfor -%}
     {%- for child in getChildTypes(node) %}
     {{ child.source }} <|-- {{ child.target }}
     {%- endfor -%}
