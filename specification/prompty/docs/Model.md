@@ -28,6 +28,20 @@ model:
   id: gpt-35-turbo
 ```
 
+## Class Diagram
+
+```mermaid
+---
+title: Model
+---
+classDiagram
+    class Model {
+        +string id
+        +Connection connection
+    }
+    Model *-- Connection
+```
+
 
 
 
@@ -37,7 +51,6 @@ model:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model  |
-| connection | [Connection](Connection.md) | The connection configuration for the model <p>Related Types:<ul></ul></p> |
-
+| connection | [Connection](Connection.md) | The connection configuration for the model  |
 
 

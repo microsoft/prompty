@@ -7,6 +7,35 @@ available tools, and template configurations for prompt rendering.
 
 These can be written in a markdown format or in a pure YAML format.
 
+## Class Diagram
+
+```mermaid
+---
+title: Prompty
+---
+classDiagram
+    class Prompty {
+        +string id
+        +string version
+        +string name
+        +string description
+        +Metadata metadata
+        +Model model
+        +Input[] inputs
+        +Output[] outputs
+        +Tool[] tools
+        +Template template
+        +string instructions
+        +string additional_instructions
+    }
+    Prompty *-- Metadata
+    Prompty *-- Model
+    Prompty *-- Input
+    Prompty *-- Output
+    Prompty *-- Tool
+    Prompty *-- Template
+```
+
 
 ## Yaml Example
 ```yaml
@@ -70,14 +99,13 @@ instructions: |-
 | version | string | Version of the Prompty specification  |
 | name | string | Human-readable name of the agent  |
 | description | string | Description of the agent&#39;s capabilities and purpose  |
-| metadata | [Metadata](Metadata.md) | Additional metadata including authors, tags, and other arbitrary properties <p>Related Types:<ul></ul></p> |
-| model | [Model](Model.md) | Model configuration used for execution <p>Related Types:<ul></ul></p> |
-| inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering <p>Related Types:<ul></ul></p> |
+| metadata | [Metadata](Metadata.md) | Additional metadata including authors, tags, and other arbitrary properties  |
+| model | [Model](Model.md) | Model configuration used for execution  |
+| inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering  |
 | outputs | [Output Collection](Output.md) | Expected output format and structure from the agent <p>Related Types:<ul><li>[ArrayOutput](ArrayOutput.md)</li><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |
 | tools | [Tool Collection](Tool.md) | Tools available to the agent for extended functionality <p>Related Types:<ul><li>[FunctionTool](FunctionTool.md)</li><li>[ServerTool](ServerTool.md)</li><li>[BingSearchTool](BingSearchTool.md)</li><li>[FileSearchTool](FileSearchTool.md)</li><li>[McpTool](McpTool.md)</li></ul></p> |
-| template | [Template](Template.md) | Template configuration for prompt rendering <p>Related Types:<ul></ul></p> |
+| template | [Template](Template.md) | Template configuration for prompt rendering  |
 | instructions | string | Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)  |
 | additional_instructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
-
 
 

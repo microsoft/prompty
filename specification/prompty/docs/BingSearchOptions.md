@@ -2,6 +2,19 @@
 
 Options for the Bing search tool.
 
+## Class Diagram
+
+```mermaid
+---
+title: BingSearchOptions
+---
+classDiagram
+    class BingSearchOptions {
+        +BingSearchConfiguration[] configurations
+    }
+    BingSearchOptions *-- BingSearchConfiguration
+```
+
 
 
 
@@ -10,7 +23,6 @@ Options for the Bing search tool.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |  <p>Related Types:<ul></ul></p> |
-
+| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |   |
 
 

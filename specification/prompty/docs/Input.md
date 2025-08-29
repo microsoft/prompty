@@ -13,6 +13,24 @@ inputs:
   property3: boolean
 ```
 
+## Class Diagram
+
+```mermaid
+---
+title: Input
+---
+classDiagram
+    class Input {
+        +string name
+        +string type
+        +string description
+        +boolean required
+        +boolean strict
+        +unknown default
+        +unknown sample
+    }
+```
+
 
 
 
@@ -28,6 +46,5 @@ inputs:
 | strict | boolean | Whether the input property can emit structural text when parsing output  |
 | default | unknown | The default value of the input  |
 | sample | unknown | A sample value of the input for examples and tooling  |
-
 
 

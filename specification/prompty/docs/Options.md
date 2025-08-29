@@ -12,6 +12,19 @@ options:
   retryAttempts: 3
  ```
 
+## Class Diagram
+
+```mermaid
+---
+title: Options
+---
+classDiagram
+    class Options {
+    }
+    Options <|-- BingSearchOptions
+    Options <|-- FileSearchOptions
+    Options <|-- McpToolOptions
+```
 
 
 

@@ -2,6 +2,20 @@
 
 Represents an array parameter for a tool.
 
+## Class Diagram
+
+```mermaid
+---
+title: ArrayParameter
+---
+classDiagram
+    class ArrayParameter {
+        +string type
+        +Parameter items
+    }
+    ArrayParameter *-- Parameter
+```
+
 
 
 
@@ -11,7 +25,6 @@ Represents an array parameter for a tool.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type | string |   |
-| items | [Parameter](Parameter.md) | The type of items contained in the array <p>Related Types:<ul></ul></p> |
-
+| items | [Parameter](Parameter.md) | The type of items contained in the array  |
 
 

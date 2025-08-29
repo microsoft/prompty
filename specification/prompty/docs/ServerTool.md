@@ -6,6 +6,20 @@ It may include features such as authentication, data storage, and long-running p
 This tool type is ideal for tasks that involve complex computations or access to secure resources
 Server tools can be used to offload heavy processing from client applications
 
+## Class Diagram
+
+```mermaid
+---
+title: ServerTool
+---
+classDiagram
+    class ServerTool {
+        +string type
+        +Options options
+    }
+    ServerTool *-- Options
+```
+
 
 
 
@@ -16,6 +30,5 @@ Server tools can be used to offload heavy processing from client applications
 | ---- | ---- | ----------- |
 | type | string | The type identifier for server tools  |
 | options | [Options](Options.md) | Configuration options for the server tool  |
-
 
 

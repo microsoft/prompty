@@ -16,6 +16,22 @@ template:
   parser: prompty
 ```
 
+## Class Diagram
+
+```mermaid
+---
+title: Template
+---
+classDiagram
+    class Template {
+        +string format
+        +string parser
+        +boolean strict
+        +Options options
+    }
+    Template *-- Options
+```
+
 
 
 
@@ -28,6 +44,5 @@ template:
 | parser | string | Parser used to process the rendered template into API-compatible format  |
 | strict | boolean | Whether the template can emit structural text for parsing output  |
 | options | [Options](Options.md) | Additional options for the template engine  |
-
 
 

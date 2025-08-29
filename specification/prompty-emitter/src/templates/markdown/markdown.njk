@@ -2,6 +2,26 @@
 
 {{ node.description }}
 
+## Class Diagram
+
+```mermaid
+---
+title: {{ node.typeName.name }}
+---
+classDiagram
+    class {{ node.typeName.name }} {
+      {%- for prop in node.properties %}
+        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+      {%- endfor %}
+    }
+    {%- for child in getChildTypes(node) %}
+    {{ child.source }} <|-- {{ child.target }}
+    {%- endfor -%}
+    {%- for comp in getCompositionTypes(node) %}
+    {{ comp.source }} *-- {{ comp.target }}
+    {%- endfor %}
+```
+
 {% if yml %}
 ## Yaml Example
 ```yaml
@@ -19,5 +39,4 @@
 | {{ prop.name }} | {{ renderType(prop) }} | {{ prop.description }} {{ renderChildTypes(prop) | safe }} |
 {% endfor -%}
 {% endif %}
-
 

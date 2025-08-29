@@ -2,6 +2,20 @@
 
 The Bing search tool.
 
+## Class Diagram
+
+```mermaid
+---
+title: BingSearchTool
+---
+classDiagram
+    class BingSearchTool {
+        +string type
+        +BingSearchOptions options
+    }
+    BingSearchTool *-- BingSearchOptions
+```
+
 
 
 
@@ -12,6 +26,5 @@ The Bing search tool.
 | ---- | ---- | ----------- |
 | type | string | The type identifier for Bing search tools  |
 | options | [BingSearchOptions](BingSearchOptions.md) | The options for the Bing search tool  |
-
 
 

@@ -2,6 +2,19 @@
 
 Options for ranking file search results.
 
+## Class Diagram
+
+```mermaid
+---
+title: FileSearchRankingOptions
+---
+classDiagram
+    class FileSearchRankingOptions {
+        +string ranker
+        +float32 scoreThreshold
+    }
+```
+
 
 
 
@@ -12,6 +25,5 @@ Options for ranking file search results.
 | ---- | ---- | ----------- |
 | ranker | string | File search ranker.  |
 | scoreThreshold | float32 | Ranker search threshold.  |
-
 
 

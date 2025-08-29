@@ -53,7 +53,9 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       node: node,
       yml: sample.length > 0 ? stringify(deepMerge(...sample), { indent: 2 }) : undefined,
       renderType: renderType,
-      renderChildTypes: renderChildTypes
+      renderChildTypes: renderChildTypes,
+      getChildTypes: getChildTypes,
+      getCompositionTypes: getCompositionTypes
     });
 
     await emitMarkdownFile(context, node.typeName.name, md, outputDir);
@@ -70,14 +72,30 @@ export const renderType = (prop: PropertyNode) => {
 };
 
 export const renderChildTypes = (node: PropertyNode) => {
-  if(!node.isScalar && node.type) {
+  if (!node.isScalar && node.type) {
     const childTypes = node.type.childTypes.map(c => {
       return `<li>[${c.typeName.name}](${c.typeName.name}.md)</li>`;
     });
 
+    if (childTypes.length === 0) {
+      return "";
+    }
+
     return `<p>Related Types:<ul>${childTypes.join("")}</ul></p>`;
   }
   return "";
+};
+
+export const getChildTypes = (node: TypeNode): { source: string, target: string }[] => {
+  return node.childTypes.map(c => {
+    return { source: node.typeName.name, target: c.typeName.name };
+  });
+};
+
+export const getCompositionTypes = (node: TypeNode): { source: string, target: string }[] => {
+  return node.properties.filter(p => !p.isScalar).map(c => {
+    return { source: node.typeName.name, target: c.typeName.name };
+  });
 };
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
