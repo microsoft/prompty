@@ -33,7 +33,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     });
   }).flat();
 
-  const compositionTypes: {source: string, target: string}[] = nodes.map(n => {
+  const compositionTypes: { source: string, target: string }[] = nodes.map(n => {
     return n.properties.filter(p => !p.isScalar).map(c => {
       return { source: n.typeName.name, target: c.typeName.name };
     });
@@ -49,11 +49,14 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
 
   for (const node of nodes) {
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
-    await emitMarkdownFile(context, node.typeName.name, template.render({
+    const md = template.render({
       node: node,
       yml: sample.length > 0 ? stringify(deepMerge(...sample), { indent: 2 }) : undefined,
-      renderType: renderType
-    }), outputDir);
+      renderType: renderType,
+      renderChildTypes: renderChildTypes
+    });
+
+    await emitMarkdownFile(context, node.typeName.name, md, outputDir);
   }
 }
 
@@ -64,6 +67,17 @@ export const renderType = (prop: PropertyNode) => {
   } else {
     return `[${prop.typeName.name + arrayString}](${prop.typeName.name}.md)`;
   }
+};
+
+export const renderChildTypes = (node: PropertyNode) => {
+  if(!node.isScalar && node.type) {
+    const childTypes = node.type.childTypes.map(c => {
+      return `<li>[${c.typeName.name}](${c.typeName.name}.md)</li>`;
+    });
+
+    return `<br />Related Types:<ul>${childTypes.join("")}</ul>`;
+  }
+  return "";
 };
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {

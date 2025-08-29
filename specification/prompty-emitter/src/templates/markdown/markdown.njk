@@ -16,7 +16,7 @@
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {% for prop in node.properties -%}
-| {{ prop.name }} | {{ renderType(prop) }} | {{ prop.description }} |
+| {{ prop.name }} | {{ renderType(prop) }} | {{ prop.description }} {{ renderChildTypes(prop) | safe }} |
 {% endfor -%}
 {% endif %}
 
