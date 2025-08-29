@@ -121,9 +121,11 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
         }
       }
       for (const child of prop.type.childTypes) {
-        if (!visited.has(child.typeName.fullName)) {
-          yield child;
-          visited.add(child.typeName.fullName);
+        for(const subNode of enumerateTypes(child, visited)) {
+          if (!visited.has(subNode.typeName.fullName)) {
+            yield subNode;
+            visited.add(subNode.typeName.fullName);
+          }
         }
       }
     }

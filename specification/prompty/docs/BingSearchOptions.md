@@ -10,7 +10,7 @@ Options for the Bing search tool.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |  <br />Related Types:<ul></ul> |
+| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |  <p>Related Types:<ul></ul></p> |
 
 
 

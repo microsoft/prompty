@@ -37,7 +37,7 @@ model:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model  |
-| connection | [Connection](Connection.md) | The connection configuration for the model <br />Related Types:<ul></ul> |
+| connection | [Connection](Connection.md) | The connection configuration for the model <p>Related Types:<ul></ul></p> |
 
 
 

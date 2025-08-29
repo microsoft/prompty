@@ -11,12 +11,28 @@ classDiagram
     }
     class Options {
     }
+    class BingSearchConfiguration {
+        +string connectionId
+        +string instanceName
+        +string market
+        +string setLang
+        +int64 count
+        +string freshness
+    }
     class BingSearchOptions {
         +BingSearchConfiguration[] configurations
+    }
+    class FileSearchRankingOptions {
+        +string ranker
+        +float32 scoreThreshold
     }
     class FileSearchOptions {
         +int32 maxNumResults
         +FileSearchRankingOptions rankingOptions
+    }
+    class Authentication {
+        +string type
+        +Options credentials
     }
     class McpToolOptions {
         +string name
@@ -49,13 +65,13 @@ classDiagram
         +string description
         +boolean required
     }
-    class ArrayOutput {
-        +string type
-        +Output items
-    }
     class ObjectOutput {
         +string type
         +Output[] properties
+    }
+    class ArrayOutput {
+        +string type
+        +Output items
     }
     class Binding {
         +string name
@@ -66,6 +82,21 @@ classDiagram
         +string type
         +string description
         +Binding[] bindings
+    }
+    class Parameter {
+        +string name
+        +string type
+        +string description
+        +boolean required
+        +unknown[] enum
+    }
+    class ArrayParameter {
+        +string type
+        +Parameter items
+    }
+    class ObjectParameter {
+        +string type
+        +Parameter[] properties
     }
     class FunctionTool {
         +string type
@@ -117,14 +148,19 @@ classDiagram
     Tool <|-- BingSearchTool
     Tool <|-- FileSearchTool
     Tool <|-- McpTool
+    Parameter <|-- ObjectParameter
+    Parameter <|-- ArrayParameter
     BingSearchOptions *-- BingSearchConfiguration
     FileSearchOptions *-- FileSearchRankingOptions
+    Authentication *-- Options
     McpToolOptions *-- Authentication
     Connection *-- Options
     Model *-- Connection
-    ArrayOutput *-- Output
     ObjectOutput *-- Output
+    ArrayOutput *-- Output
     Tool *-- Binding
+    ArrayParameter *-- Parameter
+    ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
     ServerTool *-- Options
     BingSearchTool *-- BingSearchOptions

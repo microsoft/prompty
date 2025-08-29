@@ -12,7 +12,7 @@ This extends the base Output model to represent a structured object.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type | string |   |
-| properties | [Output Collection](Output.md) | The properties contained in the object  |
+| properties | [Output Collection](Output.md) | The properties contained in the object <p>Related Types:<ul></ul></p> |
 
 
 

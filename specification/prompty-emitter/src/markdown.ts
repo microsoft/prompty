@@ -75,7 +75,7 @@ export const renderChildTypes = (node: PropertyNode) => {
       return `<li>[${c.typeName.name}](${c.typeName.name}.md)</li>`;
     });
 
-    return `<br />Related Types:<ul>${childTypes.join("")}</ul>`;
+    return `<p>Related Types:<ul>${childTypes.join("")}</ul></p>`;
   }
   return "";
 };

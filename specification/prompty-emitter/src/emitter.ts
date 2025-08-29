@@ -42,8 +42,6 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   const targets = options["emit-targets"] || [];
   const targetNames = targets.map(t => t.type.toLowerCase());
 
-  //console.log(`OPTIONS: ${JSON.stringify(options)}`);
-
   if (targetNames.includes("markdown")) {
     const idx = targetNames.indexOf("markdown");
     const target = targets[idx];
