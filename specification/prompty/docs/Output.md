@@ -16,8 +16,6 @@ classDiagram
         +string description
         +boolean required
     }
-    Output <|-- ArrayOutput
-    Output <|-- ObjectOutput
 ```
 
 

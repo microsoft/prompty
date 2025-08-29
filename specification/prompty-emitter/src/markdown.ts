@@ -64,6 +64,8 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
   }
 }
 
+
+
 export const renderType = (prop: PropertyNode) => {
   const arrayString = prop.isCollection ? " Collection" : "";
   if (prop.isScalar) {
@@ -101,6 +103,7 @@ export const getCompositionTypes = (node: TypeNode): { source: string, target: s
     target: c.typeName.name
   }, ...(c.type ? getChildTypes(c.type) : [])]);
 };
+
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
   const dir = outputDir || `${context.emitterOutputDir}/markdown`;

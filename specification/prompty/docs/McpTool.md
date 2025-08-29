@@ -13,7 +13,6 @@ classDiagram
         +string type
         +McpToolOptions options
     }
-    McpTool *-- McpToolOptions
 ```
 
 

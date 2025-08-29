@@ -14,7 +14,6 @@ classDiagram
         +string type
         +FileSearchOptions options
     }
-    FileSearchTool *-- FileSearchOptions
 ```
 
 

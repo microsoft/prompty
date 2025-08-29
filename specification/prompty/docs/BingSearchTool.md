@@ -13,7 +13,6 @@ classDiagram
         +string type
         +BingSearchOptions options
     }
-    BingSearchTool *-- BingSearchOptions
 ```
 
 

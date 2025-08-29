@@ -9,23 +9,10 @@ Represents an object parameter for a tool.
 title: ObjectParameter
 ---
 classDiagram
-    class Parameter {
-        +string name
-        +string type
-        +string description
-        +boolean required
-        +unknown[] enum
-    }
-    class ArrayParameter {
-        +string type
-        +Parameter items
-    }
     class ObjectParameter {
         +string type
         +Parameter[] properties
     }
-    ObjectParameter *-- Parameter
-    Parameter *-- ArrayParameter
 ```
 
 

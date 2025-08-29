@@ -29,7 +29,6 @@ classDiagram
         +boolean strict
         +Options options
     }
-    Template *-- Options
 ```
 
 

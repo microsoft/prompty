@@ -17,7 +17,6 @@ classDiagram
         +string type
         +Options options
     }
-    ServerTool *-- Options
 ```
 
 

@@ -16,8 +16,6 @@ classDiagram
         +boolean required
         +unknown[] enum
     }
-    Parameter <|-- ObjectParameter
-    Parameter <|-- ArrayParameter
 ```
 
 

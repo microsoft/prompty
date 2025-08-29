@@ -9,17 +9,10 @@ Represents an array parameter for a tool.
 title: ArrayParameter
 ---
 classDiagram
-    class Parameter {
-        +string type
-        +string description
-        +boolean required
-        +unknown[] enum
-    }
     class ArrayParameter {
         +string type
         +Parameter items
     }
-    ArrayParameter *-- Parameter
 ```
 
 

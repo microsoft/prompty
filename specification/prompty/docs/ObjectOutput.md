@@ -10,17 +10,10 @@ This extends the base Output model to represent a structured object.
 title: ObjectOutput
 ---
 classDiagram
-    class Output {
-        +string name
-        +string type
-        +string description
-        +boolean required
-    }
     class ObjectOutput {
         +string type
         +Output[] properties
     }
-    ObjectOutput *-- Output
 ```
 
 
