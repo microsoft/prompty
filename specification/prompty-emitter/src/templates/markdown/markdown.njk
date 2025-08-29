@@ -23,6 +23,12 @@ classDiagram
     {{ node.typeName.name }} <|-- {{ type.typeName.name }}
     {%- endfor %}
 ```
+{% if md %}
+## Markdown Example
+```markdown
+{{ md | safe }}
+```
+{% endif %}
 
 {% if yml %}
 ## Yaml Example

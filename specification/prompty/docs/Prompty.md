@@ -30,6 +30,58 @@ classDiagram
     }
 ```
 
+## Markdown Example
+```markdown
+---
+id: unique-agent-id
+version: 1.0.0
+name: basic-prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+model:
+  id: gpt-35-turbo
+  connection:
+    provider: azure
+    type: chat
+    endpoint: https://{your-custom-endpoint}.openai.azure.com/
+inputs:
+  firstName:
+    type: string
+    sample: Jane
+  lastName:
+    type: string
+    sample: Doe
+  question:
+    type: string
+    sample: What is the meaning of life?
+outputs:
+  answer:
+    type: string
+    description: The answer to the user's question.
+template:
+  format: handlebars
+  parser: prompty
+---
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly,
+and in a personable manner using markdown and even add some 
+personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to 
+their questions. Use their name to address them in your responses.
+user:
+{{question}}
+```
+
+
 
 ## Yaml Example
 ```yaml

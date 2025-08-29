@@ -50,9 +50,21 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
 
   for (const node of nodes) {
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
-    const md = template.render({
+    let yml: string | undefined = undefined;
+    let md: string | undefined = undefined;
+    if (sample.length > 0) {
+      const s = deepMerge(...sample);
+      yml = stringify(s, { indent: 2 });
+      if("instructions" in s) {
+        const instructions = s.instructions;
+        delete s.instructions;
+        md = `---\n${stringify(s, { indent: 2 })}---\n${instructions}`;
+      }
+    }
+    const markdown = template.render({
       node: node,
-      yml: sample.length > 0 ? stringify(deepMerge(...sample), { indent: 2 }) : undefined,
+      yml: yml,
+      md: md,
       renderType: renderType,
       renderChildTypes: renderChildTypes,
       getChildTypes: getChildTypes,
@@ -60,11 +72,16 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       enumerateTypes: enumerateTypes
     });
 
-    await emitMarkdownFile(context, node.typeName.name, md, outputDir);
+    await emitMarkdownFile(context, node.typeName.name, markdown, outputDir);
   }
 }
 
-
+const renderPromptyMarkdown = (node: TypeNode): string => {
+  if("instructions" in node) {
+    const instructions = node.instructions;
+  }
+  return "";
+}
 
 export const renderType = (prop: PropertyNode) => {
   const arrayString = prop.isCollection ? " Collection" : "";
@@ -103,7 +120,6 @@ export const getCompositionTypes = (node: TypeNode): { source: string, target: s
     target: c.typeName.name
   }, ...(c.type ? getChildTypes(c.type) : [])]);
 };
-
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
   const dir = outputDir || `${context.emitterOutputDir}/markdown`;
