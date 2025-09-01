@@ -1,67 +1,130 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
+import { stringify } from 'yaml'
+import { get } from "http";
+
+function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
+  return objects.reduce((acc, obj) => {
+    Object.keys(obj).forEach((key) => {
+      const accValue = acc[key as keyof T];
+      const objValue = obj[key as keyof T];
+
+      if (typeof accValue === "object" && typeof objValue === "object") {
+        acc[key as keyof T] = deepMerge(accValue, objValue);
+      } else {
+        acc[key as keyof T] = objValue;
+      }
+    });
+    return acc;
+  }, {} as T);
+}
 
 
-
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/markdown'));
   const template = env.getTemplate('markdown.njk', true);
+  const readme = env.getTemplate('readme.njk', true);
 
-  emitMarkdown(context, template, node, false);
-}
+  const childTypes: { source: string, target: string }[] = nodes.map(n => {
+    return n.childTypes.map(c => {
+      return { source: n.typeName.name, target: c.typeName.name };
+    });
+  }).flat();
 
-const typeLink = (name: string) => name.toLowerCase().replaceAll(' ', '-');
+  const compositionTypes: { source: string, target: string }[] = nodes.map(n => {
+    return n.properties.filter(p => !p.isScalar).map(c => {
+      return { source: n.typeName.name, target: c.typeName.name };
+    });
+  }).flat();
 
-const emitMarkdown = async (context: EmitContext<PromptyEmitterOptions>,
-  template: nunjucks.Template,
-  node: TypeNode, inline: boolean = false): Promise<string> => {
-  const markdown = template.render({
-    node: node,
-    renderType: renderType(inline),
+  const readmeContent = readme.render({
+    types: nodes,
+    childTypes: childTypes,
+    compositionTypes: compositionTypes
   });
 
-  if (inline) {
-    const props = await Promise.all(node.properties.flatMap(async (p) => {
-      return await Promise.all(p.type.map(async (t) => { return await emitMarkdown(context, template, t, true) }));
-    }));
+  await emitMarkdownFile(context, "README", readmeContent, outputDir);
 
-    const content = markdown + props.flatMap(p => p).filter(p => p && p.length > 0).join("\n");
-    return content;
-
-  } else {
-    // return root
-    await emitMarkdownFile(context, node.typeName, markdown);
-    // emit file for prop (since not inline)
-    for (const prop of node.properties.filter(p => p.type.length > 0)) {
-      const props = await Promise.all(prop.type.map(async (t) =>
-        await emitMarkdown(context, template, t, true)
-      ));
-      await emitMarkdownFile(context, prop.name, props.join("\n"));
+  for (const node of nodes) {
+    const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
+    let yml: string | undefined = undefined;
+    let md: string | undefined = undefined;
+    if (sample.length > 0) {
+      const s = deepMerge(...sample);
+      yml = stringify(s, { indent: 2 });
+      if("instructions" in s) {
+        const instructions = s.instructions;
+        delete s.instructions;
+        md = `---\n${stringify(s, { indent: 2 })}---\n${instructions}`;
+      }
     }
+    const markdown = template.render({
+      node: node,
+      yml: yml,
+      md: md,
+      renderType: renderType,
+      renderChildTypes: renderChildTypes,
+      getChildTypes: getChildTypes,
+      getCompositionTypes: getCompositionTypes,
+      enumerateTypes: enumerateTypes
+    });
 
-    return markdown;
+    await emitMarkdownFile(context, node.typeName.name, markdown, outputDir);
   }
-
 }
 
-const renderType = (inline: boolean) => (prop: PropertyNode): string => {
-  const text = `${prop.typeName}${prop.isCollection ? " Collection" : ""}`.replaceAll(" | ", ", ");
-  if (prop.kind !== "Scalar" && !prop.typeName.includes("unknown") && !prop.typeName.includes('"')) {
-    if (inline) {
-      return `[${text}](#${typeLink(prop.typeName)})`
-    } else {
-      return `[${text}](${typeLink(prop.name)}.md)`;
-    }
+const renderPromptyMarkdown = (node: TypeNode): string => {
+  if("instructions" in node) {
+    const instructions = node.instructions;
   }
-  return text;
+  return "";
+}
+
+export const renderType = (prop: PropertyNode) => {
+  const arrayString = prop.isCollection ? " Collection" : "";
+  if (prop.isScalar) {
+    return prop.typeName.name + arrayString;
+  } else {
+    return `[${prop.typeName.name + arrayString}](${prop.typeName.name}.md)`;
+  }
 };
 
-const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string) => {
+export const renderChildTypes = (node: PropertyNode) => {
+  if (!node.isScalar && node.type) {
+    const childTypes = node.type.childTypes.map(c => {
+      return `<li>[${c.typeName.name}](${c.typeName.name}.md)</li>`;
+    });
+
+    if (childTypes.length === 0) {
+      return "";
+    }
+
+    return `<p>Related Types:<ul>${childTypes.join("")}</ul></p>`;
+  }
+  return "";
+};
+
+export const getChildTypes = (node: TypeNode): { source: string, target: string }[] => {
+  return node.childTypes.flatMap(c => [{
+    source: node.typeName.name,
+    target: c.typeName.name
+  }, ...getChildTypes(c)]);
+};
+
+export const getCompositionTypes = (node: TypeNode): { source: string, target: string }[] => {
+  return node.properties.filter(p => !p.isScalar).flatMap(c => [{
+    source: node.typeName.name,
+    target: c.typeName.name
+  }, ...(c.type ? getChildTypes(c.type) : [])]);
+};
+
+const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
+  const dir = outputDir || `${context.emitterOutputDir}/markdown`;
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "markdown", `${typeLink(name)}.md`),
+    path: resolvePath(dir, `${name}.md`),
     content: markdown,
   });
 }

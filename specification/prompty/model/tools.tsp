@@ -1,4 +1,6 @@
+import "@prompty/emitter";
 import "./core.tsp";
+import "./tools";
 
 namespace Prompty.Core {
   /**
@@ -9,21 +11,7 @@ namespace Prompty.Core {
     input: string;
   }
 
-  alias Bindings = Record<Binding> | Named<Binding>[];
-
-  /**
-   * Represents a tool that can be used in prompts.
-   */
-  model Tool {
-    @doc("The type identifier for the tool")
-    type: string;
-
-    @doc("A short description of the tool for metadata purposes")
-    description?: string = "";
-
-    @doc("Tool argument bindings to input properties")
-    binding?: Bindings = #[];
-  }
+  alias Bindings = Record<Binding> | Named<Binding, "Name of the binding">[];
 
   /**
    * Represents a parameter for a tool.
@@ -62,21 +50,41 @@ namespace Prompty.Core {
     items: Parameter | Named<Parameter>;
   }
 
-  alias Parameters = Record<Parameter> | Named<Parameter>[];
+  alias Parameters = Record<Parameter> | Named<Parameter, "Name of the parameter">[];
+
+  union ToolTypes {
+    functionType: "function",
+    string
+  };
+
+  /**
+   * Represents a tool that can be used in prompts.
+   */
+ 
+  model Tool {
+    @doc("The type identifier for the tool")
+    type: ToolTypes;
+
+    @doc("A short description of the tool for metadata purposes")
+    description?: string = "";
+
+    @doc("Tool argument bindings to input properties")
+    bindings?: Bindings = #[];
+  }
 
   /**
    * Represents a local function tool.
    */
   model FunctionTool extends Tool {
     @doc("The type identifier for function tools")
-    type: string = "function";
+    type: "function";
 
     @doc("Parameters accepted by the function tool")
     parameters: Parameters = #[];
   }
 
   /**
-   * Represents a tool that runs on a server
+   * Represents a generic server tool that runs on a server
    * This tool type is designed for operations that require server-side execution
    * It may include features such as authentication, data storage, and long-running processes
    * This tool type is ideal for tasks that involve complex computations or access to secure resources

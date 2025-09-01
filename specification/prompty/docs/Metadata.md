@@ -18,4 +18,20 @@ metadata:
     - tag3
 ```
 
+## Class Diagram
+
+```mermaid
+---
+title: Metadata
+---
+classDiagram
+    class Metadata {
+    }
+```
+
+
+
+
+
+
 

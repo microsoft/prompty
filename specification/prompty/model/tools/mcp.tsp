@@ -2,11 +2,11 @@ import "../core.tsp";
 import "../tools.tsp";
 import "./authentication.tsp";
 
-namespace Prompty.ServerTools {
+namespace Prompty.Core {
   /**
    * Configuration options for the MCP tool.
    */
-  model McpToolOptions extends Prompty.Core.Options {
+  model McpToolOptions extends Options {
     @doc("The name of the MCP tool")
     name: string;
 
@@ -23,7 +23,7 @@ namespace Prompty.ServerTools {
   /**
    * The MCP Server tool.
    */
-  model McpTool extends Prompty.Core.Tool {
+  model McpTool extends Tool {
     @doc("The type identifier for MCP tools")
     type: "mcp";
 

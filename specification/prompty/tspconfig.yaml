@@ -9,4 +9,12 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output/prompty"
-    target-name: "AgentDefinition"
+    emit-targets:
+      - type: markdown
+        output-dir: "{cwd}/../../prompty/docs"
+      - type: CSharp
+        output-dir: "{cwd}/tsp-output/prompty/CSharp"
+      - type: Python
+        output-dir: "{cwd}/tsp-output/prompty/Python"
+      - type: TypeScript
+        output-dir: "{cwd}/tsp-output/prompty/TypeScript"

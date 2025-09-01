@@ -1,3 +1,4 @@
+import "@prompty/emitter";
 import "./core.tsp";
 
 namespace Prompty.Core {
@@ -5,9 +6,10 @@ namespace Prompty.Core {
    * Represents the output properties of an AI agent.
    * Each output property can be a simple type, an array, or an object.
    */
+  @discriminator("type")
   model Output {
     @doc("The data type of the output property")
-    type: SimpleTypes = "string";
+    type: SimpleTypes;
 
     @doc("A short description of the output property")
     description?: string = "";
@@ -24,7 +26,7 @@ namespace Prompty.Core {
     type: "array";
 
     @doc("The type of items contained in the array")
-    items: Output | Named<Output>;
+    items: Output | Named<Output, "Name of the output property">;
   }
 
   /**
@@ -38,5 +40,5 @@ namespace Prompty.Core {
     properties: Outputs;
   }
 
-  alias Outputs = Record<Output> | Named<Output>[];
+  alias Outputs = Record<Output> | Named<Output, "Name of the output property">[];
 }

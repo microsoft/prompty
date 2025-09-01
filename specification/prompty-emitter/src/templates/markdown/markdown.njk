@@ -1,6 +1,42 @@
-# {{ node.typeName }}
+# {{ node.typeName.name }}
 
 {{ node.description }}
+
+## Class Diagram
+
+```mermaid
+---
+title: {{ node.typeName.name }}
+---
+classDiagram
+    class {{ node.typeName.name }} {
+      {%- for prop in node.properties %}
+        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+      {%- endfor %}
+    }
+    {%- for type in node.childTypes %}
+    class {{ type.typeName.name }} {
+      {%- for prop in type.properties %}
+        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+      {%- endfor %}
+    }
+    {{ node.typeName.name }} <|-- {{ type.typeName.name }}
+    {%- endfor %}
+```
+{% if md %}
+## Markdown Example
+```markdown
+{{ md | safe }}
+```
+{% endif %}
+
+{% if yml %}
+## Yaml Example
+```yaml
+{{ yml | safe }}
+```
+{% endif %}
+
 {% if node.properties.length > 0 %}
 
 ## Properties
@@ -8,7 +44,15 @@
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {% for prop in node.properties -%}
-| {{ prop.name }} |  {{ renderType(prop) }} | {{ prop.description }} |
+| {{ prop.name }} | {{ renderType(prop) }} | {{ prop.description }} {{ renderChildTypes(prop) | safe }} |
 {% endfor -%}
 {% endif %}
 
+{% if node.childTypes.length > 0 %}
+## Child Types
+
+The following types extend `{{ node.typeName.name }}`:
+{% for type in node.childTypes -%}
+- [{{ type.typeName.name }}]({{ type.typeName.name }}.md)
+{% endfor -%}
+{% endif %}

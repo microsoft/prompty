@@ -1,7 +1,7 @@
 import "../core.tsp";
 import "../tools.tsp";
 
-namespace Prompty.ServerTools {
+namespace Prompty.Core {
   /**
    * Configuration options for the Bing search tool.
    */
@@ -28,14 +28,14 @@ namespace Prompty.ServerTools {
   /**
    * Options for the Bing search tool.
    */
-  model BingSearchOptions extends Prompty.Core.Options {
+  model BingSearchOptions extends Options {
     configurations: BingSearchConfiguration[];
   }
 
   /**
    * The Bing search tool.
    */
-  model BingSearchTool extends Prompty.Core.Tool {
+  model BingSearchTool extends Tool {
     @doc("The type identifier for Bing search tools")
     type: "bing_search";
 

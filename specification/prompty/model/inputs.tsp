@@ -1,3 +1,4 @@
+import "@prompty/emitter";
 import "./core.tsp";
 
 namespace Prompty.Core {
@@ -17,7 +18,7 @@ namespace Prompty.Core {
    */
   model Input {
     @doc("The data type of the input property")
-    type: SimpleTypes = "string";
+    type: SimpleTypes;
 
     @doc("A short description of the input property")
     description?: string = "";
@@ -35,5 +36,5 @@ namespace Prompty.Core {
     sample?: unknown = null;
   }
 
-  alias Inputs = Record<Input> | Named<Input>[];
+  alias Inputs = Record<Input> | Named<Input, "Name of the input property">[];
 }
