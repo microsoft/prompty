@@ -30,7 +30,7 @@ namespace Prompty.Core {
    */
   model Parameter {
     @doc("The data type of the tool parameter")
-    type: SimpleTypes = "string";
+    type: string;
 
     @doc("A short description of the property")
     description?: string = "";

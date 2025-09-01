@@ -9,4 +9,4 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output/prompty"
-    target-name: "Prompty"
+    target-name: "AgentDefinition"

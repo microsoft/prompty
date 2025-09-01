@@ -108,6 +108,9 @@ namespace Prompty.Core {
    */
   model Prompty {
     // Prompty metadata
+    @doc("Type represented by the Prompty document")
+    type: string = "";
+
     @doc("Unique identifier for the Prompty document")
     id?: string = "";
 
