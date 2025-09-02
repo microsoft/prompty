@@ -3,6 +3,7 @@ import { defineConfig, passthroughImageService } from "astro/config";
 import starlight from "@astrojs/starlight";
 import devtoolsJson from "vite-plugin-devtools-json";
 import starlightAutoSidebar from "starlight-auto-sidebar";
+import starlightLinksValidator from "starlight-links-validator";
 
 export default defineConfig({
   site: "https://prompty.ai/",
@@ -28,7 +29,9 @@ export default defineConfig({
           href: "https://github.com/microsoft/prompty",
         },
       ],
-      plugins: [starlightAutoSidebar()],
+      plugins: [starlightAutoSidebar(), starlightLinksValidator({
+        exclude: ["http://localhost:4321"]
+      })],
       sidebar: [
         {
           label: "Welcome",

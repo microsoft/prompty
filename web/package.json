@@ -18,6 +18,7 @@
     "starlight-contributor-list": "^0.3.0"
   },
   "devDependencies": {
+    "starlight-links-validator": "^0.17.1",
     "vite-plugin-devtools-json": "^0.2.0"
   }
 }
