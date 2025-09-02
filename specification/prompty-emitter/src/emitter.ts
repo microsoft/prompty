@@ -49,7 +49,12 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     await generateMarkdown(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
   }
 
-  //await generatePython(context, ast);
+  if (targetNames.includes("python")) {
+    const idx = targetNames.indexOf("python");
+    const target = targets[idx];
+    // emit python
+    await generatePython(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
+  }
 
   //await generateCsharp(context, ast);
 
