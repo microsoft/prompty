@@ -4,11 +4,11 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 {%- for type in types %}
-from ._{{ formatFile(type.typeName) }} import {{ type.typeName }}
+from ._{{ type.typeName.name }} import {{ type.typeName.name }}
 {%- endfor %}
 
 __all__ = [
     {%- for type in types %}
-    "{{ type.typeName }}",
+    "{{ type.typeName.name }}",
     {%- endfor %}
 ]

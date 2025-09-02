@@ -5,17 +5,17 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-{%- if typingIncludes and typingIncludes.length > 0 %}
-from typing import{% for item in typingIncludes -%}{{ comma() }} {{ item }}{% endfor %}
+{%- if typings and typings.length > 0 %}
+from typing import{% for item in typings -%}{{ comma() }} {{ item }}{% endfor %}
 {%- endif %}
 from dataclasses import dataclass, field
 {%- for import in imports %}
-{{ import }}
+from ._{{ import }} import {{ import }}
 {%- endfor %}
 
 
 @dataclass
-class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}){%- endif -%}:
+class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endif -%}:
     """{%- for line in node.description.split('\n') -%}
     {{ line }}
     {% endfor -%}
@@ -23,38 +23,42 @@ class {{ node.typeName }}{%- if node.baseType.length > 0 -%}({{ node.baseType }}
     Attributes
     ----------
     {% for prop in node.properties -%}
-    {{ prop.name }} : {{ renderType(node, prop) | safe }}
+    {{ prop.name }} : {{ renderType(prop) | safe }}
         {{ prop.description }}
     {% endfor %}
     """ 
-    {% for prop in node.properties -%}
-    {{ prop.name }}: {{ renderType(node, prop) | safe }}{{ renderDefault(node, prop) | safe }}
-    {% endfor %}
 
-    def load(self, data: Optional[dict] = None):
+    {% for prop in node.properties -%}
+    {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
+    {% endfor %}
+    @staticmethod
+    def load(data: Optional[dict] = None) -> "{{ node.typeName.name }}":
+        instance = {{ node.typeName.name }}()
         {% for prop in node.properties -%}
         if data is not None and "{{ prop.name }}" in data:
-            self.{{ prop.name }} = {% if prop.kind == "Scalar" %}data["{{ prop.name }}"]{% else %}self.load_{{ prop.name }}(data["{{ prop.name }}"]){% endif %}
+            instance.{{ prop.name }} = {% if prop.isScalar %}data["{{ prop.name }}"]{% else %}{% if prop.isCollection %}{{ node.typeName.name }}.load_{{ prop.name }}{% else %}{{ prop.typeName.name }}.load{% endif %}(data["{{ prop.name }}"]){% endif %}
         {% endfor -%}
+        return instance
 
     {% for prop in node.properties | selectattr("isCollection") %}
-    def load_{{ prop.name }}(self, data: Optional[dict] = None) -> list[{{ prop.typeName }}]:
+    @staticmethod
+    def load_{{ prop.name }}(data: Optional[dict] = None) -> list[{{ prop.typeName.name }}]:
         if data is not None and "{{ prop.name }}" in data:
-            return [{{ prop.typeName | safe }}(item) for item in data["{{ prop.name }}"]]
+            return [{{ prop.typeName.name }}(item) for item in data["{{ prop.name }}"]]
         else:
             return []
     {% endfor %}
     {% else %}
     """
-
-    def __init__(self, data: Optional[dict] = None):
-        if data is None:
-            data = {}
-        else:
-            self.data = data
-    
     # Fallback for unknown properties
     data: dict = field(default_factory=dict)
+
+    @staticmethod
+    def load(data: Optional[dict] = None) -> "{{ node.typeName.name }}":
+        instance = {{ node.typeName.name }}()
+        if data is not None:
+            instance.data = data
+        return instance
 
     def __getitem__(self, key):
         return self.data[key]

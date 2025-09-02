@@ -13,8 +13,8 @@ options:
       - type: markdown
         output-dir: "{cwd}/../../prompty/docs"
       - type: CSharp
-        output-dir: "{cwd}/tsp-output/prompty/CSharp"
+        output-dir: "./tsp-output/prompty/CSharp"
       - type: Python
-        output-dir: "{cwd}/tsp-output/prompty/Python"
+        output-dir: "./tsp-output/prompty/Python"
       - type: TypeScript
-        output-dir: "{cwd}/tsp-output/prompty/TypeScript"
+        output-dir: "./tsp-output/prompty/TypeScript"
