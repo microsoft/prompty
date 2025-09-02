@@ -126,6 +126,7 @@ classDiagram
         +Options options
     }
     class Prompty {
+        +string type
         +string id
         +string version
         +string name

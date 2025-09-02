@@ -56,13 +56,20 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     await generatePython(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
   }
 
-  //await generateCsharp(context, ast);
+  if (targetNames.includes("csharp")) {
+    const idx = targetNames.indexOf("csharp");
+    const target = targets[idx];
+    // emit csharp
+    await generateCsharp(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
+  }
 
   await emitFile(context.program, {
     path: resolvePath(context.emitterOutputDir, "json", "model.json"),
     content: JSON.stringify(model.getSanitizedObject(), null, 2),
   });
 }
+
+
 
 const resolveNamespace = (node: TypeNode, rootNamespace: string): TypeName => {
   const parts = node.typeName.namespace.split(".");

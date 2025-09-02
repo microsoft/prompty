@@ -29,22 +29,26 @@ const csharpSkipTypes = [
   "ServerTool"
 ]
 
-export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/csharp'));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
 
+  const rootNode = nodes.find(n => n.isRoot);
+  if (!rootNode) {
+    throw new Error("Root node not found");
+  }
+
   const utils = utilsTemplate.render({
-    namespace: getNamespace(node),
+    namespace: getNamespace(rootNode),
   });
 
-  await emitCsharpFile(context, node, utils, "Utils.cs");
+  await emitCsharpFile(context, rootNode, utils, "Utils.cs", outputDir);
 
-  const types = Array.from(enumerateTypes(node));
 
-  for (const type of types) {
-    if (csharpSkipTypes.includes(type.typeName)) {
+  for (const type of nodes) {
+    if (csharpSkipTypes.includes(type.typeName.name) || (type.base && csharpSkipTypes.includes(type.base.name))) {
       continue;
     }
 
@@ -60,13 +64,13 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
       formatDescription: formatDescription,
     });
 
-    const className = getClassName(type.typeName);
-    await emitCsharpFile(context, type, csharp, `${className}.cs`);
+    const className = getClassName(type.typeName.name);
+    await emitCsharpFile(context, type, csharp, `${className}.cs`, outputDir);
   }
 }
 
 const isClass = (node: TypeNode): boolean => {
-  return node.kind === "Model" && node.properties.length > 0;
+  return false;
 };
 
 const getClassName = (name: string): string => {
@@ -81,55 +85,50 @@ const renderPropertyName = (prop: PropertyNode): string => {
 };
 
 const renderType = (prop: PropertyNode): string => {
-  const nameRender = (name: string): string => {
-    name = prop.isCollection ? `IList<${name}>` : name;
-    return `${name}${prop.isOptional ? "?" : ""}`;
-  };
-  if (prop.kind === "Scalar" || prop.kind === "Intrinsic") {
-    return nameRender(csharpTypeMapper[prop.typeName]);
-  } else if (prop.kind === "Model") {
-    if (prop.typeName === "unknown") {
-      return nameRender("object");
-    } else {
-      return nameRender(getClassName(prop.typeName));
-    }
-  } else if (prop.kind === "Union") {
-    if (prop.variants.length > 0) {
-      return nameRender(csharpTypeMapper[prop.variants[0].kind]);
-    } else {
-      return nameRender(getClassName(prop.typeName));
-    }
-  } else {
-    return nameRender(csharpTypeMapper[prop.kind]);
-  }
+  let type = prop.isScalar ? (csharpTypeMapper[prop.typeName.name] || "Any") : prop.typeName.name;
+  type = prop.isCollection ? `IList<${type}>` : type;
+  type = `${type}${prop.isOptional ? "?" : ""}`;
+  return type;
 };
 
 const renderDefault = (prop: PropertyNode): string => {
+  /*
   if (prop.isCollection && !prop.isOptional) {
     return " = [];";
   }
-  if (prop.typeName === "string" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName, prop.defaultValue);
+  if (prop.typeName.name === "string" && !prop.isOptional) {
+    return renderDefaultType(prop.typeName.name, prop.defaultValue);
   }
-  if (prop.typeName === "boolean" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName, prop.defaultValue);
+  if (prop.typeName.name === "boolean" && !prop.isOptional) {
+    return renderDefaultType(prop.typeName.name, prop.defaultValue);
   }
-  if (prop.typeName === "number" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName, prop.defaultValue);
+  if (prop.typeName.name === "number" && !prop.isOptional) {
+    return renderDefaultType(prop.typeName.name, prop.defaultValue);
   }
-  if (prop.typeName === "object" && !prop.isOptional) {
-    return " = new " + getClassName(prop.typeName) + "();";
+  if (prop.typeName.name === "object" && !prop.isOptional) {
+    return " = new " + getClassName(prop.typeName.name) + "();";
   }
   if (prop.kind === "Union" && !prop.isOptional) {
     if (prop.variants.length > 0) {
       return renderDefaultType(prop.variants[0].kind.toLowerCase(), prop.defaultValue);
     }
   }
-  if (!prop.isOptional)
-  {
-    return " = new " + getClassName(prop.typeName) + "();";
+  if (!prop.isOptional) {
+    return " = new " + getClassName(prop.typeName.name) + "();";
   }
   return "";
+  */
+  if (!prop.isOptional) {
+    if (prop.isCollection) {
+      return " = [];";
+    } else if (prop.isScalar) {
+      return renderDefaultType(prop.typeName.name, prop.defaultValue);
+    } else {
+      return " = new " + getClassName(prop.typeName.name) + "();";
+    }
+  } else {
+    return "";
+  }
 };
 
 const renderDefaultType = (typeName: string, defaultValue: string | number | boolean | null = null): string => {
@@ -160,20 +159,27 @@ const renderNullCoalescing = (prop: PropertyNode): string => {
 };
 
 const getNamespace = (node: TypeNode): string => {
-  const parts = node.fullTypeName.split(".");
+  const parts = node.typeName.fullName.split(".");
   parts.pop(); // remove the last part (the type name)
   return parts.join(".");
 };
 
-const formatDescription = (input: string): string => {  
-    const lines = input.split('\n');  
-    const convertedLines = lines.map(line => `/// ${line}`);  
-    return convertedLines.join('\n');  
-}  
+const formatDescription = (input: string): string => {
+  const lines = input.split('\n');
+  const convertedLines = lines.map(line => `/// ${line}`);
+  return convertedLines.join('\n');
+}
 
-const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string) => {
+const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
+  outputDir = outputDir || `${context.emitterOutputDir}/python`;
+  const typePath = type.typeName.fullName.split(".");
+  // remove typename
+  typePath.pop();
+  // replace typename with file
+  typePath.push(filename);
+  const path = resolvePath(outputDir, ...typePath);
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "csharp", "generated", "Definition", filename),
+    path,
     content: python,
   });
 }

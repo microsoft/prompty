@@ -15,6 +15,7 @@ title: Prompty
 ---
 classDiagram
     class Prompty {
+        +string type
         +string id
         +string version
         +string name
@@ -141,6 +142,7 @@ instructions: |-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| type | string | Type represented by the Prompty document  |
 | id | string | Unique identifier for the Prompty document  |
 | version | string | Version of the Prompty specification  |
 | name | string | Human-readable name of the agent  |
