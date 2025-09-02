@@ -7,7 +7,6 @@ import { generateCsharp } from "./csharp.js";
 
 
 export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
-
   // resolving top level Prompty model
   // this is the "Model" entry point for the emitter
   const m = context.program.resolveTypeReference("Prompty.Core.Prompty");
@@ -17,27 +16,22 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     );
   }
 
-  const model = resolveModel(context.program, m[0], new Set());
-  model.isRoot = true;
-  const ast = Array.from(enumerateTypes(model));
-
   const options = {
     emitterOutputDir: context.emitterOutputDir,
     ...context.options,
   }
 
-  const renamedAst: TypeNode[] = [];
-  if (options["root-namespace"] || options["root-object"]) {
-    const rootNamespace = options["root-namespace"] || "Prompty";
-    for (const node of ast) {
-      if (options["root-object"] && node.isRoot) {
-        node.typeName.name = options["root-object"];
-      }
-      // replace first place of dotted namespace with rootNamespace
-      node.typeName = resolveNamespace(node, rootNamespace);
-      renamedAst.push(node);
+  const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "Prompty");
+  model.isRoot = true;
+  if(options["root-object"]){
+    model.typeName = {
+      namespace: model.typeName.namespace,
+      name: options["root-object"],
+      fullName: `${model.typeName.namespace}.${options["root-object"]}`
     }
   }
+  const ast = Array.from(enumerateTypes(model));
+
 
   const targets = options["emit-targets"] || [];
   const targetNames = targets.map(t => t.type.toLowerCase());
@@ -46,21 +40,21 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     const idx = targetNames.indexOf("markdown");
     const target = targets[idx];
     // emit markdown
-    await generateMarkdown(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
+    await generateMarkdown(context, ast.length > 0 ? ast : ast, target["output-dir"]);
   }
 
   if (targetNames.includes("python")) {
     const idx = targetNames.indexOf("python");
     const target = targets[idx];
     // emit python
-    await generatePython(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
+    await generatePython(context, ast.length > 0 ? ast : ast, target["output-dir"]);
   }
 
   if (targetNames.includes("csharp")) {
     const idx = targetNames.indexOf("csharp");
     const target = targets[idx];
     // emit csharp
-    await generateCsharp(context, renamedAst.length > 0 ? renamedAst : ast, target["output-dir"]);
+    await generateCsharp(context, ast.length > 0 ? ast : ast, target["output-dir"]);
   }
 
   await emitFile(context.program, {

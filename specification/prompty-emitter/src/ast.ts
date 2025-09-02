@@ -1,4 +1,16 @@
-import { getDiscriminator, getDoc, getEntityName, getNamespaceFullName, getPropertyType, getTypeName, isTemplateInstance, Model, ModelProperty, Program, resolveUsages, Scalar, Type, Union } from "@typespec/compiler";
+import {
+  Type,
+  Model,
+  Scalar,
+  Union,
+  Program,
+  getDoc,
+  getTypeName,
+  ModelProperty,
+  getEntityName,
+  isTemplateInstance,
+  getNamespaceFullName,
+} from "@typespec/compiler";
 import { AlternateEntry, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
@@ -9,17 +21,23 @@ export interface TypeName {
   fullName: string
 }
 
-const getModelType = (model: Model): TypeName => {
+const getModelType = (model: Model, rootNamespace: string): TypeName => {
+  let namespace = model.namespace ? getNamespaceFullName(model.namespace) : rootNamespace || "";
+
+  const parts = namespace.split(".");
+  parts[0] = rootNamespace;
+  namespace = parts.join(".");
+  const name = getTypeName(model, {
+    nameOnly: true,
+    printable: true,
+  });
+
   return {
-    namespace: model.namespace ? getNamespaceFullName(model.namespace) : "",
-    name: getTypeName(model, {
-      nameOnly: true,
-      printable: true,
-    }),
-    fullName: getEntityName(model),
+    namespace: namespace,
+    name: name,
+    fullName: `${namespace}.${name}`,
   };
 };
-
 
 export interface Alternative {
   simple: any;
@@ -121,7 +139,7 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
         }
       }
       for (const child of prop.type.childTypes) {
-        for(const subNode of enumerateTypes(child, visited)) {
+        for (const subNode of enumerateTypes(child, visited)) {
           if (!visited.has(subNode.typeName.fullName)) {
             yield subNode;
             visited.add(subNode.typeName.fullName);
@@ -137,7 +155,7 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
   }
 };
 
-export const resolveModel = (program: Program, model: Model, visited: Set<string> = new Set()): TypeNode => {
+export const resolveModel = (program: Program, model: Model, visited: Set<string> = new Set(), rootNamespace: string): TypeNode => {
 
   const node = new TypeNode(model, getDoc(program, model) || "");
 
@@ -147,25 +165,25 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     if (!innerModel || innerModel.kind !== "Model") {
       throw new Error(`Invalid Named<T> model: ${model.name}`);
     }
-    node.typeName = getModelType(innerModel);
-    node.childTypes = resolveModelChildren(program, innerModel, visited);
+    node.typeName = getModelType(innerModel, rootNamespace);
+    node.childTypes = resolveModelChildren(program, innerModel, visited, rootNamespace);
     node.description = getDoc(program, innerModel) || "";
     visited.add(innerModel.name);
   } else {
-    node.typeName = getModelType(model);
-    node.childTypes = resolveModelChildren(program, model, visited);
+    node.typeName = getModelType(model, rootNamespace);
+    node.childTypes = resolveModelChildren(program, model, visited, rootNamespace);
     visited.add(model.name);
   }
 
   if (model.baseModel) {
-    node.base = getModelType(model.baseModel);
+    node.base = getModelType(model.baseModel, rootNamespace);
   }
 
   // resolve properties if model
   if (model.kind === "Model") {
     const properties: PropertyNode[] = [];
     for (const [_, value] of model.properties) {
-      const prop = resolveProperty(program, value, visited);
+      const prop = resolveProperty(program, value, visited, rootNamespace);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
       // alternatives
@@ -178,20 +196,20 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
   return node;
 };
 
-export const resolveModelChildren = (program: Program, model: Model, visited: Set<string>): TypeNode[] => {
+export const resolveModelChildren = (program: Program, model: Model, visited: Set<string>, rootNamespace: string): TypeNode[] => {
   return model.derivedModels.filter(derived => !visited.has(derived.name)).flatMap(derived => {
-    return [resolveModel(program, derived, visited), ...resolveModelChildren(program, derived, visited)];
+    return [resolveModel(program, derived, visited, rootNamespace), ...resolveModelChildren(program, derived, visited, rootNamespace)];
   });
 };
 
-export const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>): PropertyNode => {
+export const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>, rootNamespace: string): PropertyNode => {
   switch (property.type.kind) {
     case "Scalar":
       return resolveScalarProperty(program, property, property.type);
     case "Model":
-      return resolveModelProperty(program, property, property.type, visited);
+      return resolveModelProperty(program, property, property.type, visited, rootNamespace);
     case "Union":
-      return resolveUnionProperty(program, property, property.type, visited);
+      return resolveUnionProperty(program, property, property.type, visited, rootNamespace);
     case "Intrinsic":
       return resolveIntrinsicProperty(program, property, property.type, visited);
     case "String":
@@ -304,14 +322,14 @@ export const resolveIntrinsicProperty = (program: Program, property: ModelProper
   return prop;
 };
 
-export const resolveModelProperty = (program: Program, property: ModelProperty, model: Model, visited: Set<string>): PropertyNode => {
+export const resolveModelProperty = (program: Program, property: ModelProperty, model: Model, visited: Set<string>, rootNamespace: string): PropertyNode => {
   const prop = new PropertyNode(
     property,
     getDoc(program, property) || ""
   );
 
   if (model.name === "Array") {
-    
+
     const innerModel = getTemplateModel(model);
     if (innerModel) {
       // Use innerModel for naming and docs
@@ -319,9 +337,9 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
       prop.isAny = false;
       prop.isOptional = property.optional;
       prop.isCollection = true;
-      prop.typeName = getModelType(innerModel);
+      prop.typeName = getModelType(innerModel, rootNamespace);
       if (!visited.has(model.name)) {
-        prop.type = resolveModel(program, innerModel, visited);
+        prop.type = resolveModel(program, innerModel, visited, rootNamespace);
       }
     } else {
       // check for Scalar Arrays
@@ -361,15 +379,15 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
     prop.isOptional = property.optional;
     prop.isCollection = false;
 
-    prop.typeName = getModelType(model);
+    prop.typeName = getModelType(model, rootNamespace);
     if (!visited.has(model.name)) {
-      prop.type = resolveModel(program, model, visited);
+      prop.type = resolveModel(program, model, visited, rootNamespace);
     }
   }
   return prop;
 };
 
-export const resolveUnionProperty = (program: Program, property: ModelProperty, union: Union, visited: Set<string>): PropertyNode => {
+export const resolveUnionProperty = (program: Program, property: ModelProperty, union: Union, visited: Set<string>, rootNamespace: string): PropertyNode => {
   const prop = new PropertyNode(
     property,
     getDoc(program, property) || ""
@@ -385,8 +403,8 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
 
   if (models.length === 1) {
     if (!visited.has(models[0].name)) {
-      prop.type = resolveModel(program, models[0], visited);
-      prop.typeName = getModelType(models[0]);
+      prop.type = resolveModel(program, models[0], visited, rootNamespace);
+      prop.typeName = getModelType(models[0], rootNamespace);
     }
   } else if (models.length === 2) {
     const modelNames = models.map(m => m.name);
@@ -402,10 +420,10 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       if (recordType && arrayType && namedType && recordType.name === arrayType.name) {
         prop.isCollection = true;
         // Use T as actual class model for naming purposes
-        prop.typeName = getModelType(arrayType);
+        prop.typeName = getModelType(arrayType, rootNamespace);
         // Use Named<T> for actual model props
         if (!visited.has(arrayType.name)) {
-          prop.type = resolveModel(program, namedType, visited);
+          prop.type = resolveModel(program, namedType, visited, rootNamespace);
         }
       }
       else {
@@ -423,9 +441,9 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       const namedModel = getTemplateModel(models[namedIdx]);
       const mainModel = models[(namedIdx + 1) % 2];
       if (namedModel && namedModel.name === mainModel.name) {
-        prop.typeName = getModelType(namedModel);
+        prop.typeName = getModelType(namedModel, rootNamespace);
         if (!visited.has(mainModel.name)) {
-          prop.type = resolveModel(program, namedModel, visited);
+          prop.type = resolveModel(program, namedModel, visited, rootNamespace);
         }
       } else {
         program.reportDiagnostic({

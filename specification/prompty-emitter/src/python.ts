@@ -77,9 +77,10 @@ const renderDefault = (prop: PropertyNode): string => {
 
 const importIncludes = (node: TypeNode): string[] => {
   const includes = new Set<string>();
-  // always add Optional for loaders
-  includes.add("Optional");
   for (const prop of node.properties) {
+    if(prop.isOptional){
+      includes.add("Optional");
+    }
     if (prop.isAny) {
       includes.add("Any");
     }

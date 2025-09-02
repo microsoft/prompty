@@ -32,7 +32,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
     {% endfor %}
     @staticmethod
-    def load(data: Optional[dict] = None) -> "{{ node.typeName.name }}":
+    def load(data: dict) -> "{{ node.typeName.name }}":
         instance = {{ node.typeName.name }}()
         {% for prop in node.properties -%}
         if data is not None and "{{ prop.name }}" in data:
@@ -42,11 +42,11 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
 
     {% for prop in node.properties | selectattr("isCollection") %}
     @staticmethod
-    def load_{{ prop.name }}(data: Optional[dict] = None) -> list[{{ prop.typeName.name }}]:
-        if data is not None and "{{ prop.name }}" in data:
-            return [{{ prop.typeName.name }}(item) for item in data["{{ prop.name }}"]]
-        else:
-            return []
+    def load_{{ prop.name }}(data: dict | list) -> list[{{ prop.typeName.name }}]:
+        # convert named {{ prop.name }} to list
+        if isinstance(data, dict):
+            data = [ {"name": k, **v} for k, v in data.items() ]
+        return [{{ prop.typeName.name }}(item) for item in data]
     {% endfor %}
     {% else %}
     """
@@ -54,7 +54,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     data: dict = field(default_factory=dict)
 
     @staticmethod
-    def load(data: Optional[dict] = None) -> "{{ node.typeName.name }}":
+    def load(data: dict) -> "{{ node.typeName.name }}":
         instance = {{ node.typeName.name }}()
         if data is not None:
             instance.data = data
