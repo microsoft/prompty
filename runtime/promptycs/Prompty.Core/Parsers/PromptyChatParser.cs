@@ -3,21 +3,28 @@ using System.Text.RegularExpressions;
 
 namespace Prompty.Core.Parsers
 {
-    enum ContentType
+    public enum ContentType
     {
         Text,
-        LocalImage,
-        RemoteImage
+        RemoteImage,
+        DataImage,
     }
 
-    struct RawMessage
+    public struct RawMessage
     {
         public ChatRole Role { get; set; }
-        public string? Content { get; set; }
-        public IEnumerable<RawContent> Contents { get; set; }
+        public List<RawContent> Contents { get; set; }
+        public Dictionary<string, object> Args { get; set; }
+
+        public RawMessage(ChatRole role)
+        {
+            Role = role;
+            Contents = new List<RawContent>();
+            Args = new Dictionary<string, object>();
+        }
     }
 
-    struct RawContent
+    public struct RawContent
     {
         public ContentType ContentType { get; set; }
         public string Content { get; set; }
@@ -38,32 +45,25 @@ namespace Prompty.Core.Parsers
             if (args.GetType() != typeof(string))
                 throw new Exception("Invalid args type for prompty.chat");
 
-            var messages = ParseOld((string)args).Select(m =>
+            var messages = Parse((string)args).Select(m =>
             {
-                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
+                var contents = m.Contents.Select<RawContent, AIContent>(c =>
                 {
-                    var contents = m.Contents.Select<RawContent, AIContent>(c =>
+                    switch (c.ContentType)
                     {
-                        switch (c.ContentType)
-                        {
-                            case ContentType.Text:
-                                return new TextContent(c.Content);
-                            case ContentType.LocalImage:
-                                var image = GetImageContent(c.Content, c.Media);
-                                return new DataContent(data: image, mediaType: c.Media);
-                            case ContentType.RemoteImage:
-                                return new UriContent(uri: c.Content, mediaType: c.Media);
-                            default:
-                                throw new Exception("Invalid content type!");
-                        }
-                    }).ToList();
+                        case ContentType.Text:
+                            return new TextContent(c.Content);
+                        case ContentType.RemoteImage:
+                            return new UriContent(uri: c.Content, mediaType: c.Media);
+                        case ContentType.DataImage:
+                            var imageData = Convert.FromBase64String(c.Content);
+                            return new DataContent(data: imageData, mediaType: c.Media);
+                        default:
+                            throw new Exception("Invalid content type!");
+                    }
+                }).ToList();
 
-                    return new ChatMessage(m.Role, contents);
-                }
-                else
-                {
-                    return new ChatMessage(m.Role, m.Content);
-                }
+                return new ChatMessage(m.Role, contents);
             }).ToArray();
 
             return messages;
@@ -72,43 +72,8 @@ namespace Prompty.Core.Parsers
 
         public async override Task<object> InvokeAsync(object args)
         {
-            if (args.GetType() != typeof(string))
-                throw new Exception("Invalid args type for prompty.chat");
-
-            var messageTask = ParseOld((string)args).Select(async m =>
-            {
-                if (string.IsNullOrEmpty(m.Content) && m.Contents != null)
-                {
-                    var task = m.Contents.Select<RawContent, Task<AIContent>>(async c =>
-                    {
-                        switch (c.ContentType)
-                        {
-                            case ContentType.Text:
-                                return new TextContent(c.Content);
-                            case ContentType.LocalImage:
-                                var image = await GetImageContentAsync(c.Content, c.Media);
-                                return new DataContent(data: image, mediaType: c.Media);
-                            case ContentType.RemoteImage:
-                                return new UriContent(uri: c.Content, mediaType: c.Media);
-                            default:
-                                throw new Exception("Invalid content type!");
-                        }
-                    });
-
-                    var results = await Task.WhenAll(task);
-
-                    return new ChatMessage(m.Role, [.. results]);
-                }
-                else
-                {
-                    return new ChatMessage(m.Role, m.Content);
-                }
-            });
-
-            var messages = await Task.WhenAll(messageTask);
-            return messages;
+            return await Task.Run(() => Invoke(args));
         }
-
 
         private ChatRole ToChatRole(string role)
         {
@@ -153,118 +118,120 @@ namespace Prompty.Core.Parsers
         }
 
 
-        public IEnumerable<Settings> Parse(string template)
+        public IEnumerable<RawMessage> Parse(string template)
         {
             var boundary = @"^\s*#?\s*(" + string.Join("|", _roles) + @")(\[((\w+)*\s*=\s*\""?([^\""]*)\""?\s*(,?)\s*)+\])?\s*:\s*$";
-            var contentBuffer = new List<string>();
-            // first role is system (if not specified)
-            var argBuffer = new Dictionary<string, object>()
-            {
-                ["role"] = "system"
-            };
+            
+            RawMessage rawMessage = new RawMessage(ChatRole.System); // default role
 
             var lines = template.Split('\n');
             foreach (var line in lines)
             {
                 if (Regex.IsMatch(line, boundary))
                 {
-                    if (contentBuffer.Count > 0)
+                    bool hasArgs = line.Contains('[') && line.Contains(']');
+                    var roleGroups = hasArgs ? Regex.Match(line, boundary) : null;
+                    string roleString = hasArgs && roleGroups != null ? roleGroups.Groups[1].Value : line.Replace(":", "").Trim().ToLower();
+
+                    ChatRole role = ToChatRole(roleString);
+                    if (rawMessage.Role != role)
                     {
-                        argBuffer["content"] = string.Join("\n", contentBuffer);
-                        yield return new Settings(argBuffer);
-                        contentBuffer = new List<string>();
-                        argBuffer = new Dictionary<string, object>();
+                        // If the role has changed, yield the current message
+                        // and start a new one
+                        if (rawMessage.Contents.Count > 0)
+                        {
+                            yield return rawMessage;
+                        }
+                        rawMessage = new RawMessage(role);
                     }
 
-                    if (line.Contains('[') && line.Contains(']'))
+                    if (hasArgs && roleGroups != null)
                     {
-                        var role = Regex.Match(line, boundary);
-                        argBuffer["role"] = role.Groups[1].Value;
-                        var args = role.Groups[2].Value.Trim().Trim('[', ']');
-
+                        var args = roleGroups.Groups[2].Value.Trim().Trim('[', ']');
                         if (args.Length > 0)
                             foreach (var item in ParseArgs(args))
-                                argBuffer[item.Key] = item.Value;
+                            {
+                                rawMessage.Args[item.Key] = item.Value;
+                            }
                     }
-                    else
-                        argBuffer["role"] = line.Replace(":", "").Trim().ToLower();
-
                 }
                 else
-                    contentBuffer.Add(line);
+                {
+                    AddRawMessageContent(rawMessage, line.Trim());
+                }
             }
 
-            if (contentBuffer.Count > 0)
-            {
-                argBuffer["content"] = string.Join("\n", contentBuffer);
-                yield return new Settings(argBuffer);
-            }
+            yield return rawMessage;
         }
 
-        private IEnumerable<RawMessage> ParseOld(string template)
+        private void AddRawMessageContent(RawMessage rawMessage, string content)
         {
-            var chunks = Regex.Split(template, _messageRegex, RegexOptions.Multiline)
-                                .Where(s => s.Trim().Length > 0)
-                                .Select(s => s.Trim())
-                                .ToList();
+            if (string.IsNullOrEmpty(content))
+                return;
 
-            // if no starter role, assume system
-            if (chunks[0].Trim().ToLower() != "system")
-                chunks.Insert(0, "system");
-
-            // if last chunk is role then content is empty
-            if (_roles.Contains(chunks[chunks.Count - 1].Trim().ToLower()))
-                chunks.RemoveAt(chunks.Count - 1);
-
-            if (chunks.Count % 2 != 0)
-                throw new Exception("Invalid prompt format!");
-
-            List<ChatMessage> messages = [];
-            for (int i = 0; i < chunks.Count; i += 2)
+            var rawContent = ProcessImageContent(content);
+            if (rawContent != null)
             {
-                var matches = Regex.Matches(chunks[i + 1], _imageRegex, RegexOptions.Multiline);
-                if (matches.Count > 0)
-                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Contents = Process(matches, chunks[i + 1]) };
-                else
-                    yield return new RawMessage { Role = ToChatRole(chunks[i]), Content = chunks[i + 1] };
+                rawMessage.Contents.Add((RawContent)rawContent);
+            }
+            else
+            {
+                rawMessage.Contents.Add(new RawContent
+                {
+                    ContentType = ContentType.Text,
+                    Content = content,
+                });
             }
         }
 
-        private IEnumerable<RawContent> Process(MatchCollection matches, string content)
+        /// <summary>
+        /// This method processes the image in markdown format: ![alt text dfdv](camping.jpg \"Title cds csd dsc\")
+        /// </summary>
+        private RawContent? ProcessImageContent(string content)
         {
             var content_chunks = Regex.Split(content, _imageRegex, RegexOptions.Multiline)
                             .Where(s => s.Trim().Length > 0)
                             .Select(s => s.Trim())
                             .ToList();
 
-            int current_chunk = 0;
-            for (int i = 0; i < content_chunks.Count; i++)
+            if (content_chunks.Count != 2 || !content_chunks[0].StartsWith("![alt"))
             {
-                var chunk = content_chunks[i];
-
-                // alt entry
-                if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["alt"].Value)
-                    continue;
-                // image entry
-                else if (current_chunk < matches.Count && chunk == matches[current_chunk].Groups["filename"].Value)
-                {
-                    var img = matches[current_chunk].Groups[2].Value.Split(' ')[0].Trim();
-                    var media = img.Split('.').Last().Trim().ToLower();
-                    if (media != "jpg" && media != "jpeg" && media != "png")
-                        throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
-
-                    if (img.StartsWith("http://") || img.StartsWith("https://"))
-                        yield return new RawContent { ContentType = ContentType.RemoteImage, Content = img, Media = $"image/{media}" };
-                    else
-                        yield return new RawContent { ContentType = ContentType.LocalImage, Content = img, Media = $"image/{media}" };
-
-                    current_chunk++;
-                }
-                // text entry
-                else if (chunk.Trim().Length > 0)
-                    yield return new RawContent { ContentType = ContentType.Text, Content = chunk.Trim() };
-
+                return null;
             }
+
+            if (content_chunks[1].StartsWith("data:image"))
+            {
+                SplitDataUri(content_chunks[1], out var mediaType, out var data);
+                // Case 1: data URI
+                return new RawContent { ContentType = ContentType.DataImage, Content = data, Media = mediaType };
+            }
+            else
+            {
+                SplitImageUri(content_chunks[1], out var imagePath, out var mediaType, out var isRemote);
+
+                if (isRemote)
+                {
+                    // Case 2: remote image
+                    return new RawContent { ContentType = ContentType.RemoteImage, Content = imagePath, Media = mediaType };
+                }
+                else
+                {
+                    try
+                    {
+                        var imageContent = GetImageContent(imagePath, mediaType);
+                        if (imageContent != null)
+                        {
+                            // Case 3: local image
+                            return new RawContent { ContentType = ContentType.DataImage, Content = Convert.ToBase64String(imageContent), Media = mediaType };
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+
+            return null;
         }
 
         private byte[]? GetImageContent(string image, string media)
@@ -281,6 +248,56 @@ namespace Prompty.Core.Parsers
             var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
             var bytes = await FileUtils.ReadAllBytesAsync(path);
             return bytes;
+        }
+
+        private void SplitDataUri(string dataUri, out string mediaType, out string data)
+        {
+            if (string.IsNullOrWhiteSpace(dataUri) || !dataUri.StartsWith("data:"))
+            {
+                throw new ArgumentException("Invalid Data URI");
+            }
+
+            // Split the data URI into data and title
+            dataUri = dataUri.Split(' ')[0].Trim();
+
+            // Find the first comma  
+            int commaIndex = dataUri.IndexOf(',');
+            if (commaIndex == -1)
+            {
+                throw new ArgumentException("Invalid Data URI: no data found");
+            }
+
+            // Split the metadata and data  
+            string metadata = dataUri.Substring(0, commaIndex);
+            data = dataUri.Substring(commaIndex + 1); // Extract data after the comma  
+
+            // Now split the metadata  
+            string[] metadataParts = metadata.Split(new[] { ';' }, 2);
+            mediaType = metadataParts[0].Substring(5); // Remove 'data:'  
+        }
+
+        private void SplitImageUri(string imageUri, out string imagePath, out string mediaType, out bool isRemote)
+        {
+            if (string.IsNullOrWhiteSpace(imageUri))
+            {
+                throw new ArgumentException("Invalid Image URI");
+            }
+
+            // Find the first space  
+            imagePath = imageUri.Split(' ')[0].Trim();
+            if (string.IsNullOrWhiteSpace(imagePath))
+            {
+                throw new ArgumentException("Invalid Image URI: no image path found");
+            }
+
+            // Find the file extension and convert to media type
+            var media = imagePath.Split('.').Last().Trim().ToLower();
+            if (media != "jpg" && media != "jpeg" && media != "png")
+                throw new Exception("Invalid image media type (jpg, jpeg, or png are allowed)");
+            mediaType = $"image/{media}";
+
+            // Check if the image path is local or remote 
+            isRemote = imagePath.StartsWith("http://") || imagePath.StartsWith("https://");
         }
     }
 }

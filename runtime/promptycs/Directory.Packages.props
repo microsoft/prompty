@@ -5,12 +5,12 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.4.0-preview.1.25207.5" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.7.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageVersion Include="Scriban" Version="5.12.1" />
+    <PackageVersion Include="Scriban" Version="6.2.1" />
     <PackageVersion Include="Stubble.Core" Version="1.10.8" />    
-    <PackageVersion Include="YamlDotNet" Version="15.3.0" />
+    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <!-- Prompty.Core.Tests -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageVersion Include="xunit" Version="2.4.2" />

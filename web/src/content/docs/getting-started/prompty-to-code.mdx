@@ -144,18 +144,7 @@ load_dotenv()
 # Configure tracing for development
 Tracer.add("console", console_tracer)
 
-@trace
-def chat_with_shakespeare(question: str) -> str:
-    """Get a response from Shakespeare about the given question"""
-    try:
-        response = prompty.execute(
-            "shakespeare.prompty",
-            inputs={"question": question}
-        )
-        return response
-    except Exception as e:
-        print(f"Error executing prompt: {e}")
-        return None
+The Prompty runtime supports additional runtimes, including frameworks such as [LangChain](/tutorials/using-langchain/), and [Semantic Kernel](/tutorials/using-semantic-kernel/). In the tutorials section, we will cover how to generate code from Prompty assets using these runtimes. (coming soon)
 
 def main():
     """Main application loop"""
@@ -321,6 +310,25 @@ else:
 ```
 
 Congratulations! You've successfully converted your Prompty asset to code and built your first application. 🎉
+if __name__ == "__main__":
+   json_input = '''{
+  "question": "Please write a short text inviting friends to a Game Night."
+}'''
+   args = json.loads(json_input)
+
+   result = run(**args)
+```
+</details>
+
+
+
+
+
+
+## 7. Additional supported runtimes
+
+The Prompty runtime supports additional runtimes, including frameworks such as [LangChain](/tutorials/using-langchain/), and [Semantic Kernel](/tutorials/using-semantic-kernel/). In the tutorials section, we will cover how to generate code from Prompty assets using these runtimes. (coming soon)
+
 
 ---
-[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
+[Want to Contribute To the Project?](/contributing/) - _Updated Guidance Coming Soon_.
