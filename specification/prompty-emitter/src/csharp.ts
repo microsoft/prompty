@@ -69,10 +69,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   }
 }
 
-const isClass = (node: TypeNode): boolean => {
-  return false;
-};
-
 const getClassName = (name: string): string => {
   return csharpTypeNameMapper[name] || name;
 };
@@ -92,32 +88,6 @@ const renderType = (prop: PropertyNode): string => {
 };
 
 const renderDefault = (prop: PropertyNode): string => {
-  /*
-  if (prop.isCollection && !prop.isOptional) {
-    return " = [];";
-  }
-  if (prop.typeName.name === "string" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName.name, prop.defaultValue);
-  }
-  if (prop.typeName.name === "boolean" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName.name, prop.defaultValue);
-  }
-  if (prop.typeName.name === "number" && !prop.isOptional) {
-    return renderDefaultType(prop.typeName.name, prop.defaultValue);
-  }
-  if (prop.typeName.name === "object" && !prop.isOptional) {
-    return " = new " + getClassName(prop.typeName.name) + "();";
-  }
-  if (prop.kind === "Union" && !prop.isOptional) {
-    if (prop.variants.length > 0) {
-      return renderDefaultType(prop.variants[0].kind.toLowerCase(), prop.defaultValue);
-    }
-  }
-  if (!prop.isOptional) {
-    return " = new " + getClassName(prop.typeName.name) + "();";
-  }
-  return "";
-  */
   if (!prop.isOptional) {
     if (prop.isCollection) {
       return " = [];";
