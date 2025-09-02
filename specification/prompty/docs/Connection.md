@@ -31,7 +31,7 @@ classDiagram
 | provider | string | The unique provider of the connection  |
 | type | string | The type of connection used to tell the runtime how to load and execute the agent  |
 | endpoint | string | The endpoint URL for the connection  |
-| options | [Options](Options.md) | Additional options for model execution <p>Related Types:<ul><li>[BingSearchOptions](BingSearchOptions.md)</li><li>[FileSearchOptions](FileSearchOptions.md)</li><li>[McpToolOptions](McpToolOptions.md)</li></ul></p> |
+| options | [Options](Options.md) | Additional options for model execution  |
 
 
 

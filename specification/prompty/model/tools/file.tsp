@@ -16,7 +16,7 @@ namespace Prompty.Core {
   /**
    * Options for file search.
    */
-  model FileSearchOptions extends Options {
+  model FileSearchOptions {
     @doc("The maximum number of search results to return.")
     maxNumResults?: int32;
 

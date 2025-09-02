@@ -12,35 +12,6 @@ classDiagram
     }
     class Options {
     }
-    class BingSearchConfiguration {
-        +string connectionId
-        +string instanceName
-        +string market
-        +string setLang
-        +int64 count
-        +string freshness
-    }
-    class BingSearchOptions {
-        +BingSearchConfiguration[] configurations
-    }
-    class FileSearchRankingOptions {
-        +string ranker
-        +float32 scoreThreshold
-    }
-    class FileSearchOptions {
-        +int32 maxNumResults
-        +FileSearchRankingOptions rankingOptions
-    }
-    class Authentication {
-        +string type
-        +Options credentials
-    }
-    class McpToolOptions {
-        +string name
-        +string url
-        +string[] allowed
-        +Authentication authentication
-    }
     class Connection {
         +string provider
         +string type
@@ -107,13 +78,42 @@ classDiagram
         +string type
         +Options options
     }
+    class BingSearchConfiguration {
+        +string connectionId
+        +string instanceName
+        +string market
+        +string setLang
+        +int64 count
+        +string freshness
+    }
+    class BingSearchOptions {
+        +BingSearchConfiguration[] configurations
+    }
     class BingSearchTool {
         +string type
         +BingSearchOptions options
     }
+    class FileSearchRankingOptions {
+        +string ranker
+        +float32 scoreThreshold
+    }
+    class FileSearchOptions {
+        +int32 maxNumResults
+        +FileSearchRankingOptions rankingOptions
+    }
     class FileSearchTool {
         +string type
         +FileSearchOptions options
+    }
+    class Authentication {
+        +string type
+        +Options credentials
+    }
+    class McpToolOptions {
+        +string name
+        +string url
+        +string[] allowed
+        +Authentication authentication
     }
     class McpTool {
         +string type
@@ -140,9 +140,6 @@ classDiagram
         +string instructions
         +string additional_instructions
     }
-    Options <|-- BingSearchOptions
-    Options <|-- FileSearchOptions
-    Options <|-- McpToolOptions
     Output <|-- ArrayOutput
     Output <|-- ObjectOutput
     Tool <|-- FunctionTool
@@ -152,10 +149,6 @@ classDiagram
     Tool <|-- McpTool
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
-    BingSearchOptions *-- BingSearchConfiguration
-    FileSearchOptions *-- FileSearchRankingOptions
-    Authentication *-- Options
-    McpToolOptions *-- Authentication
     Connection *-- Options
     Model *-- Connection
     ObjectOutput *-- Output
@@ -165,8 +158,12 @@ classDiagram
     ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
     ServerTool *-- Options
+    BingSearchOptions *-- BingSearchConfiguration
     BingSearchTool *-- BingSearchOptions
+    FileSearchOptions *-- FileSearchRankingOptions
     FileSearchTool *-- FileSearchOptions
+    Authentication *-- Options
+    McpToolOptions *-- Authentication
     McpTool *-- McpToolOptions
     Template *-- Options
     Prompty *-- Metadata

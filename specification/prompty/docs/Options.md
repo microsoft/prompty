@@ -21,22 +21,6 @@ title: Options
 classDiagram
     class Options {
     }
-    class BingSearchOptions {
-        +BingSearchConfiguration[] configurations
-    }
-    Options <|-- BingSearchOptions
-    class FileSearchOptions {
-        +int32 maxNumResults
-        +FileSearchRankingOptions rankingOptions
-    }
-    Options <|-- FileSearchOptions
-    class McpToolOptions {
-        +string name
-        +string url
-        +string[] allowed
-        +Authentication authentication
-    }
-    Options <|-- McpToolOptions
 ```
 
 
@@ -44,11 +28,4 @@ classDiagram
 
 
 
-
-## Child Types
-
-The following types extend `Options`:
-- [BingSearchOptions](BingSearchOptions.md)
-- [FileSearchOptions](FileSearchOptions.md)
-- [McpToolOptions](McpToolOptions.md)
 

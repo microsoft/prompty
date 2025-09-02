@@ -6,7 +6,7 @@ namespace Prompty.Core {
   /**
    * Configuration options for the MCP tool.
    */
-  model McpToolOptions extends Options {
+  model McpToolOptions {
     @doc("The name of the MCP tool")
     name: string;
 
