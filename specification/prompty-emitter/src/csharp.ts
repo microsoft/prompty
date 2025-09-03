@@ -14,7 +14,6 @@ const csharpTypeMapper: Record<string, string> = {
 }
 
 const csharpTypeNameMapper: Record<string, string> = {
-  "Prompty": "AgentDefinition",
   "Input": "AgentInput",
   "Output": "AgentOutput",
   "Metadata": "AgentMetadata"
@@ -61,7 +60,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
       renderSummary: renderSummary,
       renderNullCoalescing: renderNullCoalescing,
       getClassName: getClassName,
-      formatDescription: formatDescription,
     });
 
     const className = getClassName(type.typeName.name);
@@ -133,12 +131,6 @@ const getNamespace = (node: TypeNode): string => {
   parts.pop(); // remove the last part (the type name)
   return parts.join(".");
 };
-
-const formatDescription = (input: string): string => {
-  const lines = input.split('\n');
-  const convertedLines = lines.map(line => `/// ${line}`);
-  return convertedLines.join('\n');
-}
 
 const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
   outputDir = outputDir || `${context.emitterOutputDir}/python`;

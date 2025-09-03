@@ -2,34 +2,37 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.Extensions.AI.Agents;
-
-#pragma warning disable RCS1037 // Remove trailing white-space
-/// <summary>
-/// {{ formatDescription(node.description) | safe }}.
-/// </summary>
-public sealed class {{ getClassName(node.typeName.name) }}{% if node.baseType.length > 0 -%} : {{ node.baseType }}{% endif %}
+namespace {{ node.typeName.namespace }}
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
-    /// </summary>
-    public {{ getClassName(node.typeName.name) }}()
-    {
-    }
+  #pragma warning disable RCS1037 // Remove trailing white-space
+  /// <summary>
+  {% for line in node.description.split('\n') -%}
+  /// {{ line }}
+  {% endfor -%}
+  /// </summary>
+  public {% if node.isAbstract %}abstract{% endif %} sealed class {{ getClassName(node.typeName.name) }}{% if node.base -%} : {{ node.base.name }}{% endif %}
+  {
+      /// <summary>
+      /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+      /// </summary>
+      public {{ getClassName(node.typeName.name) }}()
+      {
+      }
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal {{ getClassName(node.typeName.name) }}(IDictionary<string, object> props) : this()
-    {
-{%- for prop in node.properties %}
-        {{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
-{%- endfor %}
-    }
-{% for prop in node.properties %}    
-    {{ renderSummary(prop) | safe }}
-    public {{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
-{% endfor -%}
+      /// <summary>
+      /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+      /// </summary>
+      /// <param name="props">Properties for this instance.</param>
+      internal {{ getClassName(node.typeName.name) }}(IDictionary<string, object> props) : this()
+      {
+  {%- for prop in node.properties %}
+          {{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
+  {%- endfor %}
+      }
+  {% for prop in node.properties %}    
+      {{ renderSummary(prop) | safe }}
+      public {{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
+  {% endfor -%}
+  }
+  #pragma warning restore RCS1037 // Remove trailing white-space
 }
-#pragma warning restore RCS1037 // Remove trailing white-space

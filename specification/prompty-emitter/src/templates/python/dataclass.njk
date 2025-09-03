@@ -9,13 +9,16 @@
 from typing import{% for item in typings -%}{{ comma() }} {{ item }}{% endfor %}
 {%- endif %}
 from dataclasses import dataclass, field
+{%- if node.isAbstract %}
+from abc import ABC
+{%- endif %}
 {%- for import in imports %}
 from ._{{ import }} import {{ import }}
 {%- endfor %}
 
 
 @dataclass
-class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endif -%}:
+class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endif -%}{%- if node.isAbstract -%}(ABC){%- endif -%}:
     """{%- for line in node.description.split('\n') -%}
     {{ line }}
     {% endfor -%}
@@ -33,21 +36,55 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {% endfor %}
     @staticmethod
     def load(data: dict) -> "{{ node.typeName.name }}":
+        {%- if node.discriminator %}
+        # load polymorphic {{ node.typeName.name }} instance
+        instance = {{ node.typeName.name }}.load_{{ node.discriminator }}(data)
+        {% else %}
+        # create new instance
         instance = {{ node.typeName.name }}()
+        {% endif -%}
         {% for prop in node.properties -%}
         if data is not None and "{{ prop.name }}" in data:
-            instance.{{ prop.name }} = {% if prop.isScalar %}data["{{ prop.name }}"]{% else %}{% if prop.isCollection %}{{ node.typeName.name }}.load_{{ prop.name }}{% else %}{{ prop.typeName.name }}.load{% endif %}(data["{{ prop.name }}"]){% endif %}
+            {{ renderSetInstance(node, prop, "instance", "data") | safe }}
         {% endfor -%}
         return instance
 
     {% for prop in node.properties | selectattr("isCollection") %}
     @staticmethod
     def load_{{ prop.name }}(data: dict | list) -> list[{{ prop.typeName.name }}]:
-        # convert named {{ prop.name }} to list
         if isinstance(data, dict):
+            # convert named {{ prop.name }} to list of {{ prop.typeName.name }}
             data = [ {"name": k, **v} for k, v in data.items() ]
-        return [{{ prop.typeName.name }}(item) for item in data]
+        return [{{ prop.typeName.name }}.load(item) for item in data]
     {% endfor %}
+    {% if node.discriminator %}
+    @staticmethod
+    def load_{{ node.discriminator }}(data: dict) -> "{{ node.typeName.name }}":
+        # load polymorphic {{ node.typeName.name }} instance
+        if data is not None and "{{ node.discriminator }}" in data:
+            discriminator_value = data["{{ node.discriminator }}"]
+            {%- set first = polymorphicTypes.first -%}
+            {%- set others = polymorphicTypes.others -%}
+            {%- set default = polymorphicTypes.default -%}
+            {%- if first %}
+            if discriminator_value == "{{ first.value }}":
+                return {{ first.instance.typeName.name }}.load(data)
+            {%- for other in others %}
+            elif discriminator_value == "{{ other.value }}":
+                return {{ other.instance.typeName.name }}.load(data)
+            {%- endfor %}
+            {%- endif %}
+            {%- if default %}
+            else:
+                return {{ default.instance.typeName.name }}.load(data)
+            {%- else %}
+            else:
+                raise ValueError(f"Unknown {{ node.typeName.name }} discriminator value: {discriminator_value}")
+            {%- endif %}
+        else:
+            raise ValueError("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'")
+
+    {% endif %}
     {% else %}
     """
     # Fallback for unknown properties

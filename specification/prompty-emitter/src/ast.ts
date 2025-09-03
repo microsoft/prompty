@@ -10,8 +10,10 @@ import {
   getEntityName,
   isTemplateInstance,
   getNamespaceFullName,
+  getDiscriminator,
+  Discriminator,
 } from "@typespec/compiler";
-import { AlternateEntry, getStateValue, SampleEntry } from "./decorators.js";
+import { AlternateEntry, getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
 
@@ -59,6 +61,8 @@ export class TypeNode {
   public childTypes: TypeNode[] = [];
   public alternatives: Alternative[] = [];
   public properties: PropertyNode[] = [];
+  public isAbstract: boolean = false;
+  public discriminator: string | undefined = undefined;
 
   constructor(public model: Model, description: string) {
     this.model = model;
@@ -70,6 +74,8 @@ export class TypeNode {
       typeName: this.typeName,
       description: this.description,
       base: this.base || {},
+      isAbstract: this.isAbstract,
+      discriminator: this.discriminator,
       childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       alternatives: this.alternatives,
       properties: this.properties.map(prop => prop.getSanitizedObject()),
@@ -168,10 +174,16 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.typeName = getModelType(innerModel, rootNamespace);
     node.childTypes = resolveModelChildren(program, innerModel, visited, rootNamespace);
     node.description = getDoc(program, innerModel) || "";
+    node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, innerModel) || false;
+    const discriminator = getDiscriminator(program, innerModel);
+    node.discriminator = discriminator ? discriminator.propertyName : undefined;
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace);
     node.childTypes = resolveModelChildren(program, model, visited, rootNamespace);
+    node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, model) || false;
+    const discriminator = getDiscriminator(program, model);
+    node.discriminator = discriminator ? discriminator.propertyName : undefined;
     visited.add(model.name);
   }
 

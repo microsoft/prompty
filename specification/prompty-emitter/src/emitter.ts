@@ -1,5 +1,5 @@
-import { EmitContext, emitFile, resolveModule, resolvePath } from "@typespec/compiler";
-import { enumerateTypes, resolveModel, TypeName, TypeNode } from "./ast.js";
+import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
+import { enumerateTypes, resolveModel } from "./ast.js";
 import { PromptyEmitterOptions } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
 import { generatePython } from "./python.js";
@@ -34,43 +34,32 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
 
 
   const targets = options["emit-targets"] || [];
-  const targetNames = targets.map(t => t.type.toLowerCase());
+  const targetNames = targets.map(t => t.type.toLowerCase().trim());
+
 
   if (targetNames.includes("markdown")) {
     const idx = targetNames.indexOf("markdown");
     const target = targets[idx];
     // emit markdown
-    await generateMarkdown(context, ast.length > 0 ? ast : ast, target["output-dir"]);
+    await generateMarkdown(context, ast, target["output-dir"]);
   }
 
   if (targetNames.includes("python")) {
     const idx = targetNames.indexOf("python");
     const target = targets[idx];
     // emit python
-    await generatePython(context, ast.length > 0 ? ast : ast, target["output-dir"]);
+    await generatePython(context, ast, target["output-dir"]);
   }
 
   if (targetNames.includes("csharp")) {
     const idx = targetNames.indexOf("csharp");
     const target = targets[idx];
     // emit csharp
-    await generateCsharp(context, ast.length > 0 ? ast : ast, target["output-dir"]);
+    await generateCsharp(context, ast, target["output-dir"]);
   }
 
   await emitFile(context.program, {
-    path: resolvePath(context.emitterOutputDir, "json", "model.json"),
+    path: resolvePath(context.emitterOutputDir, "json-ast", "model.json"),
     content: JSON.stringify(model.getSanitizedObject(), null, 2),
   });
 }
-
-
-
-const resolveNamespace = (node: TypeNode, rootNamespace: string): TypeName => {
-  const parts = node.typeName.namespace.split(".");
-  parts[0] = rootNamespace;
-  return {
-    namespace: parts.join("."),
-    name: node.typeName.name,
-    fullName: `${parts.join(".")}.${node.typeName.name}`,
-  };
-};

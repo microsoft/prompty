@@ -16,6 +16,7 @@ namespace Prompty.Core {
   /**
    * Represents a parameter for a tool.
    */
+  @discriminator("type")
   model Parameter {
     @doc("The data type of the tool parameter")
     type: string;
@@ -60,7 +61,8 @@ namespace Prompty.Core {
   /**
    * Represents a tool that can be used in prompts.
    */
- 
+  @abstract
+  @discriminator("type")
   model Tool {
     @doc("The type identifier for the tool")
     type: ToolTypes;
@@ -92,7 +94,7 @@ namespace Prompty.Core {
    */
   model ServerTool extends Tool {
     @doc("The type identifier for server tools")
-    type: string;
+    type: "*";
 
     @doc("Configuration options for the server tool")
     options: Options = #{};

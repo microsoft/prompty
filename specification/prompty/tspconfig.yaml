@@ -8,7 +8,7 @@ options:
     emitAllRefs: true
     file-type: yaml
   "@prompty/emitter":
-    emitter-output-dir: "{cwd}/tsp-output/prompty"
+    emitter-output-dir: "{cwd}/tsp-output"
     #root-namespace: "Microsoft.AgentFramework"
     #root-object: "Agent"
     emit-targets:

@@ -1,6 +1,5 @@
-import { type BooleanLiteral, type StringLiteral, type DecoratorContext, type Model, type Union, getTypeName, Program, Type, ModelProperty, Value, ObjectValue, ArrayValue, Diagnostic, serializeValueAsJson } from "@typespec/compiler";
+import { type DecoratorContext, type Model, Program, Type, ModelProperty, ObjectValue, serializeValueAsJson } from "@typespec/compiler";
 import { StateKeys } from "./lib.js";
-import { serialize } from "v8";
 
 
 export interface SampleOptions {
@@ -22,6 +21,15 @@ export const appendStateValue = <T>(context: DecoratorContext, key: symbol, targ
 
 export const getStateValue = <T>(program: Program, key: symbol, target: Type): T[] => {
   return program.stateMap(key).get(target) || [];
+};
+
+export const setStateScalar = <T>(context: DecoratorContext, key: symbol, target: Type, value: T) => {
+  context.program.stateMap(key).set(target, value);
+};
+
+export const getStateScalar = <T>(program: Program, key: symbol, target: Type): T | undefined => {
+  const value = program.stateMap(key).get(target);
+  return value ? value : undefined;
 };
 
 export interface SampleEntry {
@@ -111,4 +119,8 @@ export function $alternate(context: DecoratorContext, target: ModelProperty, sam
     description: options?.description ?? "",
   }
   appendStateValue<AlternateEntry>(context, StateKeys.alternates, target, entry);
+}
+
+export function $abstract(context: DecoratorContext, target: Model) {
+  setStateScalar(context, StateKeys.abstracts, target, true);
 }
