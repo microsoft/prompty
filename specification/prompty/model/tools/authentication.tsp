@@ -14,6 +14,9 @@ namespace Prompty.Core {
     string,
   }
 
+  /**
+   * Authentication configuration for the MCP tool
+   */
   model Authentication {
     @doc("The type of authentication to use")
     type: AuthType;

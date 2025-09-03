@@ -29,6 +29,7 @@ namespace Prompty.Core {
    * Options for the Bing search tool.
    */
   model BingSearchOptions {
+    @doc("The configuration options for the Bing search tool")
     configurations: BingSearchConfiguration[];
   }
 

@@ -1,38 +1,44 @@
 // Copyright (c) Microsoft. All rights reserved.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
-namespace {{ node.typeName.namespace }}
+namespace Microsoft.Extensions.AI.Agents;
+
+#pragma warning disable RCS1037 // Remove trailing white-space
+#pragma warning disable RCS1036 // Remove unnecessary blank line
+/// <summary>
+{% for line in node.description.split('\n') -%}
+/// {{ line }}
+{% endfor -%}
+/// </summary>
+[ExcludeFromCodeCoverage]
+public {% if node.isAbstract %}abstract{% else %}sealed{% endif %} class {{ getClassName(node.typeName.name) }}{% if node.base %} : {{ node.base.name }}{% endif %}
 {
-  #pragma warning disable RCS1037 // Remove trailing white-space
-  /// <summary>
-  {% for line in node.description.split('\n') -%}
-  /// {{ line }}
-  {% endfor -%}
-  /// </summary>
-  public {% if node.isAbstract %}abstract{% endif %} sealed class {{ getClassName(node.typeName.name) }}{% if node.base -%} : {{ node.base.name }}{% endif %}
-  {
-      /// <summary>
-      /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
-      /// </summary>
-      public {{ getClassName(node.typeName.name) }}()
-      {
-      }
+    /// <summary>
+    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+    /// </summary>
+    {% if node.isAbstract %}protected{% else %}public{% endif %} {{ getClassName(node.typeName.name) }}()
+    {
+    }
 
-      /// <summary>
-      /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
-      /// </summary>
-      /// <param name="props">Properties for this instance.</param>
-      internal {{ getClassName(node.typeName.name) }}(IDictionary<string, object> props) : this()
-      {
-  {%- for prop in node.properties %}
-          {{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
-  {%- endfor %}
-      }
-  {% for prop in node.properties %}    
-      {{ renderSummary(prop) | safe }}
-      public {{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
-  {% endfor -%}
-  }
-  #pragma warning restore RCS1037 // Remove trailing white-space
+    /// <summary>
+    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+    /// </summary>
+    /// <param name="props">Properties for this instance.</param>
+    internal {{ getClassName(node.typeName.name) }}(IDictionary<string, object> props) : this()
+    {
+{%- for prop in node.properties %}
+        {{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
+{%- endfor %}
+    }
+{% for prop in node.properties %}    
+    {{ renderSummary(prop) | safe }}
+    {% if isUrlLike(prop) %}#pragma warning disable CA1056 // URI-like properties should not be strings{% endif %}
+    public {% if node.isAbstract %}virtual {% endif %}{% if isOverride(node, prop) %}override {% endif %}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
+    {% if isUrlLike(prop) %}#pragma warning restore CA1056 // URI-like properties should not be strings{% endif %}
+{% endfor -%}
 }
+#pragma warning restore RCS1037 // Remove trailing white-space
+#pragma warning restore RCS1036 // Remove unnecessary blank line
+
