@@ -81,9 +81,8 @@ const getClassName = (name: string): string => {
 const isOverride = (type: TypeNode, prop: PropertyNode): boolean => {
   // type.base needs to be a TypeNode so that I can check is a property being overridden
   // for now just hardcode the property types that do need to be overridden
-  if (type.base && type.base.name === "Tool" && prop.name === "type")
-  {
-    return true
+  if (type.base && type.base.name === "Tool" && prop.name === "type") {
+    return true;
   }
   return false;
 };
