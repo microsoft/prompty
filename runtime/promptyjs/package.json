@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@changesets/cli": "^2.27.1",
+    "@changesets/cli": "^2.29.6",
     "@types/base-64": "^1.0.2",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
