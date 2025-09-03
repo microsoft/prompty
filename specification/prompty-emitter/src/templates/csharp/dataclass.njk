@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.Extensions.AI.Agents;
+namespace {{ node.typeName.namespace }};
 
 #pragma warning disable RCS1037 // Remove trailing white-space
 #pragma warning disable RCS1036 // Remove unnecessary blank line
+#pragma warning disable IDE0055 // Fix formatting 
 /// <summary>
 {% for line in node.description.split('\n') -%}
 /// {{ line }}
@@ -41,4 +42,5 @@ public {% if node.isAbstract %}abstract{% else %}sealed{% endif %} class {{ getC
 }
 #pragma warning restore RCS1037 // Remove trailing white-space
 #pragma warning restore RCS1036 // Remove unnecessary blank line
+#pragma warning restore IDE0055 // Fix formatting 
 

@@ -30,6 +30,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "generate": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig.yaml",
+    "generate:meai": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig-meai.yaml",
     "test": "node --test",
     "lint": "eslint src/ test/ --report-unused-disable-directives --max-warnings=0",
     "lint:fix": "eslint . --report-unused-disable-directives --fix",

@@ -25,10 +25,14 @@ export interface TypeName {
 
 const getModelType = (model: Model, rootNamespace: string): TypeName => {
   let namespace = model.namespace ? getNamespaceFullName(model.namespace) : rootNamespace || "";
-
-  const parts = namespace.split(".");
-  parts[0] = rootNamespace;
-  namespace = parts.join(".");
+  if (rootNamespace.includes('.'))
+    namespace = rootNamespace;
+  else
+  {
+    const parts = namespace.split(".");
+    parts[0] = rootNamespace;
+    namespace = parts.join(".");
+  }
   const name = getTypeName(model, {
     nameOnly: true,
     printable: true,
