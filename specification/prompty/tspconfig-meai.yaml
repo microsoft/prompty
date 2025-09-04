@@ -1,0 +1,22 @@
+emit:
+  - "@typespec/json-schema"
+  - "@prompty/emitter"
+options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{cwd}/tsp-output/json-schema"
+    emitAllModels: true
+    emitAllRefs: true
+    file-type: yaml
+  "@prompty/emitter":
+    emitter-output-dir: "{cwd}/tsp-output"
+    root-namespace: "Microsoft.Extensions.AI.Agents"
+    root-object: "AgentDefinition"
+    emit-targets:
+      - type: markdown
+        output-dir: "{cwd}/../../prompty/docs"
+      - type: CSharp
+        output-dir: "./tsp-output/CSharp"
+      - type: Python
+        output-dir: "./tsp-output/Python"
+      - type: TypeScript
+        output-dir: "./tsp-output/TypeScript"

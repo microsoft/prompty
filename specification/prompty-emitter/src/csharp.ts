@@ -9,23 +9,29 @@ const csharpTypeMapper: Record<string, string> = {
   "array": "[]",
   "object": "object",
   "boolean": "bool",
+  "float32": "float",
   "unknown": "object",
   "unknown[]": "object[]",
 }
 
 const csharpTypeNameMapper: Record<string, string> = {
+  "Prompty": "AgentDefinition",
   "Input": "AgentInput",
   "Output": "AgentOutput",
-  "Metadata": "AgentMetadata"
+  "Metadata": "AgentMetadata",
+  "Authentication": "McpAuthentication"
 }
 
 const csharpSkipTypes = [
   "ArrayOutput",
   "ArrayParameter",
   "ObjectOutput",
-  "ObjectParameter",
-  "FunctionTool",
-  "ServerTool"
+  "ObjectParameter"
+]
+
+const numberTypes = [
+  "int64",
+  "float32"
 ]
 
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
@@ -45,7 +51,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   await emitCsharpFile(context, rootNode, utils, "Utils.cs", outputDir);
 
-
   for (const type of nodes) {
     if (csharpSkipTypes.includes(type.typeName.name) || (type.base && csharpSkipTypes.includes(type.base.name))) {
       continue;
@@ -60,6 +65,8 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
       renderSummary: renderSummary,
       renderNullCoalescing: renderNullCoalescing,
       getClassName: getClassName,
+      isOverride: isOverride,
+      isUrlLike: isUrlLike,
     });
 
     const className = getClassName(type.typeName.name);
@@ -71,6 +78,19 @@ const getClassName = (name: string): string => {
   return csharpTypeNameMapper[name] || name;
 };
 
+const isOverride = (type: TypeNode, prop: PropertyNode): boolean => {
+  // type.base needs to be a TypeNode so that I can check is a property being overridden
+  // for now just hardcode the property types that do need to be overridden
+  if (type.base && type.base.name === "Tool" && prop.name === "type") {
+    return true;
+  }
+  return false;
+};
+
+const isUrlLike = (prop: PropertyNode): boolean => {
+  return prop.name === "url" || prop.name.endsWith("Url");
+};
+
 const renderPropertyName = (prop: PropertyNode): string => {
   // convert snake_case to PascalCase
   const pascal = prop.name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -79,7 +99,7 @@ const renderPropertyName = (prop: PropertyNode): string => {
 };
 
 const renderType = (prop: PropertyNode): string => {
-  let type = prop.isScalar ? (csharpTypeMapper[prop.typeName.name] || "Any") : prop.typeName.name;
+  let type = prop.isScalar ? (csharpTypeMapper[prop.typeName.name] || "object") : getClassName(prop.typeName.name);
   type = prop.isCollection ? `IList<${type}>` : type;
   type = `${type}${prop.isOptional ? "?" : ""}`;
   return type;
@@ -120,10 +140,14 @@ const renderSummary = (prop: PropertyNode): string => {
 };
 
 const renderNullCoalescing = (prop: PropertyNode): string => {
-  if (!prop.isOptional) {
+  if (!prop.isOptional && !isNumber(prop)) {
     return " ?? throw new ArgumentException(\"Properties must contain a property named: " + prop.name + "\", nameof(props))";
   }
   return "";
+};
+
+const isNumber = (prop: PropertyNode): boolean => {
+  return numberTypes.includes(prop.typeName.name);
 };
 
 const getNamespace = (node: TypeNode): string => {
@@ -133,7 +157,7 @@ const getNamespace = (node: TypeNode): string => {
 };
 
 const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
-  outputDir = outputDir || `${context.emitterOutputDir}/python`;
+  outputDir = outputDir || `${context.emitterOutputDir}/CSharp`;
   const typePath = type.typeName.fullName.split(".");
   // remove typename
   typePath.pop();
