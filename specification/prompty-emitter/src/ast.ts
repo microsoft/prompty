@@ -16,6 +16,13 @@ import {
 import { AlternateEntry, getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
+const builtinTypes = [
+  "Record<unknown>",
+]
+
+export function isBuiltinType(type: TypeNode): boolean {
+  return builtinTypes.includes(type.typeName.name) || (type.base ? builtinTypes.includes(type.base.name) : false);
+}
 
 export interface TypeName {
   namespace: string;

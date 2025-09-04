@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, getTypeName, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeNode, isBuiltinType } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const csharpTypeMapper: Record<string, string> = {
@@ -19,7 +19,8 @@ const csharpTypeNameMapper: Record<string, string> = {
   "Input": "AgentInput",
   "Output": "AgentOutput",
   "Metadata": "AgentMetadata",
-  "Authentication": "McpAuthentication"
+  "Authentication": "McpAuthentication",
+  "Record<unknown>": "Dictionary<string, object>",
 }
 
 const csharpSkipTypes = [
@@ -51,14 +52,17 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   await emitCsharpFile(context, rootNode, utils, "Utils.cs", outputDir);
 
-  for (const type of nodes) {
-    if (csharpSkipTypes.includes(type.typeName.name) || (type.base && csharpSkipTypes.includes(type.base.name))) {
+  for (const node of nodes) {
+    if (isBuiltinType(node)) {
+      continue;
+    }
+    if (csharpSkipTypes.includes(node.typeName.name) || (node.base && csharpSkipTypes.includes(node.base.name))) {
       continue;
     }
 
     const csharp = classTemplate.render({
-      node: type,
-      namespace: getNamespace(type),
+      node: node,
+      namespace: getNamespace(node),
       renderPropertyName: renderPropertyName,
       renderType: renderType,
       renderDefault: renderDefault,
@@ -69,8 +73,8 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
       isUrlLike: isUrlLike,
     });
 
-    const className = getClassName(type.typeName.name);
-    await emitCsharpFile(context, type, csharp, `${className}.cs`, outputDir);
+    const className = getClassName(node.typeName.name);
+    await emitCsharpFile(context, node, csharp, `${className}.cs`, outputDir);
   }
 }
 

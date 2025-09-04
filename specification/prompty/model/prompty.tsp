@@ -1,6 +1,5 @@
 import "@prompty/emitter";
 import "./core.tsp";
-import "./metadata.tsp";
 import "./model.tsp";
 import "./inputs.tsp";
 import "./outputs.tsp";
@@ -48,7 +47,7 @@ namespace Prompty.Core {
         tags: #["example", "prompt"],
       },
     })
-    metadata?: Metadata = #{};
+    metadata?: Record<unknown> = #{};
 
     // model execution
     @doc("Model configuration used for execution")

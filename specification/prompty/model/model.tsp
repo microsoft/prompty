@@ -17,7 +17,7 @@ namespace Prompty.Core {
     endpoint: string;
 
     @doc("Additional options for model execution")
-    options?: Options = #{};
+    options?: Record<unknown> = #{};
   }
 
   /**

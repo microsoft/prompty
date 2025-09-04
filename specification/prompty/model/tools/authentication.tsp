@@ -22,6 +22,6 @@ namespace Prompty.Core {
     type: AuthType;
 
     @doc("The credentials to use for authentication")
-    credentials: Options
+    credentials: Record<unknown>
   }
 }

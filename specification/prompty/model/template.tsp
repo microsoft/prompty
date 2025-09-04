@@ -30,6 +30,6 @@ namespace Prompty.Core {
     strict?: boolean = false;
 
     @doc("Additional options for the template engine")
-    options?: Options = #{};
+    options?: Record<unknown> = #{};
   }
 }

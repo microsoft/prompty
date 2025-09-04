@@ -17,7 +17,7 @@ classDiagram
     {%- for type in node.childTypes %}
     class {{ type.typeName.name }} {
       {%- for prop in type.properties %}
-        +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
+        +{{ prop.typeName.name | safe }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}
     }
     {{ node.typeName.name }} <|-- {{ type.typeName.name }}
