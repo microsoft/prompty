@@ -1,9 +1,8 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeName, TypeNode, isBuiltinType } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import { stringify } from 'yaml'
-import { get } from "http";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -48,9 +47,6 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
   await emitMarkdownFile(context, "README", readmeContent, outputDir);
 
   for (const node of nodes) {
-    if (isBuiltinType(node)) {
-      continue;
-    }
 
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
     let yml: string | undefined = undefined;

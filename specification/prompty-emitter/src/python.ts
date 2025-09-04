@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath, Type } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode, isBuiltinType } from "./ast.js";
+import { PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const pythonTypeMapper: Record<string, string> = {
@@ -32,9 +32,6 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   await emitPythonFile(context, rootNode, init, `__init__.py`, outputDir);
 
   for (const node of nodes) {
-    if (isBuiltinType(node)) {
-      continue;
-    }
 
     const includes = importIncludes(node);
     const python = classTemplate.render({

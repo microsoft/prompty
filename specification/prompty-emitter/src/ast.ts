@@ -16,13 +16,6 @@ import {
 import { AlternateEntry, getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
-const builtinTypes = [
-  "Record<unknown>",
-]
-
-export function isBuiltinType(type: TypeNode): boolean {
-  return builtinTypes.includes(type.typeName.name) || (type.base ? builtinTypes.includes(type.base.name) : false);
-}
 
 export interface TypeName {
   namespace: string;
@@ -406,15 +399,16 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
     prop.typeName = getModelType(model, rootNamespace);
     if(prop.typeName.name === "Record<unknown>") {
       prop.isScalar = true;
-      prop.isAny = false;
       prop.isDict = true;
       prop.typeName = {
         namespace: "",
         name: "dictionary",
         fullName: "dictionary"
       };
+      // need to clear this out as a model type
+      prop.type = undefined;
     }
-    if (!visited.has(model.name)) {
+    if (!visited.has(model.name) && prop.typeName.name !== "dictionary") {
       prop.type = resolveModel(program, model, visited, rootNamespace);
     }
   }

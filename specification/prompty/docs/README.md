@@ -8,8 +8,6 @@ The root [object](Prompty.md) represents the main entry point for the system.
 title: Declarative Agents
 ---
 classDiagram
-    class Record&lt;unknown&gt; {
-    }
     class Connection {
         +string provider
         +string type

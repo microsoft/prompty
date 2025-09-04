@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, getTypeName, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode, isBuiltinType } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const csharpTypeMapper: Record<string, string> = {
@@ -53,9 +53,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   await emitCsharpFile(context, rootNode, utils, "Utils.cs", outputDir);
 
   for (const node of nodes) {
-    if (isBuiltinType(node)) {
-      continue;
-    }
     if (csharpSkipTypes.includes(node.typeName.name) || (node.base && csharpSkipTypes.includes(node.base.name))) {
       continue;
     }
