@@ -97,7 +97,7 @@ namespace Prompty.Core {
     type: "*";
 
     @doc("Configuration options for the server tool")
-    options: Options = #{};
+    options: Record<unknown> = #{};
   }
 
   alias Tools = Record<Tool> | Named<Tool>[];

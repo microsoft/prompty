@@ -14,7 +14,7 @@ namespace {{ node.typeName.namespace }};
 {% endfor -%}
 /// </summary>
 [ExcludeFromCodeCoverage]
-public {% if node.isAbstract %}abstract{% else %}sealed{% endif %} class {{ getClassName(node.typeName.name) }}{% if node.base %} : {{ node.base.name }}{% endif %}
+public {% if node.isAbstract %}abstract{% else %}sealed{% endif %} class {{ getClassName(node.typeName.name) }}{% if node.base %} : {{ getClassName(node.base.name) | safe }}{% endif %}
 {
     /// <summary>
     /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.

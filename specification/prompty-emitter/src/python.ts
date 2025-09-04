@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath, Type } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { PropertyNode, TypeNode, isBuiltinType } from "./ast.js";
 import * as nunjucks from "nunjucks";
 
 const pythonTypeMapper: Record<string, string> = {
@@ -12,7 +12,8 @@ const pythonTypeMapper: Record<string, string> = {
   "int64": "int",
   "int32": "int",
   "float64": "float",
-  "float32": "float"
+  "float32": "float",
+  "Record<unknown>": "Dict[str, Any]",
 };
 
 interface PythonDiscriminator {
@@ -36,6 +37,10 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   await emitPythonFile(context, rootNode, init, `__init__.py`, outputDir);
 
   for (const node of nodes) {
+    if (isBuiltinType(node)) {
+      continue;
+    }
+
     const includes = importIncludes(node);
     const python = classTemplate.render({
       node: node,
@@ -75,7 +80,7 @@ const retrievePolymorphicInstances = (node: TypeNode): any => {
 };
 
 const renderType = (prop: PropertyNode): string => {
-  let type = prop.isScalar ? (pythonTypeMapper[prop.typeName.name] || "Any") : prop.typeName.name;
+  let type = prop.isScalar ? (pythonTypeMapper[prop.typeName.name] || "Any") : pythonTypeMapper[prop.typeName.name] || prop.typeName.name;
   if (prop.isCollection) {
     type = `List[${type}]`;
   }
