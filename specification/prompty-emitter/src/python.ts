@@ -13,14 +13,9 @@ const pythonTypeMapper: Record<string, string> = {
   "int32": "int",
   "float64": "float",
   "float32": "float",
-  "Record<unknown>": "Dict[str, Any]",
+  "dictionary": "dict[str, Any]",
 };
 
-interface PythonDiscriminator {
-  discriminator: string;
-  value: string;
-  instance: TypeNode;
-}
 
 export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
@@ -134,6 +129,9 @@ const importIncludes = (node: TypeNode): string[] => {
     }
     if (prop.isCollection) {
       includes.add("List");
+    }
+    if( prop.isDict) {
+      includes.add("Any");
     }
   }
   return Array.from(includes);

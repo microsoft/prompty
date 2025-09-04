@@ -23,7 +23,7 @@ classDiagram
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) |   |
+| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) | The configuration options for the Bing search tool  |
 
 
 

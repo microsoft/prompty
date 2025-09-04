@@ -27,7 +27,7 @@ classDiagram
         +string format
         +string parser
         +boolean strict
-        +Options options
+        +dictionary options
     }
 ```
 
@@ -43,7 +43,7 @@ classDiagram
 | format | string | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)  |
 | parser | string | Parser used to process the rendered template into API-compatible format  |
 | strict | boolean | Whether the template can emit structural text for parsing output  |
-| options | [Options](Options.md) | Additional options for the template engine  |
+| options | dictionary | Additional options for the template engine  |
 
 
 

@@ -20,7 +20,7 @@ classDiagram
         +string version
         +string name
         +string description
-        +Metadata metadata
+        +dictionary metadata
         +Model model
         +Input[] inputs
         +Output[] outputs
@@ -147,7 +147,7 @@ instructions: |-
 | version | string | Version of the Prompty specification  |
 | name | string | Human-readable name of the agent  |
 | description | string | Description of the agent&#39;s capabilities and purpose  |
-| metadata | [Metadata](Metadata.md) | Additional metadata including authors, tags, and other arbitrary properties  |
+| metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties  |
 | model | [Model](Model.md) | Model configuration used for execution  |
 | inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering  |
 | outputs | [Output Collection](Output.md) | Expected output format and structure from the agent <p>Related Types:<ul><li>[ArrayOutput](ArrayOutput.md)</li><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |

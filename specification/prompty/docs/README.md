@@ -8,15 +8,13 @@ The root [object](Prompty.md) represents the main entry point for the system.
 title: Declarative Agents
 ---
 classDiagram
-    class Metadata {
-    }
-    class Options {
+    class Record&lt;unknown&gt; {
     }
     class Connection {
         +string provider
         +string type
         +string endpoint
-        +Options options
+        +dictionary options
     }
     class Model {
         +string id
@@ -76,7 +74,7 @@ classDiagram
     }
     class ServerTool {
         +string type
-        +Options options
+        +dictionary options
     }
     class BingSearchConfiguration {
         +string connectionId
@@ -107,7 +105,7 @@ classDiagram
     }
     class Authentication {
         +string type
-        +Options credentials
+        +dictionary credentials
     }
     class McpToolOptions {
         +string name
@@ -123,7 +121,7 @@ classDiagram
         +string format
         +string parser
         +boolean strict
-        +Options options
+        +dictionary options
     }
     class Prompty {
         +string type
@@ -131,7 +129,7 @@ classDiagram
         +string version
         +string name
         +string description
-        +Metadata metadata
+        +dictionary metadata
         +Model model
         +Input[] inputs
         +Output[] outputs
@@ -149,7 +147,6 @@ classDiagram
     Tool <|-- McpTool
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
-    Connection *-- Options
     Model *-- Connection
     ObjectOutput *-- Output
     ArrayOutput *-- Output
@@ -157,16 +154,12 @@ classDiagram
     ArrayParameter *-- Parameter
     ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
-    ServerTool *-- Options
     BingSearchOptions *-- BingSearchConfiguration
     BingSearchTool *-- BingSearchOptions
     FileSearchOptions *-- FileSearchRankingOptions
     FileSearchTool *-- FileSearchOptions
-    Authentication *-- Options
     McpToolOptions *-- Authentication
     McpTool *-- McpToolOptions
-    Template *-- Options
-    Prompty *-- Metadata
     Prompty *-- Model
     Prompty *-- Input
     Prompty *-- Output

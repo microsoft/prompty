@@ -15,7 +15,7 @@ title: ServerTool
 classDiagram
     class ServerTool {
         +string type
-        +Options options
+        +dictionary options
     }
 ```
 
@@ -29,7 +29,7 @@ classDiagram
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type | string | The type identifier for server tools  |
-| options | [Options](Options.md) | Configuration options for the server tool  |
+| options | dictionary | Configuration options for the server tool  |
 
 
 

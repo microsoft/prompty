@@ -15,7 +15,7 @@ classDiagram
         +string provider
         +string type
         +string endpoint
-        +Options options
+        +dictionary options
     }
 ```
 
@@ -31,7 +31,7 @@ classDiagram
 | provider | string | The unique provider of the connection  |
 | type | string | The type of connection used to tell the runtime how to load and execute the agent  |
 | endpoint | string | The endpoint URL for the connection  |
-| options | [Options](Options.md) | Additional options for model execution  |
+| options | dictionary | Additional options for model execution  |
 
 
 

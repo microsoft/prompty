@@ -110,7 +110,7 @@ export class PropertyNode {
   public isOptional: boolean = false;
   public isCollection: boolean = false;
   public isAny: boolean = false;
-
+  public isDict: boolean = false;
 
   public defaultValue: string | number | boolean | null = null;
   public allowedValues: string[] = [];
@@ -136,6 +136,7 @@ export class PropertyNode {
       isOptional: this.isOptional,
       isCollection: this.isCollection,
       isAny: this.isAny,
+      isDict: this.isDict,
 
       defaultValue: this.defaultValue || "null",
       allowedValues: this.allowedValues,
@@ -401,8 +402,18 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
     prop.isAny = false;
     prop.isOptional = property.optional;
     prop.isCollection = false;
-
+    
     prop.typeName = getModelType(model, rootNamespace);
+    if(prop.typeName.name === "Record<unknown>") {
+      prop.isScalar = true;
+      prop.isAny = false;
+      prop.isDict = true;
+      prop.typeName = {
+        namespace: "",
+        name: "dictionary",
+        fullName: "dictionary"
+      };
+    }
     if (!visited.has(model.name)) {
       prop.type = resolveModel(program, model, visited, rootNamespace);
     }

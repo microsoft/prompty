@@ -22,7 +22,7 @@ classDiagram
     Tool <|-- FunctionTool
     class ServerTool {
         +string type
-        +Options options
+        +dictionary options
     }
     Tool <|-- ServerTool
     class BingSearchTool {

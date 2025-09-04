@@ -1,6 +1,6 @@
 # Authentication
 
-
+Authentication configuration for the MCP tool
 
 ## Class Diagram
 
@@ -11,7 +11,7 @@ title: Authentication
 classDiagram
     class Authentication {
         +string type
-        +Options credentials
+        +dictionary credentials
     }
 ```
 
@@ -25,7 +25,7 @@ classDiagram
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type | string | The type of authentication to use  |
-| credentials | [Options](Options.md) | The credentials to use for authentication  |
+| credentials | dictionary | The credentials to use for authentication  |
 
 
 
