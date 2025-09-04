@@ -108,6 +108,10 @@ class PromptyChatParser(Parser):
         any
             The parsed content
         """
+        # Check if image parsing is disabled in template options
+        if self.prompty.template.options.get("disable_image_parsing", False):
+            return content
+
         # regular expression to parse markdown images
         image = r"(?P<alt>!\[[^\]]*\])\((?P<filename>.*?)(?=\"|\))\)"
         matches = re.findall(image, content, flags=re.MULTILINE)
