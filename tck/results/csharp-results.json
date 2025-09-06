@@ -1,0 +1,258 @@
+{
+  "runtime": "csharp",
+  "timestamp": "2025-06-26T01:18:04Z",
+  "version": "1.0",
+  "total_tests": 9,
+  "results": [
+    {
+      "test_id": "basic-parsing",
+      "test_type": "parse",
+      "runtime": "csharp",
+      "status": "fail",
+      "actual": {
+        "content": "system:\nYou are a helpful assistant. Answer questions for {{name}} who is {{age}} years old.\n\nuser:\n{{question}}\n",
+        "model": {
+          "api": "chat",
+          "configuration": {
+            "model": "gpt-3.5-turbo"
+          },
+          "parameters": {
+            "max_tokens": "100",
+            "temperature": "0.0"
+          }
+        },
+        "inputs": {
+          "name": {
+            "type": "string",
+            "required": true,
+            "description": "User's name"
+          },
+          "age": {
+            "type": "number",
+            "required": true,
+            "description": "User's age",
+            "default": 25
+          },
+          "question": {
+            "type": "string",
+            "required": true,
+            "description": "Question to ask"
+          }
+        },
+        "outputs": {},
+        "sample": {
+          "age": 25
+        },
+        "template": {
+          "format": "jinja2",
+          "parser": "prompty"
+        },
+        "name": "Basic Compatibility Test",
+        "description": "Simple test for basic functionality",
+        "version": "1.0",
+        "authors": [
+          "tck-team"
+        ],
+        "tags": [
+          "basic",
+          "compatibility"
+        ]
+      },
+      "expected": {
+        "metadata": {
+          "name": "Basic Compatibility Test",
+          "description": "Simple test for basic functionality",
+          "version": "1.0",
+          "authors": [
+            "tck-team"
+          ],
+          "tags": [
+            "basic",
+            "compatibility"
+          ]
+        },
+        "model": {
+          "api": "chat",
+          "configuration": {
+            "type": "openai",
+            "model": "gpt-3.5-turbo"
+          },
+          "parameters": {
+            "max_tokens": 100,
+            "temperature": 0.0
+          },
+          "response": "first"
+        },
+        "inputs": {
+          "name": {
+            "type": "string",
+            "description": "User's name",
+            "required": true
+          },
+          "age": {
+            "type": "number",
+            "description": "User's age",
+            "default": 25
+          },
+          "question": {
+            "type": "string",
+            "description": "Question to ask",
+            "required": true
+          }
+        },
+        "sample": {
+          "name": "Alice",
+          "age": 30,
+          "question": "What is the meaning of life?"
+        },
+        "template": {
+          "format": "jinja2",
+          "parser": "prompty"
+        },
+        "content": "system:\nYou are a helpful assistant. Answer questions for {{name}} who is {{age}} years old.\n\nuser:\n{{question}}"
+      },
+      "differences": {
+        "missing_key at `metadata`": "expected={\n  \"name\": \"Basic Compatibility Test\",\n  \"description\": \"Simple test for basic functionality\",\n  \"version\": \"1.0\",\n  \"authors\": [\n    \"tck-team\"\n  ],\n  \"tags\": [\n    \"basic\",\n    \"compatibility\"\n  ]\n} vs actual=None",
+        "value at `model`": "expected={\n  \"api\": \"chat\",\n  \"configuration\": {\n    \"type\": \"openai\",\n    \"model\": \"gpt-3.5-turbo\"\n  },\n  \"parameters\": {\n    \"max_tokens\": 100,\n    \"temperature\": 0.0\n  },\n  \"response\": \"first\"\n} vs actual=System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "value at `inputs`": "expected={\n  \"name\": {\n    \"type\": \"string\",\n    \"description\": \"User's name\",\n    \"required\": true\n  },\n  \"age\": {\n    \"type\": \"number\",\n    \"description\": \"User's age\",\n    \"default\": 25\n  },\n  \"question\": {\n    \"type\": \"string\",\n    \"description\": \"Question to ask\",\n    \"required\": true\n  }\n} vs actual=System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "value at `sample`": "expected={\n  \"name\": \"Alice\",\n  \"age\": 30,\n  \"question\": \"What is the meaning of life?\"\n} vs actual=System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "value at `template`": "expected={\n  \"format\": \"jinja2\",\n  \"parser\": \"prompty\"\n} vs actual=System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "value at `content`": "expected=system:\nYou are a helpful assistant. Answer questions for {{name}} who is {{age}} years old.\n\nuser:\n{{question}} vs actual=system:\nYou are a helpful assistant. Answer questions for {{name}} who is {{age}} years old.\n\nuser:\n{{question}}\n",
+        "extra_key at `outputs`": "expected=None vs actual=System.Collections.Generic.Dictionary`2[System.String,System.Object]",
+        "extra_key at `name`": "expected=None vs actual=Basic Compatibility Test",
+        "extra_key at `description`": "expected=None vs actual=Simple test for basic functionality",
+        "extra_key at `version`": "expected=None vs actual=1.0",
+        "extra_key at `authors`": "expected=None vs actual=System.Collections.Generic.List`1[System.String]",
+        "extra_key at `tags`": "expected=None vs actual=System.Collections.Generic.List`1[System.String]"
+      },
+      "execution_time_ms": 60.897
+    },
+    {
+      "test_id": "basic-rendering",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'name'",
+      "error_type": "Exception",
+      "execution_time_ms": 2.682
+    },
+    {
+      "test_id": "env-var-resolution",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'context'",
+      "error_type": "Exception",
+      "execution_time_ms": 1.246
+    },
+    {
+      "test_id": "complex-template",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'user_name'",
+      "error_type": "Exception",
+      "execution_time_ms": 1.626
+    },
+    {
+      "test_id": "function-calling-parsing",
+      "test_type": "parse",
+      "runtime": "csharp",
+      "status": "pass",
+      "actual": {
+        "content": "system:\nYou are a helpful assistant with access to weather information.\n\nuser:\n{{question}}\n",
+        "model": {
+          "api": "chat",
+          "configuration": {
+            "model": "gpt-4"
+          },
+          "parameters": {
+            "max_tokens": "300",
+            "temperature": "0.0",
+            "tools": [
+              {
+                "type": "function",
+                "function": {
+                  "name": "get_weather",
+                  "description": "Get current weather for a location",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "location": {
+                        "type": "string",
+                        "description": "City name"
+                      },
+                      "unit": {
+                        "type": "string",
+                        "enum": [
+                          "celsius",
+                          "fahrenheit"
+                        ],
+                        "default": "celsius"
+                      }
+                    },
+                    "required": [
+                      "location"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "inputs": {
+          "question": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "outputs": {},
+        "template": {
+          "format": "liquid",
+          "parser": "prompty"
+        },
+        "name": "Function Calling Test",
+        "description": "Test function calling capabilities",
+        "version": "1.0"
+      },
+      "message": "No expected results file found",
+      "execution_time_ms": 2.368
+    },
+    {
+      "test_id": "missing-required-input",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'name'",
+      "error_type": "Exception",
+      "execution_time_ms": 1.25
+    },
+    {
+      "test_id": "invalid-yaml",
+      "test_type": "parse",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Exception during deserialization",
+      "error_type": "YamlException",
+      "execution_time_ms": 1.458
+    },
+    {
+      "test_id": "conditional-rendering",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'show_details'",
+      "error_type": "Exception",
+      "execution_time_ms": 1.233
+    },
+    {
+      "test_id": "missing-required-input",
+      "test_type": "render",
+      "runtime": "csharp",
+      "status": "error",
+      "error": "Missing required input 'required_field'",
+      "error_type": "Exception",
+      "execution_time_ms": 1.146
+    }
+  ]
+}

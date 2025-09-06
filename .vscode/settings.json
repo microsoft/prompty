@@ -6,5 +6,6 @@
   "files.associations": {
     "*.css": "tailwindcss",
     "*.mdx": "markdown"
-  }
+  },
+  "java.compile.nullAnalysis.mode": "disabled"
 }

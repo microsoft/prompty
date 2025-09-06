@@ -1,0 +1,59 @@
+---
+name: "Complex Template Test"
+description: "Test complex template features including conditionals and loops"
+version: "1.0"
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-4
+  parameters:
+    max_tokens: 500
+    temperature: 0.1
+sample:
+  user_name: "Bob"
+  items:
+    - name: "Apple"
+      price: 1.50
+    - name: "Banana"
+      price: 0.75
+  show_prices: true
+  currency: "USD"
+inputs:
+  user_name:
+    type: string
+    required: true
+  items:
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+  show_prices:
+    type: boolean
+    default: false
+  currency:
+    type: string
+    default: "USD"
+template:
+  format: jinja2
+---
+system:
+You are a shopping assistant for {{user_name}}.
+
+Here are the available items:
+{% for item in items %}
+- {{item.name}}{% if show_prices %} - {{item.price}} {{currency}}{% endif %}
+{% endfor %}
+
+{% if items|length > 0 %}
+Total items: {{items|length}}
+{% else %}
+No items available.
+{% endif %}
+
+user:
+Help me with my shopping list.

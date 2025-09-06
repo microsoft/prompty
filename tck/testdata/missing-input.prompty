@@ -1,0 +1,22 @@
+---
+name: missing-input
+description: Test with missing required input
+version: 1.0
+model:
+  api: openai
+  configuration:
+    type: azure_openai
+    azure_endpoint: https://api.openai.com/v1
+  parameters:
+    model: gpt-4
+    max_tokens: 100
+inputs:
+  required_field:
+    type: string
+    description: This field is required
+    required: true
+template:
+  type: jinja2
+  parser: prompty
+---
+You said: {{required_field}}

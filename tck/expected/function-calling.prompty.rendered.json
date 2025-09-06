@@ -1,0 +1,6 @@
+{
+  "inputs": {
+    "user_query": "What's the weather like in Seattle?"
+  },
+  "expected_content": "User query: What's the weather like in Seattle?\n\nPlease help the user with their weather request. You have access to a get_weather function that can provide current weather information for any location.\n"
+}

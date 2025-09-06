@@ -1,0 +1,40 @@
+---
+name: "Function Calling Test"
+description: "Test function calling capabilities"
+version: "1.0"
+model:
+  api: chat
+  configuration:
+    type: openai
+    model: gpt-4
+  parameters:
+    max_tokens: 300
+    temperature: 0.0
+    tools:
+      - type: function
+        function:
+          name: get_weather
+          description: Get current weather for a location
+          parameters:
+            type: object
+            properties:
+              location:
+                type: string
+                description: City name
+              unit:
+                type: string
+                enum: ["celsius", "fahrenheit"]
+                default: "celsius"
+            required: ["location"]
+sample:
+  question: "What's the weather like in Paris?"
+inputs:
+  question:
+    type: string
+    required: true
+---
+system:
+You are a helpful assistant with access to weather information.
+
+user:
+{{question}}

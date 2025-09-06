@@ -1,0 +1,8 @@
+{
+  "inputs": {
+    "user_name": "Bob",
+    "show_details": false,
+    "items": ["Item 1", "Item 2", "Item 3"]
+  },
+  "expected_content": "Hello Bob!\n\nSimple view: 3 items\n"
+}
