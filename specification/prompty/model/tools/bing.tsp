@@ -1,5 +1,6 @@
 import "../core.tsp";
 import "../tools.tsp";
+import "../connection.tsp";
 
 namespace Prompty.Core {
   /**
@@ -39,6 +40,9 @@ namespace Prompty.Core {
   model BingSearchTool extends Tool {
     @doc("The type identifier for Bing search tools")
     type: "bing_search";
+
+    @doc("The connection configuration for the Bing search tool")
+    connection: Connection;
 
     @doc("The options for the Bing search tool")
     options: BingSearchOptions;

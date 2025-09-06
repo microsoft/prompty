@@ -9,14 +9,18 @@ title: Declarative Agents
 ---
 classDiagram
     class Connection {
-        +string provider
-        +string type
+        +string authType
         +string endpoint
         +dictionary options
     }
+    class ModelOptions {
+        +string type
+    }
     class Model {
         +string id
+        +string provider
         +Connection connection
+        +ModelOptions options
     }
     class Input {
         +string name
@@ -72,6 +76,7 @@ classDiagram
     }
     class ServerTool {
         +string type
+        +Connection connection
         +dictionary options
     }
     class BingSearchConfiguration {
@@ -87,6 +92,7 @@ classDiagram
     }
     class BingSearchTool {
         +string type
+        +Connection connection
         +BingSearchOptions options
     }
     class FileSearchRankingOptions {
@@ -99,20 +105,17 @@ classDiagram
     }
     class FileSearchTool {
         +string type
+        +Connection connection
         +FileSearchOptions options
-    }
-    class Authentication {
-        +string type
-        +dictionary credentials
     }
     class McpToolOptions {
         +string name
         +string url
         +string[] allowed
-        +Authentication authentication
     }
     class McpTool {
         +string type
+        +Connection connection
         +McpToolOptions options
     }
     class Template {
@@ -146,17 +149,21 @@ classDiagram
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
     Model *-- Connection
+    Model *-- ModelOptions
     ObjectOutput *-- Output
     ArrayOutput *-- Output
     Tool *-- Binding
     ArrayParameter *-- Parameter
     ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
+    ServerTool *-- Connection
     BingSearchOptions *-- BingSearchConfiguration
+    BingSearchTool *-- Connection
     BingSearchTool *-- BingSearchOptions
     FileSearchOptions *-- FileSearchRankingOptions
+    FileSearchTool *-- Connection
     FileSearchTool *-- FileSearchOptions
-    McpToolOptions *-- Authentication
+    McpTool *-- Connection
     McpTool *-- McpToolOptions
     Prompty *-- Model
     Prompty *-- Input

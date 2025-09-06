@@ -30,6 +30,14 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+type: string
+description: A description of the output property
+required: true
+
+```
+
 
 
 

@@ -1,23 +1,15 @@
 import "./core.tsp";
+import "./connection.tsp";
 
 namespace Prompty.Core {
+  alias apiType = "chat" | "completion" | "embedding" | "image" | string;
   /**
-   * Connection configuration for AI agents.
-   * `provider`, `type`, and `endpoint` are required properties here,
-   * but this section can accept additional via options.
+   * Options for configuring the behavior of the AI model.
+   * `type` is a required property here, but this section can accept additional via options.
    */
-  model Connection {
-    @doc("The unique provider of the connection")
-    provider: string;
-
-    @doc("The type of connection used to tell the runtime how to load and execute the agent")
-    type: string;
-
-    @doc("The endpoint URL for the connection")
-    endpoint: string;
-
-    @doc("Additional options for model execution")
-    options?: Record<unknown> = #{};
+  @discriminator("type")
+  model ModelOptions {
+    type: apiType;
   }
 
   /**
@@ -49,11 +41,33 @@ namespace Prompty.Core {
    *   id: gpt-35-turbo
    * ```
    */
+  @discriminator("provider")
   model Model {
-    @doc("The unique identifier of the model")
+    @doc("The unique identifier of the model - can be used as the single property shorthand")
+    @sample(#{ id: "gpt-35-turbo" })
     id: string = "";
 
+    @doc("The provider of the model (e.g., 'openai', 'azure', 'anthropic')")
+    @sample(#{ provider: "azure" })
+    provider?: string;
+
     @doc("The connection configuration for the model")
+    @sample(#{
+      connection: #{
+        authType: "key",
+        endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+      },
+    })
     connection?: Connection;
+
+    @doc("Additional options for the model")
+    @sample(#{
+      options: #{
+        type: "chat",
+        temperature: 0.7,
+        maxTokens: 1000,
+      },
+    })
+    options?: ModelOptions;
   }
 }

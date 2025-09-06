@@ -1,5 +1,6 @@
 import "../core.tsp";
 import "../tools.tsp";
+import "../connection.tsp";
 
 namespace Prompty.Core {
   /**
@@ -31,6 +32,9 @@ namespace Prompty.Core {
   model FileSearchTool extends Tool {
     @doc("The type identifier for file search tools")
     type: "file_search";
+
+    @doc("The connection configuration for the file search tool")
+    connection: Connection;
 
     @doc("The options for the file search tool")
     options: FileSearchOptions;

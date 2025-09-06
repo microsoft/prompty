@@ -18,21 +18,27 @@ namespace Prompty.Core {
    */
   model Input {
     @doc("The data type of the input property")
+    @sample(#{ type: "string" })
     type: SimpleTypes;
 
     @doc("A short description of the input property")
+    @sample(#{ description: "A description of the input property" })
     description?: string = "";
 
     @doc("Whether the input property is required")
+    @sample(#{ required: true })
     required?: boolean = false;
 
     @doc("Whether the input property can emit structural text when parsing output")
+    @sample(#{ strict: true })
     strict?: boolean = false;
 
-    @doc("The default value of the input")
+    @doc("The default value of the input - this represents the default value if none is provided")
+    @sample(#{ default: "default value" })
     default?: unknown = null;
 
     @doc("A sample value of the input for examples and tooling")
+    @sample(#{ sample: "sample value" })
     sample?: unknown = null;
   }
 

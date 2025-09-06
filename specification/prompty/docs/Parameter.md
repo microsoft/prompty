@@ -30,6 +30,18 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+type: string
+description: A description of the tool parameter
+required: true
+enum:
+  - value1
+  - value2
+  - value3
+
+```
+
 
 
 

@@ -33,6 +33,17 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+type: string
+description: A description of the input property
+required: true
+strict: true
+default: default value
+sample: sample value
+
+```
+
 
 
 
@@ -45,7 +56,7 @@ classDiagram
 | description | string | A short description of the input property  |
 | required | boolean | Whether the input property is required  |
 | strict | boolean | Whether the input property can emit structural text when parsing output  |
-| default | unknown | The default value of the input  |
+| default | unknown | The default value of the input - this represents the default value if none is provided  |
 | sample | unknown | A sample value of the input for examples and tooling  |
 
 

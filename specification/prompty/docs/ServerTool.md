@@ -15,11 +15,24 @@ title: ServerTool
 classDiagram
     class ServerTool {
         +string type
+        +Connection connection
         +dictionary options
     }
 ```
 
 
+
+## Yaml Example
+```yaml
+connection:
+  provider: key
+  endpoint: https://api.yourservice.com/
+  apiKey: your-api-key
+options:
+  timeout: 30
+  retries: 3
+
+```
 
 
 
@@ -29,6 +42,7 @@ classDiagram
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | type | string | The type identifier for server tools  |
+| connection | [Connection](Connection.md) | Connection configuration for the server tool  |
 | options | dictionary | Configuration options for the server tool  |
 
 

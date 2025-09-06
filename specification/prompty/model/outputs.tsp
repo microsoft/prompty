@@ -9,12 +9,15 @@ namespace Prompty.Core {
   @discriminator("type")
   model Output {
     @doc("The data type of the output property")
+    @sample(#{ type: "string" })
     type: SimpleTypes;
 
     @doc("A short description of the output property")
+    @sample(#{ description: "A description of the output property" })
     description?: string = "";
 
     @doc("Whether the output property is required")
+    @sample(#{ required: true })
     required?: boolean = true;
   }
 
@@ -26,6 +29,7 @@ namespace Prompty.Core {
     type: "array";
 
     @doc("The type of items contained in the array")
+    @sample(#{ items: #{ type: "string" } })
     items: Output | Named<Output, "Name of the output property">;
   }
 
@@ -37,6 +41,7 @@ namespace Prompty.Core {
     type: "object";
 
     @doc("The properties contained in the object")
+    @sample(#{ properties: #{ property1: #{ type: "string" }, property2: #{ type: "number" } } })
     properties: Outputs;
   }
 

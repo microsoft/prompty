@@ -1,6 +1,6 @@
 import "../core.tsp";
 import "../tools.tsp";
-import "./authentication.tsp";
+import "../connection.tsp";
 
 namespace Prompty.Core {
   /**
@@ -16,8 +16,6 @@ namespace Prompty.Core {
     @doc("List of allowed operations or resources for the MCP tool")
     allowed: string[] = #[];
 
-    @doc("Authentication configuration for the MCP tool")
-    authentication: Authentication;
   }
 
   /**
@@ -26,6 +24,9 @@ namespace Prompty.Core {
   model McpTool extends Tool {
     @doc("The type identifier for MCP tools")
     type: "mcp";
+
+    @doc("The connection configuration for the MCP tool")
+    connection: Connection;
 
     @doc("The options for the MCP tool")
     options: McpToolOptions;

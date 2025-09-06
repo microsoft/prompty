@@ -12,14 +12,20 @@ title: Connection
 ---
 classDiagram
     class Connection {
-        +string provider
-        +string type
+        +string authType
         +string endpoint
         +dictionary options
     }
 ```
 
 
+
+## Yaml Example
+```yaml
+authType: key
+endpoint: https://{your-custom-endpoint}.openai.azure.com/
+
+```
 
 
 
@@ -28,10 +34,9 @@ classDiagram
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| provider | string | The unique provider of the connection  |
-| type | string | The type of connection used to tell the runtime how to load and execute the agent  |
-| endpoint | string | The endpoint URL for the connection  |
-| options | dictionary | Additional options for model execution  |
+| authType | string | The Authentication type for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
+| endpoint | string | The endpoint URL for the AI service  |
+| options | dictionary | Additional options for the connection  |
 
 
 

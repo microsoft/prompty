@@ -17,6 +17,16 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+properties:
+  param1:
+    type: string
+  param2:
+    type: number
+
+```
+
 
 
 

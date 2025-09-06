@@ -17,6 +17,13 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+items:
+  type: string
+
+```
+
 
 
 

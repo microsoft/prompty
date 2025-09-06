@@ -22,27 +22,40 @@ classDiagram
     Tool <|-- FunctionTool
     class ServerTool {
         +string type
+        +Connection connection
         +dictionary options
     }
     Tool <|-- ServerTool
     class BingSearchTool {
         +string type
+        +Connection connection
         +BingSearchOptions options
     }
     Tool <|-- BingSearchTool
     class FileSearchTool {
         +string type
+        +Connection connection
         +FileSearchOptions options
     }
     Tool <|-- FileSearchTool
     class McpTool {
         +string type
+        +Connection connection
         +McpToolOptions options
     }
     Tool <|-- McpTool
 ```
 
 
+
+## Yaml Example
+```yaml
+type: function
+description: A description of the tool
+bindings:
+  input: value
+
+```
 
 
 

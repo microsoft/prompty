@@ -33,6 +33,17 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+format: handlebars
+parser: prompty
+strict: false
+options:
+  trimBlocks: true
+  lstripBlocks: true
+
+```
+
 
 
 

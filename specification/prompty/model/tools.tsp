@@ -19,15 +19,19 @@ namespace Prompty.Core {
   @discriminator("type")
   model Parameter {
     @doc("The data type of the tool parameter")
+    @sample(#{ type: "string" })
     type: string;
 
     @doc("A short description of the property")
+    @sample(#{ description: "A description of the tool parameter" })
     description?: string = "";
 
     @doc("Whether the tool parameter is required")
+    @sample(#{ required: true })
     required?: boolean = true;
 
     @doc("Allowed enumeration values for the parameter")
+    @sample(#{ `enum`: #["value1", "value2", "value3"] })
     `enum`?: unknown[] = #[];
   }
 
@@ -38,6 +42,9 @@ namespace Prompty.Core {
     type: "object";
 
     @doc("The properties of the object parameter")
+    @sample(#{
+      properties: #{ param1: #{ type: "string" }, param2: #{ type: "number" } },
+    })
     properties: Parameters = #[];
   }
 
@@ -48,15 +55,19 @@ namespace Prompty.Core {
     type: "array";
 
     @doc("The type of items contained in the array")
+    @sample(#{ items: #{ type: "string" } })
     items: Parameter | Named<Parameter>;
   }
 
-  alias Parameters = Record<Parameter> | Named<Parameter, "Name of the parameter">[];
+  alias Parameters = Record<Parameter> | Named<
+    Parameter,
+    "Name of the parameter"
+  >[];
 
   union ToolTypes {
     functionType: "function",
-    string
-  };
+    string,
+  }
 
   /**
    * Represents a tool that can be used in prompts.
@@ -65,12 +76,15 @@ namespace Prompty.Core {
   @discriminator("type")
   model Tool {
     @doc("The type identifier for the tool")
+    @sample(#{ type: "function" })
     type: ToolTypes;
 
     @doc("A short description of the tool for metadata purposes")
+    @sample(#{ description: "A description of the tool" })
     description?: string = "";
 
     @doc("Tool argument bindings to input properties")
+    @sample(#{ bindings: #{ input: "value" } })
     bindings?: Bindings = #[];
   }
 
@@ -82,6 +96,9 @@ namespace Prompty.Core {
     type: "function";
 
     @doc("Parameters accepted by the function tool")
+    @sample(#{
+      parameters: #{ param1: #{ type: "string" }, param2: #{ type: "number" } },
+    })
     parameters: Parameters = #[];
   }
 
@@ -96,7 +113,18 @@ namespace Prompty.Core {
     @doc("The type identifier for server tools")
     type: "*";
 
+    @doc("Connection configuration for the server tool")
+    @sample(#{
+      connection: #{
+        provider: "key",
+        endpoint: "https://api.yourservice.com/",
+        apiKey: "your-api-key",
+      },
+    })
+    connection: Connection;
+
     @doc("Configuration options for the server tool")
+    @sample(#{ options: #{ timeout: 30, retries: 3 } })
     options: Record<unknown> = #{};
   }
 
