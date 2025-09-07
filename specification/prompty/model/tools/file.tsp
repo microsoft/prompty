@@ -30,8 +30,8 @@ namespace Prompty.Core {
    * This tool allows an AI agent to search for files based on a query.
    */
   model FileSearchTool extends Tool {
-    @doc("The type identifier for file search tools")
-    type: "file_search";
+    @doc("The kind identifier for file search tools")
+    kind: "file_search";
 
     @doc("The connection configuration for the file search tool")
     connection: Connection;

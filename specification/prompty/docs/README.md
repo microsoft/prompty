@@ -9,17 +9,17 @@ title: Declarative Agents
 ---
 classDiagram
     class Connection {
-        +string authType
+        +string kind
         +string endpoint
         +dictionary options
     }
     class KeyConnection {
-        +string authType
+        +string kind
         +string endpoint
         +string key
     }
     class OAuthConnection {
-        +string authType
+        +string kind
         +string endpoint
         +string clientId
         +string clientSecret
@@ -27,7 +27,7 @@ classDiagram
         +string[] scopes
     }
     class ModelOptions {
-        +string type
+        +string kind
     }
     class Model {
         +string id
@@ -37,7 +37,7 @@ classDiagram
     }
     class Input {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
         +boolean strict
@@ -46,16 +46,16 @@ classDiagram
     }
     class Output {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
     }
     class ObjectOutput {
-        +string type
+        +string kind
         +Output[] properties
     }
     class ArrayOutput {
-        +string type
+        +string kind
         +Output items
     }
     class Binding {
@@ -64,31 +64,31 @@ classDiagram
     }
     class Tool {
         +string name
-        +string type
+        +string kind
         +string description
         +Binding[] bindings
     }
     class Parameter {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
         +unknown[] enum
     }
     class ArrayParameter {
-        +string type
+        +string kind
         +Parameter items
     }
     class ObjectParameter {
-        +string type
+        +string kind
         +Parameter[] properties
     }
     class FunctionTool {
-        +string type
+        +string kind
         +Parameter[] parameters
     }
     class ServerTool {
-        +string type
+        +string kind
         +Connection connection
         +dictionary options
     }
@@ -104,7 +104,7 @@ classDiagram
         +BingSearchConfiguration[] configurations
     }
     class BingSearchTool {
-        +string type
+        +string kind
         +Connection connection
         +BingSearchOptions options
     }
@@ -117,7 +117,7 @@ classDiagram
         +FileSearchRankingOptions rankingOptions
     }
     class FileSearchTool {
-        +string type
+        +string kind
         +Connection connection
         +FileSearchOptions options
     }
@@ -127,7 +127,7 @@ classDiagram
         +string[] allowed
     }
     class McpTool {
-        +string type
+        +string kind
         +Connection connection
         +McpToolOptions options
     }
@@ -138,7 +138,7 @@ classDiagram
         +dictionary options
     }
     class Prompty {
-        +string type
+        +string kind
         +string id
         +string version
         +string name

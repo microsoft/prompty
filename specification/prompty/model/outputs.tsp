@@ -4,13 +4,13 @@ import "./core.tsp";
 namespace Prompty.Core {
   /**
    * Represents the output properties of an AI agent.
-   * Each output property can be a simple type, an array, or an object.
+   * Each output property can be a simple kind, an array, or an object.
    */
-  @discriminator("type")
+  @discriminator("kind")
   model Output {
-    @doc("The data type of the output property")
-    @sample(#{ type: "string" })
-    type: SimpleTypes;
+    @doc("The data kind of the output property")
+    @sample(#{ kind: "string" })
+    kind: SimpleTypes;
 
     @doc("A short description of the output property")
     @sample(#{ description: "A description of the output property" })
@@ -26,10 +26,10 @@ namespace Prompty.Core {
    * This extends the base Output model to represent an array of items.
    */
   model ArrayOutput extends Output {
-    type: "array";
+    kind: "array";
 
     @doc("The type of items contained in the array")
-    @sample(#{ items: #{ type: "string" } })
+    @sample(#{ items: #{ kind: "string" } })
     items: Output | Named<Output, "Name of the output property">;
   }
 
@@ -38,10 +38,10 @@ namespace Prompty.Core {
    * This extends the base Output model to represent a structured object.
    */
   model ObjectOutput extends Output {
-    type: "object";
+    kind: "object";
 
     @doc("The properties contained in the object")
-    @sample(#{ properties: #{ property1: #{ type: "string" }, property2: #{ type: "number" } } })
+    @sample(#{ properties: #{ property1: #{ kind: "string" }, property2: #{ kind: "number" } } })
     properties: Outputs;
   }
 

@@ -11,18 +11,18 @@ title: Parameter
 classDiagram
     class Parameter {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
         +unknown[] enum
     }
     class ObjectParameter {
-        +string type
+        +string kind
         +Parameter[] properties
     }
     Parameter <|-- ObjectParameter
     class ArrayParameter {
-        +string type
+        +string kind
         +Parameter items
     }
     Parameter <|-- ArrayParameter
@@ -32,7 +32,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-type: string
+kind: string
 description: A description of the tool parameter
 required: true
 enum:
@@ -50,7 +50,7 @@ enum:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | Name of the parameter  |
-| type | string | The data type of the tool parameter  |
+| kind | string | The data type of the tool parameter  |
 | description | string | A short description of the property  |
 | required | boolean | Whether the tool parameter is required  |
 | enum | unknown Collection | Allowed enumeration values for the parameter  |

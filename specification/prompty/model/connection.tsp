@@ -5,13 +5,14 @@ namespace Prompty.Core {
 
   /**
    * Connection configuration for AI agents.
-   * `provider`, `type`, and `endpoint` are required properties here,
+   * `provider`, `kind`, and `endpoint` are required properties here,
    * but this section can accept additional via options.
    */
+  @discriminator("kind")
   model Connection {
-    @doc("The Authentication type for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-    @sample(#{ authType: "key" })
-    authType: ConnectionType;
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    @sample(#{ kind: "key" })
+    kind: ConnectionType;
 
     @doc("The endpoint URL for the AI service")
     @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
@@ -25,9 +26,9 @@ namespace Prompty.Core {
    * Connection configuration for AI services using API keys.
    */
   model KeyConnection extends Connection {
-    @doc("The Authentication type for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-    @sample(#{ authType: "key" })
-    authType: "key";
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    @sample(#{ kind: "key" })
+    kind: "key";
 
     @doc("The endpoint URL for the AI service")
     @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
@@ -42,9 +43,9 @@ namespace Prompty.Core {
    * Connection configuration for AI services using OAuth authentication.
    */
   model OAuthConnection extends Connection {
-    @doc("The Authentication type for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-    @sample(#{ authType: "oauth" })
-    authType: "oauth";
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    @sample(#{ kind: "oauth" })
+    kind: "oauth";
 
     @doc("The endpoint URL for the AI service")
     @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })

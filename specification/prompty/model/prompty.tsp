@@ -19,14 +19,14 @@ namespace Prompty.Core {
    */
   model Prompty {
     // Prompty metadata
-    @doc("Type represented by the Prompty document")
-    type: string = "";
+    @doc("Kind represented by the document")
+    kind?: string = "";
 
-    @doc("Unique identifier for the Prompty document")
+    @doc("Unique identifier for the document")
     @sample(#{ id: "unique-agent-id" })
     id?: string = "";
 
-    @doc("Version of the Prompty specification")
+    @doc("Document version")
     @sample(#{ version: "1.0.0" })
     version?: string = "";
 
@@ -68,20 +68,20 @@ namespace Prompty.Core {
     @doc("Input parameters that participate in template rendering")
     @sample(#{
       inputs: #[
-        #{ name: "firstName", type: "string", sample: "Jane" },
-        #{ name: "lastName", type: "string", sample: "Doe" },
+        #{ name: "firstName", kind: "string", sample: "Jane" },
+        #{ name: "lastName", kind: "string", sample: "Doe" },
         #{
           name: "question",
-          type: "string",
+          kind: "string",
           sample: "What is the meaning of life?",
         }
       ],
     })
     @sample(#{
       inputs: #{
-        firstName: #{ type: "string", sample: "Jane" },
-        lastName: #{ type: "string", sample: "Doe" },
-        question: #{ type: "string", sample: "What is the meaning of life?" },
+        firstName: #{ kind: "string", sample: "Jane" },
+        lastName: #{ kind: "string", sample: "Doe" },
+        question: #{ kind: "string", sample: "What is the meaning of life?" },
       },
     })
     inputs?: Inputs = #[];
@@ -91,7 +91,7 @@ namespace Prompty.Core {
       outputs: #[
         #{
           name: "answer",
-          type: "string",
+          kind: "string",
           description: "The answer to the user's question.",
         }
       ],
@@ -99,7 +99,7 @@ namespace Prompty.Core {
     @sample(#{
       outputs: #{
         answer: #{
-          type: "string",
+          kind: "string",
           description: "The answer to the user's question.",
         },
       },

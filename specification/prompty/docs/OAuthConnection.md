@@ -10,7 +10,7 @@ title: OAuthConnection
 ---
 classDiagram
     class OAuthConnection {
-        +string authType
+        +string kind
         +string endpoint
         +string clientId
         +string clientSecret
@@ -23,7 +23,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-authType: oauth
+kind: oauth
 endpoint: https://{your-custom-endpoint}.openai.azure.com/
 clientId: your-client-id
 clientSecret: your-client-secret
@@ -40,7 +40,7 @@ scopes:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| authType | string | The Authentication type for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
+| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
 | endpoint | string | The endpoint URL for the AI service  |
 | clientId | string | The OAuth client ID for authenticating with the AI service  |
 | clientSecret | string | The OAuth client secret for authenticating with the AI service  |

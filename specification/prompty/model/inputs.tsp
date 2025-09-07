@@ -11,8 +11,8 @@ namespace Prompty.Core {
    */
   model Input {
     @doc("The data type of the input property")
-    @sample(#{ type: "string" })
-    type: SimpleTypes;
+    @sample(#{ kind: "string" })
+    kind: SimpleTypes;
 
     @doc("A short description of the input property")
     @sample(#{ description: "A description of the input property" })

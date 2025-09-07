@@ -10,7 +10,7 @@ title: ObjectParameter
 ---
 classDiagram
     class ObjectParameter {
-        +string type
+        +string kind
         +Parameter[] properties
     }
 ```
@@ -21,9 +21,9 @@ classDiagram
 ```yaml
 properties:
   param1:
-    type: string
+    kind: string
   param2:
-    type: number
+    kind: number
 
 ```
 
@@ -34,7 +34,7 @@ properties:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string |   |
+| kind | string |   |
 | properties | [Parameter Collection](Parameter.md) | The properties of the object parameter <p>Related Types:<ul><li>[ArrayParameter](ArrayParameter.md)</li></ul></p> |
 
 

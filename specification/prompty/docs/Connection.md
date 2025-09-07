@@ -1,7 +1,7 @@
 # Connection
 
 Connection configuration for AI agents.
-`provider`, `type`, and `endpoint` are required properties here,
+`provider`, `kind`, and `endpoint` are required properties here,
 but this section can accept additional via options.
 
 ## Class Diagram
@@ -12,18 +12,18 @@ title: Connection
 ---
 classDiagram
     class Connection {
-        +string authType
+        +string kind
         +string endpoint
         +dictionary options
     }
     class KeyConnection {
-        +string authType
+        +string kind
         +string endpoint
         +string key
     }
     Connection <|-- KeyConnection
     class OAuthConnection {
-        +string authType
+        +string kind
         +string endpoint
         +string clientId
         +string clientSecret
@@ -37,7 +37,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-authType: key
+kind: key
 endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 ```
@@ -49,7 +49,7 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| authType | string | The Authentication type for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
+| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
 | endpoint | string | The endpoint URL for the AI service  |
 | options | dictionary | Additional options for the connection  |
 

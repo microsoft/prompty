@@ -5,11 +5,11 @@ namespace Prompty.Core {
   alias apiType = "chat" | "completion" | "embedding" | "image" | string;
   /**
    * Options for configuring the behavior of the AI model.
-   * `type` is a required property here, but this section can accept additional via options.
+   * `kind` is a required property here, but this section can accept additional via options.
    */
-  @discriminator("type")
+  @discriminator("kind")
   model ModelOptions {
-    type: apiType;
+    kind: apiType;
   }
 
   /**

@@ -11,7 +11,7 @@ title: FileSearchTool
 ---
 classDiagram
     class FileSearchTool {
-        +string type
+        +string kind
         +Connection connection
         +FileSearchOptions options
     }
@@ -26,7 +26,7 @@ classDiagram
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string | The type identifier for file search tools  |
+| kind | string | The kind identifier for file search tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the file search tool  |
 | options | [FileSearchOptions](FileSearchOptions.md) | The options for the file search tool  |
 

@@ -11,7 +11,7 @@ title: ObjectOutput
 ---
 classDiagram
     class ObjectOutput {
-        +string type
+        +string kind
         +Output[] properties
     }
 ```
@@ -22,9 +22,9 @@ classDiagram
 ```yaml
 properties:
   property1:
-    type: string
+    kind: string
   property2:
-    type: number
+    kind: number
 
 ```
 
@@ -35,7 +35,7 @@ properties:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string |   |
+| kind | string |   |
 | properties | [Output Collection](Output.md) | The properties contained in the object  |
 
 

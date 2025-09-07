@@ -1,7 +1,7 @@
 # Output
 
 Represents the output properties of an AI agent.
-Each output property can be a simple type, an array, or an object.
+Each output property can be a simple kind, an array, or an object.
 
 ## Class Diagram
 
@@ -12,17 +12,17 @@ title: Output
 classDiagram
     class Output {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
     }
     class ArrayOutput {
-        +string type
+        +string kind
         +Output items
     }
     Output <|-- ArrayOutput
     class ObjectOutput {
-        +string type
+        +string kind
         +Output[] properties
     }
     Output <|-- ObjectOutput
@@ -32,7 +32,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-type: string
+kind: string
 description: A description of the output property
 required: true
 
@@ -46,7 +46,7 @@ required: true
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | Name of the output property  |
-| type | string | The data type of the output property  |
+| kind | string | The data kind of the output property  |
 | description | string | A short description of the output property  |
 | required | boolean | Whether the output property is required  |
 

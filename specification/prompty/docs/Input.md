@@ -15,7 +15,7 @@ title: Input
 classDiagram
     class Input {
         +string name
-        +string type
+        +string kind
         +string description
         +boolean required
         +boolean strict
@@ -28,7 +28,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-type: string
+kind: string
 description: A description of the input property
 required: true
 strict: true
@@ -45,7 +45,7 @@ sample: sample value
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | Name of the input property  |
-| type | string | The data type of the input property  |
+| kind | string | The data type of the input property  |
 | description | string | A short description of the input property  |
 | required | boolean | Whether the input property is required  |
 | strict | boolean | Whether the input property can emit structural text when parsing output  |

@@ -10,7 +10,7 @@ title: ArrayParameter
 ---
 classDiagram
     class ArrayParameter {
-        +string type
+        +string kind
         +Parameter items
     }
 ```
@@ -20,7 +20,7 @@ classDiagram
 ## Yaml Example
 ```yaml
 items:
-  type: string
+  kind: string
 
 ```
 
@@ -31,8 +31,8 @@ items:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string |   |
-| items | [Parameter](Parameter.md) | The type of items contained in the array  |
+| kind | string |   |
+| items | [Parameter](Parameter.md) | The kind of items contained in the array  |
 
 
 

@@ -11,7 +11,7 @@ title: ArrayOutput
 ---
 classDiagram
     class ArrayOutput {
-        +string type
+        +string kind
         +Output items
     }
 ```
@@ -21,7 +21,7 @@ classDiagram
 ## Yaml Example
 ```yaml
 items:
-  type: string
+  kind: string
 
 ```
 
@@ -32,7 +32,7 @@ items:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string |   |
+| kind | string |   |
 | items | [Output](Output.md) | The type of items contained in the array <p>Related Types:<ul><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |
 
 

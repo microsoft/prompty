@@ -38,8 +38,8 @@ namespace Prompty.Core {
    * The Bing search tool.
    */
   model BingSearchTool extends Tool {
-    @doc("The type identifier for Bing search tools")
-    type: "bing_search";
+    @doc("The kind identifier for Bing search tools")
+    kind: "bing_search";
 
     @doc("The connection configuration for the Bing search tool")
     connection: Connection;

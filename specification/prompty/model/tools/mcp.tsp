@@ -22,8 +22,8 @@ namespace Prompty.Core {
    * The MCP Server tool.
    */
   model McpTool extends Tool {
-    @doc("The type identifier for MCP tools")
-    type: "mcp";
+    @doc("The kind identifier for MCP tools")
+    kind: "mcp";
 
     @doc("The connection configuration for the MCP tool")
     connection: Connection;

@@ -10,7 +10,7 @@ title: FunctionTool
 ---
 classDiagram
     class FunctionTool {
-        +string type
+        +string kind
         +Parameter[] parameters
     }
 ```
@@ -21,9 +21,9 @@ classDiagram
 ```yaml
 parameters:
   param1:
-    type: string
+    kind: string
   param2:
-    type: number
+    kind: number
 
 ```
 
@@ -34,7 +34,7 @@ parameters:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string | The type identifier for function tools  |
+| kind | string | The kind identifier for function tools  |
 | parameters | [Parameter Collection](Parameter.md) | Parameters accepted by the function tool <p>Related Types:<ul><li>[ObjectParameter](ObjectParameter.md)</li><li>[ArrayParameter](ArrayParameter.md)</li></ul></p> |
 
 

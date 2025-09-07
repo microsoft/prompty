@@ -15,7 +15,7 @@ title: Prompty
 ---
 classDiagram
     class Prompty {
-        +string type
+        +string kind
         +string id
         +string version
         +string name
@@ -53,17 +53,17 @@ model:
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
 inputs:
   firstName:
-    type: string
+    kind: string
     sample: Jane
   lastName:
-    type: string
+    kind: string
     sample: Doe
   question:
-    type: string
+    kind: string
     sample: What is the meaning of life?
 outputs:
   answer:
-    type: string
+    kind: string
     description: The answer to the user's question.
 template:
   format: handlebars
@@ -105,17 +105,17 @@ model:
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
 inputs:
   firstName:
-    type: string
+    kind: string
     sample: Jane
   lastName:
-    type: string
+    kind: string
     sample: Doe
   question:
-    type: string
+    kind: string
     sample: What is the meaning of life?
 outputs:
   answer:
-    type: string
+    kind: string
     description: The answer to the user's question.
 template:
   format: handlebars
@@ -142,9 +142,9 @@ instructions: |-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| type | string | Type represented by the Prompty document  |
-| id | string | Unique identifier for the Prompty document  |
-| version | string | Version of the Prompty specification  |
+| kind | string | Kind represented by the document  |
+| id | string | Unique identifier for the document  |
+| version | string | Document version  |
 | name | string | Human-readable name of the agent  |
 | description | string | Description of the agent&#39;s capabilities and purpose  |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties  |

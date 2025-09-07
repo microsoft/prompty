@@ -16,11 +16,11 @@ namespace Prompty.Core {
   /**
    * Represents a parameter for a tool.
    */
-  @discriminator("type")
+  @discriminator("kind")
   model Parameter {
     @doc("The data type of the tool parameter")
-    @sample(#{ type: "string" })
-    type: string;
+    @sample(#{ kind: "string" })
+    kind: string;
 
     @doc("A short description of the property")
     @sample(#{ description: "A description of the tool parameter" })
@@ -39,11 +39,11 @@ namespace Prompty.Core {
    * Represents an object parameter for a tool.
    */
   model ObjectParameter extends Parameter {
-    type: "object";
+    kind: "object";
 
     @doc("The properties of the object parameter")
     @sample(#{
-      properties: #{ param1: #{ type: "string" }, param2: #{ type: "number" } },
+      properties: #{ param1: #{ kind: "string" }, param2: #{ kind: "number" } },
     })
     properties: Parameters = #[];
   }
@@ -52,10 +52,10 @@ namespace Prompty.Core {
    * Represents an array parameter for a tool.
    */
   model ArrayParameter extends Parameter {
-    type: "array";
+    kind: "array";
 
-    @doc("The type of items contained in the array")
-    @sample(#{ items: #{ type: "string" } })
+    @doc("The kind of items contained in the array")
+    @sample(#{ items: #{ kind: "string" } })
     items: Parameter | Named<Parameter>;
   }
 
@@ -73,11 +73,11 @@ namespace Prompty.Core {
    * Represents a tool that can be used in prompts.
    */
   @abstract
-  @discriminator("type")
+  @discriminator("kind")
   model Tool {
-    @doc("The type identifier for the tool")
-    @sample(#{ type: "function" })
-    type: ToolTypes;
+    @doc("The kind identifier for the tool")
+    @sample(#{ kind: "function" })
+    kind: ToolTypes;
 
     @doc("A short description of the tool for metadata purposes")
     @sample(#{ description: "A description of the tool" })
@@ -92,26 +92,26 @@ namespace Prompty.Core {
    * Represents a local function tool.
    */
   model FunctionTool extends Tool {
-    @doc("The type identifier for function tools")
-    type: "function";
+    @doc("The kind identifier for function tools")
+    kind: "function";
 
     @doc("Parameters accepted by the function tool")
     @sample(#{
-      parameters: #{ param1: #{ type: "string" }, param2: #{ type: "number" } },
+      parameters: #{ param1: #{ kind: "string" }, param2: #{ kind: "number" } },
     })
     parameters: Parameters = #[];
   }
 
   /**
    * Represents a generic server tool that runs on a server
-   * This tool type is designed for operations that require server-side execution
+   * This tool kind is designed for operations that require server-side execution
    * It may include features such as authentication, data storage, and long-running processes
-   * This tool type is ideal for tasks that involve complex computations or access to secure resources
+   * This tool kind is ideal for tasks that involve complex computations or access to secure resources
    * Server tools can be used to offload heavy processing from client applications
    */
   model ServerTool extends Tool {
-    @doc("The type identifier for server tools")
-    type: "*";
+    @doc("The kind identifier for server tools")
+    kind: "*";
 
     @doc("Connection configuration for the server tool")
     @sample(#{
