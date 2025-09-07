@@ -68,7 +68,7 @@ options:
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model - can be used as the single property shorthand  |
 | provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
-| connection | [Connection](Connection.md) | The connection configuration for the model  |
+| connection | [Connection](Connection.md) | The connection configuration for the model <p>Related Types:<ul><li>[KeyConnection](KeyConnection.md)</li><li>[OAuthConnection](OAuthConnection.md)</li></ul></p> |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
 
 

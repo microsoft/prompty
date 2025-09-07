@@ -16,6 +16,21 @@ classDiagram
         +string endpoint
         +dictionary options
     }
+    class KeyConnection {
+        +string authType
+        +string endpoint
+        +string key
+    }
+    Connection <|-- KeyConnection
+    class OAuthConnection {
+        +string authType
+        +string endpoint
+        +string clientId
+        +string clientSecret
+        +string tokenUrl
+        +string[] scopes
+    }
+    Connection <|-- OAuthConnection
 ```
 
 
@@ -39,4 +54,10 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 | options | dictionary | Additional options for the connection  |
 
 
+
+## Child Types
+
+The following types extend `Connection`:
+- [KeyConnection](KeyConnection.md)
+- [OAuthConnection](OAuthConnection.md)
 

@@ -13,6 +13,19 @@ classDiagram
         +string endpoint
         +dictionary options
     }
+    class KeyConnection {
+        +string authType
+        +string endpoint
+        +string key
+    }
+    class OAuthConnection {
+        +string authType
+        +string endpoint
+        +string clientId
+        +string clientSecret
+        +string tokenUrl
+        +string[] scopes
+    }
     class ModelOptions {
         +string type
     }
@@ -139,6 +152,8 @@ classDiagram
         +string instructions
         +string additional_instructions
     }
+    Connection <|-- KeyConnection
+    Connection <|-- OAuthConnection
     Output <|-- ArrayOutput
     Output <|-- ObjectOutput
     Tool <|-- FunctionTool
