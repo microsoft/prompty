@@ -9,13 +9,6 @@ and additional options for the template engine.
 It allows for the creation of reusable templates that can be filled with dynamic data
 and processed to generate prompts for AI models.
 
-Example:
-```yaml
-template:
-  format: jinja2
-  parser: prompty
-```
-
 ## Class Diagram
 
 ```mermaid

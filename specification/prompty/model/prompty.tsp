@@ -15,7 +15,7 @@ namespace Prompty.Core {
    * available tools, and template configurations for prompt rendering.
    *
    * These can be written in a markdown format or in a pure YAML format.
-   *
+   * 
    */
   model Prompty {
     // Prompty metadata

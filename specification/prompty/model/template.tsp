@@ -12,12 +12,6 @@ namespace Prompty.Core {
    * It allows for the creation of reusable templates that can be filled with dynamic data
    * and processed to generate prompts for AI models.
    * 
-   * Example:
-   * ```yaml
-   * template:
-   *   format: jinja2
-   *   parser: prompty
-   * ```
    */
   model Template {
     @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")

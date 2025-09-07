@@ -8,13 +8,6 @@ namespace Prompty.Core {
    *   including their type, description, whether they are required, and other attributes.
    * * It allows for the definition of dynamic inputs that can be filled with data
    *  and processed to generate prompts for AI models.
-   * * Example:
-   * ```yaml
-   * inputs:
-   *   property1: string
-   *   property2: number
-   *   property3: boolean
-   * ```
    */
   model Input {
     @doc("The data type of the input property")
