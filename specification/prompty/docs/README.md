@@ -9,6 +9,7 @@ title: Declarative Agents
 ---
 classDiagram
     class Connection {
+        +string id
         +string kind
         +string endpoint
         +dictionary options
@@ -43,6 +44,14 @@ classDiagram
         +boolean strict
         +unknown default
         +unknown sample
+    }
+    class ObjectInput {
+        +string kind
+        +Input[] properties
+    }
+    class ArrayInput {
+        +string kind
+        +Input items
     }
     class Output {
         +string name
@@ -100,36 +109,24 @@ classDiagram
         +int64 count
         +string freshness
     }
-    class BingSearchOptions {
-        +BingSearchConfiguration[] configurations
-    }
     class BingSearchTool {
         +string kind
         +Connection connection
-        +BingSearchOptions options
-    }
-    class FileSearchRankingOptions {
-        +string ranker
-        +float32 scoreThreshold
-    }
-    class FileSearchOptions {
-        +int32 maxNumResults
-        +FileSearchRankingOptions rankingOptions
+        +BingSearchConfiguration[] configurations
     }
     class FileSearchTool {
         +string kind
         +Connection connection
-        +FileSearchOptions options
-    }
-    class McpToolOptions {
-        +string name
-        +string url
-        +string[] allowed
+        +int32 maxNumResults
+        +string ranker
+        +float32 scoreThreshold
     }
     class McpTool {
         +string kind
         +Connection connection
-        +McpToolOptions options
+        +string name
+        +string url
+        +string[] allowed
     }
     class Template {
         +string format
@@ -154,6 +151,8 @@ classDiagram
     }
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection
+    Input <|-- ArrayInput
+    Input <|-- ObjectInput
     Output <|-- ArrayOutput
     Output <|-- ObjectOutput
     Tool <|-- FunctionTool
@@ -165,6 +164,8 @@ classDiagram
     Parameter <|-- ArrayParameter
     Model *-- Connection
     Model *-- ModelOptions
+    ObjectInput *-- Input
+    ArrayInput *-- Input
     ObjectOutput *-- Output
     ArrayOutput *-- Output
     Tool *-- Binding
@@ -172,14 +173,10 @@ classDiagram
     ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
     ServerTool *-- Connection
-    BingSearchOptions *-- BingSearchConfiguration
     BingSearchTool *-- Connection
-    BingSearchTool *-- BingSearchOptions
-    FileSearchOptions *-- FileSearchRankingOptions
+    BingSearchTool *-- BingSearchConfiguration
     FileSearchTool *-- Connection
-    FileSearchTool *-- FileSearchOptions
     McpTool *-- Connection
-    McpTool *-- McpToolOptions
     Prompty *-- Model
     Prompty *-- Input
     Prompty *-- Output

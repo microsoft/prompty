@@ -12,11 +12,26 @@ classDiagram
     class McpTool {
         +string kind
         +Connection connection
-        +McpToolOptions options
+        +string name
+        +string url
+        +string[] allowed
     }
 ```
 
 
+
+## Yaml Example
+```yaml
+kind: mcp
+connection:
+  id: connectionId
+name: My MCP Tool
+url: https://mcp.server.com
+allowed:
+  - operation1
+  - operation2
+
+```
 
 
 
@@ -27,7 +42,9 @@ classDiagram
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for MCP tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the MCP tool  |
-| options | [McpToolOptions](McpToolOptions.md) | The options for the MCP tool  |
+| name | string | The name of the MCP tool  |
+| url | string | The URL of the MCP server  |
+| allowed | string Collection | List of allowed operations or resources for the MCP tool  |
 
 
 

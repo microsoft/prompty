@@ -12,6 +12,7 @@ title: Connection
 ---
 classDiagram
     class Connection {
+        +string id
         +string kind
         +string endpoint
         +dictionary options
@@ -37,6 +38,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+id: my-connection
 kind: key
 endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
@@ -49,6 +51,7 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| id | string | The unique identifier of the connection - can be used as the single property shorthand  |
 | kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
 | endpoint | string | The endpoint URL for the AI service  |
 | options | dictionary | Additional options for the connection  |

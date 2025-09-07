@@ -22,6 +22,16 @@ classDiagram
         +unknown default
         +unknown sample
     }
+    class ArrayInput {
+        +string kind
+        +Input items
+    }
+    Input <|-- ArrayInput
+    class ObjectInput {
+        +string kind
+        +Input[] properties
+    }
+    Input <|-- ObjectInput
 ```
 
 
@@ -53,4 +63,10 @@ sample: sample value
 | sample | unknown | A sample value of the input for examples and tooling  |
 
 
+
+## Child Types
+
+The following types extend `Input`:
+- [ArrayInput](ArrayInput.md)
+- [ObjectInput](ObjectInput.md)
 

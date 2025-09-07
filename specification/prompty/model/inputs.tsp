@@ -35,5 +35,34 @@ namespace Prompty.Core {
     sample?: unknown = null;
   }
 
+  /**
+   * Represents an array output property.
+   * This extends the base Output model to represent an array of items.
+   */
+  model ArrayInput extends Input {
+    kind: "array";
+
+    @doc("The type of items contained in the array")
+    @sample(#{ items: #{ kind: "string" } })
+    items: Input | Named<Input, "Name of the input property">;
+  }
+
+  /**
+   * Represents an object output property.
+   * This extends the base Output model to represent a structured object.
+   */
+  model ObjectInput extends Input {
+    kind: "object";
+
+    @doc("The properties contained in the object")
+    @sample(#{
+      properties: #{
+        property1: #{ kind: "string" },
+        property2: #{ kind: "number" },
+      },
+    })
+    properties: Inputs;
+  }
+
   alias Inputs = Record<Input> | Named<Input, "Name of the input property">[];
 }

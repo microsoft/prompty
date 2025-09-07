@@ -149,7 +149,7 @@ instructions: |-
 | description | string | Description of the agent&#39;s capabilities and purpose  |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties  |
 | model | [Model](Model.md) | Model configuration used for execution  |
-| inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering  |
+| inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering <p>Related Types:<ul><li>[ArrayInput](ArrayInput.md)</li><li>[ObjectInput](ObjectInput.md)</li></ul></p> |
 | outputs | [Output Collection](Output.md) | Expected output format and structure from the agent <p>Related Types:<ul><li>[ArrayOutput](ArrayOutput.md)</li><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |
 | tools | [Tool Collection](Tool.md) | Tools available to the agent for extended functionality <p>Related Types:<ul><li>[FunctionTool](FunctionTool.md)</li><li>[ServerTool](ServerTool.md)</li><li>[BingSearchTool](BingSearchTool.md)</li><li>[FileSearchTool](FileSearchTool.md)</li><li>[McpTool](McpTool.md)</li></ul></p> |
 | template | [Template](Template.md) | Template configuration for prompt rendering  |

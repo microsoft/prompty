@@ -29,19 +29,23 @@ classDiagram
     class BingSearchTool {
         +string kind
         +Connection connection
-        +BingSearchOptions options
+        +BingSearchConfiguration[] configurations
     }
     Tool <|-- BingSearchTool
     class FileSearchTool {
         +string kind
         +Connection connection
-        +FileSearchOptions options
+        +int32 maxNumResults
+        +string ranker
+        +float32 scoreThreshold
     }
     Tool <|-- FileSearchTool
     class McpTool {
         +string kind
         +Connection connection
-        +McpToolOptions options
+        +string name
+        +string url
+        +string[] allowed
     }
     Tool <|-- McpTool
 ```

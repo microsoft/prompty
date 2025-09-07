@@ -13,11 +13,24 @@ classDiagram
     class FileSearchTool {
         +string kind
         +Connection connection
-        +FileSearchOptions options
+        +int32 maxNumResults
+        +string ranker
+        +float32 scoreThreshold
     }
 ```
 
 
+
+## Yaml Example
+```yaml
+kind: file_search
+connection:
+  id: connectionId
+maxNumResults: 10
+ranker: default
+scoreThreshold: 0.5
+
+```
 
 
 
@@ -28,7 +41,9 @@ classDiagram
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for file search tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the file search tool  |
-| options | [FileSearchOptions](FileSearchOptions.md) | The options for the file search tool  |
+| maxNumResults | int32 | The maximum number of search results to return.  |
+| ranker | string | File search ranker.  |
+| scoreThreshold | float32 | Ranker search threshold.  |
 
 
 

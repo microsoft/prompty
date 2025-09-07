@@ -27,24 +27,32 @@ namespace Prompty.Core {
   }
 
   /**
-   * Options for the Bing search tool.
-   */
-  model BingSearchOptions {
-    @doc("The configuration options for the Bing search tool")
-    configurations: BingSearchConfiguration[];
-  }
-
-  /**
    * The Bing search tool.
    */
   model BingSearchTool extends Tool {
     @doc("The kind identifier for Bing search tools")
+    @sample(#{ kind: "bing_search" })
     kind: "bing_search";
 
     @doc("The connection configuration for the Bing search tool")
+    @sample(#{
+      connection: #{ id: "connectionId" },
+    })
     connection: Connection;
 
-    @doc("The options for the Bing search tool")
-    options: BingSearchOptions;
+    @doc("The configuration options for the Bing search tool")
+    @sample(#{
+      configurations: #[
+        #{ 
+          connectionId: "connectionId",
+          instanceName: "MyBingInstance",
+          market: "en-US",
+          setLang: "en",
+          count: 10,
+          freshness: "Day"
+        }
+      ]
+    })
+    configurations: BingSearchConfiguration[];
   }
 }

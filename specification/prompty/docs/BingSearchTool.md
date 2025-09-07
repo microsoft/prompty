@@ -12,11 +12,26 @@ classDiagram
     class BingSearchTool {
         +string kind
         +Connection connection
-        +BingSearchOptions options
+        +BingSearchConfiguration[] configurations
     }
 ```
 
 
+
+## Yaml Example
+```yaml
+kind: bing_search
+connection:
+  id: connectionId
+configurations:
+  - connectionId: connectionId
+    instanceName: MyBingInstance
+    market: en-US
+    setLang: en
+    count: 10
+    freshness: Day
+
+```
 
 
 
@@ -27,7 +42,7 @@ classDiagram
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for Bing search tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the Bing search tool  |
-| options | [BingSearchOptions](BingSearchOptions.md) | The options for the Bing search tool  |
+| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) | The configuration options for the Bing search tool  |
 
 
 

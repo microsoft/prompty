@@ -1,0 +1,42 @@
+# ObjectInput
+
+Represents an object output property.
+This extends the base Output model to represent a structured object.
+
+## Class Diagram
+
+```mermaid
+---
+title: ObjectInput
+---
+classDiagram
+    class ObjectInput {
+        +string kind
+        +Input[] properties
+    }
+```
+
+
+
+## Yaml Example
+```yaml
+properties:
+  property1:
+    kind: string
+  property2:
+    kind: number
+
+```
+
+
+
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| kind | string |   |
+| properties | [Input Collection](Input.md) | The properties contained in the object  |
+
+
+

@@ -4,39 +4,30 @@ import "../connection.tsp";
 
 namespace Prompty.Core {
   /**
-   * Options for ranking file search results.
-   */
-  model FileSearchRankingOptions {
-    @doc("File search ranker.")
-    ranker: string;
-
-    @doc("Ranker search threshold.")
-    scoreThreshold: float32;
-  }
-
-  /**
-   * Options for file search.
-   */
-  model FileSearchOptions {
-    @doc("The maximum number of search results to return.")
-    maxNumResults?: int32;
-
-    @doc("Options for ranking file search results.")
-    rankingOptions?: FileSearchRankingOptions;
-  }
-
-  /**
    * A tool for searching files.
    * This tool allows an AI agent to search for files based on a query.
    */
   model FileSearchTool extends Tool {
     @doc("The kind identifier for file search tools")
+    @sample(#{ kind: "file_search" })
     kind: "file_search";
 
     @doc("The connection configuration for the file search tool")
+    @sample(#{
+      connection: #{ id: "connectionId" },
+    })
     connection: Connection;
 
-    @doc("The options for the file search tool")
-    options: FileSearchOptions;
+    @doc("The maximum number of search results to return.")
+    @sample(#{ maxNumResults: 10 })
+    maxNumResults?: int32;
+
+    @doc("File search ranker.")
+    @sample(#{ ranker: "default" })
+    ranker: string;
+
+    @doc("Ranker search threshold.")
+    @sample(#{ scoreThreshold: 0.5 })
+    scoreThreshold: float32;
   }
 }

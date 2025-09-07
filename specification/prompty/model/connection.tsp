@@ -10,6 +10,10 @@ namespace Prompty.Core {
    */
   @discriminator("kind")
   model Connection {
+    @doc("The unique identifier of the connection - can be used as the single property shorthand")
+    @sample(#{ id: "my-connection" })
+    id?: string = "";
+
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
     @sample(#{ kind: "key" })
     kind: ConnectionType;
@@ -60,7 +64,9 @@ namespace Prompty.Core {
     clientSecret: string;
 
     @doc("The OAuth token URL for obtaining access tokens")
-    @sample(#{ tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" })
+    @sample(#{
+      tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+    })
     tokenUrl: string;
 
     @doc("The scopes required for the OAuth token")
