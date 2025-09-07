@@ -44,7 +44,11 @@ namespace Prompty.Core {
 
     @doc("The type of items contained in the array")
     @sample(#{ items: #{ kind: "string" } })
-    items: Input | Named<Input, "Name of the input property">;
+    items: Input | Named<
+      Input,
+      "Name of the input property",
+      #{ name: "my-input-item" }
+    >;
   }
 
   /**
@@ -64,5 +68,9 @@ namespace Prompty.Core {
     properties: Inputs;
   }
 
-  alias Inputs = Record<Input> | Named<Input, "Name of the input property">[];
+  alias Inputs = Record<Input> | Named<
+    Input,
+    "Name of the input property",
+    #{ name: "my-input" }
+  >[];
 }

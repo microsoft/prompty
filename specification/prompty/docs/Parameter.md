@@ -32,6 +32,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+name: my-parameter
 kind: string
 description: A description of the tool parameter
 required: true

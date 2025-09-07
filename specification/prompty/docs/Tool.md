@@ -54,6 +54,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+name: my-tool
 kind: function
 description: A description of the tool
 bindings:
@@ -68,7 +69,7 @@ bindings:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | string | Name of the item  |
+| name | string | Name of the tool. If a function tool, this is the function name, otherwise it is the type  |
 | kind | string | The kind identifier for the tool  |
 | description | string | A short description of the tool for metadata purposes  |
 | bindings | [Binding Collection](Binding.md) | Tool argument bindings to input properties  |

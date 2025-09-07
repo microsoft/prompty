@@ -8,10 +8,15 @@ namespace Prompty.Core {
    */
   model Binding {
     @doc("The input property that will be bound to the tool parameter argument")
+    @sample(#{ input: "input-variable" })
     input: string;
   }
 
-  alias Bindings = Record<Binding> | Named<Binding, "Name of the binding">[];
+  alias Bindings = Record<Binding> | Named<
+    Binding,
+    "Name of the binding",
+    #{ name: "my-tool" }
+  >[];
 
   /**
    * Represents a parameter for a tool.
@@ -56,12 +61,17 @@ namespace Prompty.Core {
 
     @doc("The kind of items contained in the array")
     @sample(#{ items: #{ kind: "string" } })
-    items: Parameter | Named<Parameter>;
+    items: Parameter | Named<
+      Parameter,
+      "Name of the parameter",
+      #{ name: "my-parameter-item" }
+    >;
   }
 
   alias Parameters = Record<Parameter> | Named<
     Parameter,
-    "Name of the parameter"
+    "Name of the parameter",
+    #{ name: "my-parameter" }
   >[];
 
   union ToolTypes {
@@ -93,6 +103,7 @@ namespace Prompty.Core {
    */
   model FunctionTool extends Tool {
     @doc("The kind identifier for function tools")
+    @sample(#{ kind: "function" })
     kind: "function";
 
     @doc("Parameters accepted by the function tool")
@@ -110,7 +121,7 @@ namespace Prompty.Core {
    * Server tools can be used to offload heavy processing from client applications
    */
   model ServerTool extends Tool {
-    @doc("The kind identifier for server tools")
+    @doc("The kind identifier for server tools. This is a wildcard and can represent any server tool type not explicitly defined.")
     kind: "*";
 
     @doc("Connection configuration for the server tool")
@@ -128,5 +139,9 @@ namespace Prompty.Core {
     options: Record<unknown> = #{};
   }
 
-  alias Tools = Record<Tool> | Named<Tool>[];
+  alias Tools = Record<Tool> | Named<
+    Tool,
+    "Name of the tool. If a function tool, this is the function name, otherwise it is the type",
+    #{ name: "my-tool" }
+  >[];
 }

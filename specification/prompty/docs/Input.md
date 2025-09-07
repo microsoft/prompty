@@ -38,6 +38,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+name: my-input
 kind: string
 description: A description of the input property
 required: true

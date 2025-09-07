@@ -17,6 +17,13 @@ classDiagram
 
 
 
+## Yaml Example
+```yaml
+name: my-tool
+input: input-variable
+
+```
+
 
 
 

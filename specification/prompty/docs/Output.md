@@ -32,6 +32,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+name: my-output
 kind: string
 description: A description of the output property
 required: true

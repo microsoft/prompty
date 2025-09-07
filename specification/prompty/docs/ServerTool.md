@@ -41,7 +41,7 @@ options:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The kind identifier for server tools  |
+| kind | string | The kind identifier for server tools. This is a wildcard and can represent any server tool type not explicitly defined.  |
 | connection | [Connection](Connection.md) | Connection configuration for the server tool  |
 | options | dictionary | Configuration options for the server tool  |
 

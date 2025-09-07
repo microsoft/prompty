@@ -30,7 +30,11 @@ namespace Prompty.Core {
 
     @doc("The type of items contained in the array")
     @sample(#{ items: #{ kind: "string" } })
-    items: Output | Named<Output, "Name of the output property">;
+    items: Output | Named<
+      Output,
+      "Name of the output property",
+      #{ name: "my-output-item" }
+    >;
   }
 
   /**
@@ -41,9 +45,18 @@ namespace Prompty.Core {
     kind: "object";
 
     @doc("The properties contained in the object")
-    @sample(#{ properties: #{ property1: #{ kind: "string" }, property2: #{ kind: "number" } } })
+    @sample(#{
+      properties: #{
+        property1: #{ kind: "string" },
+        property2: #{ kind: "number" },
+      },
+    })
     properties: Outputs;
   }
 
-  alias Outputs = Record<Output> | Named<Output, "Name of the output property">[];
+  alias Outputs = Record<Output> | Named<
+    Output,
+    "Name of the output property",
+    #{ name: "my-output" }
+  >[];
 }

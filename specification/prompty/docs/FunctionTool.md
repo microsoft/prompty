@@ -19,6 +19,7 @@ classDiagram
 
 ## Yaml Example
 ```yaml
+kind: function
 parameters:
   param1:
     kind: string
