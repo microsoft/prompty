@@ -12,12 +12,16 @@ namespace Prompty.Core {
   @discriminator("kind")
   model Connection {
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-    @sample(#{ kind: "key" })
+    @sample(#{ kind: "oauth" })
     kind: ConnectionType;
 
     @doc("The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')")
     @sample(#{ authority: "system" })
     authority: Authority = "system";
+
+    @doc("The usage description for the connection, providing context on how this connection will be used")
+    @sample(#{ usage_description: "This will allow the agent to respond to an email on your behalf" })
+    usage_description?: string;
 
     @doc("Additional options for the connection")
     options?: Record<unknown> = #{};
