@@ -12,11 +12,16 @@ title: Connection
 ---
 classDiagram
     class Connection {
-        +string id
         +string kind
-        +string endpoint
+        +string authority
         +dictionary options
     }
+    class NamedConnection {
+        +string kind
+        +string name
+        +dictionary options
+    }
+    Connection <|-- NamedConnection
     class KeyConnection {
         +string kind
         +string endpoint
@@ -38,9 +43,8 @@ classDiagram
 
 ## Yaml Example
 ```yaml
-id: my-connection
 kind: key
-endpoint: https://{your-custom-endpoint}.openai.azure.com/
+authority: system
 
 ```
 
@@ -51,9 +55,8 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| id | string | The unique identifier of the connection - can be used as the single property shorthand  |
 | kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
-| endpoint | string | The endpoint URL for the AI service  |
+| authority | string | The authority level for the connection, indicating under whose authority the connection is made (e.g., &#39;user&#39;, &#39;agent&#39;, &#39;system&#39;)  |
 | options | dictionary | Additional options for the connection  |
 
 
@@ -61,6 +64,7 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 ## Child Types
 
 The following types extend `Connection`:
+- [NamedConnection](NamedConnection.md)
 - [KeyConnection](KeyConnection.md)
 - [OAuthConnection](OAuthConnection.md)
 

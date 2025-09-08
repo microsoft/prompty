@@ -9,9 +9,13 @@ title: Declarative Agents
 ---
 classDiagram
     class Connection {
-        +string id
         +string kind
-        +string endpoint
+        +string authority
+        +dictionary options
+    }
+    class NamedConnection {
+        +string kind
+        +string name
         +dictionary options
     }
     class KeyConnection {
@@ -149,6 +153,7 @@ classDiagram
         +string instructions
         +string additional_instructions
     }
+    Connection <|-- NamedConnection
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection
     Input <|-- ArrayInput

@@ -1,7 +1,8 @@
 import "@prompty/emitter";
 
 namespace Prompty.Core {
-  alias ConnectionType = "key" | "oauth" | "agent" | string;
+  alias ConnectionType = "key" | "oauth" | "named" | string;
+  alias Authority = "user" | "agent" | "system" | string;
 
   /**
    * Connection configuration for AI agents.
@@ -10,19 +11,31 @@ namespace Prompty.Core {
    */
   @discriminator("kind")
   model Connection {
-    @doc("The unique identifier of the connection - can be used as the single property shorthand")
-    @sample(#{ id: "my-connection" })
-    id?: string = "";
-
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
     @sample(#{ kind: "key" })
     kind: ConnectionType;
 
-    @doc("The endpoint URL for the AI service")
-    @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
-    endpoint: string;
+    @doc("The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')")
+    @sample(#{ authority: "system" })
+    authority: Authority = "system";
 
     @doc("Additional options for the connection")
+    options?: Record<unknown> = #{};
+  }
+
+  /**
+   * Connection configuration for AI services using named connections.
+   */
+  model NamedConnection extends Connection {
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    @sample(#{ kind: "named" })
+    kind: "named";
+
+    @doc("The name of the connection")
+    @sample(#{ name: "my-named-connection" })
+    name: string;
+
+    @doc("Additional options for the named connection")
     options?: Record<unknown> = #{};
   }
 
