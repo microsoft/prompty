@@ -13,6 +13,14 @@ classDiagram
         +string kind
         +Parameter[] properties
     }
+    class Parameter {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +unknown[] enum
+    }
+    ObjectParameter *-- Parameter
 ```
 
 

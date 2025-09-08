@@ -14,6 +14,12 @@ classDiagram
         +string kind
         +Output items
     }
+    class Output {
+        +string kind
+        +string description
+        +boolean required
+    }
+    ArrayOutput *-- Output
 ```
 
 

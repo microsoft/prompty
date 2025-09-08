@@ -48,6 +48,11 @@ classDiagram
         +string[] allowed
     }
     Tool <|-- McpTool
+    class Binding {
+        +string name
+        +string input
+    }
+    Tool *-- Binding
 ```
 
 

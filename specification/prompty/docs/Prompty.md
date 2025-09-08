@@ -29,6 +29,44 @@ classDiagram
         +string instructions
         +string additional_instructions
     }
+    class Model {
+        +string id
+        +string provider
+        +Connection connection
+        +ModelOptions options
+    }
+    Prompty *-- Model
+    class Input {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +boolean strict
+        +unknown default
+        +unknown sample
+    }
+    Prompty *-- Input
+    class Output {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+    }
+    Prompty *-- Output
+    class Tool {
+        +string name
+        +string kind
+        +string description
+        +Binding[] bindings
+    }
+    Prompty *-- Tool
+    class Template {
+        +string format
+        +string parser
+        +boolean strict
+        +dictionary options
+    }
+    Prompty *-- Template
 ```
 
 ## Markdown Example

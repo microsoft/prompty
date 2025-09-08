@@ -13,6 +13,14 @@ classDiagram
         +string kind
         +Parameter[] parameters
     }
+    class Parameter {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +unknown[] enum
+    }
+    FunctionTool *-- Parameter
 ```
 
 

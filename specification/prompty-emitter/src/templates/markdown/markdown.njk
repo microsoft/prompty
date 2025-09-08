@@ -22,15 +22,13 @@ classDiagram
     }
     {{ node.typeName.name }} <|-- {{ type.typeName.name }}
     {%- endfor %}
-    {%- for prop in type.properties %}
-    {% if not prop.type.isScalar %}
-    class {{ prop.type.typeName.name }} {
-      {%- for p in prop.type.properties %}
-        +{{ p.typeName.name | safe }}{{ "[]" if p.isCollection else "" }} {{ p.name }}
+    {%- for type in getCompositionTypes(node) %}
+    class {{ type.typeName.name }} {
+      {%- for prop in type.properties %}
+        +{{ prop.typeName.name | safe }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}
     }
-    {{ node.typeName.name }} *-- {{ prop.type.typeName.name }}
-    {%- endif %}
+    {{ node.typeName.name }} *-- {{ type.typeName.name }}
     {%- endfor %}
 ```
 {% if md %}

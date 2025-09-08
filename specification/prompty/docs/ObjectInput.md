@@ -14,6 +14,16 @@ classDiagram
         +string kind
         +Input[] properties
     }
+    class Input {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +boolean strict
+        +unknown default
+        +unknown sample
+    }
+    ObjectInput *-- Input
 ```
 
 

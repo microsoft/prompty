@@ -14,6 +14,15 @@ classDiagram
         +Connection connection
         +BingSearchConfiguration[] configurations
     }
+    class BingSearchConfiguration {
+        +string connectionId
+        +string instanceName
+        +string market
+        +string setLang
+        +int64 count
+        +string freshness
+    }
+    BingSearchTool *-- BingSearchConfiguration
 ```
 
 

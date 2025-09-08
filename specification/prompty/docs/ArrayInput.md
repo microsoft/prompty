@@ -14,6 +14,15 @@ classDiagram
         +string kind
         +Input items
     }
+    class Input {
+        +string kind
+        +string description
+        +boolean required
+        +boolean strict
+        +unknown default
+        +unknown sample
+    }
+    ArrayInput *-- Input
 ```
 
 

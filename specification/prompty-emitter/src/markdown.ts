@@ -113,11 +113,9 @@ export const getChildTypes = (node: TypeNode): { source: string, target: string 
   }, ...getChildTypes(c)]);
 };
 
-export const getCompositionTypes = (node: TypeNode): { source: string, target: string }[] => {
-  return node.properties.filter(p => !p.isScalar).flatMap(c => [{
-    source: node.typeName.name,
-    target: c.typeName.name
-  }, ...(c.type ? getChildTypes(c.type) : [])]);
+export const getCompositionTypes = (node: TypeNode): TypeNode[] => {
+  const nonScalars = node.properties.filter(p => !p.isScalar);
+  return nonScalars.flatMap(c => c.type ? [c.type] : []);
 };
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {

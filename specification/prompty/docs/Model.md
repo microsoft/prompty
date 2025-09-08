@@ -17,6 +17,17 @@ classDiagram
         +Connection connection
         +ModelOptions options
     }
+    class Connection {
+        +string kind
+        +string authority
+        +string usage_description
+        +dictionary options
+    }
+    Model *-- Connection
+    class ModelOptions {
+        +string kind
+    }
+    Model *-- ModelOptions
 ```
 
 

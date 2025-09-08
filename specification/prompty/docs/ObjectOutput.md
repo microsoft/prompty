@@ -14,6 +14,13 @@ classDiagram
         +string kind
         +Output[] properties
     }
+    class Output {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+    }
+    ObjectOutput *-- Output
 ```
 
 

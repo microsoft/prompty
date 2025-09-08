@@ -13,6 +13,13 @@ classDiagram
         +string kind
         +Parameter items
     }
+    class Parameter {
+        +string kind
+        +string description
+        +boolean required
+        +unknown[] enum
+    }
+    ArrayParameter *-- Parameter
 ```
 
 
