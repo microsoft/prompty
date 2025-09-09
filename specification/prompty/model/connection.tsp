@@ -20,7 +20,9 @@ namespace Prompty.Core {
     authority: Authority = "system";
 
     @doc("The usage description for the connection, providing context on how this connection will be used")
-    @sample(#{ usage_description: "This will allow the agent to respond to an email on your behalf" })
+    @sample(#{
+      usage_description: "This will allow the agent to respond to an email on your behalf",
+    })
     usage_description?: string;
 
     @doc("Additional options for the connection")
@@ -38,9 +40,6 @@ namespace Prompty.Core {
     @doc("The name of the connection")
     @sample(#{ name: "my-named-connection" })
     name: string;
-
-    @doc("Additional options for the named connection")
-    options?: Record<unknown> = #{};
   }
 
   /**
