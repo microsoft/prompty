@@ -1,3 +1,4 @@
+# Prompty
 
 Prompty is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop of prompt engineering and prompt source management in a cross-language and cross-platform implementation.
 
@@ -6,9 +7,11 @@ The file format has a supporting toolchain with a VS Code extension and runtimes
 The tooling comes together in three ways: the *prompty file asset*, the *VS Code extension tool*, and *runtimes* in multiple programming languages.
 
 ## The Prompty File Format
+
 Prompty is a language agnostic prompt asset for creating prompts and engineering the responses. Learn more about the format [here](https://prompty.ai/docs/prompty-file-spec).
 
 Examples prompty file:
+
 ```markdown
 ---
 name: Basic Prompt
@@ -41,14 +44,14 @@ user:
 {{question}}
 ```
 
-
 ## The Prompty VS Code Extension
+
 Run Prompty files directly in VS Code. This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Prompty extension in the Visual Studio Code Marketplace.
 
 Download the [VS Code extension here](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
 
-
 ## Using this Prompty Runtime
+
 The Python runtime is a simple way to run your prompts in Python. The runtime is available as a Python package and can be installed using pip. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
 
 ```bash
@@ -68,15 +71,48 @@ response = prompty.execute("path/to/prompty/file")
 print(response)
 ```
 
+## Configuration Options
+
+### Disabling Image Parsing
+
+By default, the Prompty chat parser automatically processes markdown images (`![alt](image.png)`) by converting them to base64 data URIs for LLM consumption. You can disable this behavior when you want to preserve image references as plain text:
+
+```yaml
+---
+name: Markdown Converter
+model:
+  api: chat
+  configuration:
+    azure_deployment: gpt-35-turbo
+template:
+  format: jinja2
+  parser: prompty
+  options:
+    disable_image_parsing: true
+---
+system:
+Convert the following markdown to HTML, preserving image references as-is:
+
+user:
+{{content}}
+```
+
+This is useful when:
+
+- Converting markdown to other formats where you want to preserve image references
+- Processing documentation where images aren't needed for LLM processing
+- Avoiding file access issues when images aren't available in the execution environment
+
 ## Available Invokers
+
 The Prompty runtime comes with a set of built-in invokers that can be used to execute prompts. These include:
 
 - `azure`: Invokes the Azure OpenAI API
 - `openai`: Invokes the OpenAI API
 - `serverless`: Invokes serverless models (like the ones on GitHub) using the [Azure AI Inference client library](https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview) (currently only key based authentication is supported with more managed identity support coming soon)
 
-
 ## Using Tracing in Prompty
+
 Prompty supports tracing to help you understand the execution of your prompts. This functionality is customizable and can be used to trace the execution of your prompts in a way that makes sense to you. Prompty has two default traces built in: `console_tracer` and `PromptyTracer`. The `console_tracer` writes the trace to the console, and the `PromptyTracer` writes the trace to a JSON file. You can also create your own tracer by creating your own hook.
 
 ```python
@@ -162,6 +198,7 @@ def get_response(customerId, prompt):
 In this case, whenever this code is executed, a `.tracy` file will be created in the `path/to/output` directory. This file will contain the trace of the execution of the `get_response` function, the execution of the `get_customer` function, and the prompty internals that generated the response.
 
 ## OpenTelemetry Tracing
+
 You can add OpenTelemetry tracing to your application using the same hook mechanism. In your application, you might create something like `trace_span` to trace the execution of your prompts:
 
 ```python
@@ -185,6 +222,7 @@ Tracer.add("OpenTelemetry", trace_span)
 This will produce spans during the execution of the prompt that can be sent to an OpenTelemetry collector for further analysis.
 
 ## CLI
+
 The Prompty runtime also comes with a CLI tool that allows you to run prompts from the command line. The CLI tool is installed with the Python package.
 
 ```bash
@@ -194,4 +232,5 @@ prompty -s path/to/prompty/file -e .env
 This will execute the prompt and print the response to the console. If there are any environment variables the CLI should take into account, you can pass those in via the `-e` flag. It also has default tracing enabled.
 
 ## Contributing
+
 We welcome contributions to the Prompty project! This community led project is open to all contributors. The project can be found on [GitHub](https://github.com/Microsoft/prompty).

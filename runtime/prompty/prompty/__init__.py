@@ -272,13 +272,15 @@ def _validate_inputs(prompt: Prompty, inputs: dict[str, typing.Any], merge_sampl
                     f"Type mismatch for input property {input.name}: input type ({inputs[input.name].type}) != sample type ({input.type})"
                 )
             clean_inputs[input.name] = inputs[input.name]
+        elif input.default is not None:
+            clean_inputs[input.name] = input.default
+        elif getattr(input, "required", False):
+            raise ValueError(f"Missing required input property {input.name}")
         else:
-            if input.default is not None:
-                clean_inputs[input.name] = input.default
-            else:
-                raise ValueError(f"Missing input property {input.name}")
+            # optional input with no default - continue
+            continue
 
-    # check stra inputs
+    # check stray inputs
     invalid: list[str] = []
     for k, v in inputs.items():
         if prompt.get_input(k) is None:

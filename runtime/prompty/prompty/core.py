@@ -113,6 +113,10 @@ class TemplateProperty:
         Nonce is automatically genereted for each run
     content : str
         Template content used for rendering
+    strict : bool
+        Whether the template is strict or not
+    options : dict
+        The options of the template (optional)
     """
 
     format: str = field(default="mustache")
