@@ -1,9 +1,3 @@
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 import { EmitContext, emitFile, resolvePath, Type } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
 import { PropertyNode, TypeNode } from "./ast.js";
@@ -24,9 +18,9 @@ const pythonTypeMapper: Record<string, string> = {
 };
 
 
-export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
+export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
-  const templatePath = path.resolve(__dirname, 'templates', 'python');
+  const templatePath = path.resolve(templateDir, 'python');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const initTemplate = env.getTemplate('init.njk', true);

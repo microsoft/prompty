@@ -1,10 +1,3 @@
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
 import { PropertyNode, TypeNode } from "./ast.js";
@@ -28,9 +21,9 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   }, {} as T);
 }
 
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
-  const templatePath = path.resolve(__dirname, 'templates', 'markdown');
+  const templatePath = path.resolve(templateDir, 'markdown');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const template = env.getTemplate('markdown.njk', true);
   const readme = env.getTemplate('readme.njk', true);

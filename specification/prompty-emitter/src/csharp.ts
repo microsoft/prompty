@@ -42,9 +42,9 @@ const numberTypes = [
   "float32"
 ]
 
-export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
-  const templatePath = path.resolve(__dirname, 'templates', 'csharp');
+  const templatePath = path.resolve(templateDir, 'csharp');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);

@@ -5,9 +5,10 @@ export interface EmitTarget {
   "output-dir"?: string;
 }
 export interface PromptyEmitterOptions {
+  "root-object": string;
   "emit-targets"?: EmitTarget[];
   "root-namespace"?: string;
-  "root-object"?: string;
+  "root-alias"?: string;
 }
 
 const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
@@ -39,11 +40,16 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
     },
     "root-object": {
       type: "string",
+      nullable: false,
+      description: "Root object for the emitted artifacts"
+    },
+    "root-alias": {
+      type: "string",
       nullable: true,
-      description: "Root object for the emitted code"
+      description: "Alias for the root object"
     }
   },
-  required: [],
+  required: ["root-object"],
 };
 
 export const $lib = createTypeSpecLibrary({

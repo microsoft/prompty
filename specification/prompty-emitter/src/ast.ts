@@ -162,6 +162,14 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
 
   if (!visited.has(node.typeName.fullName)) {
     yield node;
+    for (const child of node.childTypes) {
+      for (const subNode of enumerateTypes(child, visited)) {
+        if (!visited.has(subNode.typeName.fullName)) {
+          yield subNode;
+          visited.add(subNode.typeName.fullName);
+        }
+      }
+    }
     visited.add(node.typeName.fullName);
   }
 };
