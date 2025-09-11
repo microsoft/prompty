@@ -1,7 +1,14 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 import { EmitContext, emitFile, getTypeName, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
+import path from "path";
 
 const csharpTypeMapper: Record<string, string> = {
   "string": "string",
@@ -37,7 +44,8 @@ const numberTypes = [
 
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
-  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/csharp'));
+  const templatePath = path.resolve(__dirname, 'templates', 'csharp');
+  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
 

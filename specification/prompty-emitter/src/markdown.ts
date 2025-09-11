@@ -1,8 +1,16 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
 import { PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import { stringify } from 'yaml';
+import path from "path";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -22,7 +30,8 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
 
 export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, nodes: TypeNode[], outputDir?: string) => {
   // set up template environment
-  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader('./src/templates/markdown'));
+  const templatePath = path.resolve(__dirname, 'templates', 'markdown');
+  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const template = env.getTemplate('markdown.njk', true);
   const readme = env.getTemplate('readme.njk', true);
 

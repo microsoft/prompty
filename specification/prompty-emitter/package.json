@@ -1,8 +1,10 @@
 {
   "name": "@prompty/emitter",
-  "version": "0.1.0",
+  "version": "0.1.9",
+  "license": "MIT",
   "type": "module",
   "main": "dist/src/index.js",
+  
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -37,7 +39,7 @@
     "format": "prettier .  --write",
     "format:check": "prettier --check ."
   },
-  "private": true,
+  "private": false,
   "packageManager": "npm@11.5.1+sha512.232e6f5d9e799bcb486920b3e9ba907fdf96e576cf7e8c9446c8162e33a416096a1d37a9e910d9a918f6b1f606791c99bc6bb61ee2569b496ec74af13d0dbd95",
   "dependencies": {
     "nunjucks": "^3.2.4",
