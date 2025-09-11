@@ -22,7 +22,7 @@ classDiagram
     }
     {{ node.typeName.name }} <|-- {{ type.typeName.name }}
     {%- endfor %}
-    {%- for type in getCompositionTypes(node) %}
+    {%- for type in compositionTypes %}
     class {{ type.typeName.name }} {
       {%- for prop in type.properties %}
         +{{ prop.typeName.name | safe }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
@@ -33,6 +33,7 @@ classDiagram
 ```
 {% if md %}
 ## Markdown Example
+
 ```markdown
 {{ md | safe }}
 ```
@@ -40,6 +41,7 @@ classDiagram
 
 {% if yml %}
 ## Yaml Example
+
 ```yaml
 {{ yml | safe }}
 ```

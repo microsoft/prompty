@@ -23,9 +23,8 @@ classDiagram
     ObjectOutput *-- Output
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 properties:
   property1:
@@ -35,15 +34,9 @@ properties:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-| properties | [Output Collection](Output.md) | The properties contained in the object  |
-
-
-
+| properties | [Output[]](Output.md) | The properties contained in the object  |

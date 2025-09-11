@@ -19,9 +19,8 @@ classDiagram
     }
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 kind: oauth
 endpoint: https://{your-custom-endpoint}.openai.azure.com/
@@ -33,9 +32,6 @@ scopes:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -45,7 +41,4 @@ scopes:
 | clientId | string | The OAuth client ID for authenticating with the AI service  |
 | clientSecret | string | The OAuth client secret for authenticating with the AI service  |
 | tokenUrl | string | The OAuth token URL for obtaining access tokens  |
-| scopes | string Collection | The scopes required for the OAuth token  |
-
-
-
+| scopes | string[] | The scopes required for the OAuth token  |

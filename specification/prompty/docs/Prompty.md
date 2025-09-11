@@ -25,6 +25,7 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
+        +Connection[] connections
         +Template template
         +string instructions
         +string additional_instructions
@@ -70,6 +71,7 @@ classDiagram
 ```
 
 ## Markdown Example
+
 ```markdown
 ---
 id: unique-agent-id
@@ -103,6 +105,20 @@ outputs:
   answer:
     kind: string
     description: The answer to the user's question.
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+connections:
+  - name: my-connection
+    kind: named
 template:
   format: handlebars
   parser: prompty
@@ -120,9 +136,8 @@ user:
 {{question}}
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 id: unique-agent-id
 version: 1.0.0
@@ -155,6 +170,20 @@ outputs:
   answer:
     kind: string
     description: The answer to the user's question.
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+connections:
+  - name: my-connection
+    kind: named
 template:
   format: handlebars
   parser: prompty
@@ -173,9 +202,6 @@ instructions: |-
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -187,12 +213,10 @@ instructions: |-
 | description | string | Description of the agent&#39;s capabilities and purpose  |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties  |
 | model | [Model](Model.md) | Model configuration used for execution  |
-| inputs | [Input Collection](Input.md) | Input parameters that participate in template rendering <p>Related Types:<ul><li>[ArrayInput](ArrayInput.md)</li><li>[ObjectInput](ObjectInput.md)</li></ul></p> |
-| outputs | [Output Collection](Output.md) | Expected output format and structure from the agent <p>Related Types:<ul><li>[ArrayOutput](ArrayOutput.md)</li><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |
-| tools | [Tool Collection](Tool.md) | Tools available to the agent for extended functionality <p>Related Types:<ul><li>[FunctionTool](FunctionTool.md)</li><li>[ServerTool](ServerTool.md)</li><li>[BingSearchTool](BingSearchTool.md)</li><li>[FileSearchTool](FileSearchTool.md)</li><li>[McpTool](McpTool.md)</li></ul></p> |
+| inputs | [Input[]](Input.md) | Input parameters that participate in template rendering (Related Types: [ArrayInput](ArrayInput.md), [ObjectInput](ObjectInput.md)) |
+| outputs | [Output[]](Output.md) | Expected output format and structure from the agent (Related Types: [ArrayOutput](ArrayOutput.md), [ObjectOutput](ObjectOutput.md)) |
+| tools | [Tool[]](Tool.md) | Tools available to the agent for extended functionality (Related Types: [FunctionTool](FunctionTool.md), [ServerTool](ServerTool.md), [BingSearchTool](BingSearchTool.md), [FileSearchTool](FileSearchTool.md), [McpTool](McpTool.md)) |
+| connections | [Connection[]](Connection.md) | Connections available to the agent for accessing external services  |
 | template | [Template](Template.md) | Template configuration for prompt rendering  |
 | instructions | string | Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)  |
 | additional_instructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
-
-
-

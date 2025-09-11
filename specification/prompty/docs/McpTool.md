@@ -18,9 +18,8 @@ classDiagram
     }
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 kind: mcp
 connection:
@@ -33,9 +32,6 @@ allowed:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -44,7 +40,4 @@ allowed:
 | connection | [Connection](Connection.md) | The connection configuration for the MCP tool  |
 | name | string | The name of the MCP tool  |
 | url | string | The URL of the MCP server  |
-| allowed | string Collection | List of allowed operations or resources for the MCP tool  |
-
-
-
+| allowed | string[] | List of allowed operations or resources for the MCP tool  |

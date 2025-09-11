@@ -4,6 +4,7 @@
 # Default TypeSpec output
 tsp-output/
 dist/
+__ignore/
 
 # Dependency directories
 node_modules/

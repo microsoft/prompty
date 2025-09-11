@@ -22,24 +22,17 @@ classDiagram
     ArrayOutput *-- Output
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 items:
   kind: string
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-| items | [Output](Output.md) | The type of items contained in the array <p>Related Types:<ul><li>[ObjectOutput](ObjectOutput.md)</li></ul></p> |
-
-
-
+| items | [Output](Output.md) | The type of items contained in the array (Related Types: [ObjectOutput](ObjectOutput.md)) |

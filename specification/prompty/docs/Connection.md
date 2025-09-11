@@ -17,12 +17,11 @@ classDiagram
         +string usage_description
         +dictionary options
     }
-    class NamedConnection {
+    class ReferenceConnection {
         +string kind
         +string name
-        +dictionary options
     }
-    Connection <|-- NamedConnection
+    Connection <|-- ReferenceConnection
     class KeyConnection {
         +string kind
         +string endpoint
@@ -40,18 +39,14 @@ classDiagram
     Connection <|-- OAuthConnection
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 kind: oauth
 authority: system
 usage_description: This will allow the agent to respond to an email on your behalf
 
 ```
-
-
-
 
 ## Properties
 
@@ -62,12 +57,10 @@ usage_description: This will allow the agent to respond to an email on your beha
 | usage_description | string | The usage description for the connection, providing context on how this connection will be used  |
 | options | dictionary | Additional options for the connection  |
 
-
-
 ## Child Types
 
 The following types extend `Connection`:
-- [NamedConnection](NamedConnection.md)
+
+- [ReferenceConnection](ReferenceConnection.md)
 - [KeyConnection](KeyConnection.md)
 - [OAuthConnection](OAuthConnection.md)
-

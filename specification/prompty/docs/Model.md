@@ -30,9 +30,8 @@ classDiagram
     Model *-- ModelOptions
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 id: gpt-35-turbo
 provider: azure
@@ -46,17 +45,11 @@ options:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model - can be used as the single property shorthand  |
 | provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
-| connection | [Connection](Connection.md) | The connection configuration for the model <p>Related Types:<ul><li>[NamedConnection](NamedConnection.md)</li><li>[KeyConnection](KeyConnection.md)</li><li>[OAuthConnection](OAuthConnection.md)</li></ul></p> |
+| connection | [Connection](Connection.md) | The connection configuration for the model (Related Types: [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md)) |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
-
-
-

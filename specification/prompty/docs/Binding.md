@@ -15,17 +15,13 @@ classDiagram
     }
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 name: my-tool
 input: input-variable
 
 ```
-
-
-
 
 ## Properties
 
@@ -33,6 +29,3 @@ input: input-variable
 | ---- | ---- | ----------- |
 | name | string | Name of the binding  |
 | input | string | The input property that will be bound to the tool parameter argument  |
-
-
-

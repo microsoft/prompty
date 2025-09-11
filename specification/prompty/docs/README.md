@@ -14,10 +14,9 @@ classDiagram
         +string usage_description
         +dictionary options
     }
-    class NamedConnection {
+    class ReferenceConnection {
         +string kind
         +string name
-        +dictionary options
     }
     class KeyConnection {
         +string kind
@@ -150,11 +149,12 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
+        +Connection[] connections
         +Template template
         +string instructions
         +string additional_instructions
     }
-    Connection <|-- NamedConnection
+    Connection <|-- ReferenceConnection
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection
     Input <|-- ArrayInput
@@ -187,5 +187,6 @@ classDiagram
     Prompty *-- Input
     Prompty *-- Output
     Prompty *-- Tool
+    Prompty *-- Connection
     Prompty *-- Template
 ```

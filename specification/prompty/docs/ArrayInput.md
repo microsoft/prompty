@@ -25,24 +25,17 @@ classDiagram
     ArrayInput *-- Input
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 items:
   kind: string
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-| items | [Input](Input.md) | The type of items contained in the array <p>Related Types:<ul><li>[ObjectInput](ObjectInput.md)</li></ul></p> |
-
-
-
+| items | [Input](Input.md) | The type of items contained in the array (Related Types: [ObjectInput](ObjectInput.md)) |

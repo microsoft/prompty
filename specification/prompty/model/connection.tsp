@@ -1,7 +1,7 @@
 import "@prompty/emitter";
 
 namespace Prompty.Core {
-  alias ConnectionType = "key" | "oauth" | "named" | string;
+  alias ConnectionType = "key" | "oauth" | "reference" | string;
   alias Authority = "user" | "agent" | "system" | string;
 
   /**
@@ -29,16 +29,22 @@ namespace Prompty.Core {
     options?: Record<unknown> = #{};
   }
 
+  alias Connections = Record<Connection> | Named<
+    Connection,
+    "Name of the connection",
+    #{ name: "my-connection" }
+  >[];
+
   /**
    * Connection configuration for AI services using named connections.
    */
-  model NamedConnection extends Connection {
+  model ReferenceConnection extends Connection {
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-    @sample(#{ kind: "named" })
-    kind: "named";
+    @sample(#{ kind: "reference" })
+    kind: "reference";
 
     @doc("The name of the connection")
-    @sample(#{ name: "my-named-connection" })
+    @sample(#{ name: "my-reference-connection" })
     name: string;
   }
 

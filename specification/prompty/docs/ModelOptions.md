@@ -15,16 +15,8 @@ classDiagram
     }
 ```
 
-
-
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-
-
-

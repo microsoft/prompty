@@ -1,8 +1,8 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
+import { PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
-import { stringify } from 'yaml'
+import { stringify } from 'yaml';
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -47,7 +47,6 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
   await emitMarkdownFile(context, "README", readmeContent, outputDir);
 
   for (const node of nodes) {
-
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
     let yml: string | undefined = undefined;
     let md: string | undefined = undefined;
@@ -66,24 +65,15 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       md: md,
       renderType: renderType,
       renderChildTypes: renderChildTypes,
-      getChildTypes: getChildTypes,
-      getCompositionTypes: getCompositionTypes,
-      enumerateTypes: enumerateTypes
+      compositionTypes: getCompositionTypes(node),
     });
 
     await emitMarkdownFile(context, node.typeName.name, markdown, outputDir);
   }
 }
 
-const renderPromptyMarkdown = (node: TypeNode): string => {
-  if("instructions" in node) {
-    const instructions = node.instructions;
-  }
-  return "";
-}
-
 export const renderType = (prop: PropertyNode) => {
-  const arrayString = prop.isCollection ? " Collection" : "";
+  const arrayString = prop.isCollection ? "[]" : "";
   if (prop.isScalar) {
     return prop.typeName.name + arrayString;
   } else {
@@ -94,14 +84,14 @@ export const renderType = (prop: PropertyNode) => {
 export const renderChildTypes = (node: PropertyNode) => {
   if (!node.isScalar && node.type) {
     const childTypes = node.type.childTypes.map(c => {
-      return `<li>[${c.typeName.name}](${c.typeName.name}.md)</li>`;
+      return `[${c.typeName.name}](${c.typeName.name}.md)`;
     });
 
     if (childTypes.length === 0) {
       return "";
     }
 
-    return `<p>Related Types:<ul>${childTypes.join("")}</ul></p>`;
+    return `(Related Types: ${childTypes.join(", ")})`;
   }
   return "";
 };

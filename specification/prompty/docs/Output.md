@@ -28,9 +28,8 @@ classDiagram
     Output <|-- ObjectOutput
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 name: my-output
 kind: string
@@ -38,9 +37,6 @@ description: A description of the output property
 required: true
 
 ```
-
-
-
 
 ## Properties
 
@@ -51,11 +47,9 @@ required: true
 | description | string | A short description of the output property  |
 | required | boolean | Whether the output property is required  |
 
-
-
 ## Child Types
 
 The following types extend `Output`:
+
 - [ArrayOutput](ArrayOutput.md)
 - [ObjectOutput](ObjectOutput.md)
-

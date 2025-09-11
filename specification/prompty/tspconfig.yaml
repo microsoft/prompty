@@ -13,7 +13,7 @@ options:
     #root-object: "Agent"
     emit-targets:
       - type: markdown
-        output-dir: "./tsp-output/markdown"
+        output-dir: "../prompty/docs"
       - type: CSharp
         output-dir: "./tsp-output/CSharp"
       - type: Python

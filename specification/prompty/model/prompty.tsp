@@ -6,7 +6,6 @@ import "./outputs.tsp";
 import "./tools.tsp";
 import "./template.tsp";
 
-
 namespace Prompty.Core {
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
@@ -15,7 +14,7 @@ namespace Prompty.Core {
    * available tools, and template configurations for prompt rendering.
    *
    * These can be written in a markdown format or in a pure YAML format.
-   * 
+   *
    */
   model Prompty {
     // Prompty metadata
@@ -108,7 +107,57 @@ namespace Prompty.Core {
 
     // tools
     @doc("Tools available to the agent for extended functionality")
+    @sample(#{
+      tools: #{
+        getCurrentWeather: #{
+          kind: "function",
+          description: "Get the current weather in a given location",
+          parameters: #{
+            location: #{
+              kind: "string",
+              description: "The city and state, e.g. San Francisco, CA",
+            },
+            unit: #{
+              kind: "string",
+              description: "The unit of temperature, e.g. Celsius or Fahrenheit",
+            },
+          },
+        },
+      },
+    })
+    @sample(#{
+      tools: #[
+        #{
+          name: "getCurrentWeather",
+          kind: "function",
+          description: "Get the current weather in a given location",
+          parameters: #{
+            location: #{
+              kind: "string",
+              description: "The city and state, e.g. San Francisco, CA",
+            },
+            unit: #{
+              kind: "string",
+              description: "The unit of temperature, e.g. Celsius or Fahrenheit",
+            },
+          },
+        }
+      ],
+    })
     tools?: Tools = #[];
+
+    @doc("Connections available to the agent for accessing external services")
+    @sample(#{
+      connections: #{
+        `my-connection`: #{
+          kind: "key",
+          endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+          key: "\${env:OPENAI_API_KEY}",
+        },
+      },
+    })
+    @sample(#{ connections: #[#{ name: "my-connection", kind: "named" }] })
+    connections?: Connections = #[];
 
     // template values
     @doc("Template configuration for prompt rendering")
@@ -116,20 +165,21 @@ namespace Prompty.Core {
     template?: Template;
 
     @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")
-    @sample(#{ instructions: 
-    """
-    system:
-    You are an AI assistant who helps people find information.
-    As the assistant, you answer questions briefly, succinctly,
-    and in a personable manner using markdown and even add some 
-    personal flair with appropriate emojis.
-
-    # Customer
-    You are helping {{firstName}} {{lastName}} to find answers to 
-    their questions. Use their name to address them in your responses.
-    user:
-    {{question}}
-    """})
+    @sample(#{
+      instructions: """
+        system:
+        You are an AI assistant who helps people find information.
+        As the assistant, you answer questions briefly, succinctly,
+        and in a personable manner using markdown and even add some 
+        personal flair with appropriate emojis.
+        
+        # Customer
+        You are helping {{firstName}} {{lastName}} to find answers to 
+        their questions. Use their name to address them in your responses.
+        user:
+        {{question}}
+        """,
+    })
     instructions?: string = "";
 
     @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")

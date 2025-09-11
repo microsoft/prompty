@@ -55,9 +55,8 @@ classDiagram
     Tool *-- Binding
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 name: my-tool
 kind: function
@@ -67,9 +66,6 @@ bindings:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -77,16 +73,14 @@ bindings:
 | name | string | Name of the tool. If a function tool, this is the function name, otherwise it is the type  |
 | kind | string | The kind identifier for the tool  |
 | description | string | A short description of the tool for metadata purposes  |
-| bindings | [Binding Collection](Binding.md) | Tool argument bindings to input properties  |
-
-
+| bindings | [Binding[]](Binding.md) | Tool argument bindings to input properties  |
 
 ## Child Types
 
 The following types extend `Tool`:
+
 - [FunctionTool](FunctionTool.md)
 - [ServerTool](ServerTool.md)
 - [BingSearchTool](BingSearchTool.md)
 - [FileSearchTool](FileSearchTool.md)
 - [McpTool](McpTool.md)
-

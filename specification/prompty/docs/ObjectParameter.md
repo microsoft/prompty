@@ -23,9 +23,8 @@ classDiagram
     ObjectParameter *-- Parameter
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 properties:
   param1:
@@ -35,15 +34,9 @@ properties:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-| properties | [Parameter Collection](Parameter.md) | The properties of the object parameter <p>Related Types:<ul><li>[ArrayParameter](ArrayParameter.md)</li></ul></p> |
-
-
-
+| properties | [Parameter[]](Parameter.md) | The properties of the object parameter (Related Types: [ArrayParameter](ArrayParameter.md)) |

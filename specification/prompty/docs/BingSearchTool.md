@@ -25,9 +25,8 @@ classDiagram
     BingSearchTool *-- BingSearchConfiguration
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 kind: bing_search
 connection:
@@ -42,16 +41,10 @@ configurations:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for Bing search tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the Bing search tool  |
-| configurations | [BingSearchConfiguration Collection](BingSearchConfiguration.md) | The configuration options for the Bing search tool  |
-
-
-
+| configurations | [BingSearchConfiguration[]](BingSearchConfiguration.md) | The configuration options for the Bing search tool  |

@@ -1,4 +1,4 @@
-# NamedConnection
+# ReferenceConnection
 
 Connection configuration for AI services using named connections.
 
@@ -6,27 +6,22 @@ Connection configuration for AI services using named connections.
 
 ```mermaid
 ---
-title: NamedConnection
+title: ReferenceConnection
 ---
 classDiagram
-    class NamedConnection {
+    class ReferenceConnection {
         +string kind
         +string name
-        +dictionary options
     }
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
-kind: named
-name: my-named-connection
+kind: reference
+name: my-reference-connection
 
 ```
-
-
-
 
 ## Properties
 
@@ -34,7 +29,3 @@ name: my-named-connection
 | ---- | ---- | ----------- |
 | kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
 | name | string | The name of the connection  |
-| options | dictionary | Additional options for the named connection  |
-
-
-

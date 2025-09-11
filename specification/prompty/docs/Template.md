@@ -24,9 +24,8 @@ classDiagram
     }
 ```
 
-
-
 ## Yaml Example
+
 ```yaml
 format: handlebars
 parser: prompty
@@ -37,9 +36,6 @@ options:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -48,6 +44,3 @@ options:
 | parser | string | Parser used to process the rendered template into API-compatible format  |
 | strict | boolean | Whether the template can emit structural text for parsing output  |
 | options | dictionary | Additional options for the template engine  |
-
-
-
