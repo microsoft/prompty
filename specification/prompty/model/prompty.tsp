@@ -8,6 +8,7 @@ import "./template.tsp";
 import "./container.tsp";
 
 namespace Prompty.Core {
+  alias PromptyKind = "prompt" | "container";
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
    * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
@@ -17,10 +18,11 @@ namespace Prompty.Core {
    * These can be written in a markdown format or in a pure YAML format.
    *
    */
+  @discriminator("kind")
   model Prompty {
     // Prompty metadata
     @doc("Kind represented by the document")
-    kind?: string = "";
+    kind: PromptyKind = "prompt";
 
     @doc("Unique identifier for the document")
     @sample(#{ id: "unique-agent-id" })

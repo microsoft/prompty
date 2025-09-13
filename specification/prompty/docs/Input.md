@@ -68,5 +68,6 @@ sample: sample value
 ## Child Types
 
 The following types extend `Input`:
+
 * [ArrayInput](ArrayInput.md)
 * [ObjectInput](ObjectInput.md)
