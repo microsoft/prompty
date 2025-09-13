@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: ContainerDefinition
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ContainerDefinition {

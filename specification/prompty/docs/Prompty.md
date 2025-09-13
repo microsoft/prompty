@@ -12,6 +12,11 @@ These can be written in a markdown format or in a pure YAML format.
 ```mermaid
 ---
 title: Prompty
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Prompty {

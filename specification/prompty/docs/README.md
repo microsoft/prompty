@@ -6,6 +6,11 @@ The root [object](Prompty.md) represents the main entry point for the system.
 ```mermaid
 ---
 title: Declarative Agents
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ModelOptions {

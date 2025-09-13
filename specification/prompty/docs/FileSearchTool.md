@@ -8,6 +8,11 @@ This tool allows an AI agent to search for files based on a query.
 ```mermaid
 ---
 title: FileSearchTool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class FileSearchTool {

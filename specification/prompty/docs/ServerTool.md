@@ -11,6 +11,11 @@ Server tools can be used to offload heavy processing from client applications
 ```mermaid
 ---
 title: ServerTool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ServerTool {

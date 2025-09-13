@@ -7,6 +7,11 @@ The MCP Server tool.
 ```mermaid
 ---
 title: McpTool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class McpTool {

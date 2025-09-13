@@ -7,6 +7,11 @@ The Bing search tool.
 ```mermaid
 ---
 title: BingSearchTool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class BingSearchTool {

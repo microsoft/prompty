@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: Scale
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Scale {

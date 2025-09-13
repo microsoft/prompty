@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: FoundryConnection
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class FoundryConnection {

@@ -8,6 +8,11 @@ Options for configuring the behavior of the AI model.
 ```mermaid
 ---
 title: ModelOptions
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ModelOptions {

@@ -7,6 +7,11 @@ Represents a binding between an input property and a tool parameter.
 ```mermaid
 ---
 title: Binding
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Binding {

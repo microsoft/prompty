@@ -14,6 +14,11 @@ and processed to generate prompts for AI models.
 ```mermaid
 ---
 title: Template
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Template {

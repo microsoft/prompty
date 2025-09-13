@@ -9,6 +9,11 @@ It allows for flexible configuration of AI models to suit different use cases an
 ```mermaid
 ---
 title: Model
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Model {

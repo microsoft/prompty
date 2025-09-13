@@ -8,6 +8,11 @@ This extends the base Output model to represent a structured object.
 ```mermaid
 ---
 title: ObjectInput
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ObjectInput {

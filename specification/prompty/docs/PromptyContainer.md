@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: PromptyContainer
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class PromptyContainer {

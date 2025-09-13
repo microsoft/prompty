@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: EnvironmentVariable
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class EnvironmentVariable {

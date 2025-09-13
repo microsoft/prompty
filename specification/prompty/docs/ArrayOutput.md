@@ -8,6 +8,11 @@ This extends the base Output model to represent an array of items.
 ```mermaid
 ---
 title: ArrayOutput
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ArrayOutput {

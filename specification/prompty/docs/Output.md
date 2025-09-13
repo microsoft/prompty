@@ -8,6 +8,11 @@ Each output property can be a simple kind, an array, or an object.
 ```mermaid
 ---
 title: Output
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Output {

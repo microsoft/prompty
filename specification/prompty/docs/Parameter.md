@@ -7,6 +7,11 @@ Represents a parameter for a tool.
 ```mermaid
 ---
 title: Parameter
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Parameter {

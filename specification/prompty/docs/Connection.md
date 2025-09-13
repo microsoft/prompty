@@ -9,6 +9,11 @@ but this section can accept additional via options.
 ```mermaid
 ---
 title: Connection
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Connection {

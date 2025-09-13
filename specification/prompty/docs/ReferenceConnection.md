@@ -7,6 +7,11 @@ Connection configuration for AI services using named connections.
 ```mermaid
 ---
 title: ReferenceConnection
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class ReferenceConnection {

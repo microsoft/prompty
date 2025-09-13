@@ -7,6 +7,11 @@ Connection configuration for AI services using API keys.
 ```mermaid
 ---
 title: KeyConnection
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class KeyConnection {

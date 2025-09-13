@@ -7,6 +7,11 @@ Represents a tool that can be used in prompts.
 ```mermaid
 ---
 title: Tool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Tool {

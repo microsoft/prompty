@@ -29,7 +29,7 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r ./src/templates ./dist/src",
     "watch": "tsc --watch",
     "generate": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig.yaml && markdownlint ../prompty/docs/* -f -c ./markdown.json",
     "generate:meai": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig-meai.yaml",

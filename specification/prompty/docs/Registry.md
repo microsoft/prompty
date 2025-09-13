@@ -5,6 +5,11 @@
 ```mermaid
 ---
 title: Registry
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Registry {

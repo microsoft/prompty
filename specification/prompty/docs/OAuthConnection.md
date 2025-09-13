@@ -7,6 +7,11 @@ Connection configuration for AI services using OAuth authentication.
 ```mermaid
 ---
 title: OAuthConnection
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class OAuthConnection {

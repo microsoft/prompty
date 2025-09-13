@@ -7,6 +7,11 @@ Configuration options for the Bing search tool.
 ```mermaid
 ---
 title: BingSearchConfiguration
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class BingSearchConfiguration {

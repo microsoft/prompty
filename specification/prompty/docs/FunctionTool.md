@@ -7,6 +7,11 @@ Represents a local function tool.
 ```mermaid
 ---
 title: FunctionTool
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class FunctionTool {

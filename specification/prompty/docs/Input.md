@@ -12,6 +12,11 @@ and processed to generate prompts for AI models.
 ```mermaid
 ---
 title: Input
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
 ---
 classDiagram
     class Input {
