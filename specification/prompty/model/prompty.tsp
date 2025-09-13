@@ -164,7 +164,7 @@ namespace Prompty.Core {
 
     // template values
     @doc("Template configuration for prompt rendering")
-    @sample(#{ template: #{ format: "handlebars", parser: "prompty" } })
+    @sample(#{ template: #{ format: "mustache", parser: "prompty" } })
     template?: Template;
 
     @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")

@@ -7,11 +7,9 @@ import {
   getDoc,
   getTypeName,
   ModelProperty,
-  getEntityName,
   isTemplateInstance,
   getNamespaceFullName,
   getDiscriminator,
-  Discriminator,
 } from "@typespec/compiler";
 import { AlternateEntry, getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
@@ -50,6 +48,7 @@ const getModelType = (model: Model, rootNamespace: string, rootAlias: string): T
 };
 
 export interface Alternative {
+  property: string;
   simple: any;
   complex: {
     [key: string]: any;
