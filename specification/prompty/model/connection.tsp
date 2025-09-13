@@ -1,7 +1,7 @@
 import "@prompty/emitter";
 
 namespace Prompty.Core {
-  alias ConnectionType = "key" | "oauth" | "reference" | string;
+  alias ConnectionType = "key" | "oauth" | "reference" | "foundry" | string;
   alias Authority = "user" | "agent" | "system" | string;
 
   /**
@@ -94,5 +94,24 @@ namespace Prompty.Core {
     @doc("The scopes required for the OAuth token")
     @sample(#{ scopes: #["https://cognitiveservices.azure.com/.default"] })
     scopes: string[];
+  }
+
+
+  model FoundryConnection extends Connection {
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    @sample(#{ kind: "foundry" })
+    kind: "foundry";
+
+    @doc("The Foundry endpoint URL for the AI service")
+    @sample(#{ type: "index" })
+    type: string;
+
+    @doc("The Foundry connection name")
+    @sample(#{ name: "my-foundry-connection" })
+    name: string;
+    
+    @doc("The Foundry project name")
+    @sample(#{ project: "my-foundry-project" })
+    project: string;
   }
 }

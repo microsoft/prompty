@@ -8,29 +8,6 @@ The root [object](Prompty.md) represents the main entry point for the system.
 title: Declarative Agents
 ---
 classDiagram
-    class Connection {
-        +string kind
-        +string authority
-        +string usage_description
-        +dictionary options
-    }
-    class ReferenceConnection {
-        +string kind
-        +string name
-    }
-    class KeyConnection {
-        +string kind
-        +string endpoint
-        +string key
-    }
-    class OAuthConnection {
-        +string kind
-        +string endpoint
-        +string clientId
-        +string clientSecret
-        +string tokenUrl
-        +string[] scopes
-    }
     class ModelOptions {
         +string kind
     }
@@ -132,6 +109,13 @@ classDiagram
         +string url
         +string[] allowed
     }
+    class ModelTool {
+        +string kind
+        +string id
+        +string provider
+        +Connection connection
+        +ModelOptions options
+    }
     class Template {
         +string format
         +string parser
@@ -154,9 +138,66 @@ classDiagram
         +string instructions
         +string additional_instructions
     }
-    Connection <|-- ReferenceConnection
-    Connection <|-- KeyConnection
-    Connection <|-- OAuthConnection
+    class Connection {
+        +string kind
+        +string authority
+        +string usage_description
+        +dictionary options
+    }
+    class ReferenceConnection {
+        +string kind
+        +string name
+    }
+    class KeyConnection {
+        +string kind
+        +string endpoint
+        +string key
+    }
+    class OAuthConnection {
+        +string kind
+        +string endpoint
+        +string clientId
+        +string clientSecret
+        +string tokenUrl
+        +string[] scopes
+    }
+    class FoundryConnection {
+        +string kind
+        +string type
+        +string name
+        +string project
+    }
+    class Registry {
+        +string kind
+        +Connection connection
+    }
+    class AzureContainerRegistry {
+        +string kind
+        +string subscription
+        +string resource_group
+        +string registry_name
+    }
+    class Scale {
+        +numeric minReplicas
+        +numeric maxReplicas
+        +float cpu
+        +float memory
+    }
+    class ContainerDefinition {
+        +string image
+        +string tag
+        +Registry registry
+        +Scale scale
+    }
+    class EnvironmentVariable {
+        +string name
+        +string value
+    }
+    class PromptyContainer {
+        +string kind
+        +ContainerDefinition container
+        +EnvironmentVariable[] environment_variables
+    }
     Input <|-- ArrayInput
     Input <|-- ObjectInput
     Output <|-- ArrayOutput
@@ -166,8 +207,15 @@ classDiagram
     Tool <|-- BingSearchTool
     Tool <|-- FileSearchTool
     Tool <|-- McpTool
+    Tool <|-- ModelTool
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
+    Prompty <|-- PromptyContainer
+    Connection <|-- ReferenceConnection
+    Connection <|-- KeyConnection
+    Connection <|-- OAuthConnection
+    Connection <|-- FoundryConnection
+    Registry <|-- AzureContainerRegistry
     Model *-- Connection
     Model *-- ModelOptions
     ObjectInput *-- Input
@@ -183,10 +231,17 @@ classDiagram
     BingSearchTool *-- BingSearchConfiguration
     FileSearchTool *-- Connection
     McpTool *-- Connection
+    ModelTool *-- Connection
+    ModelTool *-- ModelOptions
     Prompty *-- Model
     Prompty *-- Input
     Prompty *-- Output
     Prompty *-- Tool
     Prompty *-- Connection
     Prompty *-- Template
+    Registry *-- Connection
+    ContainerDefinition *-- Registry
+    ContainerDefinition *-- Scale
+    PromptyContainer *-- ContainerDefinition
+    PromptyContainer *-- EnvironmentVariable
 ```

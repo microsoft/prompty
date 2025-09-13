@@ -1,31 +1,27 @@
-# Model
+# ModelTool
 
-Model for defining the structure and behavior of AI agents.
-This model includes properties for specifying the model&#39;s provider, connection details, and various options.
-It allows for flexible configuration of AI models to suit different use cases and requirements.
+The MCP Server tool.
 
 ## Class Diagram
 
 ```mermaid
 ---
-title: Model
+title: ModelTool
 ---
 classDiagram
-    class Model {
+    class ModelTool {
+        +string kind
         +string id
         +string provider
         +Connection connection
         +ModelOptions options
     }
-    class ModelOptions {
-        +string kind
-    }
-    Model *-- ModelOptions
 ```
 
 ## Yaml Example
 
 ```yaml
+kind: mcp
 id: gpt-35-turbo
 provider: azure
 connection:
@@ -42,6 +38,7 @@ options:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| kind | string | The kind identifier for MCP tools  |
 | id | string | The unique identifier of the model - can be used as the single property shorthand  |
 | provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
 | connection | [Connection](Connection.md) | The connection configuration for the model  |

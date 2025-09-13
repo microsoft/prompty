@@ -4,7 +4,6 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/src/index.js",
-  
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -25,13 +24,14 @@
     "@typescript-eslint/parser": "^8.15.0",
     "@typespec/compiler": "latest",
     "eslint": "^9.15.0",
+    "markdownlint-cli": "^0.45.0",
     "prettier": "^3.3.3",
     "typescript": "^5.3.3"
   },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "generate": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig.yaml",
+    "generate": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig.yaml && markdownlint ../prompty/docs/* -f -c ./markdown.json",
     "generate:meai": "tsp compile ../prompty/model/main.tsp --config ../prompty/tspconfig-meai.yaml",
     "test": "node --test",
     "lint": "eslint src/ test/ --report-unused-disable-directives --max-warnings=0",

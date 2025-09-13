@@ -48,6 +48,14 @@ classDiagram
         +string[] allowed
     }
     Tool <|-- McpTool
+    class ModelTool {
+        +string kind
+        +string id
+        +string provider
+        +Connection connection
+        +ModelOptions options
+    }
+    Tool <|-- ModelTool
     class Binding {
         +string name
         +string input
@@ -84,3 +92,4 @@ The following types extend `Tool`:
 - [BingSearchTool](BingSearchTool.md)
 - [FileSearchTool](FileSearchTool.md)
 - [McpTool](McpTool.md)
+- [ModelTool](ModelTool.md)

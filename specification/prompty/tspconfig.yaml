@@ -15,8 +15,8 @@ options:
       - type: markdown
         output-dir: "../prompty/docs"
       - type: CSharp
-        output-dir: "./tsp-output/CSharp"
+        output-dir: "./tsp-output/csharp"
       - type: Python
-        output-dir: "./tsp-output/Python"
+        output-dir: "./tsp-output/python"
       - type: TypeScript
-        output-dir: "./tsp-output/TypeScript"
+        output-dir: "./tsp-output/typescript"

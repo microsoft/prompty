@@ -37,6 +37,13 @@ classDiagram
         +string[] scopes
     }
     Connection <|-- OAuthConnection
+    class FoundryConnection {
+        +string kind
+        +string type
+        +string name
+        +string project
+    }
+    Connection <|-- FoundryConnection
 ```
 
 ## Yaml Example
@@ -64,3 +71,4 @@ The following types extend `Connection`:
 - [ReferenceConnection](ReferenceConnection.md)
 - [KeyConnection](KeyConnection.md)
 - [OAuthConnection](OAuthConnection.md)
+- [FoundryConnection](FoundryConnection.md)

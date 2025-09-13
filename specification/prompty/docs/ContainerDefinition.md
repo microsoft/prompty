@@ -1,0 +1,37 @@
+# ContainerDefinition
+
+## Class Diagram
+
+```mermaid
+---
+title: ContainerDefinition
+---
+classDiagram
+    class ContainerDefinition {
+        +string image
+        +string tag
+        +Registry registry
+        +Scale scale
+    }
+    class Registry {
+        +string kind
+        +Connection connection
+    }
+    ContainerDefinition *-- Registry
+    class Scale {
+        +numeric minReplicas
+        +numeric maxReplicas
+        +float cpu
+        +float memory
+    }
+    ContainerDefinition *-- Scale
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| image | string |   |
+| tag | string |   |
+| registry | [Registry](Registry.md) | Container image registry definition (Related Types: [AzureContainerRegistry](AzureContainerRegistry.md)) |
+| scale | [Scale](Scale.md) | Instance scaling configuration  |

@@ -5,6 +5,7 @@ import "./inputs.tsp";
 import "./outputs.tsp";
 import "./tools.tsp";
 import "./template.tsp";
+import "./container.tsp";
 
 namespace Prompty.Core {
   /**
@@ -184,5 +185,17 @@ namespace Prompty.Core {
 
     @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")
     additional_instructions?: string = "";
+  }
+
+
+  model PromptyContainer extends Prompty {
+    @doc("Type of agent, e.g., 'prompt' or 'container'")
+    kind: "container";
+
+    @doc("Container definition including registry and scaling information")
+    container: ContainerDefinition;
+
+    @doc("Environment variables to set in the hosted agent container.")
+    environment_variables?: EnvironmentVariables = #[];
   }
 }
