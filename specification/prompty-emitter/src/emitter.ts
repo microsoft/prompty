@@ -20,7 +20,7 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     ...context.options,
   }
 
-  
+
   // resolving top level Prompty model
   // this is the "Model" entry point for the emitter
   const m = context.program.resolveTypeReference(options["root-object"]);
@@ -32,13 +32,12 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
 
 
 
-  const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "Prompty");
+  const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "Prompty", options["root-alias"] || "Prompty");
   model.isRoot = true;
-  if(options["root-alias"]){
+  if (options["root-alias"]) {
     model.typeName = {
       namespace: model.typeName.namespace,
-      name: options["root-alias"],
-      fullName: `${model.typeName.namespace}.${options["root-alias"]}`
+      name: options["root-alias"]
     }
   }
   const ast = Array.from(enumerateTypes(model));

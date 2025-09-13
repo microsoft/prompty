@@ -67,6 +67,7 @@ classDiagram
 ## Child Types
 
 The following types extend `{{ node.typeName.name }}`:
+
 {% for type in node.childTypes -%}
 - [{{ type.typeName.name }}]({{ type.typeName.name }}.md)
 {% endfor -%}

@@ -1,12 +1,6 @@
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-import { EmitContext, emitFile, getTypeName, resolvePath } from "@typespec/compiler";
+import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
+import { PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import path from "path";
 
@@ -22,11 +16,9 @@ const csharpTypeMapper: Record<string, string> = {
 }
 
 const csharpTypeNameMapper: Record<string, string> = {
-  "Prompty": "AgentDefinition",
   "Input": "AgentInput",
   "Output": "AgentOutput",
   "Metadata": "AgentMetadata",
-  "Authentication": "McpAuthentication",
   "Record<unknown>": "Dictionary<string, object>",
 }
 
@@ -67,7 +59,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
     const csharp = classTemplate.render({
       node: node,
-      namespace: getNamespace(node),
       renderPropertyName: renderPropertyName,
       renderType: renderType,
       renderDefault: renderDefault,
@@ -160,16 +151,14 @@ const isNumber = (prop: PropertyNode): boolean => {
 };
 
 const getNamespace = (node: TypeNode): string => {
-  const parts = node.typeName.fullName.split(".");
-  parts.pop(); // remove the last part (the type name)
+  const parts = node.typeName.namespace.split(".");
   return parts.join(".");
 };
 
 const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
   outputDir = outputDir || `${context.emitterOutputDir}/CSharp`;
-  const typePath = type.typeName.fullName.split(".");
-  // remove typename
-  typePath.pop();
+  const typePath = type.typeName.namespace.split(".");
+
   // replace typename with file
   typePath.push(filename);
   const path = resolvePath(outputDir, ...typePath);

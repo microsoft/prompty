@@ -20,15 +20,13 @@ import { StateKeys } from "./lib.js";
 export interface TypeName {
   namespace: string;
   name: string;
-  fullName: string
 }
 
-const getModelType = (model: Model, rootNamespace: string): TypeName => {
+const getModelType = (model: Model, rootNamespace: string, rootAlias: string): TypeName => {
   let namespace = model.namespace ? getNamespaceFullName(model.namespace) : rootNamespace || "";
   if (rootNamespace.includes('.'))
     namespace = rootNamespace;
-  else
-  {
+  else {
     const parts = namespace.split(".");
     parts[0] = rootNamespace;
     namespace = parts.join(".");
@@ -38,10 +36,16 @@ const getModelType = (model: Model, rootNamespace: string): TypeName => {
     printable: true,
   });
 
+  if (rootAlias) {
+    return {
+      namespace: namespace,
+      name: name.replace("Prompty", rootAlias)
+    };
+  }
+
   return {
     namespace: namespace,
-    name: name,
-    fullName: `${namespace}.${name}`,
+    name: name
   };
 };
 
@@ -56,8 +60,7 @@ export interface Alternative {
 export class TypeNode {
   public typeName: TypeName = {
     namespace: "",
-    name: "",
-    fullName: "",
+    name: ""
   };
   public description: string;
   public isRoot: boolean = false;
@@ -91,8 +94,7 @@ export class PropertyNode {
   public name: string;
   public typeName: TypeName = {
     namespace: "",
-    name: "",
-    fullName: "",
+    name: ""
   };
   public description: string;
 
@@ -144,37 +146,37 @@ export const enumerateTypes = function* (node: TypeNode, visited: Set<string> = 
     if (prop.type) {
       // enumerate
       for (const subNode of enumerateTypes(prop.type, visited)) {
-        if (!visited.has(subNode.typeName.fullName)) {
+        if (!visited.has(`${subNode.typeName.namespace}.${subNode.typeName.name}`)) {
           yield subNode;
-          visited.add(subNode.typeName.fullName);
+          visited.add(`${subNode.typeName.namespace}.${subNode.typeName.name}`);
         }
       }
       for (const child of prop.type.childTypes) {
         for (const subNode of enumerateTypes(child, visited)) {
-          if (!visited.has(subNode.typeName.fullName)) {
+          if (!visited.has(`${subNode.typeName.namespace}.${subNode.typeName.name}`)) {
             yield subNode;
-            visited.add(subNode.typeName.fullName);
+            visited.add(`${subNode.typeName.namespace}.${subNode.typeName.name}`);
           }
         }
       }
     }
   }
 
-  if (!visited.has(node.typeName.fullName)) {
+  if (!visited.has(`${node.typeName.namespace}.${node.typeName.name}`)) {
     yield node;
     for (const child of node.childTypes) {
       for (const subNode of enumerateTypes(child, visited)) {
-        if (!visited.has(subNode.typeName.fullName)) {
+        if (!visited.has(`${subNode.typeName.namespace}.${subNode.typeName.name}`)) {
           yield subNode;
-          visited.add(subNode.typeName.fullName);
+          visited.add(`${subNode.typeName.namespace}.${subNode.typeName.name}`);
         }
       }
     }
-    visited.add(node.typeName.fullName);
+    visited.add(`${node.typeName.namespace}.${node.typeName.name}`);
   }
 };
 
-export const resolveModel = (program: Program, model: Model, visited: Set<string> = new Set(), rootNamespace: string): TypeNode => {
+export const resolveModel = (program: Program, model: Model, visited: Set<string> = new Set(), rootNamespace: string, rootAlias: string): TypeNode => {
 
   const node = new TypeNode(model, getDoc(program, model) || "");
 
@@ -184,16 +186,16 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     if (!innerModel || innerModel.kind !== "Model") {
       throw new Error(`Invalid Named<T> model: ${model.name}`);
     }
-    node.typeName = getModelType(innerModel, rootNamespace);
-    node.childTypes = resolveModelChildren(program, innerModel, visited, rootNamespace);
+    node.typeName = getModelType(innerModel, rootNamespace, rootAlias);
+    node.childTypes = resolveModelChildren(program, innerModel, visited, rootNamespace, rootAlias);
     node.description = getDoc(program, innerModel) || "";
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, innerModel) || false;
     const discriminator = getDiscriminator(program, innerModel);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
     visited.add(innerModel.name);
   } else {
-    node.typeName = getModelType(model, rootNamespace);
-    node.childTypes = resolveModelChildren(program, model, visited, rootNamespace);
+    node.typeName = getModelType(model, rootNamespace, rootAlias);
+    node.childTypes = resolveModelChildren(program, model, visited, rootNamespace, rootAlias);
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, model) || false;
     const discriminator = getDiscriminator(program, model);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
@@ -201,14 +203,14 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
   }
 
   if (model.baseModel) {
-    node.base = getModelType(model.baseModel, rootNamespace);
+    node.base = getModelType(model.baseModel, rootNamespace, rootAlias);
   }
 
   // resolve properties if model
   if (model.kind === "Model") {
     const properties: PropertyNode[] = [];
     for (const [_, value] of model.properties) {
-      const prop = resolveProperty(program, value, visited, rootNamespace);
+      const prop = resolveProperty(program, value, visited, rootNamespace, rootAlias);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
       // alternatives
@@ -221,20 +223,20 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
   return node;
 };
 
-export const resolveModelChildren = (program: Program, model: Model, visited: Set<string>, rootNamespace: string): TypeNode[] => {
+export const resolveModelChildren = (program: Program, model: Model, visited: Set<string>, rootNamespace: string, rootAlias: string): TypeNode[] => {
   return model.derivedModels.filter(derived => !visited.has(derived.name)).flatMap(derived => {
-    return [resolveModel(program, derived, visited, rootNamespace), ...resolveModelChildren(program, derived, visited, rootNamespace)];
+    return [resolveModel(program, derived, visited, rootNamespace, rootAlias), ...resolveModelChildren(program, derived, visited, rootNamespace, rootAlias)];
   });
 };
 
-export const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>, rootNamespace: string): PropertyNode => {
+export const resolveProperty = (program: Program, property: ModelProperty, visited: Set<string>, rootNamespace: string, rootAlias: string): PropertyNode => {
   switch (property.type.kind) {
     case "Scalar":
       return resolveScalarProperty(program, property, property.type);
     case "Model":
-      return resolveModelProperty(program, property, property.type, visited, rootNamespace);
+      return resolveModelProperty(program, property, property.type, visited, rootNamespace, rootAlias);
     case "Union":
-      return resolveUnionProperty(program, property, property.type, visited, rootNamespace);
+      return resolveUnionProperty(program, property, property.type, visited, rootNamespace, rootAlias);
     case "Intrinsic":
       return resolveIntrinsicProperty(program, property, property.type, visited);
     case "String":
@@ -247,8 +249,7 @@ export const resolveProperty = (program: Program, property: ModelProperty, visit
       prop.defaultValue = property.type.value;
       prop.typeName = {
         namespace: "",
-        name: "string",
-        fullName: "string"
+        name: "string"
       };
 
       prop.isScalar = true;
@@ -277,8 +278,7 @@ export const resolveScalarProperty = (program: Program, property: ModelProperty,
 
   prop.typeName = {
     namespace: "",
-    name: getTypeName(scalar, { nameOnly: true }),
-    fullName: getEntityName(scalar)
+    name: getTypeName(scalar, { nameOnly: true })
   };
 
   prop.isScalar = true;
@@ -316,8 +316,7 @@ export const resolveIntrinsicProperty = (program: Program, property: ModelProper
 
   prop.typeName = {
     namespace: "",
-    name: getTypeName(intrinsic, { nameOnly: true }),
-    fullName: getEntityName(intrinsic)
+    name: getTypeName(intrinsic, { nameOnly: true })
   };
 
   prop.isScalar = true;
@@ -347,7 +346,7 @@ export const resolveIntrinsicProperty = (program: Program, property: ModelProper
   return prop;
 };
 
-export const resolveModelProperty = (program: Program, property: ModelProperty, model: Model, visited: Set<string>, rootNamespace: string): PropertyNode => {
+export const resolveModelProperty = (program: Program, property: ModelProperty, model: Model, visited: Set<string>, rootNamespace: string, rootAlias: string): PropertyNode => {
   const prop = new PropertyNode(
     property,
     getDoc(program, property) || ""
@@ -362,9 +361,9 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
       prop.isAny = false;
       prop.isOptional = property.optional;
       prop.isCollection = true;
-      prop.typeName = getModelType(innerModel, rootNamespace);
+      prop.typeName = getModelType(innerModel, rootNamespace, rootAlias);
       if (!visited.has(model.name)) {
-        prop.type = resolveModel(program, innerModel, visited, rootNamespace);
+        prop.type = resolveModel(program, innerModel, visited, rootNamespace, rootAlias);
       }
     } else {
       // check for Scalar Arrays
@@ -376,8 +375,7 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
         prop.isCollection = true;
         prop.typeName = {
           namespace: "",
-          name: getTypeName(innerType, { nameOnly: true }),
-          fullName: getEntityName(innerType)
+          name: getTypeName(innerType, { nameOnly: true })
         };
       } else if (innerType && innerType.kind === "Intrinsic") {
         prop.isScalar = true;
@@ -386,8 +384,7 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
         prop.isCollection = true;
         prop.typeName = {
           namespace: "",
-          name: "unknown",
-          fullName: "unknown"
+          name: "unknown"
         };
       } else {
         program.reportDiagnostic({
@@ -403,27 +400,26 @@ export const resolveModelProperty = (program: Program, property: ModelProperty, 
     prop.isAny = false;
     prop.isOptional = property.optional;
     prop.isCollection = false;
-    
-    prop.typeName = getModelType(model, rootNamespace);
-    if(prop.typeName.name === "Record<unknown>") {
+
+    prop.typeName = getModelType(model, rootNamespace, rootAlias);
+    if (prop.typeName.name === "Record<unknown>") {
       prop.isScalar = true;
       prop.isDict = true;
       prop.typeName = {
         namespace: "",
-        name: "dictionary",
-        fullName: "dictionary"
+        name: "dictionary"
       };
       // need to clear this out as a model type
       prop.type = undefined;
     }
     if (!visited.has(model.name) && prop.typeName.name !== "dictionary") {
-      prop.type = resolveModel(program, model, visited, rootNamespace);
+      prop.type = resolveModel(program, model, visited, rootNamespace, rootAlias);
     }
   }
   return prop;
 };
 
-export const resolveUnionProperty = (program: Program, property: ModelProperty, union: Union, visited: Set<string>, rootNamespace: string): PropertyNode => {
+export const resolveUnionProperty = (program: Program, property: ModelProperty, union: Union, visited: Set<string>, rootNamespace: string, rootAlias: string): PropertyNode => {
   const prop = new PropertyNode(
     property,
     getDoc(program, property) || ""
@@ -439,8 +435,8 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
 
   if (models.length === 1) {
     if (!visited.has(models[0].name)) {
-      prop.type = resolveModel(program, models[0], visited, rootNamespace);
-      prop.typeName = getModelType(models[0], rootNamespace);
+      prop.type = resolveModel(program, models[0], visited, rootNamespace, rootAlias);
+      prop.typeName = getModelType(models[0], rootNamespace, rootAlias);
     }
   } else if (models.length === 2) {
     const modelNames = models.map(m => m.name);
@@ -456,10 +452,10 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       if (recordType && arrayType && namedType && recordType.name === arrayType.name) {
         prop.isCollection = true;
         // Use T as actual class model for naming purposes
-        prop.typeName = getModelType(arrayType, rootNamespace);
+        prop.typeName = getModelType(arrayType, rootNamespace, rootAlias);
         // Use Named<T> for actual model props
         if (!visited.has(arrayType.name)) {
-          prop.type = resolveModel(program, namedType, visited, rootNamespace);
+          prop.type = resolveModel(program, namedType, visited, rootNamespace, rootAlias);
         }
       }
       else {
@@ -477,9 +473,9 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       const namedModel = getTemplateModel(models[namedIdx]);
       const mainModel = models[(namedIdx + 1) % 2];
       if (namedModel && namedModel.name === mainModel.name) {
-        prop.typeName = getModelType(namedModel, rootNamespace);
+        prop.typeName = getModelType(namedModel, rootNamespace, rootAlias);
         if (!visited.has(mainModel.name)) {
-          prop.type = resolveModel(program, namedModel, visited, rootNamespace);
+          prop.type = resolveModel(program, namedModel, visited, rootNamespace, rootAlias);
         }
       } else {
         program.reportDiagnostic({
@@ -505,8 +501,7 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
     if (acceptableVariants === variants.length) {
       prop.typeName = {
         "namespace": "",
-        "name": "string",
-        "fullName": "string"
+        "name": "string"
       };
       prop.isScalar = true;
       prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value)

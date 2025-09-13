@@ -155,9 +155,7 @@ const typeLink = (name: string) =>
 
 const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
   outputDir = outputDir || `${context.emitterOutputDir}/python`;
-  const typePath = type.typeName.fullName.split(".").map(part => typeLink(part));
-  // remove typename
-  typePath.pop();
+  const typePath = type.typeName.namespace.split(".").map(part => typeLink(part));
   // replace typename with file
   typePath.push(filename);
   const path = resolvePath(outputDir, ...typePath);
