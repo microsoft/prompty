@@ -1,5 +1,7 @@
 # EnvironmentVariable
 
+
+
 ## Class Diagram
 
 ```mermaid
@@ -18,6 +20,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -25,9 +29,15 @@ name: MY_ENV_VAR
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | Name of the environment variable  |
 | value | string | Environment variable resolution  |
+
+
+

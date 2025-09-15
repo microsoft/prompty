@@ -23,6 +23,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -37,6 +39,9 @@ allowed:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -46,3 +51,6 @@ allowed:
 | name | string | The name of the MCP tool  |
 | url | string | The URL of the MCP server  |
 | allowed | string[] | List of allowed operations or resources for the MCP tool  |
+
+
+

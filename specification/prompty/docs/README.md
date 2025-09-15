@@ -138,7 +138,6 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
-        +Connection[] connections
         +Template template
         +string instructions
         +string additional_instructions
@@ -242,7 +241,6 @@ classDiagram
     Prompty *-- Input
     Prompty *-- Output
     Prompty *-- Tool
-    Prompty *-- Connection
     Prompty *-- Template
     Registry *-- Connection
     ContainerDefinition *-- Registry

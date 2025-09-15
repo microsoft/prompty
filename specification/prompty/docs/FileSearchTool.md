@@ -24,6 +24,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -36,6 +38,9 @@ scoreThreshold: 0.5
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -45,3 +50,6 @@ scoreThreshold: 0.5
 | maxNumResults | int32 | The maximum number of search results to return.  |
 | ranker | string | File search ranker.  |
 | scoreThreshold | float32 | Ranker search threshold.  |
+
+
+

@@ -63,7 +63,7 @@ namespace Prompty.Core {
         },
       },
     })
-    @alternate(#{ `model`: "{value}" }, #{ `model`: #{ id: "{value}" } })
+    @alternate(string, #{ `model`: "{value}" }, #{ `model`: #{ id: "{value}" } })
     `model`: Model | string;
 
     // Inputs and Outputs
@@ -148,19 +148,6 @@ namespace Prompty.Core {
       ],
     })
     tools?: Tools = #[];
-
-    @doc("Connections available to the agent for accessing external services")
-    @sample(#{
-      connections: #{
-        `my-connection`: #{
-          kind: "key",
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
-          key: "\${env:OPENAI_API_KEY}",
-        },
-      },
-    })
-    @sample(#{ connections: #[#{ name: "my-connection", kind: "named" }] })
-    connections?: Connections = #[];
 
     // template values
     @doc("Template configuration for prompt rendering")

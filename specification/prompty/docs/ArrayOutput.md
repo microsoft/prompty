@@ -27,6 +27,8 @@ classDiagram
     ArrayOutput *-- Output
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -35,9 +37,15 @@ items:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Output](Output.md) | The type of items contained in the array (Related Types: [ObjectOutput](ObjectOutput.md)) |
+
+
+

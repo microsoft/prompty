@@ -1,5 +1,7 @@
 # ContainerDefinition
 
+
+
 ## Class Diagram
 
 ```mermaid
@@ -32,6 +34,11 @@ classDiagram
     ContainerDefinition *-- Scale
 ```
 
+
+
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -40,3 +47,6 @@ classDiagram
 | tag | string |   |
 | registry | [Registry](Registry.md) | Container image registry definition (Related Types: [AzureContainerRegistry](AzureContainerRegistry.md)) |
 | scale | [Scale](Scale.md) | Instance scaling configuration  |
+
+
+

@@ -1,7 +1,6 @@
 # Input
 
 Represents a single input property for a prompt.
-
 * This model defines the structure of input properties that can be used in prompts,
 including their type, description, whether they are required, and other attributes.
 * It allows for the definition of dynamic inputs that can be filled with data
@@ -40,6 +39,8 @@ classDiagram
     Input <|-- ObjectInput
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -53,6 +54,9 @@ sample: sample value
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -65,9 +69,12 @@ sample: sample value
 | default | unknown | The default value of the input - this represents the default value if none is provided  |
 | sample | unknown | A sample value of the input for examples and tooling  |
 
+
+
 ## Child Types
 
 The following types extend `Input`:
 
-* [ArrayInput](ArrayInput.md)
-* [ObjectInput](ObjectInput.md)
+- [ArrayInput](ArrayInput.md)
+- [ObjectInput](ObjectInput.md)
+

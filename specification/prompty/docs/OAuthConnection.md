@@ -24,6 +24,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -37,6 +39,9 @@ scopes:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -47,3 +52,6 @@ scopes:
 | clientSecret | string | The OAuth client secret for authenticating with the AI service  |
 | tokenUrl | string | The OAuth token URL for obtaining access tokens  |
 | scopes | string[] | The scopes required for the OAuth token  |
+
+
+

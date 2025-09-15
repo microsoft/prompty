@@ -48,9 +48,8 @@ const getModelType = (model: Model, rootNamespace: string, rootAlias: string): T
 };
 
 export interface Alternative {
-  property: string;
-  simple: any;
-  complex: {
+  scalar: string;
+  expansion: {
     [key: string]: any;
   };
 }
@@ -82,8 +81,8 @@ export class TypeNode {
       base: this.base || {},
       isAbstract: this.isAbstract,
       discriminator: this.discriminator,
-      childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       alternatives: this.alternatives,
+      childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
   }
@@ -214,6 +213,10 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
       // alternatives
       prop.alternatives = getStateValue<AlternateEntry>(program, StateKeys.alternates, value);
+      if (prop.alternatives.length > 0 && prop.type) {
+        const alts = prop.alternatives.map(a => ({ scalar: a.scalar, expansion: a.expansion[prop.name] }));
+        prop.type.alternatives = alts;
+      }
       properties.push(prop);
     }
     node.properties = properties;

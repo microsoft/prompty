@@ -9,7 +9,7 @@ extern dec sample(target: ModelProperty, sample: unknown);
 /**
  * Adds an alternate sample to the target model property, with an expansion description.
  */
-extern dec alternate(target: ModelProperty, sample: unknown, expansion: unknown);
+extern dec alternate(target: ModelProperty, `scalar`: Scalar, sample: unknown, expansion: unknown);
 
 /**
  * Marks the target model as abstract, preventing direct instantiation.

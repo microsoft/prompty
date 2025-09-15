@@ -31,6 +31,8 @@ classDiagram
     ObjectInput *-- Input
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -42,9 +44,15 @@ properties:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
 | properties | [Input[]](Input.md) | The properties contained in the object  |
+
+
+

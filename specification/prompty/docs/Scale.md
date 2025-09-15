@@ -1,5 +1,7 @@
 # Scale
 
+
+
 ## Class Diagram
 
 ```mermaid
@@ -20,6 +22,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -30,6 +34,9 @@ memory: 2
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -38,3 +45,6 @@ memory: 2
 | maxReplicas | numeric | Maximum number of container instances to run  |
 | cpu | float | CPU allocation per instance (in cores)  |
 | memory | float | Memory allocation per instance (in GB)  |
+
+
+

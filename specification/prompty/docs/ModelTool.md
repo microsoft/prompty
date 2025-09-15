@@ -23,6 +23,8 @@ classDiagram
     }
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -39,6 +41,9 @@ options:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -48,3 +53,6 @@ options:
 | provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
 | connection | [Connection](Connection.md) | The connection configuration for the model  |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
+
+
+

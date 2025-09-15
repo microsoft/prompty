@@ -68,6 +68,8 @@ classDiagram
     Tool *-- Binding
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -79,6 +81,9 @@ bindings:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -87,6 +92,8 @@ bindings:
 | kind | string | The kind identifier for the tool  |
 | description | string | A short description of the tool for metadata purposes  |
 | bindings | [Binding[]](Binding.md) | Tool argument bindings to input properties  |
+
+
 
 ## Child Types
 
@@ -98,3 +105,4 @@ The following types extend `Tool`:
 - [FileSearchTool](FileSearchTool.md)
 - [McpTool](McpTool.md)
 - [ModelTool](ModelTool.md)
+

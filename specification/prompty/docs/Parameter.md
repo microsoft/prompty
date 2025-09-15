@@ -33,6 +33,8 @@ classDiagram
     Parameter <|-- ArrayParameter
 ```
 
+
+
 ## Yaml Example
 
 ```yaml
@@ -47,6 +49,9 @@ enum:
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -57,9 +62,12 @@ enum:
 | required | boolean | Whether the tool parameter is required  |
 | enum | unknown[] | Allowed enumeration values for the parameter  |
 
+
+
 ## Child Types
 
 The following types extend `Parameter`:
 
 - [ObjectParameter](ObjectParameter.md)
 - [ArrayParameter](ArrayParameter.md)
+

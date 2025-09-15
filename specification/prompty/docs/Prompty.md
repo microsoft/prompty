@@ -30,7 +30,6 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
-        +Connection[] connections
         +Template template
         +string instructions
         +string additional_instructions
@@ -127,11 +126,8 @@ tools:
       unit:
         kind: string
         description: The unit of temperature, e.g. Celsius or Fahrenheit
-connections:
-  - name: my-connection
-    kind: named
 template:
-  format: handlebars
+  format: mustache
   parser: prompty
 ---
 system:
@@ -146,6 +142,8 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}
 ```
+
+
 
 ## Yaml Example
 
@@ -192,11 +190,8 @@ tools:
       unit:
         kind: string
         description: The unit of temperature, e.g. Celsius or Fahrenheit
-connections:
-  - name: my-connection
-    kind: named
 template:
-  format: handlebars
+  format: mustache
   parser: prompty
 instructions: |-
   system:
@@ -213,6 +208,9 @@ instructions: |-
 
 ```
 
+
+
+
 ## Properties
 
 | Name | Type | Description |
@@ -227,13 +225,15 @@ instructions: |-
 | inputs | [Input[]](Input.md) | Input parameters that participate in template rendering (Related Types: [ArrayInput](ArrayInput.md), [ObjectInput](ObjectInput.md)) |
 | outputs | [Output[]](Output.md) | Expected output format and structure from the agent (Related Types: [ArrayOutput](ArrayOutput.md), [ObjectOutput](ObjectOutput.md)) |
 | tools | [Tool[]](Tool.md) | Tools available to the agent for extended functionality (Related Types: [FunctionTool](FunctionTool.md), [ServerTool](ServerTool.md), [BingSearchTool](BingSearchTool.md), [FileSearchTool](FileSearchTool.md), [McpTool](McpTool.md), [ModelTool](ModelTool.md)) |
-| connections | [Connection[]](Connection.md) | Connections available to the agent for accessing external services  |
 | template | [Template](Template.md) | Template configuration for prompt rendering  |
 | instructions | string | Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)  |
 | additional_instructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
+
+
 
 ## Child Types
 
 The following types extend `Prompty`:
 
 - [PromptyContainer](PromptyContainer.md)
+
