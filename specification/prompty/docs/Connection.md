@@ -51,8 +51,6 @@ classDiagram
     Connection <|-- FoundryConnection
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -61,9 +59,6 @@ authority: system
 usage_description: This will allow the agent to respond to an email on your behalf
 
 ```
-
-
-
 
 ## Properties
 
@@ -74,8 +69,6 @@ usage_description: This will allow the agent to respond to an email on your beha
 | usage_description | string | The usage description for the connection, providing context on how this connection will be used  |
 | options | dictionary | Additional options for the connection  |
 
-
-
 ## Child Types
 
 The following types extend `Connection`:
@@ -84,4 +77,3 @@ The following types extend `Connection`:
 - [KeyConnection](KeyConnection.md)
 - [OAuthConnection](OAuthConnection.md)
 - [FoundryConnection](FoundryConnection.md)
-

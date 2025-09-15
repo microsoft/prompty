@@ -28,8 +28,6 @@ classDiagram
     FunctionTool *-- Parameter
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -42,15 +40,9 @@ parameters:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for function tools  |
 | parameters | [Parameter[]](Parameter.md) | Parameters accepted by the function tool (Related Types: [ObjectParameter](ObjectParameter.md), [ArrayParameter](ArrayParameter.md)) |
-
-
-

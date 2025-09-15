@@ -27,8 +27,6 @@ classDiagram
     ArrayParameter *-- Parameter
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -37,15 +35,9 @@ items:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Parameter](Parameter.md) | The kind of items contained in the array  |
-
-
-

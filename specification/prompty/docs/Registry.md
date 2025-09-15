@@ -1,7 +1,5 @@
 # Registry
 
-
-
 ## Class Diagram
 
 ```mermaid
@@ -34,11 +32,6 @@ classDiagram
     Registry *-- Connection
 ```
 
-
-
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -46,11 +39,8 @@ classDiagram
 | kind | string |   |
 | connection | [Connection](Connection.md) |  (Related Types: [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
 
-
-
 ## Child Types
 
 The following types extend `Registry`:
 
 - [AzureContainerRegistry](AzureContainerRegistry.md)
-

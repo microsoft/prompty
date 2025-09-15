@@ -211,7 +211,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
       const prop = resolveProperty(program, value, visited, rootNamespace, rootAlias);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
-      // alternatives
+      // alternative .ctor
       prop.alternatives = getStateValue<AlternateEntry>(program, StateKeys.alternates, value);
       if (prop.alternatives.length > 0 && prop.type) {
         const alts = prop.alternatives.map(a => ({ scalar: a.scalar, expansion: a.expansion[prop.name] }));
@@ -498,7 +498,7 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       return prop;
     }
   } else {
-    // only accept unions for defining string variants
+    // string variants for `kind` scalar type
     const acceptableVariants = variants.filter(v => v.kind === "String" || (v.kind === "Scalar" && v.name === "string")).length;
     if (acceptableVariants === variants.length) {
       prop.typeName = {

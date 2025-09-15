@@ -30,8 +30,6 @@ classDiagram
     ArrayInput *-- Input
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -40,15 +38,9 @@ items:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Input](Input.md) | The type of items contained in the array (Related Types: [ObjectInput](ObjectInput.md)) |
-
-
-

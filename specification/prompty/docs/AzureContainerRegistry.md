@@ -1,7 +1,5 @@
 # AzureContainerRegistry
 
-
-
 ## Class Diagram
 
 ```mermaid
@@ -22,11 +20,6 @@ classDiagram
     }
 ```
 
-
-
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -35,6 +28,3 @@ classDiagram
 | subscription | string |   |
 | resource_group | string |   |
 | registry_name | string |   |
-
-
-

@@ -94,6 +94,14 @@ const renderDefault = (prop: PropertyNode): string => {
       return " = field(default=\"\")";
     } else if (prop.typeName.name === "number") {
       return " = field(default=0)";
+    } else if (prop.typeName.name === "dictionary") {
+      return " = field(default_factory=dict)";
+    } else if (prop.typeName.name === "int64" || prop.typeName.name === "int32") {
+      return " = field(default=0)";
+    } else if (prop.typeName.name === "float64" || prop.typeName.name === "float32" || prop.typeName.name === "float") {
+      return " = field(default=0.0)";
+    } else if (prop.typeName.name === "numeric") {
+      return " = field(default=0)";
     } else {
       return " = field(default=None)";
     }

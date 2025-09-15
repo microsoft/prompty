@@ -9,6 +9,7 @@ namespace Prompty.Core {
    * * It allows for the definition of dynamic inputs that can be filled with data
    *  and processed to generate prompts for AI models.
    */
+  @discriminator("kind")
   model Input {
     @doc("The data type of the input property")
     @sample(#{ kind: "string" })
@@ -72,5 +73,5 @@ namespace Prompty.Core {
     Input,
     "Name of the input property",
     #{ name: "my-input" }
-  >[];
+  >[]; // need to support input aliasing => | Record<string | numeric | boolean>;
 }

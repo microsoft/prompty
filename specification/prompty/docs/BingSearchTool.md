@@ -30,8 +30,6 @@ classDiagram
     BingSearchTool *-- BingSearchConfiguration
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -48,9 +46,6 @@ configurations:
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -58,6 +53,3 @@ configurations:
 | kind | string | The kind identifier for Bing search tools  |
 | connection | [Connection](Connection.md) | The connection configuration for the Bing search tool  |
 | configurations | [BingSearchConfiguration[]](BingSearchConfiguration.md) | The configuration options for the Bing search tool  |
-
-
-

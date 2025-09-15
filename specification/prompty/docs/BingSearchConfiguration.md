@@ -24,11 +24,6 @@ classDiagram
     }
 ```
 
-
-
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -38,7 +33,4 @@ classDiagram
 | market | string | The market where the results come from.  |
 | setLang | string | The language to use for user interface strings when calling Bing API.  |
 | count | int64 | The number of search results to return in the bing api response  |
-| freshness | string | Filter search results by a specific time range. Accepted values: https://learn.microsoft.com/bing/search-apis/bing-web-search/reference/query-parameters  |
-
-
-
+| freshness | string | Filter search results by a specific time range. Accepted values: <https://learn.microsoft.com/bing/search-apis/bing-web-search/reference/query-parameters>  |

@@ -1,7 +1,5 @@
 # FoundryConnection
 
-
-
 ## Class Diagram
 
 ```mermaid
@@ -22,8 +20,6 @@ classDiagram
     }
 ```
 
-
-
 ## Yaml Example
 
 ```yaml
@@ -34,9 +30,6 @@ project: my-foundry-project
 
 ```
 
-
-
-
 ## Properties
 
 | Name | Type | Description |
@@ -45,6 +38,3 @@ project: my-foundry-project
 | type | string | The Foundry endpoint URL for the AI service  |
 | name | string | The Foundry connection name  |
 | project | string | The Foundry project name  |
-
-
-
