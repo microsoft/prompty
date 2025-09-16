@@ -26,11 +26,11 @@ namespace Prompty.Core {
   model Scale {
     @doc("Minimum number of container instances to run")
     @sample(#{ minReplicas: 1 })
-    minReplicas?: numeric = 1;
+    minReplicas?: integer = 1;
 
     @doc("Maximum number of container instances to run")
     @sample(#{ maxReplicas: 5 })
-    maxReplicas?: numeric = 5;
+    maxReplicas?: integer = 5;
 
     @doc("CPU allocation per instance (in cores)")
     @sample(#{ cpu: 0.5 })

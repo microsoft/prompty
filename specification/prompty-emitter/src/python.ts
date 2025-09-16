@@ -14,6 +14,10 @@ const pythonTypeMapper: Record<string, string> = {
   "int32": "int",
   "float64": "float",
   "float32": "float",
+  "integer": "int",
+  "float": "float",
+  "numeric": "float",
+  "any": "Any",
   "dictionary": "dict[str, Any]",
 };
 
@@ -44,6 +48,7 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
       renderDefault: renderDefault,
       renderSetInstance: renderSetInstance,
       polymorphicTypes: retrievePolymorphicInstances(node),
+      collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
     });
     await emitPythonFile(context, node, python, `_${node.typeName.name}.py`, outputDir);
   }
@@ -88,25 +93,24 @@ const renderDefault = (prop: PropertyNode): string => {
   if (prop.isCollection) {
     return " = field(default_factory=list)";
   } else if (prop.isScalar) {
+    
     if (prop.typeName.name === "boolean") {
-      return " = field(default=False)";
+      return ` = field(default=${prop.defaultValue === true ? "True" : "False"})`;
     } else if (prop.typeName.name === "string") {
-      return " = field(default=\"\")";
-    } else if (prop.typeName.name === "number") {
-      return " = field(default=0)";
+      return ` = field(default="${prop.defaultValue ?? ""}")`;
+    } else if (prop.typeName.name === "number" || prop.typeName.name === "numeric") {
+      return ` = field(default=${prop.defaultValue ?? "0.0"})`;
     } else if (prop.typeName.name === "dictionary") {
       return " = field(default_factory=dict)";
-    } else if (prop.typeName.name === "int64" || prop.typeName.name === "int32") {
-      return " = field(default=0)";
+    } else if (prop.typeName.name === "int64" || prop.typeName.name === "int32" || prop.typeName.name === "integer") {
+      return ` = field(default=${prop.defaultValue ?? "0"})`;
     } else if (prop.typeName.name === "float64" || prop.typeName.name === "float32" || prop.typeName.name === "float") {
-      return " = field(default=0.0)";
-    } else if (prop.typeName.name === "numeric") {
-      return " = field(default=0)";
+      return ` = field(default=${prop.defaultValue ?? "0.0"})`;
     } else {
-      return " = field(default=None)";
+      return ` = field(default=${prop.defaultValue ?? ""})`;
     }
   } else if (prop.isOptional) {
-    return " = field(default=None)";
+    return ` = field(default=${prop.defaultValue ?? "None"})`;
   } else {
     return ` = field(default_factory=${prop.typeName.name})`;
   }
@@ -137,7 +141,7 @@ const importIncludes = (node: TypeNode): string[] => {
     if (prop.isCollection) {
       includes.add("List");
     }
-    if( prop.isDict) {
+    if (prop.isDict) {
       includes.add("Any");
     }
   }

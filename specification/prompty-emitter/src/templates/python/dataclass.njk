@@ -36,7 +36,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {% endfor %}
     @staticmethod
     def load(data: dict) -> "{{ node.typeName.name }}":
-        {%- if node.discriminator %}
+        {%- if polymorphicTypes %}
         # load polymorphic {{ node.typeName.name }} instance
         instance = {{ node.typeName.name }}.load_{{ node.discriminator }}(data)
         {% else %}
@@ -49,7 +49,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
         {% endfor -%}
         return instance
 
-    {% for prop in node.properties | selectattr("isCollection") %}
+    {% for prop in collectionTypes %}
     @staticmethod
     def load_{{ prop.name }}(data: dict | list) -> list[{{ prop.typeName.name }}]:
         if isinstance(data, dict):
@@ -57,7 +57,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
             data = [ {"name": k, **v} for k, v in data.items() ]
         return [{{ prop.typeName.name }}.load(item) for item in data]
     {% endfor %}
-    {% if node.discriminator %}
+    {% if polymorphicTypes %}
     @staticmethod
     def load_{{ node.discriminator }}(data: dict) -> "{{ node.typeName.name }}":
         # load polymorphic {{ node.typeName.name }} instance

@@ -24,8 +24,8 @@ classDiagram
     }
     ContainerDefinition *-- Registry
     class Scale {
-        +numeric minReplicas
-        +numeric maxReplicas
+        +integer minReplicas
+        +integer maxReplicas
         +float cpu
         +float memory
     }

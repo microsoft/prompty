@@ -182,8 +182,8 @@ classDiagram
         +string registry_name
     }
     class Scale {
-        +numeric minReplicas
-        +numeric maxReplicas
+        +integer minReplicas
+        +integer maxReplicas
         +float cpu
         +float memory
     }
