@@ -15,24 +15,45 @@ namespace Prompty.Core {
    */
   model Template {
     @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
-    @sample(#{ format: "handlebars" })
-    format: string;
+    @sample(#{ format: #{ kind: "mustache" } })
+    @alternate(string, #{ format: "{value}" }, #{ format: #{ kind: "{value}" } })
+    format: Format | string;
 
     @doc("Parser used to process the rendered template into API-compatible format")
-    @sample(#{ parser: "prompty" })
-    parser: string;
+    @sample(#{ parser: #{ kind: "mustache" } })
+    @alternate(string, #{ parser: "{value}" }, #{ parser: #{ kind: "{value}" } })
+    parser: Parser | string;
+  }
+
+  /**
+   * Template format definition
+   */
+  @discriminator("kind")
+  model Format {
+    @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
+    @sample(#{ kind: "mustache" })
+    kind: string;
 
     @doc("Whether the template can emit structural text for parsing output")
-    @sample(#{ strict: false })
+    @sample(#{ strict: true })
     strict?: boolean = false;
+    
+    @doc("Options for the template engine")
+    @sample(#{ options: #{ key: "value" } })
+    options?: Record<unknown> = #{};
+  }
 
-    @doc("Additional options for the template engine")
-    @sample(#{
-      options: #{
-        trimBlocks: true,
-        lstripBlocks: true,
-      },
-    })
+  /**
+   * Template parser definition
+   */
+  @discriminator("kind")
+  model Parser {
+    @doc("Parser used to process the rendered template into API-compatible format")
+    @sample(#{ kind: "prompty" })
+    kind: string;
+
+    @doc("Options for the parser")
+    @sample(#{ options: #{ key: "value" } })
     options?: Record<unknown> = #{};
   }
 }

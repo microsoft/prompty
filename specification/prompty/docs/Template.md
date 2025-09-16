@@ -22,22 +22,29 @@ config:
 ---
 classDiagram
     class Template {
-        +string format
-        +string parser
+        +Format format
+        +Parser parser
+    }
+    class Format {
+        +string kind
         +boolean strict
         +dictionary options
     }
+    Template *-- Format
+    class Parser {
+        +string kind
+        +dictionary options
+    }
+    Template *-- Parser
 ```
 
 ## Yaml Example
 
 ```yaml
-format: handlebars
-parser: prompty
-strict: false
-options:
-  trimBlocks: true
-  lstripBlocks: true
+format:
+  kind: mustache
+parser:
+  kind: mustache
 
 ```
 
@@ -45,7 +52,5 @@ options:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| format | string | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)  |
-| parser | string | Parser used to process the rendered template into API-compatible format  |
-| strict | boolean | Whether the template can emit structural text for parsing output  |
-| options | dictionary | Additional options for the template engine  |
+| format | [Format](Format.md) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)  |
+| parser | [Parser](Parser.md) | Parser used to process the rendered template into API-compatible format  |

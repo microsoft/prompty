@@ -121,11 +121,18 @@ classDiagram
         +Connection connection
         +ModelOptions options
     }
-    class Template {
-        +string format
-        +string parser
+    class Format {
+        +string kind
         +boolean strict
         +dictionary options
+    }
+    class Parser {
+        +string kind
+        +dictionary options
+    }
+    class Template {
+        +Format format
+        +Parser parser
     }
     class Prompty {
         +string kind
@@ -237,6 +244,8 @@ classDiagram
     McpTool *-- Connection
     ModelTool *-- Connection
     ModelTool *-- ModelOptions
+    Template *-- Format
+    Template *-- Parser
     Prompty *-- Model
     Prompty *-- Input
     Prompty *-- Output

@@ -72,10 +72,8 @@ classDiagram
     }
     Prompty *-- Tool
     class Template {
-        +string format
-        +string parser
-        +boolean strict
-        +dictionary options
+        +Format format
+        +Parser parser
     }
     Prompty *-- Template
 ```
