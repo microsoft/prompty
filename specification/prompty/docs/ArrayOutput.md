@@ -41,3 +41,9 @@ items:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Output](Output.md) | The type of items contained in the array (Related Types: [ObjectOutput](ObjectOutput.md)) |
+
+## Composed Types
+
+The following types are composed within `ArrayOutput`:
+
+- [Output](Output.md)

@@ -82,8 +82,8 @@ const retrievePolymorphicInstances = (node: TypeNode): any => {
 
 const generateLoader = (node: TypeNode): any => {
   const typeGuards: string[] = [];
-  if (node.alternatives && node.alternatives.length > 0) {
-    node.alternatives.forEach(alt => {
+  if (node.alternates && node.alternates.length > 0) {
+    node.alternates.forEach(alt => {
       typeGuards.push(pythonTypeMapper[alt.scalar] || "Any");
     });
   }
@@ -96,8 +96,8 @@ const generateLoader = (node: TypeNode): any => {
 
 
 const generateAlternates = (node: TypeNode): { scalar: string; alternate: string }[] => {
-  if (node.alternatives && node.alternatives.length > 0) {
-    return node.alternatives.map(alt => ({
+  if (node.alternates && node.alternates.length > 0) {
+    return node.alternates.map(alt => ({
       scalar: pythonTypeMapper[alt.scalar],
       alternate: JSON.stringify(alt.expansion, null, ``).replaceAll('\n', '').replace("\"{value}\"", " data"),
     }));
@@ -135,7 +135,7 @@ const renderDefault = (prop: PropertyNode): string => {
     } else if (prop.typeName.name === "float64" || prop.typeName.name === "float32" || prop.typeName.name === "float") {
       return ` = field(default=${prop.defaultValue ?? "0.0"})`;
     } else {
-      return ` = field(default=${prop.defaultValue ?? ""})`;
+      return ` = field(default=${prop.defaultValue ?? "None"})`;
     }
   } else if (prop.isOptional) {
     return ` = field(default=${prop.defaultValue ?? "None"})`;
@@ -173,7 +173,7 @@ const importIncludes = (node: TypeNode): string[] => {
       includes.add("Any");
     }
   }
-  if (node.alternatives && node.alternatives.length > 0) {
+  if (node.alternates && node.alternates.length > 0) {
     includes.add("Union");
   }
   return Array.from(includes);

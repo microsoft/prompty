@@ -63,7 +63,6 @@ namespace Prompty.Core {
         },
       },
     })
-    @alternate(string, #{ `model`: "{value}" }, #{ `model`: #{ id: "{value}" } })
     `model`: Model | string;
 
     // Inputs and Outputs

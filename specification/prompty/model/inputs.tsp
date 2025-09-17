@@ -10,6 +10,10 @@ namespace Prompty.Core {
    *  and processed to generate prompts for AI models.
    */
   @discriminator("kind")
+  @shorthand(string, #{ kind: "string", sample: "{value}" }, "input", "Simple construction with just a kind of string")
+  @shorthand(integer, #{ kind: "number", sample: "{value}" }, "input", "Simple construction with just a kind of integer")
+  @shorthand(float, #{ kind: "number", sample: "{value}" }, "input", "Simple construction with just a kind of float")
+  @shorthand(boolean, #{ kind: "boolean", sample: "{value}" }, "input", "Simple construction with just a kind of boolean")
   model Input {
     @doc("The data type of the input property")
     @sample(#{ kind: "string" })

@@ -1,3 +1,4 @@
+import "@prompty/emitter";
 import "./core.tsp";
 
 namespace Prompty.Core {
@@ -16,12 +17,10 @@ namespace Prompty.Core {
   model Template {
     @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
     @sample(#{ format: #{ kind: "mustache" } })
-    @alternate(string, #{ format: "{value}" }, #{ format: #{ kind: "{value}" } })
     format: Format | string;
 
     @doc("Parser used to process the rendered template into API-compatible format")
     @sample(#{ parser: #{ kind: "mustache" } })
-    @alternate(string, #{ parser: "{value}" }, #{ parser: #{ kind: "{value}" } })
     parser: Parser | string;
   }
 
@@ -29,6 +28,7 @@ namespace Prompty.Core {
    * Template format definition
    */
   @discriminator("kind")
+  @shorthand(string, #{ kind: "{value}" }, "format", "Simple construction with just a \"kind\" string")
   model Format {
     @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
     @sample(#{ kind: "mustache" })
@@ -47,6 +47,7 @@ namespace Prompty.Core {
    * Template parser definition
    */
   @discriminator("kind")
+  @shorthand(string, #{ kind: "{value}" }, "parser", "Simple construction with just a \"kind\" string")
   model Parser {
     @doc("Parser used to process the rendered template into API-compatible format")
     @sample(#{ kind: "prompty" })

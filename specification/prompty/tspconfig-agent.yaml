@@ -9,14 +9,10 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
+    root-object: "Prompty.Core.Prompty"
     root-namespace: "Microsoft.Extensions.AI.Agents"
-    root-object: "AgentDefinition"
+    root-alias: "Agent"
     emit-targets:
       - type: markdown
         output-dir: "./tsp-output/Markdown"
-      - type: CSharp
-        output-dir: "./tsp-output/CSharp"
-      - type: Python
-        output-dir: "./tsp-output/Python"
-      - type: TypeScript
-        output-dir: "./tsp-output/TypeScript"
+

@@ -5,7 +5,7 @@ The root [object](Prompty.md) represents the main entry point for the system.
 
 ```mermaid
 ---
-title: Declarative Agents
+title: Prompty and Related Types
 config:
   look: handDrawn
   theme: colorful

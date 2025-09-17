@@ -45,3 +45,9 @@ properties:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | properties | [Output[]](Output.md) | The properties contained in the object  |
+
+## Composed Types
+
+The following types are composed within `ObjectOutput`:
+
+- [Output](Output.md)

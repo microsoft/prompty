@@ -38,3 +38,10 @@ classDiagram
 | kind | string | Type of agent, e.g., &#39;prompt&#39; or &#39;container&#39;  |
 | container | [ContainerDefinition](ContainerDefinition.md) | Container definition including registry and scaling information  |
 | environment_variables | [EnvironmentVariable[]](EnvironmentVariable.md) | Environment variables to set in the hosted agent container.  |
+
+## Composed Types
+
+The following types are composed within `PromptyContainer`:
+
+- [ContainerDefinition](ContainerDefinition.md)
+- [EnvironmentVariable](EnvironmentVariable.md)

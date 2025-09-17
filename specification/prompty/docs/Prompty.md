@@ -227,3 +227,13 @@ instructions: |-
 The following types extend `Prompty`:
 
 - [PromptyContainer](PromptyContainer.md)
+
+## Composed Types
+
+The following types are composed within `Prompty`:
+
+- [Model](Model.md)
+- [Input](Input.md)
+- [Output](Output.md)
+- [Tool](Tool.md)
+- [Template](Template.md)

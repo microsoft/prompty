@@ -40,3 +40,10 @@ classDiagram
 | tag | string |   |
 | registry | [Registry](Registry.md) | Container image registry definition (Related Types: [AzureContainerRegistry](AzureContainerRegistry.md)) |
 | scale | [Scale](Scale.md) | Instance scaling configuration  |
+
+## Composed Types
+
+The following types are composed within `ContainerDefinition`:
+
+- [Registry](Registry.md)
+- [Scale](Scale.md)

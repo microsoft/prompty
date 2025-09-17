@@ -71,3 +71,88 @@ The following types extend `Input`:
 
 * [ArrayInput](ArrayInput.md)
 * [ObjectInput](ObjectInput.md)
+
+## Alternate Constructions
+
+The following alternate constructions are available for `Input`.
+These allow for simplified creation of instances using a single property.
+
+### boolean input
+
+Simple construction with just a kind of boolean
+
+The following simplified representation can be used:
+
+```yaml
+input: true
+
+```
+
+This is equivalent to the full representation:
+
+```yaml
+input:
+  kind: boolean
+  sample: true
+
+```
+
+### float input
+
+Simple construction with just a kind of float
+
+The following simplified representation can be used:
+
+```yaml
+input: 3.14
+
+```
+
+This is equivalent to the full representation:
+
+```yaml
+input:
+  kind: number
+  sample: 3.14
+
+```
+
+### integer input
+
+Simple construction with just a kind of integer
+
+The following simplified representation can be used:
+
+```yaml
+input: 5
+
+```
+
+This is equivalent to the full representation:
+
+```yaml
+input:
+  kind: number
+  sample: 5
+
+```
+
+### string input
+
+Simple construction with just a kind of string
+
+The following simplified representation can be used:
+
+```yaml
+input: "example"
+
+```
+
+This is equivalent to the full representation:
+
+```yaml
+input:
+  kind: string
+  sample: "example"
+
+```

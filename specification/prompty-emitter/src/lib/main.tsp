@@ -15,3 +15,9 @@ extern dec alternate(target: ModelProperty, `scalar`: Scalar, sample: unknown, e
  * Marks the target model as abstract, preventing direct instantiation.
  */
 extern dec abstract(target: Model);
+
+
+/**
+ * Marks the target model as a shorthand for another model, providing a scalar type and expansion description.
+ */
+extern dec shorthand(target: Model, `scalar`: Scalar, expansion: unknown, title?: string, description?: string);

@@ -45,3 +45,9 @@ properties:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | properties | [Parameter[]](Parameter.md) | The properties of the object parameter (Related Types: [ArrayParameter](ArrayParameter.md)) |
+
+## Composed Types
+
+The following types are composed within `ObjectParameter`:
+
+- [Parameter](Parameter.md)

@@ -36,7 +36,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {% endfor %}
     @staticmethod
     {{ loader | safe }}
-        {%- if node.alternatives.length > 0 %}
+        {%- if node.alternates.length > 0 %}
         # handle alternate representations
         {% for alt in alternates -%}
         if isinstance(data, {{ alt.scalar }}):

@@ -11,7 +11,7 @@ import {
   getNamespaceFullName,
   getDiscriminator,
 } from "@typespec/compiler";
-import { AlternateEntry, getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
+import { getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
 
@@ -52,6 +52,8 @@ export interface Alternative {
   expansion: {
     [key: string]: any;
   };
+  title?: string;
+  description?: string;
 }
 
 
@@ -64,7 +66,7 @@ export class TypeNode {
   public isRoot: boolean = false;
   public base: TypeName | null = null;
   public childTypes: TypeNode[] = [];
-  public alternatives: Alternative[] = [];
+  public alternates: Alternative[] = [];
   public properties: PropertyNode[] = [];
   public isAbstract: boolean = false;
   public discriminator: string | undefined = undefined;
@@ -81,7 +83,7 @@ export class TypeNode {
       base: this.base || {},
       isAbstract: this.isAbstract,
       discriminator: this.discriminator,
-      alternatives: this.alternatives,
+      alternates: this.alternates,
       childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
@@ -97,7 +99,6 @@ export class PropertyNode {
   public description: string;
 
   public samples: SampleEntry[] = [];
-  public alternatives: AlternateEntry[] = [];
 
   public isScalar: boolean = false;
   public isOptional: boolean = false;
@@ -123,7 +124,6 @@ export class PropertyNode {
       typeName: this.typeName,
       description: this.description,
       samples: this.samples,
-      alternatives: this.alternatives,
 
       isScalar: this.isScalar,
       isOptional: this.isOptional,
@@ -190,6 +190,8 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, innerModel) || false;
     const discriminator = getDiscriminator(program, innerModel);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
+    // shorthand .ctor
+    node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, innerModel);
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace, rootAlias);
@@ -197,12 +199,16 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, model) || false;
     const discriminator = getDiscriminator(program, model);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
+    // shorthand .ctor
+    node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, model);
     visited.add(model.name);
   }
 
   if (model.baseModel) {
     node.base = getModelType(model.baseModel, rootNamespace, rootAlias);
   }
+
+  
 
   // resolve properties if model
   if (model.kind === "Model") {
@@ -211,12 +217,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
       const prop = resolveProperty(program, value, visited, rootNamespace, rootAlias);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
-      // alternative .ctor
-      prop.alternatives = getStateValue<AlternateEntry>(program, StateKeys.alternates, value);
-      if (prop.alternatives.length > 0 && prop.type) {
-        const alts = prop.alternatives.map(a => ({ scalar: a.scalar, expansion: a.expansion[prop.name] }));
-        prop.type.alternatives = alts;
-      }
+
       properties.push(prop);
     }
     node.properties = properties;

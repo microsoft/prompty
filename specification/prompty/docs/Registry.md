@@ -44,3 +44,9 @@ classDiagram
 The following types extend `Registry`:
 
 - [AzureContainerRegistry](AzureContainerRegistry.md)
+
+## Composed Types
+
+The following types are composed within `Registry`:
+
+- [Connection](Connection.md)

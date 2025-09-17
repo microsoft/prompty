@@ -98,3 +98,9 @@ The following types extend `Tool`:
 - [FileSearchTool](FileSearchTool.md)
 - [McpTool](McpTool.md)
 - [ModelTool](ModelTool.md)
+
+## Composed Types
+
+The following types are composed within `Tool`:
+
+- [Binding](Binding.md)

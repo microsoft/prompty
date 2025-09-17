@@ -41,3 +41,9 @@ items:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Parameter](Parameter.md) | The kind of items contained in the array  |
+
+## Composed Types
+
+The following types are composed within `ArrayParameter`:
+
+- [Parameter](Parameter.md)

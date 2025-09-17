@@ -46,3 +46,9 @@ parameters:
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for function tools  |
 | parameters | [Parameter[]](Parameter.md) | Parameters accepted by the function tool (Related Types: [ObjectParameter](ObjectParameter.md), [ArrayParameter](ArrayParameter.md)) |
+
+## Composed Types
+
+The following types are composed within `FunctionTool`:
+
+- [Parameter](Parameter.md)

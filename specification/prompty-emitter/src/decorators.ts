@@ -1,7 +1,6 @@
-import { type DecoratorContext, type Model, Program, Type, ModelProperty, ObjectValue, serializeValueAsJson } from "@typespec/compiler";
+import { type DecoratorContext, type Model, Program, Type, ModelProperty, ObjectValue, serializeValueAsJson, StringValue } from "@typespec/compiler";
 import { StateKeys } from "./lib.js";
-import { Scalar } from "yaml";
-
+import { Alternative } from "./ast.js";
 
 export interface SampleOptions {
   title?: string;
@@ -79,103 +78,38 @@ export interface AlternateEntry {
   description?: string;
 }
 
-export function $alternate(context: DecoratorContext, target: ModelProperty, scalar: Type, sample: ObjectValue, expansion: ObjectValue, options?: SampleOptions) {
-  const alt = serializeValueAsJson(context.program, sample, sample.type);
-  if (!alt) {
+export function $abstract(context: DecoratorContext, target: Model) {
+  setStateScalar(context, StateKeys.abstracts, target, true);
+}
+
+
+export function $shorthand(context: DecoratorContext, target: Model, scalar: Type, expansion: ObjectValue, title?: StringValue, description?: StringValue) {
+  if(scalar.kind !== "Scalar") {
     context.program.reportDiagnostic({
-      code: "prompty-emitter-alternate-serialization",
-      message: `Failed to serialize alternate value.`,
+      code: "prompty-emitter-shorthand-scalar-type",
+      message: `Shorthand decorator requires a scalar type for the shorthand representation.`,
       severity: "error",
-      target: target,
+      target: scalar,
     });
     return;
   }
-  if (!alt.hasOwnProperty(target.name)) {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-alternate-name-mismatch",
-      message: `Alternate object must have a property named '${target.name}' to match the target property.`,
-      severity: "error",
-      target: target,
-    });
-    return;
-  }
+
   const exp = serializeValueAsJson(context.program, expansion, expansion.type);
   if (!exp) {
     context.program.reportDiagnostic({
-      code: "prompty-emitter-expansion-serialization",
+      code: "prompty-emitter-shorthand-serialization",
       message: `Failed to serialize expansion value.`,
       severity: "error",
       target: target,
     });
     return;
   }
-  if (!exp.hasOwnProperty(target.name)) {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-expansion-name-mismatch",
-      message: `Expansion object must have a property named '${target.name}' to match the target property.`,
-      severity: "error",
-      target: target,
-    });
-    return;
-  }
-  if(scalar.kind !== "Scalar") {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-alternate-scalar-type",
-      message: `Alternate decorator requires a scalar type for the alternate representation.`,
-      severity: "error",
-      target: scalar,
-    });
-    return;
-  }
-  // check that scalar type is contained in the union of values of the target property
-  if (target.type.kind !== "Union") {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-alternate-target-type",
-      message: `Alternate decorator requires the target property to be a union type.`,
-      severity: "error",
-      target: target,
-    });
-    return;
-  }
 
-  const variants = Array.from(target.type.variants).map(([, v]) => v.type)
-  // check if duplicate scalar value already exists as alternate
-  const currentAlternates = getStateValue<AlternateEntry>(context.program, StateKeys.alternates, target);
-  for (const variant of variants) {
-    if (variant.kind === "Scalar" && variant.name === scalar.name) {
-      // check if this variant is already in the current alternates
-      if (currentAlternates.find(a => a.scalar === scalar.name)) {
-        context.program.reportDiagnostic({
-          code: "prompty-emitter-alternate-duplicate",
-          message: `Alternate with scalar value '${scalar.name}' and alternate representation already exists on target property.`,
-          severity: "error",
-          target: target,
-        });
-        return;
-      }
-    }
-  }
-  // check if the sclar value exists in the union of target property
-  if (!variants.find(v => v.kind === "Scalar" && v.name === scalar.name)) {
-    context.program.reportDiagnostic({
-      code: "prompty-emitter-alternate-scalar-mismatch",
-      message: `Alternate scalar value '${scalar.name}' does not exist in the union of target property types.`,
-      severity: "error",
-      target: target,
-    });
-    return;
-  }
-
-  const entry: AlternateEntry = {
+  const entry: Alternative = {
     scalar: scalar.name,
-    alternate: alt,
     expansion: exp,
-    title: options?.title ?? "",
-    description: options?.description ?? "",
+    title: title?.value ?? "",
+    description: description?.value ?? "",
   }
-  appendStateValue<AlternateEntry>(context, StateKeys.alternates, target, entry);
-}
-
-export function $abstract(context: DecoratorContext, target: Model) {
-  setStateScalar(context, StateKeys.abstracts, target, true);
+  appendStateValue<Alternative>(context, StateKeys.shorthands, target, entry);
 }

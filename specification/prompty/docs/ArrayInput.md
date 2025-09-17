@@ -44,3 +44,9 @@ items:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | items | [Input](Input.md) | The type of items contained in the array (Related Types: [ObjectInput](ObjectInput.md)) |
+
+## Composed Types
+
+The following types are composed within `ArrayInput`:
+
+- [Input](Input.md)

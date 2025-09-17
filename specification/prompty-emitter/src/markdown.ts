@@ -22,6 +22,8 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
 }
 
 export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
+
+  const rootObject = context.options["root-alias"] || "Prompty";
   // set up template environment
   const templatePath = path.resolve(templateDir, 'markdown');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
@@ -42,6 +44,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
 
   const readmeContent = readme.render({
     types: nodes,
+    rootObject: rootObject,
     childTypes: childTypes,
     compositionTypes: compositionTypes
   });
@@ -55,7 +58,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     if (sample.length > 0) {
       const s = deepMerge(...sample);
       yml = stringify(s, { indent: 2 });
-      if("instructions" in s) {
+      if ("instructions" in s) {
         const instructions = s.instructions;
         delete s.instructions;
         md = `---\n${stringify(s, { indent: 2 })}---\n${instructions}`;
@@ -68,6 +71,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       renderType: renderType,
       renderChildTypes: renderChildTypes,
       compositionTypes: getCompositionTypes(node),
+      alternateCtors: generateAlternates(node),
     });
 
     await emitMarkdownFile(context, node.typeName.name, markdown, outputDir);
@@ -108,6 +112,45 @@ export const getChildTypes = (node: TypeNode): { source: string, target: string 
 export const getCompositionTypes = (node: TypeNode): TypeNode[] => {
   const nonScalars = node.properties.filter(p => !p.isScalar);
   return nonScalars.flatMap(c => c.type ? [c.type] : []);
+};
+
+const typeExampleMapper: Record<string, string> = {
+  "string": "\"example\"",
+  "number": "5",
+  "boolean": "true",
+  "int64": "5",
+  "int32": "5",
+  "float64": "3.14",
+  "float32": "3.14",
+  "integer": "5",
+  "float": "3.14",
+  "numeric": "3.14",
+};
+
+export const generateAlternates = (node: TypeNode): { title: string; description: string; scalar: string; simple: string, expanded: string }[] => {
+  if (node.alternates && node.alternates.length > 0) {
+    const alts: { title: string; description: string; scalar: string; simple: string, expanded: string }[] = [];
+    for (const alt of node.alternates) {
+      const scalar = alt.scalar;
+      const sample = typeExampleMapper[scalar] ? typeExampleMapper[scalar] : "example";
+
+      const simple: { [key: string]: any } = {};
+      simple[alt.title || "value"] = "\"{value}\"";
+      const expansion: { [key: string]: any } = {};
+      expansion[alt.title || "value"] = alt.expansion;
+
+      alts.push({
+        title: alt.title || "",
+        description: alt.description || "",
+        scalar: scalar,
+        simple: stringify(simple, { indent: 2 }).replace("\"{value}\"", sample).replaceAll("'", ""),
+        expanded: stringify(expansion, { indent: 2 }).replace("\"{value}\"", sample)
+      });
+    }
+    return alts;
+  } else {
+    return [];
+  }
 };
 
 const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {

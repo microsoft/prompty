@@ -51,3 +51,33 @@ options:
 | provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
 | connection | [Connection](Connection.md) | The connection configuration for the model  |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
+
+## Composed Types
+
+The following types are composed within `Model`:
+
+- [ModelOptions](ModelOptions.md)
+
+## Alternate Constructions
+
+The following alternate constructions are available for `Model`.
+These allow for simplified creation of instances using a single property.
+
+### string model
+
+Simple construction with just an id
+
+The following simplified representation can be used:
+
+```yaml
+model: "example"
+
+```
+
+This is equivalent to the full representation:
+
+```yaml
+model:
+  id: "example"
+
+```

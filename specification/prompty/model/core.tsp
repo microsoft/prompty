@@ -14,8 +14,8 @@ namespace Prompty.Core {
   alias SimpleTypes =
     | "string"
     | "number"
+    | "boolean"
     | "array"
     | "object"
-    | "boolean"
     | string;
 }

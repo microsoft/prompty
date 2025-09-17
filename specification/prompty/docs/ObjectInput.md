@@ -48,3 +48,9 @@ properties:
 | ---- | ---- | ----------- |
 | kind | string |   |
 | properties | [Input[]](Input.md) | The properties contained in the object  |
+
+## Composed Types
+
+The following types are composed within `ObjectInput`:
+
+- [Input](Input.md)

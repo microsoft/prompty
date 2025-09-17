@@ -58,7 +58,7 @@ export const $lib = createTypeSpecLibrary({
   emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     samples: { description: "Sample values for properties" },
-    alternates: { description: "Alternate values for properties" },
+    shorthands: { description: "Shorthand models creation" },
     abstracts: { description: "Abstract models" }
   }
 });
