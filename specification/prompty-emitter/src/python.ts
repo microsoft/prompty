@@ -1,4 +1,4 @@
-import { EmitContext, emitFile, resolvePath, Type } from "@typespec/compiler";
+import { EmitContext, emitFile, isUnknownType, resolvePath, Type } from "@typespec/compiler";
 import { PromptyEmitterOptions } from "./lib.js";
 import { PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
@@ -47,6 +47,8 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
       renderType: renderType,
       renderDefault: renderDefault,
       renderSetInstance: renderSetInstance,
+      loader: generateLoader(node),
+      alternates: generateAlternates(node),
       polymorphicTypes: retrievePolymorphicInstances(node),
       collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
     });
@@ -78,6 +80,32 @@ const retrievePolymorphicInstances = (node: TypeNode): any => {
   return undefined;
 };
 
+const generateLoader = (node: TypeNode): any => {
+  const typeGuards: string[] = [];
+  if (node.alternatives && node.alternatives.length > 0) {
+    node.alternatives.forEach(alt => {
+      typeGuards.push(pythonTypeMapper[alt.scalar] || "Any");
+    });
+  }
+  if (typeGuards.length > 0) {
+    return `def load(data: Union[${["dict", ...typeGuards].join(", ")}]) -> "${node.typeName.name}":`
+  } else {
+    return `def load(data: dict) -> "${node.typeName.name}":`
+  }
+};
+
+
+const generateAlternates = (node: TypeNode): { scalar: string; alternate: string }[] => {
+  if (node.alternatives && node.alternatives.length > 0) {
+    return node.alternatives.map(alt => ({
+      scalar: pythonTypeMapper[alt.scalar],
+      alternate: JSON.stringify(alt.expansion, null, ``).replaceAll('\n', '').replace("\"{value}\"", " data"),
+    }));
+  } else {
+    return [];
+  }
+};
+
 const renderType = (prop: PropertyNode): string => {
   let type = prop.isScalar ? (pythonTypeMapper[prop.typeName.name] || "Any") : pythonTypeMapper[prop.typeName.name] || prop.typeName.name;
   if (prop.isCollection) {
@@ -93,7 +121,7 @@ const renderDefault = (prop: PropertyNode): string => {
   if (prop.isCollection) {
     return " = field(default_factory=list)";
   } else if (prop.isScalar) {
-    
+
     if (prop.typeName.name === "boolean") {
       return ` = field(default=${prop.defaultValue === true ? "True" : "False"})`;
     } else if (prop.typeName.name === "string") {
@@ -144,6 +172,9 @@ const importIncludes = (node: TypeNode): string[] => {
     if (prop.isDict) {
       includes.add("Any");
     }
+  }
+  if (node.alternatives && node.alternatives.length > 0) {
+    includes.add("Union");
   }
   return Array.from(includes);
 };

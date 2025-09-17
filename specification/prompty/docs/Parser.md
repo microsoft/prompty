@@ -1,5 +1,7 @@
 # Parser
 
+Template parser definition
+
 ## Class Diagram
 
 ```mermaid
@@ -16,6 +18,15 @@ classDiagram
         +string kind
         +dictionary options
     }
+```
+
+## Yaml Example
+
+```yaml
+kind: prompty
+options:
+  key: value
+
 ```
 
 ## Properties

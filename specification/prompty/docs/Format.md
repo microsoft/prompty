@@ -1,5 +1,7 @@
 # Format
 
+Template format definition
+
 ## Class Diagram
 
 ```mermaid
@@ -17,6 +19,16 @@ classDiagram
         +boolean strict
         +dictionary options
     }
+```
+
+## Yaml Example
+
+```yaml
+kind: mustache
+strict: true
+options:
+  key: value
+
 ```
 
 ## Properties
