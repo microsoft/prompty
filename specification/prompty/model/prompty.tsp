@@ -175,15 +175,23 @@ namespace Prompty.Core {
     additional_instructions?: string = "";
   }
 
+  alias Protocols = "responses" | "activity" | "a2a" | string;
 
   model PromptyContainer extends Prompty {
     @doc("Type of agent, e.g., 'prompt' or 'container'")
+    @sample(#{ kind: "container" })
     kind: "container";
 
+    @doc("Protocol used by the containerized agent")
+    @sample(#{ protocol: "responses" })
+    protocol: Protocols = "responses";
+
     @doc("Container definition including registry and scaling information")
+    @sample(#{ container: #{ image: "my-container-image", registry: #{ kind: "acr", subscription: "my-subscription-id" } } })
     container: ContainerDefinition;
 
     @doc("Environment variables to set in the hosted agent container.")
+    @sample(#{ environment_variables: #{ MY_ENV_VAR: "my-value" } })
     environment_variables?: EnvironmentVariables = #[];
   }
 }

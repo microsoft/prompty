@@ -206,6 +206,7 @@ classDiagram
     }
     class PromptyContainer {
         +string kind
+        +string protocol
         +ContainerDefinition container
         +EnvironmentVariable[] environment_variables
     }
