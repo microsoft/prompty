@@ -14,7 +14,7 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class {{ node.typeName.name }} {
+    class {{ node.typeName.name }}{% if node.isAbstract %}<<Abstract>>{% endif %} {
       {%- for prop in node.properties %}
         +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}

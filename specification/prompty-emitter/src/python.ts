@@ -134,12 +134,10 @@ const renderSetInstance = (node: TypeNode) => (prop: PropertyNode, variable: str
 
 const importIncludes = (node: TypeNode): string[] => {
   const includes = new Set<string>();
+  includes.add("Any");
   for (const prop of node.properties) {
     if (prop.isOptional) {
       includes.add("Optional");
-    }
-    if (prop.isAny) {
-      includes.add("Any");
     }
     if (prop.isCollection) {
       includes.add("List");

@@ -35,7 +35,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
     {% endfor %}
     @staticmethod
-    def load(data: {{ loaderTypes | safe }}) -> "{{ node.typeName.name }}":
+    def load(data: Any) -> "{{ node.typeName.name }}":
         """Load a {{ node.typeName.name }} instance."""
         
         {%- if node.alternates.length > 0 %}
@@ -44,8 +44,11 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
         if isinstance(data, {{ alt.scalar }}):
             data = {{ alt.alternate | safe }}
         {% endfor -%}
-        {% endif -%}
-        {%- if polymorphicTypes %}
+        {% endif %}
+        
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for {{ node.typeName.name }}: {data}")
+        {% if polymorphicTypes %}
         # load polymorphic {{ node.typeName.name }} instance
         instance = {{ node.typeName.name }}.load_{{ node.discriminator }}(data)
         {% else %}
