@@ -149,9 +149,9 @@ public class Prompty
         {
             instance.Instructions = instructionsValue as string;
         }
-        if (data.TryGetValue("additional_instructions", out var additional_instructionsValue))
+        if (data.TryGetValue("additionalInstructions", out var additionalInstructionsValue))
         {
-            instance.AdditionalInstructions = additional_instructionsValue as string;
+            instance.AdditionalInstructions = additionalInstructionsValue as string;
         }
         return instance;
     }

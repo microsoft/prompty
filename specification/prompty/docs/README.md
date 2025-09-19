@@ -171,13 +171,17 @@ classDiagram
         +Tool[] tools
         +Template template
         +string instructions
-        +string additional_instructions
+        +string additionalInstructions
     }
     class Connection {
-      
+      <<abstract>>
         +string kind
         +string authority
-        +string usage_description
+        +string usageDescription
+    }
+    class GenericConnection {
+      
+        +string kind
         +dictionary options
     }
     class ReferenceConnection {
@@ -216,8 +220,8 @@ classDiagram
       
         +string kind
         +string subscription
-        +string resource_group
-        +string registry_name
+        +string resourceGroup
+        +string registryName
     }
     class Scale {
       
@@ -243,7 +247,7 @@ classDiagram
         +string kind
         +string protocol
         +ContainerDefinition container
-        +EnvironmentVariable[] environment_variables
+        +EnvironmentVariable[] environmentVariables
     }
     Input <|-- ArrayInput
     Input <|-- ObjectInput
@@ -258,6 +262,7 @@ classDiagram
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
     Prompty <|-- PromptyContainer
+    Connection <|-- GenericConnection
     Connection <|-- ReferenceConnection
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection

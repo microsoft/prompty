@@ -52,7 +52,7 @@ namespace Prompty.Core {
   model AzureContainerRegistry extends Registry {
     kind: "acr";
     subscription: string;
-    resource_group: string;
-    registry_name: string;
+    resourceGroup: string;
+    registryName: string;
   }
 }

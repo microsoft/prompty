@@ -12,12 +12,12 @@ namespace Prompty.Core;
 /// `provider`, `kind`, and `endpoint` are required properties here,
 /// but this section can accept additional via options.
 /// </summary>
-public class Connection
+public abstract class Connection
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Connection"/>.
     /// </summary>
-    public Connection()
+    protected Connection()
     {
     }
         
@@ -35,11 +35,6 @@ public class Connection
     /// The usage description for the connection, providing context on how this connection will be used
     /// </summary>
     public string? UsageDescription { get; set; }
-        
-    /// <summary>
-    /// Additional options for the connection
-    /// </summary>
-    public IDictionary<string, object>? Options { get; set; }
     
 
     /// <summary>
@@ -61,13 +56,9 @@ public class Connection
         {
             instance.Authority = authorityValue as string ?? throw new ArgumentException("Properties must contain a property named: authority", nameof(props));
         }
-        if (data.TryGetValue("usage_description", out var usage_descriptionValue))
+        if (data.TryGetValue("usageDescription", out var usageDescriptionValue))
         {
-            instance.UsageDescription = usage_descriptionValue as string;
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = optionsValue as IDictionary<string, object>;
+            instance.UsageDescription = usageDescriptionValue as string;
         }
         return instance;
     }
@@ -100,7 +91,7 @@ public class Connection
             }
             else
             {
-                return Load(props);
+                return GenericConnection.Load(props);
             }
         }
         else

@@ -17,12 +17,16 @@ config:
 ---
 classDiagram
     class Connection {
-      
+      <<abstract>>
         +string kind
         +string authority
-        +string usage_description
+        +string usageDescription
+    }
+    class GenericConnection {
+        +string kind
         +dictionary options
     }
+    Connection <|-- GenericConnection
     class ReferenceConnection {
         +string kind
         +string name
@@ -57,7 +61,7 @@ classDiagram
 ```yaml
 kind: oauth
 authority: system
-usage_description: This will allow the agent to respond to an email on your behalf
+usageDescription: This will allow the agent to respond to an email on your behalf
 
 ```
 
@@ -67,13 +71,13 @@ usage_description: This will allow the agent to respond to an email on your beha
 | ---- | ---- | ----------- |
 | kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)  |
 | authority | string | The authority level for the connection, indicating under whose authority the connection is made (e.g., &#39;user&#39;, &#39;agent&#39;, &#39;system&#39;)  |
-| usage_description | string | The usage description for the connection, providing context on how this connection will be used  |
-| options | dictionary | Additional options for the connection  |
+| usageDescription | string | The usage description for the connection, providing context on how this connection will be used  |
 
 ## Child Types
 
 The following types extend `Connection`:
 
+- [GenericConnection](GenericConnection.md)
 - [ReferenceConnection](ReferenceConnection.md)
 - [KeyConnection](KeyConnection.md)
 - [OAuthConnection](OAuthConnection.md)

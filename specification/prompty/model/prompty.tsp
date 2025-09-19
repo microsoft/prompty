@@ -172,7 +172,7 @@ namespace Prompty.Core {
     instructions?: string = "";
 
     @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")
-    additional_instructions?: string = "";
+    additionalInstructions?: string = "";
   }
 
   alias Protocols = "responses" | "activity" | "a2a" | string;
@@ -191,7 +191,7 @@ namespace Prompty.Core {
     container: ContainerDefinition;
 
     @doc("Environment variables to set in the hosted agent container.")
-    @sample(#{ environment_variables: #{ MY_ENV_VAR: "my-value" } })
-    environment_variables?: EnvironmentVariables = #[];
+    @sample(#{ environmentVariables: #{ MY_ENV_VAR: "my-value" } })
+    environmentVariables?: EnvironmentVariables = #[];
   }
 }

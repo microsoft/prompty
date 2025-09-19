@@ -59,13 +59,13 @@ public class AzureContainerRegistry : Registry
         {
             instance.Subscription = subscriptionValue as string ?? throw new ArgumentException("Properties must contain a property named: subscription", nameof(props));
         }
-        if (data.TryGetValue("resource_group", out var resource_groupValue))
+        if (data.TryGetValue("resourceGroup", out var resourceGroupValue))
         {
-            instance.ResourceGroup = resource_groupValue as string ?? throw new ArgumentException("Properties must contain a property named: resource_group", nameof(props));
+            instance.ResourceGroup = resourceGroupValue as string ?? throw new ArgumentException("Properties must contain a property named: resourceGroup", nameof(props));
         }
-        if (data.TryGetValue("registry_name", out var registry_nameValue))
+        if (data.TryGetValue("registryName", out var registryNameValue))
         {
-            instance.RegistryName = registry_nameValue as string ?? throw new ArgumentException("Properties must contain a property named: registry_name", nameof(props));
+            instance.RegistryName = registryNameValue as string ?? throw new ArgumentException("Properties must contain a property named: registryName", nameof(props));
         }
         return instance;
     }

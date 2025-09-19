@@ -33,13 +33,13 @@ classDiagram
         +Tool[] tools
         +Template template
         +string instructions
-        +string additional_instructions
+        +string additionalInstructions
     }
     class PromptyContainer {
         +string kind
         +string protocol
         +ContainerDefinition container
-        +EnvironmentVariable[] environment_variables
+        +EnvironmentVariable[] environmentVariables
     }
     Prompty <|-- PromptyContainer
     class Model {
@@ -222,7 +222,7 @@ instructions: |-
 | tools | [Tool[]](Tool.md) | Tools available to the agent for extended functionality (Related Types: [FunctionTool](FunctionTool.md), [ServerTool](ServerTool.md), [BingSearchTool](BingSearchTool.md), [FileSearchTool](FileSearchTool.md), [McpTool](McpTool.md), [ModelTool](ModelTool.md)) |
 | template | [Template](Template.md) | Template configuration for prompt rendering  |
 | instructions | string | Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)  |
-| additional_instructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
+| additionalInstructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
 
 ## Child Types
 

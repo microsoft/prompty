@@ -16,8 +16,8 @@ classDiagram
       
         +string kind
         +string subscription
-        +string resource_group
-        +string registry_name
+        +string resourceGroup
+        +string registryName
     }
 ```
 
@@ -27,5 +27,5 @@ classDiagram
 | ---- | ---- | ----------- |
 | kind | string |   |
 | subscription | string |   |
-| resource_group | string |   |
-| registry_name | string |   |
+| resourceGroup | string |   |
+| registryName | string |   |

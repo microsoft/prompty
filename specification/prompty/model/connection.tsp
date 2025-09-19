@@ -1,7 +1,13 @@
 import "@prompty/emitter";
 
 namespace Prompty.Core {
-  alias ConnectionType = "key" | "oauth" | "reference" | "foundry" | string;
+  alias ConnectionType =
+    | "generic"
+    | "key"
+    | "oauth"
+    | "reference"
+    | "foundry"
+    | string;
   alias Authority = "user" | "agent" | "system" | string;
 
   /**
@@ -9,6 +15,7 @@ namespace Prompty.Core {
    * `provider`, `kind`, and `endpoint` are required properties here,
    * but this section can accept additional via options.
    */
+  @abstract
   @discriminator("kind")
   model Connection {
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
@@ -21,12 +28,9 @@ namespace Prompty.Core {
 
     @doc("The usage description for the connection, providing context on how this connection will be used")
     @sample(#{
-      usage_description: "This will allow the agent to respond to an email on your behalf",
+      usageDescription: "This will allow the agent to respond to an email on your behalf",
     })
-    usage_description?: string;
-
-    @doc("Additional options for the connection")
-    options?: Record<unknown> = #{};
+    usageDescription?: string;
   }
 
   alias Connections = Record<Connection> | Named<
@@ -34,6 +38,14 @@ namespace Prompty.Core {
     "Name of the connection",
     #{ name: "my-connection" }
   >[];
+
+  model GenericConnection extends Connection {
+    @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
+    kind: "*";
+
+    @doc("Additional options for the connection")
+    options?: Record<unknown> = #{};
+  }
 
   /**
    * Connection configuration for AI services using named connections.
@@ -96,7 +108,6 @@ namespace Prompty.Core {
     scopes: string[];
   }
 
-
   model FoundryConnection extends Connection {
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
     @sample(#{ kind: "foundry" })
@@ -109,7 +120,7 @@ namespace Prompty.Core {
     @doc("The Foundry connection name")
     @sample(#{ name: "my-foundry-connection" })
     name: string;
-    
+
     @doc("The Foundry project name")
     @sample(#{ project: "my-foundry-project" })
     project: string;

@@ -63,9 +63,9 @@ public class PromptyContainer : Prompty
         {
             instance.Container = ContainerDefinition.Load(containerValue.ToParamDictionary());
         }
-        if (data.TryGetValue("environment_variables", out var environment_variablesValue))
+        if (data.TryGetValue("environmentVariables", out var environmentVariablesValue))
         {
-            instance.EnvironmentVariables = LoadEnvironmentVariables(environment_variablesValue);
+            instance.EnvironmentVariables = LoadEnvironmentVariables(environmentVariablesValue);
         }
         return instance;
     }

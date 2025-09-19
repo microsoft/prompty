@@ -20,15 +20,14 @@ classDiagram
     class AzureContainerRegistry {
         +string kind
         +string subscription
-        +string resource_group
-        +string registry_name
+        +string resourceGroup
+        +string registryName
     }
     Registry <|-- AzureContainerRegistry
     class Connection {
         +string kind
         +string authority
-        +string usage_description
-        +dictionary options
+        +string usageDescription
     }
     Registry *-- Connection
 ```
@@ -38,7 +37,7 @@ classDiagram
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |   |
-| connection | [Connection](Connection.md) |  (Related Types: [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
+| connection | [Connection](Connection.md) |  (Related Types: [GenericConnection](GenericConnection.md), [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
 
 ## Child Types
 

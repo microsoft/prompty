@@ -17,7 +17,7 @@ classDiagram
         +string kind
         +string protocol
         +ContainerDefinition container
-        +EnvironmentVariable[] environment_variables
+        +EnvironmentVariable[] environmentVariables
     }
     class ContainerDefinition {
         +string image
@@ -43,7 +43,7 @@ container:
   registry:
     kind: acr
     subscription: my-subscription-id
-environment_variables:
+environmentVariables:
   MY_ENV_VAR: my-value
 
 ```
@@ -55,7 +55,7 @@ environment_variables:
 | kind | string | Type of agent, e.g., &#39;prompt&#39; or &#39;container&#39;  |
 | protocol | string | Protocol used by the containerized agent  |
 | container | [ContainerDefinition](ContainerDefinition.md) | Container definition including registry and scaling information  |
-| environment_variables | [EnvironmentVariable[]](EnvironmentVariable.md) | Environment variables to set in the hosted agent container.  |
+| environmentVariables | [EnvironmentVariable[]](EnvironmentVariable.md) | Environment variables to set in the hosted agent container.  |
 
 ## Composed Types
 
