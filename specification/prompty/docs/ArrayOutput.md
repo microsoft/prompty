@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class ArrayOutput {
+      
         +string kind
         +Output items
     }

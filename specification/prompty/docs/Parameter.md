@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class Parameter {
+      
         +string name
         +string kind
         +string description

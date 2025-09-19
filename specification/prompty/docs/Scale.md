@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class Scale {
+      
         +integer minReplicas
         +integer maxReplicas
         +float cpu

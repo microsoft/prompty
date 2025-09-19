@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class ModelOptions {
+      
         +string kind
     }
 ```

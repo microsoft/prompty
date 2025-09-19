@@ -17,6 +17,7 @@ config:
 ---
 classDiagram
     class Connection {
+      
         +string kind
         +string authority
         +string usage_description

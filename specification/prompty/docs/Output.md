@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class Output {
+      
         +string name
         +string kind
         +string description

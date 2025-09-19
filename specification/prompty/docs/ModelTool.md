@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class ModelTool {
+      
         +string kind
         +string id
         +string provider

@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class KeyConnection {
+      
         +string kind
         +string endpoint
         +string key

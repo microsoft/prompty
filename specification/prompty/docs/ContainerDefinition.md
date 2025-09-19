@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class ContainerDefinition {
+      
         +string image
         +string tag
         +Registry registry

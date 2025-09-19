@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class Format {
+      
         +string kind
         +boolean strict
         +dictionary options

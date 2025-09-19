@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class ObjectParameter {
+      
         +string kind
         +Parameter[] properties
     }

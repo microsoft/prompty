@@ -19,6 +19,7 @@ config:
 ---
 classDiagram
     class ServerTool {
+      
         +string kind
         +Connection connection
         +dictionary options

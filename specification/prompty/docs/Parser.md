@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class Parser {
+      
         +string kind
         +dictionary options
     }

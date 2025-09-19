@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class BingSearchTool {
+      
         +string kind
         +Connection connection
         +BingSearchConfiguration[] configurations

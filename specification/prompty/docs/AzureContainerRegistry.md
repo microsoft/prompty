@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class AzureContainerRegistry {
+      
         +string kind
         +string subscription
         +string resource_group

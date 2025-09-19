@@ -20,6 +20,7 @@ config:
 ---
 classDiagram
     class Prompty {
+      
         +string kind
         +string id
         +string version

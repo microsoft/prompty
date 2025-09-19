@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class FunctionTool {
+      
         +string kind
         +Parameter[] parameters
     }

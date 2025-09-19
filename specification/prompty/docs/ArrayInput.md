@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class ArrayInput {
+      
         +string kind
         +Input items
     }

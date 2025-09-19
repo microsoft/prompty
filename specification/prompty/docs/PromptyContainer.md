@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class PromptyContainer {
+      
         +string kind
         +string protocol
         +ContainerDefinition container

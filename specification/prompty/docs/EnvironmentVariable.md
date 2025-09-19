@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class EnvironmentVariable {
+      
         +string name
         +string value
     }

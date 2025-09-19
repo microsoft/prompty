@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class BingSearchConfiguration {
+      
         +string connectionId
         +string instanceName
         +string market

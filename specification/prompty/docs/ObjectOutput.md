@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class ObjectOutput {
+      
         +string kind
         +Output[] properties
     }

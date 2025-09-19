@@ -14,7 +14,8 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class Tool<<Abstract>> {
+    class Tool {
+      <<abstract>>
         +string name
         +string kind
         +string description

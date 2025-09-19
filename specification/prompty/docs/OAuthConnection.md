@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class OAuthConnection {
+      
         +string kind
         +string endpoint
         +string clientId

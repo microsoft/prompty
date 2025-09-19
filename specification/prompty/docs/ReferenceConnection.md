@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class ReferenceConnection {
+      
         +string kind
         +string name
     }

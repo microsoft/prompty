@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class McpTool {
+      
         +string kind
         +Connection connection
         +string name

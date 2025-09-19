@@ -15,6 +15,7 @@ config:
 ---
 classDiagram
     class ArrayParameter {
+      
         +string kind
         +Parameter items
     }

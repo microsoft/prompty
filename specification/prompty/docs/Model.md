@@ -17,6 +17,7 @@ config:
 ---
 classDiagram
     class Model {
+      
         +string id
         +string provider
         +Connection connection

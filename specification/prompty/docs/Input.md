@@ -20,6 +20,7 @@ config:
 ---
 classDiagram
     class Input {
+      
         +string name
         +string kind
         +string description

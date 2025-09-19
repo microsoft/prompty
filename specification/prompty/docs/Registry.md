@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class Registry {
+      
         +string kind
         +Connection connection
     }

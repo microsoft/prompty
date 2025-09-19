@@ -13,6 +13,7 @@ config:
 ---
 classDiagram
     class FoundryConnection {
+      
         +string kind
         +string type
         +string name

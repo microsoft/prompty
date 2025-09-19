@@ -14,15 +14,18 @@ config:
 ---
 classDiagram
     class ModelOptions {
+      
         +string kind
     }
     class Model {
+      
         +string id
         +string provider
         +Connection connection
         +ModelOptions options
     }
     class Input {
+      
         +string name
         +string kind
         +string description
@@ -32,38 +35,46 @@ classDiagram
         +unknown sample
     }
     class ObjectInput {
+      
         +string kind
         +Input[] properties
     }
     class ArrayInput {
+      
         +string kind
         +Input items
     }
     class Output {
+      
         +string name
         +string kind
         +string description
         +boolean required
     }
     class ObjectOutput {
+      
         +string kind
         +Output[] properties
     }
     class ArrayOutput {
+      
         +string kind
         +Output items
     }
     class Binding {
+      
         +string name
         +string input
     }
     class Tool {
+      <<abstract>>
         +string name
         +string kind
         +string description
         +Binding[] bindings
     }
     class Parameter {
+      
         +string name
         +string kind
         +string description
@@ -71,23 +82,28 @@ classDiagram
         +unknown[] enum
     }
     class ArrayParameter {
+      
         +string kind
         +Parameter items
     }
     class ObjectParameter {
+      
         +string kind
         +Parameter[] properties
     }
     class FunctionTool {
+      
         +string kind
         +Parameter[] parameters
     }
     class ServerTool {
+      
         +string kind
         +Connection connection
         +dictionary options
     }
     class BingSearchConfiguration {
+      
         +string connectionId
         +string instanceName
         +string market
@@ -96,11 +112,13 @@ classDiagram
         +string freshness
     }
     class BingSearchTool {
+      
         +string kind
         +Connection connection
         +BingSearchConfiguration[] configurations
     }
     class FileSearchTool {
+      
         +string kind
         +Connection connection
         +int32 maxNumResults
@@ -108,6 +126,7 @@ classDiagram
         +float32 scoreThreshold
     }
     class McpTool {
+      
         +string kind
         +Connection connection
         +string name
@@ -115,6 +134,7 @@ classDiagram
         +string[] allowed
     }
     class ModelTool {
+      
         +string kind
         +string id
         +string provider
@@ -122,19 +142,23 @@ classDiagram
         +ModelOptions options
     }
     class Format {
+      
         +string kind
         +boolean strict
         +dictionary options
     }
     class Parser {
+      
         +string kind
         +dictionary options
     }
     class Template {
+      
         +Format format
         +Parser parser
     }
     class Prompty {
+      
         +string kind
         +string id
         +string version
@@ -150,21 +174,25 @@ classDiagram
         +string additional_instructions
     }
     class Connection {
+      
         +string kind
         +string authority
         +string usage_description
         +dictionary options
     }
     class ReferenceConnection {
+      
         +string kind
         +string name
     }
     class KeyConnection {
+      
         +string kind
         +string endpoint
         +string key
     }
     class OAuthConnection {
+      
         +string kind
         +string endpoint
         +string clientId
@@ -173,38 +201,45 @@ classDiagram
         +string[] scopes
     }
     class FoundryConnection {
+      
         +string kind
         +string type
         +string name
         +string project
     }
     class Registry {
+      
         +string kind
         +Connection connection
     }
     class AzureContainerRegistry {
+      
         +string kind
         +string subscription
         +string resource_group
         +string registry_name
     }
     class Scale {
+      
         +integer minReplicas
         +integer maxReplicas
         +float cpu
         +float memory
     }
     class ContainerDefinition {
+      
         +string image
         +string tag
         +Registry registry
         +Scale scale
     }
     class EnvironmentVariable {
+      
         +string name
         +string value
     }
     class PromptyContainer {
+      
         +string kind
         +string protocol
         +ContainerDefinition container

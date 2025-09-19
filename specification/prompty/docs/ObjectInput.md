@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class ObjectInput {
+      
         +string kind
         +Input[] properties
     }

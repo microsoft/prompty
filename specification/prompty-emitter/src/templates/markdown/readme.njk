@@ -15,6 +15,7 @@ config:
 classDiagram
     {%- for type in types %}
     class {{ type.typeName.name }} {
+      {% if type.isAbstract %}<<abstract>>{% endif %}
       {%- for prop in type.properties %}
         +{{ prop.typeName.name }}{{ "[]" if prop.isCollection else "" }} {{ prop.name }}
       {%- endfor %}

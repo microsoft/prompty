@@ -16,6 +16,7 @@ config:
 ---
 classDiagram
     class FileSearchTool {
+      
         +string kind
         +Connection connection
         +int32 maxNumResults
