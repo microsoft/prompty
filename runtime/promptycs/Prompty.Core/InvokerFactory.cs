@@ -36,39 +36,29 @@ namespace Prompty.Core
 
         public bool IsRegistered(string name, InvokerType invokerType)
         {
-            switch (invokerType)
+            return invokerType switch
             {
-                case InvokerType.Renderer:
-                    return _renderers.ContainsKey(name);
-                case InvokerType.Parser:
-                    return _parsers.ContainsKey(name);
-                case InvokerType.Executor:
-                    return _executors.ContainsKey(name);
-                case InvokerType.Processor:
-                    return _processors.ContainsKey(name);
-                default:
-                    return false;
-            }
+                InvokerType.Renderer => _renderers.ContainsKey(name),
+                InvokerType.Parser => _parsers.ContainsKey(name),
+                InvokerType.Executor => _executors.ContainsKey(name),
+                InvokerType.Processor => _processors.ContainsKey(name),
+                _ => false,
+            };
         }
 
         public Type GetInvoker(string name, InvokerType invokerType)
         {
             if (!IsRegistered(name, invokerType))
-                throw new Exception($"{invokerType.ToString()}.{name} not found!");
+                throw new Exception($"{invokerType}.{name} not found!");
 
-            switch (invokerType)
+            return invokerType switch
             {
-                case InvokerType.Renderer:
-                    return _renderers[name];
-                case InvokerType.Parser:
-                    return _parsers[name];
-                case InvokerType.Executor:
-                    return _executors[name];
-                case InvokerType.Processor:
-                    return _processors[name];
-                default:
-                    throw new Exception($"{invokerType.ToString()}.{name} not found!");
-            }
+                InvokerType.Renderer => _renderers[name],
+                InvokerType.Parser => _parsers[name],
+                InvokerType.Executor => _executors[name],
+                InvokerType.Processor => _processors[name],
+                _ => throw new Exception($"{invokerType}.{name} not found!"),
+            };
         }
 
         public void RegisterRenderer(string name, Type type)
@@ -107,7 +97,7 @@ namespace Prompty.Core
             if (prompty?.Template?.Format == null)
                 throw new Exception("Template type not found!");
 
-            return CreateInvoker(prompty?.Template?.Format!, InvokerType.Renderer, prompty!);
+            return CreateInvoker("", InvokerType.Renderer, prompty!);
         }
 
         public Invoker CreateParser(string name, Prompty prompty)
@@ -117,10 +107,10 @@ namespace Prompty.Core
 
         public Invoker CreateParser(Prompty prompty)
         {
-            if (prompty?.Template?.Parser == null || prompty?.Model?.Api == null)
-                throw new Exception("Invalid Parser - Parser and Model Api are required");
+            //if (prompty?.Template?.Parser == null || prompty?.Model?.Api == null)
+            //    throw new Exception("Invalid Parser - Parser and Model Api are required");
 
-            var parserType = $"{prompty?.Template?.Parser}.{prompty?.Model?.Api}";
+            var parserType = ""; // $"{prompty?.Template?.Parser}.{prompty?.Model?.Api}";
             return CreateInvoker(parserType, InvokerType.Parser, prompty!);
         }
 
@@ -131,10 +121,8 @@ namespace Prompty.Core
 
         public Invoker CreateExecutor(Prompty prompty)
         {
-            if (prompty?.Model?.Connection?.Type == null)
-                throw new Exception("Model Configuration type not found!");
 
-            return CreateInvoker(prompty?.Model?.Connection?.Type!, InvokerType.Executor, prompty!);
+            return CreateInvoker("", InvokerType.Executor, prompty!);
         }
 
         public Invoker CreateProcessor(string name, Prompty prompty)

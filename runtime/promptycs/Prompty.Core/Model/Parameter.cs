@@ -8,48 +8,52 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// Represents the output properties of an AI agent.
-/// Each output property can be a simple kind, an array, or an object.
+/// Represents a parameter for a tool.
 /// </summary>
-public class Output
+public class Parameter
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="Output"/>.
+    /// Initializes a new instance of <see cref="Parameter"/>.
     /// </summary>
-    public Output()
+    public Parameter()
     {
     }
         
     /// <summary>
-    /// Name of the output property
+    /// Name of the parameter
     /// </summary>
     public string Name { get; set; } = string.Empty;
         
     /// <summary>
-    /// The data kind of the output property
+    /// The data type of the tool parameter
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
         
     /// <summary>
-    /// A short description of the output property
+    /// A short description of the property
     /// </summary>
     public string? Description { get; set; }
         
     /// <summary>
-    /// Whether the output property is required
+    /// Whether the tool parameter is required
     /// </summary>
     public bool? Required { get; set; }
+        
+    /// <summary>
+    /// Allowed enumeration values for the parameter
+    /// </summary>
+    public IList<object>? Enum { get; set; }
     
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Output"/>.
+    /// Initializes a new instance of <see cref="Parameter"/>.
     /// </summary>
     /// <param name="props">Properties for this instance.</param>
-    internal static Output Load(object props)
+    internal static Parameter Load(object props)
     {
         IDictionary<string, object> data = props.ToParamDictionary();
         
-        // load polymorphic Output instance
+        // load polymorphic Parameter instance
         var instance = LoadKind(data);
         
         if (data.TryGetValue("name", out var nameValue))
@@ -68,26 +72,30 @@ public class Output
         {
             instance.Required = (bool)requiredValue;
         }
+        if (data.TryGetValue("enum", out var enumValue))
+        {
+            instance.Enum = enumValue as IList<object>;
+        }
         return instance;
     }
     
     
     /// <summary>
-    /// Load a polymorphic instance of <see cref="Output"/> based on the "kind" property.
+    /// Load a polymorphic instance of <see cref="Parameter"/> based on the "kind" property.
     /// </summary>
-    internal static Output LoadKind(IDictionary<string, object> props)
+    internal static Parameter LoadKind(IDictionary<string, object> props)
     {
-        // load polymorphic Output instance from kind property
+        // load polymorphic Parameter instance from kind property
         if(props.ContainsKey("kind"))
         {
             var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "array")
+            if(discriminator_value == "object")
             {
-                return ArrayOutput.Load(props);
+                return ObjectParameter.Load(props);
             }
-            else if (discriminator_value == "object")
+            else if (discriminator_value == "array")
             {
-                return ObjectOutput.Load(props);
+                return ArrayParameter.Load(props);
             }
             else
             {
@@ -96,7 +104,7 @@ public class Output
         }
         else
         {
-            throw new ArgumentException("Missing Output discriminator property: 'kind'");
+            throw new ArgumentException("Missing Parameter discriminator property: 'kind'");
         }
     }
     

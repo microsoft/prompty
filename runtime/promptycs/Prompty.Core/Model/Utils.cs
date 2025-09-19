@@ -3,7 +3,7 @@ using System.Collections;
 using System.Reflection;
 
 #pragma warning disable IDE0130
-namespace {{ namespace }};
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>

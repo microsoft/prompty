@@ -3,6 +3,8 @@ import { createTypeSpecLibrary, JSONSchemaType } from "@typespec/compiler";
 export interface EmitTarget {
   "type": string;
   "output-dir"?: string;
+  "test-dir"?: string;
+  "alias"?: { [key: string]: any };
 }
 export interface PromptyEmitterOptions {
   "root-object": string;
@@ -26,6 +28,15 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
           "output-dir": {
             type: "string",
             nullable: true
+          },
+          "test-dir": {
+            type: "string",
+            nullable: true
+          },
+          "alias": { 
+            type: "object", 
+            additionalProperties: true, 
+            nullable: true 
           }
         },
         required: ["type"]

@@ -3,13 +3,12 @@
 namespace Prompty.Core.Renderers
 {
     [Renderer("mustache")]
-    public class MustacheRenderer : Invoker
+    public class MustacheRenderer(Prompty prompty) : Invoker(prompty)
     {
-        public MustacheRenderer(Prompty prompty) : base(prompty) { }
         public override object Invoke(object args)
         {
-            var stubble = new StubbleBuilder().Build();
-            return stubble.Render(_prompty.Content.ToString(), args);
+            _ = new StubbleBuilder().Build();
+            return "";
         }
 
         public override Task<object> InvokeAsync(object args)

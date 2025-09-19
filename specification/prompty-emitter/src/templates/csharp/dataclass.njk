@@ -3,44 +3,114 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable IDE0130
 namespace {{ node.typeName.namespace }};
+#pragma warning restore IDE0130
 
-#pragma warning disable RCS1037 // Remove trailing white-space
-#pragma warning disable RCS1036 // Remove unnecessary blank line
-#pragma warning disable IDE0055 // Fix formatting 
 /// <summary>
 {% for line in node.description.split('\n') -%}
 /// {{ line }}
 {% endfor -%}
 /// </summary>
-[ExcludeFromCodeCoverage]
-public {% if node.isAbstract %}abstract{% else %}sealed{% endif %} class {{ getClassName(node.typeName.name) }}{% if node.base %} : {{ getClassName(node.base.name) | safe }}{% endif %}
+public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }}{% if node.base %} : {{ node.base.name }}{% endif %}
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+    /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
     /// </summary>
-    {% if node.isAbstract %}protected{% else %}public{% endif %} {{ getClassName(node.typeName.name) }}()
+    {% if node.isAbstract %}protected{% else %}public{% endif %} {{ node.typeName.name }}()
     {
     }
+    {% for prop in node.properties %}    
+    {{ renderSummary(prop) | safe }}
+    public {{ renderPropertyModifier(prop) }}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
+    {% endfor %}
 
     /// <summary>
-    /// Initializes a new instance of <see cref="{{ getClassName(node.typeName.name) }}"/>.
+    /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
     /// </summary>
     /// <param name="props">Properties for this instance.</param>
-    internal {{ getClassName(node.typeName.name) }}(IDictionary<string, object> props) : this()
+    internal static {% if node.base %}new {% endif %}{{ node.typeName.name }} Load(object props)
     {
-{%- for prop in node.properties %}
-        {{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
-{%- endfor %}
+        {%- if node.alternates.length > 0 %}
+        IDictionary<string, object> data;
+        {% for alt in alternates -%}
+        {% if not loop.first %}else {% endif %}if (props is {{ alt.scalar }} {{ alt.scalar }}Value)
+        {
+            data = new Dictionary<string, object>
+            {
+               {{ alt.alternate | safe}}
+            };
+        }
+        {% endfor -%}
+        else
+        {
+            data = props.ToParamDictionary();
+        }
+        {% else %}
+        IDictionary<string, object> data = props.ToParamDictionary();
+        {% endif -%}
+        {%- if polymorphicTypes %}
+        // load polymorphic {{ node.typeName.name }} instance
+        var instance = Load{{ node.discriminator | capitalize }}(data);
+        {% else %}
+        // create new instance
+        var instance = new {{ node.typeName.name }}();
+        {% endif -%}
+        {%- for prop in node.properties %}
+        if (data.TryGetValue("{{ prop.name }}", out var {{ prop.name }}Value))
+        {
+            {{ renderSetInstance(prop, "instance", "data") | safe }}
+        }
+        {%- endfor %}
+        return instance;
     }
-{% for prop in node.properties %}    
-    {{ renderSummary(prop) | safe }}
-    {% if isUrlLike(prop) %}#pragma warning disable CA1056 // URI-like properties should not be strings{% endif %}
-    public {% if node.isAbstract %}virtual {% endif %}{% if isOverride(node, prop) %}override {% endif %}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
-    {% if isUrlLike(prop) %}#pragma warning restore CA1056 // URI-like properties should not be strings{% endif %}
-{% endfor -%}
+    {% for prop in collectionTypes %}
+    internal static IList<{{ prop.typeName.name }}> Load{{ renderPropertyName(prop) }}(object data)
+    {
+        return [.. data.GetNamedDictionaryList().Select(item => {{ prop.typeName.name }}.Load(item))];
+    }
+    {% endfor %}
+    {% if polymorphicTypes %}
+    /// <summary>
+    /// Load a polymorphic instance of <see cref="{{ node.typeName.name }}"/> based on the "{{ node.discriminator }}" property.
+    /// </summary>
+    internal static {{ node.typeName.name }} Load{{ node.discriminator | capitalize }}(IDictionary<string, object> props)
+    {
+        // load polymorphic {{ node.typeName.name }} instance from {{ node.discriminator }} property
+        if(props.ContainsKey("{{ node.discriminator }}"))
+        {
+            var discriminator_value = props.GetValueOrDefault<string>("{{ node.discriminator }}");
+            {%- set first = polymorphicTypes.first -%}
+            {%- set others = polymorphicTypes.others -%}
+            {%- set default = polymorphicTypes.default -%}
+            {%- if first %}
+            if(discriminator_value == "{{ first.value }}")
+            {
+                return {{ first.instance.typeName.name }}.Load(props);
+            }
+            {%- for other in others %}
+            else if (discriminator_value == "{{ other.value }}")
+            {
+                return {{ other.instance.typeName.name }}.Load(props);
+            }
+            {%- endfor %}
+            {%- endif %}
+            {%- if default %}
+            else
+            {
+                return {% if default.instance.typeName.name != node.typeName.name %}{{ default.instance.typeName.name }}.{% endif %}Load(props);
+            }
+            {%- else %}
+            else
+            {
+                throw new ArgumentException($"Unknown {{ node.typeName.name }} discriminator value: {discriminator_value}");
+            }
+            {%- endif %}
+        }
+        else
+        {
+            throw new ArgumentException("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'");
+        }
+    }
+    {% endif %}
 }
-#pragma warning restore RCS1037 // Remove trailing white-space
-#pragma warning restore RCS1036 // Remove unnecessary blank line
-#pragma warning restore IDE0055 // Fix formatting 
-

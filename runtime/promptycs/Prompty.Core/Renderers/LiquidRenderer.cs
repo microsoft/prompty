@@ -11,7 +11,7 @@ namespace Prompty.Core.Renderers
         public override object Invoke(object args)
         {
             // TODO - figure out base templating using liquid
-            var template = Scriban.Template.ParseLiquid(_prompty.Content.ToString());
+            var template = Scriban.Template.ParseLiquid("");
             return template.Render(args);
         }
 

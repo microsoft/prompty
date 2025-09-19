@@ -35,7 +35,9 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
     {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
     {% endfor %}
     @staticmethod
-    {{ loader | safe }}
+    def load(data: {{ loaderTypes | safe }}) -> "{{ node.typeName.name }}":
+        """Load a {{ node.typeName.name }} instance."""
+        
         {%- if node.alternates.length > 0 %}
         # handle alternate representations
         {% for alt in alternates -%}
@@ -52,7 +54,7 @@ class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endi
         {% endif -%}
         {% for prop in node.properties -%}
         if data is not None and "{{ prop.name }}" in data:
-            {{ renderSetInstance(node, prop, "instance", "data") | safe }}
+            {{ renderSetInstance(prop, "instance", "data") | safe }}
         {% endfor -%}
         return instance
 

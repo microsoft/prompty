@@ -46,41 +46,17 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
       imports: importTypes(node),
       renderType: renderType,
       renderDefault: renderDefault,
-      renderSetInstance: renderSetInstance,
-      loader: generateLoader(node),
+      renderSetInstance: renderSetInstance(node),
+      loaderTypes: getLoaderTypes(node),
       alternates: generateAlternates(node),
-      polymorphicTypes: retrievePolymorphicInstances(node),
+      polymorphicTypes: node.retrievePolymorphicTypes(),
       collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
     });
     await emitPythonFile(context, node, python, `_${node.typeName.name}.py`, outputDir);
   }
-}
-
-const retrievePolymorphicInstances = (node: TypeNode): any => {
-  let instances: any[] = [];
-  if (node.discriminator && node.childTypes.length > 0) {
-    instances = node.childTypes.map(child => ({
-      discriminator: node.discriminator,
-      value: child.properties.find(p => p.name === node.discriminator)?.defaultValue || "*",
-      instance: child,
-    }));
-
-    if (!node.isAbstract) {
-      instances = [...instances, { discriminator: node.discriminator, value: "*", instance: node }];
-    }
-
-    const filteredInstances = instances.filter(instance => instance.value !== "*");
-    const defaultInstance = instances.filter(i => i.value === "*")[0];
-    return {
-      first: filteredInstances[0],
-      others: filteredInstances.slice(1),
-      default: defaultInstance,
-    };
-  }
-  return undefined;
 };
 
-const generateLoader = (node: TypeNode): any => {
+const getLoaderTypes = (node: TypeNode): any => {
   const typeGuards: string[] = [];
   if (node.alternates && node.alternates.length > 0) {
     node.alternates.forEach(alt => {
@@ -88,12 +64,11 @@ const generateLoader = (node: TypeNode): any => {
     });
   }
   if (typeGuards.length > 0) {
-    return `def load(data: Union[${["dict", ...typeGuards].join(", ")}]) -> "${node.typeName.name}":`
+    return `Union[${["dict", ...typeGuards].join(", ")}]`
   } else {
-    return `def load(data: dict) -> "${node.typeName.name}":`
+    return "dict";
   }
 };
-
 
 const generateAlternates = (node: TypeNode): { scalar: string; alternate: string }[] => {
   if (node.alternates && node.alternates.length > 0) {
@@ -144,7 +119,7 @@ const renderDefault = (prop: PropertyNode): string => {
   }
 }
 
-const renderSetInstance = (node: TypeNode, prop: PropertyNode, variable: string, dictArg: string): string => {
+const renderSetInstance = (node: TypeNode) => (prop: PropertyNode, variable: string, dictArg: string): string => {
   const setter = `${variable}.${prop.name} = `;
   if (prop.isScalar) {
     return `${setter}${dictArg}["${prop.name}"]`;

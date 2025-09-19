@@ -76,6 +76,30 @@ export class TypeNode {
     this.description = description;
   }
 
+  retrievePolymorphicTypes(): any {
+    let instances: any[] = [];
+    if (this.discriminator && this.childTypes.length > 0) {
+      instances = this.childTypes.map(child => ({
+        discriminator: this.discriminator,
+        value: child.properties.find(p => p.name === this.discriminator)?.defaultValue || "*",
+        instance: child,
+      }));
+
+      if (!this.isAbstract) {
+        instances = [...instances, { discriminator: this.discriminator, value: "*", instance: this }];
+      }
+
+      const filteredInstances = instances.filter(instance => instance.value !== "*");
+      const defaultInstance = instances.filter(i => i.value === "*")[0];
+      return {
+        first: filteredInstances[0],
+        others: filteredInstances.slice(1),
+        default: defaultInstance,
+      };
+    }
+    return undefined;
+  };
+
   getSanitizedObject(): Record<string, any> {
     return {
       typeName: this.typeName,
@@ -208,7 +232,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.base = getModelType(model.baseModel, rootNamespace, rootAlias);
   }
 
-  
+
 
   // resolve properties if model
   if (model.kind === "Model") {

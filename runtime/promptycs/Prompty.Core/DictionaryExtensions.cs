@@ -6,54 +6,8 @@ namespace Prompty.Core
 {
     public static class DictionaryExtensions
     {
-        private static Dictionary<string, object> Expand(IDictionary dictionary)
-        {
-            var dict = new Dictionary<string, object>();
-            foreach (DictionaryEntry entry in dictionary)
-            {
-                if (entry.Value != null)
-                    dict.Add(entry.Key.ToString()!, GetValue(entry.Value));
-            }
-            return dict;
-        }
-        private static object GetValue(object o)
-        {
-            return Type.GetTypeCode(o.GetType()) switch
-            {
-                TypeCode.Object => o switch
-                {
 
-                    IDictionary dict => Expand(dict),
-                    IList list => Enumerable.Range(0, list.Count).Where(i => list[i] != null).Select(i => list[i]!.ToParamDictionary()).ToArray(),
-                    _ => o.ToParamDictionary(),
-                },
-                _ => o,
-            };
-        }
 
-        public static Dictionary<string, object> ToParamDictionary(this object obj)
-        {
-            if (obj == null)
-                return new Dictionary<string, object>();
-
-            else if (obj is Dictionary<string, object>)
-                return (Dictionary<string, object>)obj;
-
-            var items = obj.GetType()
-                  .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                  .Where(prop => prop.GetGetMethod() != null);
-
-            var dict = new Dictionary<string, object>();
-
-            foreach (var item in items)
-            {
-                var value = item.GetValue(obj);
-                if (value != null)
-                    dict.Add(item.Name, GetValue(value));
-            }
-
-            return dict;
-        }
 
 
         public static Dictionary<string, object> ToDictionary(this JsonElement obj)
@@ -92,9 +46,8 @@ namespace Prompty.Core
         public static IEnumerable<T> GetList<T>(this Dictionary<string, object> dict, string key)
         {
             // try to see if dictionary has key and can map to type
-            if (dict.ContainsKey(key) && dict[key].GetType() == typeof(List<object>))
+            if (dict.TryGetValue(key, out var value) && value is List<object> list)
             {
-                var list = (List<object>)dict[key];
                 if (list.Count > 0)
                     return list.Select(i => (T)i);
             }
@@ -105,9 +58,8 @@ namespace Prompty.Core
         public static IEnumerable<T> GetList<S, T>(this Dictionary<string, object> dict, string key, Func<S, T> transform)
         {
             // try to see if dictionary has key and can map to type
-            if (dict.ContainsKey(key) && dict[key].GetType() == typeof(List<object>))
+            if (dict.TryGetValue(key, out var value) && value is List<object> list)
             {
-                var list = (List<object>)dict[key];
                 if (list.Count > 0)
                     return list.Select(i => transform((S)i));
             }
@@ -153,9 +105,8 @@ namespace Prompty.Core
 
         public static T? GetAndRemove<T>(this Dictionary<string, object> dict, string key)
         {
-            if (dict.ContainsKey(key) && dict[key].GetType() == typeof(T))
+            if (dict.TryGetValue(key, out var value) && value is T v)
             {
-                var v = (T)dict[key];
                 dict.Remove(key);
                 return v;
             }

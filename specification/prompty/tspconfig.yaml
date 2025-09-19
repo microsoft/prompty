@@ -9,14 +9,17 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
-    #root-namespace: "Microsoft.AgentFramework"
+    #root-namespace: "Prompty.Core.Model"
     #root-alias: "Agent"
     root-object: "Prompty.Core.Prompty"
     emit-targets:
       - type: markdown
         output-dir: "../prompty/docs"
       - type: CSharp
-        output-dir: "./tsp-output/csharp"
+        output-dir: "../../runtime/promptycs/Prompty.Core/Model"
+        test-dir: "../../runtime/promptycs/Prompty.Core.Tests/Model"
+        aliases:
+          Input: "AgentInput"
       - type: Python
         output-dir: "./tsp-output/python"
       - type: TypeScript

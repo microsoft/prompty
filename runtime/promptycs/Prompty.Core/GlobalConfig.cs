@@ -21,7 +21,7 @@ namespace Prompty.Core
             if (result.HasMatches)
             {
                 return result.Files
-                    .Where(f => System.IO.Path.GetDirectoryName(f.Path)?.Length <= path.Length)
+                    .Where(f => Path.GetDirectoryName(f.Path)?.Length <= path.Length)
                     .Select(f => f.Path)
                     .OrderByDescending(f => f.Length)
                     .First();

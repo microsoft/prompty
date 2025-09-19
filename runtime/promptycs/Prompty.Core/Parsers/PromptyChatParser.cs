@@ -121,7 +121,7 @@ namespace Prompty.Core.Parsers
         public IEnumerable<RawMessage> Parse(string template)
         {
             var boundary = @"^\s*#?\s*(" + string.Join("|", _roles) + @")(\[((\w+)*\s*=\s*\""?([^\""]*)\""?\s*(,?)\s*)+\])?\s*:\s*$";
-            
+
             RawMessage rawMessage = new RawMessage(ChatRole.System); // default role
 
             var lines = template.Split('\n');
@@ -236,7 +236,7 @@ namespace Prompty.Core.Parsers
 
         private byte[]? GetImageContent(string image, string media)
         {
-            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var basePath = ""; // Path.GetDirectoryName(_prompty.Path);
             var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
             var bytes = File.ReadAllBytes(path);
             return bytes;
@@ -244,7 +244,7 @@ namespace Prompty.Core.Parsers
 
         private async Task<byte[]?> GetImageContentAsync(string image, string media)
         {
-            var basePath = Path.GetDirectoryName(_prompty.Path);
+            var basePath = ""; // Path.GetDirectoryName(_prompty.Path);
             var path = basePath != null ? FileUtils.GetFullPath(image, basePath) : Path.GetFullPath(image);
             var bytes = await FileUtils.ReadAllBytesAsync(path);
             return bytes;

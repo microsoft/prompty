@@ -8,18 +8,21 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// Model for defining the structure and behavior of AI agents.
-/// This model includes properties for specifying the model&#39;s provider, connection details, and various options.
-/// It allows for flexible configuration of AI models to suit different use cases and requirements.
+/// The MCP Server tool.
 /// </summary>
-public class Model
+public class ModelTool : Tool
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="Model"/>.
+    /// Initializes a new instance of <see cref="ModelTool"/>.
     /// </summary>
-    public Model()
+    public ModelTool()
     {
     }
+        
+    /// <summary>
+    /// The kind identifier for MCP tools
+    /// </summary>
+    public override string Kind { get; set; } = "model";
         
     /// <summary>
     /// The unique identifier of the model - can be used as the single property shorthand
@@ -43,27 +46,20 @@ public class Model
     
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Model"/>.
+    /// Initializes a new instance of <see cref="ModelTool"/>.
     /// </summary>
     /// <param name="props">Properties for this instance.</param>
-    internal static Model Load(object props)
+    internal static new ModelTool Load(object props)
     {
-        IDictionary<string, object> data;
-        if (props is string stringValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"id", stringValue}
-            };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
+        IDictionary<string, object> data = props.ToParamDictionary();
         
         // create new instance
-        var instance = new Model();
+        var instance = new ModelTool();
         
+        if (data.TryGetValue("kind", out var kindValue))
+        {
+            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind", nameof(props));
+        }
         if (data.TryGetValue("id", out var idValue))
         {
             instance.Id = idValue as string ?? throw new ArgumentException("Properties must contain a property named: id", nameof(props));
