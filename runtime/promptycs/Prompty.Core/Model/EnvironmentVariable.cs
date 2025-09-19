@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Definition for an environment variable used in containerized agents.
 /// </summary>
 public class EnvironmentVariable
 {

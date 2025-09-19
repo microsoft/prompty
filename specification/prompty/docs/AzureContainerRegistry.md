@@ -1,5 +1,7 @@
 # AzureContainerRegistry
 
+Definition for an Azure Container Registry (ACR).
+
 ## Class Diagram
 
 ```mermaid
@@ -21,11 +23,21 @@ classDiagram
     }
 ```
 
+## Yaml Example
+
+```yaml
+kind: acr
+subscription: your-subscription-id
+resourceGroup: your-resource-group
+registryName: your-acr-name
+
+```
+
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string |   |
-| subscription | string |   |
-| resourceGroup | string |   |
-| registryName | string |   |
+| kind | string | The kind of container registry  |
+| subscription | string | The Azure subscription ID for the ACR  |
+| resourceGroup | string | The Azure resource group containing the ACR  |
+| registryName | string | The name of the ACR  |

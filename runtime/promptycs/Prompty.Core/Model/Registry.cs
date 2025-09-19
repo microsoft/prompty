@@ -8,24 +8,24 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Definition for a container image registry.
 /// </summary>
-public class Registry
+public abstract class Registry
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Registry"/>.
     /// </summary>
-    public Registry()
+    protected Registry()
     {
     }
         
     /// <summary>
-    /// 
+    /// The kind of container registry
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
         
     /// <summary>
-    /// 
+    /// The connection configuration for accessing the container registry
     /// </summary>
     public Connection Connection { get; set; } = new Connection();
     
@@ -68,7 +68,7 @@ public class Registry
             }
             else
             {
-                return Load(props);
+                return GenericRegistry.Load(props);
             }
         }
         else

@@ -212,9 +212,16 @@ classDiagram
         +string project
     }
     class Registry {
-      
+      <<abstract>>
         +string kind
         +Connection connection
+    }
+    class GenericRegistry {
+      
+        +string kind
+        +string repository
+        +string username
+        +string password
     }
     class AzureContainerRegistry {
       
@@ -267,6 +274,7 @@ classDiagram
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection
     Connection <|-- FoundryConnection
+    Registry <|-- GenericRegistry
     Registry <|-- AzureContainerRegistry
     Model *-- Connection
     Model *-- ModelOptions

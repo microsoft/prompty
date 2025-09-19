@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Configuration for scaling container instances.
 /// </summary>
 public class Scale
 {

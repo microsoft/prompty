@@ -1,5 +1,7 @@
 # Scale
 
+Configuration for scaling container instances.
+
 ## Class Diagram
 
 ```mermaid

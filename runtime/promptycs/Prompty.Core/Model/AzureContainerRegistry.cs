@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Definition for an Azure Container Registry (ACR).
 /// </summary>
 public class AzureContainerRegistry : Registry
 {
@@ -20,22 +20,22 @@ public class AzureContainerRegistry : Registry
     }
         
     /// <summary>
-    /// 
+    /// The kind of container registry
     /// </summary>
     public override string Kind { get; set; } = "acr";
         
     /// <summary>
-    /// 
+    /// The Azure subscription ID for the ACR
     /// </summary>
     public string Subscription { get; set; } = string.Empty;
         
     /// <summary>
-    /// 
+    /// The Azure resource group containing the ACR
     /// </summary>
     public string ResourceGroup { get; set; } = string.Empty;
         
     /// <summary>
-    /// 
+    /// The name of the ACR
     /// </summary>
     public string RegistryName { get; set; } = string.Empty;
     

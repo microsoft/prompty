@@ -1,5 +1,7 @@
 # EnvironmentVariable
 
+Definition for an environment variable used in containerized agents.
+
 ## Class Diagram
 
 ```mermaid
@@ -23,6 +25,7 @@ classDiagram
 
 ```yaml
 name: MY_ENV_VAR
+value: my-value
 
 ```
 

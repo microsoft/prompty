@@ -1,5 +1,7 @@
 # Registry
 
+Definition for a container image registry.
+
 ## Class Diagram
 
 ```mermaid
@@ -13,10 +15,17 @@ config:
 ---
 classDiagram
     class Registry {
-      
+      <<abstract>>
         +string kind
         +Connection connection
     }
+    class GenericRegistry {
+        +string kind
+        +string repository
+        +string username
+        +string password
+    }
+    Registry <|-- GenericRegistry
     class AzureContainerRegistry {
         +string kind
         +string subscription
@@ -32,17 +41,29 @@ classDiagram
     Registry *-- Connection
 ```
 
+## Yaml Example
+
+```yaml
+kind: docker
+connection:
+  kind: key
+  authority: system
+  usageDescription: Access to the container registry
+
+```
+
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string |   |
-| connection | [Connection](Connection.md) |  (Related Types: [GenericConnection](GenericConnection.md), [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
+| kind | string | The kind of container registry  |
+| connection | [Connection](Connection.md) | The connection configuration for accessing the container registry (Related Types: [GenericConnection](GenericConnection.md), [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
 
 ## Child Types
 
 The following types extend `Registry`:
 
+- [GenericRegistry](GenericRegistry.md)
 - [AzureContainerRegistry](AzureContainerRegistry.md)
 
 ## Composed Types

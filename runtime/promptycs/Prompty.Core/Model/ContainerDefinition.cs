@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Definition for a containerized AI agent.
 /// </summary>
 public class ContainerDefinition
 {
@@ -20,12 +20,12 @@ public class ContainerDefinition
     }
         
     /// <summary>
-    /// 
+    /// The container image name
     /// </summary>
     public string Image { get; set; } = string.Empty;
         
     /// <summary>
-    /// 
+    /// The container image tag (defaults to 'latest' if not specified)
     /// </summary>
     public string? Tag { get; set; }
         

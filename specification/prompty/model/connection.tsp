@@ -2,7 +2,6 @@ import "@prompty/emitter";
 
 namespace Prompty.Core {
   alias ConnectionType =
-    | "generic"
     | "key"
     | "oauth"
     | "reference"
