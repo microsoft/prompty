@@ -1,0 +1,116 @@
+@dataclass
+class {{ node.typeName.name }}{%- if node.base -%}({{ node.base.name }}){%- endif -%}{%- if node.isAbstract -%}(ABC){%- endif -%}:
+    """{%- for line in node.description.split('\n') -%}
+    {{ line }}
+    {% endfor -%}
+    {% if node.properties.length > 0 %}
+    Attributes
+    ----------
+    {% for prop in node.properties -%}
+    {{ prop.name }} : {{ renderType(prop) | safe }}
+        {{ prop.description }}
+    {% endfor %}
+    """ 
+
+    {% for prop in node.properties -%}
+    {{ prop.name }}: {{ renderType(prop) | safe }}{{ renderDefault(prop) | safe }}
+    {% endfor %}
+    @staticmethod
+    def load(data: Any) -> "{{ node.typeName.name }}":
+        """Load a {{ node.typeName.name }} instance."""
+        
+        {%- if node.alternates.length > 0 %}
+        # handle alternate representations
+        {% for alt in alternates -%}
+        if isinstance(data, {{ alt.scalar }}):
+            data = {{ alt.alternate | safe }}
+        {% endfor -%}
+        {% endif %}
+        
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for {{ node.typeName.name }}: {data}")
+        {% if polymorphicTypes %}
+        # load polymorphic {{ node.typeName.name }} instance
+        instance = {{ node.typeName.name }}.load_{{ node.discriminator }}(data)
+        {% else %}
+        # create new instance
+        instance = {{ node.typeName.name }}()
+        {% endif -%}
+        {% for prop in node.properties -%}
+        if data is not None and "{{ prop.name }}" in data:
+            {{ renderSetInstance(prop, "instance", "data") | safe }}
+        {% endfor -%}
+        return instance
+
+    {% for prop in collectionTypes %}
+    @staticmethod
+    def load_{{ prop.name }}(data: dict | list) -> list[{{ prop.typeName.name }}]:
+        if isinstance(data, dict):
+            # convert named {{ prop.name }} to list of {{ prop.typeName.name }}
+            data = [ {"name": k, **v} for k, v in data.items() ]
+        return [{{ prop.typeName.name }}.load(item) for item in data]
+    {% endfor %}
+    {% if polymorphicTypes %}
+    @staticmethod
+    def load_{{ node.discriminator }}(data: dict) -> "{{ node.typeName.name }}":
+        # load polymorphic {{ node.typeName.name }} instance
+        if data is not None and "{{ node.discriminator }}" in data:
+            discriminator_value = data["{{ node.discriminator }}"]
+            {%- set first = polymorphicTypes.first -%}
+            {%- set others = polymorphicTypes.others -%}
+            {%- set default = polymorphicTypes.default -%}
+            {%- if first %}
+            if discriminator_value == "{{ first.value }}":
+                return {{ first.instance.typeName.name }}.load(data)
+            {%- for other in others %}
+            elif discriminator_value == "{{ other.value }}":
+                return {{ other.instance.typeName.name }}.load(data)
+            {%- endfor %}
+            {%- endif %}
+            {%- if default %}
+            else:
+                return {{ default.instance.typeName.name }}.load(data)
+            {%- else %}
+            else:
+                raise ValueError(f"Unknown {{ node.typeName.name }} discriminator value: {discriminator_value}")
+            {%- endif %}
+        else:
+            raise ValueError("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'")
+
+    {% endif %}
+    {% else %}
+    """
+    # Fallback for unknown properties
+    data: dict = field(default_factory=dict)
+
+    @staticmethod
+    def load(data: dict) -> "{{ node.typeName.name }}":
+        instance = {{ node.typeName.name }}()
+        if data is not None:
+            instance.data = data
+        return instance
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __contains__(self, key):
+        return key in self.data
+
+    def keys(self):
+        return self.data.keys()
+
+    def values(self):
+        return self.data.values()
+
+    def items(self):
+        return self.data.items()
+
+    def __repr__(self):
+        return repr(self.data)
+    {% endif %}

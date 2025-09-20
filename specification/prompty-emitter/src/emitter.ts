@@ -38,8 +38,6 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
       name: options["root-alias"]
     }
   }
-  const ast = Array.from(enumerateTypes(model));
-
 
   const targets = options["emit-targets"] || [];
   const targetNames = targets.map(t => t.type.toLowerCase().trim());
@@ -49,21 +47,21 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     const idx = targetNames.indexOf("markdown");
     const target = targets[idx];
     // emit markdown
-    await generateMarkdown(context, options.templateDir, ast, target["output-dir"]);
+    await generateMarkdown(context, options.templateDir, model, target);
   }
 
   if (targetNames.includes("python")) {
     const idx = targetNames.indexOf("python");
     const target = targets[idx];
     // emit python
-    await generatePython(context, options.templateDir, ast, target["output-dir"]);
+    await generatePython(context, options.templateDir, model, target);
   }
 
   if (targetNames.includes("csharp")) {
     const idx = targetNames.indexOf("csharp");
     const target = targets[idx];
     // emit csharp
-    await generateCsharp(context, options.templateDir, ast, target["output-dir"]);
+    await generateCsharp(context, options.templateDir, model, target);
   }
 
   await emitFile(context.program, {

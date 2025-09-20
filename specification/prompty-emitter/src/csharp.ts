@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import path from "path";
 
@@ -31,23 +31,20 @@ const numberTypes = [
   "float",
 ]
 
-export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget) => {
   // set up template environment
   const templatePath = path.resolve(templateDir, 'csharp');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
 
-  const rootNode = nodes.find(n => n.isRoot);
-  if (!rootNode) {
-    throw new Error("Root node not found");
-  }
+  const nodes = Array.from(enumerateTypes(node));
 
   const utils = utilsTemplate.render({
-    namespace: rootNode.typeName.namespace,
+    namespace: node.typeName.namespace,
   });
 
-  await emitCsharpFile(context, rootNode, utils, "Utils.cs", outputDir);
+  await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
 
   const findType = (typeName: string): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === typeName);
@@ -71,7 +68,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
     });
 
     //const className = getClassName(node.typeName.name);
-    await emitCsharpFile(context, node, csharp, `${node.typeName.name}.cs`, outputDir);
+    await emitCsharpFile(context, node, csharp, `${node.typeName.name}.cs`, emitTarget["output-dir"]);
   }
 };
 

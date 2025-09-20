@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, isUnknownType, resolvePath, Type } from "@typespec/compiler";
-import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import path from "path";
 
@@ -22,52 +22,66 @@ const pythonTypeMapper: Record<string, string> = {
 };
 
 
-export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
+export const generatePython = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget) => {
   // set up template environment
   const templatePath = path.resolve(templateDir, 'python');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
-  const classTemplate = env.getTemplate('dataclass.njk', true);
+  const fileTemplate = env.getTemplate('dataclass.njk', true);
+  const classTemplate = env.getTemplate('class.njk', true);
   const initTemplate = env.getTemplate('init.njk', true);
+  const testTemplate = env.getTemplate('test.njk', true);
 
-  const rootNode = nodes.filter(n => n.isRoot)[0];
+  const nodes = Array.from(enumerateTypes(node));
 
-  const init = initTemplate.render({
-    types: nodes,
-  });
-
-  await emitPythonFile(context, rootNode, init, `__init__.py`, outputDir);
+  // render init file
+  await emitPythonFile(context, node, renderInit(nodes, initTemplate), `__init__.py`, emitTarget["output-dir"]);
 
   for (const node of nodes) {
-
-    const includes = importIncludes(node);
-    const python = classTemplate.render({
-      node: node,
-      typings: includes,
-      imports: importTypes(node),
-      renderType: renderType,
-      renderDefault: renderDefault,
-      renderSetInstance: renderSetInstance(node),
-      loaderTypes: getLoaderTypes(node),
-      alternates: generateAlternates(node),
-      polymorphicTypes: node.retrievePolymorphicTypes(),
-      collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
-    });
-    await emitPythonFile(context, node, python, `_${node.typeName.name}.py`, outputDir);
+    // render each class
+    if (node.base) continue; // skip base classes, they will be rendered with their derived types
+    // render class file
+    await emitPythonFile(context, node, renderPython(node, fileTemplate, classTemplate), `_${node.typeName.name}.py`, emitTarget["output-dir"]);
   }
 };
 
-const getLoaderTypes = (node: TypeNode): any => {
-  const typeGuards: string[] = [];
-  if (node.alternates && node.alternates.length > 0) {
-    node.alternates.forEach(alt => {
-      typeGuards.push(pythonTypeMapper[alt.scalar] || "Any");
+const renderInit = (nodes: TypeNode[], initTemplate: nunjucks.Template): string => {
+  const n = nodes.filter(n => !n.base);
+  const init = initTemplate.render({
+    baseTypes: n,
+    types: nodes,
+  });
+  return init;
+};
+
+const renderPython = (node: TypeNode, fileTemplate: nunjucks.Template, classTemplate: nunjucks.Template): string => {
+  // render a single class and its children
+  const renderClass = (n: TypeNode) => {
+    return classTemplate.render({
+      node: n,
+      imports: importTypes(n),
+      renderType: renderType,
+      renderDefault: renderDefault,
+      renderSetInstance: renderSetInstance(n),
+      alternates: generateAlternates(n),
+      polymorphicTypes: n.retrievePolymorphicTypes(),
+      collectionTypes: n.properties.filter(p => p.isCollection && !p.isScalar),
     });
+  };
+
+  const classDef: string[] = [renderClass(node), ...node.childTypes.map(ct => renderClass(ct))];
+
+  const typings = ["Any"];
+  if (containsOptional(node)) {
+    typings.push("Optional");
   }
-  if (typeGuards.length > 0) {
-    return `Union[${["dict", ...typeGuards].join(", ")}]`
-  } else {
-    return "dict";
-  }
+  const python = fileTemplate.render({
+    containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
+    typings: typings,
+    imports: importTypes(node),
+    classes: classDef,
+  });
+
+  return python;
 };
 
 const generateAlternates = (node: TypeNode): { scalar: string; alternate: string }[] => {
@@ -84,7 +98,7 @@ const generateAlternates = (node: TypeNode): { scalar: string; alternate: string
 const renderType = (prop: PropertyNode): string => {
   let type = prop.isScalar ? (pythonTypeMapper[prop.typeName.name] || "Any") : pythonTypeMapper[prop.typeName.name] || prop.typeName.name;
   if (prop.isCollection) {
-    type = `List[${type}]`;
+    type = `list[${type}]`;
   }
   if (prop.isOptional) {
     type = `Optional[${type}]`;
@@ -132,36 +146,23 @@ const renderSetInstance = (node: TypeNode) => (prop: PropertyNode, variable: str
   }
 }
 
-const importIncludes = (node: TypeNode): string[] => {
-  const includes = new Set<string>();
-  includes.add("Any");
-  for (const prop of node.properties) {
-    if (prop.isOptional) {
-      includes.add("Optional");
-    }
-    if (prop.isCollection) {
-      includes.add("List");
-    }
-    if (prop.isDict) {
-      includes.add("Any");
-    }
-  }
-  if (node.alternates && node.alternates.length > 0) {
-    includes.add("Union");
-  }
-  return Array.from(includes);
+const containsOptional = (node: TypeNode): boolean => {
+  const optional = [
+    node.properties.some(p => p.isOptional),
+    ...node.childTypes.map(c => c.properties.some(p => p.isOptional))
+  ];
+  return optional.some(o => o);
 };
 
 const importTypes = (node: TypeNode): string[] => {
-  const imports = new Set<string>(node.properties.filter(p => !p.isScalar).map(p => p.typeName.name));
-  if (node.base) {
-    imports.add(node.base.name);
-  }
-  if (node.childTypes.length > 0) {
-    node.childTypes.forEach(child => {
-      imports.add(child.typeName.name);
-    });
-  }
+  const imports = [
+    node.properties.filter(p => !p.isScalar).map(p => p.typeName.name),
+    ...node.childTypes.flatMap(c => c.properties.filter(p => !p.isScalar).map(p => p.typeName.name))
+  ].flat().filter(n => n !== node.typeName.name && node.base?.name !== n);
+
+  // remove duplicates and self references
+
+
   return Array.from(imports);
 };
 

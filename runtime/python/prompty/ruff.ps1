@@ -1,0 +1,1 @@
+ruff check --fix ./prompty/**/*.py -v

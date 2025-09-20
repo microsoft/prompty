@@ -136,10 +136,7 @@ classDiagram
     class ModelTool {
       
         +string kind
-        +string id
-        +string provider
-        +Connection connection
-        +ModelOptions options
+        +Model model
     }
     class Format {
       
@@ -291,8 +288,7 @@ classDiagram
     BingSearchTool *-- BingSearchConfiguration
     FileSearchTool *-- Connection
     McpTool *-- Connection
-    ModelTool *-- Connection
-    ModelTool *-- ModelOptions
+    ModelTool *-- Model
     Template *-- Format
     Template *-- Parser
     Prompty *-- Model

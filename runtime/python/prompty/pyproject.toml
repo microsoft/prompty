@@ -1,0 +1,61 @@
+[project]
+name = "prompty"
+dynamic = ["version"]
+readme = "README.md"
+description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
+authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
+requires-python = ">=3.9"
+
+license = { text = "MIT" }
+dependencies = [
+  "pyyaml>=6.0.1",
+  "python-dotenv>=1.0.1",
+  "click>=8.1.7",
+  "aiofiles>=24.1.0",
+]
+
+[project.urls]
+Repository = "https://github.com/Microsoft/prompty"
+Documentation = "https://prompty.ai/docs"
+Issues = "https://github.com/microsoft/prompty/issues"
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+  "types-aiofiles",
+  "types-PyYAML",
+  "types-chevron",
+  "pytest-cov",
+  "flit",
+  "black",
+  "chevron",
+]
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+output-format = "full"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["D203", "E501"]
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.report]
+show_missing = true
+
+[build-system]
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
+
+[project.scripts]
+prompty = "prompty.cli:run"

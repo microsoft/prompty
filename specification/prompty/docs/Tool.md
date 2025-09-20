@@ -56,10 +56,7 @@ classDiagram
     Tool <|-- McpTool
     class ModelTool {
         +string kind
-        +string id
-        +string provider
-        +Connection connection
-        +ModelOptions options
+        +Model model
     }
     Tool <|-- ModelTool
     class Binding {

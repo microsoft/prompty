@@ -1,9 +1,10 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { PromptyEmitterOptions } from "./lib.js";
-import { PropertyNode, TypeNode } from "./ast.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import { stringify } from 'yaml';
 import path from "path";
+import { emit } from "process";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -21,7 +22,7 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   }, {} as T);
 }
 
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, nodes: TypeNode[], outputDir?: string) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget) => {
 
   const rootObject = context.options["root-alias"] || "Prompty";
   // set up template environment
@@ -29,6 +30,8 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const template = env.getTemplate('markdown.njk', true);
   const readme = env.getTemplate('readme.njk', true);
+
+  const nodes = Array.from(enumerateTypes(node));
 
   const childTypes: { source: string, target: string }[] = nodes.map(n => {
     return n.childTypes.map(c => {
@@ -49,7 +52,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     compositionTypes: compositionTypes
   });
 
-  await emitMarkdownFile(context, "README", readmeContent, outputDir);
+  await emitMarkdownFile(context, "README", readmeContent, emitTarget["output-dir"]);
 
   for (const node of nodes) {
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
@@ -74,7 +77,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       alternateCtors: generateAlternates(node),
     });
 
-    await emitMarkdownFile(context, node.typeName.name, markdown, outputDir);
+    await emitMarkdownFile(context, node.typeName.name, markdown, emitTarget["output-dir"]);
   }
 }
 
