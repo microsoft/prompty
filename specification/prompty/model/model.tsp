@@ -31,8 +31,9 @@ namespace Prompty.Core {
     @doc("The connection configuration for the model")
     @sample(#{
       connection: #{
-        authType: "key",
+        kind: "key",
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+        key: "{your-api-key}",
       },
     })
     connection?: Connection;

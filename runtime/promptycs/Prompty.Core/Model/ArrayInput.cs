@@ -28,7 +28,7 @@ public class ArrayInput : Input
     /// <summary>
     /// The type of items contained in the array
     /// </summary>
-    public Input Items { get; set; } = new Input();
+    public Input Items { get; set; }
     
 
     /// <summary>

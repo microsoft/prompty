@@ -86,9 +86,11 @@ class Input:
             elif discriminator_value == "object":
                 return ObjectInput.load(data)
             else:
-                return Input.load(data)
+                # create new instance (stop recursion)
+                return Input()
         else:
-            raise ValueError("Missing Input discriminator property: 'kind'")
+            # create new instance
+            return Input()
 
 
 @dataclass
@@ -159,6 +161,7 @@ class ObjectInput(Input):
     @staticmethod
     def load_properties(data: dict | list) -> list[Input]:
         if isinstance(data, dict):
-            # convert named properties to list of Input
+            # convert simple named properties to list of Input
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Input.load(item) for item in data]

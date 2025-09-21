@@ -17,16 +17,16 @@ class Connection(ABC):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     authority : str
-        The authority level for the connection, indicating under whose authority the connection is made (e.g., &#39;user&#39;, &#39;agent&#39;, &#39;system&#39;)
+        The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     usageDescription : Optional[str]
         The usage description for the connection, providing context on how this connection will be used
 
     """
 
     kind: str = field(default="")
-    authority: str = field(default="")
+    authority: str = field(default="system")
     usageDescription: Optional[str] = field(default="")
 
     @staticmethod
@@ -60,6 +60,7 @@ class Connection(ABC):
             elif discriminator_value == "foundry":
                 return FoundryConnection.load(data)
             else:
+                # load default instance
                 return GenericConnection.load(data)
         else:
             raise ValueError("Missing Connection discriminator property: 'kind'")
@@ -72,7 +73,7 @@ class GenericConnection(Connection):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     options : Optional[dict[str, Any]]
         Additional options for the connection
 
@@ -104,7 +105,7 @@ class ReferenceConnection(Connection):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     name : str
         The name of the connection
 
@@ -136,7 +137,7 @@ class KeyConnection(Connection):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     endpoint : str
         The endpoint URL for the AI service
     key : str
@@ -173,7 +174,7 @@ class OAuthConnection(Connection):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     endpoint : str
         The endpoint URL for the AI service
     clientId : str
@@ -225,7 +226,7 @@ class FoundryConnection(Connection):
     Attributes
     ----------
     kind : str
-        The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens)
+        The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     type : str
         The Foundry endpoint URL for the AI service
     name : str

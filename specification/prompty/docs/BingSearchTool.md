@@ -36,7 +36,7 @@ classDiagram
 ```yaml
 kind: bing_search
 connection:
-  id: connectionId
+  kind: provider-connection
 configurations:
   - connectionId: connectionId
     instanceName: MyBingInstance

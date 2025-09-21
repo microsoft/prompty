@@ -63,9 +63,11 @@ class Parameter:
             elif discriminator_value == "array":
                 return ArrayParameter.load(data)
             else:
-                return Parameter.load(data)
+                # create new instance (stop recursion)
+                return Parameter()
         else:
-            raise ValueError("Missing Parameter discriminator property: 'kind'")
+            # create new instance
+            return Parameter()
 
 
 @dataclass
@@ -102,8 +104,9 @@ class ObjectParameter(Parameter):
     @staticmethod
     def load_properties(data: dict | list) -> list[Parameter]:
         if isinstance(data, dict):
-            # convert named properties to list of Parameter
+            # convert simple named properties to list of Parameter
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Parameter.load(item) for item in data]
 
 

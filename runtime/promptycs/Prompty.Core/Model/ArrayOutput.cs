@@ -28,7 +28,7 @@ public class ArrayOutput : Output
     /// <summary>
     /// The type of items contained in the array
     /// </summary>
-    public Output Items { get; set; } = new Output();
+    public Output Items { get; set; }
     
 
     /// <summary>

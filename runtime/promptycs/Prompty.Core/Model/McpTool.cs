@@ -27,7 +27,7 @@ public class McpTool : Tool
     /// <summary>
     /// The connection configuration for the MCP tool
     /// </summary>
-    public Connection Connection { get; set; } = new Connection();
+    public Connection Connection { get; set; }
         
     /// <summary>
     /// The name of the MCP tool

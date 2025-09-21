@@ -41,14 +41,11 @@ output-format = "full"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-ignore = ["D203", "E501"]
+ignore = ["E501"]
 
 [tool.black]
 line-length = 120
 target-version = ["py39"]
-
-[tool.pytest.ini_options]
-asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.report]
 show_missing = true

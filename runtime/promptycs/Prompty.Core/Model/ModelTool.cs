@@ -27,7 +27,7 @@ public class ModelTool : Tool
     /// <summary>
     /// The connection configuration for the model tool
     /// </summary>
-    public Model Model { get; set; } = new Model();
+    public Model Model { get; set; }
     
 
     /// <summary>

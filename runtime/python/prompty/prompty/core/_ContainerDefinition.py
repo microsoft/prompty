@@ -19,7 +19,7 @@ class ContainerDefinition:
     image : str
         The container image name
     tag : Optional[str]
-        The container image tag (defaults to &#39;latest&#39; if not specified)
+        The container image tag (defaults to 'latest' if not specified)
     registry : Registry
         Container image registry definition
     scale : Scale

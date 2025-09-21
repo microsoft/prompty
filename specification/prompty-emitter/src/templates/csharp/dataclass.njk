@@ -98,7 +98,13 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
             {%- if default %}
             else
             {
-                return {% if default.instance.typeName.name != node.typeName.name %}{{ default.instance.typeName.name }}.{% endif %}Load(props);
+                {% if default.instance.typeName.name == node.typeName.name -%}
+                //create new instance (stop recursion)
+                return new {{ node.typeName.name }}();
+                {%- else %}
+                // load default instance
+                return {{ default.instance.typeName.name }}.Load(props);
+                {% endif %}
             }
             {%- else %}
             else

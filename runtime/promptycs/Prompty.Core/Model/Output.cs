@@ -91,7 +91,8 @@ public class Output
             }
             else
             {
-                return Load(props);
+                //create new instance (stop recursion)
+                return new Output();
             }
         }
         else

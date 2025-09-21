@@ -35,8 +35,9 @@ classDiagram
 id: gpt-35-turbo
 provider: azure
 connection:
-  authType: key
+  kind: key
   endpoint: https://{your-custom-endpoint}.openai.azure.com/
+  key: "{your-api-key}"
 options:
   type: chat
   temperature: 0.7

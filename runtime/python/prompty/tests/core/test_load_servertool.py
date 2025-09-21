@@ -1,0 +1,25 @@
+import json
+
+from prompty.core import ServerTool
+
+
+def test_create_servertool():
+    instance = ServerTool()
+    assert instance is not None
+
+
+def test_load_servertool():
+    json_data = """
+    {
+      "connection": {
+        "kind": "provider-connection"
+      },
+      "options": {
+        "timeout": 30,
+        "retries": 3
+      }
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = ServerTool.load(data)
+    assert instance is not None

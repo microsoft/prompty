@@ -28,7 +28,7 @@ public class FileSearchTool : Tool
     /// <summary>
     /// The connection configuration for the file search tool
     /// </summary>
-    public Connection Connection { get; set; } = new Connection();
+    public Connection Connection { get; set; }
         
     /// <summary>
     /// The maximum number of search results to return.

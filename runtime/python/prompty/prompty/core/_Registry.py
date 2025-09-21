@@ -49,6 +49,7 @@ class Registry(ABC):
             if discriminator_value == "acr":
                 return AzureContainerRegistry.load(data)
             else:
+                # load default instance
                 return GenericRegistry.load(data)
         else:
             raise ValueError("Missing Registry discriminator property: 'kind'")

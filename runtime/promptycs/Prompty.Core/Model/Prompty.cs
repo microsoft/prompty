@@ -27,7 +27,7 @@ public class Prompty
     /// <summary>
     /// Kind represented by the document
     /// </summary>
-    public virtual string Kind { get; set; } = string.Empty;
+    public virtual string Kind { get; set; } = "prompt";
         
     /// <summary>
     /// Unique identifier for the document
@@ -57,7 +57,7 @@ public class Prompty
     /// <summary>
     /// Model configuration used for execution
     /// </summary>
-    public Model Model { get; set; } = new Model();
+    public Model Model { get; set; }
         
     /// <summary>
     /// Input parameters that participate in template rendering
@@ -187,7 +187,8 @@ public class Prompty
             }
             else
             {
-                return Load(props);
+                //create new instance (stop recursion)
+                return new Prompty();
             }
         }
         else

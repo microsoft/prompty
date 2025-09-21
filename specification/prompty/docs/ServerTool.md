@@ -30,9 +30,7 @@ classDiagram
 
 ```yaml
 connection:
-  provider: key
-  endpoint: https://api.yourservice.com/
-  apiKey: your-api-key
+  kind: provider-connection
 options:
   timeout: 30
   retries: 3

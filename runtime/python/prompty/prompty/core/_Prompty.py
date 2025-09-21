@@ -35,7 +35,7 @@ class Prompty:
     name : str
         Human-readable name of the agent
     description : Optional[str]
-        Description of the agent&#39;s capabilities and purpose
+        Description of the agent's capabilities and purpose
     metadata : Optional[dict[str, Any]]
         Additional metadata including authors, tags, and other arbitrary properties
     model : Model
@@ -55,7 +55,7 @@ class Prompty:
 
     """
 
-    kind: str = field(default="")
+    kind: str = field(default="prompt")
     id: Optional[str] = field(default="")
     version: Optional[str] = field(default="")
     name: str = field(default="")
@@ -109,22 +109,25 @@ class Prompty:
     @staticmethod
     def load_inputs(data: dict | list) -> list[Input]:
         if isinstance(data, dict):
-            # convert named inputs to list of Input
+            # convert simple named inputs to list of Input
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Input.load(item) for item in data]
 
     @staticmethod
     def load_outputs(data: dict | list) -> list[Output]:
         if isinstance(data, dict):
-            # convert named outputs to list of Output
+            # convert simple named outputs to list of Output
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Output.load(item) for item in data]
 
     @staticmethod
     def load_tools(data: dict | list) -> list[Tool]:
         if isinstance(data, dict):
-            # convert named tools to list of Tool
+            # convert simple named tools to list of Tool
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Tool.load(item) for item in data]
 
     @staticmethod
@@ -135,9 +138,11 @@ class Prompty:
             if discriminator_value == "container":
                 return PromptyContainer.load(data)
             else:
-                return Prompty.load(data)
+                # create new instance (stop recursion)
+                return Prompty()
         else:
-            raise ValueError("Missing Prompty discriminator property: 'kind'")
+            # create new instance
+            return Prompty()
 
 
 @dataclass
@@ -147,7 +152,7 @@ class PromptyContainer(Prompty):
     Attributes
     ----------
     kind : str
-        Type of agent, e.g., &#39;prompt&#39; or &#39;container&#39;
+        Type of agent, e.g., 'prompt' or 'container'
     protocol : str
         Protocol used by the containerized agent
     container : ContainerDefinition
@@ -158,7 +163,7 @@ class PromptyContainer(Prompty):
     """
 
     kind: str = field(default="container")
-    protocol: str = field(default="")
+    protocol: str = field(default="responses")
     container: ContainerDefinition = field(default_factory=ContainerDefinition)
     environmentVariables: Optional[list[EnvironmentVariable]] = field(default_factory=list)
 
@@ -184,6 +189,8 @@ class PromptyContainer(Prompty):
     @staticmethod
     def load_environmentVariables(data: dict | list) -> list[EnvironmentVariable]:
         if isinstance(data, dict):
-            # convert named environmentVariables to list of EnvironmentVariable
-            data = [{"name": k, **v} for k, v in data.items()]
+            # convert simple named environmentVariables to list of EnvironmentVariable
+            # simple expansion to "name", "value"
+            data = [{"name": k, "value": v} for k, v in data.items()]
+
         return [EnvironmentVariable.load(item) for item in data]

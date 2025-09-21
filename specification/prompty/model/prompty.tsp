@@ -8,7 +8,7 @@ import "./template.tsp";
 import "./container.tsp";
 
 namespace Prompty.Core {
-  alias PromptyKind = "prompt" | "container";
+  alias PromptyKind = "prompt" | "container" | string;
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
    * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
@@ -57,9 +57,9 @@ namespace Prompty.Core {
       `model`: #{
         id: "gpt-35-turbo",
         connection: #{
-          provider: "azure",
-          type: "chat",
+          kind: "key",
           endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+          key: "{your-api-key}",
         },
       },
     })
@@ -187,7 +187,12 @@ namespace Prompty.Core {
     protocol: Protocols = "responses";
 
     @doc("Container definition including registry and scaling information")
-    @sample(#{ container: #{ image: "my-container-image", registry: #{ kind: "acr", subscription: "my-subscription-id" } } })
+    @sample(#{
+      container: #{
+        image: "my-container-image",
+        registry: #{ kind: "acr", subscription: "my-subscription-id" },
+      },
+    })
     container: ContainerDefinition;
 
     @doc("Environment variables to set in the hosted agent container.")

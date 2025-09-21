@@ -36,7 +36,7 @@ namespace Prompty.Core {
 
     @doc("The connection configuration for the Bing search tool")
     @sample(#{
-      connection: #{ id: "connectionId" },
+      connection: #{ kind: "provider-connection" },
     })
     connection: Connection;
 

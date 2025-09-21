@@ -27,7 +27,7 @@ public class BingSearchTool : Tool
     /// <summary>
     /// The connection configuration for the Bing search tool
     /// </summary>
-    public Connection Connection { get; set; } = new Connection();
+    public Connection Connection { get; set; }
         
     /// <summary>
     /// The configuration options for the Bing search tool

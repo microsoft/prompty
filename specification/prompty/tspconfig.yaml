@@ -21,7 +21,7 @@ options:
         aliases:
           Input: "AgentInput"
       - type: Python
-        output-dir: "../../runtime/python/prompty"
+        output-dir: "../../runtime/python/prompty/prompty/core"
         test-dir: "../../runtime/python/prompty/tests/core"
       - type: TypeScript
         output-dir: "./tsp-output/typescript"

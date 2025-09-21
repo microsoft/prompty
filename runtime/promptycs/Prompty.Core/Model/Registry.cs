@@ -27,7 +27,7 @@ public abstract class Registry
     /// <summary>
     /// The connection configuration for accessing the container registry
     /// </summary>
-    public Connection Connection { get; set; } = new Connection();
+    public Connection Connection { get; set; }
     
 
     /// <summary>
@@ -68,7 +68,10 @@ public abstract class Registry
             }
             else
             {
+                
+                // load default instance
                 return GenericRegistry.Load(props);
+                
             }
         }
         else

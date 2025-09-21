@@ -21,7 +21,7 @@ class Model:
     id : str
         The unique identifier of the model - can be used as the single property shorthand
     provider : Optional[str]
-        The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)
+        The provider of the model (e.g., 'openai', 'azure', 'anthropic')
     connection : Optional[Connection]
         The connection configuration for the model
     options : Optional[ModelOptions]

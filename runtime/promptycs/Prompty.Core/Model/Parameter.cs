@@ -99,7 +99,8 @@ public class Parameter
             }
             else
             {
-                return Load(props);
+                //create new instance (stop recursion)
+                return new Parameter();
             }
         }
         else

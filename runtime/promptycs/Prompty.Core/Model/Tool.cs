@@ -107,7 +107,10 @@ public abstract class Tool
             }
             else
             {
+                
+                // load default instance
                 return ServerTool.Load(props);
+                
             }
         }
         else

@@ -183,7 +183,10 @@ const renderDefault = (prop: PropertyNode): string => {
     } else if (prop.isScalar) {
       return renderDefaultType(prop.typeName.name, prop.defaultValue);
     } else {
-      return " = new " + prop.typeName.name + "();";
+      //if (!prop.type?.isAbstract) {
+      //  return " = new " + prop.typeName.name + "();";
+      //}
+      return "";
     }
   } else {
     return "";

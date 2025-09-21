@@ -98,9 +98,9 @@ metadata:
 model:
   id: gpt-35-turbo
   connection:
-    provider: azure
-    type: chat
+    kind: key
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
+    key: "{your-api-key}"
 inputs:
   firstName:
     kind: string
@@ -160,9 +160,9 @@ metadata:
 model:
   id: gpt-35-turbo
   connection:
-    provider: azure
-    type: chat
+    kind: key
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
+    key: "{your-api-key}"
 inputs:
   firstName:
     kind: string

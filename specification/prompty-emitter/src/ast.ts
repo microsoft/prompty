@@ -531,6 +531,9 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
         "name": "string"
       };
       prop.isScalar = true;
+      if(property.defaultValue && property.defaultValue.valueKind === "StringValue") {
+        prop.defaultValue = property.defaultValue?.value || null;
+      }
       prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value)
       const s = 1;
     } else {

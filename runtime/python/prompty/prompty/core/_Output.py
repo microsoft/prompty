@@ -59,9 +59,11 @@ class Output:
             elif discriminator_value == "object":
                 return ObjectOutput.load(data)
             else:
-                return Output.load(data)
+                # create new instance (stop recursion)
+                return Output()
         else:
-            raise ValueError("Missing Output discriminator property: 'kind'")
+            # create new instance
+            return Output()
 
 
 @dataclass
@@ -132,6 +134,7 @@ class ObjectOutput(Output):
     @staticmethod
     def load_properties(data: dict | list) -> list[Output]:
         if isinstance(data, dict):
-            # convert named properties to list of Output
+            # convert simple named properties to list of Output
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Output.load(item) for item in data]

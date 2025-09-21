@@ -3,6 +3,7 @@ import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import path from "path";
+import { title } from "process";
 
 const pythonTypeMapper: Record<string, string> = {
   "string": "str",
@@ -38,10 +39,86 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
 
   for (const node of nodes) {
     // render each class
-    if (node.base) continue; // skip base classes, they will be rendered with their derived types
-    // render class file
-    await emitPythonFile(context, node, renderPython(node, fileTemplate, classTemplate), `_${node.typeName.name}.py`, emitTarget["output-dir"]);
+
+    // skip child types
+    if (!node.base) {
+      // render class file
+      await emitPythonFile(context, node, renderPython(node, fileTemplate, classTemplate), `_${node.typeName.name}.py`, emitTarget["output-dir"]);
+    }
+
+    if (emitTarget["test-dir"]) {
+      // render test file
+      await emitPythonFile(context, node, renderTest(node, testTemplate), `test_load_${node.typeName.name.toLowerCase()}.py`, emitTarget["test-dir"]);
+    }
   }
+};
+
+const getCombinations = (arrays: any[][]): any[][] => {
+  if (arrays.length === 0) return [[]];
+
+  const [firstArray, ...restArrays] = arrays;
+  const combinationsOfRest = getCombinations(restArrays);
+
+  return firstArray.flatMap(item =>
+    combinationsOfRest.map(combination => [item, ...combination])
+  );
+}
+
+const scalarValue: Record<string, string> = {
+  "boolean": 'False',
+  "float": "3.14",
+  "integer": "3",
+  "string": '"example"',
+}
+
+const renderTest = (node: TypeNode, testTemplate: nunjucks.Template): string => {
+  const samples = node.properties.filter(p => p.samples && p.samples.length > 0).map(p => {
+    return p.samples?.map(s => ({
+      ...s.sample,
+    }));
+  });
+
+  const combinations =
+    samples.length > 0 ?
+      getCombinations(samples) :
+      [];
+
+  const flattened = combinations.map(c => {
+    const sample = Object.assign({}, ...c);
+    return {
+      example: JSON.stringify(sample, null, 2).split('\n'),
+      // get all scalars in the sample
+      validation: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => ({
+        key: key,
+        value: typeof sample[key] === 'boolean' ? (sample[key] ? "True" : "False") : sample[key],
+        delimeter: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '"""' : '"') : '',
+      })),
+    };
+  });
+
+  const alternates = node.alternates.map(alt => {
+    return {
+      title: alt.title || alt.scalar,
+      scalar: alt.scalar,
+      value: scalarValue[alt.scalar] || "None",
+      validation: Object.keys(alt.expansion).filter(key => typeof alt.expansion[key] !== 'object').map(key => {
+        const value = alt.expansion[key] === "{value}" ? (scalarValue[alt.scalar] || "None") : alt.expansion[key];
+        return {
+          key: key,
+          value: value,
+          delimeter: typeof value === 'string' && !value.includes('"') && alt.expansion[key] !== "{value}" ? '"' : '',
+        };
+      }),
+    };
+  });
+
+  const test = testTemplate.render({
+    node: node,
+    // replace control characters in samples
+    examples: flattened,
+    alternates: alternates,
+  });
+  return test;
 };
 
 const renderInit = (nodes: TypeNode[], initTemplate: nunjucks.Template): string => {
@@ -55,7 +132,11 @@ const renderInit = (nodes: TypeNode[], initTemplate: nunjucks.Template): string 
 
 const renderPython = (node: TypeNode, fileTemplate: nunjucks.Template, classTemplate: nunjucks.Template): string => {
   // render a single class and its children
+
   const renderClass = (n: TypeNode) => {
+    const collectionTypes = n.properties.filter(p => p.isCollection && !p.isScalar).map(
+      p => ({ prop: p, type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [] })
+    );
     return classTemplate.render({
       node: n,
       imports: importTypes(n),
@@ -64,7 +145,7 @@ const renderPython = (node: TypeNode, fileTemplate: nunjucks.Template, classTemp
       renderSetInstance: renderSetInstance(n),
       alternates: generateAlternates(n),
       polymorphicTypes: n.retrievePolymorphicTypes(),
-      collectionTypes: n.properties.filter(p => p.isCollection && !p.isScalar),
+      collectionTypes: collectionTypes,
     });
   };
 
@@ -172,10 +253,10 @@ const typeLink = (name: string) =>
 
 const emitPythonFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
   outputDir = outputDir || `${context.emitterOutputDir}/python`;
-  const typePath = type.typeName.namespace.split(".").map(part => typeLink(part));
+  //const typePath = type.typeName.namespace.split(".").map(part => typeLink(part));
   // replace typename with file
-  typePath.push(filename);
-  const path = resolvePath(outputDir, ...typePath);
+  //typePath.push(filename);
+  const path = resolvePath(outputDir, filename);
   await emitFile(context.program, {
     path: resolvePath(path),
     content: python,

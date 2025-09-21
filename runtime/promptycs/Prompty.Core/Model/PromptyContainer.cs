@@ -27,12 +27,12 @@ public class PromptyContainer : Prompty
     /// <summary>
     /// Protocol used by the containerized agent
     /// </summary>
-    public string Protocol { get; set; } = string.Empty;
+    public string Protocol { get; set; } = "responses";
         
     /// <summary>
     /// Container definition including registry and scaling information
     /// </summary>
-    public ContainerDefinition Container { get; set; } = new ContainerDefinition();
+    public ContainerDefinition Container { get; set; }
         
     /// <summary>
     /// Environment variables to set in the hosted agent container.

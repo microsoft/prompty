@@ -31,7 +31,7 @@ public class ServerTool : Tool
     /// <summary>
     /// Connection configuration for the server tool
     /// </summary>
-    public Connection Connection { get; set; } = new Connection();
+    public Connection Connection { get; set; }
         
     /// <summary>
     /// Configuration options for the server tool

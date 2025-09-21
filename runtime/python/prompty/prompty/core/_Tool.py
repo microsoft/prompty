@@ -58,8 +58,10 @@ class Tool(ABC):
     @staticmethod
     def load_bindings(data: dict | list) -> list[Binding]:
         if isinstance(data, dict):
-            # convert named bindings to list of Binding
-            data = [{"name": k, **v} for k, v in data.items()]
+            # convert simple named bindings to list of Binding
+            # simple expansion to "name", "input"
+            data = [{"name": k, "input": v} for k, v in data.items()]
+
         return [Binding.load(item) for item in data]
 
     @staticmethod
@@ -78,6 +80,7 @@ class Tool(ABC):
             elif discriminator_value == "model":
                 return ModelTool.load(data)
             else:
+                # load default instance
                 return ServerTool.load(data)
         else:
             raise ValueError("Missing Tool discriminator property: 'kind'")
@@ -117,8 +120,9 @@ class FunctionTool(Tool):
     @staticmethod
     def load_parameters(data: dict | list) -> list[Parameter]:
         if isinstance(data, dict):
-            # convert named parameters to list of Parameter
+            # convert simple named parameters to list of Parameter
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [Parameter.load(item) for item in data]
 
 
@@ -202,8 +206,9 @@ class BingSearchTool(Tool):
     @staticmethod
     def load_configurations(data: dict | list) -> list[BingSearchConfiguration]:
         if isinstance(data, dict):
-            # convert named configurations to list of BingSearchConfiguration
+            # convert simple named configurations to list of BingSearchConfiguration
             data = [{"name": k, **v} for k, v in data.items()]
+
         return [BingSearchConfiguration.load(item) for item in data]
 
 

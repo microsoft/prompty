@@ -27,7 +27,7 @@ public class ArrayParameter : Parameter
     /// <summary>
     /// The kind of items contained in the array
     /// </summary>
-    public Parameter Items { get; set; } = new Parameter();
+    public Parameter Items { get; set; }
     
 
     /// <summary>

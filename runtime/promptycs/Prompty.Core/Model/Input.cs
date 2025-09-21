@@ -153,7 +153,8 @@ public class Input
             }
             else
             {
-                return Load(props);
+                //create new instance (stop recursion)
+                return new Input();
             }
         }
         else

@@ -29,7 +29,7 @@ classDiagram
 ```yaml
 kind: mcp
 connection:
-  id: connectionId
+  kind: provider-connection
 name: My MCP Tool
 url: https://mcp.server.com
 allowed:

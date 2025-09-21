@@ -30,7 +30,7 @@ classDiagram
 ```yaml
 kind: file_search
 connection:
-  id: connectionId
+  kind: provider-connection
 maxNumResults: 10
 ranker: default
 scoreThreshold: 0.5

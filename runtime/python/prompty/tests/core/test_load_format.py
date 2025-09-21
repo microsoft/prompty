@@ -1,0 +1,32 @@
+import json
+
+from prompty.core import Format
+
+
+def test_create_format():
+    instance = Format()
+    assert instance is not None
+
+
+def test_load_format():
+    json_data = """
+    {
+      "kind": "mustache",
+      "strict": true,
+      "options": {
+        "key": "value"
+      }
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = Format.load(data)
+    assert instance is not None
+    assert instance.kind == "mustache"
+
+    assert instance.strict
+
+
+def test_load_format_from_string():
+    instance = Format.load("example")
+    assert instance is not None
+    assert instance.kind == "example"

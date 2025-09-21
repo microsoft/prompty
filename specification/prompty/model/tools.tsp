@@ -125,13 +125,7 @@ namespace Prompty.Core {
     kind: "*";
 
     @doc("Connection configuration for the server tool")
-    @sample(#{
-      connection: #{
-        provider: "key",
-        endpoint: "https://api.yourservice.com/",
-        apiKey: "your-api-key",
-      },
-    })
+    @sample(#{ connection: #{ kind: "provider-connection" } })
     connection: Connection;
 
     @doc("Configuration options for the server tool")

@@ -32,12 +32,12 @@ public class ContainerDefinition
     /// <summary>
     /// Container image registry definition
     /// </summary>
-    public Registry Registry { get; set; } = new Registry();
+    public Registry Registry { get; set; }
         
     /// <summary>
     /// Instance scaling configuration
     /// </summary>
-    public Scale Scale { get; set; } = new Scale();
+    public Scale Scale { get; set; }
     
 
     /// <summary>

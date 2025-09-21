@@ -29,12 +29,12 @@ public class Template
     /// <summary>
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
     /// </summary>
-    public Format Format { get; set; } = new Format();
+    public Format Format { get; set; }
         
     /// <summary>
     /// Parser used to process the rendered template into API-compatible format
     /// </summary>
-    public Parser Parser { get; set; } = new Parser();
+    public Parser Parser { get; set; }
     
 
     /// <summary>
