@@ -48,5 +48,4 @@ public class OAuthConnectionConversionTests
         Assert.Equal("your-client-secret", instance.ClientSecret);
         Assert.Equal("https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", instance.TokenUrl);
     }
-
 }

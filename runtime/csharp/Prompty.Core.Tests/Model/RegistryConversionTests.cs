@@ -40,5 +40,4 @@ public class RegistryConversionTests
         Assert.NotNull(instance);
         Assert.Equal("docker", instance.Kind);
     }
-
 }

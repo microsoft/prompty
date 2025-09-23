@@ -38,5 +38,27 @@ public class {{ node.typeName.name }}ConversionTests
         {%- endif %}
         {%- endfor %}
     }
+    {%- endfor %}
+
+    {%- if alternates.length > 0 %}
+    {% for alt in alternates -%}
+    [Fact]
+    public void LoadFrom{{ alt.scalar | title }}()
+    {
+        var data = {% if alt.value == "True" %}true{% elif alt.value == "False" %}false{% else %}{{ alt.value | safe }}{% endif %};
+        var instance = JsonSerializer.Deserialize<{{ node.typeName.name }}>(data);
+        Assert.NotNull(instance);
+        {%- for item in alt.validation %}
+        {%- if item.value == "True" or item.value == "False" %}
+        Assert.NotNull(instance.{{ item.key }});
+        Assert.IsType<bool>(instance.{{ item.key }});
+        Assert.{% if item.value == "False" %}False{% else %}True{% endif %}((bool)instance.{{ item.key }});
+        {%- else %}
+        Assert.Equal({{ item.delimeter | safe }}{{ item.value | safe }}{{ item.delimeter | safe }}, instance.{{ item.key }});   
+        {%- endif %}
+        {%- endfor %}
+    }
+
     {% endfor %}
+    {%- endif %}
 }

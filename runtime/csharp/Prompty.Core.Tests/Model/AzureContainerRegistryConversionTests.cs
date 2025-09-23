@@ -40,5 +40,4 @@ public class AzureContainerRegistryConversionTests
         Assert.Equal("your-resource-group", instance.ResourceGroup);
         Assert.Equal("your-acr-name", instance.RegistryName);
     }
-
 }

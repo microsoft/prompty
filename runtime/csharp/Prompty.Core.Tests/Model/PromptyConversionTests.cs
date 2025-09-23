@@ -164,7 +164,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput1()
     {
@@ -320,7 +319,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput2()
     {
@@ -478,7 +476,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput3()
     {
@@ -635,7 +632,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput4()
     {
@@ -795,7 +791,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput5()
     {
@@ -954,7 +949,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput6()
     {
@@ -1115,7 +1109,6 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
     [Fact]
     public void LoadYamlInput7()
     {
@@ -1275,5 +1268,4 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}", instance.Instructions);
     }
-
 }

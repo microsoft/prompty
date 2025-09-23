@@ -40,5 +40,4 @@ public class GenericRegistryConversionTests
         Assert.Equal("my-username", instance.Username);
         Assert.Equal("my-password", instance.Password);
     }
-
 }

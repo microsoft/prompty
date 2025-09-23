@@ -36,5 +36,14 @@ public class ParserConversionTests
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
     }
+    [Fact]
+    public void LoadFromString()
+    {
+        var data = "example";
+        var instance = JsonSerializer.Deserialize<Parser>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Kind);
+    }
+
 
 }

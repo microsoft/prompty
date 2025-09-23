@@ -41,5 +41,4 @@ public class ObjectInputConversionTests
         var instance = JsonSerializer.Deserialize<ObjectInput>(jsonData);
         Assert.NotNull(instance);
     }
-
 }

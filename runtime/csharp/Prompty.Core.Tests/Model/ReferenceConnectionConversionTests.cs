@@ -34,5 +34,4 @@ public class ReferenceConnectionConversionTests
         Assert.Equal("reference", instance.Kind);
         Assert.Equal("my-reference-connection", instance.Name);
     }
-
 }

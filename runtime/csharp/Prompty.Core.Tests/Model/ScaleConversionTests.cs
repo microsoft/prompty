@@ -40,5 +40,4 @@ public class ScaleConversionTests
         Assert.Equal(0.5, instance.Cpu);
         Assert.Equal(2, instance.Memory);
     }
-
 }

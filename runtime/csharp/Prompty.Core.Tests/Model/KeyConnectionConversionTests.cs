@@ -37,5 +37,4 @@ public class KeyConnectionConversionTests
         Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", instance.Endpoint);
         Assert.Equal("your-api-key", instance.Key);
     }
-
 }

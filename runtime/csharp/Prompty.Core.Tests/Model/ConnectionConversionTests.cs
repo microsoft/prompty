@@ -37,5 +37,4 @@ public class ConnectionConversionTests
         Assert.Equal("system", instance.Authority);
         Assert.Equal("This will allow the agent to respond to an email on your behalf", instance.UsageDescription);
     }
-
 }

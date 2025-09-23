@@ -42,5 +42,4 @@ public class ToolConversionTests
         Assert.Equal("function", instance.Kind);
         Assert.Equal("A description of the tool", instance.Description);
     }
-
 }

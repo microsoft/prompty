@@ -43,5 +43,4 @@ public class ModelToolConversionTests
         Assert.NotNull(instance);
         Assert.Equal("model", instance.Kind);
     }
-
 }

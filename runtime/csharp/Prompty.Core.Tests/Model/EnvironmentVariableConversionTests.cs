@@ -34,5 +34,14 @@ public class EnvironmentVariableConversionTests
         Assert.Equal("MY_ENV_VAR", instance.Name);
         Assert.Equal("my-value", instance.Value);
     }
+    [Fact]
+    public void LoadFromString()
+    {
+        var data = "example";
+        var instance = JsonSerializer.Deserialize<EnvironmentVariable>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Value);
+    }
+
 
 }

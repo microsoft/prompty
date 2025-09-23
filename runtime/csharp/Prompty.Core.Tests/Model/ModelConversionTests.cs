@@ -52,5 +52,12 @@ public class ModelConversionTests
         Assert.Equal("gpt-35-turbo", instance.Id);
         Assert.Equal("azure", instance.Provider);
     }
-
+    [Fact]
+    public void LoadFromString()
+    {
+        var data = "\"example\"";
+        var instance = JsonSerializer.Deserialize<Model>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Id);
+    }
 }

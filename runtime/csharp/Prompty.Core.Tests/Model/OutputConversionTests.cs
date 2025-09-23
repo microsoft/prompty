@@ -40,5 +40,4 @@ public class OutputConversionTests
         Assert.Equal("A description of the output property", instance.Description);
         Assert.True(instance.Required);
     }
-
 }

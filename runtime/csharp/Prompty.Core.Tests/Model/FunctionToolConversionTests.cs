@@ -44,5 +44,4 @@ public class FunctionToolConversionTests
         Assert.NotNull(instance);
         Assert.Equal("function", instance.Kind);
     }
-
 }

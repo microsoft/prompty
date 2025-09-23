@@ -59,5 +59,4 @@ public class ContainerDefinitionConversionTests
         Assert.Equal("my-container-image", instance.Image);
         Assert.Equal("v1.0.0", instance.Tag);
     }
-
 }

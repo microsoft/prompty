@@ -31,5 +31,4 @@ public class BingSearchConfigurationConversionTests
         Assert.NotNull(instance);
         Assert.Equal("my-configuration", instance.Name);
     }
-
 }

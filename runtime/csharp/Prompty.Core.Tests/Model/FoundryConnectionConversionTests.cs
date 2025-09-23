@@ -40,5 +40,4 @@ public class FoundryConnectionConversionTests
         Assert.Equal("my-foundry-connection", instance.Name);
         Assert.Equal("my-foundry-project", instance.Project);
     }
-
 }

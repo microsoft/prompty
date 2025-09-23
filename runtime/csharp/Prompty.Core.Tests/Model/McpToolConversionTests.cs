@@ -49,5 +49,4 @@ public class McpToolConversionTests
         Assert.Equal("My MCP Tool", instance.Name);
         Assert.Equal("https://mcp.server.com", instance.Url);
     }
-
 }

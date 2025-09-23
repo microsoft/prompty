@@ -45,5 +45,4 @@ public class FileSearchToolConversionTests
         Assert.Equal("default", instance.Ranker);
         Assert.Equal(0.5, instance.ScoreThreshold);
     }
-
 }

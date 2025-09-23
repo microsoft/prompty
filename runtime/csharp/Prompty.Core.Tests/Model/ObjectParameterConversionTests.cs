@@ -41,5 +41,4 @@ public class ObjectParameterConversionTests
         var instance = JsonSerializer.Deserialize<ObjectParameter>(jsonData);
         Assert.NotNull(instance);
     }
-
 }

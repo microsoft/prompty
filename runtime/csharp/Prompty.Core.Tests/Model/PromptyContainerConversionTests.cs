@@ -51,5 +51,4 @@ public class PromptyContainerConversionTests
         Assert.Equal("container", instance.Kind);
         Assert.Equal("responses", instance.Protocol);
     }
-
 }

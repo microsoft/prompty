@@ -53,5 +53,4 @@ public class BingSearchToolConversionTests
         Assert.NotNull(instance);
         Assert.Equal("bing_search", instance.Kind);
     }
-
 }

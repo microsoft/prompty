@@ -131,7 +131,7 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template): string =>
       validation: Object.keys(alt.expansion).filter(key => typeof alt.expansion[key] !== 'object').map(key => {
         const value = alt.expansion[key] === "{value}" ? (scalarValue[alt.scalar] || "None") : alt.expansion[key];
         return {
-          key: key,
+          key: renderName(key),
           value: value,
           delimeter: typeof value === 'string' && !value.includes('"') && alt.expansion[key] !== "{value}" ? '"' : '',
         };

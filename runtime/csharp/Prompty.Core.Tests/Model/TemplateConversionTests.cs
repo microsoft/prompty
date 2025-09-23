@@ -38,5 +38,4 @@ public class TemplateConversionTests
         var instance = JsonSerializer.Deserialize<Template>(jsonData);
         Assert.NotNull(instance);
     }
-
 }

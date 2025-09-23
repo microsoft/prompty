@@ -33,5 +33,4 @@ public class ArrayParameterConversionTests
         var instance = JsonSerializer.Deserialize<ArrayParameter>(jsonData);
         Assert.NotNull(instance);
     }
-
 }

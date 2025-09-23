@@ -34,5 +34,14 @@ public class BindingConversionTests
         Assert.Equal("my-tool", instance.Name);
         Assert.Equal("input-variable", instance.Input);
     }
+    [Fact]
+    public void LoadFromString()
+    {
+        var data = "example";
+        var instance = JsonSerializer.Deserialize<Binding>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Input);
+    }
+
 
 }

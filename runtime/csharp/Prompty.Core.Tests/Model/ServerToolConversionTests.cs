@@ -40,5 +40,4 @@ public class ServerToolConversionTests
         var instance = JsonSerializer.Deserialize<ServerTool>(jsonData);
         Assert.NotNull(instance);
     }
-
 }

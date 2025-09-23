@@ -49,5 +49,4 @@ public class ParameterConversionTests
         Assert.Equal("A description of the tool parameter", instance.Description);
         Assert.True(instance.Required);
     }
-
 }
