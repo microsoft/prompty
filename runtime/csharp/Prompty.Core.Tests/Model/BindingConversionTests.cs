@@ -37,11 +37,10 @@ public class BindingConversionTests
     [Fact]
     public void LoadFromString()
     {
-        var data = "example";
+        var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Binding>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }
-
 
 }

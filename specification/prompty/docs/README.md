@@ -20,7 +20,7 @@ classDiagram
     class Model {
       
         +string id
-        +string provider
+        +string publisher
         +Connection connection
         +ModelOptions options
     }
@@ -105,7 +105,6 @@ classDiagram
     class BingSearchConfiguration {
       
         +string name
-        +string connectionId
         +string market
         +string setLang
         +int64 count
@@ -137,6 +136,13 @@ classDiagram
       
         +string kind
         +Model model
+    }
+    class OpenApiTool {
+      
+        +string kind
+        +Connection connection
+        +string specification
+        +string[] operationIds
     }
     class Format {
       
@@ -263,6 +269,7 @@ classDiagram
     Tool <|-- FileSearchTool
     Tool <|-- McpTool
     Tool <|-- ModelTool
+    Tool <|-- OpenApiTool
     Parameter <|-- ObjectParameter
     Parameter <|-- ArrayParameter
     Prompty <|-- PromptyContainer
@@ -289,6 +296,7 @@ classDiagram
     FileSearchTool *-- Connection
     McpTool *-- Connection
     ModelTool *-- Model
+    OpenApiTool *-- Connection
     Template *-- Format
     Template *-- Parser
     Prompty *-- Model

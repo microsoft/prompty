@@ -37,11 +37,10 @@ public class EnvironmentVariableConversionTests
     [Fact]
     public void LoadFromString()
     {
-        var data = "example";
+        var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<EnvironmentVariable>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Value);
     }
-
 
 }

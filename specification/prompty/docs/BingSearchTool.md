@@ -22,7 +22,6 @@ classDiagram
     }
     class BingSearchConfiguration {
         +string name
-        +string connectionId
         +string market
         +string setLang
         +int64 count
@@ -38,8 +37,7 @@ kind: bing_search
 connection:
   kind: provider-connection
 configurations:
-  - connectionId: connectionId
-    instanceName: MyBingInstance
+  - instanceName: MyBingInstance
     market: en-US
     setLang: en
     count: 10

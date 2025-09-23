@@ -19,7 +19,7 @@ classDiagram
     class Model {
       
         +string id
-        +string provider
+        +string publisher
         +Connection connection
         +ModelOptions options
     }
@@ -33,7 +33,7 @@ classDiagram
 
 ```yaml
 id: gpt-35-turbo
-provider: azure
+publisher: azure
 connection:
   kind: key
   endpoint: https://{your-custom-endpoint}.openai.azure.com/
@@ -50,7 +50,7 @@ options:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model - can be used as the single property shorthand  |
-| provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
+| publisher | string | The publisher of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
 | connection | [Connection](Connection.md) | The connection configuration for the model  |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
 

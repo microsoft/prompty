@@ -77,6 +77,8 @@ class Tool(ABC):
                 return McpTool.load(data)
             elif discriminator_value == "model":
                 return ModelTool.load(data)
+            elif discriminator_value == "openapi":
+                return OpenApiTool.load(data)
             else:
                 # load default instance
                 return ServerTool.load(data)
@@ -317,4 +319,44 @@ class ModelTool(Tool):
             instance.kind = data["kind"]
         if data is not None and "model" in data:
             instance.model = Model.load(data["model"])
+        return instance
+
+
+@dataclass
+class OpenApiTool(Tool):
+    """
+    Attributes
+    ----------
+    kind : str
+        The kind identifier for OpenAPI tools
+    connection : Connection
+        The connection configuration for the OpenAPI tool
+    specification : str
+        The URL or relative path to the OpenAPI specification document (JSON or YAML format)
+    operationIds : list[str]
+        The name of the operation to be invoked from the OpenAPI specification
+    """
+
+    kind: str = field(default="openapi")
+    connection: Connection = field(default_factory=Connection)
+    specification: str = field(default="")
+    operationIds: list[str] = field(default_factory=list)
+
+    @staticmethod
+    def load(data: Any) -> "OpenApiTool":
+        """Load a OpenApiTool instance."""
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for OpenApiTool: {data}")
+
+        # create new instance
+        instance = OpenApiTool()
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "connection" in data:
+            instance.connection = Connection.load(data["connection"])
+        if data is not None and "specification" in data:
+            instance.specification = data["specification"]
+        if data is not None and "operationIds" in data:
+            instance.operationIds = data["operationIds"]
         return instance

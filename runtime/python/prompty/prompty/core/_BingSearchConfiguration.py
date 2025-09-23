@@ -14,8 +14,6 @@ class BingSearchConfiguration:
     ----------
     name : str
         The name of the Bing search tool instance, used to identify the specific instance in the system
-    connectionId : str
-        Connection id for grounding with bing search
     market : Optional[str]
         The market where the results come from.
     setLang : Optional[str]
@@ -27,7 +25,6 @@ class BingSearchConfiguration:
     """
 
     name: str = field(default="")
-    connectionId: str = field(default="")
     market: Optional[str] = field(default="")
     setLang: Optional[str] = field(default="")
     count: Optional[int] = field(default=0)
@@ -44,8 +41,6 @@ class BingSearchConfiguration:
         instance = BingSearchConfiguration()
         if data is not None and "name" in data:
             instance.name = data["name"]
-        if data is not None and "connectionId" in data:
-            instance.connectionId = data["connectionId"]
         if data is not None and "market" in data:
             instance.market = data["market"]
         if data is not None and "setLang" in data:

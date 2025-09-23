@@ -45,7 +45,11 @@ public class {{ node.typeName.name }}ConversionTests
     [Fact]
     public void LoadFrom{{ alt.scalar | title }}()
     {
+        {%- if alt.scalar == "string" %}
+        var data = "{{ alt.value | replace('"', '\\"') | safe }}";
+        {%- else %}
         var data = {% if alt.value == "True" %}true{% elif alt.value == "False" %}false{% else %}{{ alt.value | safe }}{% endif %};
+        {%- endif %}
         var instance = JsonSerializer.Deserialize<{{ node.typeName.name }}>(data);
         Assert.NotNull(instance);
         {%- for item in alt.validation %}
@@ -58,7 +62,6 @@ public class {{ node.typeName.name }}ConversionTests
         {%- endif %}
         {%- endfor %}
     }
-
     {% endfor %}
     {%- endif %}
 }

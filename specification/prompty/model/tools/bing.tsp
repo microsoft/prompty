@@ -7,9 +7,6 @@ namespace Prompty.Core {
    * Configuration options for the Bing search tool.
    */
   model BingSearchConfiguration {
-    @doc("Connection id for grounding with bing search")
-    connectionId: string;
-
     @doc("The market where the results come from.")
     market?: string;
 
@@ -45,7 +42,6 @@ namespace Prompty.Core {
     @sample(#{
       configurations: #[
         #{
-          connectionId: "connectionId",
           instanceName: "MyBingInstance",
           market: "en-US",
           setLang: "en",

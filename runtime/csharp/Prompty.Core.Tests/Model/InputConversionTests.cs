@@ -60,7 +60,6 @@ public class InputConversionTests
         Assert.IsType<bool>(instance.Sample);
         Assert.False((bool)instance.Sample);
     }
-
     [Fact]
     public void LoadFromFloat32()
     {
@@ -70,7 +69,6 @@ public class InputConversionTests
         Assert.Equal("float", instance.Kind);
         Assert.Equal(3.14, instance.Sample);
     }
-
     [Fact]
     public void LoadFromInteger()
     {
@@ -80,16 +78,14 @@ public class InputConversionTests
         Assert.Equal("integer", instance.Kind);
         Assert.Equal(3, instance.Sample);
     }
-
     [Fact]
     public void LoadFromString()
     {
-        var data = "example";
+        var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("string", instance.Kind);
         Assert.Equal("example", instance.Sample);
     }
-
 
 }

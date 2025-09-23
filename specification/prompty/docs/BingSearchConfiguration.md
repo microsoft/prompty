@@ -17,7 +17,6 @@ classDiagram
     class BingSearchConfiguration {
       
         +string name
-        +string connectionId
         +string market
         +string setLang
         +int64 count
@@ -37,7 +36,6 @@ name: my-configuration
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | The name of the Bing search tool instance, used to identify the specific instance in the system  |
-| connectionId | string | Connection id for grounding with bing search  |
 | market | string | The market where the results come from.  |
 | setLang | string | The language to use for user interface strings when calling Bing API.  |
 | count | int64 | The number of search results to return in the bing api response  |

@@ -25,11 +25,6 @@ public class BingSearchConfiguration
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Connection id for grounding with bing search
-    /// </summary>
-    public string ConnectionId { get; set; } = string.Empty;
-
-    /// <summary>
     /// The market where the results come from.
     /// </summary>
     public string? Market { get; set; }
@@ -71,11 +66,6 @@ public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfigur
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
             }
 
-            if (rootElement.TryGetProperty("connectionId", out JsonElement connectionIdValue))
-            {
-                instance.ConnectionId = connectionIdValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: connectionId");
-            }
-
             if (rootElement.TryGetProperty("market", out JsonElement marketValue))
             {
                 instance.Market = marketValue.GetString();
@@ -105,9 +95,6 @@ public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfigur
         writer.WriteStartObject();
         writer.WritePropertyName("name");
         JsonSerializer.Serialize(writer, value.Name, options);
-
-        writer.WritePropertyName("connectionId");
-        JsonSerializer.Serialize(writer, value.ConnectionId, options);
 
         if (value.Market != null)
         {

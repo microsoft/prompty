@@ -16,8 +16,7 @@ public class BingSearchToolConversionTests
         connection:
           kind: provider-connection
         configurations:
-          - connectionId: connectionId
-            instanceName: MyBingInstance
+          - instanceName: MyBingInstance
             market: en-US
             setLang: en
             count: 10
@@ -38,7 +37,6 @@ public class BingSearchToolConversionTests
           },
           "configurations": [
             {
-              "connectionId": "connectionId",
               "instanceName": "MyBingInstance",
               "market": "en-US",
               "setLang": "en",

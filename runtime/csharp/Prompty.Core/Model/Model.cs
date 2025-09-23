@@ -27,9 +27,9 @@ public class Model
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+    /// The publisher of the model (e.g., 'openai', 'azure', 'anthropic')
     /// </summary>
-    public string? Provider { get; set; }
+    public string? Publisher { get; set; }
 
     /// <summary>
     /// The connection configuration for the model
@@ -71,9 +71,9 @@ public class ModelConverter : JsonConverter<Model>
                 instance.Id = idValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: id");
             }
 
-            if (rootElement.TryGetProperty("provider", out JsonElement providerValue))
+            if (rootElement.TryGetProperty("publisher", out JsonElement publisherValue))
             {
-                instance.Provider = providerValue.GetString();
+                instance.Publisher = publisherValue.GetString();
             }
 
             if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
@@ -96,10 +96,10 @@ public class ModelConverter : JsonConverter<Model>
         writer.WritePropertyName("id");
         JsonSerializer.Serialize(writer, value.Id, options);
 
-        if (value.Provider != null)
+        if (value.Publisher != null)
         {
-            writer.WritePropertyName("provider");
-            JsonSerializer.Serialize(writer, value.Provider, options);
+            writer.WritePropertyName("publisher");
+            JsonSerializer.Serialize(writer, value.Publisher, options);
         }
 
         if (value.Connection != null)

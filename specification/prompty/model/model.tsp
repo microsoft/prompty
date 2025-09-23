@@ -24,9 +24,9 @@ namespace Prompty.Core {
     @sample(#{ id: "gpt-35-turbo" })
     id: string = "";
 
-    @doc("The provider of the model (e.g., 'openai', 'azure', 'anthropic')")
-    @sample(#{ provider: "azure" })
-    provider?: string;
+    @doc("The publisher of the model (e.g., 'openai', 'azure', 'anthropic')")
+    @sample(#{ publisher: "azure" })
+    publisher?: string;
 
     @doc("The connection configuration for the model")
     @sample(#{

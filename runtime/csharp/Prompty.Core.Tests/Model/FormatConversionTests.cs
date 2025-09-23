@@ -42,11 +42,10 @@ public class FormatConversionTests
     [Fact]
     public void LoadFromString()
     {
-        var data = "example";
+        var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Format>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }
-
 
 }

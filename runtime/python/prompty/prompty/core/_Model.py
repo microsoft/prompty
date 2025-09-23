@@ -17,8 +17,8 @@ class Model:
     ----------
     id : str
         The unique identifier of the model - can be used as the single property shorthand
-    provider : Optional[str]
-        The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+    publisher : Optional[str]
+        The publisher of the model (e.g., 'openai', 'azure', 'anthropic')
     connection : Optional[Connection]
         The connection configuration for the model
     options : Optional[ModelOptions]
@@ -26,7 +26,7 @@ class Model:
     """
 
     id: str = field(default="")
-    provider: Optional[str] = field(default="")
+    publisher: Optional[str] = field(default="")
     connection: Optional[Connection] = field(default=None)
     options: Optional[ModelOptions] = field(default=None)
 
@@ -44,8 +44,8 @@ class Model:
         instance = Model()
         if data is not None and "id" in data:
             instance.id = data["id"]
-        if data is not None and "provider" in data:
-            instance.provider = data["provider"]
+        if data is not None and "publisher" in data:
+            instance.publisher = data["publisher"]
         if data is not None and "connection" in data:
             instance.connection = Connection.load(data["connection"])
         if data is not None and "options" in data:

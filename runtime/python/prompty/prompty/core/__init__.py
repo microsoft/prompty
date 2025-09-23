@@ -27,7 +27,7 @@ from ._Prompty import Prompty, PromptyContainer
 from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
 from ._Scale import Scale
 from ._Template import Template
-from ._Tool import BingSearchTool, FileSearchTool, FunctionTool, McpTool, ModelTool, ServerTool, Tool
+from ._Tool import BingSearchTool, FileSearchTool, FunctionTool, McpTool, ModelTool, OpenApiTool, ServerTool, Tool
 
 __all__ = [
     "ModelOptions",
@@ -50,6 +50,7 @@ __all__ = [
     "FileSearchTool",
     "McpTool",
     "ModelTool",
+    "OpenApiTool",
     "Format",
     "Parser",
     "Template",

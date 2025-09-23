@@ -14,7 +14,7 @@ def test_load_json_model():
     json_data = """
     {
       "id": "gpt-35-turbo",
-      "provider": "azure",
+      "publisher": "azure",
       "connection": {
         "kind": "key",
         "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
@@ -31,13 +31,13 @@ def test_load_json_model():
     instance = Model.load(data)
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
-    assert instance.provider == "azure"
+    assert instance.publisher == "azure"
 
 
 def test_load_yaml_model():
     yaml_data = """
     id: gpt-35-turbo
-    provider: azure
+    publisher: azure
     connection:
       kind: key
       endpoint: https://{your-custom-endpoint}.openai.azure.com/
@@ -52,7 +52,7 @@ def test_load_yaml_model():
     instance = Model.load(data)
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
-    assert instance.provider == "azure"
+    assert instance.publisher == "azure"
 
 
 def test_load_model_from_string():

@@ -19,7 +19,6 @@ def test_load_json_bingsearchtool():
       },
       "configurations": [
         {
-          "connectionId": "connectionId",
           "instanceName": "MyBingInstance",
           "market": "en-US",
           "setLang": "en",
@@ -41,8 +40,7 @@ def test_load_yaml_bingsearchtool():
     connection:
       kind: provider-connection
     configurations:
-      - connectionId: connectionId
-        instanceName: MyBingInstance
+      - instanceName: MyBingInstance
         market: en-US
         setLang: en
         count: 10

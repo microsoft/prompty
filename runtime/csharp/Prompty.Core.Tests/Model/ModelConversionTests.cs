@@ -13,7 +13,7 @@ public class ModelConversionTests
     {
         string yamlData = """
         id: gpt-35-turbo
-        provider: azure
+        publisher: azure
         connection:
           kind: key
           endpoint: https://{your-custom-endpoint}.openai.azure.com/
@@ -33,7 +33,7 @@ public class ModelConversionTests
         string jsonData = """
         {
           "id": "gpt-35-turbo",
-          "provider": "azure",
+          "publisher": "azure",
           "connection": {
             "kind": "key",
             "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
@@ -50,7 +50,7 @@ public class ModelConversionTests
         var instance = JsonSerializer.Deserialize<Model>(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("gpt-35-turbo", instance.Id);
-        Assert.Equal("azure", instance.Provider);
+        Assert.Equal("azure", instance.Publisher);
     }
     [Fact]
     public void LoadFromString()
@@ -60,4 +60,5 @@ public class ModelConversionTests
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Id);
     }
+
 }

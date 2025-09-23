@@ -59,6 +59,13 @@ classDiagram
         +Model model
     }
     Tool <|-- ModelTool
+    class OpenApiTool {
+        +string kind
+        +Connection connection
+        +string specification
+        +string[] operationIds
+    }
+    Tool <|-- OpenApiTool
     class Binding {
         +string name
         +string input
@@ -96,6 +103,7 @@ The following types extend `Tool`:
 - [FileSearchTool](FileSearchTool.md)
 - [McpTool](McpTool.md)
 - [ModelTool](ModelTool.md)
+- [OpenApiTool](OpenApiTool.md)
 
 ## Composed Types
 
