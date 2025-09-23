@@ -29,45 +29,7 @@ public class Parser
     /// </summary>
     public IDictionary<string, object>? Options { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Parser"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Parser Load(object props)
-    {
-        IDictionary<string, object> data;
-        if (props is string stringValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", stringValue}
-            };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-        
-        // create new instance
-        var instance = new Parser();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = optionsValue as IDictionary<string, object>;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ParserConverter : JsonConverter<Parser>
 {
@@ -77,12 +39,21 @@ public class ParserConverter : JsonConverter<Parser>
         {
             throw new JsonException("Cannot convert null value to Parser.");
         }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Parser are not supported");
+            return new Parser()
+            {
+                Kind = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Parser();
 
+            // create new instance
+            var instance = new Parser();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

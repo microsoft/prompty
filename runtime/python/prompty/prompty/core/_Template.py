@@ -12,22 +12,13 @@ from ._Parser import Parser
 
 @dataclass
 class Template:
-    """Template model for defining prompt templates.
-
-    This model specifies the rendering engine used for slot filling prompts,
-    the parser used to process the rendered template into API-compatible format,
-    and additional options for the template engine.
-
-    It allows for the creation of reusable templates that can be filled with dynamic data
-    and processed to generate prompts for AI models.
-
+    """Template model for defining prompt templates.This model specifies the rendering engine used for slot filling prompts,the parser used to process the rendered template into API-compatible format,and additional options for the template engine.It allows for the creation of reusable templates that can be filled with dynamic dataand processed to generate prompts for AI models.
     Attributes
     ----------
     format : Format
         Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
     parser : Parser
         Parser used to process the rendered template into API-compatible format
-
     """
 
     format: Format = field(default_factory=Format)

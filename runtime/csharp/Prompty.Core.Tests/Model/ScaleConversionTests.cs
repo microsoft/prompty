@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -37,9 +35,10 @@ public class ScaleConversionTests
 
         var instance = JsonSerializer.Deserialize<Scale>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.minReplicas, 1);
-        Assert.Equal(instance.maxReplicas, 5);
-        Assert.Equal(instance.cpu, 0.5);
-        Assert.Equal(instance.memory, 2);
+        Assert.Equal(1, instance.MinReplicas);
+        Assert.Equal(5, instance.MaxReplicas);
+        Assert.Equal(0.5, instance.Cpu);
+        Assert.Equal(2, instance.Memory);
     }
+
 }

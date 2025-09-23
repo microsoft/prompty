@@ -53,9 +53,7 @@ def test_load_yaml_input():
     assert instance.name == "my-input"
     assert instance.kind == "string"
     assert instance.description == "A description of the input property"
-
     assert instance.required
-
     assert instance.strict
     assert instance.default == "default value"
     assert instance.sample == "sample value"
@@ -65,21 +63,20 @@ def test_load_input_from_boolean():
     instance = Input.load(False)
     assert instance is not None
     assert instance.kind == "boolean"
-
     assert not instance.sample
 
 
-def test_load_input_from_float():
+def test_load_input_from_float32():
     instance = Input.load(3.14)
     assert instance is not None
-    assert instance.kind == "number"
+    assert instance.kind == "float"
     assert instance.sample == 3.14
 
 
 def test_load_input_from_integer():
     instance = Input.load(3)
     assert instance is not None
-    assert instance.kind == "number"
+    assert instance.kind == "integer"
     assert instance.sample == 3
 
 

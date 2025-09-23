@@ -29,34 +29,7 @@ public class ModelTool : Tool
     /// </summary>
     public Model Model { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ModelTool"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ModelTool Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ModelTool();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("model", out var modelValue))
-        {
-            instance.Model = Model.Load(modelValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ModelToolConverter : JsonConverter<ModelTool>
 {
@@ -70,8 +43,9 @@ public class ModelToolConverter : JsonConverter<ModelTool>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ModelTool();
 
+            // create new instance
+            var instance = new ModelTool();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

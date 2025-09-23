@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import{% for item in typings -%}{{ comma() }} {{ item }}{% endfor %}
 {%- endif %}
 
-{% for import in imports %}
+{%- for import in imports %}
 from ._{{ import }} import {{ import }}
 {%- endfor %}
 

@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -43,12 +41,13 @@ public class InputConversionTests
 
         var instance = JsonSerializer.Deserialize<Input>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.name, "my-input");
-        Assert.Equal(instance.kind, "string");
-        Assert.Equal(instance.description, "A description of the input property");
-        Assert.True(instance.required);
-        Assert.True(instance.strict);
-        Assert.Equal(instance.default, "default value");
-        Assert.Equal(instance.sample, "sample value");
+        Assert.Equal("my-input", instance.Name);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("A description of the input property", instance.Description);
+        Assert.True(instance.Required);
+        Assert.True(instance.Strict);
+        Assert.Equal("default value", instance.Default);
+        Assert.Equal("sample value", instance.Sample);
     }
+
 }

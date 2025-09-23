@@ -4,6 +4,7 @@ namespace Prompty.Core {
   /**
    * Definition for an environment variable used in containerized agents.
    */
+  @shorthand(string, #{ value: "{value}" })
   model EnvironmentVariable {
     @doc("Environment variable resolution")
     @sample(#{ value: "my-value" })

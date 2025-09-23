@@ -39,42 +39,7 @@ public class Scale
     /// </summary>
     public float Memory { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Scale"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Scale Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new Scale();
-        
-        if (data.TryGetValue("minReplicas", out var minReplicasValue))
-        {
-            instance.MinReplicas = (int)minReplicasValue;
-        }
-        if (data.TryGetValue("maxReplicas", out var maxReplicasValue))
-        {
-            instance.MaxReplicas = (int)maxReplicasValue;
-        }
-        if (data.TryGetValue("cpu", out var cpuValue))
-        {
-            instance.Cpu = (float)cpuValue;
-        }
-        if (data.TryGetValue("memory", out var memoryValue))
-        {
-            instance.Memory = (float)memoryValue;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ScaleConverter : JsonConverter<Scale>
 {
@@ -88,8 +53,9 @@ public class ScaleConverter : JsonConverter<Scale>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Scale();
 
+            // create new instance
+            var instance = new Scale();
             if (rootElement.TryGetProperty("minReplicas", out JsonElement minReplicasValue))
             {
                 instance.MinReplicas = minReplicasValue.GetInt32();

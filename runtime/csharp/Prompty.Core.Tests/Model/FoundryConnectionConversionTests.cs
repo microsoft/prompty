@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -37,9 +35,10 @@ public class FoundryConnectionConversionTests
 
         var instance = JsonSerializer.Deserialize<FoundryConnection>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "foundry");
-        Assert.Equal(instance.type, "index");
-        Assert.Equal(instance.name, "my-foundry-connection");
-        Assert.Equal(instance.project, "my-foundry-project");
+        Assert.Equal("foundry", instance.Kind);
+        Assert.Equal("index", instance.Type);
+        Assert.Equal("my-foundry-connection", instance.Name);
+        Assert.Equal("my-foundry-project", instance.Project);
     }
+
 }

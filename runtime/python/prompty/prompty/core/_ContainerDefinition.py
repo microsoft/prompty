@@ -13,7 +13,6 @@ from ._Scale import Scale
 @dataclass
 class ContainerDefinition:
     """Definition for a containerized AI agent.
-
     Attributes
     ----------
     image : str
@@ -24,7 +23,6 @@ class ContainerDefinition:
         Container image registry definition
     scale : Scale
         Instance scaling configuration
-
     """
 
     image: str = field(default="")

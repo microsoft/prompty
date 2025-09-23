@@ -20,14 +20,14 @@ public class BingSearchConfiguration
     }
 
     /// <summary>
+    /// The name of the Bing search tool instance, used to identify the specific instance in the system
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// Connection id for grounding with bing search
     /// </summary>
     public string ConnectionId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The instance name of the Bing search tool, used to identify the specific instance in the system
-    /// </summary>
-    public string InstanceName { get; set; } = string.Empty;
 
     /// <summary>
     /// The market where the results come from.
@@ -49,50 +49,7 @@ public class BingSearchConfiguration
     /// </summary>
     public string? Freshness { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="BingSearchConfiguration"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static BingSearchConfiguration Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new BingSearchConfiguration();
-        
-        if (data.TryGetValue("connectionId", out var connectionIdValue))
-        {
-            instance.ConnectionId = connectionIdValue as string ?? throw new ArgumentException("Properties must contain a property named: connectionId");
-        }
-        if (data.TryGetValue("instanceName", out var instanceNameValue))
-        {
-            instance.InstanceName = instanceNameValue as string ?? throw new ArgumentException("Properties must contain a property named: instanceName");
-        }
-        if (data.TryGetValue("market", out var marketValue))
-        {
-            instance.Market = marketValue as string;
-        }
-        if (data.TryGetValue("setLang", out var setLangValue))
-        {
-            instance.SetLang = setLangValue as string;
-        }
-        if (data.TryGetValue("count", out var countValue))
-        {
-            instance.Count = countValue as long;
-        }
-        if (data.TryGetValue("freshness", out var freshnessValue))
-        {
-            instance.Freshness = freshnessValue as string;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfiguration>
 {
@@ -106,16 +63,17 @@ public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfigur
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
+
+            // create new instance
             var instance = new BingSearchConfiguration();
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
+            }
 
             if (rootElement.TryGetProperty("connectionId", out JsonElement connectionIdValue))
             {
                 instance.ConnectionId = connectionIdValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: connectionId");
-            }
-
-            if (rootElement.TryGetProperty("instanceName", out JsonElement instanceNameValue))
-            {
-                instance.InstanceName = instanceNameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: instanceName");
             }
 
             if (rootElement.TryGetProperty("market", out JsonElement marketValue))
@@ -145,11 +103,11 @@ public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfigur
     public override void Write(Utf8JsonWriter writer, BingSearchConfiguration value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
+        writer.WritePropertyName("name");
+        JsonSerializer.Serialize(writer, value.Name, options);
+
         writer.WritePropertyName("connectionId");
         JsonSerializer.Serialize(writer, value.ConnectionId, options);
-
-        writer.WritePropertyName("instanceName");
-        JsonSerializer.Serialize(writer, value.InstanceName, options);
 
         if (value.Market != null)
         {

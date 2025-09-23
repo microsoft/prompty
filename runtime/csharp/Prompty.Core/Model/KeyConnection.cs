@@ -34,38 +34,7 @@ public class KeyConnection : Connection
     /// </summary>
     public string Key { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="KeyConnection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new KeyConnection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new KeyConnection();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("endpoint", out var endpointValue))
-        {
-            instance.Endpoint = endpointValue as string ?? throw new ArgumentException("Properties must contain a property named: endpoint");
-        }
-        if (data.TryGetValue("key", out var keyValue))
-        {
-            instance.Key = keyValue as string ?? throw new ArgumentException("Properties must contain a property named: key");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class KeyConnectionConverter : JsonConverter<KeyConnection>
 {
@@ -79,8 +48,9 @@ public class KeyConnectionConverter : JsonConverter<KeyConnection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new KeyConnection();
 
+            // create new instance
+            var instance = new KeyConnection();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

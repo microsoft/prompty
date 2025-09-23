@@ -39,42 +39,7 @@ public class ContainerDefinition
     /// </summary>
     public Scale Scale { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ContainerDefinition"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static ContainerDefinition Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ContainerDefinition();
-        
-        if (data.TryGetValue("image", out var imageValue))
-        {
-            instance.Image = imageValue as string ?? throw new ArgumentException("Properties must contain a property named: image");
-        }
-        if (data.TryGetValue("tag", out var tagValue))
-        {
-            instance.Tag = tagValue as string;
-        }
-        if (data.TryGetValue("registry", out var registryValue))
-        {
-            instance.Registry = Registry.Load(registryValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("scale", out var scaleValue))
-        {
-            instance.Scale = Scale.Load(scaleValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ContainerDefinitionConverter : JsonConverter<ContainerDefinition>
 {
@@ -88,8 +53,9 @@ public class ContainerDefinitionConverter : JsonConverter<ContainerDefinition>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ContainerDefinition();
 
+            // create new instance
+            var instance = new ContainerDefinition();
             if (rootElement.TryGetProperty("image", out JsonElement imageValue))
             {
                 instance.Image = imageValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: image");

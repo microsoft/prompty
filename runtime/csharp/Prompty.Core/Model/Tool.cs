@@ -39,92 +39,7 @@ public abstract class Tool
     /// </summary>
     public IList<Binding>? Bindings { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Tool"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Tool Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Tool instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("description", out var descriptionValue))
-        {
-            instance.Description = descriptionValue as string;
-        }
-        if (data.TryGetValue("bindings", out var bindingsValue))
-        {
-            instance.Bindings = LoadBindings(bindingsValue);
-        }
-        return instance;
-    }
-    
-    internal static IList<Binding> LoadBindings(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => Binding.Load(item))];
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Tool"/> based on the "kind" property.
-    /// </summary>
-    internal static Tool LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Tool instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "function")
-            {
-                return FunctionTool.Load(props);
-            }
-            else if (discriminator_value == "bing_search")
-            {
-                return BingSearchTool.Load(props);
-            }
-            else if (discriminator_value == "file_search")
-            {
-                return FileSearchTool.Load(props);
-            }
-            else if (discriminator_value == "mcp")
-            {
-                return McpTool.Load(props);
-            }
-            else if (discriminator_value == "model")
-            {
-                return ModelTool.Load(props);
-            }
-            else
-            {
-                
-                // load default instance
-                return ServerTool.Load(props);
-                
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Tool discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
-
-
 
 public class ToolConverter : JsonConverter<Tool>
 {
@@ -138,8 +53,32 @@ public class ToolConverter : JsonConverter<Tool>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ServerTool();
 
+            // load polymorphic Tool instance
+            Tool instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Tool is not supported");
+                instance = discriminator switch
+                {
+                    "function" => JsonSerializer.Deserialize<FunctionTool>(rootElement, options)
+                        ?? throw new JsonException("Empty FunctionTool instances are not supported"),
+                    "bing_search" => JsonSerializer.Deserialize<BingSearchTool>(rootElement, options)
+                        ?? throw new JsonException("Empty BingSearchTool instances are not supported"),
+                    "file_search" => JsonSerializer.Deserialize<FileSearchTool>(rootElement, options)
+                        ?? throw new JsonException("Empty FileSearchTool instances are not supported"),
+                    "mcp" => JsonSerializer.Deserialize<McpTool>(rootElement, options)
+                        ?? throw new JsonException("Empty McpTool instances are not supported"),
+                    "model" => JsonSerializer.Deserialize<ModelTool>(rootElement, options)
+                        ?? throw new JsonException("Empty ModelTool instances are not supported"),
+                    _ => new ServerTool(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Tool discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
@@ -157,7 +96,29 @@ public class ToolConverter : JsonConverter<Tool>
 
             if (rootElement.TryGetProperty("bindings", out JsonElement bindingsValue))
             {
-                // need object collection deserialization
+                if (bindingsValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Bindings =
+                        [.. bindingsValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<Binding> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Bindings are not supported"))];
+                }
+                else if (bindingsValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Bindings =
+                        [.. bindingsValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<Binding>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Bindings are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for bindings");
+                }
             }
 
             return instance;

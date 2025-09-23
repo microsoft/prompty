@@ -21,8 +21,8 @@ classDiagram
         +BingSearchConfiguration[] configurations
     }
     class BingSearchConfiguration {
+        +string name
         +string connectionId
-        +string instanceName
         +string market
         +string setLang
         +int64 count

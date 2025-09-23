@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -35,8 +33,9 @@ public class KeyConnectionConversionTests
 
         var instance = JsonSerializer.Deserialize<KeyConnection>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "key");
-        Assert.Equal(instance.endpoint, "https://{your-custom-endpoint}.openai.azure.com/");
-        Assert.Equal(instance.key, "your-api-key");
+        Assert.Equal("key", instance.Kind);
+        Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", instance.Endpoint);
+        Assert.Equal("your-api-key", instance.Key);
     }
+
 }

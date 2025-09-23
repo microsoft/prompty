@@ -58,115 +58,7 @@ public class Input
     /// </summary>
     public object? Sample { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Input"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Input Load(object props)
-    {
-        IDictionary<string, object> data;
-        if (props is bool boolValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", "boolean"}, {"sample", boolValue}
-            };
-        }
-        else if (props is object objectValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", "number"}, {"sample", objectValue}
-            };
-        }
-        else if (props is int intValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", "number"}, {"sample", intValue}
-            };
-        }
-        else if (props is string stringValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", "string"}, {"sample", stringValue}
-            };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-        
-        // load polymorphic Input instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("description", out var descriptionValue))
-        {
-            instance.Description = descriptionValue as string;
-        }
-        if (data.TryGetValue("required", out var requiredValue))
-        {
-            instance.Required = (bool)requiredValue;
-        }
-        if (data.TryGetValue("strict", out var strictValue))
-        {
-            instance.Strict = (bool)strictValue;
-        }
-        if (data.TryGetValue("default", out var defaultValue))
-        {
-            instance.Default = defaultValue as object;
-        }
-        if (data.TryGetValue("sample", out var sampleValue))
-        {
-            instance.Sample = sampleValue as object;
-        }
-        return instance;
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Input"/> based on the "kind" property.
-    /// </summary>
-    internal static Input LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Input instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "array")
-            {
-                return ArrayInput.Load(props);
-            }
-            else if (discriminator_value == "object")
-            {
-                return ObjectInput.Load(props);
-            }
-            else
-            {
-                //create new instance (stop recursion)
-                return new Input();
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Input discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
 
 public class InputConverter : JsonConverter<Input>
 {
@@ -176,12 +68,66 @@ public class InputConverter : JsonConverter<Input>
         {
             throw new JsonException("Cannot convert null value to Input.");
         }
+        else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
+        {
+            var boolValue = reader.GetBoolean();
+            return new Input()
+            {
+                Kind = "boolean",
+                Sample = boolValue,
+            };
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            var floatValue = reader.GetSingle();
+            return new Input()
+            {
+                Kind = "float",
+                Sample = floatValue,
+            };
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            var intValue = reader.GetInt32();
+            return new Input()
+            {
+                Kind = "integer",
+                Sample = intValue,
+            };
+        }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Input are not supported");
+            return new Input()
+            {
+                Kind = "string",
+                Sample = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Input();
 
+            // load polymorphic Input instance
+            Input instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Input is not supported");
+                instance = discriminator switch
+                {
+                    "array" => JsonSerializer.Deserialize<ArrayInput>(rootElement, options)
+                        ?? throw new JsonException("Empty ArrayInput instances are not supported"),
+                    "object" => JsonSerializer.Deserialize<ObjectInput>(rootElement, options)
+                        ?? throw new JsonException("Empty ObjectInput instances are not supported"),
+                    _ => new Input(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Input discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");

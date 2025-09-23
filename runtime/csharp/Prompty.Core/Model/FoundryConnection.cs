@@ -39,42 +39,7 @@ public class FoundryConnection : Connection
     /// </summary>
     public string Project { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="FoundryConnection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new FoundryConnection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new FoundryConnection();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("type", out var typeValue))
-        {
-            instance.Type = typeValue as string ?? throw new ArgumentException("Properties must contain a property named: type");
-        }
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("project", out var projectValue))
-        {
-            instance.Project = projectValue as string ?? throw new ArgumentException("Properties must contain a property named: project");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class FoundryConnectionConverter : JsonConverter<FoundryConnection>
 {
@@ -88,8 +53,9 @@ public class FoundryConnectionConverter : JsonConverter<FoundryConnection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new FoundryConnection();
 
+            // create new instance
+            var instance = new FoundryConnection();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

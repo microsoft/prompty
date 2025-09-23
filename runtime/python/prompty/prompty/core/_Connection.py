@@ -10,10 +10,7 @@ from typing import Any, Optional
 
 @dataclass
 class Connection(ABC):
-    """Connection configuration for AI agents.
-    `provider`, `kind`, and `endpoint` are required properties here,
-    but this section can accept additional via options.
-
+    """Connection configuration for AI agents.`provider`, `kind`, and `endpoint` are required properties here,but this section can accept additional via options.
     Attributes
     ----------
     kind : str
@@ -22,7 +19,6 @@ class Connection(ABC):
         The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     usageDescription : Optional[str]
         The usage description for the connection, providing context on how this connection will be used
-
     """
 
     kind: str = field(default="")
@@ -68,15 +64,13 @@ class Connection(ABC):
 
 @dataclass
 class GenericConnection(Connection):
-    """
-
+    """Generic connection configuration for AI services.
     Attributes
     ----------
     kind : str
         The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     options : Optional[dict[str, Any]]
         Additional options for the connection
-
     """
 
     kind: str = field(default="*")
@@ -101,14 +95,12 @@ class GenericConnection(Connection):
 @dataclass
 class ReferenceConnection(Connection):
     """Connection configuration for AI services using named connections.
-
     Attributes
     ----------
     kind : str
         The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     name : str
         The name of the connection
-
     """
 
     kind: str = field(default="reference")
@@ -133,7 +125,6 @@ class ReferenceConnection(Connection):
 @dataclass
 class KeyConnection(Connection):
     """Connection configuration for AI services using API keys.
-
     Attributes
     ----------
     kind : str
@@ -142,7 +133,6 @@ class KeyConnection(Connection):
         The endpoint URL for the AI service
     key : str
         The API key for authenticating with the AI service
-
     """
 
     kind: str = field(default="key")
@@ -170,7 +160,6 @@ class KeyConnection(Connection):
 @dataclass
 class OAuthConnection(Connection):
     """Connection configuration for AI services using OAuth authentication.
-
     Attributes
     ----------
     kind : str
@@ -185,7 +174,6 @@ class OAuthConnection(Connection):
         The OAuth token URL for obtaining access tokens
     scopes : list[str]
         The scopes required for the OAuth token
-
     """
 
     kind: str = field(default="oauth")
@@ -222,7 +210,6 @@ class OAuthConnection(Connection):
 @dataclass
 class FoundryConnection(Connection):
     """
-
     Attributes
     ----------
     kind : str
@@ -233,7 +220,6 @@ class FoundryConnection(Connection):
         The Foundry connection name
     project : str
         The Foundry project name
-
     """
 
     kind: str = field(default="foundry")

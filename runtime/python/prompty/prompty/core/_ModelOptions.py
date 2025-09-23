@@ -9,13 +9,10 @@ from typing import Any
 
 @dataclass
 class ModelOptions:
-    """Options for configuring the behavior of the AI model.
-    `kind` is a required property here, but this section can accept additional via options.
-
+    """Options for configuring the behavior of the AI model.`kind` is a required property here, but this section can accept additional via options.
     Attributes
     ----------
     kind : str
-
 
     """
 

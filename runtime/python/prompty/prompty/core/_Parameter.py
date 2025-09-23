@@ -10,7 +10,6 @@ from typing import Any, Optional
 @dataclass
 class Parameter:
     """Represents a parameter for a tool.
-
     Attributes
     ----------
     name : str
@@ -23,7 +22,6 @@ class Parameter:
         Whether the tool parameter is required
     enum : Optional[list[Any]]
         Allowed enumeration values for the parameter
-
     """
 
     name: str = field(default="")
@@ -73,14 +71,12 @@ class Parameter:
 @dataclass
 class ObjectParameter(Parameter):
     """Represents an object parameter for a tool.
-
     Attributes
     ----------
     kind : str
 
     properties : list[Parameter]
         The properties of the object parameter
-
     """
 
     kind: str = field(default="object")
@@ -113,14 +109,12 @@ class ObjectParameter(Parameter):
 @dataclass
 class ArrayParameter(Parameter):
     """Represents an array parameter for a tool.
-
     Attributes
     ----------
     kind : str
 
     items : Parameter
         The kind of items contained in the array
-
     """
 
     kind: str = field(default="array")

@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -42,9 +40,10 @@ public class FileSearchToolConversionTests
 
         var instance = JsonSerializer.Deserialize<FileSearchTool>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "file_search");
-        Assert.Equal(instance.maxNumResults, 10);
-        Assert.Equal(instance.ranker, "default");
-        Assert.Equal(instance.scoreThreshold, 0.5);
+        Assert.Equal("file_search", instance.Kind);
+        Assert.Equal(10, instance.MaxNumResults);
+        Assert.Equal("default", instance.Ranker);
+        Assert.Equal(0.5, instance.ScoreThreshold);
     }
+
 }

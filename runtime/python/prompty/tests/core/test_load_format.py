@@ -40,7 +40,6 @@ def test_load_yaml_format():
     instance = Format.load(data)
     assert instance is not None
     assert instance.kind == "mustache"
-
     assert instance.strict
 
 

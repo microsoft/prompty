@@ -30,34 +30,7 @@ public class ArrayOutput : Output
     /// </summary>
     public Output Items { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ArrayOutput"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ArrayOutput Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ArrayOutput();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("items", out var itemsValue))
-        {
-            instance.Items = Output.Load(itemsValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ArrayOutputConverter : JsonConverter<ArrayOutput>
 {
@@ -71,8 +44,9 @@ public class ArrayOutputConverter : JsonConverter<ArrayOutput>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ArrayOutput();
 
+            // create new instance
+            var instance = new ArrayOutput();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

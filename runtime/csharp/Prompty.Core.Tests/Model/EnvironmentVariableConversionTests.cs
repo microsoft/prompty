@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -33,7 +31,8 @@ public class EnvironmentVariableConversionTests
 
         var instance = JsonSerializer.Deserialize<EnvironmentVariable>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.name, "MY_ENV_VAR");
-        Assert.Equal(instance.value, "my-value");
+        Assert.Equal("MY_ENV_VAR", instance.Name);
+        Assert.Equal("my-value", instance.Value);
     }
+
 }

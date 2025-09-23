@@ -36,25 +36,25 @@ def test_load_yaml_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = {{node.typeName.name}}.load(data)
     assert instance is not None
-    {% for validation in sample.validation -%}
+    {%- for validation in sample.validation %}
     {%- if validation.value == "True" or validation.value == "False" %}
     assert {% if validation.value == "False" %}not {% endif %}instance.{{ validation.key }}
-    {% else -%}
+    {%- else %}
     assert instance.{{ validation.key }} == {{ validation.delimeter | safe }}{{ validation.value }}{{ validation.delimeter | safe }}
-    {% endif -%}
-    {% endfor %}
+    {%- endif %}
+    {%- endfor %}
 {% endfor %}
 {% if alternates.length > 0 %}
 {% for alt in alternates -%}
 def test_load_{{node.typeName.name | lower}}_from_{{ alt.scalar }}():
     instance = {{node.typeName.name}}.load({{ alt.value | safe }})
     assert instance is not None
-    {% for item in alt.validation -%}
+    {%- for item in alt.validation %}
     {%- if item.value == "True" or item.value == "False" %}
     assert {% if item.value == "False" %}not {% endif %}instance.{{ item.key }}
-    {% else -%}
+    {%- else %}
     assert instance.{{ item.key }} == {{ item.delimeter | safe }}{{ item.value | safe }}{{ item.delimeter | safe }}
-    {% endif -%}
-    {% endfor %}
+    {%- endif %}
+    {%- endfor %}
 {% endfor %}
 {% endif %}

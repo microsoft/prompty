@@ -36,34 +36,7 @@ public class Template
     /// </summary>
     public Parser Parser { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Template"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Template Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new Template();
-        
-        if (data.TryGetValue("format", out var formatValue))
-        {
-            instance.Format = Format.Load(formatValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("parser", out var parserValue))
-        {
-            instance.Parser = Parser.Load(parserValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class TemplateConverter : JsonConverter<Template>
 {
@@ -77,8 +50,9 @@ public class TemplateConverter : JsonConverter<Template>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Template();
 
+            // create new instance
+            var instance = new Template();
             if (rootElement.TryGetProperty("format", out JsonElement formatValue))
             {
                 instance.Format = JsonSerializer.Deserialize<Format>(formatValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: format");

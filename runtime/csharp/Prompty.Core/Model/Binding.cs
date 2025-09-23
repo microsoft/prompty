@@ -29,34 +29,7 @@ public class Binding
     /// </summary>
     public string Input { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Binding"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Binding Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new Binding();
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("input", out var inputValue))
-        {
-            instance.Input = inputValue as string ?? throw new ArgumentException("Properties must contain a property named: input");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class BindingConverter : JsonConverter<Binding>
 {
@@ -66,12 +39,21 @@ public class BindingConverter : JsonConverter<Binding>
         {
             throw new JsonException("Cannot convert null value to Binding.");
         }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Binding are not supported");
+            return new Binding()
+            {
+                Input = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Binding();
 
+            // create new instance
+            var instance = new Binding();
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");

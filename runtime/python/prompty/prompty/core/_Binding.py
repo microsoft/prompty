@@ -10,14 +10,12 @@ from typing import Any
 @dataclass
 class Binding:
     """Represents a binding between an input property and a tool parameter.
-
     Attributes
     ----------
     name : str
         Name of the binding
     input : str
         The input property that will be bound to the tool parameter argument
-
     """
 
     name: str = field(default="")
@@ -26,6 +24,9 @@ class Binding:
     @staticmethod
     def load(data: Any) -> "Binding":
         """Load a Binding instance."""
+        # handle alternate representations
+        if isinstance(data, str):
+            data = {"input": data}
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Binding: {data}")

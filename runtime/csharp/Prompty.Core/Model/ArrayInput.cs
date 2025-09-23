@@ -30,34 +30,7 @@ public class ArrayInput : Input
     /// </summary>
     public Input Items { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ArrayInput"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ArrayInput Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ArrayInput();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("items", out var itemsValue))
-        {
-            instance.Items = Input.Load(itemsValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ArrayInputConverter : JsonConverter<ArrayInput>
 {
@@ -71,8 +44,9 @@ public class ArrayInputConverter : JsonConverter<ArrayInput>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ArrayInput();
 
+            // create new instance
+            var instance = new ArrayInput();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

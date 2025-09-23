@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -37,9 +35,10 @@ public class GenericRegistryConversionTests
 
         var instance = JsonSerializer.Deserialize<GenericRegistry>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "some-value");
-        Assert.Equal(instance.repository, "https://my-registry.com");
-        Assert.Equal(instance.username, "my-username");
-        Assert.Equal(instance.password, "my-password");
+        Assert.Equal("some-value", instance.Kind);
+        Assert.Equal("https://my-registry.com", instance.Repository);
+        Assert.Equal("my-username", instance.Username);
+        Assert.Equal("my-password", instance.Password);
     }
+
 }

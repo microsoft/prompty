@@ -29,63 +29,7 @@ public abstract class Registry
     /// </summary>
     public Connection Connection { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Registry"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Registry Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Registry instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("connection", out var connectionValue))
-        {
-            instance.Connection = Connection.Load(connectionValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Registry"/> based on the "kind" property.
-    /// </summary>
-    internal static Registry LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Registry instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "acr")
-            {
-                return AzureContainerRegistry.Load(props);
-            }
-            else
-            {
-                
-                // load default instance
-                return GenericRegistry.Load(props);
-                
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Registry discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
-
-
 
 public class RegistryConverter : JsonConverter<Registry>
 {
@@ -99,8 +43,24 @@ public class RegistryConverter : JsonConverter<Registry>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new GenericRegistry();
 
+            // load polymorphic Registry instance
+            Registry instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Registry is not supported");
+                instance = discriminator switch
+                {
+                    "acr" => JsonSerializer.Deserialize<AzureContainerRegistry>(rootElement, options)
+                        ?? throw new JsonException("Empty AzureContainerRegistry instances are not supported"),
+                    _ => new GenericRegistry(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Registry discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

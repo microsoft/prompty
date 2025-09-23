@@ -89,118 +89,7 @@ public class Prompty
     /// </summary>
     public string? AdditionalInstructions { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Prompty"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Prompty Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Prompty instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("id", out var idValue))
-        {
-            instance.Id = idValue as string;
-        }
-        if (data.TryGetValue("version", out var versionValue))
-        {
-            instance.Version = versionValue as string;
-        }
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("description", out var descriptionValue))
-        {
-            instance.Description = descriptionValue as string;
-        }
-        if (data.TryGetValue("metadata", out var metadataValue))
-        {
-            instance.Metadata = metadataValue as IDictionary<string, object>;
-        }
-        if (data.TryGetValue("model", out var modelValue))
-        {
-            instance.Model = Model.Load(modelValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("inputs", out var inputsValue))
-        {
-            instance.Inputs = LoadInputs(inputsValue);
-        }
-        if (data.TryGetValue("outputs", out var outputsValue))
-        {
-            instance.Outputs = LoadOutputs(outputsValue);
-        }
-        if (data.TryGetValue("tools", out var toolsValue))
-        {
-            instance.Tools = LoadTools(toolsValue);
-        }
-        if (data.TryGetValue("template", out var templateValue))
-        {
-            instance.Template = Template.Load(templateValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("instructions", out var instructionsValue))
-        {
-            instance.Instructions = instructionsValue as string;
-        }
-        if (data.TryGetValue("additionalInstructions", out var additionalInstructionsValue))
-        {
-            instance.AdditionalInstructions = additionalInstructionsValue as string;
-        }
-        return instance;
-    }
-    
-    internal static IList<Input> LoadInputs(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => Input.Load(item))];
-    }
-    
-    internal static IList<Output> LoadOutputs(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => Output.Load(item))];
-    }
-    
-    internal static IList<Tool> LoadTools(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => Tool.Load(item))];
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Prompty"/> based on the "kind" property.
-    /// </summary>
-    internal static Prompty LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Prompty instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "container")
-            {
-                return PromptyContainer.Load(props);
-            }
-            else
-            {
-                //create new instance (stop recursion)
-                return new Prompty();
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Prompty discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
 
 public class PromptyConverter : JsonConverter<Prompty>
 {
@@ -214,8 +103,28 @@ public class PromptyConverter : JsonConverter<Prompty>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Prompty();
 
+            // load polymorphic Prompty instance
+            Prompty instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Prompty is not supported");
+                instance = discriminator switch
+                {
+                    "container" => JsonSerializer.Deserialize<PromptyContainer>(rootElement, options)
+                        ?? throw new JsonException("Empty PromptyContainer instances are not supported"),
+                    _ => new Prompty(),
+                };
+            }
+            else
+            {
+                // default to "prompt" if discriminator is missing or empty
+                instance = new Prompty
+                {
+                    Kind = "prompt"
+                };
+            }
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
@@ -253,17 +162,83 @@ public class PromptyConverter : JsonConverter<Prompty>
 
             if (rootElement.TryGetProperty("inputs", out JsonElement inputsValue))
             {
-                // need object collection deserialization
+                if (inputsValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Inputs =
+                        [.. inputsValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<Input> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Inputs are not supported"))];
+                }
+                else if (inputsValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Inputs =
+                        [.. inputsValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<Input>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Inputs are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for inputs");
+                }
             }
 
             if (rootElement.TryGetProperty("outputs", out JsonElement outputsValue))
             {
-                // need object collection deserialization
+                if (outputsValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Outputs =
+                        [.. outputsValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<Output> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Outputs are not supported"))];
+                }
+                else if (outputsValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Outputs =
+                        [.. outputsValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<Output>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Outputs are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for outputs");
+                }
             }
 
             if (rootElement.TryGetProperty("tools", out JsonElement toolsValue))
             {
-                // need object collection deserialization
+                if (toolsValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Tools =
+                        [.. toolsValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<Tool> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Tools are not supported"))];
+                }
+                else if (toolsValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Tools =
+                        [.. toolsValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<Tool>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Tools are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for tools");
+                }
             }
 
             if (rootElement.TryGetProperty("template", out JsonElement templateValue))

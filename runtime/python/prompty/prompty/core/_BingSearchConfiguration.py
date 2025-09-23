@@ -10,13 +10,12 @@ from typing import Any, Optional
 @dataclass
 class BingSearchConfiguration:
     """Configuration options for the Bing search tool.
-
     Attributes
     ----------
+    name : str
+        The name of the Bing search tool instance, used to identify the specific instance in the system
     connectionId : str
         Connection id for grounding with bing search
-    instanceName : str
-        The instance name of the Bing search tool, used to identify the specific instance in the system
     market : Optional[str]
         The market where the results come from.
     setLang : Optional[str]
@@ -25,11 +24,10 @@ class BingSearchConfiguration:
         The number of search results to return in the bing api response
     freshness : Optional[str]
         Filter search results by a specific time range. Accepted values: https://learn.microsoft.com/bing/search-apis/bing-web-search/reference/query-parameters
-
     """
 
+    name: str = field(default="")
     connectionId: str = field(default="")
-    instanceName: str = field(default="")
     market: Optional[str] = field(default="")
     setLang: Optional[str] = field(default="")
     count: Optional[int] = field(default=0)
@@ -44,10 +42,10 @@ class BingSearchConfiguration:
 
         # create new instance
         instance = BingSearchConfiguration()
+        if data is not None and "name" in data:
+            instance.name = data["name"]
         if data is not None and "connectionId" in data:
             instance.connectionId = data["connectionId"]
-        if data is not None and "instanceName" in data:
-            instance.instanceName = data["instanceName"]
         if data is not None and "market" in data:
             instance.market = data["market"]
         if data is not None and "setLang" in data:

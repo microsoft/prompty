@@ -17,13 +17,7 @@ from ._Tool import Tool
 
 @dataclass
 class Prompty:
-    """The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
-    It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
-    The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
-    available tools, and template configurations for prompt rendering.
-
-    These can be written in a markdown format or in a pure YAML format.
-
+    """The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.It provides a way to create reusable and composable AI agents that can be executed with specific configurations.The specification includes metadata about the agent, model configuration, input parameters, expected outputs,available tools, and template configurations for prompt rendering.These can be written in a markdown format or in a pure YAML format.
     Attributes
     ----------
     kind : str
@@ -52,7 +46,6 @@ class Prompty:
         Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)
     additionalInstructions : Optional[str]
         Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)
-
     """
 
     kind: str = field(default="prompt")
@@ -148,7 +141,6 @@ class Prompty:
 @dataclass
 class PromptyContainer(Prompty):
     """
-
     Attributes
     ----------
     kind : str
@@ -159,7 +151,6 @@ class PromptyContainer(Prompty):
         Container definition including registry and scaling information
     environmentVariables : Optional[list[EnvironmentVariable]]
         Environment variables to set in the hosted agent container.
-
     """
 
     kind: str = field(default="container")

@@ -10,17 +10,15 @@ from typing import Any, Optional
 @dataclass
 class Parser:
     """Template parser definition
-
     Attributes
     ----------
     kind : str
         Parser used to process the rendered template into API-compatible format
     options : Optional[dict[str, Any]]
         Options for the parser
-
     """
 
-    kind: str = field(default="")
+    kind: str = field(default="*")
     options: Optional[dict[str, Any]] = field(default_factory=dict)
 
     @staticmethod

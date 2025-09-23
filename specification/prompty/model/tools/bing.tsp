@@ -10,9 +10,6 @@ namespace Prompty.Core {
     @doc("Connection id for grounding with bing search")
     connectionId: string;
 
-    @doc("The instance name of the Bing search tool, used to identify the specific instance in the system")
-    instanceName: string;
-
     @doc("The market where the results come from.")
     market?: string;
 
@@ -26,6 +23,12 @@ namespace Prompty.Core {
     freshness?: string;
   }
 
+  alias BingSearchConfigurations = Record<BingSearchConfiguration> | Named<
+    BingSearchConfiguration,
+    "The name of the Bing search tool instance, used to identify the specific instance in the system",
+    #{ name: "my-configuration" }
+  >[];
+
   /**
    * The Bing search tool.
    */
@@ -35,24 +38,22 @@ namespace Prompty.Core {
     kind: "bing_search";
 
     @doc("The connection configuration for the Bing search tool")
-    @sample(#{
-      connection: #{ kind: "provider-connection" },
-    })
+    @sample(#{ connection: #{ kind: "provider-connection" } })
     connection: Connection;
 
     @doc("The configuration options for the Bing search tool")
     @sample(#{
       configurations: #[
-        #{ 
+        #{
           connectionId: "connectionId",
           instanceName: "MyBingInstance",
           market: "en-US",
           setLang: "en",
           count: 10,
-          freshness: "Day"
+          freshness: "Day",
         }
-      ]
+      ],
     })
-    configurations: BingSearchConfiguration[];
+    configurations: BingSearchConfigurations;
   }
 }

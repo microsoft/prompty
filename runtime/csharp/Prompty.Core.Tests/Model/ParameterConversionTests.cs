@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -46,9 +44,10 @@ public class ParameterConversionTests
 
         var instance = JsonSerializer.Deserialize<Parameter>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.name, "my-parameter");
-        Assert.Equal(instance.kind, "string");
-        Assert.Equal(instance.description, "A description of the tool parameter");
-        Assert.True(instance.required);
+        Assert.Equal("my-parameter", instance.Name);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("A description of the tool parameter", instance.Description);
+        Assert.True(instance.Required);
     }
+
 }

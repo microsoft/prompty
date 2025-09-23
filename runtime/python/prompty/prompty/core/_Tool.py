@@ -17,7 +17,6 @@ from ._Parameter import Parameter
 @dataclass
 class Tool(ABC):
     """Represents a tool that can be used in prompts.
-
     Attributes
     ----------
     name : str
@@ -28,7 +27,6 @@ class Tool(ABC):
         A short description of the tool for metadata purposes
     bindings : Optional[list[Binding]]
         Tool argument bindings to input properties
-
     """
 
     name: str = field(default="")
@@ -89,14 +87,12 @@ class Tool(ABC):
 @dataclass
 class FunctionTool(Tool):
     """Represents a local function tool.
-
     Attributes
     ----------
     kind : str
         The kind identifier for function tools
     parameters : list[Parameter]
         Parameters accepted by the function tool
-
     """
 
     kind: str = field(default="function")
@@ -128,12 +124,7 @@ class FunctionTool(Tool):
 
 @dataclass
 class ServerTool(Tool):
-    """Represents a generic server tool that runs on a server
-    This tool kind is designed for operations that require server-side execution
-    It may include features such as authentication, data storage, and long-running processes
-    This tool kind is ideal for tasks that involve complex computations or access to secure resources
-    Server tools can be used to offload heavy processing from client applications
-
+    """Represents a generic server tool that runs on a serverThis tool kind is designed for operations that require server-side executionIt may include features such as authentication, data storage, and long-running processesThis tool kind is ideal for tasks that involve complex computations or access to secure resourcesServer tools can be used to offload heavy processing from client applications
     Attributes
     ----------
     kind : str
@@ -142,7 +133,6 @@ class ServerTool(Tool):
         Connection configuration for the server tool
     options : dict[str, Any]
         Configuration options for the server tool
-
     """
 
     kind: str = field(default="*")
@@ -170,7 +160,6 @@ class ServerTool(Tool):
 @dataclass
 class BingSearchTool(Tool):
     """The Bing search tool.
-
     Attributes
     ----------
     kind : str
@@ -179,7 +168,6 @@ class BingSearchTool(Tool):
         The connection configuration for the Bing search tool
     configurations : list[BingSearchConfiguration]
         The configuration options for the Bing search tool
-
     """
 
     kind: str = field(default="bing_search")
@@ -214,9 +202,7 @@ class BingSearchTool(Tool):
 
 @dataclass
 class FileSearchTool(Tool):
-    """A tool for searching files.
-    This tool allows an AI agent to search for files based on a query.
-
+    """A tool for searching files.This tool allows an AI agent to search for files based on a query.
     Attributes
     ----------
     kind : str
@@ -229,7 +215,6 @@ class FileSearchTool(Tool):
         File search ranker.
     scoreThreshold : float
         Ranker search threshold.
-
     """
 
     kind: str = field(default="file_search")
@@ -263,7 +248,6 @@ class FileSearchTool(Tool):
 @dataclass
 class McpTool(Tool):
     """The MCP Server tool.
-
     Attributes
     ----------
     kind : str
@@ -276,7 +260,6 @@ class McpTool(Tool):
         The URL of the MCP server
     allowed : list[str]
         List of allowed operations or resources for the MCP tool
-
     """
 
     kind: str = field(default="mcp")
@@ -310,14 +293,12 @@ class McpTool(Tool):
 @dataclass
 class ModelTool(Tool):
     """The MCP Server tool.
-
     Attributes
     ----------
     kind : str
         The kind identifier for a model connection as a tool
     model : Model
         The connection configuration for the model tool
-
     """
 
     kind: str = field(default="model")

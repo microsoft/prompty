@@ -98,7 +98,7 @@ input:
 
 ```
 
-### float input
+### float32 input
 
 Simple construction with just a kind of float
 
@@ -113,7 +113,7 @@ This is equivalent to the full representation:
 
 ```yaml
 input:
-  kind: number
+  kind: float
   sample: 3.14
 
 ```
@@ -133,7 +133,7 @@ This is equivalent to the full representation:
 
 ```yaml
 input:
-  kind: number
+  kind: integer
   sample: 5
 
 ```

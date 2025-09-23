@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -33,7 +31,8 @@ public class BindingConversionTests
 
         var instance = JsonSerializer.Deserialize<Binding>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.name, "my-tool");
-        Assert.Equal(instance.input, "input-variable");
+        Assert.Equal("my-tool", instance.Name);
+        Assert.Equal("input-variable", instance.Input);
     }
+
 }

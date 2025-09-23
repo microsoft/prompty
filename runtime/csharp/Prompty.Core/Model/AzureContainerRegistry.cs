@@ -39,42 +39,7 @@ public class AzureContainerRegistry : Registry
     /// </summary>
     public string RegistryName { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="AzureContainerRegistry"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new AzureContainerRegistry Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new AzureContainerRegistry();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("subscription", out var subscriptionValue))
-        {
-            instance.Subscription = subscriptionValue as string ?? throw new ArgumentException("Properties must contain a property named: subscription");
-        }
-        if (data.TryGetValue("resourceGroup", out var resourceGroupValue))
-        {
-            instance.ResourceGroup = resourceGroupValue as string ?? throw new ArgumentException("Properties must contain a property named: resourceGroup");
-        }
-        if (data.TryGetValue("registryName", out var registryNameValue))
-        {
-            instance.RegistryName = registryNameValue as string ?? throw new ArgumentException("Properties must contain a property named: registryName");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class AzureContainerRegistryConverter : JsonConverter<AzureContainerRegistry>
 {
@@ -88,8 +53,9 @@ public class AzureContainerRegistryConverter : JsonConverter<AzureContainerRegis
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new AzureContainerRegistry();
 
+            // create new instance
+            var instance = new AzureContainerRegistry();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

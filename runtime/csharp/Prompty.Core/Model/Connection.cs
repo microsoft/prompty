@@ -36,79 +36,7 @@ public abstract class Connection
     /// </summary>
     public string? UsageDescription { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Connection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Connection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Connection instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("authority", out var authorityValue))
-        {
-            instance.Authority = authorityValue as string ?? throw new ArgumentException("Properties must contain a property named: authority");
-        }
-        if (data.TryGetValue("usageDescription", out var usageDescriptionValue))
-        {
-            instance.UsageDescription = usageDescriptionValue as string;
-        }
-        return instance;
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Connection"/> based on the "kind" property.
-    /// </summary>
-    internal static Connection LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Connection instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "reference")
-            {
-                return ReferenceConnection.Load(props);
-            }
-            else if (discriminator_value == "key")
-            {
-                return KeyConnection.Load(props);
-            }
-            else if (discriminator_value == "oauth")
-            {
-                return OAuthConnection.Load(props);
-            }
-            else if (discriminator_value == "foundry")
-            {
-                return FoundryConnection.Load(props);
-            }
-            else
-            {
-                
-                // load default instance
-                return GenericConnection.Load(props);
-                
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Connection discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
-
-
 
 public class ConnectionConverter : JsonConverter<Connection>
 {
@@ -122,8 +50,30 @@ public class ConnectionConverter : JsonConverter<Connection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new GenericConnection();
 
+            // load polymorphic Connection instance
+            Connection instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Connection is not supported");
+                instance = discriminator switch
+                {
+                    "reference" => JsonSerializer.Deserialize<ReferenceConnection>(rootElement, options)
+                        ?? throw new JsonException("Empty ReferenceConnection instances are not supported"),
+                    "key" => JsonSerializer.Deserialize<KeyConnection>(rootElement, options)
+                        ?? throw new JsonException("Empty KeyConnection instances are not supported"),
+                    "oauth" => JsonSerializer.Deserialize<OAuthConnection>(rootElement, options)
+                        ?? throw new JsonException("Empty OAuthConnection instances are not supported"),
+                    "foundry" => JsonSerializer.Deserialize<FoundryConnection>(rootElement, options)
+                        ?? throw new JsonException("Empty FoundryConnection instances are not supported"),
+                    _ => new GenericConnection(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Connection discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

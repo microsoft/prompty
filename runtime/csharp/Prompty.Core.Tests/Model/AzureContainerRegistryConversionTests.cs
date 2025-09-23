@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -37,9 +35,10 @@ public class AzureContainerRegistryConversionTests
 
         var instance = JsonSerializer.Deserialize<AzureContainerRegistry>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "acr");
-        Assert.Equal(instance.subscription, "your-subscription-id");
-        Assert.Equal(instance.resourceGroup, "your-resource-group");
-        Assert.Equal(instance.registryName, "your-acr-name");
+        Assert.Equal("acr", instance.Kind);
+        Assert.Equal("your-subscription-id", instance.Subscription);
+        Assert.Equal("your-resource-group", instance.ResourceGroup);
+        Assert.Equal("your-acr-name", instance.RegistryName);
     }
+
 }

@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -150,27 +148,25 @@ public class PromptyConversionTests
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput1()
     {
         string yamlData = """
         id: unique-agent-id
@@ -236,7 +232,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput1()
     {
         string jsonData = """
         {
@@ -308,27 +304,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput2()
     {
         string yamlData = """
         id: unique-agent-id
@@ -394,7 +388,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput2()
     {
         string jsonData = """
         {
@@ -468,27 +462,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput3()
     {
         string yamlData = """
         id: unique-agent-id
@@ -554,7 +546,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput3()
     {
         string jsonData = """
         {
@@ -627,27 +619,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput4()
     {
         string yamlData = """
         id: unique-agent-id
@@ -713,7 +703,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput4()
     {
         string jsonData = """
         {
@@ -789,27 +779,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput5()
     {
         string yamlData = """
         id: unique-agent-id
@@ -875,7 +863,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput5()
     {
         string jsonData = """
         {
@@ -950,27 +938,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput6()
     {
         string yamlData = """
         id: unique-agent-id
@@ -1036,7 +1022,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput6()
     {
         string jsonData = """
         {
@@ -1113,27 +1099,25 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput7()
     {
         string yamlData = """
         id: unique-agent-id
@@ -1199,7 +1183,7 @@ user:
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput7()
     {
         string jsonData = """
         {
@@ -1275,23 +1259,21 @@ user:
 
         var instance = JsonSerializer.Deserialize<Prompty>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "unique-agent-id");
-        Assert.Equal(instance.version, "1.0.0");
-        Assert.Equal(instance.name, "basic-prompt");
-        Assert.Equal(instance.description, "A basic prompt that uses the GPT-3 chat API to answer questions");
-        Assert.Equal(instance.instructions, """system:
+        Assert.Equal("unique-agent-id", instance.Id);
+        Assert.Equal("1.0.0", instance.Version);
+        Assert.Equal("basic-prompt", instance.Name);
+        Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
+        Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
+and in a personable manner using markdown and even add some 
 personal flair with appropriate emojis.
 
 # Customer
-You are helping { { firstName} }
-        { { lastName} }
-        to find answers to
+You are helping {{firstName}} {{lastName}} to find answers to 
 their questions. Use their name to address them in your responses.
 user:
-        { { question} }
-        """);
+{{question}}", instance.Instructions);
     }
+
 }

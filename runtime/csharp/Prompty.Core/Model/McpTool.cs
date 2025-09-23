@@ -44,46 +44,7 @@ public class McpTool : Tool
     /// </summary>
     public IList<string> Allowed { get; set; } = [];
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="McpTool"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new McpTool Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new McpTool();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("connection", out var connectionValue))
-        {
-            instance.Connection = Connection.Load(connectionValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("url", out var urlValue))
-        {
-            instance.Url = urlValue as string ?? throw new ArgumentException("Properties must contain a property named: url");
-        }
-        if (data.TryGetValue("allowed", out var allowedValue))
-        {
-            instance.Allowed = allowedValue as IList<string> ?? throw new ArgumentException("Properties must contain a property named: allowed");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class McpToolConverter : JsonConverter<McpTool>
 {
@@ -97,8 +58,9 @@ public class McpToolConverter : JsonConverter<McpTool>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new McpTool();
 
+            // create new instance
+            var instance = new McpTool();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

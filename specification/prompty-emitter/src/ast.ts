@@ -92,8 +92,7 @@ export class TypeNode {
       const filteredInstances = instances.filter(instance => instance.value !== "*");
       const defaultInstance = instances.filter(i => i.value === "*")[0];
       return {
-        first: filteredInstances[0],
-        others: filteredInstances.slice(1),
+        types: filteredInstances,
         default: defaultInstance,
       };
     }
@@ -531,7 +530,7 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
         "name": "string"
       };
       prop.isScalar = true;
-      if(property.defaultValue && property.defaultValue.valueKind === "StringValue") {
+      if (property.defaultValue && property.defaultValue.valueKind === "StringValue") {
         prop.defaultValue = property.defaultValue?.value || null;
       }
       prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value)

@@ -40,71 +40,7 @@ public class Output
     /// </summary>
     public bool? Required { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Output"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Output Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Output instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("description", out var descriptionValue))
-        {
-            instance.Description = descriptionValue as string;
-        }
-        if (data.TryGetValue("required", out var requiredValue))
-        {
-            instance.Required = (bool)requiredValue;
-        }
-        return instance;
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Output"/> based on the "kind" property.
-    /// </summary>
-    internal static Output LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Output instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "array")
-            {
-                return ArrayOutput.Load(props);
-            }
-            else if (discriminator_value == "object")
-            {
-                return ObjectOutput.Load(props);
-            }
-            else
-            {
-                //create new instance (stop recursion)
-                return new Output();
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Output discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
 
 public class OutputConverter : JsonConverter<Output>
 {
@@ -118,8 +54,26 @@ public class OutputConverter : JsonConverter<Output>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Output();
 
+            // load polymorphic Output instance
+            Output instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Output is not supported");
+                instance = discriminator switch
+                {
+                    "array" => JsonSerializer.Deserialize<ArrayOutput>(rootElement, options)
+                        ?? throw new JsonException("Empty ArrayOutput instances are not supported"),
+                    "object" => JsonSerializer.Deserialize<ObjectOutput>(rootElement, options)
+                        ?? throw new JsonException("Empty ObjectOutput instances are not supported"),
+                    _ => new Output(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Output discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");

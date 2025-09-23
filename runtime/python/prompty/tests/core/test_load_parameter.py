@@ -52,5 +52,4 @@ def test_load_yaml_parameter():
     assert instance.name == "my-parameter"
     assert instance.kind == "string"
     assert instance.description == "A description of the tool parameter"
-
     assert instance.required

@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -47,8 +45,9 @@ public class McpToolConversionTests
 
         var instance = JsonSerializer.Deserialize<McpTool>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "mcp");
-        Assert.Equal(instance.name, "My MCP Tool");
-        Assert.Equal(instance.url, "https://mcp.server.com");
+        Assert.Equal("mcp", instance.Kind);
+        Assert.Equal("My MCP Tool", instance.Name);
+        Assert.Equal("https://mcp.server.com", instance.Url);
     }
+
 }

@@ -80,6 +80,7 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
   const csharp = classTemplate.render({
     node: node,
     renderPropertyName: renderPropertyName,
+    renderName: renderName,
     renderType: renderType,
     renderDefault: renderDefault,
     renderSetInstance: renderSetInstance,
@@ -114,9 +115,10 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template): string =>
       yaml: YAML.stringify(sample, { indent: 2 }).split('\n'),
       // get all scalars in the sample
       validation: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => ({
-        key: key,
+        key: renderName(key),
         value: typeof sample[key] === 'boolean' ? (sample[key] ? "True" : "False") : sample[key],
-        delimeter: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '"""' : '"') : '',
+        startDelim: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '@"' : '"') : '',
+        endDelim: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '"' : '"') : '',
       })),
     };
   });
@@ -142,14 +144,18 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template): string =>
     // replace control characters in samples
     examples: examples,
     alternates: alternates,
-    renderPropertyName: renderPropertyName,
+    renderName: renderName,
   });
   return test;
 };
 
 const renderPropertyName = (prop: PropertyNode): string => {
+  return renderName(prop.name);
+};
+
+const renderName = (name: string): string => {
   // convert snake_case to PascalCase
-  const pascal = prop.name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  const pascal = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   // capitalize the first letter
   return pascal.charAt(0).toUpperCase() + pascal.slice(1);
 };
@@ -187,30 +193,30 @@ const recursiveExpand = (obj: any): any => {
   return obj;
 };
 
-const generateAlternates = (node: TypeNode): { scalar: string; alternate: string }[] => {
+const generateAlternates = (node: TypeNode): { scalar: string; expansion: { property: string, value: string }[] }[] => {
   if (node.alternates && node.alternates.length > 0) {
-    const alternates: { scalar: string; alternate: string }[] = [];
+    const alternates: { scalar: string; expansion: { property: string, value: string }[] }[] = [];
     for (const alt of node.alternates) {
       const scalar = csharpTypeMapper[alt.scalar] || "object";
 
       // Process each alternate
-      const expansion: string[] = [];
+      const expansion: { property: string, value: string }[] = [];
       for (const key in alt.expansion) {
         const value = alt.expansion[key];
-        // check if valu is a string
+        // check if value is a string
         if (value === "{value}") {
-          expansion.push(`{"${key}", ${scalar}Value}`);
+          expansion.push({ property: renderName(key), value: `${scalar}Value` });
         } else {
           if (typeof value === 'string') {
-            expansion.push(`{"${key}", "${value}"}`);
+            expansion.push({ property: renderName(key), value: `"${value}"` });
           } else {
-            expansion.push(`{"${key}", ${value}}`);
+            expansion.push({ property: renderName(key), value: `${value}` });
           }
         }
       }
       alternates.push({
         scalar: scalar,
-        alternate: expansion.join(", ")
+        expansion: expansion,
       });
     }
     return alternates;

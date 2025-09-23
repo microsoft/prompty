@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -35,8 +33,9 @@ public class ConnectionConversionTests
 
         var instance = JsonSerializer.Deserialize<Connection>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "oauth");
-        Assert.Equal(instance.authority, "system");
-        Assert.Equal(instance.usageDescription, "This will allow the agent to respond to an email on your behalf");
+        Assert.Equal("oauth", instance.Kind);
+        Assert.Equal("system", instance.Authority);
+        Assert.Equal("This will allow the agent to respond to an email on your behalf", instance.UsageDescription);
     }
+
 }

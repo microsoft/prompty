@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -44,10 +42,11 @@ public class OAuthConnectionConversionTests
 
         var instance = JsonSerializer.Deserialize<OAuthConnection>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "oauth");
-        Assert.Equal(instance.endpoint, "https://{your-custom-endpoint}.openai.azure.com/");
-        Assert.Equal(instance.clientId, "your-client-id");
-        Assert.Equal(instance.clientSecret, "your-client-secret");
-        Assert.Equal(instance.tokenUrl, "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token");
+        Assert.Equal("oauth", instance.Kind);
+        Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", instance.Endpoint);
+        Assert.Equal("your-client-id", instance.ClientId);
+        Assert.Equal("your-client-secret", instance.ClientSecret);
+        Assert.Equal("https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", instance.TokenUrl);
     }
+
 }

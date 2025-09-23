@@ -29,34 +29,7 @@ public class ReferenceConnection : Connection
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ReferenceConnection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ReferenceConnection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ReferenceConnection();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ReferenceConnectionConverter : JsonConverter<ReferenceConnection>
 {
@@ -70,8 +43,9 @@ public class ReferenceConnectionConverter : JsonConverter<ReferenceConnection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ReferenceConnection();
 
+            // create new instance
+            var instance = new ReferenceConnection();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

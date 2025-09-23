@@ -38,38 +38,7 @@ public class ServerTool : Tool
     /// </summary>
     public IDictionary<string, object> Options { get; set; } = new Dictionary<string, object>();
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ServerTool"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ServerTool Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ServerTool();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("connection", out var connectionValue))
-        {
-            instance.Connection = Connection.Load(connectionValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = optionsValue as IDictionary<string, object> ?? throw new ArgumentException("Properties must contain a property named: options");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ServerToolConverter : JsonConverter<ServerTool>
 {
@@ -83,8 +52,9 @@ public class ServerToolConverter : JsonConverter<ServerTool>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ServerTool();
 
+            // create new instance
+            var instance = new ServerTool();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

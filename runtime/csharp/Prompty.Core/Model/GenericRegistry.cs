@@ -39,42 +39,7 @@ public class GenericRegistry : Registry
     /// </summary>
     public string? Password { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="GenericRegistry"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new GenericRegistry Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new GenericRegistry();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("repository", out var repositoryValue))
-        {
-            instance.Repository = repositoryValue as string ?? throw new ArgumentException("Properties must contain a property named: repository");
-        }
-        if (data.TryGetValue("username", out var usernameValue))
-        {
-            instance.Username = usernameValue as string;
-        }
-        if (data.TryGetValue("password", out var passwordValue))
-        {
-            instance.Password = passwordValue as string;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class GenericRegistryConverter : JsonConverter<GenericRegistry>
 {
@@ -88,8 +53,9 @@ public class GenericRegistryConverter : JsonConverter<GenericRegistry>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new GenericRegistry();
 
+            // create new instance
+            var instance = new GenericRegistry();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

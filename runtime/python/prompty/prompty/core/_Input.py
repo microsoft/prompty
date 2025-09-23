@@ -9,12 +9,7 @@ from typing import Any, Optional
 
 @dataclass
 class Input:
-    """Represents a single input property for a prompt.
-    * This model defines the structure of input properties that can be used in prompts,
-    including their type, description, whether they are required, and other attributes.
-    * It allows for the definition of dynamic inputs that can be filled with data
-    and processed to generate prompts for AI models.
-
+    """Represents a single input property for a prompt.* This model defines the structure of input properties that can be used in prompts,including their type, description, whether they are required, and other attributes.* It allows for the definition of dynamic inputs that can be filled with dataand processed to generate prompts for AI models.
     Attributes
     ----------
     name : str
@@ -31,7 +26,6 @@ class Input:
         The default value of the input - this represents the default value if none is provided
     sample : Optional[Any]
         A sample value of the input for examples and tooling
-
     """
 
     name: str = field(default="")
@@ -49,9 +43,9 @@ class Input:
         if isinstance(data, bool):
             data = {"kind": "boolean", "sample": data}
         if isinstance(data, float):
-            data = {"kind": "number", "sample": data}
+            data = {"kind": "float", "sample": data}
         if isinstance(data, int):
-            data = {"kind": "number", "sample": data}
+            data = {"kind": "integer", "sample": data}
         if isinstance(data, str):
             data = {"kind": "string", "sample": data}
 
@@ -95,16 +89,13 @@ class Input:
 
 @dataclass
 class ArrayInput(Input):
-    """Represents an array output property.
-    This extends the base Output model to represent an array of items.
-
+    """Represents an array output property.This extends the base Output model to represent an array of items.
     Attributes
     ----------
     kind : str
 
     items : Input
         The type of items contained in the array
-
     """
 
     kind: str = field(default="array")
@@ -128,16 +119,13 @@ class ArrayInput(Input):
 
 @dataclass
 class ObjectInput(Input):
-    """Represents an object output property.
-    This extends the base Output model to represent a structured object.
-
+    """Represents an object output property.This extends the base Output model to represent a structured object.
     Attributes
     ----------
     kind : str
 
     properties : list[Input]
         The properties contained in the object
-
     """
 
     kind: str = field(default="object")

@@ -10,14 +10,12 @@ from typing import Any
 @dataclass
 class EnvironmentVariable:
     """Definition for an environment variable used in containerized agents.
-
     Attributes
     ----------
     name : str
         Name of the environment variable
     value : str
         Environment variable resolution
-
     """
 
     name: str = field(default="")
@@ -26,6 +24,9 @@ class EnvironmentVariable:
     @staticmethod
     def load(data: Any) -> "EnvironmentVariable":
         """Load a EnvironmentVariable instance."""
+        # handle alternate representations
+        if isinstance(data, str):
+            data = {"value": data}
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for EnvironmentVariable: {data}")

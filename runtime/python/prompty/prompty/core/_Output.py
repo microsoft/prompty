@@ -9,9 +9,7 @@ from typing import Any, Optional
 
 @dataclass
 class Output:
-    """Represents the output properties of an AI agent.
-    Each output property can be a simple kind, an array, or an object.
-
+    """Represents the output properties of an AI agent.Each output property can be a simple kind, an array, or an object.
     Attributes
     ----------
     name : str
@@ -22,7 +20,6 @@ class Output:
         A short description of the output property
     required : Optional[bool]
         Whether the output property is required
-
     """
 
     name: str = field(default="")
@@ -68,16 +65,13 @@ class Output:
 
 @dataclass
 class ArrayOutput(Output):
-    """Represents an array output property.
-    This extends the base Output model to represent an array of items.
-
+    """Represents an array output property.This extends the base Output model to represent an array of items.
     Attributes
     ----------
     kind : str
 
     items : Output
         The type of items contained in the array
-
     """
 
     kind: str = field(default="array")
@@ -101,16 +95,13 @@ class ArrayOutput(Output):
 
 @dataclass
 class ObjectOutput(Output):
-    """Represents an object output property.
-    This extends the base Output model to represent a structured object.
-
+    """Represents an object output property.This extends the base Output model to represent a structured object.
     Attributes
     ----------
     kind : str
 
     properties : list[Output]
         The properties contained in the object
-
     """
 
     kind: str = field(default="object")

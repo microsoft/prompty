@@ -6,6 +6,7 @@ namespace Prompty.Core {
   /**
    * Represents a binding between an input property and a tool parameter.
    */
+  @shorthand(string, #{ input: "{value}" })
   model Binding {
     @doc("The input property that will be bound to the tool parameter argument")
     @sample(#{ input: "input-variable" })

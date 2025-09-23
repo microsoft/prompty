@@ -10,7 +10,6 @@ from typing import Any, Optional
 @dataclass
 class Format:
     """Template format definition
-
     Attributes
     ----------
     kind : str
@@ -19,10 +18,9 @@ class Format:
         Whether the template can emit structural text for parsing output
     options : Optional[dict[str, Any]]
         Options for the template engine
-
     """
 
-    kind: str = field(default="")
+    kind: str = field(default="*")
     strict: Optional[bool] = field(default=False)
     options: Optional[dict[str, Any]] = field(default_factory=dict)
 

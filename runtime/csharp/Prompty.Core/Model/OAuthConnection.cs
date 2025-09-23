@@ -49,50 +49,7 @@ public class OAuthConnection : Connection
     /// </summary>
     public IList<string> Scopes { get; set; } = [];
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="OAuthConnection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new OAuthConnection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new OAuthConnection();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("endpoint", out var endpointValue))
-        {
-            instance.Endpoint = endpointValue as string ?? throw new ArgumentException("Properties must contain a property named: endpoint");
-        }
-        if (data.TryGetValue("clientId", out var clientIdValue))
-        {
-            instance.ClientId = clientIdValue as string ?? throw new ArgumentException("Properties must contain a property named: clientId");
-        }
-        if (data.TryGetValue("clientSecret", out var clientSecretValue))
-        {
-            instance.ClientSecret = clientSecretValue as string ?? throw new ArgumentException("Properties must contain a property named: clientSecret");
-        }
-        if (data.TryGetValue("tokenUrl", out var tokenUrlValue))
-        {
-            instance.TokenUrl = tokenUrlValue as string ?? throw new ArgumentException("Properties must contain a property named: tokenUrl");
-        }
-        if (data.TryGetValue("scopes", out var scopesValue))
-        {
-            instance.Scopes = scopesValue as IList<string> ?? throw new ArgumentException("Properties must contain a property named: scopes");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class OAuthConnectionConverter : JsonConverter<OAuthConnection>
 {
@@ -106,8 +63,9 @@ public class OAuthConnectionConverter : JsonConverter<OAuthConnection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new OAuthConnection();
 
+            // create new instance
+            var instance = new OAuthConnection();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

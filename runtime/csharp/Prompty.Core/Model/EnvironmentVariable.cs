@@ -29,34 +29,7 @@ public class EnvironmentVariable
     /// </summary>
     public string Value { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="EnvironmentVariable"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static EnvironmentVariable Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new EnvironmentVariable();
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("value", out var valueValue))
-        {
-            instance.Value = valueValue as string ?? throw new ArgumentException("Properties must contain a property named: value");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class EnvironmentVariableConverter : JsonConverter<EnvironmentVariable>
 {
@@ -66,12 +39,21 @@ public class EnvironmentVariableConverter : JsonConverter<EnvironmentVariable>
         {
             throw new JsonException("Cannot convert null value to EnvironmentVariable.");
         }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for EnvironmentVariable are not supported");
+            return new EnvironmentVariable()
+            {
+                Value = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new EnvironmentVariable();
 
+            // create new instance
+            var instance = new EnvironmentVariable();
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");

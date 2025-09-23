@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -53,6 +51,7 @@ public class BingSearchToolConversionTests
 
         var instance = JsonSerializer.Deserialize<BingSearchTool>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "bing_search");
+        Assert.Equal("bing_search", instance.Kind);
     }
+
 }

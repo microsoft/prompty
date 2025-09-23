@@ -29,39 +29,7 @@ public class ObjectParameter : Parameter
     /// </summary>
     public IList<Parameter> Properties { get; set; } = [];
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ObjectParameter"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new ObjectParameter Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ObjectParameter();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("properties", out var propertiesValue))
-        {
-            instance.Properties = LoadProperties(propertiesValue);
-        }
-        return instance;
-    }
-    
-    internal static IList<Parameter> LoadProperties(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => Parameter.Load(item))];
-    }
-    
-    
-    */
 }
-
 
 public class ObjectParameterConverter : JsonConverter<ObjectParameter>
 {
@@ -75,8 +43,9 @@ public class ObjectParameterConverter : JsonConverter<ObjectParameter>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ObjectParameter();
 
+            // create new instance
+            var instance = new ObjectParameter();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
@@ -84,7 +53,29 @@ public class ObjectParameterConverter : JsonConverter<ObjectParameter>
 
             if (rootElement.TryGetProperty("properties", out JsonElement propertiesValue))
             {
-                // need object collection deserialization
+                if (propertiesValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Properties =
+                        [.. propertiesValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<Parameter> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Properties are not supported"))];
+                }
+                else if (propertiesValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Properties =
+                        [.. propertiesValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<Parameter>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Properties are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for properties");
+                }
             }
 
             return instance;

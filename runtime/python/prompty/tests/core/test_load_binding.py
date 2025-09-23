@@ -35,3 +35,9 @@ def test_load_yaml_binding():
     assert instance is not None
     assert instance.name == "my-tool"
     assert instance.input == "input-variable"
+
+
+def test_load_binding_from_string():
+    instance = Binding.load("example")
+    assert instance is not None
+    assert instance.input == "example"

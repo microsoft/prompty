@@ -34,49 +34,7 @@ public class Format
     /// </summary>
     public IDictionary<string, object>? Options { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Format"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Format Load(object props)
-    {
-        IDictionary<string, object> data;
-        if (props is string stringValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"kind", stringValue}
-            };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-        
-        // create new instance
-        var instance = new Format();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("strict", out var strictValue))
-        {
-            instance.Strict = (bool)strictValue;
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = optionsValue as IDictionary<string, object>;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class FormatConverter : JsonConverter<Format>
 {
@@ -86,12 +44,21 @@ public class FormatConverter : JsonConverter<Format>
         {
             throw new JsonException("Cannot convert null value to Format.");
         }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Format are not supported");
+            return new Format()
+            {
+                Kind = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Format();
 
+            // create new instance
+            var instance = new Format();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

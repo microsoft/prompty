@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -51,7 +49,8 @@ public class ModelConversionTests
 
         var instance = JsonSerializer.Deserialize<Model>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.id, "gpt-35-turbo");
-        Assert.Equal(instance.provider, "azure");
+        Assert.Equal("gpt-35-turbo", instance.Id);
+        Assert.Equal("azure", instance.Provider);
     }
+
 }

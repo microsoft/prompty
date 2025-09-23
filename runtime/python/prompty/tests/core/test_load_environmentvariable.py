@@ -35,3 +35,9 @@ def test_load_yaml_environmentvariable():
     assert instance is not None
     assert instance.name == "MY_ENV_VAR"
     assert instance.value == "my-value"
+
+
+def test_load_environmentvariable_from_string():
+    instance = EnvironmentVariable.load("example")
+    assert instance is not None
+    assert instance.value == "example"

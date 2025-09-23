@@ -34,43 +34,7 @@ public class BingSearchTool : Tool
     /// </summary>
     public IList<BingSearchConfiguration> Configurations { get; set; } = [];
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="BingSearchTool"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new BingSearchTool Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new BingSearchTool();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("connection", out var connectionValue))
-        {
-            instance.Connection = Connection.Load(connectionValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("configurations", out var configurationsValue))
-        {
-            instance.Configurations = LoadConfigurations(configurationsValue);
-        }
-        return instance;
-    }
-    
-    internal static IList<BingSearchConfiguration> LoadConfigurations(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => BingSearchConfiguration.Load(item))];
-    }
-    
-    
-    */
 }
-
 
 public class BingSearchToolConverter : JsonConverter<BingSearchTool>
 {
@@ -84,8 +48,9 @@ public class BingSearchToolConverter : JsonConverter<BingSearchTool>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new BingSearchTool();
 
+            // create new instance
+            var instance = new BingSearchTool();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
@@ -98,7 +63,29 @@ public class BingSearchToolConverter : JsonConverter<BingSearchTool>
 
             if (rootElement.TryGetProperty("configurations", out JsonElement configurationsValue))
             {
-                // need object collection deserialization
+                if (configurationsValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.Configurations =
+                        [.. configurationsValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<BingSearchConfiguration> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for Configurations are not supported"))];
+                }
+                else if (configurationsValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.Configurations =
+                        [.. configurationsValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<BingSearchConfiguration>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for Configurations are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for configurations");
+                }
             }
 
             return instance;

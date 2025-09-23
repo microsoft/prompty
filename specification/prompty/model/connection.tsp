@@ -1,12 +1,7 @@
 import "@prompty/emitter";
 
 namespace Prompty.Core {
-  alias ConnectionType =
-    | "key"
-    | "oauth"
-    | "reference"
-    | "foundry"
-    | string;
+  alias ConnectionType = "key" | "oauth" | "reference" | "foundry" | string;
   alias Authority = "user" | "agent" | "system" | string;
 
   /**
@@ -38,6 +33,9 @@ namespace Prompty.Core {
     #{ name: "my-connection" }
   >[];
 
+  /**
+   * Generic connection configuration for AI services.
+   */
   model GenericConnection extends Connection {
     @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
     kind: "*";

@@ -43,5 +43,4 @@ def test_load_yaml_output():
     assert instance.name == "my-output"
     assert instance.kind == "string"
     assert instance.description == "A description of the output property"
-
     assert instance.required

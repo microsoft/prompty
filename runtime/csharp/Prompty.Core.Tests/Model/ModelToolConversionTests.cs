@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -43,6 +41,7 @@ public class ModelToolConversionTests
 
         var instance = JsonSerializer.Deserialize<ModelTool>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "model");
+        Assert.Equal("model", instance.Kind);
     }
+
 }

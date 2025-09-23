@@ -1,5 +1,7 @@
 # GenericConnection
 
+Generic connection configuration for AI services.
+
 ## Class Diagram
 
 ```mermaid

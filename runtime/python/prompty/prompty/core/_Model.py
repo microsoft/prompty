@@ -12,10 +12,7 @@ from ._ModelOptions import ModelOptions
 
 @dataclass
 class Model:
-    """Model for defining the structure and behavior of AI agents.
-    This model includes properties for specifying the model&#39;s provider, connection details, and various options.
-    It allows for flexible configuration of AI models to suit different use cases and requirements.
-
+    """Model for defining the structure and behavior of AI agents.This model includes properties for specifying the model&#39;s provider, connection details, and various options.It allows for flexible configuration of AI models to suit different use cases and requirements.
     Attributes
     ----------
     id : str
@@ -26,7 +23,6 @@ class Model:
         The connection configuration for the model
     options : Optional[ModelOptions]
         Additional options for the model
-
     """
 
     id: str = field(default="")

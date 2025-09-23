@@ -13,14 +13,12 @@ from ._Connection import Connection
 @dataclass
 class Registry(ABC):
     """Definition for a container image registry.
-
     Attributes
     ----------
     kind : str
         The kind of container registry
     connection : Connection
         The connection configuration for accessing the container registry
-
     """
 
     kind: str = field(default="")
@@ -58,7 +56,6 @@ class Registry(ABC):
 @dataclass
 class GenericRegistry(Registry):
     """Definition for a generic container image registry.
-
     Attributes
     ----------
     kind : str
@@ -69,7 +66,6 @@ class GenericRegistry(Registry):
         The username for accessing the container registry
     password : Optional[str]
         The password for accessing the container registry
-
     """
 
     kind: str = field(default="*")
@@ -100,7 +96,6 @@ class GenericRegistry(Registry):
 @dataclass
 class AzureContainerRegistry(Registry):
     """Definition for an Azure Container Registry (ACR).
-
     Attributes
     ----------
     kind : str
@@ -111,7 +106,6 @@ class AzureContainerRegistry(Registry):
         The Azure resource group containing the ACR
     registryName : str
         The name of the ACR
-
     """
 
     kind: str = field(default="acr")

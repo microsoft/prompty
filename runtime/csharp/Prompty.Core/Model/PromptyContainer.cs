@@ -39,47 +39,7 @@ public class PromptyContainer : Prompty
     /// </summary>
     public IList<EnvironmentVariable>? EnvironmentVariables { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="PromptyContainer"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new PromptyContainer Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new PromptyContainer();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("protocol", out var protocolValue))
-        {
-            instance.Protocol = protocolValue as string ?? throw new ArgumentException("Properties must contain a property named: protocol");
-        }
-        if (data.TryGetValue("container", out var containerValue))
-        {
-            instance.Container = ContainerDefinition.Load(containerValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("environmentVariables", out var environmentVariablesValue))
-        {
-            instance.EnvironmentVariables = LoadEnvironmentVariables(environmentVariablesValue);
-        }
-        return instance;
-    }
-    
-    internal static IList<EnvironmentVariable> LoadEnvironmentVariables(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => EnvironmentVariable.Load(item))];
-    }
-    
-    
-    */
 }
-
 
 public class PromptyContainerConverter : JsonConverter<PromptyContainer>
 {
@@ -93,8 +53,9 @@ public class PromptyContainerConverter : JsonConverter<PromptyContainer>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new PromptyContainer();
 
+            // create new instance
+            var instance = new PromptyContainer();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
@@ -112,7 +73,29 @@ public class PromptyContainerConverter : JsonConverter<PromptyContainer>
 
             if (rootElement.TryGetProperty("environmentVariables", out JsonElement environmentVariablesValue))
             {
-                // need object collection deserialization
+                if (environmentVariablesValue.ValueKind == JsonValueKind.Array)
+                {
+                    instance.EnvironmentVariables =
+                        [.. environmentVariablesValue.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<EnvironmentVariable> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for EnvironmentVariables are not supported"))];
+                }
+                else if (environmentVariablesValue.ValueKind == JsonValueKind.Object)
+                {
+                    instance.EnvironmentVariables =
+                        [.. environmentVariablesValue.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<EnvironmentVariable>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for EnvironmentVariables are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for environmentVariables");
+                }
             }
 
             return instance;

@@ -44,75 +44,7 @@ public class Parameter
     /// </summary>
     public IList<object>? Enum { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Parameter"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Parameter Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // load polymorphic Parameter instance
-        var instance = LoadKind(data);
-        
-        if (data.TryGetValue("name", out var nameValue))
-        {
-            instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name");
-        }
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("description", out var descriptionValue))
-        {
-            instance.Description = descriptionValue as string;
-        }
-        if (data.TryGetValue("required", out var requiredValue))
-        {
-            instance.Required = (bool)requiredValue;
-        }
-        if (data.TryGetValue("enum", out var enumValue))
-        {
-            instance.Enum = enumValue as IList<object>;
-        }
-        return instance;
-    }
-    
-    
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="Parameter"/> based on the "kind" property.
-    /// </summary>
-    internal static Parameter LoadKind(IDictionary<string, object> props)
-    {
-        // load polymorphic Parameter instance from kind property
-        if(props.ContainsKey("kind"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "object")
-            {
-                return ObjectParameter.Load(props);
-            }
-            else if (discriminator_value == "array")
-            {
-                return ArrayParameter.Load(props);
-            }
-            else
-            {
-                //create new instance (stop recursion)
-                return new Parameter();
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Missing Parameter discriminator property: 'kind'");
-        }
-    }
-    
-    */
 }
-
 
 public class ParameterConverter : JsonConverter<Parameter>
 {
@@ -126,8 +58,26 @@ public class ParameterConverter : JsonConverter<Parameter>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Parameter();
 
+            // load polymorphic Parameter instance
+            Parameter instance;
+            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString()
+                    ?? throw new JsonException("Empty discriminator value for Parameter is not supported");
+                instance = discriminator switch
+                {
+                    "object" => JsonSerializer.Deserialize<ObjectParameter>(rootElement, options)
+                        ?? throw new JsonException("Empty ObjectParameter instances are not supported"),
+                    "array" => JsonSerializer.Deserialize<ArrayParameter>(rootElement, options)
+                        ?? throw new JsonException("Empty ArrayParameter instances are not supported"),
+                    _ => new Parameter(),
+                };
+            }
+            else
+            {
+                throw new JsonException("Missing Parameter discriminator property: 'kind'");
+            }
             if (rootElement.TryGetProperty("name", out JsonElement nameValue))
             {
                 instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");

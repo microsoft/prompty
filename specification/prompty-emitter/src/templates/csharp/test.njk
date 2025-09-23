@@ -1,18 +1,15 @@
 using Xunit;
 using System.Text.Json;
-using {{ node.typeName.namespace }};
-
 
 #pragma warning disable IDE0130
-namespace {{ node.typeName.namespace }}.Tests.Model;
+namespace {{ node.typeName.namespace }};
 #pragma warning restore IDE0130
 
 
 public class {{ node.typeName.name }}ConversionTests
-{
-    {%- for sample in examples %}
+{   {% for sample in examples %}
     [Fact]
-    public void LoadYamlInput()
+    public void LoadYamlInput{% if not loop.first %}{{loop.index - 1}}{% endif %}()
     {
         string yamlData = """
         {%- for line in sample.yaml %}
@@ -23,7 +20,7 @@ public class {{ node.typeName.name }}ConversionTests
     }
 
     [Fact]
-    public void LoadJsonInput()
+    public void LoadJsonInput{% if not loop.first %}{{loop.index - 1}}{% endif %}()
     {
         string jsonData = """
         {%- for line in sample.json %}
@@ -35,11 +32,11 @@ public class {{ node.typeName.name }}ConversionTests
         Assert.NotNull(instance);
         {%- for validation in sample.validation %}
         {%- if validation.value == "True" or validation.value == "False" %}
-        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key }});
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key  }});
         {%- else %}
-        Assert.Equal(instance.{{ validation.key }}, {{ validation.delimeter | safe }}{{ validation.value }}{{ validation.delimeter | safe }});
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}, instance.{{ validation.key }});
         {%- endif %}
         {%- endfor %}
     }
-    {%- endfor %}
+    {% endfor %}
 }

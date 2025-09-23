@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -40,6 +38,7 @@ public class RegistryConversionTests
 
         var instance = JsonSerializer.Deserialize<Registry>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.kind, "docker");
+        Assert.Equal("docker", instance.Kind);
     }
+
 }

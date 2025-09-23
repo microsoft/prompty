@@ -24,118 +24,8 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     {{ renderSummary(prop) | safe }}
     public {{ renderPropertyModifier(prop) }}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
     {% endfor %}
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static {% if node.base %}new {% endif %}{{ node.typeName.name }} Load(object props)
-    {
-        {%- if node.alternates.length > 0 %}
-        IDictionary<string, object> data;
-        {% for alt in alternates -%}
-        {% if not loop.first %}else {% endif %}if (props is {{ alt.scalar }} {{ alt.scalar }}Value)
-        {
-            data = new Dictionary<string, object>
-            {
-               {{ alt.alternate | safe}}
-            };
-        }
-        {% endfor -%}
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-        {% else %}
-        IDictionary<string, object> data = props.ToParamDictionary();
-        {% endif -%}
-        {%- if polymorphicTypes %}
-        // load polymorphic {{ node.typeName.name }} instance
-        var instance = Load{{ node.discriminator | capitalize }}(data);
-        {% else %}
-        // create new instance
-        var instance = new {{ node.typeName.name }}();
-        {% endif -%}
-        {%- for prop in node.properties %}
-        if (data.TryGetValue("{{ prop.name }}", out var {{ prop.name }}Value))
-        {
-            {{ renderSetInstance(prop, "instance", "data") | safe }}
-        }
-        {%- endfor %}
-        return instance;
-    }
-    {% for prop in collectionTypes %}
-    internal static IList<{{ prop.typeName.name }}> Load{{ renderPropertyName(prop) }}(object data)
-    {
-        return [.. data.GetNamedDictionaryList().Select(item => {{ prop.typeName.name }}.Load(item))];
-    }
-    {% endfor %}
-    {% if polymorphicTypes %}
-    /// <summary>
-    /// Load a polymorphic instance of <see cref="{{ node.typeName.name }}"/> based on the "{{ node.discriminator }}" property.
-    /// </summary>
-    internal static {{ node.typeName.name }} Load{{ node.discriminator | capitalize }}(IDictionary<string, object> props)
-    {
-        // load polymorphic {{ node.typeName.name }} instance from {{ node.discriminator }} property
-        if(props.ContainsKey("{{ node.discriminator }}"))
-        {
-            var discriminator_value = props.GetValueOrDefault<string>("{{ node.discriminator }}");
-            {%- set first = polymorphicTypes.first -%}
-            {%- set others = polymorphicTypes.others -%}
-            {%- set default = polymorphicTypes.default -%}
-            {%- if first %}
-            if(discriminator_value == "{{ first.value }}")
-            {
-                return {{ first.instance.typeName.name }}.Load(props);
-            }
-            {%- for other in others %}
-            else if (discriminator_value == "{{ other.value }}")
-            {
-                return {{ other.instance.typeName.name }}.Load(props);
-            }
-            {%- endfor %}
-            {%- endif %}
-            {%- if default %}
-            else
-            {
-                {% if default.instance.typeName.name == node.typeName.name -%}
-                //create new instance (stop recursion)
-                return new {{ node.typeName.name }}();
-                {%- else %}
-                // load default instance
-                return {{ default.instance.typeName.name }}.Load(props);
-                {% endif %}
-            }
-            {%- else %}
-            else
-            {
-                throw new ArgumentException($"Unknown {{ node.typeName.name }} discriminator value: {discriminator_value}");
-            }
-            {%- endif %}
-        }
-        else
-        {
-            throw new ArgumentException("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'");
-        }
-    }
-    {% endif %}
-    */
 }
 
-
-{% if node.isAbstract %}
-{% if node.typeName.name.startsWith("Tool") %}
-{%- set testType = "Server" + node.typeName.name -%}
-{% else %}
-{%- set testType = "Generic" + node.typeName.name -%}
-{% endif %}
-{% else %}
-{%- set testType = node.typeName.name -%}
-{% endif %}
-
-{%- set others = polymorphicTypes.others -%}
-{%- set default = polymorphicTypes.default -%}
 public class {{ node.typeName.name }}Converter: JsonConverter<{{ node.typeName.name }}>
 {
     public override {{ node.typeName.name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -144,12 +34,85 @@ public class {{ node.typeName.name }}Converter: JsonConverter<{{ node.typeName.n
         {
             throw new JsonException("Cannot convert null value to {{ node.typeName.name }}.");
         }
+        {%- for alt in alternates %}
+            {%- if alt.scalar == "bool" %}
+        else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
+        {
+            var {{ alt.scalar }}Value = reader.GetBoolean();
+            return new {{ node.typeName.name }}()
+            {
+                {%- for item in alt.expansion %}
+                {{ item.property }} = {{ item.value | safe }},
+                {%- endfor %}
+            };
+        }
+            {%- elif alt.scalar == "float" or alt.scalar == "int" %}
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            var {{ alt.scalar }}Value = reader.Get{% if alt.scalar == "float" %}Single{% else %}Int32{% endif %}();
+            return new {{ node.typeName.name }}()
+            {
+                {%- for item in alt.expansion %}
+                {{ item.property }} = {{ item.value | safe }},
+                {%- endfor %}
+            };
+        }
+            {%- else %}
+        else if (reader.TokenType == JsonTokenType.{{ alt.scalar | capitalize }})
+        {
+            var {{ alt.scalar }}Value = reader.{{ converterMapper(alt.scalar) }}() ?? throw new ArgumentException("Empty {{ alt.scalar }} shorthand values for {{ node.typeName.name }} are not supported");
+            return new {{ node.typeName.name }}()
+            {
+                {%- for item in alt.expansion %}
+                {{ item.property }} = {{ item.value | safe }},
+                {%- endfor %}
+            };
+        }
+            {%- endif %}
+        {%- endfor %}
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new {{ testType }}();
-            {% for prop in node.properties %}
+            {% if polymorphicTypes %}
+            // load polymorphic {{ node.typeName.name }} instance
+            {{ node.typeName.name }} instance;
+            if (rootElement.TryGetProperty("{{ node.discriminator }}", out JsonElement discriminatorValue))
+            {
+                var discriminator = discriminatorValue.GetString() 
+                    ?? throw new JsonException("Empty discriminator value for {{ node.typeName.name }} is not supported");
+                instance = discriminator switch 
+                {
+                    {%- for type in polymorphicTypes.types %}
+                    "{{ type.value }}" => JsonSerializer.Deserialize<{{ type.instance.typeName.name }}> (rootElement, options)
+                        ?? throw new JsonException("Empty {{ type.instance.typeName.name }} instances are not supported"),
+                    {%- endfor %}
+                    {%- if polymorphicTypes.default %}
+                    _ => new {{ polymorphicTypes.default.instance.typeName.name }}(),
+                    {%- else %}
+                    _ => throw new JsonException($"Unknown {{ node.typeName.name }} discriminator value: {discriminator}"),
+                    {%- endif %}
+                };
+            }
+            else
+            {
+                {%- if node.isRoot %}
+                // default to "prompt" if discriminator is missing or empty
+                instance = new {{ node.typeName.name }}
+                {
+                    {{ renderName(node.discriminator) }} = "prompt"
+                };
+                {%- else %}
+                throw new JsonException("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'");
+                {%- endif %}
+            }
+
+            {%- else %}
+            // create new instance
+            var instance = new {{ node.typeName.name }}();
+            {%- endif %}
+
+            {%- for prop in node.properties %}
             if (rootElement.TryGetProperty("{{ prop.name }}", out JsonElement {{ prop.name }}Value))
             {
                 {%- if prop.isDict %}
@@ -158,7 +121,29 @@ public class {{ node.typeName.name }}Converter: JsonConverter<{{ node.typeName.n
                     {%- if prop.isScalar %}
                 instance.{{ renderPropertyName(prop) }} = [.. {{ prop.name }}Value.EnumerateArray().Select(x => x.{{ converterMapper(prop.typeName.name) }}() ?? throw new ArgumentException("Empty array elements for {{ prop.name }} are not supported"))];
                     {%- else %}
-                // need object collection deserialization
+                if ({{ prop.name }}Value.ValueKind == JsonValueKind.Array)
+                {
+                    instance.{{ renderPropertyName(prop) }} = 
+                        [.. {{ prop.name }}Value.EnumerateArray()
+                            .Select(x => JsonSerializer.Deserialize<{{ prop.typeName.name }}> (x.GetRawText(), options)
+                                ?? throw new ArgumentException("Empty array elements for {{ renderPropertyName(prop) }} are not supported"))];
+                }
+                else if ({{ prop.name }}Value.ValueKind == JsonValueKind.Object)
+                {
+                    instance.{{ renderPropertyName(prop) }} = 
+                        [.. {{ prop.name }}Value.EnumerateObject()
+                            .Select(property =>
+                            {
+                                var item = JsonSerializer.Deserialize<{{ prop.typeName.name }}>(property.Value.GetRawText(), options)
+                                    ?? throw new ArgumentException("Empty array elements for {{ renderPropertyName(prop) }} are not supported");
+                                item.Name = property.Name;
+                                return item;
+                            })];
+                }
+                else
+                {
+                    throw new JsonException("Invalid JSON token for {{ prop.name }}");
+                }
                     {%- endif %}
                 {%- else %}
                     {%- if prop.isScalar %}

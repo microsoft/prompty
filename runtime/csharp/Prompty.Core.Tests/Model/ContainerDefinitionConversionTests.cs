@@ -1,10 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using Prompty.Core;
-
 
 #pragma warning disable IDE0130
-namespace Prompty.Core.Tests.Model;
+namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
@@ -58,7 +56,8 @@ public class ContainerDefinitionConversionTests
 
         var instance = JsonSerializer.Deserialize<ContainerDefinition>(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(instance.image, "my-container-image");
-        Assert.Equal(instance.tag, "v1.0.0");
+        Assert.Equal("my-container-image", instance.Image);
+        Assert.Equal("v1.0.0", instance.Tag);
     }
+
 }

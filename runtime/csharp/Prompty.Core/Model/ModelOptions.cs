@@ -25,30 +25,7 @@ public class ModelOptions
     /// </summary>
     public string Kind { get; set; } = string.Empty;
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="ModelOptions"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static ModelOptions Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new ModelOptions();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ModelOptionsConverter : JsonConverter<ModelOptions>
 {
@@ -62,8 +39,9 @@ public class ModelOptionsConverter : JsonConverter<ModelOptions>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new ModelOptions();
 
+            // create new instance
+            var instance = new ModelOptions();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

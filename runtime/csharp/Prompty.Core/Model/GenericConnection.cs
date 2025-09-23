@@ -7,7 +7,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
+/// Generic connection configuration for AI services.
 /// </summary>
 [JsonConverter(typeof(GenericConnectionConverter))]
 public class GenericConnection : Connection
@@ -29,34 +29,7 @@ public class GenericConnection : Connection
     /// </summary>
     public IDictionary<string, object>? Options { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="GenericConnection"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static new GenericConnection Load(object props)
-    {
-        IDictionary<string, object> data = props.ToParamDictionary();
-        
-        // create new instance
-        var instance = new GenericConnection();
-        
-        if (data.TryGetValue("kind", out var kindValue))
-        {
-            instance.Kind = kindValue as string ?? throw new ArgumentException("Properties must contain a property named: kind");
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = optionsValue as IDictionary<string, object>;
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class GenericConnectionConverter : JsonConverter<GenericConnection>
 {
@@ -70,8 +43,9 @@ public class GenericConnectionConverter : JsonConverter<GenericConnection>
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new GenericConnection();
 
+            // create new instance
+            var instance = new GenericConnection();
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");

@@ -10,7 +10,6 @@ from typing import Any, Optional
 @dataclass
 class Scale:
     """Configuration for scaling container instances.
-
     Attributes
     ----------
     minReplicas : Optional[int]
@@ -21,7 +20,6 @@ class Scale:
         CPU allocation per instance (in cores)
     memory : float
         Memory allocation per instance (in GB)
-
     """
 
     minReplicas: Optional[int] = field(default=1)

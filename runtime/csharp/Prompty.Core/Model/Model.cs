@@ -41,53 +41,7 @@ public class Model
     /// </summary>
     public ModelOptions? Options { get; set; }
 
-
-    /*
-    /// <summary>
-    /// Initializes a new instance of <see cref="Model"/>.
-    /// </summary>
-    /// <param name="props">Properties for this instance.</param>
-    internal static Model Load(object props)
-    {
-        IDictionary<string, object> data;
-        if (props is string stringValue)
-        {
-            data = new Dictionary<string, object>
-            {
-               {"id", stringValue}
-            };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-        
-        // create new instance
-        var instance = new Model();
-        
-        if (data.TryGetValue("id", out var idValue))
-        {
-            instance.Id = idValue as string ?? throw new ArgumentException("Properties must contain a property named: id");
-        }
-        if (data.TryGetValue("provider", out var providerValue))
-        {
-            instance.Provider = providerValue as string;
-        }
-        if (data.TryGetValue("connection", out var connectionValue))
-        {
-            instance.Connection = Connection.Load(connectionValue.ToParamDictionary());
-        }
-        if (data.TryGetValue("options", out var optionsValue))
-        {
-            instance.Options = ModelOptions.Load(optionsValue.ToParamDictionary());
-        }
-        return instance;
-    }
-    
-    
-    */
 }
-
 
 public class ModelConverter : JsonConverter<Model>
 {
@@ -97,12 +51,21 @@ public class ModelConverter : JsonConverter<Model>
         {
             throw new JsonException("Cannot convert null value to Model.");
         }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Model are not supported");
+            return new Model()
+            {
+                Id = stringValue,
+            };
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
             var rootElement = jsonDocument.RootElement;
-            var instance = new Model();
 
+            // create new instance
+            var instance = new Model();
             if (rootElement.TryGetProperty("id", out JsonElement idValue))
             {
                 instance.Id = idValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: id");
