@@ -2,9 +2,8 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
-import { stringify } from 'yaml';
+import * as YAML from 'yaml';
 import path from "path";
-import { emit } from "process";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -60,11 +59,11 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     let md: string | undefined = undefined;
     if (sample.length > 0) {
       const s = deepMerge(...sample);
-      yml = stringify(s, { indent: 2 });
+      yml = YAML.stringify(s, { indent: 2 });
       if ("instructions" in s) {
         const instructions = s.instructions;
         delete s.instructions;
-        md = `---\n${stringify(s, { indent: 2 })}---\n${instructions}`;
+        md = `---\n${YAML.stringify(s, { indent: 2 })}---\n${instructions}`;
       }
     }
     const markdown = template.render({
@@ -146,8 +145,8 @@ export const generateAlternates = (node: TypeNode): { title: string; description
         title: alt.title || "",
         description: alt.description || "",
         scalar: scalar,
-        simple: stringify(simple, { indent: 2 }).replace("\"{value}\"", sample).replaceAll("'", ""),
-        expanded: stringify(expansion, { indent: 2 }).replace("\"{value}\"", sample)
+        simple: YAML.stringify(simple, { indent: 2 }).replace("\"{value}\"", sample).replaceAll("'", ""),
+        expanded: YAML.stringify(expansion, { indent: 2 }).replace("\"{value}\"", sample)
       });
     }
     return alts;

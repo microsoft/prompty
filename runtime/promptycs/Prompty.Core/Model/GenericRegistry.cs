@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a generic container image registry.
 /// </summary>
+[JsonConverter(typeof(GenericRegistryConverter))]
 public class GenericRegistry : Registry
 {
     /// <summary>
@@ -71,4 +71,67 @@ public class GenericRegistry : Registry
     }
     
     
+}
+
+
+public class GenericRegistryConverter: JsonConverter<GenericRegistry>
+{
+    public override GenericRegistry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new GenericRegistry();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new GenericRegistry();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("repository", out JsonElement repositoryValue))
+            {
+                instance.Repository = JsonSerializer.Deserialize<string>(repositoryValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("username", out JsonElement usernameValue))
+            {
+                instance.Username = JsonSerializer.Deserialize<string?>(usernameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("password", out JsonElement passwordValue))
+            {
+                instance.Password = JsonSerializer.Deserialize<string?>(passwordValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return GenericRegistry.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, GenericRegistry value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Repository != null)
+        {
+            writer.WritePropertyName("repository");
+            JsonSerializer.Serialize(writer, value.Repository, options);
+        }
+        if(value.Username != null)
+        {
+            writer.WritePropertyName("username");
+            JsonSerializer.Serialize(writer, value.Username, options);
+        }
+        if(value.Password != null)
+        {
+            writer.WritePropertyName("password");
+            JsonSerializer.Serialize(writer, value.Password, options);
+        }
+        writer.WriteEndObject();
+    }
 }

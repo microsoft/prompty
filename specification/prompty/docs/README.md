@@ -229,10 +229,10 @@ classDiagram
     }
     class Scale {
       
-        +integer minReplicas
-        +integer maxReplicas
-        +float cpu
-        +float memory
+        +int32 minReplicas
+        +int32 maxReplicas
+        +float32 cpu
+        +float32 memory
     }
     class ContainerDefinition {
       

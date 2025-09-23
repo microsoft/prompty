@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -14,6 +13,7 @@ namespace Prompty.Core;
 /// * It allows for the definition of dynamic inputs that can be filled with data
 /// and processed to generate prompts for AI models.
 /// </summary>
+[JsonConverter(typeof(InputConverter))]
 public class Input
 {
     /// <summary>
@@ -163,4 +163,94 @@ public class Input
         }
     }
     
+}
+
+
+public class InputConverter: JsonConverter<Input>
+{
+    public override Input Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Input();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Input();
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
+            {
+                instance.Description = JsonSerializer.Deserialize<string?>(descriptionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("required", out JsonElement requiredValue))
+            {
+                instance.Required = JsonSerializer.Deserialize<bool?>(requiredValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("strict", out JsonElement strictValue))
+            {
+                instance.Strict = JsonSerializer.Deserialize<bool?>(strictValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("default", out JsonElement defaultValue))
+            {
+                instance.Default = JsonSerializer.Deserialize<object?>(defaultValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("sample", out JsonElement sampleValue))
+            {
+                instance.Sample = JsonSerializer.Deserialize<object?>(sampleValue.GetRawText(), options);
+            }
+
+            //var dict = rootElement.ToParamDictionary();
+            return instance;
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Input value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Description != null)
+        {
+            writer.WritePropertyName("description");
+            JsonSerializer.Serialize(writer, value.Description, options);
+        }
+        if(value.Required != null)
+        {
+            writer.WritePropertyName("required");
+            JsonSerializer.Serialize(writer, value.Required, options);
+        }
+        if(value.Strict != null)
+        {
+            writer.WritePropertyName("strict");
+            JsonSerializer.Serialize(writer, value.Strict, options);
+        }
+        if(value.Default != null)
+        {
+            writer.WritePropertyName("default");
+            JsonSerializer.Serialize(writer, value.Default, options);
+        }
+        if(value.Sample != null)
+        {
+            writer.WritePropertyName("sample");
+            JsonSerializer.Serialize(writer, value.Sample, options);
+        }
+        writer.WriteEndObject();
+    }
 }

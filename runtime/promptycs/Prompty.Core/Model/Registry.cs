@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a container image registry.
 /// </summary>
+[JsonConverter(typeof(RegistryConverter))]
 public abstract class Registry
 {
     /// <summary>
@@ -80,4 +80,49 @@ public abstract class Registry
         }
     }
     
+}
+
+
+public class RegistryConverter: JsonConverter<Registry>
+{
+    public override Registry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new GenericRegistry();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new GenericRegistry();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
+            {
+                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Registry.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Registry value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Connection != null)
+        {
+            writer.WritePropertyName("connection");
+            JsonSerializer.Serialize(writer, value.Connection, options);
+        }
+        writer.WriteEndObject();
+    }
 }

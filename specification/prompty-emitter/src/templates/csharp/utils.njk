@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 using System.Collections;
 using System.Reflection;
+using System.Text.Json;
 
 #pragma warning disable IDE0130
 namespace {{ namespace }};
@@ -11,6 +12,22 @@ namespace {{ namespace }};
 /// </summary>
 internal static class Utils
 {
+    public static object? GetScalarValue(this JsonElement obj)
+    {
+        return obj.ValueKind switch
+        {
+            JsonValueKind.String => obj.GetString(),
+            JsonValueKind.Number => obj.GetRawText().Contains('.') ? obj.GetSingle() : obj.GetInt32(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Array => obj.EnumerateArray().Select(static x => x.GetScalarValue()).ToArray(),
+            JsonValueKind.Null => null,
+            JsonValueKind.Object => null,
+            JsonValueKind.Undefined => null,
+            _ => null,
+        };
+    }
+
     /// <summary>
     /// Retrieves a value from the dictionary by key and attempts to convert it to the specified type T.
     /// </summary>

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// The MCP Server tool.
 /// </summary>
+[JsonConverter(typeof(ModelToolConverter))]
 public class ModelTool : Tool
 {
     /// <summary>
@@ -53,4 +53,49 @@ public class ModelTool : Tool
     }
     
     
+}
+
+
+public class ModelToolConverter: JsonConverter<ModelTool>
+{
+    public override ModelTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ModelTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ModelTool();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("model", out JsonElement modelValue))
+            {
+                instance.Model = JsonSerializer.Deserialize<Model>(modelValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ModelTool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ModelTool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Model != null)
+        {
+            writer.WritePropertyName("model");
+            JsonSerializer.Serialize(writer, value.Model, options);
+        }
+        writer.WriteEndObject();
+    }
 }

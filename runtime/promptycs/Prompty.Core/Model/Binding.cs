@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a binding between an input property and a tool parameter.
 /// </summary>
+[JsonConverter(typeof(BindingConverter))]
 public class Binding
 {
     /// <summary>
@@ -53,4 +53,49 @@ public class Binding
     }
     
     
+}
+
+
+public class BindingConverter: JsonConverter<Binding>
+{
+    public override Binding Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Binding();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Binding();
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("input", out JsonElement inputValue))
+            {
+                instance.Input = JsonSerializer.Deserialize<string>(inputValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Binding.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Binding value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        if(value.Input != null)
+        {
+            writer.WritePropertyName("input");
+            JsonSerializer.Serialize(writer, value.Input, options);
+        }
+        writer.WriteEndObject();
+    }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents an object parameter for a tool.
 /// </summary>
+[JsonConverter(typeof(ObjectParameterConverter))]
 public class ObjectParameter : Parameter
 {
     /// <summary>
@@ -58,4 +58,49 @@ public class ObjectParameter : Parameter
     }
     
     
+}
+
+
+public class ObjectParameterConverter: JsonConverter<ObjectParameter>
+{
+    public override ObjectParameter Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ObjectParameter();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ObjectParameter();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("properties", out JsonElement propertiesValue))
+            {
+                instance.Properties = JsonSerializer.Deserialize<IList<Parameter>>(propertiesValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ObjectParameter.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ObjectParameter value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Properties != null)
+        {
+            writer.WritePropertyName("properties");
+            JsonSerializer.Serialize(writer, value.Properties, options);
+        }
+        writer.WriteEndObject();
+    }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a local function tool.
 /// </summary>
+[JsonConverter(typeof(FunctionToolConverter))]
 public class FunctionTool : Tool
 {
     /// <summary>
@@ -58,4 +58,49 @@ public class FunctionTool : Tool
     }
     
     
+}
+
+
+public class FunctionToolConverter: JsonConverter<FunctionTool>
+{
+    public override FunctionTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new FunctionTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new FunctionTool();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("parameters", out JsonElement parametersValue))
+            {
+                instance.Parameters = JsonSerializer.Deserialize<IList<Parameter>>(parametersValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return FunctionTool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, FunctionTool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Parameters != null)
+        {
+            writer.WritePropertyName("parameters");
+            JsonSerializer.Serialize(writer, value.Parameters, options);
+        }
+        writer.WriteEndObject();
+    }
 }

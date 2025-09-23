@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace {{ node.typeName.namespace }};
@@ -12,6 +11,7 @@ namespace {{ node.typeName.namespace }};
 /// {{ line }}
 {% endfor -%}
 /// </summary>
+[JsonConverter(typeof({{ node.typeName.name }}Converter))]
 public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }}{% if node.base %} : {{ node.base.name }}{% endif %}
 {
     /// <summary>
@@ -25,6 +25,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     public {{ renderPropertyModifier(prop) }}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
     {% endfor %}
 
+    /*
     /// <summary>
     /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
     /// </summary>
@@ -119,4 +120,74 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         }
     }
     {% endif %}
+    */
+}
+
+
+{% if node.isAbstract %}
+{% if node.typeName.name.startsWith("Tool") %}
+{%- set testType = "Server" + node.typeName.name -%}
+{% else %}
+{%- set testType = "Generic" + node.typeName.name -%}
+{% endif %}
+{% else %}
+{%- set testType = node.typeName.name -%}
+{% endif %}
+
+{%- set others = polymorphicTypes.others -%}
+{%- set default = polymorphicTypes.default -%}
+public class {{ node.typeName.name }}Converter: JsonConverter<{{ node.typeName.name }}>
+{
+    public override {{ node.typeName.name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            throw new JsonException("Cannot convert null value to {{ node.typeName.name }}.");
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new {{ testType }}();
+            {% for prop in node.properties %}
+            if (rootElement.TryGetProperty("{{ prop.name }}", out JsonElement {{ prop.name }}Value))
+            {
+                {%- if prop.isDict %}
+                instance.{{ renderPropertyName(prop) }} = JsonSerializer.Deserialize<Dictionary<string, object>>({{ prop.name }}Value.GetRawText(), options){{ renderNullCoalescing(prop) | safe }};
+                {%- elif prop.isCollection %}
+                    {%- if prop.isScalar %}
+                instance.{{ renderPropertyName(prop) }} = [.. {{ prop.name }}Value.EnumerateArray().Select(x => x.{{ converterMapper(prop.typeName.name) }}() ?? throw new ArgumentException("Empty array elements for {{ prop.name }} are not supported"))];
+                    {%- else %}
+                // need object collection deserialization
+                    {%- endif %}
+                {%- else %}
+                    {%- if prop.isScalar %}
+                instance.{{ renderPropertyName(prop) }} = {{ prop.name }}Value.{{ converterMapper(prop.typeName.name) }}(){{ renderNullCoalescing(prop) | safe }};
+                    {%- else %}
+                instance.{{ renderPropertyName(prop) }} = JsonSerializer.Deserialize<{{ renderType(prop) | safe }}>({{ prop.name }}Value.GetRawText(), options){{ renderNullCoalescing(prop) | safe }};
+                    {%- endif %}
+                {%- endif %}
+            }
+            {% endfor %}
+            return instance;
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{ node.typeName.name }} value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        {%- for prop in node.properties %}
+        {%- if prop.isOptional %}
+        if(value.{{ renderPropertyName(prop) }} != null)
+        {
+            writer.WritePropertyName("{{ prop.name }}");
+            JsonSerializer.Serialize(writer, value.{{ renderPropertyName(prop) }}, options);
+        }
+        {%- else %}
+        writer.WritePropertyName("{{ prop.name }}");
+        JsonSerializer.Serialize(writer, value.{{ renderPropertyName(prop) }}, options);
+        {%- endif %}
+        {% endfor %}
+        writer.WriteEndObject();
+    }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for an Azure Container Registry (ACR).
 /// </summary>
+[JsonConverter(typeof(AzureContainerRegistryConverter))]
 public class AzureContainerRegistry : Registry
 {
     /// <summary>
@@ -71,4 +71,67 @@ public class AzureContainerRegistry : Registry
     }
     
     
+}
+
+
+public class AzureContainerRegistryConverter: JsonConverter<AzureContainerRegistry>
+{
+    public override AzureContainerRegistry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new AzureContainerRegistry();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new AzureContainerRegistry();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("subscription", out JsonElement subscriptionValue))
+            {
+                instance.Subscription = JsonSerializer.Deserialize<string>(subscriptionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("resourceGroup", out JsonElement resourceGroupValue))
+            {
+                instance.ResourceGroup = JsonSerializer.Deserialize<string>(resourceGroupValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("registryName", out JsonElement registryNameValue))
+            {
+                instance.RegistryName = JsonSerializer.Deserialize<string>(registryNameValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return AzureContainerRegistry.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, AzureContainerRegistry value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Subscription != null)
+        {
+            writer.WritePropertyName("subscription");
+            JsonSerializer.Serialize(writer, value.Subscription, options);
+        }
+        if(value.ResourceGroup != null)
+        {
+            writer.WritePropertyName("resourceGroup");
+            JsonSerializer.Serialize(writer, value.ResourceGroup, options);
+        }
+        if(value.RegistryName != null)
+        {
+            writer.WritePropertyName("registryName");
+            JsonSerializer.Serialize(writer, value.RegistryName, options);
+        }
+        writer.WriteEndObject();
+    }
 }

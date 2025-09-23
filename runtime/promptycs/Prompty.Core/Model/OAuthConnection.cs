@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using OAuth authentication.
 /// </summary>
+[JsonConverter(typeof(OAuthConnectionConverter))]
 public class OAuthConnection : Connection
 {
     /// <summary>
@@ -89,4 +89,85 @@ public class OAuthConnection : Connection
     }
     
     
+}
+
+
+public class OAuthConnectionConverter: JsonConverter<OAuthConnection>
+{
+    public override OAuthConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new OAuthConnection();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new OAuthConnection();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("endpoint", out JsonElement endpointValue))
+            {
+                instance.Endpoint = JsonSerializer.Deserialize<string>(endpointValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("clientId", out JsonElement clientIdValue))
+            {
+                instance.ClientId = JsonSerializer.Deserialize<string>(clientIdValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("clientSecret", out JsonElement clientSecretValue))
+            {
+                instance.ClientSecret = JsonSerializer.Deserialize<string>(clientSecretValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("tokenUrl", out JsonElement tokenUrlValue))
+            {
+                instance.TokenUrl = JsonSerializer.Deserialize<string>(tokenUrlValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("scopes", out JsonElement scopesValue))
+            {
+                instance.Scopes = JsonSerializer.Deserialize<IList<string>>(scopesValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return OAuthConnection.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, OAuthConnection value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Endpoint != null)
+        {
+            writer.WritePropertyName("endpoint");
+            JsonSerializer.Serialize(writer, value.Endpoint, options);
+        }
+        if(value.ClientId != null)
+        {
+            writer.WritePropertyName("clientId");
+            JsonSerializer.Serialize(writer, value.ClientId, options);
+        }
+        if(value.ClientSecret != null)
+        {
+            writer.WritePropertyName("clientSecret");
+            JsonSerializer.Serialize(writer, value.ClientSecret, options);
+        }
+        if(value.TokenUrl != null)
+        {
+            writer.WritePropertyName("tokenUrl");
+            JsonSerializer.Serialize(writer, value.TokenUrl, options);
+        }
+        if(value.Scopes != null)
+        {
+            writer.WritePropertyName("scopes");
+            JsonSerializer.Serialize(writer, value.Scopes, options);
+        }
+        writer.WriteEndObject();
+    }
 }

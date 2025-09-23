@@ -16,8 +16,8 @@ options:
       - type: markdown
         output-dir: "../prompty/docs"
       - type: CSharp
-        output-dir: "../../runtime/promptycs/Prompty.Core/Model"
-        test-dir: "../../runtime/promptycs/Prompty.Core.Tests/Model"
+        output-dir: "../../runtime/csharp/Prompty.Core/Model"
+        test-dir: "../../runtime/csharp/Prompty.Core.Tests/Model"
         aliases:
           Input: "AgentInput"
       - type: Python

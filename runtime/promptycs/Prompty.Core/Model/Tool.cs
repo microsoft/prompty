@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a tool that can be used in prompts.
 /// </summary>
+[JsonConverter(typeof(ToolConverter))]
 public abstract class Tool
 {
     /// <summary>
@@ -18,27 +18,27 @@ public abstract class Tool
     protected Tool()
     {
     }
-        
+
     /// <summary>
     /// Name of the tool. If a function tool, this is the function name, otherwise it is the type
     /// </summary>
     public virtual string Name { get; set; } = string.Empty;
-        
+
     /// <summary>
     /// The kind identifier for the tool
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
-        
+
     /// <summary>
     /// A short description of the tool for metadata purposes
     /// </summary>
     public string? Description { get; set; }
-        
+
     /// <summary>
     /// Tool argument bindings to input properties
     /// </summary>
     public IList<Binding>? Bindings { get; set; }
-    
+
 
     /// <summary>
     /// Initializes a new instance of <see cref="Tool"/>.
@@ -47,10 +47,10 @@ public abstract class Tool
     internal static Tool Load(object props)
     {
         IDictionary<string, object> data = props.ToParamDictionary();
-        
+
         // load polymorphic Tool instance
         var instance = LoadKind(data);
-        
+
         if (data.TryGetValue("name", out var nameValue))
         {
             instance.Name = nameValue as string ?? throw new ArgumentException("Properties must contain a property named: name", nameof(props));
@@ -69,23 +69,23 @@ public abstract class Tool
         }
         return instance;
     }
-    
+
     internal static IList<Binding> LoadBindings(object data)
     {
         return [.. data.GetNamedDictionaryList().Select(item => Binding.Load(item))];
     }
-    
-    
+
+
     /// <summary>
     /// Load a polymorphic instance of <see cref="Tool"/> based on the "kind" property.
     /// </summary>
     internal static Tool LoadKind(IDictionary<string, object> props)
     {
         // load polymorphic Tool instance from kind property
-        if(props.ContainsKey("kind"))
+        if (props.ContainsKey("kind"))
         {
             var discriminator_value = props.GetValueOrDefault<string>("kind");
-            if(discriminator_value == "function")
+            if (discriminator_value == "function")
             {
                 return FunctionTool.Load(props);
             }
@@ -107,10 +107,10 @@ public abstract class Tool
             }
             else
             {
-                
+
                 // load default instance
                 return ServerTool.Load(props);
-                
+
             }
         }
         else
@@ -118,5 +118,68 @@ public abstract class Tool
             throw new ArgumentException("Missing Tool discriminator property: 'kind'");
         }
     }
-    
+
+}
+
+
+public class ToolConverter : JsonConverter<Tool>
+{
+    public override Tool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ServerTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ServerTool();
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
+            {
+                instance.Description = JsonSerializer.Deserialize<string?>(descriptionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("bindings", out JsonElement bindingsValue))
+            {
+                instance.Bindings = JsonSerializer.Deserialize<IList<Binding>?>(bindingsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Tool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Tool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if (value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        if (value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if (value.Description != null)
+        {
+            writer.WritePropertyName("description");
+            JsonSerializer.Serialize(writer, value.Description, options);
+        }
+        if (value.Bindings != null)
+        {
+            writer.WritePropertyName("bindings");
+            JsonSerializer.Serialize(writer, value.Bindings, options);
+        }
+        writer.WriteEndObject();
+    }
 }

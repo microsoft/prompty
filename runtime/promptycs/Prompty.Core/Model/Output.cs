@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,6 +10,7 @@ namespace Prompty.Core;
 /// Represents the output properties of an AI agent.
 /// Each output property can be a simple kind, an array, or an object.
 /// </summary>
+[JsonConverter(typeof(OutputConverter))]
 public class Output
 {
     /// <summary>
@@ -101,4 +101,67 @@ public class Output
         }
     }
     
+}
+
+
+public class OutputConverter: JsonConverter<Output>
+{
+    public override Output Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Output();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Output();
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
+            {
+                instance.Description = JsonSerializer.Deserialize<string?>(descriptionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("required", out JsonElement requiredValue))
+            {
+                instance.Required = JsonSerializer.Deserialize<bool?>(requiredValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Output.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Output value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Description != null)
+        {
+            writer.WritePropertyName("description");
+            JsonSerializer.Serialize(writer, value.Description, options);
+        }
+        if(value.Required != null)
+        {
+            writer.WritePropertyName("required");
+            JsonSerializer.Serialize(writer, value.Required, options);
+        }
+        writer.WriteEndObject();
+    }
 }

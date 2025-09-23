@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -17,6 +16,7 @@ namespace Prompty.Core;
 /// It allows for the creation of reusable templates that can be filled with dynamic data
 /// and processed to generate prompts for AI models.
 /// </summary>
+[JsonConverter(typeof(TemplateConverter))]
 public class Template
 {
     /// <summary>
@@ -60,4 +60,49 @@ public class Template
     }
     
     
+}
+
+
+public class TemplateConverter: JsonConverter<Template>
+{
+    public override Template Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Template();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Template();
+            if (rootElement.TryGetProperty("format", out JsonElement formatValue))
+            {
+                instance.Format = JsonSerializer.Deserialize<Format>(formatValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("parser", out JsonElement parserValue))
+            {
+                instance.Parser = JsonSerializer.Deserialize<Parser>(parserValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Template.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Template value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Format != null)
+        {
+            writer.WritePropertyName("format");
+            JsonSerializer.Serialize(writer, value.Format, options);
+        }
+        if(value.Parser != null)
+        {
+            writer.WritePropertyName("parser");
+            JsonSerializer.Serialize(writer, value.Parser, options);
+        }
+        writer.WriteEndObject();
+    }
 }

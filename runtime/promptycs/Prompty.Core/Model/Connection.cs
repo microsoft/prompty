@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -12,6 +11,7 @@ namespace Prompty.Core;
 /// `provider`, `kind`, and `endpoint` are required properties here,
 /// but this section can accept additional via options.
 /// </summary>
+[JsonConverter(typeof(ConnectionConverter))]
 public abstract class Connection
 {
     /// <summary>
@@ -103,4 +103,58 @@ public abstract class Connection
         }
     }
     
+}
+
+
+public class ConnectionConverter: JsonConverter<Connection>
+{
+    public override Connection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new GenericConnection();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new GenericConnection();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("authority", out JsonElement authorityValue))
+            {
+                instance.Authority = JsonSerializer.Deserialize<string>(authorityValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("usageDescription", out JsonElement usageDescriptionValue))
+            {
+                instance.UsageDescription = JsonSerializer.Deserialize<string?>(usageDescriptionValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Connection.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Connection value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Authority != null)
+        {
+            writer.WritePropertyName("authority");
+            JsonSerializer.Serialize(writer, value.Authority, options);
+        }
+        if(value.UsageDescription != null)
+        {
+            writer.WritePropertyName("usageDescription");
+            JsonSerializer.Serialize(writer, value.UsageDescription, options);
+        }
+        writer.WriteEndObject();
+    }
 }

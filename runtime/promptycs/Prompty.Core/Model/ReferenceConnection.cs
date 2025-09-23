@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using named connections.
 /// </summary>
+[JsonConverter(typeof(ReferenceConnectionConverter))]
 public class ReferenceConnection : Connection
 {
     /// <summary>
@@ -53,4 +53,49 @@ public class ReferenceConnection : Connection
     }
     
     
+}
+
+
+public class ReferenceConnectionConverter: JsonConverter<ReferenceConnection>
+{
+    public override ReferenceConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ReferenceConnection();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ReferenceConnection();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ReferenceConnection.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ReferenceConnection value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        writer.WriteEndObject();
+    }
 }

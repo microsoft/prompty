@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// The Bing search tool.
 /// </summary>
+[JsonConverter(typeof(BingSearchToolConverter))]
 public class BingSearchTool : Tool
 {
     /// <summary>
@@ -67,4 +67,58 @@ public class BingSearchTool : Tool
     }
     
     
+}
+
+
+public class BingSearchToolConverter: JsonConverter<BingSearchTool>
+{
+    public override BingSearchTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new BingSearchTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new BingSearchTool();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
+            {
+                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("configurations", out JsonElement configurationsValue))
+            {
+                instance.Configurations = JsonSerializer.Deserialize<IList<BingSearchConfiguration>>(configurationsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return BingSearchTool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, BingSearchTool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Connection != null)
+        {
+            writer.WritePropertyName("connection");
+            JsonSerializer.Serialize(writer, value.Connection, options);
+        }
+        if(value.Configurations != null)
+        {
+            writer.WritePropertyName("configurations");
+            JsonSerializer.Serialize(writer, value.Configurations, options);
+        }
+        writer.WriteEndObject();
+    }
 }

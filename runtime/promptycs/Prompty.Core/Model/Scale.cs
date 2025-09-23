@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Configuration for scaling container instances.
 /// </summary>
+[JsonConverter(typeof(ScaleConverter))]
 public class Scale
 {
     /// <summary>
@@ -71,4 +71,67 @@ public class Scale
     }
     
     
+}
+
+
+public class ScaleConverter: JsonConverter<Scale>
+{
+    public override Scale Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Scale();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Scale();
+            if (rootElement.TryGetProperty("minReplicas", out JsonElement minReplicasValue))
+            {
+                instance.MinReplicas = JsonSerializer.Deserialize<int?>(minReplicasValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("maxReplicas", out JsonElement maxReplicasValue))
+            {
+                instance.MaxReplicas = JsonSerializer.Deserialize<int?>(maxReplicasValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("cpu", out JsonElement cpuValue))
+            {
+                instance.Cpu = JsonSerializer.Deserialize<float>(cpuValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("memory", out JsonElement memoryValue))
+            {
+                instance.Memory = JsonSerializer.Deserialize<float>(memoryValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Scale.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Scale value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.MinReplicas != null)
+        {
+            writer.WritePropertyName("minReplicas");
+            JsonSerializer.Serialize(writer, value.MinReplicas, options);
+        }
+        if(value.MaxReplicas != null)
+        {
+            writer.WritePropertyName("maxReplicas");
+            JsonSerializer.Serialize(writer, value.MaxReplicas, options);
+        }
+        if(value.Cpu != null)
+        {
+            writer.WritePropertyName("cpu");
+            JsonSerializer.Serialize(writer, value.Cpu, options);
+        }
+        if(value.Memory != null)
+        {
+            writer.WritePropertyName("memory");
+            JsonSerializer.Serialize(writer, value.Memory, options);
+        }
+        writer.WriteEndObject();
+    }
 }

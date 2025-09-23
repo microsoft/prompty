@@ -1,5 +1,7 @@
 import json
 
+import yaml
+
 from prompty.core import Input
 
 
@@ -8,7 +10,7 @@ def test_create_input():
     assert instance is not None
 
 
-def test_load_input():
+def test_load_json_input():
     json_data = """
     {
       "name": "my-input",
@@ -21,6 +23,31 @@ def test_load_input():
     }
     """
     data = json.loads(json_data, strict=False)
+    instance = Input.load(data)
+    assert instance is not None
+    assert instance.name == "my-input"
+    assert instance.kind == "string"
+    assert instance.description == "A description of the input property"
+
+    assert instance.required
+
+    assert instance.strict
+    assert instance.default == "default value"
+    assert instance.sample == "sample value"
+
+
+def test_load_yaml_input():
+    yaml_data = """
+    name: my-input
+    kind: string
+    description: A description of the input property
+    required: true
+    strict: true
+    default: default value
+    sample: sample value
+    
+    """
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Input.load(data)
     assert instance is not None
     assert instance.name == "my-input"

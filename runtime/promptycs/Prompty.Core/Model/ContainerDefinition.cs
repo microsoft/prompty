@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a containerized AI agent.
 /// </summary>
+[JsonConverter(typeof(ContainerDefinitionConverter))]
 public class ContainerDefinition
 {
     /// <summary>
@@ -71,4 +71,67 @@ public class ContainerDefinition
     }
     
     
+}
+
+
+public class ContainerDefinitionConverter: JsonConverter<ContainerDefinition>
+{
+    public override ContainerDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ContainerDefinition();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ContainerDefinition();
+            if (rootElement.TryGetProperty("image", out JsonElement imageValue))
+            {
+                instance.Image = JsonSerializer.Deserialize<string>(imageValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("tag", out JsonElement tagValue))
+            {
+                instance.Tag = JsonSerializer.Deserialize<string?>(tagValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("registry", out JsonElement registryValue))
+            {
+                instance.Registry = JsonSerializer.Deserialize<Registry>(registryValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("scale", out JsonElement scaleValue))
+            {
+                instance.Scale = JsonSerializer.Deserialize<Scale>(scaleValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ContainerDefinition.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ContainerDefinition value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Image != null)
+        {
+            writer.WritePropertyName("image");
+            JsonSerializer.Serialize(writer, value.Image, options);
+        }
+        if(value.Tag != null)
+        {
+            writer.WritePropertyName("tag");
+            JsonSerializer.Serialize(writer, value.Tag, options);
+        }
+        if(value.Registry != null)
+        {
+            writer.WritePropertyName("registry");
+            JsonSerializer.Serialize(writer, value.Registry, options);
+        }
+        if(value.Scale != null)
+        {
+            writer.WritePropertyName("scale");
+            JsonSerializer.Serialize(writer, value.Scale, options);
+        }
+        writer.WriteEndObject();
+    }
 }

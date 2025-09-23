@@ -2,6 +2,8 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
+import { getCombinations, scalarValue } from "./utilities.js";
+import * as YAML from "yaml";
 import path from "path";
 
 const csharpTypeMapper: Record<string, string> = {
@@ -10,14 +12,25 @@ const csharpTypeMapper: Record<string, string> = {
   "array": "[]",
   "object": "object",
   "boolean": "bool",
-  "int64": "int",
+  "int64": "long",
   "int32": "int",
   "float64": "double",
   "float32": "float",
   "integer": "int",
-  "float": "float",
-  "numeric": "float",
   "dictionary": "IDictionary<string, object>",
+};
+
+const jsonConverterMapper: Record<string, string> = {
+  "string": "GetString",
+  // this is smarter about numbers
+  "number": "GetScalarValue",
+  "unknown": "GetScalarValue",
+  "boolean": "GetBoolean",
+  "int64": "GetInt64",
+  "int32": "GetInt32",
+  "float64": "GetDouble",
+  "float32": "GetSingle",
+  "integer": "GetInt32",
 };
 
 const numberTypes = [
@@ -37,6 +50,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
+  const testTemplate = env.getTemplate('test.njk', true);
 
   const nodes = Array.from(enumerateTypes(node));
 
@@ -46,30 +60,91 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
 
+
+
+  for (const node of nodes) {
+    //const className = getClassName(node.typeName.name);
+    await emitCsharpFile(context, node, renderCSharp(nodes, node, classTemplate), `${node.typeName.name}.cs`, emitTarget["output-dir"]);
+    if (emitTarget["test-dir"]) {
+      await emitCsharpFile(context, node, renderTests(node, testTemplate), `${node.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
+    }
+  }
+};
+
+const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks.Template): string => {
+  const polymorphicTypes = node.retrievePolymorphicTypes();
   const findType = (typeName: string): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === typeName);
   }
 
-  for (const node of nodes) {
-    const polymorphicTypes = node.retrievePolymorphicTypes();
+  const csharp = classTemplate.render({
+    node: node,
+    renderPropertyName: renderPropertyName,
+    renderType: renderType,
+    renderDefault: renderDefault,
+    renderSetInstance: renderSetInstance,
+    renderSummary: renderSummary,
+    renderPropertyModifier: renderPropertyModifier(findType, node),
+    renderNullCoalescing: renderNullCoalescing,
+    converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
+    polymorphicTypes: polymorphicTypes,
+    collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
+    alternates: generateAlternates(node),
+  });
 
-    const csharp = classTemplate.render({
-      node: node,
-      renderPropertyName: renderPropertyName,
-      renderType: renderType,
-      renderDefault: renderDefault,
-      renderSetInstance: renderSetInstance,
-      renderSummary: renderSummary,
-      renderPropertyModifier: renderPropertyModifier(findType, node),
-      renderNullCoalescing: renderNullCoalescing,
-      polymorphicTypes: polymorphicTypes,
-      collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
-      alternates: generateAlternates(node),
-    });
+  return csharp;
+}
 
-    //const className = getClassName(node.typeName.name);
-    await emitCsharpFile(context, node, csharp, `${node.typeName.name}.cs`, emitTarget["output-dir"]);
-  }
+const renderTests = (node: TypeNode, testTemplate: nunjucks.Template): string => {
+  const samples = node.properties.filter(p => p.samples && p.samples.length > 0).map(p => {
+    return p.samples?.map(s => ({
+      ...s.sample,
+    }));
+  });
+
+  const combinations =
+    samples.length > 0 ?
+      getCombinations(samples) :
+      [];
+
+  const examples = combinations.map(c => {
+    const sample = Object.assign({}, ...c);
+    return {
+      json: JSON.stringify(sample, null, 2).split('\n'),
+      yaml: YAML.stringify(sample, { indent: 2 }).split('\n'),
+      // get all scalars in the sample
+      validation: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => ({
+        key: key,
+        value: typeof sample[key] === 'boolean' ? (sample[key] ? "True" : "False") : sample[key],
+        delimeter: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '"""' : '"') : '',
+      })),
+    };
+  });
+
+  const alternates = node.alternates.map(alt => {
+    return {
+      title: alt.title || alt.scalar,
+      scalar: alt.scalar,
+      value: scalarValue[alt.scalar] || "None",
+      validation: Object.keys(alt.expansion).filter(key => typeof alt.expansion[key] !== 'object').map(key => {
+        const value = alt.expansion[key] === "{value}" ? (scalarValue[alt.scalar] || "None") : alt.expansion[key];
+        return {
+          key: key,
+          value: value,
+          delimeter: typeof value === 'string' && !value.includes('"') && alt.expansion[key] !== "{value}" ? '"' : '',
+        };
+      }),
+    };
+  });
+
+  const test = testTemplate.render({
+    node: node,
+    // replace control characters in samples
+    examples: examples,
+    alternates: alternates,
+    renderPropertyName: renderPropertyName,
+  });
+  return test;
 };
 
 const renderPropertyName = (prop: PropertyNode): string => {
@@ -96,24 +171,6 @@ const renderPropertyModifier = (findType: (typeName: string) => TypeNode | undef
   }
   return "";
 };
-/*
-        if (props is bool)
-        {
-            data = new Dictionary<string, object> { { "kind", "boolean" }, { "default", (bool)props } };
-        }
-        else if (props is int || props is long || props is float || props is double || props is decimal)
-        {
-            data = new Dictionary<string, object> { { "kind", "number" }, { "default", props } };
-        }
-        else if (props is string)
-        {
-            data = new Dictionary<string, object> { { "kind", "string" }, { "default", props } };
-        }
-        else
-        {
-            data = props.ToParamDictionary();
-        }
-*/
 
 const recursiveExpand = (obj: any): any => {
   if (obj && typeof obj === 'object') {
@@ -216,7 +273,6 @@ const renderDefaultType = (typeName: string, defaultValue: string | number | boo
 };
 
 const renderSetInstance = (prop: PropertyNode, variable: string, dictArg: string): string => {
-  //instance.{{ renderPropertyName(prop) }} = props.GetValueOrDefault<{{ renderType(prop) | safe }}>("{{prop.name}}"){{ renderNullCoalescing(prop) | safe }};
   const propertyName = renderPropertyName(prop);
   const propertyType = renderSimpleType(prop);
   const setter = `${variable}.${propertyName}`;
@@ -241,7 +297,7 @@ const renderSummary = (prop: PropertyNode): string => {
 
 const renderNullCoalescing = (prop: PropertyNode): string => {
   if (!prop.isOptional && !isNumber(prop)) {
-    return " ?? throw new ArgumentException(\"Properties must contain a property named: " + prop.name + "\", nameof(props))";
+    return " ?? throw new ArgumentException(\"Properties must contain a property named: " + prop.name + "\")";
   }
   return "";
 };

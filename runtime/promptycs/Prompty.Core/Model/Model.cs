@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -12,6 +11,7 @@ namespace Prompty.Core;
 /// This model includes properties for specifying the model&#39;s provider, connection details, and various options.
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
+[JsonConverter(typeof(ModelConverter))]
 public class Model
 {
     /// <summary>
@@ -84,4 +84,67 @@ public class Model
     }
     
     
+}
+
+
+public class ModelConverter: JsonConverter<Model>
+{
+    public override Model Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Model();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Model();
+            if (rootElement.TryGetProperty("id", out JsonElement idValue))
+            {
+                instance.Id = JsonSerializer.Deserialize<string>(idValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("provider", out JsonElement providerValue))
+            {
+                instance.Provider = JsonSerializer.Deserialize<string?>(providerValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
+            {
+                instance.Connection = JsonSerializer.Deserialize<Connection?>(connectionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
+            {
+                instance.Options = JsonSerializer.Deserialize<ModelOptions?>(optionsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Model.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Model value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Id != null)
+        {
+            writer.WritePropertyName("id");
+            JsonSerializer.Serialize(writer, value.Id, options);
+        }
+        if(value.Provider != null)
+        {
+            writer.WritePropertyName("provider");
+            JsonSerializer.Serialize(writer, value.Provider, options);
+        }
+        if(value.Connection != null)
+        {
+            writer.WritePropertyName("connection");
+            JsonSerializer.Serialize(writer, value.Connection, options);
+        }
+        if(value.Options != null)
+        {
+            writer.WritePropertyName("options");
+            JsonSerializer.Serialize(writer, value.Options, options);
+        }
+        writer.WriteEndObject();
+    }
 }

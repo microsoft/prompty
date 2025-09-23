@@ -3,7 +3,8 @@ import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import path from "path";
-import { title } from "process";
+import { getCombinations, scalarValue } from "./utilities.js";
+import * as YAML from "yaml";
 
 const pythonTypeMapper: Record<string, string> = {
   "string": "str",
@@ -53,24 +54,6 @@ export const generatePython = async (context: EmitContext<PromptyEmitterOptions>
   }
 };
 
-const getCombinations = (arrays: any[][]): any[][] => {
-  if (arrays.length === 0) return [[]];
-
-  const [firstArray, ...restArrays] = arrays;
-  const combinationsOfRest = getCombinations(restArrays);
-
-  return firstArray.flatMap(item =>
-    combinationsOfRest.map(combination => [item, ...combination])
-  );
-}
-
-const scalarValue: Record<string, string> = {
-  "boolean": 'False',
-  "float": "3.14",
-  "integer": "3",
-  "string": '"example"',
-}
-
 const renderTest = (node: TypeNode, testTemplate: nunjucks.Template): string => {
   const samples = node.properties.filter(p => p.samples && p.samples.length > 0).map(p => {
     return p.samples?.map(s => ({
@@ -86,7 +69,8 @@ const renderTest = (node: TypeNode, testTemplate: nunjucks.Template): string => 
   const flattened = combinations.map(c => {
     const sample = Object.assign({}, ...c);
     return {
-      example: JSON.stringify(sample, null, 2).split('\n'),
+      json: JSON.stringify(sample, null, 2).split('\n'),
+      yaml: YAML.stringify(sample, { indent: 2 }).split('\n'),
       // get all scalars in the sample
       validation: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => ({
         key: key,

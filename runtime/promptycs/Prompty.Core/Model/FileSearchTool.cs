@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,6 +10,7 @@ namespace Prompty.Core;
 /// A tool for searching files.
 /// This tool allows an AI agent to search for files based on a query.
 /// </summary>
+[JsonConverter(typeof(FileSearchToolConverter))]
 public class FileSearchTool : Tool
 {
     /// <summary>
@@ -81,4 +81,76 @@ public class FileSearchTool : Tool
     }
     
     
+}
+
+
+public class FileSearchToolConverter: JsonConverter<FileSearchTool>
+{
+    public override FileSearchTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new FileSearchTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new FileSearchTool();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
+            {
+                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("maxNumResults", out JsonElement maxNumResultsValue))
+            {
+                instance.MaxNumResults = JsonSerializer.Deserialize<int?>(maxNumResultsValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("ranker", out JsonElement rankerValue))
+            {
+                instance.Ranker = JsonSerializer.Deserialize<string>(rankerValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("scoreThreshold", out JsonElement scoreThresholdValue))
+            {
+                instance.ScoreThreshold = JsonSerializer.Deserialize<float>(scoreThresholdValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return FileSearchTool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, FileSearchTool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Connection != null)
+        {
+            writer.WritePropertyName("connection");
+            JsonSerializer.Serialize(writer, value.Connection, options);
+        }
+        if(value.MaxNumResults != null)
+        {
+            writer.WritePropertyName("maxNumResults");
+            JsonSerializer.Serialize(writer, value.MaxNumResults, options);
+        }
+        if(value.Ranker != null)
+        {
+            writer.WritePropertyName("ranker");
+            JsonSerializer.Serialize(writer, value.Ranker, options);
+        }
+        if(value.ScoreThreshold != null)
+        {
+            writer.WritePropertyName("scoreThreshold");
+            JsonSerializer.Serialize(writer, value.ScoreThreshold, options);
+        }
+        writer.WriteEndObject();
+    }
 }

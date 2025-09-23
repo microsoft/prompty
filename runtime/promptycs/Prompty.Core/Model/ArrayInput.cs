@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,6 +10,7 @@ namespace Prompty.Core;
 /// Represents an array output property.
 /// This extends the base Output model to represent an array of items.
 /// </summary>
+[JsonConverter(typeof(ArrayInputConverter))]
 public class ArrayInput : Input
 {
     /// <summary>
@@ -54,4 +54,49 @@ public class ArrayInput : Input
     }
     
     
+}
+
+
+public class ArrayInputConverter: JsonConverter<ArrayInput>
+{
+    public override ArrayInput Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ArrayInput();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ArrayInput();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("items", out JsonElement itemsValue))
+            {
+                instance.Items = JsonSerializer.Deserialize<Input>(itemsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ArrayInput.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ArrayInput value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Items != null)
+        {
+            writer.WritePropertyName("items");
+            JsonSerializer.Serialize(writer, value.Items, options);
+        }
+        writer.WriteEndObject();
+    }
 }

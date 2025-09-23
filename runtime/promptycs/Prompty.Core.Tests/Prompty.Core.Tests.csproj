@@ -25,4 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Model\" />
+  </ItemGroup>
 </Project>

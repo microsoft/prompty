@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Configuration options for the Bing search tool.
 /// </summary>
+[JsonConverter(typeof(BingSearchConfigurationConverter))]
 public class BingSearchConfiguration
 {
     /// <summary>
@@ -89,4 +89,85 @@ public class BingSearchConfiguration
     }
     
     
+}
+
+
+public class BingSearchConfigurationConverter: JsonConverter<BingSearchConfiguration>
+{
+    public override BingSearchConfiguration Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new BingSearchConfiguration();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new BingSearchConfiguration();
+            if (rootElement.TryGetProperty("connectionId", out JsonElement connectionIdValue))
+            {
+                instance.ConnectionId = JsonSerializer.Deserialize<string>(connectionIdValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("instanceName", out JsonElement instanceNameValue))
+            {
+                instance.InstanceName = JsonSerializer.Deserialize<string>(instanceNameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("market", out JsonElement marketValue))
+            {
+                instance.Market = JsonSerializer.Deserialize<string?>(marketValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("setLang", out JsonElement setLangValue))
+            {
+                instance.SetLang = JsonSerializer.Deserialize<string?>(setLangValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("count", out JsonElement countValue))
+            {
+                instance.Count = JsonSerializer.Deserialize<int?>(countValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("freshness", out JsonElement freshnessValue))
+            {
+                instance.Freshness = JsonSerializer.Deserialize<string?>(freshnessValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return BingSearchConfiguration.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, BingSearchConfiguration value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.ConnectionId != null)
+        {
+            writer.WritePropertyName("connectionId");
+            JsonSerializer.Serialize(writer, value.ConnectionId, options);
+        }
+        if(value.InstanceName != null)
+        {
+            writer.WritePropertyName("instanceName");
+            JsonSerializer.Serialize(writer, value.InstanceName, options);
+        }
+        if(value.Market != null)
+        {
+            writer.WritePropertyName("market");
+            JsonSerializer.Serialize(writer, value.Market, options);
+        }
+        if(value.SetLang != null)
+        {
+            writer.WritePropertyName("setLang");
+            JsonSerializer.Serialize(writer, value.SetLang, options);
+        }
+        if(value.Count != null)
+        {
+            writer.WritePropertyName("count");
+            JsonSerializer.Serialize(writer, value.Count, options);
+        }
+        if(value.Freshness != null)
+        {
+            writer.WritePropertyName("freshness");
+            JsonSerializer.Serialize(writer, value.Freshness, options);
+        }
+        writer.WriteEndObject();
+    }
 }

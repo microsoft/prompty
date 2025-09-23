@@ -1,1 +1,45 @@
-// TODO: Finalize tests for C# object loaders
+using Xunit;
+using System.Text.Json;
+using {{ node.typeName.namespace }};
+
+
+#pragma warning disable IDE0130
+namespace {{ node.typeName.namespace }}.Tests.Model;
+#pragma warning restore IDE0130
+
+
+public class {{ node.typeName.name }}ConversionTests
+{
+    {%- for sample in examples %}
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+        {%- for line in sample.yaml %}
+        {{ line | safe }}
+        {%- endfor %}
+        """;
+        Assert.Equal(typeof(string), yamlData.GetType());
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+        {%- for line in sample.json %}
+        {{ line | safe }}
+        {%- endfor %}
+        """;
+
+        var instance = JsonSerializer.Deserialize<{{ node.typeName.name }}>(jsonData);
+        Assert.NotNull(instance);
+        {%- for validation in sample.validation %}
+        {%- if validation.value == "True" or validation.value == "False" %}
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key }});
+        {%- else %}
+        Assert.Equal(instance.{{ validation.key }}, {{ validation.delimeter | safe }}{{ validation.value }}{{ validation.delimeter | safe }});
+        {%- endif %}
+        {%- endfor %}
+    }
+    {%- endfor %}
+}

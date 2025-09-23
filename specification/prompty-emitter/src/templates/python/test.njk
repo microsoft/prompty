@@ -1,5 +1,6 @@
 {%- if examples.length > 0 %}
 import json
+import yaml
 {% endif %}
 from {{node.typeName.namespace | lower }} import {{node.typeName.name}}
 
@@ -9,13 +10,30 @@ def test_create_{{node.typeName.name | lower}}():
     assert instance is not None
 
 {% for sample in examples %}
-def test_load_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.index - 1}}{% endif %}():
+def test_load_json_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.index - 1}}{% endif %}():
     json_data = '''
-    {% for line in sample.example -%}
+    {% for line in sample.json -%}
     {{ line | safe }}
     {% endfor -%}
     '''
     data = json.loads(json_data, strict=False)
+    instance = {{node.typeName.name}}.load(data)
+    assert instance is not None
+    {% for validation in sample.validation -%}
+    {%- if validation.value == "True" or validation.value == "False" %}
+    assert {% if validation.value == "False" %}not {% endif %}instance.{{ validation.key }}
+    {% else -%}
+    assert instance.{{ validation.key }} == {{ validation.delimeter | safe }}{{ validation.value }}{{ validation.delimeter | safe }}
+    {% endif -%}
+    {% endfor %}
+
+def test_load_yaml_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.index - 1}}{% endif %}():
+    yaml_data = '''
+    {% for line in sample.yaml -%}
+    {{ line | safe }}
+    {% endfor -%}
+    '''
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = {{node.typeName.name}}.load(data)
     assert instance is not None
     {% for validation in sample.validation -%}

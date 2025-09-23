@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,6 +10,7 @@ namespace Prompty.Core;
 /// Options for configuring the behavior of the AI model.
 /// `kind` is a required property here, but this section can accept additional via options.
 /// </summary>
+[JsonConverter(typeof(ModelOptionsConverter))]
 public class ModelOptions
 {
     /// <summary>
@@ -45,4 +45,40 @@ public class ModelOptions
     }
     
     
+}
+
+
+public class ModelOptionsConverter: JsonConverter<ModelOptions>
+{
+    public override ModelOptions Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ModelOptions();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ModelOptions();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ModelOptions.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ModelOptions value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        writer.WriteEndObject();
+    }
 }

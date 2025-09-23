@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -14,6 +13,7 @@ namespace Prompty.Core;
 /// This tool kind is ideal for tasks that involve complex computations or access to secure resources
 /// Server tools can be used to offload heavy processing from client applications
 /// </summary>
+[JsonConverter(typeof(ServerToolConverter))]
 public class ServerTool : Tool
 {
     /// <summary>
@@ -66,4 +66,58 @@ public class ServerTool : Tool
     }
     
     
+}
+
+
+public class ServerToolConverter: JsonConverter<ServerTool>
+{
+    public override ServerTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new ServerTool();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new ServerTool();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
+            {
+                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
+            {
+                instance.Options = JsonSerializer.Deserialize<IDictionary<string, object>>(optionsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return ServerTool.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, ServerTool value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Connection != null)
+        {
+            writer.WritePropertyName("connection");
+            JsonSerializer.Serialize(writer, value.Connection, options);
+        }
+        if(value.Options != null)
+        {
+            writer.WritePropertyName("options");
+            JsonSerializer.Serialize(writer, value.Options, options);
+        }
+        writer.WriteEndObject();
+    }
 }

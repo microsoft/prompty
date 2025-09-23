@@ -16,10 +16,10 @@ config:
 classDiagram
     class Scale {
       
-        +integer minReplicas
-        +integer maxReplicas
-        +float cpu
-        +float memory
+        +int32 minReplicas
+        +int32 maxReplicas
+        +float32 cpu
+        +float32 memory
     }
 ```
 
@@ -37,7 +37,7 @@ memory: 2
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| minReplicas | integer | Minimum number of container instances to run  |
-| maxReplicas | integer | Maximum number of container instances to run  |
-| cpu | float | CPU allocation per instance (in cores)  |
-| memory | float | Memory allocation per instance (in GB)  |
+| minReplicas | int32 | Minimum number of container instances to run  |
+| maxReplicas | int32 | Maximum number of container instances to run  |
+| cpu | float32 | CPU allocation per instance (in cores)  |
+| memory | float32 | Memory allocation per instance (in GB)  |

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Template parser definition
 /// </summary>
+[JsonConverter(typeof(ParserConverter))]
 public class Parser
 {
     /// <summary>
@@ -64,4 +64,49 @@ public class Parser
     }
     
     
+}
+
+
+public class ParserConverter: JsonConverter<Parser>
+{
+    public override Parser Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Parser();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Parser();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
+            {
+                instance.Options = JsonSerializer.Deserialize<IDictionary<string, object>?>(optionsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Parser.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Parser value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Options != null)
+        {
+            writer.WritePropertyName("options");
+            JsonSerializer.Serialize(writer, value.Options, options);
+        }
+        writer.WriteEndObject();
+    }
 }

@@ -1,7 +1,6 @@
 import "./connection.tsp";
 
 namespace Prompty.Core {
-
   /**
    * Definition for an environment variable used in containerized agents.
    */
@@ -30,11 +29,22 @@ namespace Prompty.Core {
     tag?: string = "latest";
 
     @doc("Container image registry definition")
-    @sample(#{ registry: #{ kind: "acr", connection: #{ kind: "key", authority: "system", usageDescription: "Access to the container registry" } } })
+    @sample(#{
+      registry: #{
+        kind: "acr",
+        connection: #{
+          kind: "key",
+          authority: "system",
+          usageDescription: "Access to the container registry",
+        },
+      },
+    })
     registry: Registry;
 
     @doc("Instance scaling configuration")
-    @sample(#{ scale: #{ minReplicas: 1, maxReplicas: 5, cpu: 0.5, memory: 2.0 } })
+    @sample(#{
+      scale: #{ minReplicas: 1, maxReplicas: 5, cpu: 0.5, memory: 2.0 },
+    })
     scale: Scale;
   }
 
@@ -44,19 +54,19 @@ namespace Prompty.Core {
   model Scale {
     @doc("Minimum number of container instances to run")
     @sample(#{ minReplicas: 1 })
-    minReplicas?: integer = 1;
+    minReplicas?: int32 = 1;
 
     @doc("Maximum number of container instances to run")
     @sample(#{ maxReplicas: 5 })
-    maxReplicas?: integer = 5;
+    maxReplicas?: int32 = 5;
 
     @doc("CPU allocation per instance (in cores)")
     @sample(#{ cpu: 0.5 })
-    cpu: float = 0.5;
+    cpu: float32 = 0.5;
 
     @doc("Memory allocation per instance (in GB)")
     @sample(#{ memory: 2.0 })
-    memory: float = 2.0;
+    memory: float32 = 2.0;
   }
 
   alias ContainerDefinitionKind = "acr" | string;
@@ -72,7 +82,13 @@ namespace Prompty.Core {
     kind: ContainerDefinitionKind;
 
     @doc("The connection configuration for accessing the container registry")
-    @sample(#{ connection: #{ kind: "key", authority: "system", usageDescription: "Access to the container registry" } })
+    @sample(#{
+      connection: #{
+        kind: "key",
+        authority: "system",
+        usageDescription: "Access to the container registry",
+      },
+    })
     connection: Connection;
   }
 

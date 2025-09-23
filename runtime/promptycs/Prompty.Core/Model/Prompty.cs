@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -15,6 +14,7 @@ namespace Prompty.Core;
 /// 
 /// These can be written in a markdown format or in a pure YAML format.
 /// </summary>
+[JsonConverter(typeof(PromptyConverter))]
 public class Prompty
 {
     /// <summary>
@@ -197,4 +197,148 @@ public class Prompty
         }
     }
     
+}
+
+
+public class PromptyConverter: JsonConverter<Prompty>
+{
+    public override Prompty Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new Prompty();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new Prompty();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("id", out JsonElement idValue))
+            {
+                instance.Id = JsonSerializer.Deserialize<string?>(idValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("version", out JsonElement versionValue))
+            {
+                instance.Version = JsonSerializer.Deserialize<string?>(versionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+            {
+                instance.Name = JsonSerializer.Deserialize<string>(nameValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
+            {
+                instance.Description = JsonSerializer.Deserialize<string?>(descriptionValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("metadata", out JsonElement metadataValue))
+            {
+                instance.Metadata = JsonSerializer.Deserialize<IDictionary<string, object>?>(metadataValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("model", out JsonElement modelValue))
+            {
+                instance.Model = JsonSerializer.Deserialize<Model>(modelValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("inputs", out JsonElement inputsValue))
+            {
+                instance.Inputs = JsonSerializer.Deserialize<IList<Input>?>(inputsValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("outputs", out JsonElement outputsValue))
+            {
+                instance.Outputs = JsonSerializer.Deserialize<IList<Output>?>(outputsValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("tools", out JsonElement toolsValue))
+            {
+                instance.Tools = JsonSerializer.Deserialize<IList<Tool>?>(toolsValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("template", out JsonElement templateValue))
+            {
+                instance.Template = JsonSerializer.Deserialize<Template?>(templateValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("instructions", out JsonElement instructionsValue))
+            {
+                instance.Instructions = JsonSerializer.Deserialize<string?>(instructionsValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("additionalInstructions", out JsonElement additionalInstructionsValue))
+            {
+                instance.AdditionalInstructions = JsonSerializer.Deserialize<string?>(additionalInstructionsValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return Prompty.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, Prompty value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Id != null)
+        {
+            writer.WritePropertyName("id");
+            JsonSerializer.Serialize(writer, value.Id, options);
+        }
+        if(value.Version != null)
+        {
+            writer.WritePropertyName("version");
+            JsonSerializer.Serialize(writer, value.Version, options);
+        }
+        if(value.Name != null)
+        {
+            writer.WritePropertyName("name");
+            JsonSerializer.Serialize(writer, value.Name, options);
+        }
+        if(value.Description != null)
+        {
+            writer.WritePropertyName("description");
+            JsonSerializer.Serialize(writer, value.Description, options);
+        }
+        if(value.Metadata != null)
+        {
+            writer.WritePropertyName("metadata");
+            JsonSerializer.Serialize(writer, value.Metadata, options);
+        }
+        if(value.Model != null)
+        {
+            writer.WritePropertyName("model");
+            JsonSerializer.Serialize(writer, value.Model, options);
+        }
+        if(value.Inputs != null)
+        {
+            writer.WritePropertyName("inputs");
+            JsonSerializer.Serialize(writer, value.Inputs, options);
+        }
+        if(value.Outputs != null)
+        {
+            writer.WritePropertyName("outputs");
+            JsonSerializer.Serialize(writer, value.Outputs, options);
+        }
+        if(value.Tools != null)
+        {
+            writer.WritePropertyName("tools");
+            JsonSerializer.Serialize(writer, value.Tools, options);
+        }
+        if(value.Template != null)
+        {
+            writer.WritePropertyName("template");
+            JsonSerializer.Serialize(writer, value.Template, options);
+        }
+        if(value.Instructions != null)
+        {
+            writer.WritePropertyName("instructions");
+            JsonSerializer.Serialize(writer, value.Instructions, options);
+        }
+        if(value.AdditionalInstructions != null)
+        {
+            writer.WritePropertyName("additionalInstructions");
+            JsonSerializer.Serialize(writer, value.AdditionalInstructions, options);
+        }
+        writer.WriteEndObject();
+    }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using API keys.
 /// </summary>
+[JsonConverter(typeof(KeyConnectionConverter))]
 public class KeyConnection : Connection
 {
     /// <summary>
@@ -62,4 +62,58 @@ public class KeyConnection : Connection
     }
     
     
+}
+
+
+public class KeyConnectionConverter: JsonConverter<KeyConnection>
+{
+    public override KeyConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new KeyConnection();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new KeyConnection();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("endpoint", out JsonElement endpointValue))
+            {
+                instance.Endpoint = JsonSerializer.Deserialize<string>(endpointValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("key", out JsonElement keyValue))
+            {
+                instance.Key = JsonSerializer.Deserialize<string>(keyValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return KeyConnection.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, KeyConnection value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Endpoint != null)
+        {
+            writer.WritePropertyName("endpoint");
+            JsonSerializer.Serialize(writer, value.Endpoint, options);
+        }
+        if(value.Key != null)
+        {
+            writer.WritePropertyName("key");
+            JsonSerializer.Serialize(writer, value.Key, options);
+        }
+        writer.WriteEndObject();
+    }
 }

@@ -1,5 +1,7 @@
 import json
 
+import yaml
+
 from prompty.core import Format
 
 
@@ -8,7 +10,7 @@ def test_create_format():
     assert instance is not None
 
 
-def test_load_format():
+def test_load_json_format():
     json_data = """
     {
       "kind": "mustache",
@@ -19,6 +21,22 @@ def test_load_format():
     }
     """
     data = json.loads(json_data, strict=False)
+    instance = Format.load(data)
+    assert instance is not None
+    assert instance.kind == "mustache"
+
+    assert instance.strict
+
+
+def test_load_yaml_format():
+    yaml_data = """
+    kind: mustache
+    strict: true
+    options:
+      key: value
+    
+    """
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Format.load(data)
     assert instance is not None
     assert instance.kind == "mustache"

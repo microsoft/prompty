@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,6 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// 
 /// </summary>
+[JsonConverter(typeof(PromptyContainerConverter))]
 public class PromptyContainer : Prompty
 {
     /// <summary>
@@ -76,4 +76,67 @@ public class PromptyContainer : Prompty
     }
     
     
+}
+
+
+public class PromptyContainerConverter: JsonConverter<PromptyContainer>
+{
+    public override PromptyContainer Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+         if (reader.TokenType == JsonTokenType.Null)
+        {
+            return new PromptyContainer();
+        }
+
+        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDocument.RootElement;
+            var instance = new PromptyContainer();
+            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            {
+                instance.Kind = JsonSerializer.Deserialize<string>(kindValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("protocol", out JsonElement protocolValue))
+            {
+                instance.Protocol = JsonSerializer.Deserialize<string>(protocolValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("container", out JsonElement containerValue))
+            {
+                instance.Container = JsonSerializer.Deserialize<ContainerDefinition>(containerValue.GetRawText(), options);
+            }
+            if (rootElement.TryGetProperty("environmentVariables", out JsonElement environmentVariablesValue))
+            {
+                instance.EnvironmentVariables = JsonSerializer.Deserialize<IList<EnvironmentVariable>?>(environmentVariablesValue.GetRawText(), options);
+            }
+
+            var dict = rootElement.ToParamDictionary();
+            return PromptyContainer.Load(dict);
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, PromptyContainer value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        if(value.Kind != null)
+        {
+            writer.WritePropertyName("kind");
+            JsonSerializer.Serialize(writer, value.Kind, options);
+        }
+        if(value.Protocol != null)
+        {
+            writer.WritePropertyName("protocol");
+            JsonSerializer.Serialize(writer, value.Protocol, options);
+        }
+        if(value.Container != null)
+        {
+            writer.WritePropertyName("container");
+            JsonSerializer.Serialize(writer, value.Container, options);
+        }
+        if(value.EnvironmentVariables != null)
+        {
+            writer.WritePropertyName("environmentVariables");
+            JsonSerializer.Serialize(writer, value.EnvironmentVariables, options);
+        }
+        writer.WriteEndObject();
+    }
 }
