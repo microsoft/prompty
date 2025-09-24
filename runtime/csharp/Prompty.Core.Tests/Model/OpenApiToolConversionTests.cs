@@ -16,10 +16,6 @@ public class OpenApiToolConversionTests
         connection:
           kind: provider-connection
         specification: https://api.example.com/openapi.json
-        operationIds:
-          - getUser
-          - getUsers
-          - createUser
         
         """;
         Assert.Equal(typeof(string), yamlData.GetType());
@@ -34,12 +30,7 @@ public class OpenApiToolConversionTests
           "connection": {
             "kind": "provider-connection"
           },
-          "specification": "https://api.example.com/openapi.json",
-          "operationIds": [
-            "getUser",
-            "getUsers",
-            "createUser"
-          ]
+          "specification": "https://api.example.com/openapi.json"
         }
         """;
 

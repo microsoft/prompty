@@ -34,9 +34,11 @@ public class BindingConversionTests
         Assert.Equal("my-tool", instance.Name);
         Assert.Equal("input-variable", instance.Input);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Binding>(data);
         Assert.NotNull(instance);

@@ -34,9 +34,11 @@ public class EnvironmentVariableConversionTests
         Assert.Equal("MY_ENV_VAR", instance.Name);
         Assert.Equal("my-value", instance.Value);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<EnvironmentVariable>(data);
         Assert.NotNull(instance);

@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -59,6 +60,10 @@ public class OAuthConnectionConverter : JsonConverter<OAuthConnection>
         {
             throw new JsonException("Cannot convert null value to OAuthConnection.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing OAuthConnection: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -93,7 +98,7 @@ public class OAuthConnectionConverter : JsonConverter<OAuthConnection>
 
             if (rootElement.TryGetProperty("scopes", out JsonElement scopesValue))
             {
-                instance.Scopes = [.. scopesValue.EnumerateArray().Select(x => x.GetString() ?? throw new ArgumentException("Empty array elements for scopes are not supported"))];
+                instance.Scopes = [.. scopesValue.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException("Empty array elements for scopes are not supported"))];
             }
 
             return instance;

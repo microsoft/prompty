@@ -36,9 +36,11 @@ public class ParserConversionTests
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Parser>(data);
         Assert.NotNull(instance);

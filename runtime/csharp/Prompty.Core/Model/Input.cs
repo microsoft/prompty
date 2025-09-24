@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -77,32 +78,50 @@ public class InputConverter : JsonConverter<Input>
                 Sample = boolValue,
             };
         }
-        else if (reader.TokenType == JsonTokenType.Number)
-        {
-            var floatValue = reader.GetSingle();
-            return new Input()
-            {
-                Kind = "float",
-                Sample = floatValue,
-            };
-        }
-        else if (reader.TokenType == JsonTokenType.Number)
-        {
-            var intValue = reader.GetInt32();
-            return new Input()
-            {
-                Kind = "integer",
-                Sample = intValue,
-            };
-        }
         else if (reader.TokenType == JsonTokenType.String)
         {
-            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Input are not supported");
+            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Input are not supported");
             return new Input()
             {
                 Kind = "string",
                 Sample = stringValue,
             };
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            byte[] span = reader.HasValueSequence ?
+                        reader.ValueSequence.ToArray() :
+                        reader.ValueSpan.ToArray();
+
+            var numberString = System.Text.Encoding.UTF8.GetString(span);
+            if (numberString.Contains('.') || numberString.Contains('e') || numberString.Contains('E'))
+            {
+                // try parse as float
+                if (float.TryParse(numberString, out float floatValue))
+                {
+                    return new Input()
+                    {
+                        Kind = "float",
+                        Sample = floatValue,
+                    };
+                }
+            }
+            else
+            {
+                // try parse as int
+                if (int.TryParse(numberString, out int intValue))
+                {
+                    return new Input()
+                    {
+                        Kind = "integer",
+                        Sample = intValue,
+                    };
+                }
+            }
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Input: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))

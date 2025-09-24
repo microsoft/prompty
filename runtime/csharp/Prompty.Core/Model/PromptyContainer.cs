@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -49,6 +50,10 @@ public class PromptyContainerConverter : JsonConverter<PromptyContainer>
         {
             throw new JsonException("Cannot convert null value to PromptyContainer.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing PromptyContainer: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -78,7 +83,7 @@ public class PromptyContainerConverter : JsonConverter<PromptyContainer>
                     instance.EnvironmentVariables =
                         [.. environmentVariablesValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<EnvironmentVariable> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for EnvironmentVariables are not supported"))];
+                                ?? throw new JsonException("Empty array elements for EnvironmentVariables are not supported"))];
                 }
                 else if (environmentVariablesValue.ValueKind == JsonValueKind.Object)
                 {
@@ -87,7 +92,7 @@ public class PromptyContainerConverter : JsonConverter<PromptyContainer>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<EnvironmentVariable>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for EnvironmentVariables are not supported");
+                                    ?? throw new JsonException("Empty array elements for EnvironmentVariables are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];

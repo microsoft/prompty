@@ -142,7 +142,6 @@ classDiagram
         +string kind
         +Connection connection
         +string specification
-        +string[] operationIds
     }
     class Format {
       

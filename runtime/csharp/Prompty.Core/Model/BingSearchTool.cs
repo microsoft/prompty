@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -44,6 +45,10 @@ public class BingSearchToolConverter : JsonConverter<BingSearchTool>
         {
             throw new JsonException("Cannot convert null value to BingSearchTool.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing BingSearchTool: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -68,7 +73,7 @@ public class BingSearchToolConverter : JsonConverter<BingSearchTool>
                     instance.Configurations =
                         [.. configurationsValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<BingSearchConfiguration> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Configurations are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Configurations are not supported"))];
                 }
                 else if (configurationsValue.ValueKind == JsonValueKind.Object)
                 {
@@ -77,7 +82,7 @@ public class BingSearchToolConverter : JsonConverter<BingSearchTool>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<BingSearchConfiguration>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Configurations are not supported");
+                                    ?? throw new JsonException("Empty array elements for Configurations are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];

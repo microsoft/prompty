@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -39,6 +40,10 @@ public class ObjectParameterConverter : JsonConverter<ObjectParameter>
         {
             throw new JsonException("Cannot convert null value to ObjectParameter.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing ObjectParameter: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -58,7 +63,7 @@ public class ObjectParameterConverter : JsonConverter<ObjectParameter>
                     instance.Properties =
                         [.. propertiesValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Parameter> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Properties are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Properties are not supported"))];
                 }
                 else if (propertiesValue.ValueKind == JsonValueKind.Object)
                 {
@@ -67,7 +72,7 @@ public class ObjectParameterConverter : JsonConverter<ObjectParameter>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Parameter>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Properties are not supported");
+                                    ?? throw new JsonException("Empty array elements for Properties are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];

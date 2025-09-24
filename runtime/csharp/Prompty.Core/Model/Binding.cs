@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -41,11 +42,15 @@ public class BindingConverter : JsonConverter<Binding>
         }
         else if (reader.TokenType == JsonTokenType.String)
         {
-            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Binding are not supported");
+            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Binding are not supported");
             return new Binding()
             {
                 Input = stringValue,
             };
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Binding: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))

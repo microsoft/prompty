@@ -49,9 +49,11 @@ public class InputConversionTests
         Assert.Equal("default value", instance.Default);
         Assert.Equal("sample value", instance.Sample);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromBoolean()
     {
+        // alternate representation as boolean
         var data = false;
         var instance = JsonSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
@@ -63,15 +65,18 @@ public class InputConversionTests
     [Fact]
     public void LoadFromFloat32()
     {
+        // alternate representation as float32
         var data = 3.14;
         var instance = JsonSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("float", instance.Kind);
-        Assert.Equal(3.14, instance.Sample);
+        Assert.IsType<float>(instance.Sample);
+        Assert.Equal(3.14, (float)instance.Sample, precision: 5);
     }
     [Fact]
     public void LoadFromInteger()
     {
+        // alternate representation as integer
         var data = 3;
         var instance = JsonSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
@@ -81,6 +86,7 @@ public class InputConversionTests
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);

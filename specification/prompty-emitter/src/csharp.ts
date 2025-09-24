@@ -48,6 +48,10 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   // set up template environment
   const templatePath = path.resolve(templateDir, 'csharp');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
+  env.addFilter('isFloat', function (value: any) {
+    const isFloat = value.toString().includes('.');
+    return isFloat;
+  });
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
   const testTemplate = env.getTemplate('test.njk', true);
@@ -76,6 +80,8 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
   const findType = (typeName: string): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === typeName);
   }
+  const alternates = generateAlternates(node).filter(alt => alt.scalar !== "float" && alt.scalar !== "int");
+  const numericAlternates = generateAlternates(node).filter(alt => alt.scalar === "float" || alt.scalar === "int");
 
   const csharp = classTemplate.render({
     node: node,
@@ -90,7 +96,8 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
     polymorphicTypes: polymorphicTypes,
     collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
-    alternates: generateAlternates(node),
+    alternates: alternates,
+    numericAlternates: numericAlternates,
   });
 
   return csharp;

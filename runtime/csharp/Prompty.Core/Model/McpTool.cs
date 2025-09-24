@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -54,6 +55,10 @@ public class McpToolConverter : JsonConverter<McpTool>
         {
             throw new JsonException("Cannot convert null value to McpTool.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing McpTool: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -83,7 +88,7 @@ public class McpToolConverter : JsonConverter<McpTool>
 
             if (rootElement.TryGetProperty("allowed", out JsonElement allowedValue))
             {
-                instance.Allowed = [.. allowedValue.EnumerateArray().Select(x => x.GetString() ?? throw new ArgumentException("Empty array elements for allowed are not supported"))];
+                instance.Allowed = [.. allowedValue.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException("Empty array elements for allowed are not supported"))];
             }
 
             return instance;

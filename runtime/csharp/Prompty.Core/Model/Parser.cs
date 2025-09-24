@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -41,11 +42,15 @@ public class ParserConverter : JsonConverter<Parser>
         }
         else if (reader.TokenType == JsonTokenType.String)
         {
-            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Parser are not supported");
+            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Parser are not supported");
             return new Parser()
             {
                 Kind = stringValue,
             };
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Parser: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))

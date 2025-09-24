@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -34,11 +35,6 @@ public class OpenApiTool : Tool
     /// </summary>
     public string Specification { get; set; } = string.Empty;
 
-    /// <summary>
-    /// The name of the operation to be invoked from the OpenAPI specification
-    /// </summary>
-    public IList<string> OperationIds { get; set; } = [];
-
 }
 
 public class OpenApiToolConverter : JsonConverter<OpenApiTool>
@@ -48,6 +44,10 @@ public class OpenApiToolConverter : JsonConverter<OpenApiTool>
         if (reader.TokenType == JsonTokenType.Null)
         {
             throw new JsonException("Cannot convert null value to OpenApiTool.");
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing OpenApiTool: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
@@ -71,11 +71,6 @@ public class OpenApiToolConverter : JsonConverter<OpenApiTool>
                 instance.Specification = specificationValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: specification");
             }
 
-            if (rootElement.TryGetProperty("operationIds", out JsonElement operationIdsValue))
-            {
-                instance.OperationIds = [.. operationIdsValue.EnumerateArray().Select(x => x.GetString() ?? throw new ArgumentException("Empty array elements for operationIds are not supported"))];
-            }
-
             return instance;
         }
     }
@@ -91,9 +86,6 @@ public class OpenApiToolConverter : JsonConverter<OpenApiTool>
 
         writer.WritePropertyName("specification");
         JsonSerializer.Serialize(writer, value.Specification, options);
-
-        writer.WritePropertyName("operationIds");
-        JsonSerializer.Serialize(writer, value.OperationIds, options);
 
         writer.WriteEndObject();
     }

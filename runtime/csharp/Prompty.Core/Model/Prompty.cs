@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -99,6 +100,10 @@ public class PromptyConverter : JsonConverter<Prompty>
         {
             throw new JsonException("Cannot convert null value to Prompty.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Prompty: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -167,7 +172,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                     instance.Inputs =
                         [.. inputsValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Input> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Inputs are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Inputs are not supported"))];
                 }
                 else if (inputsValue.ValueKind == JsonValueKind.Object)
                 {
@@ -176,7 +181,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Input>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Inputs are not supported");
+                                    ?? throw new JsonException("Empty array elements for Inputs are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];
@@ -194,7 +199,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                     instance.Outputs =
                         [.. outputsValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Output> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Outputs are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Outputs are not supported"))];
                 }
                 else if (outputsValue.ValueKind == JsonValueKind.Object)
                 {
@@ -203,7 +208,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Output>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Outputs are not supported");
+                                    ?? throw new JsonException("Empty array elements for Outputs are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];
@@ -221,7 +226,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                     instance.Tools =
                         [.. toolsValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Tool> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Tools are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Tools are not supported"))];
                 }
                 else if (toolsValue.ValueKind == JsonValueKind.Object)
                 {
@@ -230,7 +235,7 @@ public class PromptyConverter : JsonConverter<Prompty>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Tool>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Tools are not supported");
+                                    ?? throw new JsonException("Empty array elements for Tools are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];

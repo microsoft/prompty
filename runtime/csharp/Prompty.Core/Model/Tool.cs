@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -48,6 +49,10 @@ public class ToolConverter : JsonConverter<Tool>
         if (reader.TokenType == JsonTokenType.Null)
         {
             throw new JsonException("Cannot convert null value to Tool.");
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Tool: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
@@ -103,7 +108,7 @@ public class ToolConverter : JsonConverter<Tool>
                     instance.Bindings =
                         [.. bindingsValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Binding> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Bindings are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Bindings are not supported"))];
                 }
                 else if (bindingsValue.ValueKind == JsonValueKind.Object)
                 {
@@ -112,7 +117,7 @@ public class ToolConverter : JsonConverter<Tool>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Binding>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Bindings are not supported");
+                                    ?? throw new JsonException("Empty array elements for Bindings are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];

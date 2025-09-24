@@ -17,12 +17,7 @@ def test_load_json_openapitool():
       "connection": {
         "kind": "provider-connection"
       },
-      "specification": "https://api.example.com/openapi.json",
-      "operationIds": [
-        "getUser",
-        "getUsers",
-        "createUser"
-      ]
+      "specification": "https://api.example.com/openapi.json"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -38,10 +33,6 @@ def test_load_yaml_openapitool():
     connection:
       kind: provider-connection
     specification: https://api.example.com/openapi.json
-    operationIds:
-      - getUser
-      - getUsers
-      - createUser
     
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)

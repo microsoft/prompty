@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -45,6 +46,10 @@ public class ConnectionConverter : JsonConverter<Connection>
         if (reader.TokenType == JsonTokenType.Null)
         {
             throw new JsonException("Cannot convert null value to Connection.");
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Connection: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))

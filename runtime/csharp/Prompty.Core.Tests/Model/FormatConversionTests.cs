@@ -39,9 +39,11 @@ public class FormatConversionTests
         Assert.Equal("mustache", instance.Kind);
         Assert.True(instance.Strict);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Format>(data);
         Assert.NotNull(instance);

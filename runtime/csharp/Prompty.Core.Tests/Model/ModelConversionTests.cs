@@ -52,9 +52,11 @@ public class ModelConversionTests
         Assert.Equal("gpt-35-turbo", instance.Id);
         Assert.Equal("azure", instance.Publisher);
     }
+    // regular expression for matching only floats
     [Fact]
     public void LoadFromString()
     {
+        // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Model>(data);
         Assert.NotNull(instance);

@@ -333,14 +333,11 @@ class OpenApiTool(Tool):
         The connection configuration for the OpenAPI tool
     specification : str
         The URL or relative path to the OpenAPI specification document (JSON or YAML format)
-    operationIds : list[str]
-        The name of the operation to be invoked from the OpenAPI specification
     """
 
     kind: str = field(default="openapi")
     connection: Connection = field(default_factory=Connection)
     specification: str = field(default="")
-    operationIds: list[str] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any) -> "OpenApiTool":
@@ -357,6 +354,4 @@ class OpenApiTool(Tool):
             instance.connection = Connection.load(data["connection"])
         if data is not None and "specification" in data:
             instance.specification = data["specification"]
-        if data is not None and "operationIds" in data:
-            instance.operationIds = data["operationIds"]
         return instance

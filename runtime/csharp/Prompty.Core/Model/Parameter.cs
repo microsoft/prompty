@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -54,6 +55,10 @@ public class ParameterConverter : JsonConverter<Parameter>
         {
             throw new JsonException("Cannot convert null value to Parameter.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Parameter: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -100,7 +105,7 @@ public class ParameterConverter : JsonConverter<Parameter>
 
             if (rootElement.TryGetProperty("enum", out JsonElement enumValue))
             {
-                instance.Enum = [.. enumValue.EnumerateArray().Select(x => x.GetScalarValue() ?? throw new ArgumentException("Empty array elements for enum are not supported"))];
+                instance.Enum = [.. enumValue.EnumerateArray().Select(x => x.GetScalarValue() ?? throw new JsonException("Empty array elements for enum are not supported"))];
             }
 
             return instance;

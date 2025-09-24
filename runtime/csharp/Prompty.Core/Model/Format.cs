@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -46,11 +47,15 @@ public class FormatConverter : JsonConverter<Format>
         }
         else if (reader.TokenType == JsonTokenType.String)
         {
-            var stringValue = reader.GetString() ?? throw new ArgumentException("Empty string shorthand values for Format are not supported");
+            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Format are not supported");
             return new Format()
             {
                 Kind = stringValue,
             };
+        }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing Format: {reader.TokenType}");
         }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))

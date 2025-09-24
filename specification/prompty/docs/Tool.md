@@ -63,7 +63,6 @@ classDiagram
         +string kind
         +Connection connection
         +string specification
-        +string[] operationIds
     }
     Tool <|-- OpenApiTool
     class Binding {

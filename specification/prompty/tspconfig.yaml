@@ -9,8 +9,6 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
-    #root-namespace: "Prompty.Core.Model"
-    #root-alias: "Agent"
     root-object: "Prompty.Core.Prompty"
     emit-targets:
       - type: markdown

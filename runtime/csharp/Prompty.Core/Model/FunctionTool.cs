@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Buffers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -39,6 +40,10 @@ public class FunctionToolConverter : JsonConverter<FunctionTool>
         {
             throw new JsonException("Cannot convert null value to FunctionTool.");
         }
+        else if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException($"Unexpected JSON token when parsing FunctionTool: {reader.TokenType}");
+        }
 
         using (var jsonDocument = JsonDocument.ParseValue(ref reader))
         {
@@ -58,7 +63,7 @@ public class FunctionToolConverter : JsonConverter<FunctionTool>
                     instance.Parameters =
                         [.. parametersValue.EnumerateArray()
                             .Select(x => JsonSerializer.Deserialize<Parameter> (x.GetRawText(), options)
-                                ?? throw new ArgumentException("Empty array elements for Parameters are not supported"))];
+                                ?? throw new JsonException("Empty array elements for Parameters are not supported"))];
                 }
                 else if (parametersValue.ValueKind == JsonValueKind.Object)
                 {
@@ -67,7 +72,7 @@ public class FunctionToolConverter : JsonConverter<FunctionTool>
                             .Select(property =>
                             {
                                 var item = JsonSerializer.Deserialize<Parameter>(property.Value.GetRawText(), options)
-                                    ?? throw new ArgumentException("Empty array elements for Parameters are not supported");
+                                    ?? throw new JsonException("Empty array elements for Parameters are not supported");
                                 item.Name = property.Name;
                                 return item;
                             })];
