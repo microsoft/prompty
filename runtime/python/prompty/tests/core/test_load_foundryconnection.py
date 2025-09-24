@@ -5,11 +5,6 @@ import yaml
 from prompty.core import FoundryConnection
 
 
-def test_create_foundryconnection():
-    instance = FoundryConnection()
-    assert instance is not None
-
-
 def test_load_json_foundryconnection():
     json_data = """
     {

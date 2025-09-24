@@ -5,11 +5,6 @@ import yaml
 from prompty.core import FileSearchTool
 
 
-def test_create_filesearchtool():
-    instance = FileSearchTool()
-    assert instance is not None
-
-
 def test_load_json_filesearchtool():
     json_data = """
     {

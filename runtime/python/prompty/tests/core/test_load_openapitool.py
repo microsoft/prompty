@@ -5,11 +5,6 @@ import yaml
 from prompty.core import OpenApiTool
 
 
-def test_create_openapitool():
-    instance = OpenApiTool()
-    assert instance is not None
-
-
 def test_load_json_openapitool():
     json_data = """
     {

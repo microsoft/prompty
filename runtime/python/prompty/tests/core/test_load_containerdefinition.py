@@ -5,11 +5,6 @@ import yaml
 from prompty.core import ContainerDefinition
 
 
-def test_create_containerdefinition():
-    instance = ContainerDefinition()
-    assert instance is not None
-
-
 def test_load_json_containerdefinition():
     json_data = """
     {

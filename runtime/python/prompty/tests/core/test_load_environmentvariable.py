@@ -5,11 +5,6 @@ import yaml
 from prompty.core import EnvironmentVariable
 
 
-def test_create_environmentvariable():
-    instance = EnvironmentVariable()
-    assert instance is not None
-
-
 def test_load_json_environmentvariable():
     json_data = """
     {

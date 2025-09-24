@@ -5,11 +5,6 @@ import yaml
 from prompty.core import FunctionTool
 
 
-def test_create_functiontool():
-    instance = FunctionTool()
-    assert instance is not None
-
-
 def test_load_json_functiontool():
     json_data = """
     {

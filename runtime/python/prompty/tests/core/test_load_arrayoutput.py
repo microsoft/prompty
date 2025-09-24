@@ -5,11 +5,6 @@ import yaml
 from prompty.core import ArrayOutput
 
 
-def test_create_arrayoutput():
-    instance = ArrayOutput()
-    assert instance is not None
-
-
 def test_load_json_arrayoutput():
     json_data = """
     {

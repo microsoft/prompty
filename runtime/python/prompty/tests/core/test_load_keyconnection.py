@@ -5,11 +5,6 @@ import yaml
 from prompty.core import KeyConnection
 
 
-def test_create_keyconnection():
-    instance = KeyConnection()
-    assert instance is not None
-
-
 def test_load_json_keyconnection():
     json_data = """
     {

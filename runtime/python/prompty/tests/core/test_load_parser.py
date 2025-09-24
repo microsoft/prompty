@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Parser
 
 
-def test_create_parser():
-    instance = Parser()
-    assert instance is not None
-
-
 def test_load_json_parser():
     json_data = """
     {

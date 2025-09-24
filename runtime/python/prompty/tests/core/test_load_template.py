@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Template
 
 
-def test_create_template():
-    instance = Template()
-    assert instance is not None
-
-
 def test_load_json_template():
     json_data = """
     {

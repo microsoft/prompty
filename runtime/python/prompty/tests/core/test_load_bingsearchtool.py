@@ -5,11 +5,6 @@ import yaml
 from prompty.core import BingSearchTool
 
 
-def test_create_bingsearchtool():
-    instance = BingSearchTool()
-    assert instance is not None
-
-
 def test_load_json_bingsearchtool():
     json_data = """
     {

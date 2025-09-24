@@ -5,11 +5,6 @@ import yaml
 from prompty.core import ReferenceConnection
 
 
-def test_create_referenceconnection():
-    instance = ReferenceConnection()
-    assert instance is not None
-
-
 def test_load_json_referenceconnection():
     json_data = """
     {

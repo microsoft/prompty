@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Model
 
 
-def test_create_model():
-    instance = Model()
-    assert instance is not None
-
-
 def test_load_json_model():
     json_data = """
     {

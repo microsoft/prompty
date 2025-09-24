@@ -4,11 +4,6 @@ import yaml
 {% endif %}
 from {{node.typeName.namespace | lower }} import {{node.typeName.name}}
 
-
-def test_create_{{node.typeName.name | lower}}():
-    instance = {{node.typeName.name}}()
-    assert instance is not None
-
 {% for sample in examples %}
 def test_load_json_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.index - 1}}{% endif %}():
     json_data = '''

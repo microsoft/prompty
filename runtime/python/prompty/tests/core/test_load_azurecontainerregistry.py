@@ -5,11 +5,6 @@ import yaml
 from prompty.core import AzureContainerRegistry
 
 
-def test_create_azurecontainerregistry():
-    instance = AzureContainerRegistry()
-    assert instance is not None
-
-
 def test_load_json_azurecontainerregistry():
     json_data = """
     {

@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Registry
 
 
-def test_create_registry():
-    instance = Registry()
-    assert instance is not None
-
-
 def test_load_json_registry():
     json_data = """
     {

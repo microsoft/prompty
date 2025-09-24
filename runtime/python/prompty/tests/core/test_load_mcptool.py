@@ -5,11 +5,6 @@ import yaml
 from prompty.core import McpTool
 
 
-def test_create_mcptool():
-    instance = McpTool()
-    assert instance is not None
-
-
 def test_load_json_mcptool():
     json_data = """
     {

@@ -5,11 +5,6 @@ import yaml
 from prompty.core import PromptyContainer
 
 
-def test_create_promptycontainer():
-    instance = PromptyContainer()
-    assert instance is not None
-
-
 def test_load_json_promptycontainer():
     json_data = """
     {

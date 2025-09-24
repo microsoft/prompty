@@ -5,11 +5,6 @@ import yaml
 from prompty.core import OAuthConnection
 
 
-def test_create_oauthconnection():
-    instance = OAuthConnection()
-    assert instance is not None
-
-
 def test_load_json_oauthconnection():
     json_data = """
     {

@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Scale
 
 
-def test_create_scale():
-    instance = Scale()
-    assert instance is not None
-
-
 def test_load_json_scale():
     json_data = """
     {

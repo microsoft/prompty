@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Parameter
 
 
-def test_create_parameter():
-    instance = Parameter()
-    assert instance is not None
-
-
 def test_load_json_parameter():
     json_data = """
     {

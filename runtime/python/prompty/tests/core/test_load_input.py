@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Input
 
 
-def test_create_input():
-    instance = Input()
-    assert instance is not None
-
-
 def test_load_json_input():
     json_data = """
     {

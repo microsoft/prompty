@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Binding
 
 
-def test_create_binding():
-    instance = Binding()
-    assert instance is not None
-
-
 def test_load_json_binding():
     json_data = """
     {

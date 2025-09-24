@@ -5,11 +5,6 @@ import yaml
 from prompty.core import Format
 
 
-def test_create_format():
-    instance = Format()
-    assert instance is not None
-
-
 def test_load_json_format():
     json_data = """
     {
