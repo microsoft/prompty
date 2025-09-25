@@ -1,0 +1,35 @@
+---
+title: Prompty Runtime
+authors:
+  - bethanyjep
+  - nitya
+  - sethjuarez
+date: 2024-06-10
+tags:
+  - tutorials
+  - runtime
+index: 2
+---
+
+## Using this Prompty Runtime
+The Python runtime is a simple way to run your prompts in Python. The runtime is available as a Python package and can be installed using pip. Depending on the type of prompt you are running, you may need to install additional dependencies. The runtime is designed to be extensible and can be customized to fit your needs.
+
+```bash
+pip install "prompty[azure]"
+```
+
+Simple usage example:
+
+```python
+import prompty
+# import invoker
+import prompty.azure
+
+# execute the prompt
+response = prompty.execute("path/to/prompty/file")
+
+print(response)
+```
+
+---
+[Want to Contribute To the Project?](/docs/contributing/) - _Updated Guidance Coming Soon_.
