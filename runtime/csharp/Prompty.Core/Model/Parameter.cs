@@ -26,7 +26,7 @@ public class Parameter
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// The data type of the tool parameter
+    /// The data type of the parameter
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
 

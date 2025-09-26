@@ -4,6 +4,8 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
+from ._Binding import Binding
+from ._BingSearchConfiguration import BingSearchConfiguration
 from ._Connection import (
     Connection,
     FoundryConnection,
@@ -12,10 +14,42 @@ from ._Connection import (
     OAuthConnection,
     ReferenceConnection,
 )
+from ._ContainerDefinition import ContainerDefinition
+from ._EnvironmentVariable import EnvironmentVariable
+from ._Format import Format
+from ._Input import ArrayInput, Input, ObjectInput
 from ._Model import Model
 from ._ModelOptions import ModelOptions
+from ._Output import ArrayOutput, ObjectOutput, Output
+from ._Parameter import ArrayParameter, ObjectParameter, Parameter
+from ._Parser import Parser
+from ._PromptyBase import Prompty, PromptyBase, PromptyContainer, PromptyManifest
+from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
+from ._Scale import Scale
+from ._Template import Template
+from ._Tool import BingSearchTool, FileSearchTool, FunctionTool, McpTool, ModelTool, OpenApiTool, ServerTool, Tool
 
 __all__ = [
+    "Input",
+    "ObjectInput",
+    "ArrayInput",
+    "Output",
+    "ObjectOutput",
+    "ArrayOutput",
+    "Binding",
+    "Tool",
+    "FunctionTool",
+    "ServerTool",
+    "BingSearchConfiguration",
+    "BingSearchTool",
+    "FileSearchTool",
+    "McpTool",
+    "ModelTool",
+    "OpenApiTool",
+    "Format",
+    "Parser",
+    "Template",
+    "PromptyBase",
     "Connection",
     "GenericConnection",
     "ReferenceConnection",
@@ -25,4 +59,15 @@ __all__ = [
     "ModelOptions",
     "Model",
     "Prompty",
+    "Parameter",
+    "ArrayParameter",
+    "ObjectParameter",
+    "PromptyManifest",
+    "Registry",
+    "GenericRegistry",
+    "AzureContainerRegistry",
+    "Scale",
+    "ContainerDefinition",
+    "EnvironmentVariable",
+    "PromptyContainer",
 ]

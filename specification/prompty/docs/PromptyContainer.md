@@ -52,7 +52,7 @@ environmentVariables:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | Type of agent, e.g., &#39;prompt&#39; or &#39;container&#39;  |
+| kind | string | Type of agent, e.g., &#39;container&#39;  |
 | protocol | string | Protocol used by the containerized agent  |
 | container | [ContainerDefinition](ContainerDefinition.md) | Container definition including registry and scaling information  |
 | environmentVariables | [EnvironmentVariable[]](EnvironmentVariable.md) | Environment variables to set in the hosted agent container.  |

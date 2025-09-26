@@ -15,7 +15,7 @@ class Parameter:
     name : str
         Name of the parameter
     kind : str
-        The data type of the tool parameter
+        The data type of the parameter
     description : Optional[str]
         A short description of the property
     required : Optional[bool]

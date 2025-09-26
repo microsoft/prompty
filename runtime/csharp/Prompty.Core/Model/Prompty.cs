@@ -28,7 +28,7 @@ public class Prompty : PromptyBase
     /// <summary>
     /// Type of agent, e.g., 'prompt'
     /// </summary>
-    public string Kind { get; set; } = "prompt";
+    public override string Kind { get; set; } = "prompt";
 
     /// <summary>
     /// Model configuration used for execution

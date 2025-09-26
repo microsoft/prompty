@@ -10,7 +10,7 @@ def test_load_json_parameter():
     {
       "name": "my-parameter",
       "kind": "string",
-      "description": "A description of the tool parameter",
+      "description": "A description of the parameter",
       "required": true,
       "enum": [
         "value1",
@@ -24,7 +24,7 @@ def test_load_json_parameter():
     assert instance is not None
     assert instance.name == "my-parameter"
     assert instance.kind == "string"
-    assert instance.description == "A description of the tool parameter"
+    assert instance.description == "A description of the parameter"
 
     assert instance.required
 
@@ -33,7 +33,7 @@ def test_load_yaml_parameter():
     yaml_data = """
     name: my-parameter
     kind: string
-    description: A description of the tool parameter
+    description: A description of the parameter
     required: true
     enum:
       - value1
@@ -46,5 +46,5 @@ def test_load_yaml_parameter():
     assert instance is not None
     assert instance.name == "my-parameter"
     assert instance.kind == "string"
-    assert instance.description == "A description of the tool parameter"
+    assert instance.description == "A description of the parameter"
     assert instance.required

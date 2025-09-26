@@ -39,7 +39,7 @@ classDiagram
 ```yaml
 name: my-parameter
 kind: string
-description: A description of the tool parameter
+description: A description of the parameter
 required: true
 enum:
   - value1
@@ -53,7 +53,7 @@ enum:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | string | Name of the parameter  |
-| kind | string | The data type of the tool parameter  |
+| kind | string | The data type of the parameter  |
 | description | string | A short description of the property  |
 | required | boolean | Whether the tool parameter is required  |
 | enum | unknown[] | Allowed enumeration values for the parameter  |

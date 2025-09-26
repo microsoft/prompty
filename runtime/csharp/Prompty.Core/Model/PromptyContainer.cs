@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// 
 /// </summary>
 [JsonConverter(typeof(PromptyContainerConverter))]
-public class PromptyContainer : Prompty
+public class PromptyContainer : PromptyBase
 {
     /// <summary>
     /// Initializes a new instance of <see cref="PromptyContainer"/>.
@@ -21,7 +21,7 @@ public class PromptyContainer : Prompty
     }
 
     /// <summary>
-    /// Type of agent, e.g., 'prompt' or 'container'
+    /// Type of agent, e.g., 'container'
     /// </summary>
     public override string Kind { get; set; } = "container";
 

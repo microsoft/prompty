@@ -14,7 +14,7 @@ public class ParameterConversionTests
         string yamlData = """
         name: my-parameter
         kind: string
-        description: A description of the tool parameter
+        description: A description of the parameter
         required: true
         enum:
           - value1
@@ -32,7 +32,7 @@ public class ParameterConversionTests
         {
           "name": "my-parameter",
           "kind": "string",
-          "description": "A description of the tool parameter",
+          "description": "A description of the parameter",
           "required": true,
           "enum": [
             "value1",
@@ -46,7 +46,7 @@ public class ParameterConversionTests
         Assert.NotNull(instance);
         Assert.Equal("my-parameter", instance.Name);
         Assert.Equal("string", instance.Kind);
-        Assert.Equal("A description of the tool parameter", instance.Description);
+        Assert.Equal("A description of the parameter", instance.Description);
         Assert.True(instance.Required);
     }
 }
