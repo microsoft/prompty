@@ -4,8 +4,6 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from ._Binding import Binding
-from ._BingSearchConfiguration import BingSearchConfiguration
 from ._Connection import (
     Connection,
     FoundryConnection,
@@ -14,58 +12,17 @@ from ._Connection import (
     OAuthConnection,
     ReferenceConnection,
 )
-from ._ContainerDefinition import ContainerDefinition
-from ._EnvironmentVariable import EnvironmentVariable
-from ._Format import Format
-from ._Input import ArrayInput, Input, ObjectInput
 from ._Model import Model
 from ._ModelOptions import ModelOptions
-from ._Output import ArrayOutput, ObjectOutput, Output
-from ._Parameter import ArrayParameter, ObjectParameter, Parameter
-from ._Parser import Parser
-from ._Prompty import Prompty, PromptyContainer
-from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
-from ._Scale import Scale
-from ._Template import Template
-from ._Tool import BingSearchTool, FileSearchTool, FunctionTool, McpTool, ModelTool, OpenApiTool, ServerTool, Tool
 
 __all__ = [
-    "ModelOptions",
-    "Model",
-    "Input",
-    "ObjectInput",
-    "ArrayInput",
-    "Output",
-    "ObjectOutput",
-    "ArrayOutput",
-    "Binding",
-    "Tool",
-    "Parameter",
-    "ArrayParameter",
-    "ObjectParameter",
-    "FunctionTool",
-    "ServerTool",
-    "BingSearchConfiguration",
-    "BingSearchTool",
-    "FileSearchTool",
-    "McpTool",
-    "ModelTool",
-    "OpenApiTool",
-    "Format",
-    "Parser",
-    "Template",
-    "Prompty",
     "Connection",
     "GenericConnection",
     "ReferenceConnection",
     "KeyConnection",
     "OAuthConnection",
     "FoundryConnection",
-    "Registry",
-    "GenericRegistry",
-    "AzureContainerRegistry",
-    "Scale",
-    "ContainerDefinition",
-    "EnvironmentVariable",
-    "PromptyContainer",
+    "ModelOptions",
+    "Model",
+    "Prompty",
 ]

@@ -11,6 +11,17 @@ namespace Prompty.Core {
     ...Item;
   }
 
+  model Id<
+    Item,
+    StringValue extends valueof string = "The unique identifier of the item",
+    Sample extends valueof unknown = #{ id: "unique-id" }
+  > {
+    @doc(StringValue)
+    @sample(Sample)
+    id: string = "";
+    ...Item;
+  }
+
   alias SimpleTypes =
     | "string"
     | "integer"

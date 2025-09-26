@@ -24,12 +24,12 @@ namespace Prompty.Core {
    */
   @discriminator("kind")
   model Parameter {
-    @doc("The data type of the tool parameter")
+    @doc("The data type of the parameter")
     @sample(#{ kind: "string" })
     kind: string;
 
     @doc("A short description of the property")
-    @sample(#{ description: "A description of the tool parameter" })
+    @sample(#{ description: "A description of the parameter" })
     description?: string = "";
 
     @doc("Whether the tool parameter is required")

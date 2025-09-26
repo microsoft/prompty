@@ -18,7 +18,12 @@ namespace Prompty.Core {
    * It allows for flexible configuration of AI models to suit different use cases and requirements.
    */
   @discriminator("provider")
-  @shorthand(string, #{ id: "{value}" }, "model", "Simple construction with just an id")
+  @shorthand(
+    string,
+    #{ id: "{value}" },
+    "model",
+    "Simple construction with just an id"
+  )
   model Model {
     @doc("The unique identifier of the model - can be used as the single property shorthand")
     @sample(#{ id: "gpt-35-turbo" })
