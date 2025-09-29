@@ -24,6 +24,8 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +unknown default
+        +unknown value
         +unknown[] enum
     }
     ObjectParameter *-- Parameter

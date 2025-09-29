@@ -130,14 +130,15 @@ classDiagram
         +Format format
         +Parser parser
     }
-    class PromptyBase {
-      <<abstract>>
+    class Prompty {
+      
         +string kind
         +string id
         +string version
         +string name
         +string description
         +dictionary metadata
+        + model
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
@@ -194,17 +195,14 @@ classDiagram
         +Connection connection
         +ModelOptions options
     }
-    class Prompty {
-      
-        +string kind
-        +Model model
-    }
     class Parameter {
       
         +string name
         +string kind
         +string description
         +boolean required
+        +unknown default
+        +unknown value
         +unknown[] enum
     }
     class ArrayParameter {
@@ -279,9 +277,8 @@ classDiagram
     Tool <|-- McpTool
     Tool <|-- ModelTool
     Tool <|-- OpenApiTool
-    PromptyBase <|-- Prompty
-    PromptyBase <|-- PromptyManifest
-    PromptyBase <|-- PromptyContainer
+    Prompty <|-- PromptyManifest
+    Prompty <|-- PromptyContainer
     Connection <|-- GenericConnection
     Connection <|-- ReferenceConnection
     Connection <|-- KeyConnection
@@ -306,13 +303,13 @@ classDiagram
     OpenApiTool *-- Connection
     Template *-- Format
     Template *-- Parser
-    PromptyBase *-- Input
-    PromptyBase *-- Output
-    PromptyBase *-- Tool
-    PromptyBase *-- Template
+    Prompty *-- 
+    Prompty *-- Input
+    Prompty *-- Output
+    Prompty *-- Tool
+    Prompty *-- Template
     Model *-- Connection
     Model *-- ModelOptions
-    Prompty *-- Model
     ArrayParameter *-- Parameter
     ObjectParameter *-- Parameter
     PromptyManifest *-- Model

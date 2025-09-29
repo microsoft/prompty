@@ -45,6 +45,8 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +unknown default
+        +unknown value
         +unknown[] enum
     }
     PromptyManifest *-- Parameter
@@ -59,8 +61,10 @@ models:
   - id: gpt-4o
   - custom-model-id
 parameters:
-  temperature: 0.7
-  maxTokens: 1000
+  param1:
+    kind: string
+  param2:
+    kind: number
 
 ```
 
@@ -69,7 +73,7 @@ parameters:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string | Type of agent, e.g., &#39;manifest&#39;  |
-| models | [Model[]](Model.md) | List of models that the agent can utilize  |
+| models | [Model[]](Model.md) | Additional models that are known to work with this prompt  |
 | parameters | [Parameter[]](Parameter.md) | Parameters for configuring the agent&#39;s behavior and execution (Related Types: [ObjectParameter](ObjectParameter.md), [ArrayParameter](ArrayParameter.md)) |
 
 ## Composed Types
