@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,15 +13,17 @@ namespace Prompty.Core;
 /// Represents an object output property.
 /// This extends the base Output model to represent a structured object.
 /// </summary>
-[JsonConverter(typeof(ObjectInputConverter))]
-public class ObjectInput : Input
+[JsonConverter(typeof(ObjectInputJsonConverter))]
+public class ObjectInput : Input, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ObjectInput"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ObjectInput()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// 
@@ -31,72 +35,35 @@ public class ObjectInput : Input
     /// </summary>
     public IList<Input> Properties { get; set; } = [];
 
-}
 
-public class ObjectInputConverter : JsonConverter<ObjectInput>
-{
-    public override ObjectInput Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to ObjectInput.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing ObjectInput: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new ObjectInput();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type ObjectInput");
             }
 
-            if (rootElement.TryGetProperty("properties", out JsonElement propertiesValue))
-            {
-                if (propertiesValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Properties =
-                        [.. propertiesValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Input> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Properties are not supported"))];
-                }
-                else if (propertiesValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Properties =
-                        [.. propertiesValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Input>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Properties are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for properties");
-                }
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing ObjectInput: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ObjectInput value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("properties");
-        JsonSerializer.Serialize(writer, value.Properties, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("properties"));
+        nestedObjectSerializer(Properties);
     }
 }

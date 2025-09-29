@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// The MCP Server tool.
 /// </summary>
-[JsonConverter(typeof(ModelToolConverter))]
-public class ModelTool : Tool
+[JsonConverter(typeof(ModelToolJsonConverter))]
+public class ModelTool : Tool, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ModelTool"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ModelTool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind identifier for a model connection as a tool
@@ -30,50 +34,35 @@ public class ModelTool : Tool
     /// </summary>
     public Model Model { get; set; }
 
-}
 
-public class ModelToolConverter : JsonConverter<ModelTool>
-{
-    public override ModelTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to ModelTool.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing ModelTool: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new ModelTool();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type ModelTool");
             }
 
-            if (rootElement.TryGetProperty("model", out JsonElement modelValue))
-            {
-                instance.Model = JsonSerializer.Deserialize<Model>(modelValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: model");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing ModelTool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ModelTool value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("model");
-        JsonSerializer.Serialize(writer, value.Model, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("model"));
+        nestedObjectSerializer(Model);
     }
 }

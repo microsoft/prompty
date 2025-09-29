@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Template format definition
 /// </summary>
-[JsonConverter(typeof(FormatConverter))]
-public class Format
+[JsonConverter(typeof(FormatJsonConverter))]
+public class Format : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Format"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Format()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
@@ -35,72 +39,61 @@ public class Format
     /// </summary>
     public IDictionary<string, object>? Options { get; set; }
 
-}
 
-public class FormatConverter : JsonConverter<Format>
-{
-    public override Format Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+        if (parser.TryConsume<Scalar>(out var scalar))
         {
-            throw new JsonException("Cannot convert null value to Format.");
-        }
-        else if (reader.TokenType == JsonTokenType.String)
-        {
-            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Format are not supported");
-            return new Format()
+            // check for non-numeric characters to differentiate strings from numbers
+            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
             {
-                Kind = stringValue,
-            };
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Format: {reader.TokenType}");
+                var stringValue = scalar.Value;
+                Kind = stringValue;
+                return;
+            }
+            else
+            {
+                throw new YamlException($"Unexpected scalar value '' when parsing Format. Expected one of the supported shorthand types or a mapping.");
+            }
         }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new Format();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type Format");
             }
 
-            if (rootElement.TryGetProperty("strict", out JsonElement strictValue))
-            {
-                instance.Strict = strictValue.GetBoolean();
-            }
-
-            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
-            {
-                instance.Options = JsonSerializer.Deserialize<Dictionary<string, object>>(optionsValue.GetRawText(), options);
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Format: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Format value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        if (value.Strict != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Strict != null)
         {
-            writer.WritePropertyName("strict");
-            JsonSerializer.Serialize(writer, value.Strict, options);
+            emitter.Emit(new Scalar("strict"));
+            nestedObjectSerializer(Strict);
         }
 
-        if (value.Options != null)
+
+        if (Options != null)
         {
-            writer.WritePropertyName("options");
-            JsonSerializer.Serialize(writer, value.Options, options);
+            emitter.Emit(new Scalar("options"));
+            nestedObjectSerializer(Options);
         }
 
-        writer.WriteEndObject();
     }
 }

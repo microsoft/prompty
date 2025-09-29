@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// The Bing search tool.
 /// </summary>
-[JsonConverter(typeof(BingSearchToolConverter))]
-public class BingSearchTool : Tool
+[JsonConverter(typeof(BingSearchToolJsonConverter))]
+public class BingSearchTool : Tool, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="BingSearchTool"/>.
     /// </summary>
+#pragma warning disable CS8618
     public BingSearchTool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind identifier for Bing search tools
@@ -35,80 +39,38 @@ public class BingSearchTool : Tool
     /// </summary>
     public IList<BingSearchConfiguration> Configurations { get; set; } = [];
 
-}
 
-public class BingSearchToolConverter : JsonConverter<BingSearchTool>
-{
-    public override BingSearchTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to BingSearchTool.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type BingSearchTool");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing BingSearchTool: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new BingSearchTool();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
-            {
-                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: connection");
-            }
-
-            if (rootElement.TryGetProperty("configurations", out JsonElement configurationsValue))
-            {
-                if (configurationsValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Configurations =
-                        [.. configurationsValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<BingSearchConfiguration> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Configurations are not supported"))];
-                }
-                else if (configurationsValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Configurations =
-                        [.. configurationsValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<BingSearchConfiguration>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Configurations are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for configurations");
-                }
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing BingSearchTool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, BingSearchTool value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("connection");
-        JsonSerializer.Serialize(writer, value.Connection, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("configurations");
-        JsonSerializer.Serialize(writer, value.Configurations, options);
+        emitter.Emit(new Scalar("connection"));
+        nestedObjectSerializer(Connection);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("configurations"));
+        nestedObjectSerializer(Configurations);
     }
 }

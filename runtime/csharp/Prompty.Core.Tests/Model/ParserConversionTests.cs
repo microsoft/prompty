@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -17,7 +18,13 @@ public class ParserConversionTests
           key: value
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Parser>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("prompty", instance.Kind);
     }
 
     [Fact]
@@ -36,13 +43,24 @@ public class ParserConversionTests
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
     }
-    // regular expression for matching only floats
     [Fact]
-    public void LoadFromString()
+    public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Parser>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Kind);
+    }
+
+
+    [Fact]
+    public void LoadYamlFromString()
+    {
+        // alternate representation as string
+        var data = "\"example\"";
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Parser>(data.ToString());
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }

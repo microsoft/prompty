@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,7 +21,13 @@ public class ModelToolConversionTests
             kind: provider-connection
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<ModelTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("model", instance.Kind);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -16,7 +17,14 @@ public class BindingConversionTests
         input: input-variable
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Binding>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-tool", instance.Name);
+        Assert.Equal("input-variable", instance.Input);
     }
 
     [Fact]
@@ -34,13 +42,24 @@ public class BindingConversionTests
         Assert.Equal("my-tool", instance.Name);
         Assert.Equal("input-variable", instance.Input);
     }
-    // regular expression for matching only floats
     [Fact]
-    public void LoadFromString()
+    public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Binding>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Input);
+    }
+
+
+    [Fact]
+    public void LoadYamlFromString()
+    {
+        // alternate representation as string
+        var data = "\"example\"";
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Binding>(data.ToString());
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }

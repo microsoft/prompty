@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using API keys.
 /// </summary>
-[JsonConverter(typeof(KeyConnectionConverter))]
-public class KeyConnection : Connection
+[JsonConverter(typeof(KeyConnectionJsonConverter))]
+public class KeyConnection : Connection, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="KeyConnection"/>.
     /// </summary>
+#pragma warning disable CS8618
     public KeyConnection()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
@@ -35,58 +39,38 @@ public class KeyConnection : Connection
     /// </summary>
     public string Key { get; set; } = string.Empty;
 
-}
 
-public class KeyConnectionConverter : JsonConverter<KeyConnection>
-{
-    public override KeyConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to KeyConnection.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type KeyConnection");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing KeyConnection: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new KeyConnection();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("endpoint", out JsonElement endpointValue))
-            {
-                instance.Endpoint = endpointValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: endpoint");
-            }
-
-            if (rootElement.TryGetProperty("key", out JsonElement keyValue))
-            {
-                instance.Key = keyValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: key");
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing KeyConnection: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, KeyConnection value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("endpoint");
-        JsonSerializer.Serialize(writer, value.Endpoint, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("key");
-        JsonSerializer.Serialize(writer, value.Key, options);
+        emitter.Emit(new Scalar("endpoint"));
+        nestedObjectSerializer(Endpoint);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("key"));
+        nestedObjectSerializer(Key);
     }
 }

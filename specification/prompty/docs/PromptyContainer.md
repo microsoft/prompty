@@ -1,5 +1,13 @@
 # PromptyContainer
 
+The following represents a containerized agent that can be deployed and hosted.
+It includes details about the container image, registry information, and environment variables.
+This model allows for the definition of agents that can run in isolated environments,
+making them suitable for deployment in various cloud or on-premises scenarios.
+
+The containerized agent can communicate using specified protocols and can be scaled
+based on the provided configuration.
+
 ## Class Diagram
 
 ```mermaid

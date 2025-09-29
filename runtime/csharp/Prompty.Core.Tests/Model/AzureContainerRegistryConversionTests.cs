@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,7 +19,16 @@ public class AzureContainerRegistryConversionTests
         registryName: your-acr-name
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<AzureContainerRegistry>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("acr", instance.Kind);
+        Assert.Equal("your-subscription-id", instance.Subscription);
+        Assert.Equal("your-resource-group", instance.ResourceGroup);
+        Assert.Equal("your-acr-name", instance.RegistryName);
     }
 
     [Fact]

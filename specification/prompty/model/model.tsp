@@ -17,7 +17,7 @@ namespace Prompty.Core {
    * This model includes properties for specifying the model's provider, connection details, and various options.
    * It allows for flexible configuration of AI models to suit different use cases and requirements.
    */
-  @discriminator("provider")
+  @discriminator("publisher")
   @shorthand(
     string,
     #{ id: "{value}" },

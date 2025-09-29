@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using named connections.
 /// </summary>
-[JsonConverter(typeof(ReferenceConnectionConverter))]
-public class ReferenceConnection : Connection
+[JsonConverter(typeof(ReferenceConnectionJsonConverter))]
+public class ReferenceConnection : Connection, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ReferenceConnection"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ReferenceConnection()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
@@ -30,50 +34,35 @@ public class ReferenceConnection : Connection
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
-}
 
-public class ReferenceConnectionConverter : JsonConverter<ReferenceConnection>
-{
-    public override ReferenceConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to ReferenceConnection.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing ReferenceConnection: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new ReferenceConnection();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type ReferenceConnection");
             }
 
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing ReferenceConnection: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ReferenceConnection value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
     }
 }

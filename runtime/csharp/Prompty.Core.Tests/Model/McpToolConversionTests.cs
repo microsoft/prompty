@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -22,7 +23,15 @@ public class McpToolConversionTests
           - operation2
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<McpTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("mcp", instance.Kind);
+        Assert.Equal("My MCP Tool", instance.Name);
+        Assert.Equal("https://mcp.server.com", instance.Url);
     }
 
     [Fact]

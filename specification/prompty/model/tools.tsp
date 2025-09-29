@@ -36,6 +36,14 @@ namespace Prompty.Core {
     @sample(#{ required: true })
     required?: boolean = true;
 
+    @doc("The default value of the parameter - this represents the default value if none is provided")
+    @sample(#{ default: "default value" })
+    default?: unknown = null;
+
+    @doc("Parameter value used for initializing manifest examples and tooling")
+    @sample(#{ value: "sample value" })
+    value?: unknown = null;
+
     @doc("Allowed enumeration values for the parameter")
     @sample(#{ `enum`: #["value1", "value2", "value3"] })
     `enum`?: unknown[] = #[];

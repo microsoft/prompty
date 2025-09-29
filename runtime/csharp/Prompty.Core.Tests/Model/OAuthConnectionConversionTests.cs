@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -21,7 +22,17 @@ public class OAuthConnectionConversionTests
           - https://cognitiveservices.azure.com/.default
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<OAuthConnection>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("oauth", instance.Kind);
+        Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", instance.Endpoint);
+        Assert.Equal("your-client-id", instance.ClientId);
+        Assert.Equal("your-client-secret", instance.ClientSecret);
+        Assert.Equal("https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", instance.TokenUrl);
     }
 
     [Fact]

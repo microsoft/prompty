@@ -23,7 +23,7 @@ from ._ModelOptions import ModelOptions
 from ._Output import ArrayOutput, ObjectOutput, Output
 from ._Parameter import ArrayParameter, ObjectParameter, Parameter
 from ._Parser import Parser
-from ._PromptyBase import Prompty, PromptyBase, PromptyContainer, PromptyManifest
+from ._Prompty import Prompty, PromptyContainer, PromptyManifest
 from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
 from ._Scale import Scale
 from ._Template import Template
@@ -49,7 +49,7 @@ __all__ = [
     "Format",
     "Parser",
     "Template",
-    "PromptyBase",
+    "Prompty",
     "Connection",
     "GenericConnection",
     "ReferenceConnection",
@@ -58,7 +58,6 @@ __all__ = [
     "FoundryConnection",
     "ModelOptions",
     "Model",
-    "Prompty",
     "Parameter",
     "ArrayParameter",
     "ObjectParameter",

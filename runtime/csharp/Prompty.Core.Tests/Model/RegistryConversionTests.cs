@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -19,7 +20,13 @@ public class RegistryConversionTests
           usageDescription: Access to the container registry
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Registry>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("docker", instance.Kind);
     }
 
     [Fact]

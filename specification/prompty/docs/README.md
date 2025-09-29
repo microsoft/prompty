@@ -138,7 +138,7 @@ classDiagram
         +string name
         +string description
         +dictionary metadata
-        + model
+        +Model model
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
@@ -303,7 +303,7 @@ classDiagram
     OpenApiTool *-- Connection
     Template *-- Format
     Template *-- Parser
-    Prompty *-- 
+    Prompty *-- Model
     Prompty *-- Input
     Prompty *-- Output
     Prompty *-- Tool

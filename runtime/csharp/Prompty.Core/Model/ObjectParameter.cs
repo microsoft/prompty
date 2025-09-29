@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents an object parameter for a tool.
 /// </summary>
-[JsonConverter(typeof(ObjectParameterConverter))]
-public class ObjectParameter : Parameter
+[JsonConverter(typeof(ObjectParameterJsonConverter))]
+public class ObjectParameter : Parameter, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ObjectParameter"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ObjectParameter()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// 
@@ -30,72 +34,35 @@ public class ObjectParameter : Parameter
     /// </summary>
     public IList<Parameter> Properties { get; set; } = [];
 
-}
 
-public class ObjectParameterConverter : JsonConverter<ObjectParameter>
-{
-    public override ObjectParameter Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to ObjectParameter.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing ObjectParameter: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new ObjectParameter();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type ObjectParameter");
             }
 
-            if (rootElement.TryGetProperty("properties", out JsonElement propertiesValue))
-            {
-                if (propertiesValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Properties =
-                        [.. propertiesValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Parameter> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Properties are not supported"))];
-                }
-                else if (propertiesValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Properties =
-                        [.. propertiesValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Parameter>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Properties are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for properties");
-                }
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing ObjectParameter: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ObjectParameter value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("properties");
-        JsonSerializer.Serialize(writer, value.Properties, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("properties"));
+        nestedObjectSerializer(Properties);
     }
 }

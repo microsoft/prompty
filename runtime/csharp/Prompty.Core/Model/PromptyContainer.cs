@@ -1,24 +1,34 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
+/// The following represents a containerized agent that can be deployed and hosted.
+/// It includes details about the container image, registry information, and environment variables.
+/// This model allows for the definition of agents that can run in isolated environments,
+/// making them suitable for deployment in various cloud or on-premises scenarios.
 /// 
+/// The containerized agent can communicate using specified protocols and can be scaled
+/// based on the provided configuration.
 /// </summary>
-[JsonConverter(typeof(PromptyContainerConverter))]
-public class PromptyContainer : PromptyBase
+[JsonConverter(typeof(PromptyContainerJsonConverter))]
+public class PromptyContainer : Prompty, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="PromptyContainer"/>.
     /// </summary>
+#pragma warning disable CS8618
     public PromptyContainer()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Type of agent, e.g., 'container'
@@ -40,91 +50,45 @@ public class PromptyContainer : PromptyBase
     /// </summary>
     public IList<EnvironmentVariable>? EnvironmentVariables { get; set; }
 
-}
 
-public class PromptyContainerConverter : JsonConverter<PromptyContainer>
-{
-    public override PromptyContainer Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to PromptyContainer.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type PromptyContainer");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing PromptyContainer: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new PromptyContainer();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("protocol", out JsonElement protocolValue))
-            {
-                instance.Protocol = protocolValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: protocol");
-            }
-
-            if (rootElement.TryGetProperty("container", out JsonElement containerValue))
-            {
-                instance.Container = JsonSerializer.Deserialize<ContainerDefinition>(containerValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: container");
-            }
-
-            if (rootElement.TryGetProperty("environmentVariables", out JsonElement environmentVariablesValue))
-            {
-                if (environmentVariablesValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.EnvironmentVariables =
-                        [.. environmentVariablesValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<EnvironmentVariable> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for EnvironmentVariables are not supported"))];
-                }
-                else if (environmentVariablesValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.EnvironmentVariables =
-                        [.. environmentVariablesValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<EnvironmentVariable>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for EnvironmentVariables are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for environmentVariables");
-                }
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing PromptyContainer: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, PromptyContainer value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("protocol");
-        JsonSerializer.Serialize(writer, value.Protocol, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("container");
-        JsonSerializer.Serialize(writer, value.Container, options);
+        emitter.Emit(new Scalar("protocol"));
+        nestedObjectSerializer(Protocol);
 
-        if (value.EnvironmentVariables != null)
+        emitter.Emit(new Scalar("container"));
+        nestedObjectSerializer(Container);
+
+        if (EnvironmentVariables != null)
         {
-            writer.WritePropertyName("environmentVariables");
-            JsonSerializer.Serialize(writer, value.EnvironmentVariables, options);
+            emitter.Emit(new Scalar("environmentVariables"));
+            nestedObjectSerializer(EnvironmentVariables);
         }
 
-        writer.WriteEndObject();
     }
 }

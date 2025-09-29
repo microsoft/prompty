@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a parameter for a tool.
 /// </summary>
-[JsonConverter(typeof(ParameterConverter))]
-public class Parameter
+[JsonConverter(typeof(ParameterJsonConverter))]
+public class Parameter : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Parameter"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Parameter()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the parameter
@@ -41,104 +45,109 @@ public class Parameter
     public bool? Required { get; set; }
 
     /// <summary>
+    /// The default value of the parameter - this represents the default value if none is provided
+    /// </summary>
+    public object? Default { get; set; }
+
+    /// <summary>
+    /// Parameter value used for initializing manifest examples and tooling
+    /// </summary>
+    public object? Value { get; set; }
+
+    /// <summary>
     /// Allowed enumeration values for the parameter
     /// </summary>
     public IList<object>? Enum { get; set; }
 
-}
 
-public class ParameterConverter : JsonConverter<Parameter>
-{
-    public override Parameter Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to Parameter.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Parameter: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // load polymorphic Parameter instance
-            Parameter instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for Parameter is not supported");
-                instance = discriminator switch
+                throw new YamlException("Expected a mapping node for type Parameter");
+            }
+
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
                 {
-                    "object" => JsonSerializer.Deserialize<ObjectParameter>(rootElement, options)
-                        ?? throw new JsonException("Empty ObjectParameter instances are not supported"),
-                    "array" => JsonSerializer.Deserialize<ArrayParameter>(rootElement, options)
-                        ?? throw new JsonException("Empty ArrayParameter instances are not supported"),
-                    _ => new Parameter(),
-                };
-            }
-            else
-            {
-                throw new JsonException("Missing Parameter discriminator property: 'kind'");
-            }
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                    case "object":
+                        var objectParameter = nestedObjectDeserializer(typeof(ObjectParameter)) as ObjectParameter;
+                        if (objectParameter == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ObjectParameter");
+                        }
+                        return;
+                    case "array":
+                        var arrayParameter = nestedObjectDeserializer(typeof(ArrayParameter)) as ArrayParameter;
+                        if (arrayParameter == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ArrayParameter");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Parameter");
+                }
             }
 
-            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
-            {
-                instance.Description = descriptionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("required", out JsonElement requiredValue))
-            {
-                instance.Required = requiredValue.GetBoolean();
-            }
-
-            if (rootElement.TryGetProperty("enum", out JsonElement enumValue))
-            {
-                instance.Enum = [.. enumValue.EnumerateArray().Select(x => x.GetScalarValue() ?? throw new JsonException("Empty array elements for enum are not supported"))];
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Parameter: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Parameter value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        if (value.Description != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Description != null)
         {
-            writer.WritePropertyName("description");
-            JsonSerializer.Serialize(writer, value.Description, options);
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
         }
 
-        if (value.Required != null)
+
+        if (Required != null)
         {
-            writer.WritePropertyName("required");
-            JsonSerializer.Serialize(writer, value.Required, options);
+            emitter.Emit(new Scalar("required"));
+            nestedObjectSerializer(Required);
         }
 
-        if (value.Enum != null)
+
+        if (Default != null)
         {
-            writer.WritePropertyName("enum");
-            JsonSerializer.Serialize(writer, value.Enum, options);
+            emitter.Emit(new Scalar("default"));
+            nestedObjectSerializer(Default);
         }
 
-        writer.WriteEndObject();
+
+        if (Value != null)
+        {
+            emitter.Emit(new Scalar("value"));
+            nestedObjectSerializer(Value);
+        }
+
+
+        if (Enum != null)
+        {
+            emitter.Emit(new Scalar("enum"));
+            nestedObjectSerializer(Enum);
+        }
+
     }
 }

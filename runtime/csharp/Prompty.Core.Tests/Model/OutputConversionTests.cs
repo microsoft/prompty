@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,7 +19,16 @@ public class OutputConversionTests
         required: true
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Output>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-output", instance.Name);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("A description of the output property", instance.Description);
+        Assert.True(instance.Required);
     }
 
     [Fact]

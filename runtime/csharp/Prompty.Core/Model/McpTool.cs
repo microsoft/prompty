@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// The MCP Server tool.
 /// </summary>
-[JsonConverter(typeof(McpToolConverter))]
-public class McpTool : Tool
+[JsonConverter(typeof(McpToolJsonConverter))]
+public class McpTool : Tool, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="McpTool"/>.
     /// </summary>
+#pragma warning disable CS8618
     public McpTool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind identifier for MCP tools
@@ -45,74 +49,44 @@ public class McpTool : Tool
     /// </summary>
     public IList<string> Allowed { get; set; } = [];
 
-}
 
-public class McpToolConverter : JsonConverter<McpTool>
-{
-    public override McpTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to McpTool.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type McpTool");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing McpTool: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new McpTool();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
-            {
-                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: connection");
-            }
-
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("url", out JsonElement urlValue))
-            {
-                instance.Url = urlValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: url");
-            }
-
-            if (rootElement.TryGetProperty("allowed", out JsonElement allowedValue))
-            {
-                instance.Allowed = [.. allowedValue.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException("Empty array elements for allowed are not supported"))];
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing McpTool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, McpTool value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("connection");
-        JsonSerializer.Serialize(writer, value.Connection, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new Scalar("connection"));
+        nestedObjectSerializer(Connection);
 
-        writer.WritePropertyName("url");
-        JsonSerializer.Serialize(writer, value.Url, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        writer.WritePropertyName("allowed");
-        JsonSerializer.Serialize(writer, value.Allowed, options);
+        emitter.Emit(new Scalar("url"));
+        nestedObjectSerializer(Url);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("allowed"));
+        nestedObjectSerializer(Allowed);
     }
 }

@@ -19,8 +19,12 @@ def test_load_json_promptymanifest():
         "custom-model-id"
       ],
       "parameters": {
-        "temperature": 0.7,
-        "maxTokens": 1000
+        "param1": {
+          "kind": "string"
+        },
+        "param2": {
+          "kind": "number"
+        }
       }
     }
     """
@@ -38,8 +42,10 @@ def test_load_yaml_promptymanifest():
       - id: gpt-4o
       - custom-model-id
     parameters:
-      temperature: 0.7
-      maxTokens: 1000
+      param1:
+        kind: string
+      param2:
+        kind: number
     
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)

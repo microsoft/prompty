@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for an Azure Container Registry (ACR).
 /// </summary>
-[JsonConverter(typeof(AzureContainerRegistryConverter))]
-public class AzureContainerRegistry : Registry
+[JsonConverter(typeof(AzureContainerRegistryJsonConverter))]
+public class AzureContainerRegistry : Registry, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="AzureContainerRegistry"/>.
     /// </summary>
+#pragma warning disable CS8618
     public AzureContainerRegistry()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind of container registry
@@ -40,66 +44,41 @@ public class AzureContainerRegistry : Registry
     /// </summary>
     public string RegistryName { get; set; } = string.Empty;
 
-}
 
-public class AzureContainerRegistryConverter : JsonConverter<AzureContainerRegistry>
-{
-    public override AzureContainerRegistry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to AzureContainerRegistry.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type AzureContainerRegistry");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing AzureContainerRegistry: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new AzureContainerRegistry();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("subscription", out JsonElement subscriptionValue))
-            {
-                instance.Subscription = subscriptionValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: subscription");
-            }
-
-            if (rootElement.TryGetProperty("resourceGroup", out JsonElement resourceGroupValue))
-            {
-                instance.ResourceGroup = resourceGroupValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: resourceGroup");
-            }
-
-            if (rootElement.TryGetProperty("registryName", out JsonElement registryNameValue))
-            {
-                instance.RegistryName = registryNameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: registryName");
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing AzureContainerRegistry: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, AzureContainerRegistry value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("subscription");
-        JsonSerializer.Serialize(writer, value.Subscription, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("resourceGroup");
-        JsonSerializer.Serialize(writer, value.ResourceGroup, options);
+        emitter.Emit(new Scalar("subscription"));
+        nestedObjectSerializer(Subscription);
 
-        writer.WritePropertyName("registryName");
-        JsonSerializer.Serialize(writer, value.RegistryName, options);
+        emitter.Emit(new Scalar("resourceGroup"));
+        nestedObjectSerializer(ResourceGroup);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("registryName"));
+        nestedObjectSerializer(RegistryName);
     }
 }

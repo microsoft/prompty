@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -27,7 +28,14 @@ public class ContainerDefinitionConversionTests
           memory: 2
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<ContainerDefinition>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-container-image", instance.Image);
+        Assert.Equal("v1.0.0", instance.Tag);
     }
 
     [Fact]

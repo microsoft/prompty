@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for an environment variable used in containerized agents.
 /// </summary>
-[JsonConverter(typeof(EnvironmentVariableConverter))]
-public class EnvironmentVariable
+[JsonConverter(typeof(EnvironmentVariableJsonConverter))]
+public class EnvironmentVariable : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="EnvironmentVariable"/>.
     /// </summary>
+#pragma warning disable CS8618
     public EnvironmentVariable()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the environment variable
@@ -30,58 +34,50 @@ public class EnvironmentVariable
     /// </summary>
     public string Value { get; set; } = string.Empty;
 
-}
 
-public class EnvironmentVariableConverter : JsonConverter<EnvironmentVariable>
-{
-    public override EnvironmentVariable Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+        if (parser.TryConsume<Scalar>(out var scalar))
         {
-            throw new JsonException("Cannot convert null value to EnvironmentVariable.");
-        }
-        else if (reader.TokenType == JsonTokenType.String)
-        {
-            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for EnvironmentVariable are not supported");
-            return new EnvironmentVariable()
+            // check for non-numeric characters to differentiate strings from numbers
+            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
             {
-                Value = stringValue,
-            };
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing EnvironmentVariable: {reader.TokenType}");
+                var stringValue = scalar.Value;
+                Value = stringValue;
+                return;
+            }
+            else
+            {
+                throw new YamlException($"Unexpected scalar value '' when parsing EnvironmentVariable. Expected one of the supported shorthand types or a mapping.");
+            }
         }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new EnvironmentVariable();
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
+                throw new YamlException("Expected a mapping node for type EnvironmentVariable");
             }
 
-            if (rootElement.TryGetProperty("value", out JsonElement valueValue))
-            {
-                instance.Value = valueValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: value");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing EnvironmentVariable: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, EnvironmentVariable value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("value");
-        JsonSerializer.Serialize(writer, value.Value, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("value"));
+        nestedObjectSerializer(Value);
     }
 }

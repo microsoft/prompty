@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -24,7 +25,14 @@ public class ModelConversionTests
           maxTokens: 1000
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Model>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("gpt-35-turbo", instance.Id);
+        Assert.Equal("azure", instance.Publisher);
     }
 
     [Fact]
@@ -52,13 +60,24 @@ public class ModelConversionTests
         Assert.Equal("gpt-35-turbo", instance.Id);
         Assert.Equal("azure", instance.Publisher);
     }
-    // regular expression for matching only floats
     [Fact]
-    public void LoadFromString()
+    public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Model>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Id);
+    }
+
+
+    [Fact]
+    public void LoadYamlFromString()
+    {
+        // alternate representation as string
+        var data = "\"example\"";
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Model>(data.ToString());
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Id);
     }

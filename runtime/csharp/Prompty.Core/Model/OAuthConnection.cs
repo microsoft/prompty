@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using OAuth authentication.
 /// </summary>
-[JsonConverter(typeof(OAuthConnectionConverter))]
-public class OAuthConnection : Connection
+[JsonConverter(typeof(OAuthConnectionJsonConverter))]
+public class OAuthConnection : Connection, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="OAuthConnection"/>.
     /// </summary>
+#pragma warning disable CS8618
     public OAuthConnection()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
@@ -50,82 +54,47 @@ public class OAuthConnection : Connection
     /// </summary>
     public IList<string> Scopes { get; set; } = [];
 
-}
 
-public class OAuthConnectionConverter : JsonConverter<OAuthConnection>
-{
-    public override OAuthConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to OAuthConnection.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type OAuthConnection");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing OAuthConnection: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new OAuthConnection();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("endpoint", out JsonElement endpointValue))
-            {
-                instance.Endpoint = endpointValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: endpoint");
-            }
-
-            if (rootElement.TryGetProperty("clientId", out JsonElement clientIdValue))
-            {
-                instance.ClientId = clientIdValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: clientId");
-            }
-
-            if (rootElement.TryGetProperty("clientSecret", out JsonElement clientSecretValue))
-            {
-                instance.ClientSecret = clientSecretValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: clientSecret");
-            }
-
-            if (rootElement.TryGetProperty("tokenUrl", out JsonElement tokenUrlValue))
-            {
-                instance.TokenUrl = tokenUrlValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: tokenUrl");
-            }
-
-            if (rootElement.TryGetProperty("scopes", out JsonElement scopesValue))
-            {
-                instance.Scopes = [.. scopesValue.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException("Empty array elements for scopes are not supported"))];
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing OAuthConnection: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, OAuthConnection value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("endpoint");
-        JsonSerializer.Serialize(writer, value.Endpoint, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("clientId");
-        JsonSerializer.Serialize(writer, value.ClientId, options);
+        emitter.Emit(new Scalar("endpoint"));
+        nestedObjectSerializer(Endpoint);
 
-        writer.WritePropertyName("clientSecret");
-        JsonSerializer.Serialize(writer, value.ClientSecret, options);
+        emitter.Emit(new Scalar("clientId"));
+        nestedObjectSerializer(ClientId);
 
-        writer.WritePropertyName("tokenUrl");
-        JsonSerializer.Serialize(writer, value.TokenUrl, options);
+        emitter.Emit(new Scalar("clientSecret"));
+        nestedObjectSerializer(ClientSecret);
 
-        writer.WritePropertyName("scopes");
-        JsonSerializer.Serialize(writer, value.Scopes, options);
+        emitter.Emit(new Scalar("tokenUrl"));
+        nestedObjectSerializer(TokenUrl);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("scopes"));
+        nestedObjectSerializer(Scopes);
     }
 }

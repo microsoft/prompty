@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -16,13 +17,26 @@ public class ParameterConversionTests
         kind: string
         description: A description of the parameter
         required: true
+        default: default value
+        value: sample value
         enum:
           - value1
           - value2
           - value3
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Parameter>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-parameter", instance.Name);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("A description of the parameter", instance.Description);
+        Assert.True(instance.Required);
+        Assert.Equal("default value", instance.Default);
+        Assert.Equal("sample value", instance.Value);
     }
 
     [Fact]
@@ -34,6 +48,8 @@ public class ParameterConversionTests
           "kind": "string",
           "description": "A description of the parameter",
           "required": true,
+          "default": "default value",
+          "value": "sample value",
           "enum": [
             "value1",
             "value2",
@@ -48,5 +64,7 @@ public class ParameterConversionTests
         Assert.Equal("string", instance.Kind);
         Assert.Equal("A description of the parameter", instance.Description);
         Assert.True(instance.Required);
+        Assert.Equal("default value", instance.Default);
+        Assert.Equal("sample value", instance.Value);
     }
 }

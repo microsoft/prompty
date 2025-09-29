@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -21,7 +22,19 @@ public class InputConversionTests
         sample: sample value
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Input>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-input", instance.Name);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("A description of the input property", instance.Description);
+        Assert.True(instance.Required);
+        Assert.True(instance.Strict);
+        Assert.Equal("default value", instance.Default);
+        Assert.Equal("sample value", instance.Sample);
     }
 
     [Fact]
@@ -49,9 +62,8 @@ public class InputConversionTests
         Assert.Equal("default value", instance.Default);
         Assert.Equal("sample value", instance.Sample);
     }
-    // regular expression for matching only floats
     [Fact]
-    public void LoadFromBoolean()
+    public void LoadJsonFromBoolean()
     {
         // alternate representation as boolean
         var data = false;
@@ -62,8 +74,23 @@ public class InputConversionTests
         Assert.IsType<bool>(instance.Sample);
         Assert.False((bool)instance.Sample);
     }
+
+
     [Fact]
-    public void LoadFromFloat32()
+    public void LoadYamlFromBoolean()
+    {
+        // alternate representation as boolean
+        var data = false;
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Input>(data.ToString());
+        Assert.NotNull(instance);
+        Assert.Equal("boolean", instance.Kind);
+        Assert.NotNull(instance.Sample);
+        Assert.IsType<bool>(instance.Sample);
+        Assert.False((bool)instance.Sample);
+    }
+    [Fact]
+    public void LoadJsonFromFloat32()
     {
         // alternate representation as float32
         var data = 3.14;
@@ -73,8 +100,22 @@ public class InputConversionTests
         Assert.IsType<float>(instance.Sample);
         Assert.Equal(3.14, (float)instance.Sample, precision: 5);
     }
+
+
     [Fact]
-    public void LoadFromInteger()
+    public void LoadYamlFromFloat32()
+    {
+        // alternate representation as float32
+        var data = 3.14;
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Input>(data.ToString());
+        Assert.NotNull(instance);
+        Assert.Equal("float", instance.Kind);
+        Assert.IsType<float>(instance.Sample);
+        Assert.Equal(3.14, (float)instance.Sample, precision: 5);
+    }
+    [Fact]
+    public void LoadJsonFromInteger()
     {
         // alternate representation as integer
         var data = 3;
@@ -83,12 +124,38 @@ public class InputConversionTests
         Assert.Equal("integer", instance.Kind);
         Assert.Equal(3, instance.Sample);
     }
+
+
     [Fact]
-    public void LoadFromString()
+    public void LoadYamlFromInteger()
+    {
+        // alternate representation as integer
+        var data = 3;
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Input>(data.ToString());
+        Assert.NotNull(instance);
+        Assert.Equal("integer", instance.Kind);
+        Assert.Equal(3, instance.Sample);
+    }
+    [Fact]
+    public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<Input>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("string", instance.Kind);
+        Assert.Equal("example", instance.Sample);
+    }
+
+
+    [Fact]
+    public void LoadYamlFromString()
+    {
+        // alternate representation as string
+        var data = "\"example\"";
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Input>(data.ToString());
         Assert.NotNull(instance);
         Assert.Equal("string", instance.Kind);
         Assert.Equal("example", instance.Sample);

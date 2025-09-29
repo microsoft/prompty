@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,7 +21,16 @@ public class FileSearchToolConversionTests
         scoreThreshold: 0.5
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<FileSearchTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("file_search", instance.Kind);
+        Assert.Equal(10, instance.MaxNumResults);
+        Assert.Equal("default", instance.Ranker);
+        Assert.Equal(0.5, instance.ScoreThreshold);
     }
 
     [Fact]

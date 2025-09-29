@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,15 +13,17 @@ namespace Prompty.Core;
 /// Represents an array output property.
 /// This extends the base Output model to represent an array of items.
 /// </summary>
-[JsonConverter(typeof(ArrayInputConverter))]
-public class ArrayInput : Input
+[JsonConverter(typeof(ArrayInputJsonConverter))]
+public class ArrayInput : Input, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ArrayInput"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ArrayInput()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// 
@@ -31,50 +35,35 @@ public class ArrayInput : Input
     /// </summary>
     public Input Items { get; set; }
 
-}
 
-public class ArrayInputConverter : JsonConverter<ArrayInput>
-{
-    public override ArrayInput Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to ArrayInput.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing ArrayInput: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new ArrayInput();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type ArrayInput");
             }
 
-            if (rootElement.TryGetProperty("items", out JsonElement itemsValue))
-            {
-                instance.Items = JsonSerializer.Deserialize<Input>(itemsValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: items");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing ArrayInput: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ArrayInput value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("items");
-        JsonSerializer.Serialize(writer, value.Items, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("items"));
+        nestedObjectSerializer(Items);
     }
 }

@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -17,7 +18,15 @@ public class KeyConnectionConversionTests
         key: your-api-key
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<KeyConnection>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("key", instance.Kind);
+        Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", instance.Endpoint);
+        Assert.Equal("your-api-key", instance.Key);
     }
 
     [Fact]

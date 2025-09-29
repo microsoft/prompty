@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,7 +21,13 @@ public class FunctionToolConversionTests
             kind: number
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<FunctionTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("function", instance.Kind);
     }
 
     [Fact]

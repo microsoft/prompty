@@ -20,6 +20,10 @@ class Parameter:
         A short description of the property
     required : Optional[bool]
         Whether the tool parameter is required
+    default : Optional[Any]
+        The default value of the parameter - this represents the default value if none is provided
+    value : Optional[Any]
+        Parameter value used for initializing manifest examples and tooling
     enum : Optional[list[Any]]
         Allowed enumeration values for the parameter
     """
@@ -28,6 +32,8 @@ class Parameter:
     kind: str = field(default="")
     description: Optional[str] = field(default="")
     required: Optional[bool] = field(default=True)
+    default: Optional[Any] = field(default=None)
+    value: Optional[Any] = field(default=None)
     enum: Optional[list[Any]] = field(default_factory=list)
 
     @staticmethod
@@ -47,6 +53,10 @@ class Parameter:
             instance.description = data["description"]
         if data is not None and "required" in data:
             instance.required = data["required"]
+        if data is not None and "default" in data:
+            instance.default = data["default"]
+        if data is not None and "value" in data:
+            instance.value = data["value"]
         if data is not None and "enum" in data:
             instance.enum = data["enum"]
         return instance

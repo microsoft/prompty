@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// 
 /// </summary>
-[JsonConverter(typeof(OpenApiToolConverter))]
-public class OpenApiTool : Tool
+[JsonConverter(typeof(OpenApiToolJsonConverter))]
+public class OpenApiTool : Tool, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="OpenApiTool"/>.
     /// </summary>
+#pragma warning disable CS8618
     public OpenApiTool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind identifier for OpenAPI tools
@@ -35,58 +39,38 @@ public class OpenApiTool : Tool
     /// </summary>
     public string Specification { get; set; } = string.Empty;
 
-}
 
-public class OpenApiToolConverter : JsonConverter<OpenApiTool>
-{
-    public override OpenApiTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to OpenApiTool.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type OpenApiTool");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing OpenApiTool: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new OpenApiTool();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
-            {
-                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: connection");
-            }
-
-            if (rootElement.TryGetProperty("specification", out JsonElement specificationValue))
-            {
-                instance.Specification = specificationValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: specification");
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing OpenApiTool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, OpenApiTool value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("connection");
-        JsonSerializer.Serialize(writer, value.Connection, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("specification");
-        JsonSerializer.Serialize(writer, value.Specification, options);
+        emitter.Emit(new Scalar("connection"));
+        nestedObjectSerializer(Connection);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("specification"));
+        nestedObjectSerializer(Specification);
     }
 }

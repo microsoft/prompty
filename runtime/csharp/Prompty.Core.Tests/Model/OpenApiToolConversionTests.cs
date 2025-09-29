@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,7 +19,14 @@ public class OpenApiToolConversionTests
         specification: https://api.example.com/openapi.json
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<OpenApiTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("openapi", instance.Kind);
+        Assert.Equal("https://api.example.com/openapi.json", instance.Specification);
     }
 
     [Fact]

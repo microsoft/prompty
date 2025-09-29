@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,7 +19,16 @@ public class ScaleConversionTests
         memory: 2
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Scale>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal(1, instance.MinReplicas);
+        Assert.Equal(5, instance.MaxReplicas);
+        Assert.Equal(0.5, instance.Cpu);
+        Assert.Equal(2, instance.Memory);
     }
 
     [Fact]

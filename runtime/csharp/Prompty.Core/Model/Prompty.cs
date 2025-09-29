@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -15,70 +17,210 @@ namespace Prompty.Core;
 /// 
 /// These can be written in a markdown format or in a pure YAML format.
 /// </summary>
-[JsonConverter(typeof(PromptyConverter))]
-public class Prompty : PromptyBase
+[JsonConverter(typeof(PromptyJsonConverter))]
+public class Prompty : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Prompty"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Prompty()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
-    /// Type of agent, e.g., 'prompt'
+    /// Kind represented by the document
     /// </summary>
-    public override string Kind { get; set; } = "prompt";
+    public virtual string Kind { get; set; } = "prompt";
 
     /// <summary>
-    /// Model configuration used for execution
+    /// Unique identifier for the document
+    /// </summary>
+    public string? Id { get; set; }
+
+    /// <summary>
+    /// Document version
+    /// </summary>
+    public string? Version { get; set; }
+
+    /// <summary>
+    /// Human-readable name of the agent
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Description of the agent's capabilities and purpose
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Additional metadata including authors, tags, and other arbitrary properties
+    /// </summary>
+    public IDictionary<string, object>? Metadata { get; set; }
+
+    /// <summary>
+    /// Primary AI model configuration for the agent
     /// </summary>
     public Model Model { get; set; }
 
-}
+    /// <summary>
+    /// Input parameters that participate in template rendering
+    /// </summary>
+    public IList<Input>? Inputs { get; set; }
 
-public class PromptyConverter : JsonConverter<Prompty>
-{
-    public override Prompty Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    /// <summary>
+    /// Expected output format and structure from the agent
+    /// </summary>
+    public IList<Output>? Outputs { get; set; }
+
+    /// <summary>
+    /// Tools available to the agent for extended functionality
+    /// </summary>
+    public IList<Tool>? Tools { get; set; }
+
+    /// <summary>
+    /// Template configuration for prompt rendering
+    /// </summary>
+    public Template? Template { get; set; }
+
+    /// <summary>
+    /// Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)
+    /// </summary>
+    public string? Instructions { get; set; }
+
+    /// <summary>
+    /// Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)
+    /// </summary>
+    public string? AdditionalInstructions { get; set; }
+
+
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to Prompty.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Prompty: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new Prompty();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type Prompty");
             }
 
-            if (rootElement.TryGetProperty("model", out JsonElement modelValue))
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
             {
-                instance.Model = JsonSerializer.Deserialize<Model>(modelValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: model");
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
+                {
+                    case "manifest":
+                        var manifestPrompty = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
+                        if (manifestPrompty == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
+                        }
+                        return;
+                    case "container":
+                        var containerPrompty = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
+                        if (containerPrompty == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type PromptyContainer");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Prompty");
+                }
             }
 
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Prompty: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Prompty value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("model");
-        JsonSerializer.Serialize(writer, value.Model, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        if (Id != null)
+        {
+            emitter.Emit(new Scalar("id"));
+            nestedObjectSerializer(Id);
+        }
+
+
+        if (Version != null)
+        {
+            emitter.Emit(new Scalar("version"));
+            nestedObjectSerializer(Version);
+        }
+
+
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
+
+        if (Description != null)
+        {
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
+        }
+
+
+        if (Metadata != null)
+        {
+            emitter.Emit(new Scalar("metadata"));
+            nestedObjectSerializer(Metadata);
+        }
+
+
+        emitter.Emit(new Scalar("model"));
+        nestedObjectSerializer(Model);
+
+        if (Inputs != null)
+        {
+            emitter.Emit(new Scalar("inputs"));
+            nestedObjectSerializer(Inputs);
+        }
+
+
+        if (Outputs != null)
+        {
+            emitter.Emit(new Scalar("outputs"));
+            nestedObjectSerializer(Outputs);
+        }
+
+
+        if (Tools != null)
+        {
+            emitter.Emit(new Scalar("tools"));
+            nestedObjectSerializer(Tools);
+        }
+
+
+        if (Template != null)
+        {
+            emitter.Emit(new Scalar("template"));
+            nestedObjectSerializer(Template);
+        }
+
+
+        if (Instructions != null)
+        {
+            emitter.Emit(new Scalar("instructions"));
+            nestedObjectSerializer(Instructions);
+        }
+
+
+        if (AdditionalInstructions != null)
+        {
+            emitter.Emit(new Scalar("additionalInstructions"));
+            nestedObjectSerializer(AdditionalInstructions);
+        }
+
     }
 }

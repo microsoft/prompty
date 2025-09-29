@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -15,7 +16,13 @@ public class BingSearchConfigurationConversionTests
         name: my-configuration
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<BingSearchConfiguration>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-configuration", instance.Name);
     }
 
     [Fact]

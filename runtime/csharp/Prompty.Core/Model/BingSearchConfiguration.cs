@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Configuration options for the Bing search tool.
 /// </summary>
-[JsonConverter(typeof(BingSearchConfigurationConverter))]
-public class BingSearchConfiguration
+[JsonConverter(typeof(BingSearchConfigurationJsonConverter))]
+public class BingSearchConfiguration : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="BingSearchConfiguration"/>.
     /// </summary>
+#pragma warning disable CS8618
     public BingSearchConfiguration()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The name of the Bing search tool instance, used to identify the specific instance in the system
@@ -45,86 +49,60 @@ public class BingSearchConfiguration
     /// </summary>
     public string? Freshness { get; set; }
 
-}
 
-public class BingSearchConfigurationConverter : JsonConverter<BingSearchConfiguration>
-{
-    public override BingSearchConfiguration Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to BingSearchConfiguration.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type BingSearchConfiguration");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing BingSearchConfiguration: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new BingSearchConfiguration();
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("market", out JsonElement marketValue))
-            {
-                instance.Market = marketValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("setLang", out JsonElement setLangValue))
-            {
-                instance.SetLang = setLangValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("count", out JsonElement countValue))
-            {
-                instance.Count = countValue.GetInt64();
-            }
-
-            if (rootElement.TryGetProperty("freshness", out JsonElement freshnessValue))
-            {
-                instance.Freshness = freshnessValue.GetString();
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing BingSearchConfiguration: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, BingSearchConfiguration value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        if (value.Market != null)
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
+
+        if (Market != null)
         {
-            writer.WritePropertyName("market");
-            JsonSerializer.Serialize(writer, value.Market, options);
+            emitter.Emit(new Scalar("market"));
+            nestedObjectSerializer(Market);
         }
 
-        if (value.SetLang != null)
+
+        if (SetLang != null)
         {
-            writer.WritePropertyName("setLang");
-            JsonSerializer.Serialize(writer, value.SetLang, options);
+            emitter.Emit(new Scalar("setLang"));
+            nestedObjectSerializer(SetLang);
         }
 
-        if (value.Count != null)
+
+        if (Count != null)
         {
-            writer.WritePropertyName("count");
-            JsonSerializer.Serialize(writer, value.Count, options);
+            emitter.Emit(new Scalar("count"));
+            nestedObjectSerializer(Count);
         }
 
-        if (value.Freshness != null)
+
+        if (Freshness != null)
         {
-            writer.WritePropertyName("freshness");
-            JsonSerializer.Serialize(writer, value.Freshness, options);
+            emitter.Emit(new Scalar("freshness"));
+            nestedObjectSerializer(Freshness);
         }
 
-        writer.WriteEndObject();
     }
 }

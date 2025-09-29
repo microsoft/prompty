@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,11 +19,19 @@ public class PromptyManifestConversionTests
           - id: gpt-4o
           - custom-model-id
         parameters:
-          temperature: 0.7
-          maxTokens: 1000
+          param1:
+            kind: string
+          param2:
+            kind: number
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<PromptyManifest>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("manifest", instance.Kind);
     }
 
     [Fact]
@@ -41,8 +50,12 @@ public class PromptyManifestConversionTests
             "custom-model-id"
           ],
           "parameters": {
-            "temperature": 0.7,
-            "maxTokens": 1000
+            "param1": {
+              "kind": "string"
+            },
+            "param2": {
+              "kind": "number"
+            }
           }
         }
         """;

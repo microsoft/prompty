@@ -18,12 +18,12 @@ namespace Prompty.Core {
    * These can be written in a markdown format or in a pure YAML format.
    *
    */
-  @abstract
   @discriminator("kind")
-  model PromptyBase {
+  model Prompty {
     // Prompty metadata
     @doc("Kind represented by the document")
-    kind?: PromptyKind = "*";
+    @sample(#{ kind: "prompt" })
+    kind: PromptyKind = "prompt";
 
     @doc("Unique identifier for the document")
     @sample(#{ id: "unique-agent-id" })
@@ -51,6 +51,20 @@ namespace Prompty.Core {
       },
     })
     metadata?: Record<unknown> = #{};
+
+    // model execution
+    @doc("Primary AI model configuration for the agent")
+    @sample(#{
+      `model`: #{
+        id: "gpt-35-turbo",
+        connection: #{
+          kind: "key",
+          endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
+          key: "{your-api-key}",
+        },
+      },
+    })
+    `model`: Model | string;
 
     // Inputs and Outputs
     @doc("Input parameters that participate in template rendering")
@@ -163,35 +177,6 @@ namespace Prompty.Core {
   }
 
   /**
-   * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
-   * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
-   * The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
-   * available tools, and template configurations for prompt rendering.
-   *
-   * These can be written in a markdown format or in a pure YAML format.
-   *
-   */
-  model Prompty extends PromptyBase {
-    @doc("Type of agent, e.g., 'prompt'")
-    @sample(#{ kind: "prompt" })
-    kind: "prompt";
-
-    // model execution
-    @doc("Model configuration used for execution")
-    @sample(#{
-      `model`: #{
-        id: "gpt-35-turbo",
-        connection: #{
-          kind: "key",
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
-          key: "{your-api-key}",
-        },
-      },
-    })
-    `model`: Model | string;
-  }
-
-  /**
    * The following represents a manifest that can be used to create agents dynamically.
    * It includes a list of models that the publisher of the manifest has tested and
    * has confidence will work with an instantiated prompt agent.
@@ -208,24 +193,37 @@ namespace Prompty.Core {
    * (This notation is used elsewhere, but only the `param` scope is supported here)
    *
    */
-  model PromptyManifest extends PromptyBase {
+  model PromptyManifest extends Prompty {
     @doc("Type of agent, e.g., 'manifest'")
     @sample(#{ kind: "manifest" })
     kind: "manifest";
 
-    @doc("List of models that the agent can utilize")
+    @doc("Additional models that are known to work with this prompt")
     @sample(#{
       models: #[#{ id: "gpt-35-turbo" }, #{ id: "gpt-4o" }, "custom-model-id"],
     })
     models: Model[];
 
     @doc("Parameters for configuring the agent's behavior and execution")
-    @sample(#{ parameters: #{ temperature: 0.7, maxTokens: 1000 } })
+    @sample(#{
+      parameters: #{ param1: #{ kind: "string" }, param2: #{ kind: "number" } },
+    })
     parameters: Parameters = #{};
   }
 
   alias Protocols = "responses" | "activity" | "a2a" | string;
-  model PromptyContainer extends PromptyBase {
+
+  /**
+   * The following represents a containerized agent that can be deployed and hosted.
+   * It includes details about the container image, registry information, and environment variables.
+   * This model allows for the definition of agents that can run in isolated environments,
+   * making them suitable for deployment in various cloud or on-premises scenarios.
+   *
+   * The containerized agent can communicate using specified protocols and can be scaled
+   * based on the provided configuration.
+   *
+   */
+  model PromptyContainer extends Prompty {
     @doc("Type of agent, e.g., 'container'")
     @sample(#{ kind: "container" })
     kind: "container";

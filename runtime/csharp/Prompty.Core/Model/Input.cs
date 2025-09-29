@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -14,15 +16,17 @@ namespace Prompty.Core;
 /// * It allows for the definition of dynamic inputs that can be filled with data
 /// and processed to generate prompts for AI models.
 /// </summary>
-[JsonConverter(typeof(InputConverter))]
-public class Input
+[JsonConverter(typeof(InputJsonConverter))]
+public class Input : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Input"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Input()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the input property
@@ -59,172 +63,138 @@ public class Input
     /// </summary>
     public object? Sample { get; set; }
 
-}
 
-public class InputConverter : JsonConverter<Input>
-{
-    public override Input Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to Input.");
-        }
-        else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
-        {
-            var boolValue = reader.GetBoolean();
-            return new Input()
-            {
-                Kind = "boolean",
-                Sample = boolValue,
-            };
-        }
-        else if (reader.TokenType == JsonTokenType.String)
-        {
-            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Input are not supported");
-            return new Input()
-            {
-                Kind = "string",
-                Sample = stringValue,
-            };
-        }
-        else if (reader.TokenType == JsonTokenType.Number)
-        {
-            byte[] span = reader.HasValueSequence ?
-                        reader.ValueSequence.ToArray() :
-                        reader.ValueSpan.ToArray();
 
-            var numberString = System.Text.Encoding.UTF8.GetString(span);
-            if (numberString.Contains('.') || numberString.Contains('e') || numberString.Contains('E'))
+        if (parser.TryConsume<Scalar>(out var scalar))
+        {
+            if (scalar.Value.ToLower() == "true" || scalar.Value.ToLower() == "false")
+            {
+                var boolValue = scalar.Value.ToLower() == "true";
+                Kind = "boolean";
+                Sample = boolValue;
+                return;
+            }
+            // check for non-numeric characters to differentiate strings from numbers
+            else if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
+            {
+                var stringValue = scalar.Value;
+                Kind = "string";
+                Sample = stringValue;
+                return;
+            }
+            else if (scalar.Value.Contains('.') || scalar.Value.Contains('e') || scalar.Value.Contains('E'))
             {
                 // try parse as float
-                if (float.TryParse(numberString, out float floatValue))
+                if (float.TryParse(scalar.Value, out float floatValue))
                 {
-                    return new Input()
-                    {
-                        Kind = "float",
-                        Sample = floatValue,
-                    };
+                    Kind = "float";
+                    Sample = floatValue;
+                    return;
                 }
             }
-            else
+            else if (scalar.Value.All(c => char.IsDigit(c)))
             {
                 // try parse as int
-                if (int.TryParse(numberString, out int intValue))
+                if (int.TryParse(scalar.Value, out int intValue))
                 {
-                    return new Input()
-                    {
-                        Kind = "integer",
-                        Sample = intValue,
-                    };
+                    Kind = "integer";
+                    Sample = intValue;
+                    return;
                 }
-            }
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Input: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // load polymorphic Input instance
-            Input instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
-            {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for Input is not supported");
-                instance = discriminator switch
-                {
-                    "array" => JsonSerializer.Deserialize<ArrayInput>(rootElement, options)
-                        ?? throw new JsonException("Empty ArrayInput instances are not supported"),
-                    "object" => JsonSerializer.Deserialize<ObjectInput>(rootElement, options)
-                        ?? throw new JsonException("Empty ObjectInput instances are not supported"),
-                    _ => new Input(),
-                };
             }
             else
             {
-                throw new JsonException("Missing Input discriminator property: 'kind'");
+                throw new YamlException($"Unexpected scalar value '' when parsing Input. Expected one of the supported shorthand types or a mapping.");
             }
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+        }
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
+                throw new YamlException("Expected a mapping node for type Input");
             }
 
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
+                {
+                    case "array":
+                        var arrayInput = nestedObjectDeserializer(typeof(ArrayInput)) as ArrayInput;
+                        if (arrayInput == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ArrayInput");
+                        }
+                        return;
+                    case "object":
+                        var objectInput = nestedObjectDeserializer(typeof(ObjectInput)) as ObjectInput;
+                        if (objectInput == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ObjectInput");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Input");
+                }
             }
 
-            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
-            {
-                instance.Description = descriptionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("required", out JsonElement requiredValue))
-            {
-                instance.Required = requiredValue.GetBoolean();
-            }
-
-            if (rootElement.TryGetProperty("strict", out JsonElement strictValue))
-            {
-                instance.Strict = strictValue.GetBoolean();
-            }
-
-            if (rootElement.TryGetProperty("default", out JsonElement defaultValue))
-            {
-                instance.Default = defaultValue.GetScalarValue();
-            }
-
-            if (rootElement.TryGetProperty("sample", out JsonElement sampleValue))
-            {
-                instance.Sample = sampleValue.GetScalarValue();
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Input: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Input value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        if (value.Description != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Description != null)
         {
-            writer.WritePropertyName("description");
-            JsonSerializer.Serialize(writer, value.Description, options);
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
         }
 
-        if (value.Required != null)
+
+        if (Required != null)
         {
-            writer.WritePropertyName("required");
-            JsonSerializer.Serialize(writer, value.Required, options);
+            emitter.Emit(new Scalar("required"));
+            nestedObjectSerializer(Required);
         }
 
-        if (value.Strict != null)
+
+        if (Strict != null)
         {
-            writer.WritePropertyName("strict");
-            JsonSerializer.Serialize(writer, value.Strict, options);
+            emitter.Emit(new Scalar("strict"));
+            nestedObjectSerializer(Strict);
         }
 
-        if (value.Default != null)
+
+        if (Default != null)
         {
-            writer.WritePropertyName("default");
-            JsonSerializer.Serialize(writer, value.Default, options);
+            emitter.Emit(new Scalar("default"));
+            nestedObjectSerializer(Default);
         }
 
-        if (value.Sample != null)
+
+        if (Sample != null)
         {
-            writer.WritePropertyName("sample");
-            JsonSerializer.Serialize(writer, value.Sample, options);
+            emitter.Emit(new Scalar("sample"));
+            nestedObjectSerializer(Sample);
         }
 
-        writer.WriteEndObject();
     }
 }

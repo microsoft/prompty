@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a binding between an input property and a tool parameter.
 /// </summary>
-[JsonConverter(typeof(BindingConverter))]
-public class Binding
+[JsonConverter(typeof(BindingJsonConverter))]
+public class Binding : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Binding"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Binding()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the binding
@@ -30,58 +34,50 @@ public class Binding
     /// </summary>
     public string Input { get; set; } = string.Empty;
 
-}
 
-public class BindingConverter : JsonConverter<Binding>
-{
-    public override Binding Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+        if (parser.TryConsume<Scalar>(out var scalar))
         {
-            throw new JsonException("Cannot convert null value to Binding.");
-        }
-        else if (reader.TokenType == JsonTokenType.String)
-        {
-            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Binding are not supported");
-            return new Binding()
+            // check for non-numeric characters to differentiate strings from numbers
+            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
             {
-                Input = stringValue,
-            };
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Binding: {reader.TokenType}");
+                var stringValue = scalar.Value;
+                Input = stringValue;
+                return;
+            }
+            else
+            {
+                throw new YamlException($"Unexpected scalar value '' when parsing Binding. Expected one of the supported shorthand types or a mapping.");
+            }
         }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new Binding();
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
+                throw new YamlException("Expected a mapping node for type Binding");
             }
 
-            if (rootElement.TryGetProperty("input", out JsonElement inputValue))
-            {
-                instance.Input = inputValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: input");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Binding: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Binding value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("input");
-        JsonSerializer.Serialize(writer, value.Input, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("input"));
+        nestedObjectSerializer(Input);
     }
 }

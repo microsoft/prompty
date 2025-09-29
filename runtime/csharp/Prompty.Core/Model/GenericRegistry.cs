@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a generic container image registry.
 /// </summary>
-[JsonConverter(typeof(GenericRegistryConverter))]
-public class GenericRegistry : Registry
+[JsonConverter(typeof(GenericRegistryJsonConverter))]
+public class GenericRegistry : Registry, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="GenericRegistry"/>.
     /// </summary>
+#pragma warning disable CS8618
     public GenericRegistry()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind of container registry
@@ -40,72 +44,49 @@ public class GenericRegistry : Registry
     /// </summary>
     public string? Password { get; set; }
 
-}
 
-public class GenericRegistryConverter : JsonConverter<GenericRegistry>
-{
-    public override GenericRegistry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to GenericRegistry.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type GenericRegistry");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing GenericRegistry: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new GenericRegistry();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("repository", out JsonElement repositoryValue))
-            {
-                instance.Repository = repositoryValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: repository");
-            }
-
-            if (rootElement.TryGetProperty("username", out JsonElement usernameValue))
-            {
-                instance.Username = usernameValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("password", out JsonElement passwordValue))
-            {
-                instance.Password = passwordValue.GetString();
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing GenericRegistry: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, GenericRegistry value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("repository");
-        JsonSerializer.Serialize(writer, value.Repository, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        if (value.Username != null)
+        emitter.Emit(new Scalar("repository"));
+        nestedObjectSerializer(Repository);
+
+        if (Username != null)
         {
-            writer.WritePropertyName("username");
-            JsonSerializer.Serialize(writer, value.Username, options);
+            emitter.Emit(new Scalar("username"));
+            nestedObjectSerializer(Username);
         }
 
-        if (value.Password != null)
+
+        if (Password != null)
         {
-            writer.WritePropertyName("password");
-            JsonSerializer.Serialize(writer, value.Password, options);
+            emitter.Emit(new Scalar("password"));
+            nestedObjectSerializer(Password);
         }
 
-        writer.WriteEndObject();
     }
 }

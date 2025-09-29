@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -12,15 +14,17 @@ namespace Prompty.Core;
 /// This model includes properties for specifying the model&#39;s provider, connection details, and various options.
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
-[JsonConverter(typeof(ModelConverter))]
-public class Model
+[JsonConverter(typeof(ModelJsonConverter))]
+public class Model : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Model"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Model()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The unique identifier of the model - can be used as the single property shorthand
@@ -42,83 +46,68 @@ public class Model
     /// </summary>
     public ModelOptions? Options { get; set; }
 
-}
 
-public class ModelConverter : JsonConverter<Model>
-{
-    public override Model Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+        if (parser.TryConsume<Scalar>(out var scalar))
         {
-            throw new JsonException("Cannot convert null value to Model.");
+            // check for non-numeric characters to differentiate strings from numbers
+            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
+            {
+                var stringValue = scalar.Value;
+                Id = stringValue;
+                return;
+            }
+            else
+            {
+                throw new YamlException($"Unexpected scalar value '' when parsing Model. Expected one of the supported shorthand types or a mapping.");
+            }
         }
-        else if (reader.TokenType == JsonTokenType.String)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            var stringValue = reader.GetString() ?? throw new JsonException("Empty string shorthand values for Model are not supported");
-            return new Model()
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                Id = stringValue,
-            };
+                throw new YamlException("Expected a mapping node for type Model");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing Model: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new Model();
-            if (rootElement.TryGetProperty("id", out JsonElement idValue))
-            {
-                instance.Id = idValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: id");
-            }
-
-            if (rootElement.TryGetProperty("publisher", out JsonElement publisherValue))
-            {
-                instance.Publisher = publisherValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
-            {
-                instance.Connection = JsonSerializer.Deserialize<Connection?>(connectionValue.GetRawText(), options);
-            }
-
-            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
-            {
-                instance.Options = JsonSerializer.Deserialize<ModelOptions?>(optionsValue.GetRawText(), options);
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing Model: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Model value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("id");
-        JsonSerializer.Serialize(writer, value.Id, options);
+        emitter.Emit(new MappingStart());
 
-        if (value.Publisher != null)
+        emitter.Emit(new Scalar("id"));
+        nestedObjectSerializer(Id);
+
+        if (Publisher != null)
         {
-            writer.WritePropertyName("publisher");
-            JsonSerializer.Serialize(writer, value.Publisher, options);
+            emitter.Emit(new Scalar("publisher"));
+            nestedObjectSerializer(Publisher);
         }
 
-        if (value.Connection != null)
+
+        if (Connection != null)
         {
-            writer.WritePropertyName("connection");
-            JsonSerializer.Serialize(writer, value.Connection, options);
+            emitter.Emit(new Scalar("connection"));
+            nestedObjectSerializer(Connection);
         }
 
-        if (value.Options != null)
+
+        if (Options != null)
         {
-            writer.WritePropertyName("options");
-            JsonSerializer.Serialize(writer, value.Options, options);
+            emitter.Emit(new Scalar("options"));
+            nestedObjectSerializer(Options);
         }
 
-        writer.WriteEndObject();
     }
 }

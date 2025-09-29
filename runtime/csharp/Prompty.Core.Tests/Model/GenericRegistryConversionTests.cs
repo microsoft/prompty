@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,7 +19,16 @@ public class GenericRegistryConversionTests
         password: my-password
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<GenericRegistry>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("some-value", instance.Kind);
+        Assert.Equal("https://my-registry.com", instance.Repository);
+        Assert.Equal("my-username", instance.Username);
+        Assert.Equal("my-password", instance.Password);
     }
 
     [Fact]

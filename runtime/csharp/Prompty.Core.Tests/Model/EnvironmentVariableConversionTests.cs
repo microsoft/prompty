@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -16,7 +17,14 @@ public class EnvironmentVariableConversionTests
         value: my-value
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<EnvironmentVariable>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("MY_ENV_VAR", instance.Name);
+        Assert.Equal("my-value", instance.Value);
     }
 
     [Fact]
@@ -34,13 +42,24 @@ public class EnvironmentVariableConversionTests
         Assert.Equal("MY_ENV_VAR", instance.Name);
         Assert.Equal("my-value", instance.Value);
     }
-    // regular expression for matching only floats
     [Fact]
-    public void LoadFromString()
+    public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
         var instance = JsonSerializer.Deserialize<EnvironmentVariable>(data);
+        Assert.NotNull(instance);
+        Assert.Equal("example", instance.Value);
+    }
+
+
+    [Fact]
+    public void LoadYamlFromString()
+    {
+        // alternate representation as string
+        var data = "\"example\"";
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<EnvironmentVariable>(data.ToString());
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Value);
     }

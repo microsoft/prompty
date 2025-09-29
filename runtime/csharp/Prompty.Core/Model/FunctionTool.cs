@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a local function tool.
 /// </summary>
-[JsonConverter(typeof(FunctionToolConverter))]
-public class FunctionTool : Tool
+[JsonConverter(typeof(FunctionToolJsonConverter))]
+public class FunctionTool : Tool, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="FunctionTool"/>.
     /// </summary>
+#pragma warning disable CS8618
     public FunctionTool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind identifier for function tools
@@ -30,72 +34,35 @@ public class FunctionTool : Tool
     /// </summary>
     public IList<Parameter> Parameters { get; set; } = [];
 
-}
 
-public class FunctionToolConverter : JsonConverter<FunctionTool>
-{
-    public override FunctionTool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to FunctionTool.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing FunctionTool: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new FunctionTool();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type FunctionTool");
             }
 
-            if (rootElement.TryGetProperty("parameters", out JsonElement parametersValue))
-            {
-                if (parametersValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Parameters =
-                        [.. parametersValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Parameter> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Parameters are not supported"))];
-                }
-                else if (parametersValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Parameters =
-                        [.. parametersValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Parameter>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Parameters are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for parameters");
-                }
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing FunctionTool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, FunctionTool value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("parameters");
-        JsonSerializer.Serialize(writer, value.Parameters, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("parameters"));
+        nestedObjectSerializer(Parameters);
     }
 }

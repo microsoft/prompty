@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a tool that can be used in prompts.
 /// </summary>
-[JsonConverter(typeof(ToolConverter))]
-public abstract class Tool
+[JsonConverter(typeof(ToolJsonConverter))]
+public abstract class Tool : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Tool"/>.
     /// </summary>
+#pragma warning disable CS8618
     protected Tool()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the tool. If a function tool, this is the function name, otherwise it is the type
@@ -40,119 +44,102 @@ public abstract class Tool
     /// </summary>
     public IList<Binding>? Bindings { get; set; }
 
-}
 
-public class ToolConverter : JsonConverter<Tool>
-{
-    public override Tool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to Tool.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type Tool");
+            }
+
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
+                {
+                    case "function":
+                        var functionTool = nestedObjectDeserializer(typeof(FunctionTool)) as FunctionTool;
+                        if (functionTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type FunctionTool");
+                        }
+                        return;
+                    case "bing_search":
+                        var bing_searchTool = nestedObjectDeserializer(typeof(BingSearchTool)) as BingSearchTool;
+                        if (bing_searchTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type BingSearchTool");
+                        }
+                        return;
+                    case "file_search":
+                        var file_searchTool = nestedObjectDeserializer(typeof(FileSearchTool)) as FileSearchTool;
+                        if (file_searchTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type FileSearchTool");
+                        }
+                        return;
+                    case "mcp":
+                        var mcpTool = nestedObjectDeserializer(typeof(McpTool)) as McpTool;
+                        if (mcpTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type McpTool");
+                        }
+                        return;
+                    case "model":
+                        var modelTool = nestedObjectDeserializer(typeof(ModelTool)) as ModelTool;
+                        if (modelTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ModelTool");
+                        }
+                        return;
+                    case "openapi":
+                        var openapiTool = nestedObjectDeserializer(typeof(OpenApiTool)) as OpenApiTool;
+                        if (openapiTool == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type OpenApiTool");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Tool");
+                }
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing Tool: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // load polymorphic Tool instance
-            Tool instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
-            {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for Tool is not supported");
-                instance = discriminator switch
-                {
-                    "function" => JsonSerializer.Deserialize<FunctionTool>(rootElement, options)
-                        ?? throw new JsonException("Empty FunctionTool instances are not supported"),
-                    "bing_search" => JsonSerializer.Deserialize<BingSearchTool>(rootElement, options)
-                        ?? throw new JsonException("Empty BingSearchTool instances are not supported"),
-                    "file_search" => JsonSerializer.Deserialize<FileSearchTool>(rootElement, options)
-                        ?? throw new JsonException("Empty FileSearchTool instances are not supported"),
-                    "mcp" => JsonSerializer.Deserialize<McpTool>(rootElement, options)
-                        ?? throw new JsonException("Empty McpTool instances are not supported"),
-                    "model" => JsonSerializer.Deserialize<ModelTool>(rootElement, options)
-                        ?? throw new JsonException("Empty ModelTool instances are not supported"),
-                    "openapi" => JsonSerializer.Deserialize<OpenApiTool>(rootElement, options)
-                        ?? throw new JsonException("Empty OpenApiTool instances are not supported"),
-                    _ => new ServerTool(),
-                };
-            }
-            else
-            {
-                throw new JsonException("Missing Tool discriminator property: 'kind'");
-            }
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
-            {
-                instance.Description = descriptionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("bindings", out JsonElement bindingsValue))
-            {
-                if (bindingsValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Bindings =
-                        [.. bindingsValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Binding> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Bindings are not supported"))];
-                }
-                else if (bindingsValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Bindings =
-                        [.. bindingsValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Binding>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Bindings are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for bindings");
-                }
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing Tool: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Tool value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        if (value.Description != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Description != null)
         {
-            writer.WritePropertyName("description");
-            JsonSerializer.Serialize(writer, value.Description, options);
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
         }
 
-        if (value.Bindings != null)
+
+        if (Bindings != null)
         {
-            writer.WritePropertyName("bindings");
-            JsonSerializer.Serialize(writer, value.Bindings, options);
+            emitter.Emit(new Scalar("bindings"));
+            nestedObjectSerializer(Bindings);
         }
 
-        writer.WriteEndObject();
     }
 }

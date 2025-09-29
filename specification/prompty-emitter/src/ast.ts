@@ -460,9 +460,9 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
   const models = variants.filter(v => v.kind === "Model");
 
   if (models.length === 1) {
+    prop.typeName = getModelType(models[0], rootNamespace, rootAlias);
     if (!visited.has(models[0].name)) {
       prop.type = resolveModel(program, models[0], visited, rootNamespace, rootAlias);
-      prop.typeName = getModelType(models[0], rootNamespace, rootAlias);
     }
   } else if (models.length === 2) {
     const modelNames = models.map(m => m.name);

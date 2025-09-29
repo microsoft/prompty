@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a container image registry.
 /// </summary>
-[JsonConverter(typeof(RegistryConverter))]
-public abstract class Registry
+[JsonConverter(typeof(RegistryJsonConverter))]
+public abstract class Registry : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Registry"/>.
     /// </summary>
+#pragma warning disable CS8618
     protected Registry()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The kind of container registry
@@ -30,65 +34,53 @@ public abstract class Registry
     /// </summary>
     public Connection Connection { get; set; }
 
-}
 
-public class RegistryConverter : JsonConverter<Registry>
-{
-    public override Registry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to Registry.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Registry: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // load polymorphic Registry instance
-            Registry instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for Registry is not supported");
-                instance = discriminator switch
+                throw new YamlException("Expected a mapping node for type Registry");
+            }
+
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
                 {
-                    "acr" => JsonSerializer.Deserialize<AzureContainerRegistry>(rootElement, options)
-                        ?? throw new JsonException("Empty AzureContainerRegistry instances are not supported"),
-                    _ => new GenericRegistry(),
-                };
-            }
-            else
-            {
-                throw new JsonException("Missing Registry discriminator property: 'kind'");
-            }
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                    case "acr":
+                        var acrRegistry = nestedObjectDeserializer(typeof(AzureContainerRegistry)) as AzureContainerRegistry;
+                        if (acrRegistry == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type AzureContainerRegistry");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Registry");
+                }
             }
 
-            if (rootElement.TryGetProperty("connection", out JsonElement connectionValue))
-            {
-                instance.Connection = JsonSerializer.Deserialize<Connection>(connectionValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: connection");
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Registry: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Registry value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("connection");
-        JsonSerializer.Serialize(writer, value.Connection, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("connection"));
+        nestedObjectSerializer(Connection);
     }
 }

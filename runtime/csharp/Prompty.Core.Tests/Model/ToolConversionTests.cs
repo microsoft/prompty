@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -19,7 +20,15 @@ public class ToolConversionTests
           input: value
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Tool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("my-tool", instance.Name);
+        Assert.Equal("function", instance.Kind);
+        Assert.Equal("A description of the tool", instance.Description);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -23,7 +24,13 @@ public class BingSearchToolConversionTests
             freshness: Day
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<BingSearchTool>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("bing_search", instance.Kind);
     }
 
     [Fact]

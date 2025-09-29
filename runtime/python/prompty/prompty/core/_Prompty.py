@@ -11,6 +11,7 @@ from ._EnvironmentVariable import EnvironmentVariable
 from ._Input import Input
 from ._Model import Model
 from ._Output import Output
+from ._Parameter import Parameter
 from ._Template import Template
 from ._Tool import Tool
 
@@ -33,7 +34,7 @@ class Prompty:
     metadata : Optional[dict[str, Any]]
         Additional metadata including authors, tags, and other arbitrary properties
     model : Model
-        Model configuration used for execution
+        Primary AI model configuration for the agent
     inputs : Optional[list[Input]]
         Input parameters that participate in template rendering
     outputs : Optional[list[Output]]
@@ -128,7 +129,9 @@ class Prompty:
         # load polymorphic Prompty instance
         if data is not None and "kind" in data:
             discriminator_value = data["kind"]
-            if discriminator_value == "container":
+            if discriminator_value == "manifest":
+                return PromptyManifest.load(data)
+            elif discriminator_value == "container":
                 return PromptyContainer.load(data)
             else:
                 # create new instance (stop recursion)
@@ -139,12 +142,63 @@ class Prompty:
 
 
 @dataclass
-class PromptyContainer(Prompty):
-    """
+class PromptyManifest(Prompty):
+    """The following represents a manifest that can be used to create agents dynamically.It includes a list of models that the publisher of the manifest has tested andhas confidence will work with an instantiated prompt agent.The manifest also includes parameters that can be used to configure the agent&#39;s behavior.These parameters include values that can be used as publisher parameters that canbe used to describe additional variables that have been tested and are known to work.Variables described here are then used to project into a prompt agent that can be executed.Once parameters are provided, these can be referenced in the manifest using the following notation:`${param:MyParameter}`This allows for dynamic configuration of the agent based on the provided parameters.(This notation is used elsewhere, but only the `param` scope is supported here)
     Attributes
     ----------
     kind : str
-        Type of agent, e.g., 'prompt' or 'container'
+        Type of agent, e.g., 'manifest'
+    models : list[Model]
+        Additional models that are known to work with this prompt
+    parameters : list[Parameter]
+        Parameters for configuring the agent's behavior and execution
+    """
+
+    kind: str = field(default="manifest")
+    models: list[Model] = field(default_factory=list)
+    parameters: list[Parameter] = field(default_factory=list)
+
+    @staticmethod
+    def load(data: Any) -> "PromptyManifest":
+        """Load a PromptyManifest instance."""
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for PromptyManifest: {data}")
+
+        # create new instance
+        instance = PromptyManifest()
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "models" in data:
+            instance.models = PromptyManifest.load_models(data["models"])
+        if data is not None and "parameters" in data:
+            instance.parameters = PromptyManifest.load_parameters(data["parameters"])
+        return instance
+
+    @staticmethod
+    def load_models(data: dict | list) -> list[Model]:
+        if isinstance(data, dict):
+            # convert simple named models to list of Model
+            data = [{"name": k, **v} for k, v in data.items()]
+
+        return [Model.load(item) for item in data]
+
+    @staticmethod
+    def load_parameters(data: dict | list) -> list[Parameter]:
+        if isinstance(data, dict):
+            # convert simple named parameters to list of Parameter
+            data = [{"name": k, **v} for k, v in data.items()]
+
+        return [Parameter.load(item) for item in data]
+
+
+@dataclass
+class PromptyContainer(Prompty):
+    """The following represents a containerized agent that can be deployed and hosted.It includes details about the container image, registry information, and environment variables.This model allows for the definition of agents that can run in isolated environments,making them suitable for deployment in various cloud or on-premises scenarios.The containerized agent can communicate using specified protocols and can be scaledbased on the provided configuration.
+    Attributes
+    ----------
+    kind : str
+        Type of agent, e.g., 'container'
     protocol : str
         Protocol used by the containerized agent
     container : ContainerDefinition

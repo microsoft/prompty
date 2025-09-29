@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -17,7 +18,15 @@ public class ConnectionConversionTests
         usageDescription: This will allow the agent to respond to an email on your behalf
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<Connection>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("oauth", instance.Kind);
+        Assert.Equal("system", instance.Authority);
+        Assert.Equal("This will allow the agent to respond to an email on your behalf", instance.UsageDescription);
     }
 
     [Fact]

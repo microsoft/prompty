@@ -12,6 +12,8 @@ def test_load_json_parameter():
       "kind": "string",
       "description": "A description of the parameter",
       "required": true,
+      "default": "default value",
+      "value": "sample value",
       "enum": [
         "value1",
         "value2",
@@ -27,6 +29,8 @@ def test_load_json_parameter():
     assert instance.description == "A description of the parameter"
 
     assert instance.required
+    assert instance.default == "default value"
+    assert instance.value == "sample value"
 
 
 def test_load_yaml_parameter():
@@ -35,6 +39,8 @@ def test_load_yaml_parameter():
     kind: string
     description: A description of the parameter
     required: true
+    default: default value
+    value: sample value
     enum:
       - value1
       - value2
@@ -48,3 +54,5 @@ def test_load_yaml_parameter():
     assert instance.kind == "string"
     assert instance.description == "A description of the parameter"
     assert instance.required
+    assert instance.default == "default value"
+    assert instance.value == "sample value"

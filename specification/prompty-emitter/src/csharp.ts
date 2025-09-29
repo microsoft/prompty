@@ -53,6 +53,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
     return isFloat;
   });
   const classTemplate = env.getTemplate('dataclass.njk', true);
+  const jsonTemplate = env.getTemplate('json.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
   const testTemplate = env.getTemplate('test.njk', true);
 
@@ -69,10 +70,40 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   for (const node of nodes) {
     //const className = getClassName(node.typeName.name);
     await emitCsharpFile(context, node, renderCSharp(nodes, node, classTemplate), `${node.typeName.name}.cs`, emitTarget["output-dir"]);
+    await emitCsharpFile(context, node, renderJsonConverter(nodes, node, jsonTemplate), `${node.typeName.name}JsonConverter.cs`, emitTarget["output-dir"]);
     if (emitTarget["test-dir"]) {
       await emitCsharpFile(context, node, renderTests(node, testTemplate), `${node.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
     }
   }
+};
+
+
+const renderJsonConverter = (nodes: TypeNode[], node: TypeNode, jsonTemplate: nunjucks.Template): string => {
+  const polymorphicTypes = node.retrievePolymorphicTypes();
+  const findType = (typeName: string): TypeNode | undefined => {
+    return nodes.find(n => n.typeName.name === typeName);
+  }
+  const alternates = generateAlternates(node).filter(alt => alt.scalar !== "float" && alt.scalar !== "int");
+  const numericAlternates = generateAlternates(node).filter(alt => alt.scalar === "float" || alt.scalar === "int");
+
+  const csharp = jsonTemplate.render({
+    node: node,
+    renderPropertyName: renderPropertyName,
+    renderName: renderName,
+    renderType: renderType,
+    renderDefault: renderDefault,
+    renderSetInstance: renderSetInstance,
+    renderSummary: renderSummary,
+    renderPropertyModifier: renderPropertyModifier(findType, node),
+    renderNullCoalescing: renderNullCoalescing,
+    converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
+    polymorphicTypes: polymorphicTypes,
+    collectionTypes: node.properties.filter(p => p.isCollection && !p.isScalar),
+    alternates: alternates,
+    numericAlternates: numericAlternates,
+  });
+
+  return csharp;
 };
 
 const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks.Template): string => {
@@ -88,6 +119,7 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     renderPropertyName: renderPropertyName,
     renderName: renderName,
     renderType: renderType,
+    renderSimpleType: renderSimpleType,
     renderDefault: renderDefault,
     renderSetInstance: renderSetInstance,
     renderSummary: renderSummary,

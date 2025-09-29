@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -15,20 +17,22 @@ namespace Prompty.Core;
 /// 
 /// These can be written in a markdown format or in a pure YAML format.
 /// </summary>
-[JsonConverter(typeof(PromptyBaseConverter))]
-public abstract class PromptyBase
+[JsonConverter(typeof(PromptyBaseJsonConverter))]
+public abstract class PromptyBase : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="PromptyBase"/>.
     /// </summary>
+#pragma warning disable CS8618
     protected PromptyBase()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Kind represented by the document
     /// </summary>
-    public virtual string? Kind { get; set; }
+    public virtual string Kind { get; set; } = string.Empty;
 
     /// <summary>
     /// Unique identifier for the document
@@ -85,252 +89,137 @@ public abstract class PromptyBase
     /// </summary>
     public string? AdditionalInstructions { get; set; }
 
-}
 
-public class PromptyBaseConverter : JsonConverter<PromptyBase>
-{
-    public override PromptyBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to PromptyBase.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type PromptyBase");
+            }
+
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
+                {
+                    case "prompt":
+                        var promptPromptyBase = nestedObjectDeserializer(typeof(Prompty)) as Prompty;
+                        if (promptPromptyBase == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type Prompty");
+                        }
+                        return;
+                    case "manifest":
+                        var manifestPromptyBase = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
+                        if (manifestPromptyBase == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
+                        }
+                        return;
+                    case "container":
+                        var containerPromptyBase = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
+                        if (containerPromptyBase == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type PromptyContainer");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing PromptyBase");
+                }
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing PromptyBase: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // load polymorphic PromptyBase instance
-            PromptyBase instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
-            {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for PromptyBase is not supported");
-                instance = discriminator switch
-                {
-                    "prompt" => JsonSerializer.Deserialize<Prompty>(rootElement, options)
-                        ?? throw new JsonException("Empty Prompty instances are not supported"),
-                    "manifest" => JsonSerializer.Deserialize<PromptyManifest>(rootElement, options)
-                        ?? throw new JsonException("Empty PromptyManifest instances are not supported"),
-                    "container" => JsonSerializer.Deserialize<PromptyContainer>(rootElement, options)
-                        ?? throw new JsonException("Empty PromptyContainer instances are not supported"),
-                    _ => throw new JsonException($"Unknown PromptyBase discriminator value: {discriminator}"),
-                };
-            }
-            else
-            {
-                // default to "prompt" if discriminator is missing or empty
-                instance = new PromptyBase
-                {
-                    Kind = "prompt"
-                };
-            }
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("id", out JsonElement idValue))
-            {
-                instance.Id = idValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("version", out JsonElement versionValue))
-            {
-                instance.Version = versionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
-            {
-                instance.Description = descriptionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("metadata", out JsonElement metadataValue))
-            {
-                instance.Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataValue.GetRawText(), options);
-            }
-
-            if (rootElement.TryGetProperty("inputs", out JsonElement inputsValue))
-            {
-                if (inputsValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Inputs =
-                        [.. inputsValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Input> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Inputs are not supported"))];
-                }
-                else if (inputsValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Inputs =
-                        [.. inputsValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Input>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Inputs are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for inputs");
-                }
-            }
-
-            if (rootElement.TryGetProperty("outputs", out JsonElement outputsValue))
-            {
-                if (outputsValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Outputs =
-                        [.. outputsValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Output> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Outputs are not supported"))];
-                }
-                else if (outputsValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Outputs =
-                        [.. outputsValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Output>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Outputs are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for outputs");
-                }
-            }
-
-            if (rootElement.TryGetProperty("tools", out JsonElement toolsValue))
-            {
-                if (toolsValue.ValueKind == JsonValueKind.Array)
-                {
-                    instance.Tools =
-                        [.. toolsValue.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<Tool> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for Tools are not supported"))];
-                }
-                else if (toolsValue.ValueKind == JsonValueKind.Object)
-                {
-                    instance.Tools =
-                        [.. toolsValue.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<Tool>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for Tools are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for tools");
-                }
-            }
-
-            if (rootElement.TryGetProperty("template", out JsonElement templateValue))
-            {
-                instance.Template = JsonSerializer.Deserialize<Template?>(templateValue.GetRawText(), options);
-            }
-
-            if (rootElement.TryGetProperty("instructions", out JsonElement instructionsValue))
-            {
-                instance.Instructions = instructionsValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("additionalInstructions", out JsonElement additionalInstructionsValue))
-            {
-                instance.AdditionalInstructions = additionalInstructionsValue.GetString();
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing PromptyBase: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, PromptyBase value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        if (value.Kind != null)
+        emitter.Emit(new MappingStart());
+
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Id != null)
         {
-            writer.WritePropertyName("kind");
-            JsonSerializer.Serialize(writer, value.Kind, options);
+            emitter.Emit(new Scalar("id"));
+            nestedObjectSerializer(Id);
         }
 
-        if (value.Id != null)
+
+        if (Version != null)
         {
-            writer.WritePropertyName("id");
-            JsonSerializer.Serialize(writer, value.Id, options);
+            emitter.Emit(new Scalar("version"));
+            nestedObjectSerializer(Version);
         }
 
-        if (value.Version != null)
+
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
+
+        if (Description != null)
         {
-            writer.WritePropertyName("version");
-            JsonSerializer.Serialize(writer, value.Version, options);
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
         }
 
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
 
-        if (value.Description != null)
+        if (Metadata != null)
         {
-            writer.WritePropertyName("description");
-            JsonSerializer.Serialize(writer, value.Description, options);
+            emitter.Emit(new Scalar("metadata"));
+            nestedObjectSerializer(Metadata);
         }
 
-        if (value.Metadata != null)
+
+        if (Inputs != null)
         {
-            writer.WritePropertyName("metadata");
-            JsonSerializer.Serialize(writer, value.Metadata, options);
+            emitter.Emit(new Scalar("inputs"));
+            nestedObjectSerializer(Inputs);
         }
 
-        if (value.Inputs != null)
+
+        if (Outputs != null)
         {
-            writer.WritePropertyName("inputs");
-            JsonSerializer.Serialize(writer, value.Inputs, options);
+            emitter.Emit(new Scalar("outputs"));
+            nestedObjectSerializer(Outputs);
         }
 
-        if (value.Outputs != null)
+
+        if (Tools != null)
         {
-            writer.WritePropertyName("outputs");
-            JsonSerializer.Serialize(writer, value.Outputs, options);
+            emitter.Emit(new Scalar("tools"));
+            nestedObjectSerializer(Tools);
         }
 
-        if (value.Tools != null)
+
+        if (Template != null)
         {
-            writer.WritePropertyName("tools");
-            JsonSerializer.Serialize(writer, value.Tools, options);
+            emitter.Emit(new Scalar("template"));
+            nestedObjectSerializer(Template);
         }
 
-        if (value.Template != null)
+
+        if (Instructions != null)
         {
-            writer.WritePropertyName("template");
-            JsonSerializer.Serialize(writer, value.Template, options);
+            emitter.Emit(new Scalar("instructions"));
+            nestedObjectSerializer(Instructions);
         }
 
-        if (value.Instructions != null)
+
+        if (AdditionalInstructions != null)
         {
-            writer.WritePropertyName("instructions");
-            JsonSerializer.Serialize(writer, value.Instructions, options);
+            emitter.Emit(new Scalar("additionalInstructions"));
+            nestedObjectSerializer(AdditionalInstructions);
         }
 
-        if (value.AdditionalInstructions != null)
-        {
-            writer.WritePropertyName("additionalInstructions");
-            JsonSerializer.Serialize(writer, value.AdditionalInstructions, options);
-        }
-
-        writer.WriteEndObject();
     }
 }

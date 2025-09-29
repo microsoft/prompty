@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// 
 /// </summary>
-[JsonConverter(typeof(FoundryConnectionConverter))]
-public class FoundryConnection : Connection
+[JsonConverter(typeof(FoundryConnectionJsonConverter))]
+public class FoundryConnection : Connection, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="FoundryConnection"/>.
     /// </summary>
+#pragma warning disable CS8618
     public FoundryConnection()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
@@ -40,66 +44,41 @@ public class FoundryConnection : Connection
     /// </summary>
     public string Project { get; set; } = string.Empty;
 
-}
 
-public class FoundryConnectionConverter : JsonConverter<FoundryConnection>
-{
-    public override FoundryConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to FoundryConnection.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type FoundryConnection");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing FoundryConnection: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new FoundryConnection();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("type", out JsonElement typeValue))
-            {
-                instance.Type = typeValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: type");
-            }
-
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("project", out JsonElement projectValue))
-            {
-                instance.Project = projectValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: project");
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing FoundryConnection: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, FoundryConnection value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("type");
-        JsonSerializer.Serialize(writer, value.Type, options);
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
 
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new Scalar("type"));
+        nestedObjectSerializer(Type);
 
-        writer.WritePropertyName("project");
-        JsonSerializer.Serialize(writer, value.Project, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("project"));
+        nestedObjectSerializer(Project);
     }
 }

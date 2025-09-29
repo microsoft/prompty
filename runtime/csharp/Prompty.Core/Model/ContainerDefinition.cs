@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Definition for a containerized AI agent.
 /// </summary>
-[JsonConverter(typeof(ContainerDefinitionConverter))]
-public class ContainerDefinition
+[JsonConverter(typeof(ContainerDefinitionJsonConverter))]
+public class ContainerDefinition : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ContainerDefinition"/>.
     /// </summary>
+#pragma warning disable CS8618
     public ContainerDefinition()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The container image name
@@ -40,69 +44,45 @@ public class ContainerDefinition
     /// </summary>
     public Scale Scale { get; set; }
 
-}
 
-public class ContainerDefinitionConverter : JsonConverter<ContainerDefinition>
-{
-    public override ContainerDefinition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to ContainerDefinition.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type ContainerDefinition");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing ContainerDefinition: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new ContainerDefinition();
-            if (rootElement.TryGetProperty("image", out JsonElement imageValue))
-            {
-                instance.Image = imageValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: image");
-            }
-
-            if (rootElement.TryGetProperty("tag", out JsonElement tagValue))
-            {
-                instance.Tag = tagValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("registry", out JsonElement registryValue))
-            {
-                instance.Registry = JsonSerializer.Deserialize<Registry>(registryValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: registry");
-            }
-
-            if (rootElement.TryGetProperty("scale", out JsonElement scaleValue))
-            {
-                instance.Scale = JsonSerializer.Deserialize<Scale>(scaleValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: scale");
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing ContainerDefinition: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, ContainerDefinition value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("image");
-        JsonSerializer.Serialize(writer, value.Image, options);
+        emitter.Emit(new MappingStart());
 
-        if (value.Tag != null)
+        emitter.Emit(new Scalar("image"));
+        nestedObjectSerializer(Image);
+
+        if (Tag != null)
         {
-            writer.WritePropertyName("tag");
-            JsonSerializer.Serialize(writer, value.Tag, options);
+            emitter.Emit(new Scalar("tag"));
+            nestedObjectSerializer(Tag);
         }
 
-        writer.WritePropertyName("registry");
-        JsonSerializer.Serialize(writer, value.Registry, options);
 
-        writer.WritePropertyName("scale");
-        JsonSerializer.Serialize(writer, value.Scale, options);
+        emitter.Emit(new Scalar("registry"));
+        nestedObjectSerializer(Registry);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("scale"));
+        nestedObjectSerializer(Scale);
     }
 }

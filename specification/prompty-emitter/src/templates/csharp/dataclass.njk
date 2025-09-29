@@ -1,221 +1,148 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace {{ node.typeName.namespace }};
 #pragma warning restore IDE0130
 
 /// <summary>
-{% for line in node.description.split('\n') -%}
+{%- for line in node.description.split('\n') %}
 /// {{ line }}
-{% endfor -%}
+{%- endfor %}
 /// </summary>
-[JsonConverter(typeof({{ node.typeName.name }}Converter))]
-public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }}{% if node.base %} : {{ node.base.name }}{% endif %}
+[JsonConverter(typeof({{ node.typeName.name }}JsonConverter))]
+public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }} : {% if node.base %}{{ node.base.name }}, {% endif %}IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
     /// </summary>
+    #pragma warning disable CS8618
     {% if node.isAbstract %}protected{% else %}public{% endif %} {{ node.typeName.name }}()
     {
     }
+    #pragma warning restore CS8618
     {% for prop in node.properties %}    
     {{ renderSummary(prop) | safe }}
     public {{ renderPropertyModifier(prop) }}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
     {% endfor %}
-}
 
-public class {{ node.typeName.name }}Converter: JsonConverter<{{ node.typeName.name }}>
-{
-    public override {{ node.typeName.name }} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public{% if node.base %} new{% endif %} void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+        {% if alternates.length > 0 %}
+        if(parser.TryConsume<Scalar>(out var scalar))
         {
-            throw new JsonException("Cannot convert null value to {{ node.typeName.name }}.");
-        }
-        {%- for alt in alternates %}
-            {%- if alt.scalar == "bool" %}
-        else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
-        {
-            var {{ alt.scalar }}Value = reader.GetBoolean();
-            return new {{ node.typeName.name }}()
+            {%- for alt in alternates %}
+                {%- if alt.scalar == "bool" %}
+            {% if not loop.first %}else {% endif %}if (scalar.Value.ToLower() == "true" || scalar.Value.ToLower() == "false")
             {
+                var {{ alt.scalar }}Value = scalar.Value.ToLower() == "true";
                 {%- for item in alt.expansion %}
-                {{ item.property }} = {{ item.value | safe }},
+                {{ item.property }} = {{ item.value | safe }};
                 {%- endfor %}
-            };
-        }
-            {%- elif alt.scalar == "float" or alt.scalar == "int" %}
-        else if (reader.TokenType == JsonTokenType.Number)
-        {
-            var {{ alt.scalar }}Value = reader.Get{% if alt.scalar == "float" %}Single{% else %}Int32{% endif %}();
-            return new {{ node.typeName.name }}()
-            {
-                {%- for item in alt.expansion %}
-                {{ item.property }} = {{ item.value | safe }},
-                {%- endfor %}
-            };
-        }
-            {%- else %}
-        else if (reader.TokenType == JsonTokenType.{{ alt.scalar | capitalize }})
-        {
-            var {{ alt.scalar }}Value = reader.{{ converterMapper(alt.scalar) }}() ?? throw new JsonException("Empty {{ alt.scalar }} shorthand values for {{ node.typeName.name }} are not supported");
-            return new {{ node.typeName.name }}()
-            {
-                {%- for item in alt.expansion %}
-                {{ item.property }} = {{ item.value | safe }},
-                {%- endfor %}
-            };
-        }
-            {%- endif %}
-        {%- endfor %}
-        {%- if numericAlternates.length > 0 %}
-        else if (reader.TokenType == JsonTokenType.Number)
-        {
-            byte[] span = reader.HasValueSequence ?
-                        reader.ValueSequence.ToArray() :
-                        reader.ValueSpan.ToArray();
-
-            var numberString = System.Text.Encoding.UTF8.GetString(span);
-            {%- for alt in numericAlternates %}
-            {%- if loop.first %}
-            if (
-            {%- if alt.scalar == "float" -%}
-            numberString.Contains('.') || numberString.Contains('e') || numberString.Contains('E'))
-            {%- else -%}
-            numberString.All(c => char.IsDigit(c))
-            {%- endif -%}
-            {%- else %}
-            else 
-            {%- endif %}
-            {
-                // try parse as {{ alt.scalar }}
-                {%- if alt.scalar == "float" %}
-                if (float.TryParse(numberString, out float floatValue))
+                return;
+            }
                 {%- else %}
-                if (int.TryParse(numberString, out int intValue))
+            // check for non-numeric characters to differentiate strings from numbers
+            {% if not loop.first %}else {% endif %}if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
+            {
+                var {{ alt.scalar }}Value = scalar.Value;
+                {%- for item in alt.expansion %}
+                {{ item.property }} = {{ item.value | safe }};
+                {%- endfor %}
+                return;
+            }
                 {%- endif %}
+            {%- endfor %}
+            {%- if numericAlternates.length > 0 %}
+                {%- for alt in numericAlternates %}
+                    {%- if alt.scalar == "float" %}
+            else if (scalar.Value.Contains('.') || scalar.Value.Contains('e') || scalar.Value.Contains('E'))
+            { 
+                // try parse as float
+                if (float.TryParse(scalar.Value, out float floatValue))
                 {
-                    return new Input()
-                    {
-                        {%- for item in alt.expansion %}
-                        {{ item.property }} = {{ item.value | safe }},
-                        {%- endfor %}
-                    };
+                    {%- for item in alt.expansion %}
+                    {{ item.property }} = {{ item.value | safe }};
+                    {%- endfor %}
+                    return;
                 }
             }
-            {%- endfor %}
-        }
-        {%- endif %}
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing {{ node.typeName.name }}: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-            {% if polymorphicTypes %}
-            // load polymorphic {{ node.typeName.name }} instance
-            {{ node.typeName.name }} instance;
-            if (rootElement.TryGetProperty("{{ node.discriminator }}", out JsonElement discriminatorValue))
-            {
-                var discriminator = discriminatorValue.GetString() 
-                    ?? throw new JsonException("Empty discriminator value for {{ node.typeName.name }} is not supported");
-                instance = discriminator switch 
-                {
-                    {%- for type in polymorphicTypes.types %}
-                    "{{ type.value }}" => JsonSerializer.Deserialize<{{ type.instance.typeName.name }}> (rootElement, options)
-                        ?? throw new JsonException("Empty {{ type.instance.typeName.name }} instances are not supported"),
-                    {%- endfor %}
-                    {%- if polymorphicTypes.default %}
-                    _ => new {{ polymorphicTypes.default.instance.typeName.name }}(),
                     {%- else %}
-                    _ => throw new JsonException($"Unknown {{ node.typeName.name }} discriminator value: {discriminator}"),
-                    {%- endif %}
-                };
+            else if (scalar.Value.All(c => char.IsDigit(c)))
+            {
+                // try parse as int
+                if (int.TryParse(scalar.Value, out int intValue))
+                {
+                    {%- for item in alt.expansion %}
+                    {{ item.property }} = {{ item.value | safe }};
+                    {%- endfor %}
+                    return;
+                }
             }
+                    {%- endif %}
+                {%- endfor %}
+            {%- endif %}
             else
             {
-                {%- if node.isRoot %}
-                // default to "prompt" if discriminator is missing or empty
-                instance = new {{ node.typeName.name }}
-                {
-                    {{ renderName(node.discriminator) }} = "prompt"
-                };
-                {%- else %}
-                throw new JsonException("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'");
-                {%- endif %}
+                throw new YamlException($"Unexpected scalar value '{{scalar.Value}}' when parsing {{ node.typeName.name }}. Expected one of the supported shorthand types or a mapping.");
             }
+        }
+        {% endif %}
 
-            {%- else %}
-            // create new instance
-            var instance = new {{ node.typeName.name }}();
-            {%- endif %}
-
-            {%- for prop in node.properties %}
-            if (rootElement.TryGetProperty("{{ prop.name }}", out JsonElement {{ prop.name }}Value))
+        
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                {%- if prop.isDict %}
-                instance.{{ renderPropertyName(prop) }} = JsonSerializer.Deserialize<Dictionary<string, object>>({{ prop.name }}Value.GetRawText(), options){{ renderNullCoalescing(prop) | safe }};
-                {%- elif prop.isCollection %}
-                    {%- if prop.isScalar %}
-                instance.{{ renderPropertyName(prop) }} = [.. {{ prop.name }}Value.EnumerateArray().Select(x => x.{{ converterMapper(prop.typeName.name) }}() ?? throw new JsonException("Empty array elements for {{ prop.name }} are not supported"))];
-                    {%- else %}
-                if ({{ prop.name }}Value.ValueKind == JsonValueKind.Array)
-                {
-                    instance.{{ renderPropertyName(prop) }} = 
-                        [.. {{ prop.name }}Value.EnumerateArray()
-                            .Select(x => JsonSerializer.Deserialize<{{ prop.typeName.name }}> (x.GetRawText(), options)
-                                ?? throw new JsonException("Empty array elements for {{ renderPropertyName(prop) }} are not supported"))];
-                }
-                else if ({{ prop.name }}Value.ValueKind == JsonValueKind.Object)
-                {
-                    instance.{{ renderPropertyName(prop) }} = 
-                        [.. {{ prop.name }}Value.EnumerateObject()
-                            .Select(property =>
-                            {
-                                var item = JsonSerializer.Deserialize<{{ prop.typeName.name }}>(property.Value.GetRawText(), options)
-                                    ?? throw new JsonException("Empty array elements for {{ renderPropertyName(prop) }} are not supported");
-                                item.Name = property.Name;
-                                return item;
-                            })];
-                }
-                else
-                {
-                    throw new JsonException("Invalid JSON token for {{ prop.name }}");
-                }
-                    {%- endif %}
-                {%- else %}
-                    {%- if prop.isScalar %}
-                instance.{{ renderPropertyName(prop) }} = {{ prop.name }}Value.{{ converterMapper(prop.typeName.name) }}(){{ renderNullCoalescing(prop) | safe }};
-                    {%- else %}
-                instance.{{ renderPropertyName(prop) }} = JsonSerializer.Deserialize<{{ renderType(prop) | safe }}>({{ prop.name }}Value.GetRawText(), options){{ renderNullCoalescing(prop) | safe }};
-                    {%- endif %}
-                {%- endif %}
+                throw new YamlException("Expected a mapping node for type {{ node.typeName.name }}");
             }
-            {% endfor %}
-            return instance;
+            {% if polymorphicTypes %}
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("{{ node.discriminator }}"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
+                {
+                    {%- for type in polymorphicTypes.types %}
+                    case "{{ type.value }}":
+                        var {{ type.value }}{{ node.typeName.name }} = nestedObjectDeserializer(typeof({{ type.instance.typeName.name }})) as {{ type.instance.typeName.name }};
+                        if ({{ type.value }}{{ node.typeName.name }} == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type {{ type.instance.typeName.name }}");
+                        }
+                        return;
+                    {%- endfor %}
+                    default:
+                        throw new YamlException($"Unknown type discriminator '{{discriminatorValue}}' when parsing {{ node.typeName.name }}");
+                }
+            }
+            {% endif %}
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing {{ node.typeName.name }}: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, {{ node.typeName.name }} value, JsonSerializerOptions options)
+    public{% if node.base %} new{% endif %} void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
+        emitter.Emit(new MappingStart());
         {%- for prop in node.properties %}
-        {%- if prop.isOptional %}
-        if(value.{{ renderPropertyName(prop) }} != null)
+        {% if prop.isOptional %}
+        if ({{ renderPropertyName(prop) }} != null)
         {
-            writer.WritePropertyName("{{ prop.name }}");
-            JsonSerializer.Serialize(writer, value.{{ renderPropertyName(prop) }}, options);
+            emitter.Emit(new Scalar("{{ prop.name }}"));
+            nestedObjectSerializer({{ renderPropertyName(prop) }});
         }
-        {%- else %}
-        writer.WritePropertyName("{{ prop.name }}");
-        JsonSerializer.Serialize(writer, value.{{ renderPropertyName(prop) }}, options);
+        {% else %}
+        emitter.Emit(new Scalar("{{ prop.name }}"));
+        nestedObjectSerializer({{ renderPropertyName(prop) }});
         {%- endif %}
-        {% endfor %}
-        writer.WriteEndObject();
+        {%- endfor %}
     }
 }

@@ -27,7 +27,7 @@ classDiagram
         +string name
         +string description
         +dictionary metadata
-        + model
+        +Model model
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
@@ -217,7 +217,7 @@ instructions: |-
 | name | string | Human-readable name of the agent  |
 | description | string | Description of the agent&#39;s capabilities and purpose  |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties  |
-| model | [](.md) | Primary AI model configuration for the agent  |
+| model | [Model](Model.md) | Primary AI model configuration for the agent  |
 | inputs | [Input[]](Input.md) | Input parameters that participate in template rendering (Related Types: [ArrayInput](ArrayInput.md), [ObjectInput](ObjectInput.md)) |
 | outputs | [Output[]](Output.md) | Expected output format and structure from the agent (Related Types: [ArrayOutput](ArrayOutput.md), [ObjectOutput](ObjectOutput.md)) |
 | tools | [Tool[]](Tool.md) | Tools available to the agent for extended functionality (Related Types: [FunctionTool](FunctionTool.md), [ServerTool](ServerTool.md), [BingSearchTool](BingSearchTool.md), [FileSearchTool](FileSearchTool.md), [McpTool](McpTool.md), [ModelTool](ModelTool.md), [OpenApiTool](OpenApiTool.md)) |

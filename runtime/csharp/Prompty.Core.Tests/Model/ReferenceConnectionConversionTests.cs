@@ -1,5 +1,6 @@
 using Xunit;
 using System.Text.Json;
+using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -16,7 +17,14 @@ public class ReferenceConnectionConversionTests
         name: my-reference-connection
         
         """;
-        Assert.Equal(typeof(string), yamlData.GetType());
+
+
+        var serializer = new DeserializerBuilder().Build();
+        var instance = serializer.Deserialize<ReferenceConnection>(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("reference", instance.Kind);
+        Assert.Equal("my-reference-connection", instance.Name);
     }
 
     [Fact]

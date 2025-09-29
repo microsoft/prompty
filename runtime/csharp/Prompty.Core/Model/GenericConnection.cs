@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Generic connection configuration for AI services.
 /// </summary>
-[JsonConverter(typeof(GenericConnectionConverter))]
-public class GenericConnection : Connection
+[JsonConverter(typeof(GenericConnectionJsonConverter))]
+public class GenericConnection : Connection, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="GenericConnection"/>.
     /// </summary>
+#pragma warning disable CS8618
     public GenericConnection()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
@@ -30,53 +34,39 @@ public class GenericConnection : Connection
     /// </summary>
     public IDictionary<string, object>? Options { get; set; }
 
-}
 
-public class GenericConnectionConverter : JsonConverter<GenericConnection>
-{
-    public override GenericConnection Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to GenericConnection.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing GenericConnection: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // create new instance
-            var instance = new GenericConnection();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                throw new YamlException("Expected a mapping node for type GenericConnection");
             }
 
-            if (rootElement.TryGetProperty("options", out JsonElement optionsValue))
-            {
-                instance.Options = JsonSerializer.Deserialize<Dictionary<string, object>>(optionsValue.GetRawText(), options);
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing GenericConnection: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, GenericConnection value, JsonSerializerOptions options)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new MappingStart());
 
-        if (value.Options != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Options != null)
         {
-            writer.WritePropertyName("options");
-            JsonSerializer.Serialize(writer, value.Options, options);
+            emitter.Emit(new Scalar("options"));
+            nestedObjectSerializer(Options);
         }
 
-        writer.WriteEndObject();
     }
 }

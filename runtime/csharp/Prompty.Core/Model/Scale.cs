@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -10,15 +12,17 @@ namespace Prompty.Core;
 /// <summary>
 /// Configuration for scaling container instances.
 /// </summary>
-[JsonConverter(typeof(ScaleConverter))]
-public class Scale
+[JsonConverter(typeof(ScaleJsonConverter))]
+public class Scale : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Scale"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Scale()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Minimum number of container instances to run
@@ -40,72 +44,49 @@ public class Scale
     /// </summary>
     public float Memory { get; set; }
 
-}
 
-public class ScaleConverter : JsonConverter<Scale>
-{
-    public override Scale Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
+
+
+
+        if (parser.TryConsume<MappingStart>(out var _))
         {
-            throw new JsonException("Cannot convert null value to Scale.");
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
+            {
+                throw new YamlException("Expected a mapping node for type Scale");
+            }
+
         }
-        else if (reader.TokenType != JsonTokenType.StartObject)
+        else
         {
-            throw new JsonException($"Unexpected JSON token when parsing Scale: {reader.TokenType}");
-        }
-
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
-
-            // create new instance
-            var instance = new Scale();
-            if (rootElement.TryGetProperty("minReplicas", out JsonElement minReplicasValue))
-            {
-                instance.MinReplicas = minReplicasValue.GetInt32();
-            }
-
-            if (rootElement.TryGetProperty("maxReplicas", out JsonElement maxReplicasValue))
-            {
-                instance.MaxReplicas = maxReplicasValue.GetInt32();
-            }
-
-            if (rootElement.TryGetProperty("cpu", out JsonElement cpuValue))
-            {
-                instance.Cpu = cpuValue.GetSingle();
-            }
-
-            if (rootElement.TryGetProperty("memory", out JsonElement memoryValue))
-            {
-                instance.Memory = memoryValue.GetSingle();
-            }
-
-            return instance;
+            throw new YamlException($"Unexpected YAML token when parsing Scale: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Scale value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        if (value.MinReplicas != null)
+        emitter.Emit(new MappingStart());
+
+        if (MinReplicas != null)
         {
-            writer.WritePropertyName("minReplicas");
-            JsonSerializer.Serialize(writer, value.MinReplicas, options);
+            emitter.Emit(new Scalar("minReplicas"));
+            nestedObjectSerializer(MinReplicas);
         }
 
-        if (value.MaxReplicas != null)
+
+        if (MaxReplicas != null)
         {
-            writer.WritePropertyName("maxReplicas");
-            JsonSerializer.Serialize(writer, value.MaxReplicas, options);
+            emitter.Emit(new Scalar("maxReplicas"));
+            nestedObjectSerializer(MaxReplicas);
         }
 
-        writer.WritePropertyName("cpu");
-        JsonSerializer.Serialize(writer, value.Cpu, options);
 
-        writer.WritePropertyName("memory");
-        JsonSerializer.Serialize(writer, value.Memory, options);
+        emitter.Emit(new Scalar("cpu"));
+        nestedObjectSerializer(Cpu);
 
-        writer.WriteEndObject();
+        emitter.Emit(new Scalar("memory"));
+        nestedObjectSerializer(Memory);
     }
 }

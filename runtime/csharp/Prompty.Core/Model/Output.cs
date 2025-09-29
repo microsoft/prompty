@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Buffers;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -11,15 +13,17 @@ namespace Prompty.Core;
 /// Represents the output properties of an AI agent.
 /// Each output property can be a simple kind, an array, or an object.
 /// </summary>
-[JsonConverter(typeof(OutputConverter))]
-public class Output
+[JsonConverter(typeof(OutputJsonConverter))]
+public class Output : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Output"/>.
     /// </summary>
+#pragma warning disable CS8618
     public Output()
     {
     }
+#pragma warning restore CS8618
 
     /// <summary>
     /// Name of the output property
@@ -41,89 +45,74 @@ public class Output
     /// </summary>
     public bool? Required { get; set; }
 
-}
 
-public class OutputConverter : JsonConverter<Output>
-{
-    public override Output Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("Cannot convert null value to Output.");
-        }
-        else if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException($"Unexpected JSON token when parsing Output: {reader.TokenType}");
-        }
 
-        using (var jsonDocument = JsonDocument.ParseValue(ref reader))
-        {
-            var rootElement = jsonDocument.RootElement;
 
-            // load polymorphic Output instance
-            Output instance;
-            if (rootElement.TryGetProperty("kind", out JsonElement discriminatorValue))
+
+        if (parser.TryConsume<MappingStart>(out var _))
+        {
+            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+            if (node == null)
             {
-                var discriminator = discriminatorValue.GetString()
-                    ?? throw new JsonException("Empty discriminator value for Output is not supported");
-                instance = discriminator switch
+                throw new YamlException("Expected a mapping node for type Output");
+            }
+
+            // handle polymorphic types
+            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
+            {
+                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+                switch (discriminatorValue)
                 {
-                    "array" => JsonSerializer.Deserialize<ArrayOutput>(rootElement, options)
-                        ?? throw new JsonException("Empty ArrayOutput instances are not supported"),
-                    "object" => JsonSerializer.Deserialize<ObjectOutput>(rootElement, options)
-                        ?? throw new JsonException("Empty ObjectOutput instances are not supported"),
-                    _ => new Output(),
-                };
-            }
-            else
-            {
-                throw new JsonException("Missing Output discriminator property: 'kind'");
-            }
-            if (rootElement.TryGetProperty("name", out JsonElement nameValue))
-            {
-                instance.Name = nameValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: name");
-            }
-
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
-            {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
+                    case "array":
+                        var arrayOutput = nestedObjectDeserializer(typeof(ArrayOutput)) as ArrayOutput;
+                        if (arrayOutput == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ArrayOutput");
+                        }
+                        return;
+                    case "object":
+                        var objectOutput = nestedObjectDeserializer(typeof(ObjectOutput)) as ObjectOutput;
+                        if (objectOutput == null)
+                        {
+                            throw new YamlException("Failed to deserialize polymorphic type ObjectOutput");
+                        }
+                        return;
+                    default:
+                        throw new YamlException($"Unknown type discriminator '' when parsing Output");
+                }
             }
 
-            if (rootElement.TryGetProperty("description", out JsonElement descriptionValue))
-            {
-                instance.Description = descriptionValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("required", out JsonElement requiredValue))
-            {
-                instance.Required = requiredValue.GetBoolean();
-            }
-
-            return instance;
+        }
+        else
+        {
+            throw new YamlException($"Unexpected YAML token when parsing Output: {parser.Current?.GetType().Name ?? "null"}");
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, Output value, JsonSerializerOptions options)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
-        writer.WriteStartObject();
-        writer.WritePropertyName("name");
-        JsonSerializer.Serialize(writer, value.Name, options);
+        emitter.Emit(new MappingStart());
 
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
+        emitter.Emit(new Scalar("name"));
+        nestedObjectSerializer(Name);
 
-        if (value.Description != null)
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        if (Description != null)
         {
-            writer.WritePropertyName("description");
-            JsonSerializer.Serialize(writer, value.Description, options);
+            emitter.Emit(new Scalar("description"));
+            nestedObjectSerializer(Description);
         }
 
-        if (value.Required != null)
+
+        if (Required != null)
         {
-            writer.WritePropertyName("required");
-            JsonSerializer.Serialize(writer, value.Required, options);
+            emitter.Emit(new Scalar("required"));
+            nestedObjectSerializer(Required);
         }
 
-        writer.WriteEndObject();
     }
 }
