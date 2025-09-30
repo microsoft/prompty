@@ -55,6 +55,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const classTemplate = env.getTemplate('dataclass.njk', true);
   const jsonTemplate = env.getTemplate('json.njk', true);
   const utilsTemplate = env.getTemplate('utils.njk', true);
+  const deserializerTemplate = env.getTemplate('deserializer.njk', true);
   const testTemplate = env.getTemplate('test.njk', true);
 
   const nodes = Array.from(enumerateTypes(node));
@@ -63,7 +64,14 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
     namespace: node.typeName.namespace,
   });
 
+  const deserializer = deserializerTemplate.render({
+    namespace: node.typeName.namespace,
+  });
+
+  await emitCsharpFile(context, node, deserializer, "YamlSerializer.cs", emitTarget["output-dir"]);
+
   await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
+
 
 
 

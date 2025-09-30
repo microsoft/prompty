@@ -48,21 +48,12 @@ public class GenericRegistry : Registry, IYamlConvertible
     public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type GenericRegistry");
-            }
+            throw new YamlException("Expected a mapping node for type GenericRegistry");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing GenericRegistry: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

@@ -37,7 +37,6 @@ public class EnvironmentVariable : IYamlConvertible
 
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-
         if (parser.TryConsume<Scalar>(out var scalar))
         {
             // check for non-numeric characters to differentiate strings from numbers
@@ -53,21 +52,12 @@ public class EnvironmentVariable : IYamlConvertible
             }
         }
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type EnvironmentVariable");
-            }
+            throw new YamlException("Expected a mapping node for type EnvironmentVariable");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing EnvironmentVariable: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

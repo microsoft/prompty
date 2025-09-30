@@ -42,7 +42,6 @@ public class Format : IYamlConvertible
 
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-
         if (parser.TryConsume<Scalar>(out var scalar))
         {
             // check for non-numeric characters to differentiate strings from numbers
@@ -58,21 +57,12 @@ public class Format : IYamlConvertible
             }
         }
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Format");
-            }
+            throw new YamlException("Expected a mapping node for type Format");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing Format: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

@@ -49,45 +49,36 @@ public class Output : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Output");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "array":
-                        var arrayOutput = nestedObjectDeserializer(typeof(ArrayOutput)) as ArrayOutput;
-                        if (arrayOutput == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ArrayOutput");
-                        }
-                        return;
-                    case "object":
-                        var objectOutput = nestedObjectDeserializer(typeof(ObjectOutput)) as ObjectOutput;
-                        if (objectOutput == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ObjectOutput");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Output");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Output");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Output: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "array":
+                    var arrayOutput = nestedObjectDeserializer(typeof(ArrayOutput)) as ArrayOutput;
+                    if (arrayOutput == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ArrayOutput");
+                    }
+                    return;
+                case "object":
+                    var objectOutput = nestedObjectDeserializer(typeof(ObjectOutput)) as ObjectOutput;
+                    if (objectOutput == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ObjectOutput");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

@@ -98,45 +98,36 @@ public class Prompty : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Prompty");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "manifest":
-                        var manifestPrompty = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
-                        if (manifestPrompty == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
-                        }
-                        return;
-                    case "container":
-                        var containerPrompty = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
-                        if (containerPrompty == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type PromptyContainer");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Prompty");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Prompty");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Prompty: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "manifest":
+                    var manifestPrompty = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
+                    if (manifestPrompty == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
+                    }
+                    return;
+                case "container":
+                    var containerPrompty = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
+                    if (containerPrompty == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type PromptyContainer");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

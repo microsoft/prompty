@@ -48,73 +48,64 @@ public abstract class Tool : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Tool");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "function":
-                        var functionTool = nestedObjectDeserializer(typeof(FunctionTool)) as FunctionTool;
-                        if (functionTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type FunctionTool");
-                        }
-                        return;
-                    case "bing_search":
-                        var bing_searchTool = nestedObjectDeserializer(typeof(BingSearchTool)) as BingSearchTool;
-                        if (bing_searchTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type BingSearchTool");
-                        }
-                        return;
-                    case "file_search":
-                        var file_searchTool = nestedObjectDeserializer(typeof(FileSearchTool)) as FileSearchTool;
-                        if (file_searchTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type FileSearchTool");
-                        }
-                        return;
-                    case "mcp":
-                        var mcpTool = nestedObjectDeserializer(typeof(McpTool)) as McpTool;
-                        if (mcpTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type McpTool");
-                        }
-                        return;
-                    case "model":
-                        var modelTool = nestedObjectDeserializer(typeof(ModelTool)) as ModelTool;
-                        if (modelTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ModelTool");
-                        }
-                        return;
-                    case "openapi":
-                        var openapiTool = nestedObjectDeserializer(typeof(OpenApiTool)) as OpenApiTool;
-                        if (openapiTool == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type OpenApiTool");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Tool");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Tool");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Tool: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "function":
+                    var functionTool = nestedObjectDeserializer(typeof(FunctionTool)) as FunctionTool;
+                    if (functionTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type FunctionTool");
+                    }
+                    return;
+                case "bing_search":
+                    var bing_searchTool = nestedObjectDeserializer(typeof(BingSearchTool)) as BingSearchTool;
+                    if (bing_searchTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type BingSearchTool");
+                    }
+                    return;
+                case "file_search":
+                    var file_searchTool = nestedObjectDeserializer(typeof(FileSearchTool)) as FileSearchTool;
+                    if (file_searchTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type FileSearchTool");
+                    }
+                    return;
+                case "mcp":
+                    var mcpTool = nestedObjectDeserializer(typeof(McpTool)) as McpTool;
+                    if (mcpTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type McpTool");
+                    }
+                    return;
+                case "model":
+                    var modelTool = nestedObjectDeserializer(typeof(ModelTool)) as ModelTool;
+                    if (modelTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ModelTool");
+                    }
+                    return;
+                case "openapi":
+                    var openapiTool = nestedObjectDeserializer(typeof(OpenApiTool)) as OpenApiTool;
+                    if (openapiTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type OpenApiTool");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,9 +19,7 @@ public class FormatConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Format>(yamlData);
+        var instance = YamlSerializer.Deserialize<Format>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("mustache", instance.Kind);
@@ -63,8 +60,7 @@ public class FormatConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Format>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Format>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }

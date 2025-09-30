@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -74,9 +73,7 @@ public class PromptyConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -254,9 +251,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -433,9 +428,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -614,9 +607,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -794,9 +785,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -977,9 +966,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -1159,9 +1146,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);
@@ -1343,9 +1328,7 @@ user:
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Prompty>(yamlData);
+        var instance = YamlSerializer.Deserialize<Prompty>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompt", instance.Kind);

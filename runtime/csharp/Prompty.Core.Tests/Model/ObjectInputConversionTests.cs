@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -21,9 +20,7 @@ public class ObjectInputConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<ObjectInput>(yamlData);
+        var instance = YamlSerializer.Deserialize<ObjectInput>(yamlData);
 
         Assert.NotNull(instance);
     }

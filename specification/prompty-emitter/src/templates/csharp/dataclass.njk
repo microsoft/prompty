@@ -32,7 +32,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
 
     public{% if node.base %} new{% endif %} void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-        {% if alternates.length > 0 %}
+        {%- if alternates.length > 0 %}
         if(parser.TryConsume<Scalar>(out var scalar))
         {
             {%- for alt in alternates %}
@@ -91,42 +91,39 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
                 throw new YamlException($"Unexpected scalar value '{{scalar.Value}}' when parsing {{ node.typeName.name }}. Expected one of the supported shorthand types or a mapping.");
             }
         }
-        {% endif %}
+        {%- endif %}
 
-        
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type {{ node.typeName.name }}");
-            }
-            {% if polymorphicTypes %}
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("{{ node.discriminator }}"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    {%- for type in polymorphicTypes.types %}
-                    case "{{ type.value }}":
-                        var {{ type.value }}{{ node.typeName.name }} = nestedObjectDeserializer(typeof({{ type.instance.typeName.name }})) as {{ type.instance.typeName.name }};
-                        if ({{ type.value }}{{ node.typeName.name }} == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type {{ type.instance.typeName.name }}");
-                        }
-                        return;
-                    {%- endfor %}
-                    default:
-                        throw new YamlException($"Unknown type discriminator '{{discriminatorValue}}' when parsing {{ node.typeName.name }}");
-                }
-            }
-            {% endif %}
+            throw new YamlException("Expected a mapping node for type {{ node.typeName.name }}");
         }
-        else
+        {% if polymorphicTypes %}
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("{{ node.discriminator }}"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing {{ node.typeName.name }}: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                {%- for type in polymorphicTypes.types %}
+                case "{{ type.value }}":
+                    var {{ type.value }}{{ node.typeName.name }} = nestedObjectDeserializer(typeof({{ type.instance.typeName.name }})) as {{ type.instance.typeName.name }};
+                    if ({{ type.value }}{{ node.typeName.name }} == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type {{ type.instance.typeName.name }}");
+                    }
+                    return;
+                {%- endfor %}
+                default:
+                {%- if polymorphicTypes.default %}
+                    return;
+                {%- else %}
+                throw new YamlException($"Unknown type discriminator '{{discriminatorValue}}' when parsing {{ node.typeName.name }}");
+                {%- endif %}
+                    
+            }
         }
+        {%- endif %}
     }
 
     public{% if node.base %} new{% endif %} void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -23,9 +22,7 @@ public class InputConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Input>(yamlData);
+        var instance = YamlSerializer.Deserialize<Input>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("my-input", instance.Name);
@@ -81,8 +78,7 @@ public class InputConversionTests
     {
         // alternate representation as boolean
         var data = false;
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Input>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("boolean", instance.Kind);
         Assert.NotNull(instance.Sample);
@@ -107,8 +103,7 @@ public class InputConversionTests
     {
         // alternate representation as float32
         var data = 3.14;
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Input>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("float", instance.Kind);
         Assert.IsType<float>(instance.Sample);
@@ -131,8 +126,7 @@ public class InputConversionTests
     {
         // alternate representation as integer
         var data = 3;
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Input>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("integer", instance.Kind);
         Assert.Equal(3, instance.Sample);
@@ -154,8 +148,7 @@ public class InputConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Input>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Input>(data);
         Assert.NotNull(instance);
         Assert.Equal("string", instance.Kind);
         Assert.Equal("example", instance.Sample);

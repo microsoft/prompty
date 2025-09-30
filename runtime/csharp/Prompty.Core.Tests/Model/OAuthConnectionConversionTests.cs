@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -23,9 +22,7 @@ public class OAuthConnectionConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<OAuthConnection>(yamlData);
+        var instance = YamlSerializer.Deserialize<OAuthConnection>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("oauth", instance.Kind);

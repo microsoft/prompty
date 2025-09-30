@@ -48,21 +48,12 @@ public class ContainerDefinition : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type ContainerDefinition");
-            }
+            throw new YamlException("Expected a mapping node for type ContainerDefinition");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing ContainerDefinition: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

@@ -1,0 +1,47 @@
+using YamlDotNet.Serialization;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Helper class for serializing and deserializing YAML data
+/// </summary>
+public class YamlSerializer
+{
+    private static IDeserializer? _deserializer;
+    private static ISerializer? _serializer;
+
+    /// <summary>
+    /// Deserialize YAML string into an object of type T
+    /// </summary>
+    /// <typeparam name="T">The type of the object to deserialize</typeparam>
+    /// <param name="yaml">The YAML string to deserialize</param>
+    /// <returns>The deserialized object</returns>
+    public static T Deserialize<T>(object yaml)
+    {
+        _deserializer ??= new DeserializerBuilder()
+            .Build();
+
+        if (yaml is string s)
+        {
+            return _deserializer.Deserialize<T>(s);
+        }
+
+        return _deserializer.Deserialize<T>(yaml.ToString() ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Serialize an object of type T into a YAML string
+    /// </summary>
+    /// <typeparam name="T">The type of the object to serialize</typeparam>
+    /// <param name="obj">The object to serialize</param>
+    /// <returns>The serialized YAML string</returns>
+    public static string Serialize<T>(T obj)
+    {
+        _serializer ??= new SerializerBuilder()
+            .Build();
+
+        return _serializer.Serialize(obj);
+    }
+}

@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -26,9 +25,7 @@ public class ParameterConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Parameter>(yamlData);
+        var instance = YamlSerializer.Deserialize<Parameter>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("my-parameter", instance.Name);

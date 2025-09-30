@@ -53,21 +53,12 @@ public class McpTool : Tool, IYamlConvertible
     public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type McpTool");
-            }
+            throw new YamlException("Expected a mapping node for type McpTool");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing McpTool: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)

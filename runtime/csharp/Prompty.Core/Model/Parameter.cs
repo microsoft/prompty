@@ -63,45 +63,36 @@ public class Parameter : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Parameter");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "object":
-                        var objectParameter = nestedObjectDeserializer(typeof(ObjectParameter)) as ObjectParameter;
-                        if (objectParameter == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ObjectParameter");
-                        }
-                        return;
-                    case "array":
-                        var arrayParameter = nestedObjectDeserializer(typeof(ArrayParameter)) as ArrayParameter;
-                        if (arrayParameter == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ArrayParameter");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Parameter");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Parameter");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Parameter: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "object":
+                    var objectParameter = nestedObjectDeserializer(typeof(ObjectParameter)) as ObjectParameter;
+                    if (objectParameter == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ObjectParameter");
+                    }
+                    return;
+                case "array":
+                    var arrayParameter = nestedObjectDeserializer(typeof(ArrayParameter)) as ArrayParameter;
+                    if (arrayParameter == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ArrayParameter");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

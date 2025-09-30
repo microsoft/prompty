@@ -38,38 +38,29 @@ public abstract class Registry : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Registry");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "acr":
-                        var acrRegistry = nestedObjectDeserializer(typeof(AzureContainerRegistry)) as AzureContainerRegistry;
-                        if (acrRegistry == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type AzureContainerRegistry");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Registry");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Registry");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Registry: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "acr":
+                    var acrRegistry = nestedObjectDeserializer(typeof(AzureContainerRegistry)) as AzureContainerRegistry;
+                    if (acrRegistry == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type AzureContainerRegistry");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

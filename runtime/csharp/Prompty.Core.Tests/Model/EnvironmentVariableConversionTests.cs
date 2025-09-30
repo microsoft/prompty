@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,9 +17,7 @@ public class EnvironmentVariableConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<EnvironmentVariable>(yamlData);
+        var instance = YamlSerializer.Deserialize<EnvironmentVariable>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("MY_ENV_VAR", instance.Name);
@@ -58,8 +55,7 @@ public class EnvironmentVariableConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<EnvironmentVariable>(data.ToString());
+        var instance = YamlSerializer.Deserialize<EnvironmentVariable>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Value);
     }

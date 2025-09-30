@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -18,9 +17,7 @@ public class BindingConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Binding>(yamlData);
+        var instance = YamlSerializer.Deserialize<Binding>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("my-tool", instance.Name);
@@ -58,8 +55,7 @@ public class BindingConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Binding>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Binding>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }

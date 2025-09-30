@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -26,9 +25,7 @@ public class ModelConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Model>(yamlData);
+        var instance = YamlSerializer.Deserialize<Model>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("gpt-35-turbo", instance.Id);
@@ -76,8 +73,7 @@ public class ModelConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<Model>(data.ToString());
+        var instance = YamlSerializer.Deserialize<Model>(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Id);
     }

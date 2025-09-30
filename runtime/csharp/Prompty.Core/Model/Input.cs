@@ -66,7 +66,6 @@ public class Input : IYamlConvertible
 
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
-
         if (parser.TryConsume<Scalar>(out var scalar))
         {
             if (scalar.Value.ToLower() == "true" || scalar.Value.ToLower() == "false")
@@ -110,45 +109,36 @@ public class Input : IYamlConvertible
             }
         }
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Input");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "array":
-                        var arrayInput = nestedObjectDeserializer(typeof(ArrayInput)) as ArrayInput;
-                        if (arrayInput == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ArrayInput");
-                        }
-                        return;
-                    case "object":
-                        var objectInput = nestedObjectDeserializer(typeof(ObjectInput)) as ObjectInput;
-                        if (objectInput == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ObjectInput");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Input");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Input");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Input: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "array":
+                    var arrayInput = nestedObjectDeserializer(typeof(ArrayInput)) as ArrayInput;
+                    if (arrayInput == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ArrayInput");
+                    }
+                    return;
+                case "object":
+                    var objectInput = nestedObjectDeserializer(typeof(ObjectInput)) as ObjectInput;
+                    if (objectInput == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ObjectInput");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

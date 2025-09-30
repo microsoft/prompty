@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,9 +19,7 @@ public class GenericRegistryConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<GenericRegistry>(yamlData);
+        var instance = YamlSerializer.Deserialize<GenericRegistry>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("some-value", instance.Kind);

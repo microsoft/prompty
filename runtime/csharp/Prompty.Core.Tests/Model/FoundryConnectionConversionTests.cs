@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -20,9 +19,7 @@ public class FoundryConnectionConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<FoundryConnection>(yamlData);
+        var instance = YamlSerializer.Deserialize<FoundryConnection>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("foundry", instance.Kind);

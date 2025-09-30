@@ -45,59 +45,50 @@ public abstract class Connection : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Connection");
-            }
-
-            // handle polymorphic types
-            if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-            {
-                var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-                switch (discriminatorValue)
-                {
-                    case "reference":
-                        var referenceConnection = nestedObjectDeserializer(typeof(ReferenceConnection)) as ReferenceConnection;
-                        if (referenceConnection == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type ReferenceConnection");
-                        }
-                        return;
-                    case "key":
-                        var keyConnection = nestedObjectDeserializer(typeof(KeyConnection)) as KeyConnection;
-                        if (keyConnection == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type KeyConnection");
-                        }
-                        return;
-                    case "oauth":
-                        var oauthConnection = nestedObjectDeserializer(typeof(OAuthConnection)) as OAuthConnection;
-                        if (oauthConnection == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type OAuthConnection");
-                        }
-                        return;
-                    case "foundry":
-                        var foundryConnection = nestedObjectDeserializer(typeof(FoundryConnection)) as FoundryConnection;
-                        if (foundryConnection == null)
-                        {
-                            throw new YamlException("Failed to deserialize polymorphic type FoundryConnection");
-                        }
-                        return;
-                    default:
-                        throw new YamlException($"Unknown type discriminator '' when parsing Connection");
-                }
-            }
-
+            throw new YamlException("Expected a mapping node for type Connection");
         }
-        else
+
+        // handle polymorphic types
+        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
         {
-            throw new YamlException($"Unexpected YAML token when parsing Connection: {parser.Current?.GetType().Name ?? "null"}");
+            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
+            switch (discriminatorValue)
+            {
+                case "reference":
+                    var referenceConnection = nestedObjectDeserializer(typeof(ReferenceConnection)) as ReferenceConnection;
+                    if (referenceConnection == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type ReferenceConnection");
+                    }
+                    return;
+                case "key":
+                    var keyConnection = nestedObjectDeserializer(typeof(KeyConnection)) as KeyConnection;
+                    if (keyConnection == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type KeyConnection");
+                    }
+                    return;
+                case "oauth":
+                    var oauthConnection = nestedObjectDeserializer(typeof(OAuthConnection)) as OAuthConnection;
+                    if (oauthConnection == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type OAuthConnection");
+                    }
+                    return;
+                case "foundry":
+                    var foundryConnection = nestedObjectDeserializer(typeof(FoundryConnection)) as FoundryConnection;
+                    if (foundryConnection == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type FoundryConnection");
+                    }
+                    return;
+                default:
+                    return;
+
+            }
         }
     }
 

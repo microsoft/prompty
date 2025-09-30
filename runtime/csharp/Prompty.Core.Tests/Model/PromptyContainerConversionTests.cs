@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -25,9 +24,7 @@ public class PromptyContainerConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<PromptyContainer>(yamlData);
+        var instance = YamlSerializer.Deserialize<PromptyContainer>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("container", instance.Kind);

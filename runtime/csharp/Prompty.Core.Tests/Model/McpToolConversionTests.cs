@@ -1,6 +1,5 @@
 using Xunit;
 using System.Text.Json;
-using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
 namespace Prompty.Core;
@@ -24,9 +23,7 @@ public class McpToolConversionTests
         
         """;
 
-
-        var serializer = new DeserializerBuilder().Build();
-        var instance = serializer.Deserialize<McpTool>(yamlData);
+        var instance = YamlSerializer.Deserialize<McpTool>(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("mcp", instance.Kind);

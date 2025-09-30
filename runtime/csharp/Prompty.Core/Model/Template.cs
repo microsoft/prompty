@@ -45,21 +45,12 @@ public class Template : IYamlConvertible
     public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
-
-
-        if (parser.TryConsume<MappingStart>(out var _))
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
         {
-            var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-            if (node == null)
-            {
-                throw new YamlException("Expected a mapping node for type Template");
-            }
+            throw new YamlException("Expected a mapping node for type Template");
+        }
 
-        }
-        else
-        {
-            throw new YamlException($"Unexpected YAML token when parsing Template: {parser.Current?.GetType().Name ?? "null"}");
-        }
     }
 
     public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
