@@ -20,6 +20,22 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Prompty {
+        +string kind
+        +string id
+        +string version
+        +string name
+        +string description
+        +dictionary metadata
+        +Model model
+        +Input[] inputs
+        +Output[] outputs
+        +Tool[] tools
+        +Template template
+        +string instructions
+        +string additionalInstructions
+    }
+    Prompty <|-- PromptyContainer
     class PromptyContainer {
       
         +string kind

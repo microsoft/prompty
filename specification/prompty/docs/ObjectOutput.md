@@ -15,6 +15,13 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Output {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+    }
+    Output <|-- ObjectOutput
     class ObjectOutput {
       
         +string kind

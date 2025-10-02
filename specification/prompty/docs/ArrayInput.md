@@ -15,6 +15,16 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Input {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +boolean strict
+        +unknown default
+        +unknown sample
+    }
+    Input <|-- ArrayInput
     class ArrayInput {
       
         +string kind

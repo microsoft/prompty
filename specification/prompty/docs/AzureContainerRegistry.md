@@ -14,6 +14,11 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Registry {
+        +string kind
+        +Connection connection
+    }
+    Registry <|-- AzureContainerRegistry
     class AzureContainerRegistry {
       
         +string kind

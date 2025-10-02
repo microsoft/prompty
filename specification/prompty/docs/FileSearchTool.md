@@ -15,6 +15,13 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Tool {
+        +string name
+        +string kind
+        +string description
+        +Binding[] bindings
+    }
+    Tool <|-- FileSearchTool
     class FileSearchTool {
       
         +string kind

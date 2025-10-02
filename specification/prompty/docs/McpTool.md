@@ -14,6 +14,13 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Tool {
+        +string name
+        +string kind
+        +string description
+        +Binding[] bindings
+    }
+    Tool <|-- McpTool
     class McpTool {
       
         +string kind

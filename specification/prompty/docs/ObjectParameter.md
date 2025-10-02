@@ -14,6 +14,16 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Parameter {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +unknown default
+        +unknown value
+        +unknown[] enum
+    }
+    Parameter <|-- ObjectParameter
     class ObjectParameter {
       
         +string kind

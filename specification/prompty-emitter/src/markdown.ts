@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
+import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
 import * as nunjucks from "nunjucks";
 import * as YAML from 'yaml';
 import path from "path";
@@ -53,6 +53,10 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
 
   await emitMarkdownFile(context, "README", readmeContent, emitTarget["output-dir"]);
 
+  const findNodeByName = (name: TypeName): TypeNode | undefined => {
+    return nodes.find(n => n.typeName.name === name.name && n.typeName.namespace === name.namespace);
+  }
+
   for (const node of nodes) {
     const sample = node.properties.filter(p => p.samples.length > 0).map(p => p.samples[0].sample);
     let yml: string | undefined = undefined;
@@ -74,6 +78,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       renderChildTypes: renderChildTypes,
       compositionTypes: getCompositionTypes(node),
       alternateCtors: generateAlternates(node),
+      parent: node.base ? findNodeByName(node.base): undefined,
     });
 
     await emitMarkdownFile(context, node.typeName.name, markdown, emitTarget["output-dir"]);

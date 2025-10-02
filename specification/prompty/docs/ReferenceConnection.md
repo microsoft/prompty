@@ -14,6 +14,12 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Connection {
+        +string kind
+        +string authority
+        +string usageDescription
+    }
+    Connection <|-- ReferenceConnection
     class ReferenceConnection {
       
         +string kind

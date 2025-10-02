@@ -12,6 +12,12 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Connection {
+        +string kind
+        +string authority
+        +string usageDescription
+    }
+    Connection <|-- FoundryConnection
     class FoundryConnection {
       
         +string kind

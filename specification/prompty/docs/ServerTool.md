@@ -18,6 +18,13 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class Tool {
+        +string name
+        +string kind
+        +string description
+        +Binding[] bindings
+    }
+    Tool <|-- ServerTool
     class ServerTool {
       
         +string kind
