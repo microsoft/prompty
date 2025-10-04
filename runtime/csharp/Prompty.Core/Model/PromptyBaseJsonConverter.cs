@@ -34,8 +34,6 @@ public class PromptyBaseJsonConverter : JsonConverter<PromptyBase>
                 {
                     "prompt" => JsonSerializer.Deserialize<Prompty>(rootElement, options)
                         ?? throw new JsonException("Empty Prompty instances are not supported"),
-                    "manifest" => JsonSerializer.Deserialize<PromptyManifest>(rootElement, options)
-                        ?? throw new JsonException("Empty PromptyManifest instances are not supported"),
                     "container" => JsonSerializer.Deserialize<PromptyContainer>(rootElement, options)
                         ?? throw new JsonException("Empty PromptyContainer instances are not supported"),
                     "hosted" => JsonSerializer.Deserialize<PromptyHostedContainer>(rootElement, options)
@@ -47,10 +45,7 @@ public class PromptyBaseJsonConverter : JsonConverter<PromptyBase>
             }
             else
             {
-                // default to "prompt" if discriminator is missing or empty
-                instance = JsonSerializer.Deserialize<Prompty>(rootElement, options)
-                    ?? throw new JsonException("Empty instances are not supported");
-                instance.Kind = "prompt";
+                throw new JsonException("Missing PromptyBase discriminator property: 'kind'");
             }
             if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
             {

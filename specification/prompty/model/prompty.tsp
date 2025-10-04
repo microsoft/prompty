@@ -8,13 +8,7 @@ import "./template.tsp";
 import "./container.tsp";
 
 namespace Prompty.Core {
-  alias PromptyKind =
-    | "container"
-    | "manifest"
-    | "prompt"
-    | "hosted"
-    | "workflow"
-    | string;
+  alias PromptyKind = "container" | "prompt" | "hosted" | "workflow" | string;
 
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
@@ -199,38 +193,10 @@ namespace Prompty.Core {
    *
    * This allows for dynamic configuration of the agent based on the provided parameters.
    * (This notation is used elsewhere, but only the `param` scope is supported here)
-   *
    */
-  model PromptyManifest extends PromptyBase {
-    @doc("Type of agent, e.g., 'manifest'")
-    @sample(#{ kind: "manifest" })
-    kind: "manifest";
-
-    // template values
-    @doc("Template configuration for prompt rendering")
-    @sample(#{ template: #{ format: "mustache", parser: "prompty" } })
-    template?: Template;
-
-    @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")
-    @sample(#{
-      instructions: """
-        system:
-        You are an AI assistant who helps people find information.
-        As the assistant, you answer questions briefly, succinctly,
-        and in a personable manner using markdown and even add some 
-        personal flair with appropriate emojis.
-        
-        # Customer
-        You are helping {{firstName}} {{lastName}} to find answers to 
-        their questions. Use their name to address them in your responses.
-        user:
-        {{question}}
-        """,
-    })
-    instructions?: string = "";
-
-    @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")
-    additionalInstructions?: string = "";
+  model PromptyManifest {
+    @doc("The agent that this manifest is based on")
+    agent: PromptyBase;
 
     @doc("Additional models that are known to work with this prompt")
     @sample(#{

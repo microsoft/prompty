@@ -33,6 +33,12 @@ classDiagram
         +string registryName
     }
     Registry <|-- AzureContainerRegistry
+    class Connection {
+        +string kind
+        +string authority
+        +string usageDescription
+    }
+    Registry *-- Connection
 ```
 
 ## Yaml Example
@@ -51,7 +57,7 @@ connection:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string | The kind of container registry  |
-| connection | [Connection](Connection.md) | The connection configuration for accessing the container registry  |
+| connection | [Connection](Connection.md) | The connection configuration for accessing the container registry (Related Types: [GenericConnection](GenericConnection.md), [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
 
 ## Child Types
 
@@ -59,3 +65,9 @@ The following types extend `Registry`:
 
 - [GenericRegistry](GenericRegistry.md)
 - [AzureContainerRegistry](AzureContainerRegistry.md)
+
+## Composed Types
+
+The following types are composed within `Registry`:
+
+- [Connection](Connection.md)

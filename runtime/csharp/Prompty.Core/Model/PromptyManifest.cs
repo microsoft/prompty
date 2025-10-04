@@ -26,7 +26,7 @@ namespace Prompty.Core;
 /// (This notation is used elsewhere, but only the `param` scope is supported here)
 /// </summary>
 [JsonConverter(typeof(PromptyManifestJsonConverter))]
-public class PromptyManifest : PromptyBase, IYamlConvertible
+public class PromptyManifest : IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="PromptyManifest"/>.
@@ -38,24 +38,9 @@ public class PromptyManifest : PromptyBase, IYamlConvertible
 #pragma warning restore CS8618
 
     /// <summary>
-    /// Type of agent, e.g., 'manifest'
+    /// The agent that this manifest is based on
     /// </summary>
-    public override string Kind { get; set; } = "manifest";
-
-    /// <summary>
-    /// Template configuration for prompt rendering
-    /// </summary>
-    public Template? Template { get; set; }
-
-    /// <summary>
-    /// Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)
-    /// </summary>
-    public string? Instructions { get; set; }
-
-    /// <summary>
-    /// Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)
-    /// </summary>
-    public string? AdditionalInstructions { get; set; }
+    public PromptyBase Agent { get; set; }
 
     /// <summary>
     /// Additional models that are known to work with this prompt
@@ -68,7 +53,7 @@ public class PromptyManifest : PromptyBase, IYamlConvertible
     public IList<Parameter> Parameters { get; set; } = [];
 
 
-    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
+    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
         var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
@@ -79,33 +64,12 @@ public class PromptyManifest : PromptyBase, IYamlConvertible
 
     }
 
-    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
+    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
         emitter.Emit(new MappingStart());
 
-        emitter.Emit(new Scalar("kind"));
-        nestedObjectSerializer(Kind);
-
-        if (Template != null)
-        {
-            emitter.Emit(new Scalar("template"));
-            nestedObjectSerializer(Template);
-        }
-
-
-        if (Instructions != null)
-        {
-            emitter.Emit(new Scalar("instructions"));
-            nestedObjectSerializer(Instructions);
-        }
-
-
-        if (AdditionalInstructions != null)
-        {
-            emitter.Emit(new Scalar("additionalInstructions"));
-            nestedObjectSerializer(AdditionalInstructions);
-        }
-
+        emitter.Emit(new Scalar("agent"));
+        nestedObjectSerializer(Agent);
 
         emitter.Emit(new Scalar("models"));
         nestedObjectSerializer(Models);

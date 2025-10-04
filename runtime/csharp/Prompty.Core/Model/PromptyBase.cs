@@ -90,13 +90,6 @@ public abstract class PromptyBase : IYamlConvertible
                         throw new YamlException("Failed to deserialize polymorphic type Prompty");
                     }
                     return;
-                case "manifest":
-                    var manifestPromptyBase = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
-                    if (manifestPromptyBase == null)
-                    {
-                        throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
-                    }
-                    return;
                 case "container":
                     var containerPromptyBase = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
                     if (containerPromptyBase == null)

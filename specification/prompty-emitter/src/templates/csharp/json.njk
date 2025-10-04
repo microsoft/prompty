@@ -119,14 +119,7 @@ public class {{ node.typeName.name }}JsonConverter: JsonConverter<{{ node.typeNa
             }
             else
             {
-                {%- if node.isRoot %}
-                // default to "prompt" if discriminator is missing or empty
-                instance = JsonSerializer.Deserialize<Prompty>(rootElement, options) 
-                    ?? throw new JsonException("Empty instances are not supported");
-                instance.Kind = "prompt";
-                {%- else %}
                 throw new JsonException("Missing {{ node.typeName.name }} discriminator property: '{{ node.discriminator }}'");
-                {%- endif %}
             }
 
             {%- else %}

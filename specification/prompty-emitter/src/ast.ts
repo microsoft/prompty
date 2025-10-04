@@ -63,7 +63,6 @@ export class TypeNode {
     name: ""
   };
   public description: string;
-  public isRoot: boolean = false;
   public base: TypeName | null = null;
   public childTypes: TypeNode[] = [];
   public alternates: Alternative[] = [];

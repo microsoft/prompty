@@ -13,6 +13,17 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
+    class ModelOptions {
+      
+        +string kind
+    }
+    class Model {
+      
+        +string id
+        +string publisher
+        +Connection connection
+        +ModelOptions options
+    }
     class Input {
       
         +string name
@@ -61,6 +72,26 @@ classDiagram
         +string kind
         +string description
         +Binding[] bindings
+    }
+    class Parameter {
+      
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +unknown default
+        +unknown value
+        +unknown[] enum
+    }
+    class ArrayParameter {
+      
+        +string kind
+        +Parameter items
+    }
+    class ObjectParameter {
+      
+        +string kind
+        +Parameter[] properties
     }
     class FunctionTool {
       
@@ -192,46 +223,6 @@ classDiagram
         +string name
         +string project
     }
-    class ModelOptions {
-      
-        +string kind
-    }
-    class Model {
-      
-        +string id
-        +string publisher
-        +Connection connection
-        +ModelOptions options
-    }
-    class Parameter {
-      
-        +string name
-        +string kind
-        +string description
-        +boolean required
-        +unknown default
-        +unknown value
-        +unknown[] enum
-    }
-    class ArrayParameter {
-      
-        +string kind
-        +Parameter items
-    }
-    class ObjectParameter {
-      
-        +string kind
-        +Parameter[] properties
-    }
-    class PromptyManifest {
-      
-        +string kind
-        +Template template
-        +string instructions
-        +string additionalInstructions
-        +Model[] models
-        +Parameter[] parameters
-    }
     class Registry {
       <<abstract>>
         +string kind
@@ -294,6 +285,12 @@ classDiagram
         +string kind
         +dictionary trigger
     }
+    class PromptyManifest {
+      
+        +PromptyBase agent
+        +Model[] models
+        +Parameter[] parameters
+    }
     Input <|-- ArrayInput
     Input <|-- ObjectInput
     Output <|-- ArrayOutput
@@ -306,8 +303,9 @@ classDiagram
     Tool <|-- ModelTool
     Tool <|-- OpenApiTool
     Tool <|-- CodeInterpreterTool
+    Parameter <|-- ObjectParameter
+    Parameter <|-- ArrayParameter
     PromptyBase <|-- Prompty
-    PromptyBase <|-- PromptyManifest
     PromptyBase <|-- PromptyContainer
     PromptyBase <|-- PromptyHostedContainer
     PromptyBase <|-- PromptyWorkflow
@@ -316,15 +314,17 @@ classDiagram
     Connection <|-- KeyConnection
     Connection <|-- OAuthConnection
     Connection <|-- FoundryConnection
-    Parameter <|-- ObjectParameter
-    Parameter <|-- ArrayParameter
     Registry <|-- GenericRegistry
     Registry <|-- AzureContainerRegistry
+    Model *-- Connection
+    Model *-- ModelOptions
     ObjectInput *-- Input
     ArrayInput *-- Input
     ObjectOutput *-- Output
     ArrayOutput *-- Output
     Tool *-- Binding
+    ArrayParameter *-- Parameter
+    ObjectParameter *-- Parameter
     FunctionTool *-- Parameter
     ServerTool *-- Connection
     BingSearchTool *-- Connection
@@ -340,13 +340,6 @@ classDiagram
     Template *-- Format
     Template *-- Parser
     Prompty *-- Template
-    Model *-- Connection
-    Model *-- ModelOptions
-    ArrayParameter *-- Parameter
-    ObjectParameter *-- Parameter
-    PromptyManifest *-- Template
-    PromptyManifest *-- Model
-    PromptyManifest *-- Parameter
     Registry *-- Connection
     ContainerDefinition *-- Registry
     ContainerDefinition *-- Scale
@@ -355,4 +348,7 @@ classDiagram
     HostedContainerDefinition *-- Scale
     PromptyHostedContainer *-- HostedContainerDefinition
     PromptyHostedContainer *-- EnvironmentVariable
+    PromptyManifest *-- PromptyBase
+    PromptyManifest *-- Model
+    PromptyManifest *-- Parameter
 ```

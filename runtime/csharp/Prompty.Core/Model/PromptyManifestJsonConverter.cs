@@ -26,24 +26,9 @@ public class PromptyManifestJsonConverter : JsonConverter<PromptyManifest>
 
             // create new instance
             var instance = new PromptyManifest();
-            if (rootElement.TryGetProperty("kind", out JsonElement kindValue))
+            if (rootElement.TryGetProperty("agent", out JsonElement agentValue))
             {
-                instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
-            }
-
-            if (rootElement.TryGetProperty("template", out JsonElement templateValue))
-            {
-                instance.Template = JsonSerializer.Deserialize<Template?>(templateValue.GetRawText(), options);
-            }
-
-            if (rootElement.TryGetProperty("instructions", out JsonElement instructionsValue))
-            {
-                instance.Instructions = instructionsValue.GetString();
-            }
-
-            if (rootElement.TryGetProperty("additionalInstructions", out JsonElement additionalInstructionsValue))
-            {
-                instance.AdditionalInstructions = additionalInstructionsValue.GetString();
+                instance.Agent = JsonSerializer.Deserialize<PromptyBase>(agentValue.GetRawText(), options) ?? throw new ArgumentException("Properties must contain a property named: agent");
             }
 
             if (rootElement.TryGetProperty("models", out JsonElement modelsValue))
@@ -98,26 +83,8 @@ public class PromptyManifestJsonConverter : JsonConverter<PromptyManifest>
     public override void Write(Utf8JsonWriter writer, PromptyManifest value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        writer.WritePropertyName("kind");
-        JsonSerializer.Serialize(writer, value.Kind, options);
-
-        if (value.Template != null)
-        {
-            writer.WritePropertyName("template");
-            JsonSerializer.Serialize(writer, value.Template, options);
-        }
-
-        if (value.Instructions != null)
-        {
-            writer.WritePropertyName("instructions");
-            JsonSerializer.Serialize(writer, value.Instructions, options);
-        }
-
-        if (value.AdditionalInstructions != null)
-        {
-            writer.WritePropertyName("additionalInstructions");
-            JsonSerializer.Serialize(writer, value.AdditionalInstructions, options);
-        }
+        writer.WritePropertyName("agent");
+        JsonSerializer.Serialize(writer, value.Agent, options);
 
         writer.WritePropertyName("models");
         JsonSerializer.Serialize(writer, value.Models, options);

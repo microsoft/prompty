@@ -9,7 +9,7 @@ options:
     file-type: yaml
   "@prompty/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
-    root-object: "Prompty.Core.PromptyBase"
+    root-object: "Prompty.Core.PromptyManifest"
     emit-targets:
       - type: markdown
         output-dir: "../prompty/docs"

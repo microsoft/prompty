@@ -31,7 +31,6 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   }
 
   const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "Prompty", options["root-alias"] || "Prompty");
-  model.isRoot = true;
   if (options["root-alias"]) {
     model.typeName = {
       namespace: model.typeName.namespace,

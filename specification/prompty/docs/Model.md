@@ -23,12 +23,6 @@ classDiagram
         +Connection connection
         +ModelOptions options
     }
-    class Connection {
-        +string kind
-        +string authority
-        +string usageDescription
-    }
-    Model *-- Connection
     class ModelOptions {
         +string kind
     }
@@ -57,14 +51,13 @@ options:
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model - can be used as the single property shorthand  |
 | publisher | string | The publisher of the model (e.g., &#39;openai&#39;, &#39;azure&#39;, &#39;anthropic&#39;)  |
-| connection | [Connection](Connection.md) | The connection configuration for the model (Related Types: [GenericConnection](GenericConnection.md), [ReferenceConnection](ReferenceConnection.md), [KeyConnection](KeyConnection.md), [OAuthConnection](OAuthConnection.md), [FoundryConnection](FoundryConnection.md)) |
+| connection | [Connection](Connection.md) | The connection configuration for the model  |
 | options | [ModelOptions](ModelOptions.md) | Additional options for the model  |
 
 ## Composed Types
 
 The following types are composed within `Model`:
 
-- [Connection](Connection.md)
 - [ModelOptions](ModelOptions.md)
 
 ## Alternate Constructions

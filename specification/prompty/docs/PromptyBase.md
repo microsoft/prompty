@@ -35,15 +35,6 @@ classDiagram
         +string additionalInstructions
     }
     PromptyBase <|-- Prompty
-    class PromptyManifest {
-        +string kind
-        +Template template
-        +string instructions
-        +string additionalInstructions
-        +Model[] models
-        +Parameter[] parameters
-    }
-    PromptyBase <|-- PromptyManifest
     class PromptyContainer {
         +string kind
         +string protocol
@@ -63,6 +54,13 @@ classDiagram
         +dictionary trigger
     }
     PromptyBase <|-- PromptyWorkflow
+    class Model {
+        +string id
+        +string publisher
+        +Connection connection
+        +ModelOptions options
+    }
+    PromptyBase *-- Model
     class Input {
         +string name
         +string kind
@@ -154,7 +152,6 @@ tools:
 The following types extend `PromptyBase`:
 
 - [Prompty](Prompty.md)
-- [PromptyManifest](PromptyManifest.md)
 - [PromptyContainer](PromptyContainer.md)
 - [PromptyHostedContainer](PromptyHostedContainer.md)
 - [PromptyWorkflow](PromptyWorkflow.md)
@@ -163,6 +160,7 @@ The following types extend `PromptyBase`:
 
 The following types are composed within `PromptyBase`:
 
+- [Model](Model.md)
 - [Input](Input.md)
 - [Output](Output.md)
 - [Tool](Tool.md)
