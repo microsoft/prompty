@@ -8,15 +8,19 @@ import "./template.tsp";
 import "./container.tsp";
 
 namespace Prompty.Core {
-  alias PromptyKind = "container" | "manifest" | "prompt" | "hosted" | string;
+  alias PromptyKind =
+    | "container"
+    | "manifest"
+    | "prompt"
+    | "hosted"
+    | "workflow"
+    | string;
+
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
    * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
    * The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
    * available tools, and template configurations for prompt rendering.
-   *
-   * These can be written in a markdown format or in a pure YAML format.
-   *
    */
   @abstract
   @discriminator("kind")
@@ -305,5 +309,27 @@ namespace Prompty.Core {
     @doc("Environment variables to set in the hosted agent container.")
     @sample(#{ environmentVariables: #{ MY_ENV_VAR: "my-value" } })
     environmentVariables?: EnvironmentVariables = #[];
+  }
+
+  /**
+   * A workflow agent that can orchestrate multiple steps and actions.
+   * This agent type is designed to handle complex workflows that may involve
+   * multiple tools, models, and decision points.
+   *
+   * The workflow agent can be configured with a series of steps that define
+   * the flow of execution, including conditional logic and parallel processing.
+   * This allows for the creation of sophisticated AI-driven processes that can
+   * adapt to various scenarios and requirements.
+   *
+   * Note: The detailed structure of the workflow steps and actions is not defined here
+   * and would need to be implemented based on specific use cases and requirements.
+   */
+  model PromptyWorkflow extends PromptyBase {
+    @doc("Type of agent, e.g., 'workflow'")
+    @sample(#{ kind: "workflow" })
+    kind: "workflow";
+
+    @doc("The steps that make up the workflow")
+    trigger?: Record<unknown>;
   }
 }

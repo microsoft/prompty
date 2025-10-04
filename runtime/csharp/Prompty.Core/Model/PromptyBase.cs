@@ -14,8 +14,6 @@ namespace Prompty.Core;
 /// It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
 /// The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
 /// available tools, and template configurations for prompt rendering.
-/// 
-/// These can be written in a markdown format or in a pure YAML format.
 /// </summary>
 [JsonConverter(typeof(PromptyBaseJsonConverter))]
 public abstract class PromptyBase : IYamlConvertible
@@ -111,6 +109,13 @@ public abstract class PromptyBase : IYamlConvertible
                     if (hostedPromptyBase == null)
                     {
                         throw new YamlException("Failed to deserialize polymorphic type PromptyHostedContainer");
+                    }
+                    return;
+                case "workflow":
+                    var workflowPromptyBase = nestedObjectDeserializer(typeof(PromptyWorkflow)) as PromptyWorkflow;
+                    if (workflowPromptyBase == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type PromptyWorkflow");
                     }
                     return;
                 default:

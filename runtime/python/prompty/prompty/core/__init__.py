@@ -24,7 +24,14 @@ from ._ModelOptions import ModelOptions
 from ._Output import ArrayOutput, ObjectOutput, Output
 from ._Parameter import ArrayParameter, ObjectParameter, Parameter
 from ._Parser import Parser
-from ._PromptyBase import Prompty, PromptyBase, PromptyContainer, PromptyHostedContainer, PromptyManifest
+from ._PromptyBase import (
+    Prompty,
+    PromptyBase,
+    PromptyContainer,
+    PromptyHostedContainer,
+    PromptyManifest,
+    PromptyWorkflow,
+)
 from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
 from ._Scale import Scale
 from ._Template import Template
@@ -84,4 +91,5 @@ __all__ = [
     "PromptyContainer",
     "HostedContainerDefinition",
     "PromptyHostedContainer",
+    "PromptyWorkflow",
 ]

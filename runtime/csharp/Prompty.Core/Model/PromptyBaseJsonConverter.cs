@@ -40,6 +40,8 @@ public class PromptyBaseJsonConverter : JsonConverter<PromptyBase>
                         ?? throw new JsonException("Empty PromptyContainer instances are not supported"),
                     "hosted" => JsonSerializer.Deserialize<PromptyHostedContainer>(rootElement, options)
                         ?? throw new JsonException("Empty PromptyHostedContainer instances are not supported"),
+                    "workflow" => JsonSerializer.Deserialize<PromptyWorkflow>(rootElement, options)
+                        ?? throw new JsonException("Empty PromptyWorkflow instances are not supported"),
                     _ => throw new JsonException($"Unknown PromptyBase discriminator value: {discriminator}"),
                 };
             }

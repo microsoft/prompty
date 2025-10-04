@@ -20,7 +20,7 @@ from ._Tool import Tool
 
 @dataclass
 class PromptyBase(ABC):
-    """The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.It provides a way to create reusable and composable AI agents that can be executed with specific configurations.The specification includes metadata about the agent, model configuration, input parameters, expected outputs,available tools, and template configurations for prompt rendering.These can be written in a markdown format or in a pure YAML format.
+    """The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.It provides a way to create reusable and composable AI agents that can be executed with specific configurations.The specification includes metadata about the agent, model configuration, input parameters, expected outputs,available tools, and template configurations for prompt rendering.
     Attributes
     ----------
     kind : str
@@ -114,6 +114,8 @@ class PromptyBase(ABC):
                 return PromptyContainer.load(data)
             elif discriminator_value == "hosted":
                 return PromptyHostedContainer.load(data)
+            elif discriminator_value == "workflow":
+                return PromptyWorkflow.load(data)
             else:
                 raise ValueError(f"Unknown PromptyBase discriminator value: {discriminator_value}")
         else:
@@ -323,3 +325,33 @@ class PromptyHostedContainer(PromptyBase):
             data = [{"name": k, **v} for k, v in data.items()]
 
         return [EnvironmentVariable.load(item) for item in data]
+
+
+@dataclass
+class PromptyWorkflow(PromptyBase):
+    """A workflow agent that can orchestrate multiple steps and actions.This agent type is designed to handle complex workflows that may involvemultiple tools, models, and decision points.The workflow agent can be configured with a series of steps that definethe flow of execution, including conditional logic and parallel processing.This allows for the creation of sophisticated AI-driven processes that canadapt to various scenarios and requirements.Note: The detailed structure of the workflow steps and actions is not defined hereand would need to be implemented based on specific use cases and requirements.
+    Attributes
+    ----------
+    kind : str
+        Type of agent, e.g., 'workflow'
+    trigger : Optional[dict[str, Any]]
+        The steps that make up the workflow
+    """
+
+    kind: str = field(default="workflow")
+    trigger: Optional[dict[str, Any]] = field(default_factory=dict)
+
+    @staticmethod
+    def load(data: Any) -> "PromptyWorkflow":
+        """Load a PromptyWorkflow instance."""
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for PromptyWorkflow: {data}")
+
+        # create new instance
+        instance = PromptyWorkflow()
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "trigger" in data:
+            instance.trigger = data["trigger"]
+        return instance

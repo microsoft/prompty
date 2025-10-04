@@ -289,6 +289,11 @@ classDiagram
         +HostedContainerDefinition container
         +EnvironmentVariable[] environmentVariables
     }
+    class PromptyWorkflow {
+      
+        +string kind
+        +dictionary trigger
+    }
     Input <|-- ArrayInput
     Input <|-- ObjectInput
     Output <|-- ArrayOutput
@@ -305,6 +310,7 @@ classDiagram
     PromptyBase <|-- PromptyManifest
     PromptyBase <|-- PromptyContainer
     PromptyBase <|-- PromptyHostedContainer
+    PromptyBase <|-- PromptyWorkflow
     Connection <|-- GenericConnection
     Connection <|-- ReferenceConnection
     Connection <|-- KeyConnection

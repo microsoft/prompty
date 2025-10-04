@@ -5,8 +5,6 @@ It provides a way to create reusable and composable AI agents that can be execut
 The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
 available tools, and template configurations for prompt rendering.
 
-These can be written in a markdown format or in a pure YAML format.
-
 ## Class Diagram
 
 ```mermaid
@@ -60,6 +58,11 @@ classDiagram
         +EnvironmentVariable[] environmentVariables
     }
     PromptyBase <|-- PromptyHostedContainer
+    class PromptyWorkflow {
+        +string kind
+        +dictionary trigger
+    }
+    PromptyBase <|-- PromptyWorkflow
     class Input {
         +string name
         +string kind
@@ -154,6 +157,7 @@ The following types extend `PromptyBase`:
 - [PromptyManifest](PromptyManifest.md)
 - [PromptyContainer](PromptyContainer.md)
 - [PromptyHostedContainer](PromptyHostedContainer.md)
+- [PromptyWorkflow](PromptyWorkflow.md)
 
 ## Composed Types
 
