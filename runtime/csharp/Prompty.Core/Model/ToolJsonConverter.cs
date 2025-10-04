@@ -44,6 +44,8 @@ public class ToolJsonConverter : JsonConverter<Tool>
                         ?? throw new JsonException("Empty ModelTool instances are not supported"),
                     "openapi" => JsonSerializer.Deserialize<OpenApiTool>(rootElement, options)
                         ?? throw new JsonException("Empty OpenApiTool instances are not supported"),
+                    "code_interpreter" => JsonSerializer.Deserialize<CodeInterpreterTool>(rootElement, options)
+                        ?? throw new JsonException("Empty CodeInterpreterTool instances are not supported"),
                     _ => new ServerTool(),
                 };
             }

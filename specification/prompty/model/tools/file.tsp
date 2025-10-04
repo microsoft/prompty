@@ -13,9 +13,7 @@ namespace Prompty.Core {
     kind: "file_search";
 
     @doc("The connection configuration for the file search tool")
-    @sample(#{
-      connection: #{ kind: "provider-connection" },
-    })
+    @sample(#{ connection: #{ kind: "provider-connection" } })
     connection: Connection;
 
     @doc("The maximum number of search results to return.")
@@ -29,5 +27,9 @@ namespace Prompty.Core {
     @doc("Ranker search threshold.")
     @sample(#{ scoreThreshold: 0.5 })
     scoreThreshold: float32;
+
+    @doc("The IDs of the vector stores to search within.")
+    @sample(#{ vectorStoreIds: #["vectorStore1", "vectorStore2"] })
+    vectorStoreIds: string[];
   }
 }

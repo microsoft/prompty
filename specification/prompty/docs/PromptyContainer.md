@@ -8,6 +8,9 @@ making them suitable for deployment in various cloud or on-premises scenarios.
 The containerized agent can communicate using specified protocols and can be scaled
 based on the provided configuration.
 
+This kind of agent represents the users intent to bring their own container specific
+app hosting platform that they manage.
+
 ## Class Diagram
 
 ```mermaid
@@ -20,10 +23,8 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class Prompty {
+    class PromptyBase {
         +string kind
-        +string id
-        +string version
         +string name
         +string description
         +dictionary metadata
@@ -31,11 +32,8 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
-        +Template template
-        +string instructions
-        +string additionalInstructions
     }
-    Prompty <|-- PromptyContainer
+    PromptyBase <|-- PromptyContainer
     class PromptyContainer {
       
         +string kind

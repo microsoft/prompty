@@ -10,15 +10,12 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
-/// It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
-/// The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
-/// available tools, and template configurations for prompt rendering.
-/// 
-/// These can be written in a markdown format or in a pure YAML format.
+/// Prompt based agent definition. Used to create agents that can be executed directly.
+/// These agents can leverage tools, input parameters, and templates to generate responses.
+/// They are designed to be straightforward and easy to use for various applications.
 /// </summary>
 [JsonConverter(typeof(PromptyJsonConverter))]
-public class Prompty : IYamlConvertible
+public class Prompty : PromptyBase, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="Prompty"/>.
@@ -30,54 +27,9 @@ public class Prompty : IYamlConvertible
 #pragma warning restore CS8618
 
     /// <summary>
-    /// Kind represented by the document
+    /// Type of agent, e.g., 'prompt'
     /// </summary>
-    public virtual string Kind { get; set; } = "prompt";
-
-    /// <summary>
-    /// Unique identifier for the document
-    /// </summary>
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// Document version
-    /// </summary>
-    public string? Version { get; set; }
-
-    /// <summary>
-    /// Human-readable name of the agent
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Description of the agent's capabilities and purpose
-    /// </summary>
-    public string? Description { get; set; }
-
-    /// <summary>
-    /// Additional metadata including authors, tags, and other arbitrary properties
-    /// </summary>
-    public IDictionary<string, object>? Metadata { get; set; }
-
-    /// <summary>
-    /// Primary AI model configuration for the agent
-    /// </summary>
-    public Model Model { get; set; }
-
-    /// <summary>
-    /// Input parameters that participate in template rendering
-    /// </summary>
-    public IList<Input>? Inputs { get; set; }
-
-    /// <summary>
-    /// Expected output format and structure from the agent
-    /// </summary>
-    public IList<Output>? Outputs { get; set; }
-
-    /// <summary>
-    /// Tools available to the agent for extended functionality
-    /// </summary>
-    public IList<Tool>? Tools { get; set; }
+    public override string Kind { get; set; } = "prompt";
 
     /// <summary>
     /// Template configuration for prompt rendering
@@ -95,7 +47,7 @@ public class Prompty : IYamlConvertible
     public string? AdditionalInstructions { get; set; }
 
 
-    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
 
         var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
@@ -104,94 +56,14 @@ public class Prompty : IYamlConvertible
             throw new YamlException("Expected a mapping node for type Prompty");
         }
 
-        // handle polymorphic types
-        if (node.Children.TryGetValue(new YamlScalarNode("kind"), out var discriminatorNode))
-        {
-            var discriminatorValue = (discriminatorNode as YamlScalarNode)?.Value;
-            switch (discriminatorValue)
-            {
-                case "manifest":
-                    var manifestPrompty = nestedObjectDeserializer(typeof(PromptyManifest)) as PromptyManifest;
-                    if (manifestPrompty == null)
-                    {
-                        throw new YamlException("Failed to deserialize polymorphic type PromptyManifest");
-                    }
-                    return;
-                case "container":
-                    var containerPrompty = nestedObjectDeserializer(typeof(PromptyContainer)) as PromptyContainer;
-                    if (containerPrompty == null)
-                    {
-                        throw new YamlException("Failed to deserialize polymorphic type PromptyContainer");
-                    }
-                    return;
-                default:
-                    return;
-
-            }
-        }
     }
 
-    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
     {
         emitter.Emit(new MappingStart());
 
         emitter.Emit(new Scalar("kind"));
         nestedObjectSerializer(Kind);
-
-        if (Id != null)
-        {
-            emitter.Emit(new Scalar("id"));
-            nestedObjectSerializer(Id);
-        }
-
-
-        if (Version != null)
-        {
-            emitter.Emit(new Scalar("version"));
-            nestedObjectSerializer(Version);
-        }
-
-
-        emitter.Emit(new Scalar("name"));
-        nestedObjectSerializer(Name);
-
-        if (Description != null)
-        {
-            emitter.Emit(new Scalar("description"));
-            nestedObjectSerializer(Description);
-        }
-
-
-        if (Metadata != null)
-        {
-            emitter.Emit(new Scalar("metadata"));
-            nestedObjectSerializer(Metadata);
-        }
-
-
-        emitter.Emit(new Scalar("model"));
-        nestedObjectSerializer(Model);
-
-        if (Inputs != null)
-        {
-            emitter.Emit(new Scalar("inputs"));
-            nestedObjectSerializer(Inputs);
-        }
-
-
-        if (Outputs != null)
-        {
-            emitter.Emit(new Scalar("outputs"));
-            nestedObjectSerializer(Outputs);
-        }
-
-
-        if (Tools != null)
-        {
-            emitter.Emit(new Scalar("tools"));
-            nestedObjectSerializer(Tools);
-        }
-
 
         if (Template != null)
         {

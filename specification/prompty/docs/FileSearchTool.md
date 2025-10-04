@@ -29,6 +29,7 @@ classDiagram
         +int32 maxNumResults
         +string ranker
         +float32 scoreThreshold
+        +string[] vectorStoreIds
     }
 ```
 
@@ -41,6 +42,9 @@ connection:
 maxNumResults: 10
 ranker: default
 scoreThreshold: 0.5
+vectorStoreIds:
+  - vectorStore1
+  - vectorStore2
 
 ```
 
@@ -53,3 +57,4 @@ scoreThreshold: 0.5
 | maxNumResults | int32 | The maximum number of search results to return.  |
 | ranker | string | File search ranker.  |
 | scoreThreshold | float32 | Ranker search threshold.  |
+| vectorStoreIds | string[] | The IDs of the vector stores to search within.  |

@@ -18,6 +18,9 @@ public class FileSearchToolConversionTests
         maxNumResults: 10
         ranker: default
         scoreThreshold: 0.5
+        vectorStoreIds:
+          - vectorStore1
+          - vectorStore2
         
         """;
 
@@ -41,7 +44,11 @@ public class FileSearchToolConversionTests
           },
           "maxNumResults": 10,
           "ranker": "default",
-          "scoreThreshold": 0.5
+          "scoreThreshold": 0.5,
+          "vectorStoreIds": [
+            "vectorStore1",
+            "vectorStore2"
+          ]
         }
         """;
 

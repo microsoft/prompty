@@ -27,10 +27,8 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class Prompty {
+    class PromptyBase {
         +string kind
-        +string id
-        +string version
         +string name
         +string description
         +dictionary metadata
@@ -38,14 +36,14 @@ classDiagram
         +Input[] inputs
         +Output[] outputs
         +Tool[] tools
-        +Template template
-        +string instructions
-        +string additionalInstructions
     }
-    Prompty <|-- PromptyManifest
+    PromptyBase <|-- PromptyManifest
     class PromptyManifest {
       
         +string kind
+        +Template template
+        +string instructions
+        +string additionalInstructions
         +Model[] models
         +Parameter[] parameters
     }
@@ -68,10 +66,56 @@ classDiagram
     PromptyManifest *-- Parameter
 ```
 
+## Markdown Example
+
+```markdown
+---
+kind: manifest
+template:
+  format: mustache
+  parser: prompty
+models:
+  - id: gpt-35-turbo
+  - id: gpt-4o
+  - custom-model-id
+parameters:
+  param1:
+    kind: string
+  param2:
+    kind: number
+---
+system:
+You are an AI assistant who helps people find information.
+As the assistant, you answer questions briefly, succinctly,
+and in a personable manner using markdown and even add some 
+personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to 
+their questions. Use their name to address them in your responses.
+user:
+{{question}}
+```
+
 ## Yaml Example
 
 ```yaml
 kind: manifest
+template:
+  format: mustache
+  parser: prompty
+instructions: |-
+  system:
+  You are an AI assistant who helps people find information.
+  As the assistant, you answer questions briefly, succinctly,
+  and in a personable manner using markdown and even add some 
+  personal flair with appropriate emojis.
+
+  # Customer
+  You are helping {{firstName}} {{lastName}} to find answers to 
+  their questions. Use their name to address them in your responses.
+  user:
+  {{question}}
 models:
   - id: gpt-35-turbo
   - id: gpt-4o
@@ -89,6 +133,9 @@ parameters:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string | Type of agent, e.g., &#39;manifest&#39;  |
+| template | [Template](Template.md) | Template configuration for prompt rendering  |
+| instructions | string | Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)  |
+| additionalInstructions | string | Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)  |
 | models | [Model[]](Model.md) | Additional models that are known to work with this prompt  |
 | parameters | [Parameter[]](Parameter.md) | Parameters for configuring the agent&#39;s behavior and execution (Related Types: [ObjectParameter](ObjectParameter.md), [ArrayParameter](ArrayParameter.md)) |
 

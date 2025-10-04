@@ -31,6 +31,21 @@ public class PromptyManifestJsonConverter : JsonConverter<PromptyManifest>
                 instance.Kind = kindValue.GetString() ?? throw new ArgumentException("Properties must contain a property named: kind");
             }
 
+            if (rootElement.TryGetProperty("template", out JsonElement templateValue))
+            {
+                instance.Template = JsonSerializer.Deserialize<Template?>(templateValue.GetRawText(), options);
+            }
+
+            if (rootElement.TryGetProperty("instructions", out JsonElement instructionsValue))
+            {
+                instance.Instructions = instructionsValue.GetString();
+            }
+
+            if (rootElement.TryGetProperty("additionalInstructions", out JsonElement additionalInstructionsValue))
+            {
+                instance.AdditionalInstructions = additionalInstructionsValue.GetString();
+            }
+
             if (rootElement.TryGetProperty("models", out JsonElement modelsValue))
             {
                 if (modelsValue.ValueKind == JsonValueKind.Array)
@@ -85,6 +100,24 @@ public class PromptyManifestJsonConverter : JsonConverter<PromptyManifest>
         writer.WriteStartObject();
         writer.WritePropertyName("kind");
         JsonSerializer.Serialize(writer, value.Kind, options);
+
+        if (value.Template != null)
+        {
+            writer.WritePropertyName("template");
+            JsonSerializer.Serialize(writer, value.Template, options);
+        }
+
+        if (value.Instructions != null)
+        {
+            writer.WritePropertyName("instructions");
+            JsonSerializer.Serialize(writer, value.Instructions, options);
+        }
+
+        if (value.AdditionalInstructions != null)
+        {
+            writer.WritePropertyName("additionalInstructions");
+            JsonSerializer.Serialize(writer, value.AdditionalInstructions, options);
+        }
 
         writer.WritePropertyName("models");
         JsonSerializer.Serialize(writer, value.Models, options);

@@ -14,7 +14,11 @@ def test_load_json_filesearchtool():
       },
       "maxNumResults": 10,
       "ranker": "default",
-      "scoreThreshold": 0.5
+      "scoreThreshold": 0.5,
+      "vectorStoreIds": [
+        "vectorStore1",
+        "vectorStore2"
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -34,6 +38,9 @@ def test_load_yaml_filesearchtool():
     maxNumResults: 10
     ranker: default
     scoreThreshold: 0.5
+    vectorStoreIds:
+      - vectorStore1
+      - vectorStore2
     
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)

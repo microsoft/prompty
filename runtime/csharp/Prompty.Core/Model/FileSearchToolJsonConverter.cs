@@ -51,6 +51,11 @@ public class FileSearchToolJsonConverter : JsonConverter<FileSearchTool>
                 instance.ScoreThreshold = scoreThresholdValue.GetSingle();
             }
 
+            if (rootElement.TryGetProperty("vectorStoreIds", out JsonElement vectorStoreIdsValue))
+            {
+                instance.VectorStoreIds = [.. vectorStoreIdsValue.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException("Empty array elements for vectorStoreIds are not supported"))];
+            }
+
             return instance;
         }
     }
@@ -75,6 +80,9 @@ public class FileSearchToolJsonConverter : JsonConverter<FileSearchTool>
 
         writer.WritePropertyName("scoreThreshold");
         JsonSerializer.Serialize(writer, value.ScoreThreshold, options);
+
+        writer.WritePropertyName("vectorStoreIds");
+        JsonSerializer.Serialize(writer, value.VectorStoreIds, options);
 
         writer.WriteEndObject();
     }

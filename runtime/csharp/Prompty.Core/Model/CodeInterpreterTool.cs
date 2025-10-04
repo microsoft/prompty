@@ -1,0 +1,60 @@
+// Copyright (c) Microsoft. All rights reserved.
+using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.RepresentationModel;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// A tool for interpreting and executing code.
+/// This tool allows an AI agent to run code snippets and analyze data files.
+/// </summary>
+[JsonConverter(typeof(CodeInterpreterToolJsonConverter))]
+public class CodeInterpreterTool : Tool, IYamlConvertible
+{
+    /// <summary>
+    /// Initializes a new instance of <see cref="CodeInterpreterTool"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    public CodeInterpreterTool()
+    {
+    }
+#pragma warning restore CS8618
+
+    /// <summary>
+    /// The kind identifier for code interpreter tools
+    /// </summary>
+    public override string Kind { get; set; } = "code_interpreter";
+
+    /// <summary>
+    /// The IDs of the files to be used by the code interpreter tool.
+    /// </summary>
+    public IList<string> FileIds { get; set; } = [];
+
+
+    public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
+    {
+
+        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
+        if (node == null)
+        {
+            throw new YamlException("Expected a mapping node for type CodeInterpreterTool");
+        }
+
+    }
+
+    public new void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
+    {
+        emitter.Emit(new MappingStart());
+
+        emitter.Emit(new Scalar("kind"));
+        nestedObjectSerializer(Kind);
+
+        emitter.Emit(new Scalar("fileIds"));
+        nestedObjectSerializer(FileIds);
+    }
+}

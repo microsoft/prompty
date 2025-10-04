@@ -79,6 +79,8 @@ class Tool(ABC):
                 return ModelTool.load(data)
             elif discriminator_value == "openapi":
                 return OpenApiTool.load(data)
+            elif discriminator_value == "code_interpreter":
+                return CodeInterpreterTool.load(data)
             else:
                 # load default instance
                 return ServerTool.load(data)
@@ -217,6 +219,8 @@ class FileSearchTool(Tool):
         File search ranker.
     scoreThreshold : float
         Ranker search threshold.
+    vectorStoreIds : list[str]
+        The IDs of the vector stores to search within.
     """
 
     kind: str = field(default="file_search")
@@ -224,6 +228,7 @@ class FileSearchTool(Tool):
     maxNumResults: Optional[int] = field(default=0)
     ranker: str = field(default="")
     scoreThreshold: float = field(default=0.0)
+    vectorStoreIds: list[str] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any) -> "FileSearchTool":
@@ -244,6 +249,8 @@ class FileSearchTool(Tool):
             instance.ranker = data["ranker"]
         if data is not None and "scoreThreshold" in data:
             instance.scoreThreshold = data["scoreThreshold"]
+        if data is not None and "vectorStoreIds" in data:
+            instance.vectorStoreIds = data["vectorStoreIds"]
         return instance
 
 
@@ -354,4 +361,34 @@ class OpenApiTool(Tool):
             instance.connection = Connection.load(data["connection"])
         if data is not None and "specification" in data:
             instance.specification = data["specification"]
+        return instance
+
+
+@dataclass
+class CodeInterpreterTool(Tool):
+    """A tool for interpreting and executing code.This tool allows an AI agent to run code snippets and analyze data files.
+    Attributes
+    ----------
+    kind : str
+        The kind identifier for code interpreter tools
+    fileIds : list[str]
+        The IDs of the files to be used by the code interpreter tool.
+    """
+
+    kind: str = field(default="code_interpreter")
+    fileIds: list[str] = field(default_factory=list)
+
+    @staticmethod
+    def load(data: Any) -> "CodeInterpreterTool":
+        """Load a CodeInterpreterTool instance."""
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for CodeInterpreterTool: {data}")
+
+        # create new instance
+        instance = CodeInterpreterTool()
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "fileIds" in data:
+            instance.fileIds = data["fileIds"]
         return instance

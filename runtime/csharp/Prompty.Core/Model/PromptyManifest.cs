@@ -26,7 +26,7 @@ namespace Prompty.Core;
 /// (This notation is used elsewhere, but only the `param` scope is supported here)
 /// </summary>
 [JsonConverter(typeof(PromptyManifestJsonConverter))]
-public class PromptyManifest : Prompty, IYamlConvertible
+public class PromptyManifest : PromptyBase, IYamlConvertible
 {
     /// <summary>
     /// Initializes a new instance of <see cref="PromptyManifest"/>.
@@ -41,6 +41,21 @@ public class PromptyManifest : Prompty, IYamlConvertible
     /// Type of agent, e.g., 'manifest'
     /// </summary>
     public override string Kind { get; set; } = "manifest";
+
+    /// <summary>
+    /// Template configuration for prompt rendering
+    /// </summary>
+    public Template? Template { get; set; }
+
+    /// <summary>
+    /// Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)
+    /// </summary>
+    public string? Instructions { get; set; }
+
+    /// <summary>
+    /// Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)
+    /// </summary>
+    public string? AdditionalInstructions { get; set; }
 
     /// <summary>
     /// Additional models that are known to work with this prompt
@@ -70,6 +85,27 @@ public class PromptyManifest : Prompty, IYamlConvertible
 
         emitter.Emit(new Scalar("kind"));
         nestedObjectSerializer(Kind);
+
+        if (Template != null)
+        {
+            emitter.Emit(new Scalar("template"));
+            nestedObjectSerializer(Template);
+        }
+
+
+        if (Instructions != null)
+        {
+            emitter.Emit(new Scalar("instructions"));
+            nestedObjectSerializer(Instructions);
+        }
+
+
+        if (AdditionalInstructions != null)
+        {
+            emitter.Emit(new Scalar("additionalInstructions"));
+            nestedObjectSerializer(AdditionalInstructions);
+        }
+
 
         emitter.Emit(new Scalar("models"));
         nestedObjectSerializer(Models);

@@ -10,33 +10,26 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// The following represents a containerized agent that can be deployed and hosted.
-/// It includes details about the container image, registry information, and environment variables.
-/// This model allows for the definition of agents that can run in isolated environments,
-/// making them suitable for deployment in various cloud or on-premises scenarios.
-/// 
-/// The containerized agent can communicate using specified protocols and can be scaled
-/// based on the provided configuration.
-/// 
-/// This kind of agent represents the users intent to bring their own container specific
-/// app hosting platform that they manage.
+/// This represents a container based agent hosted by the provider/publisher.
+/// The intent is to represent a container application that the user wants to run
+/// in a hosted environment that the provider manages.
 /// </summary>
-[JsonConverter(typeof(PromptyContainerJsonConverter))]
-public class PromptyContainer : PromptyBase, IYamlConvertible
+[JsonConverter(typeof(PromptyHostedContainerJsonConverter))]
+public class PromptyHostedContainer : PromptyBase, IYamlConvertible
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="PromptyContainer"/>.
+    /// Initializes a new instance of <see cref="PromptyHostedContainer"/>.
     /// </summary>
 #pragma warning disable CS8618
-    public PromptyContainer()
+    public PromptyHostedContainer()
     {
     }
 #pragma warning restore CS8618
 
     /// <summary>
-    /// Type of agent, e.g., 'container'
+    /// Type of agent, e.g., 'hosted'
     /// </summary>
-    public override string Kind { get; set; } = "container";
+    public override string Kind { get; set; } = "hosted";
 
     /// <summary>
     /// Protocol used by the containerized agent
@@ -46,7 +39,7 @@ public class PromptyContainer : PromptyBase, IYamlConvertible
     /// <summary>
     /// Container definition including registry and scaling information
     /// </summary>
-    public ContainerDefinition Container { get; set; }
+    public HostedContainerDefinition Container { get; set; }
 
     /// <summary>
     /// Environment variables to set in the hosted agent container.
@@ -60,7 +53,7 @@ public class PromptyContainer : PromptyBase, IYamlConvertible
         var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
         if (node == null)
         {
-            throw new YamlException("Expected a mapping node for type PromptyContainer");
+            throw new YamlException("Expected a mapping node for type PromptyHostedContainer");
         }
 
     }

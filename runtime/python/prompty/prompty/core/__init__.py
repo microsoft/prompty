@@ -17,17 +17,28 @@ from ._Connection import (
 from ._ContainerDefinition import ContainerDefinition
 from ._EnvironmentVariable import EnvironmentVariable
 from ._Format import Format
+from ._HostedContainerDefinition import HostedContainerDefinition
 from ._Input import ArrayInput, Input, ObjectInput
 from ._Model import Model
 from ._ModelOptions import ModelOptions
 from ._Output import ArrayOutput, ObjectOutput, Output
 from ._Parameter import ArrayParameter, ObjectParameter, Parameter
 from ._Parser import Parser
-from ._Prompty import Prompty, PromptyContainer, PromptyManifest
+from ._PromptyBase import Prompty, PromptyBase, PromptyContainer, PromptyHostedContainer, PromptyManifest
 from ._Registry import AzureContainerRegistry, GenericRegistry, Registry
 from ._Scale import Scale
 from ._Template import Template
-from ._Tool import BingSearchTool, FileSearchTool, FunctionTool, McpTool, ModelTool, OpenApiTool, ServerTool, Tool
+from ._Tool import (
+    BingSearchTool,
+    CodeInterpreterTool,
+    FileSearchTool,
+    FunctionTool,
+    McpTool,
+    ModelTool,
+    OpenApiTool,
+    ServerTool,
+    Tool,
+)
 
 __all__ = [
     "Input",
@@ -46,6 +57,8 @@ __all__ = [
     "McpTool",
     "ModelTool",
     "OpenApiTool",
+    "CodeInterpreterTool",
+    "PromptyBase",
     "Format",
     "Parser",
     "Template",
@@ -69,4 +82,6 @@ __all__ = [
     "ContainerDefinition",
     "EnvironmentVariable",
     "PromptyContainer",
+    "HostedContainerDefinition",
+    "PromptyHostedContainer",
 ]

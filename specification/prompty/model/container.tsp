@@ -50,6 +50,22 @@ namespace Prompty.Core {
   }
 
   /**
+   * Definition for a containerized AI agent hosted by the provider.
+   * This includes the container registry information and scaling configuration.
+   */
+  model HostedContainerDefinition {
+    @doc("Instance scaling configuration")
+    @sample(#{
+      scale: #{ minReplicas: 1, maxReplicas: 5, cpu: 0.5, memory: 2.0 },
+    })
+    scale: Scale;
+
+    @doc("Container context for building the container image")
+    @sample(#{ context: #{ dockerfile: "dockerfile", buildContext: "." } })
+    context: unknown;
+  }
+
+  /**
    * Configuration for scaling container instances.
    */
   model Scale {

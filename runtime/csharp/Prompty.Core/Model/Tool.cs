@@ -102,6 +102,13 @@ public abstract class Tool : IYamlConvertible
                         throw new YamlException("Failed to deserialize polymorphic type OpenApiTool");
                     }
                     return;
+                case "code_interpreter":
+                    var code_interpreterTool = nestedObjectDeserializer(typeof(CodeInterpreterTool)) as CodeInterpreterTool;
+                    if (code_interpreterTool == null)
+                    {
+                        throw new YamlException("Failed to deserialize polymorphic type CodeInterpreterTool");
+                    }
+                    return;
                 default:
                     return;
 

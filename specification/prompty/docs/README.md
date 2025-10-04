@@ -94,6 +94,7 @@ classDiagram
         +int32 maxNumResults
         +string ranker
         +float32 scoreThreshold
+        +string[] vectorStoreIds
     }
     class McpTool {
       
@@ -114,6 +115,22 @@ classDiagram
         +Connection connection
         +string specification
     }
+    class CodeInterpreterTool {
+      
+        +string kind
+        +string[] fileIds
+    }
+    class PromptyBase {
+      <<abstract>>
+        +string kind
+        +string name
+        +string description
+        +dictionary metadata
+        +Model model
+        +Input[] inputs
+        +Output[] outputs
+        +Tool[] tools
+    }
     class Format {
       
         +string kind
@@ -133,15 +150,6 @@ classDiagram
     class Prompty {
       
         +string kind
-        +string id
-        +string version
-        +string name
-        +string description
-        +dictionary metadata
-        +Model model
-        +Input[] inputs
-        +Output[] outputs
-        +Tool[] tools
         +Template template
         +string instructions
         +string additionalInstructions
@@ -218,6 +226,9 @@ classDiagram
     class PromptyManifest {
       
         +string kind
+        +Template template
+        +string instructions
+        +string additionalInstructions
         +Model[] models
         +Parameter[] parameters
     }
@@ -266,6 +277,18 @@ classDiagram
         +ContainerDefinition container
         +EnvironmentVariable[] environmentVariables
     }
+    class HostedContainerDefinition {
+      
+        +Scale scale
+        +unknown context
+    }
+    class PromptyHostedContainer {
+      
+        +string kind
+        +string protocol
+        +HostedContainerDefinition container
+        +EnvironmentVariable[] environmentVariables
+    }
     Input <|-- ArrayInput
     Input <|-- ObjectInput
     Output <|-- ArrayOutput
@@ -277,8 +300,11 @@ classDiagram
     Tool <|-- McpTool
     Tool <|-- ModelTool
     Tool <|-- OpenApiTool
-    Prompty <|-- PromptyManifest
-    Prompty <|-- PromptyContainer
+    Tool <|-- CodeInterpreterTool
+    PromptyBase <|-- Prompty
+    PromptyBase <|-- PromptyManifest
+    PromptyBase <|-- PromptyContainer
+    PromptyBase <|-- PromptyHostedContainer
     Connection <|-- GenericConnection
     Connection <|-- ReferenceConnection
     Connection <|-- KeyConnection
@@ -301,17 +327,18 @@ classDiagram
     McpTool *-- Connection
     ModelTool *-- Model
     OpenApiTool *-- Connection
+    PromptyBase *-- Model
+    PromptyBase *-- Input
+    PromptyBase *-- Output
+    PromptyBase *-- Tool
     Template *-- Format
     Template *-- Parser
-    Prompty *-- Model
-    Prompty *-- Input
-    Prompty *-- Output
-    Prompty *-- Tool
     Prompty *-- Template
     Model *-- Connection
     Model *-- ModelOptions
     ArrayParameter *-- Parameter
     ObjectParameter *-- Parameter
+    PromptyManifest *-- Template
     PromptyManifest *-- Model
     PromptyManifest *-- Parameter
     Registry *-- Connection
@@ -319,4 +346,7 @@ classDiagram
     ContainerDefinition *-- Scale
     PromptyContainer *-- ContainerDefinition
     PromptyContainer *-- EnvironmentVariable
+    HostedContainerDefinition *-- Scale
+    PromptyHostedContainer *-- HostedContainerDefinition
+    PromptyHostedContainer *-- EnvironmentVariable
 ```

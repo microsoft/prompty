@@ -50,6 +50,11 @@ public class FileSearchTool : Tool, IYamlConvertible
     /// </summary>
     public float ScoreThreshold { get; set; }
 
+    /// <summary>
+    /// The IDs of the vector stores to search within.
+    /// </summary>
+    public IList<string> VectorStoreIds { get; set; } = [];
+
 
     public new void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
     {
@@ -84,5 +89,8 @@ public class FileSearchTool : Tool, IYamlConvertible
 
         emitter.Emit(new Scalar("scoreThreshold"));
         nestedObjectSerializer(ScoreThreshold);
+
+        emitter.Emit(new Scalar("vectorStoreIds"));
+        nestedObjectSerializer(VectorStoreIds);
     }
 }

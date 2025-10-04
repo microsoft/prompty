@@ -44,6 +44,7 @@ classDiagram
         +int32 maxNumResults
         +string ranker
         +float32 scoreThreshold
+        +string[] vectorStoreIds
     }
     Tool <|-- FileSearchTool
     class McpTool {
@@ -65,6 +66,11 @@ classDiagram
         +string specification
     }
     Tool <|-- OpenApiTool
+    class CodeInterpreterTool {
+        +string kind
+        +string[] fileIds
+    }
+    Tool <|-- CodeInterpreterTool
     class Binding {
         +string name
         +string input
@@ -103,6 +109,7 @@ The following types extend `Tool`:
 - [McpTool](McpTool.md)
 - [ModelTool](ModelTool.md)
 - [OpenApiTool](OpenApiTool.md)
+- [CodeInterpreterTool](CodeInterpreterTool.md)
 
 ## Composed Types
 

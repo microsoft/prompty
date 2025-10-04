@@ -8,7 +8,7 @@ import "./template.tsp";
 import "./container.tsp";
 
 namespace Prompty.Core {
-  alias PromptyKind = "container" | "manifest" | "prompt" | string;
+  alias PromptyKind = "container" | "manifest" | "prompt" | "hosted" | string;
   /**
    * The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
    * It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
@@ -18,20 +18,13 @@ namespace Prompty.Core {
    * These can be written in a markdown format or in a pure YAML format.
    *
    */
+  @abstract
   @discriminator("kind")
-  model Prompty {
+  model PromptyBase {
     // Prompty metadata
     @doc("Kind represented by the document")
     @sample(#{ kind: "prompt" })
-    kind: PromptyKind = "prompt";
-
-    @doc("Unique identifier for the document")
-    @sample(#{ id: "unique-agent-id" })
-    id?: string = "";
-
-    @doc("Document version")
-    @sample(#{ version: "1.0.0" })
-    version?: string = "";
+    kind: PromptyKind;
 
     @doc("Human-readable name of the agent")
     @sample(#{ name: "basic-prompt" })
@@ -148,6 +141,17 @@ namespace Prompty.Core {
       ],
     })
     tools?: Tools = #[];
+  }
+
+  /**
+   * Prompt based agent definition. Used to create agents that can be executed directly.
+   * These agents can leverage tools, input parameters, and templates to generate responses.
+   * They are designed to be straightforward and easy to use for various applications.
+   */
+  model Prompty extends PromptyBase {
+    @doc("Type of agent, e.g., 'prompt'")
+    @sample(#{ kind: "prompt" })
+    kind: "prompt";
 
     // template values
     @doc("Template configuration for prompt rendering")
@@ -193,10 +197,36 @@ namespace Prompty.Core {
    * (This notation is used elsewhere, but only the `param` scope is supported here)
    *
    */
-  model PromptyManifest extends Prompty {
+  model PromptyManifest extends PromptyBase {
     @doc("Type of agent, e.g., 'manifest'")
     @sample(#{ kind: "manifest" })
     kind: "manifest";
+
+    // template values
+    @doc("Template configuration for prompt rendering")
+    @sample(#{ template: #{ format: "mustache", parser: "prompty" } })
+    template?: Template;
+
+    @doc("Give your agent clear directions on what to do and how to do it. Include specific tasks, their order, and any special instructions like tone or engagement style. (can use this for a pure yaml declaration or as content in the markdown format)")
+    @sample(#{
+      instructions: """
+        system:
+        You are an AI assistant who helps people find information.
+        As the assistant, you answer questions briefly, succinctly,
+        and in a personable manner using markdown and even add some 
+        personal flair with appropriate emojis.
+        
+        # Customer
+        You are helping {{firstName}} {{lastName}} to find answers to 
+        their questions. Use their name to address them in your responses.
+        user:
+        {{question}}
+        """,
+    })
+    instructions?: string = "";
+
+    @doc("Additional instructions or context for the agent, can be used to provide extra guidance (can use this for a pure yaml declaration)")
+    additionalInstructions?: string = "";
 
     @doc("Additional models that are known to work with this prompt")
     @sample(#{
@@ -222,8 +252,11 @@ namespace Prompty.Core {
    * The containerized agent can communicate using specified protocols and can be scaled
    * based on the provided configuration.
    *
+   * This kind of agent represents the users intent to bring their own container specific
+   * app hosting platform that they manage.
+   *
    */
-  model PromptyContainer extends Prompty {
+  model PromptyContainer extends PromptyBase {
     @doc("Type of agent, e.g., 'container'")
     @sample(#{ kind: "container" })
     kind: "container";
@@ -240,6 +273,34 @@ namespace Prompty.Core {
       },
     })
     container: ContainerDefinition;
+
+    @doc("Environment variables to set in the hosted agent container.")
+    @sample(#{ environmentVariables: #{ MY_ENV_VAR: "my-value" } })
+    environmentVariables?: EnvironmentVariables = #[];
+  }
+
+  /**
+   * This represents a container based agent hosted by the provider/publisher.
+   * The intent is to represent a container application that the user wants to run
+   * in a hosted environment that the provider manages.
+   */
+  model PromptyHostedContainer extends PromptyBase {
+    @doc("Type of agent, e.g., 'hosted'")
+    @sample(#{ kind: "hosted" })
+    kind: "hosted";
+
+    @doc("Protocol used by the containerized agent")
+    @sample(#{ protocol: "responses" })
+    protocol: Protocols = "responses";
+
+    @doc("Container definition including registry and scaling information")
+    @sample(#{
+      container: #{
+        scale: #{ minReplicas: 1, maxReplicas: 5, cpu: 0.5, memory: 2.0 },
+      },
+      context: #{ dockerfile: "dockerfile", buildContext: "." },
+    })
+    container: HostedContainerDefinition;
 
     @doc("Environment variables to set in the hosted agent container.")
     @sample(#{ environmentVariables: #{ MY_ENV_VAR: "my-value" } })
