@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "base-64": "^1.0.0",
-    "glob": "^11.0.1",
+    "glob": "^11.1.0",
     "gray-matter": "^4.0.3",
     "js-yaml": "^4.1.0",
     "mustache": "^4.2.0",
