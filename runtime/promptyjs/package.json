@@ -1,5 +1,5 @@
 {
-  "name": "promptyjs",
+  "name": "@prompty/core",
   "version": "0.1.0",
   "description": "Prompty core package",
   "main": "./dist/index.js",
