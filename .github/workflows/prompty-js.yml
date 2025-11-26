@@ -44,18 +44,23 @@ jobs:
     name: publish artifacts
     needs: prompty-tests
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+      - name: Ensure latest npm
+        run: npm install -g npm@latest
       - name: Node.js install dependencies
         working-directory: ./runtime/promptyjs
-        run: npm install
+        run: npm ci
       - name: Node.js build
         working-directory: ./runtime/promptyjs
-        run: npm run build
+        run: npm run build --if-present
       - name: Publish package
         working-directory: ./runtime/promptyjs
-        run: npm publish --access public
+        run: npm publish --provenance --access public
