@@ -8,4 +8,4 @@ obj/
 .env
 .venv/
 __pycache__/
-.converage
+.coverage
