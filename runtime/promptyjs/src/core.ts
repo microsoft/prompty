@@ -74,8 +74,14 @@ export class Prompty {
 
   constructor(content: string) {
 
-    // load file 
-    const items = matter(content);
+    // load file - CVE Security Fix: Disable JavaScript execution in front matter
+    const items = matter(content, {
+      engines: {
+        yaml: {
+          parse: (input: string) => yaml.load(input) as object
+        }
+      }
+    });
     // metadata
     this.name = items.data.name || "";
     this.description = items.data.description || "";

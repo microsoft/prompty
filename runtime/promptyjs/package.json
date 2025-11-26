@@ -1,6 +1,6 @@
 {
-  "name": "promptyjs",
-  "version": "0.1.0",
+  "name": "@prompty/core",
+  "version": "0.1.3",
   "description": "Prompty core package",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -36,7 +36,7 @@
     "base-64": "^1.0.0",
     "glob": "^11.0.1",
     "gray-matter": "^4.0.3",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "mustache": "^4.2.0",
     "nunjucks": "^3.2.4",
     "openai": "^4.33.0"
@@ -44,5 +44,8 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node"
+  },
+  "repository": {
+    "url": "https://github.com/microsoft/prompty"
   }
 }
