@@ -1,6 +1,6 @@
 {
   "name": "@prompty/core",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Prompty core package",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
