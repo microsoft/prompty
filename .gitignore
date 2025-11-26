@@ -3,8 +3,9 @@
 .runs/
 node_modules/
 dist/
-runtime/promptycs/Prompty.Core/bin/
-runtime/promptycs/Prompty.Core/obj/
-runtime/promptycs/Tests/bin/
-runtime/promptycs/Tests/obj/
+bin/
+obj/
 .env
+.venv/
+__pycache__/
+.converage
