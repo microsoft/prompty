@@ -44,5 +44,8 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node"
+  },
+  "repository": {
+    "url": "https://github.com/microsoft/prompty"
   }
 }
