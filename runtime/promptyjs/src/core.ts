@@ -79,6 +79,9 @@ export class Prompty {
       engines: {
         yaml: {
           parse: (input: string) => yaml.load(input) as object
+        },
+        js: {
+          parse: (input) => { console.log("JS execution disabled"); return {}; }
         }
       }
     });
