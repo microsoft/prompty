@@ -1,0 +1,9 @@
+---
+name: model-string
+model: gpt-4o
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}

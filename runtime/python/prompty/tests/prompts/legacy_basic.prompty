@@ -1,0 +1,39 @@
+---
+name: legacy-prompt
+description: Tests legacy property migration
+version: "1.0"
+authors:
+  - testauthor
+tags:
+  - test
+  - legacy
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-35-turbo
+    api_key: ${env:AZURE_OPENAI_API_KEY}
+  parameters:
+    temperature: 0.7
+    max_tokens: 500
+    top_p: 0.9
+    frequency_penalty: 0.5
+    presence_penalty: 0.3
+    stop:
+      - "\n"
+inputs:
+  firstName:
+    type: string
+    sample: Jane
+    description: The first name of the customer
+    required: true
+  lastName: Doe
+  question: What is the meaning of life?
+template: jinja2
+---
+system:
+You are an AI assistant.
+
+user:
+{{question}}

@@ -1,0 +1,27 @@
+---
+name: legacy-tools
+description: Tests legacy tools in model.parameters
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_deployment: gpt-35-turbo
+  parameters:
+    temperature: 0.7
+    tools:
+      - name: get_weather
+        kind: function
+        description: Get weather
+        parameters:
+          properties:
+            - name: location
+              kind: string
+              description: The city
+inputs:
+  question: What is the weather?
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}

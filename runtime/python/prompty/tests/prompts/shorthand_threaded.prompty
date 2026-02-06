@@ -1,0 +1,16 @@
+---
+model: gpt-4o
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+    - name: conversation
+      kind: thread
+---
+system:
+You are a helpful assistant.
+
+{{conversation}}
+
+user:
+{{question}}

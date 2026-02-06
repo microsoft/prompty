@@ -1,0 +1,20 @@
+---
+name: mcp-tools
+model:
+  id: gpt-4
+tools:
+  - name: filesystem
+    kind: mcp
+    connection:
+      kind: reference
+      name: fs-connection
+    serverName: filesystem-server
+    serverDescription: Access the local filesystem
+    approvalMode:
+      kind: always
+---
+system:
+You have access to filesystem tools.
+
+user:
+{{question}}

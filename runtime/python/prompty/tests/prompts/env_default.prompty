@@ -1,0 +1,11 @@
+---
+name: env-default
+description: Tests environment variable with default value
+model:
+  id: gpt-4
+  connection:
+    kind: key
+    endpoint: ${env:NONEXISTENT_ENDPOINT:https://fallback.openai.azure.com/}
+---
+system:
+Hello world.

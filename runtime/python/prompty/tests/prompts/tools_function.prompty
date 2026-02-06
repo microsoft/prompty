@@ -1,0 +1,33 @@
+---
+name: function-tools
+model:
+  id: gpt-4
+  apiType: chat
+tools:
+  - name: get_current_weather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      properties:
+        - name: location
+          kind: string
+          description: The city and state, e.g. San Francisco, CA
+        - name: unit
+          kind: string
+          description: Temperature unit
+          enumValues: [celsius, fahrenheit]
+      strict: true
+  - name: create_a_picture
+    kind: function
+    description: Creates a picture based on a description
+    parameters:
+      properties:
+        - name: prompt
+          kind: string
+          description: The description of what the picture should be
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}

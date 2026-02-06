@@ -1,0 +1,16 @@
+---
+name: custom-tools
+model:
+  id: gpt-4
+tools:
+  - name: my_custom_tool
+    kind: my_provider
+    connection:
+      kind: key
+      endpoint: https://custom.example.com
+---
+system:
+You have custom tools.
+
+user:
+{{question}}

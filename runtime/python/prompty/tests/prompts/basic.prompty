@@ -1,0 +1,42 @@
+---
+name: basic-prompt
+description: A basic prompt for testing
+metadata:
+  authors:
+    - testauthor
+model:
+  id: gpt-4
+  provider: azure
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1000
+inputSchema:
+  properties:
+    - name: firstName
+      kind: string
+      default: Jane
+    - name: lastName
+      kind: string
+      default: Doe
+    - name: question
+      kind: string
+      default: What is the meaning of life?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are an AI assistant who helps people find information.
+
+# Customer
+You are helping {{firstName}} {{lastName}} to find answers to their questions.
+
+user:
+{{question}}

@@ -1,0 +1,9 @@
+---
+name: no-model
+description: A prompt with no model specified
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}

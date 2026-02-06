@@ -2,15 +2,15 @@
 name = "prompty"
 dynamic = ["version"]
 readme = "README.md"
-description = "Prompty is a new asset class and format for LLM prompts that aims to provide observability, understandability, and portability for developers. It includes spec, tooling, and a runtime. This Prompty runtime supports Python"
+description = "Prompty is an asset class and format for LLM prompts"
 authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 
 license = { text = "MIT" }
 dependencies = [
+  "agentschema",
   "pyyaml>=6.0.1",
   "python-dotenv>=1.0.1",
-  "click>=8.1.7",
   "aiofiles>=24.1.0",
 ]
 
@@ -20,32 +20,57 @@ Documentation = "https://prompty.ai/docs"
 Issues = "https://github.com/microsoft/prompty/issues"
 
 [project.optional-dependencies]
+jinja2 = ["jinja2"]
+mustache = ["chevron"]
+openai = ["openai"]
+azure = ["openai", "azure-identity"]
+otel = ["opentelemetry-api>=1.20"]
+all = [
+  "jinja2",
+  "chevron",
+  "openai",
+  "azure-identity",
+  "opentelemetry-api>=1.20",
+]
 dev = [
   "pytest",
-  "ruff",
-  "mypy",
-  "types-aiofiles",
-  "types-PyYAML",
-  "types-chevron",
   "pytest-cov",
-  "flit",
-  "black",
-  "chevron",
+  "pytest-asyncio",
+  "ruff",
+  "types-PyYAML",
+  "types-aiofiles",
+  "opentelemetry-api>=1.20",
+  "opentelemetry-sdk>=1.20",
 ]
-
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py311"
 output-format = "full"
+
+# Entry points for invoker discovery
+[project.entry-points."prompty.renderers"]
+jinja2 = "prompty.renderers:Jinja2Renderer"
+mustache = "prompty.renderers:MustacheRenderer"
+
+[project.entry-points."prompty.parsers"]
+prompty = "prompty.parsers:PromptyChatParser"
+
+[project.entry-points."prompty.executors"]
+openai = "prompty.executor:OpenAIExecutor"
+azure = "prompty.executor:AzureExecutor"
+
+[project.entry-points."prompty.processors"]
+openai = "prompty.processor:OpenAIProcessor"
+azure = "prompty.processor:AzureProcessor"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 ignore = ["E501"]
 
-[tool.black]
-line-length = 120
-target-version = ["py39"]
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/test_otel.py" = ["E402"]
 
 [tool.coverage.report]
 show_missing = true
@@ -53,6 +78,3 @@ show_missing = true
 [build-system]
 requires = ["flit_core >=3.11,<4"]
 build-backend = "flit_core.buildapi"
-
-[project.scripts]
-prompty = "prompty.cli:run"

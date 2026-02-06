@@ -1,0 +1,10 @@
+---
+name: file-connection-test
+description: Tests ${file:} reference for shared connection config
+model:
+  id: gpt-4
+  apiType: chat
+  connection: ${file:shared_connection.json}
+---
+system:
+Hello world.

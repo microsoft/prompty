@@ -1,0 +1,12 @@
+---
+name: file-ref
+description: Tests file reference resolution
+model:
+  id: gpt-4
+inputSchema: ${file:schema.json}
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}

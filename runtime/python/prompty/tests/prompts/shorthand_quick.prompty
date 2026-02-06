@@ -1,0 +1,14 @@
+---
+name: quick-prompt
+model: gpt-4o-mini
+inputSchema:
+  properties:
+    - name: topic
+      kind: string
+      default: Python
+---
+system:
+You are a concise technical writer.
+
+user:
+Write a one-paragraph summary of {{topic}}.

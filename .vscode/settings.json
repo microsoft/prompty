@@ -6,5 +6,8 @@
   "files.associations": {
     "*.css": "tailwindcss",
     "*.mdx": "markdown"
-  }
+  },
+  "python.testing.cwd": "${workspaceFolder}/runtime/python/prompty",
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

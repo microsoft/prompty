@@ -1,0 +1,17 @@
+---
+name: rich-metadata
+description: A prompt with lots of metadata
+metadata:
+  authors:
+    - alice
+    - bob
+  tags:
+    - production
+    - v2
+  version: "2.0"
+  custom_field: hello
+model:
+  id: gpt-4
+---
+system:
+Hello world.

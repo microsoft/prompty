@@ -1,0 +1,18 @@
+---
+name: legacy-template-dict
+description: Tests legacy template dict migration
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_deployment: gpt-35-turbo
+  parameters:
+    temperature: 0.5
+inputs:
+  name: World
+template:
+  format: jinja2
+  parser: prompty
+---
+system:
+Hello {{name}}!

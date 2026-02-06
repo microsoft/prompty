@@ -1,0 +1,5 @@
+{
+  "kind": "key",
+  "endpoint": "https://shared.openai.azure.com/",
+  "apiKey": "shared-key"
+}

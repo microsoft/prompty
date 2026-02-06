@@ -1,0 +1,9 @@
+---
+model: gpt-4o
+description: A prompt with no name field
+---
+system:
+Answer the user's question.
+
+user:
+{{question}}
