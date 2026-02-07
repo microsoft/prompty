@@ -72,6 +72,13 @@ ignore = ["E501"]
 "__init__.py" = ["F401"]
 "tests/test_otel.py" = ["E402"]
 
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+markers = [
+  "integration: tests that hit real OpenAI / Azure OpenAI endpoints (deselected by default)",
+]
+addopts = "-m 'not integration'"
+
 [tool.coverage.report]
 show_missing = true
 
