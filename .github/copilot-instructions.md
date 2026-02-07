@@ -399,7 +399,7 @@ from prompty.tracing.tracer import Tracer, trace
 
 ### Test Files
 
-All tests live in `runtime/python/prompty/tests/`:
+All unit tests live in `runtime/python/prompty/tests/`:
 
 | Test File           | What it covers                                         |
 | ------------------- | ------------------------------------------------------ |
@@ -412,7 +412,19 @@ All tests live in `runtime/python/prompty/tests/`:
 | `test_tracer.py`    | Tracer registry, @trace decorator, PromptyTracer       |
 | `test_otel.py`      | OpenTelemetry backend (skipped if otel not installed)  |
 
-Run tests: `uv run pytest tests/ -q` (or `.venv/Scripts/python -m pytest tests/ -q`)
+Integration tests live in `runtime/python/prompty/tests/integration/` (see Phase 5):
+
+| Test File            | What it covers                                         |
+| -------------------- | ------------------------------------------------------ |
+| `test_chat.py`       | Chat completions against real OpenAI / Azure endpoints |
+| `test_embedding.py`  | Embedding API against real endpoints                   |
+| `test_image.py`      | DALL-E 2 image generation (OpenAI only)                |
+| `test_agent.py`      | Agent loop with tool calling against real endpoints    |
+| `test_streaming.py`  | Streaming chat completions                             |
+| `test_structured.py` | Structured output via outputSchema / response_format   |
+
+Run unit tests: `uv run pytest tests/ -q` (or `.venv/Scripts/python -m pytest tests/ -q`)
+Run integration tests: `pytest tests/integration/ -v -o "addopts="` (requires API keys in `.env`)
 
 ### Dependencies
 
@@ -1167,6 +1179,128 @@ All of the following must pass:
 - `headless()` creates a valid `PromptAgent` usable with `execute()` + `process()`
 
 **Phase 4 Gate: PASSED** — 298 tests, ruff clean.
+
+---
+
+## PHASE 5: Integration Tests — IMPLEMENTED
+
+### Overview
+
+Integration tests live in `tests/integration/` and hit real OpenAI / Azure OpenAI endpoints.
+They are **excluded by default** via `addopts = "-m 'not integration'"` in `pyproject.toml`,
+so `pytest tests/` only runs the 298 unit tests. Tests auto-skip when API keys are missing.
+
+### Running Integration Tests
+
+```bash
+# Fill in your API keys first
+cp .env.example .env   # or edit the existing .env
+
+# Run all integration tests (override the default marker filter)
+pytest tests/integration/ -v -o "addopts="
+
+# Run via marker
+pytest -m integration -o "addopts="
+
+# Run only OpenAI tests (Azure will skip if keys missing)
+OPENAI_API_KEY=sk-... pytest tests/integration/ -v -o "addopts="
+```
+
+### Environment Variables
+
+Configured via `.env` in the package root (`runtime/python/prompty/.env`), already gitignored.
+
+| Variable                            | Required For    | Example                                    |
+| ----------------------------------- | --------------- | ------------------------------------------ |
+| `OPENAI_API_KEY`                    | OpenAI tests    | `sk-...`                                   |
+| `AZURE_OPENAI_ENDPOINT`             | Azure tests     | `https://myresource.openai.azure.com/`     |
+| `AZURE_OPENAI_API_KEY`              | Azure tests     | `abc123...`                                |
+| `AZURE_OPENAI_CHAT_DEPLOYMENT`      | Azure tests     | `gpt-4o-mini` (your deployment name)       |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Azure embedding | `text-embedding-3-small` (deployment name) |
+
+### Skip Logic
+
+- `@skip_openai` — skips if `OPENAI_API_KEY` is empty
+- `@skip_azure` — skips if any of `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_CHAT_DEPLOYMENT` is empty
+- `@skip_azure_embedding` — skips if Azure vars or `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` is empty
+- `conftest.py` auto-adds the `integration` marker to all tests in the directory
+
+### Test Files
+
+| File                 | Tests | What it covers                                            |
+| -------------------- | ----- | --------------------------------------------------------- |
+| `test_chat.py`       | 5     | Basic + async chat, temperature control, both providers   |
+| `test_embedding.py`  | 5     | Single + batch + async embeddings, both providers         |
+| `test_image.py`      | 1     | DALL-E 2 image generation (OpenAI only, 256x256 for cost) |
+| `test_agent.py`      | 3     | Tool-calling agent loop, sync + async, both providers     |
+| `test_streaming.py`  | 3     | Streaming chat with PromptyStream/AsyncPromptyStream      |
+| `test_structured.py` | 4     | Structured output via outputSchema → response_format      |
+
+### Agent Helper Functions
+
+`conftest.py` provides two helpers that build `PromptAgent` instances programmatically
+via `AgentDefinition.load()`:
+
+```python
+make_openai_agent(
+    api_type="chat",          # "chat" | "embedding" | "image" | "agent"
+    model="gpt-4o-mini",     # model name
+    options=None,             # ModelOptions dict
+    tools=None,               # list of tool dicts
+    output_schema=None,       # outputSchema dict
+    metadata=None,            # metadata dict (e.g. {"tool_functions": {...}})
+)
+
+make_azure_agent(
+    api_type="chat",
+    deployment=None,          # defaults to AZURE_OPENAI_CHAT_DEPLOYMENT env var
+    options=None,
+    tools=None,
+    output_schema=None,
+    metadata=None,
+)
+```
+
+### Agent Mode Pattern (tool calling)
+
+To test agent mode, define tool functions and attach them via `metadata["tool_functions"]`:
+
+```python
+def get_weather(city: str) -> str:
+    return f"72°F and sunny in {city}"
+
+agent = make_openai_agent(
+    api_type="agent",
+    tools=[{
+        "name": "get_weather",
+        "kind": "function",
+        "description": "Get the current weather",
+        "parameters": {
+            "properties": [
+                {"name": "city", "kind": "string", "required": True}
+            ]
+        },
+    }],
+    metadata={"tool_functions": {"get_weather": get_weather}},
+)
+```
+
+The executor's agent loop will:
+
+1. Send messages + tool definitions to the LLM
+2. If `tool_calls` returned → look up function in `metadata["tool_functions"]`, call it, append result
+3. Re-send to LLM, repeat until the model returns a normal response
+
+### pyproject.toml Configuration
+
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+markers = [
+  "integration: tests that hit real OpenAI / Azure OpenAI endpoints (deselected by default)",
+]
+addopts = "-m 'not integration'"
+```
 
 ---
 
