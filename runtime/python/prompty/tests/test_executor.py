@@ -9,8 +9,9 @@ from unittest.mock import MagicMock, patch
 
 from agentschema import PromptAgent
 
-from prompty.executor import (
-    AzureExecutor,
+from prompty.azure.executor import AzureExecutor
+from prompty.core.types import AudioPart, FilePart, ImagePart, Message, TextPart
+from prompty.openai.executor import (
     OpenAIExecutor,
     _build_options,
     _message_to_wire,
@@ -18,7 +19,6 @@ from prompty.executor import (
     _schema_to_wire,
     _tools_to_wire,
 )
-from prompty.types import AudioPart, FilePart, ImagePart, Message, TextPart
 
 # ---------------------------------------------------------------------------
 # Helpers

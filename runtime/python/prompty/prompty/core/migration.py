@@ -41,7 +41,9 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
         if isinstance(config, dict):
             conn_type = config.pop("type", None)
             if conn_type == "azure_openai":
-                _deprecation("model.configuration.type: azure_openai", "model.provider: azure")
+                _deprecation(
+                    "model.configuration.type: azure_openai", "model.provider: azure"
+                )
                 model["provider"] = "azure"
                 if "kind" not in config:
                     config["kind"] = "key"
@@ -61,11 +63,15 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
 
                 # api_key → apiKey
                 if "api_key" in config:
-                    _deprecation("model.configuration.api_key", "model.connection.apiKey")
+                    _deprecation(
+                        "model.configuration.api_key", "model.connection.apiKey"
+                    )
                     config["apiKey"] = config.pop("api_key")
 
             elif conn_type == "openai":
-                _deprecation("model.configuration.type: openai", "model.provider: openai")
+                _deprecation(
+                    "model.configuration.type: openai", "model.provider: openai"
+                )
                 model["provider"] = "openai"
                 if "kind" not in config:
                     config["kind"] = "key"
@@ -75,7 +81,9 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
                     model["id"] = config.pop("name")
 
                 if "api_key" in config:
-                    _deprecation("model.configuration.api_key", "model.connection.apiKey")
+                    _deprecation(
+                        "model.configuration.api_key", "model.connection.apiKey"
+                    )
                     config["apiKey"] = config.pop("api_key")
 
             else:
@@ -97,7 +105,9 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
                 data.setdefault("tools", params.pop("tools"))
 
             # Rename snake_case → camelCase
-            _rename_key(params, "max_tokens", "maxOutputTokens", "model.parameters.max_tokens")
+            _rename_key(
+                params, "max_tokens", "maxOutputTokens", "model.parameters.max_tokens"
+            )
             _rename_key(params, "top_p", "topP", "model.parameters.top_p")
             _rename_key(
                 params,
@@ -126,7 +136,9 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
                     prop: dict[str, Any] = {"name": name}
                     # type → kind
                     if "type" in spec:
-                        _deprecation(f"inputs.{name}.type", f"inputSchema.properties.{name}.kind")
+                        _deprecation(
+                            f"inputs.{name}.type", f"inputSchema.properties.{name}.kind"
+                        )
                         prop["kind"] = spec.pop("type")
                     else:
                         prop["kind"] = "string"

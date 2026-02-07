@@ -50,19 +50,19 @@ output-format = "full"
 
 # Entry points for invoker discovery
 [project.entry-points."prompty.renderers"]
-jinja2 = "prompty.renderers:Jinja2Renderer"
-mustache = "prompty.renderers:MustacheRenderer"
+jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
+mustache = "prompty.renderers.mustache:MustacheRenderer"
 
 [project.entry-points."prompty.parsers"]
-prompty = "prompty.parsers:PromptyChatParser"
+prompty = "prompty.parsers.prompty:PromptyChatParser"
 
 [project.entry-points."prompty.executors"]
-openai = "prompty.executor:OpenAIExecutor"
-azure = "prompty.executor:AzureExecutor"
+openai = "prompty.openai.executor:OpenAIExecutor"
+azure = "prompty.azure.executor:AzureExecutor"
 
 [project.entry-points."prompty.processors"]
-openai = "prompty.processor:OpenAIProcessor"
-azure = "prompty.processor:AzureProcessor"
+openai = "prompty.openai.processor:OpenAIProcessor"
+azure = "prompty.azure.processor:AzureProcessor"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

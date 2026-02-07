@@ -9,7 +9,7 @@ Requires ``opentelemetry-api`` — install via ``pip install prompty[otel]``.
 Usage::
 
     from prompty import Tracer
-    from prompty.otel import otel_tracer
+    from prompty.tracing.otel import otel_tracer
 
     Tracer.add("otel", otel_tracer())
     # or with a custom tracer name:
@@ -56,7 +56,7 @@ def otel_tracer(
 
     Each call to the returned factory creates a new OTel span. The yielded
     ``add(key, value)`` callback expands dicts/lists into dotted span
-    attributes via :func:`~prompty.tracer.verbose_trace`.
+    attributes via :func:`~prompty.tracing.tracer.verbose_trace`.
 
     Special handling:
 
@@ -75,7 +75,7 @@ def otel_tracer(
     Usage::
 
         from prompty import Tracer
-        from prompty.otel import otel_tracer
+        from prompty.tracing.otel import otel_tracer
 
         Tracer.add("otel", otel_tracer())
         Tracer.add("otel", otel_tracer(tracer_name="my.service"))
@@ -93,9 +93,13 @@ def otel_tracer(
                 # Check for exception in result
                 if key == "result" and isinstance(value, dict) and "exception" in value:
                     exc_info = value["exception"]
-                    span.set_status(Status(StatusCode.ERROR, str(exc_info.get("message", ""))))
+                    span.set_status(
+                        Status(StatusCode.ERROR, str(exc_info.get("message", "")))
+                    )
                     span.set_attribute("exception.type", str(exc_info.get("type", "")))
-                    span.set_attribute("exception.message", str(exc_info.get("message", "")))
+                    span.set_attribute(
+                        "exception.message", str(exc_info.get("message", ""))
+                    )
                     tb = exc_info.get("traceback")
                     if tb:
                         if isinstance(tb, list):
@@ -107,7 +111,9 @@ def otel_tracer(
                 # Use verbose expansion for structured data
                 sanitized = sanitize(key, value)
                 if isinstance(sanitized, (dict, list)):
-                    verbose_trace(lambda k, v: _set_span_attribute(span, k, v), key, sanitized)
+                    verbose_trace(
+                        lambda k, v: _set_span_attribute(span, k, v), key, sanitized
+                    )
                 else:
                     _set_span_attribute(span, key, sanitized)
 

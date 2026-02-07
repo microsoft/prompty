@@ -28,9 +28,27 @@ from agentschema import (
     Tool,
 )
 
-from .executor import AzureExecutor, OpenAIExecutor
+# Provider implementations
+from .azure.executor import AzureExecutor
+from .azure.processor import AzureProcessor
 
-# Pipeline
+# Loader
+from .core.loader import load, load_async
+
+# Abstract message types
+from .core.types import (
+    RICH_KINDS,
+    ROLES,
+    AudioPart,
+    ContentPart,
+    FilePart,
+    ImagePart,
+    Message,
+    TextPart,
+    ThreadMarker,
+)
+
+# Pipeline (via backward-compat shim)
 from .invoker import (
     ExecutorProtocol,
     InvokerError,
@@ -47,15 +65,15 @@ from .invoker import (
     run_async,
     validate_inputs,
 )
-from .loader import load, load_async
-from .parsers import PromptyChatParser
-from .processor import AzureProcessor, OpenAIProcessor, ToolCall
+from .openai.executor import OpenAIExecutor
+from .openai.processor import OpenAIProcessor, ToolCall
 
 # Concrete invokers
+from .parsers import PromptyChatParser
 from .renderers import Jinja2Renderer, MustacheRenderer
 
 # Tracing
-from .tracer import (
+from .tracing.tracer import (
     PromptyTracer,
     Tracer,
     console_tracer,
@@ -64,17 +82,4 @@ from .tracer import (
     trace,
     trace_span,
     verbose_trace,
-)
-
-# Abstract message types
-from .types import (
-    RICH_KINDS,
-    ROLES,
-    AudioPart,
-    ContentPart,
-    FilePart,
-    ImagePart,
-    Message,
-    TextPart,
-    ThreadMarker,
 )

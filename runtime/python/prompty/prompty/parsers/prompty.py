@@ -17,14 +17,14 @@ from typing import Any
 
 from agentschema import PromptAgent
 
-from .tracer import trace
-from .types import (
+from ..core.types import (
     ROLES,
     ContentPart,
     ImagePart,
     Message,
     TextPart,
 )
+from ..tracing.tracer import trace
 
 __all__ = ["PromptyChatParser"]
 

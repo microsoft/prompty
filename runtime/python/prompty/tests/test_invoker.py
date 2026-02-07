@@ -20,6 +20,11 @@ from unittest import mock
 
 import pytest
 
+from prompty.core.types import (
+    Message,
+    TextPart,
+    ThreadMarker,
+)
 from prompty.invoker import (
     InvokerError,
     _dict_to_message,
@@ -36,11 +41,6 @@ from prompty.invoker import (
     process,
     run,
     validate_inputs,
-)
-from prompty.types import (
-    Message,
-    TextPart,
-    ThreadMarker,
 )
 
 # ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ def _patch_entry_points(**groups):
         return list(ep_map[group].values())
 
     return mock.patch(
-        "prompty.discovery.importlib.metadata.entry_points",
+        "prompty.core.discovery.importlib.metadata.entry_points",
         side_effect=fake_entry_points,
     )
 

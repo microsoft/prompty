@@ -1,7 +1,9 @@
-"""Response processor — extracts clean results from raw LLM responses.
+"""OpenAI response processor — extracts clean results from raw LLM responses.
 
 Handles ChatCompletion, Completion, embedding responses, and streaming.
-Registered as ``openai`` and ``azure`` in ``prompty.processors``.
+Registered as ``openai`` in ``prompty.processors``.
+
+Also provides shared processing logic used by the Azure processor.
 """
 
 from __future__ import annotations
@@ -11,9 +13,9 @@ from typing import Any
 
 from agentschema import PromptAgent
 
-from .tracer import trace
+from ..tracing.tracer import trace
 
-__all__ = ["OpenAIProcessor", "AzureProcessor"]
+__all__ = ["OpenAIProcessor", "ToolCall"]
 
 
 @dataclass
@@ -26,7 +28,7 @@ class ToolCall:
 
 
 class OpenAIProcessor:
-    """Processor for OpenAI / Azure OpenAI responses.
+    """Processor for OpenAI responses.
 
     Extracts content, tool calls, or embeddings from raw API responses.
     Registered as ``openai`` in ``prompty.processors``.
@@ -49,32 +51,8 @@ class OpenAIProcessor:
         return _process_response(response)
 
 
-class AzureProcessor:
-    """Processor for Azure OpenAI responses.
-
-    Identical logic to OpenAIProcessor — Azure uses the same response types.
-    Registered as ``azure`` in ``prompty.processors``.
-    """
-
-    @trace
-    def process(
-        self,
-        agent: PromptAgent,
-        response: Any,
-    ) -> Any:
-        return _process_response(response)
-
-    @trace
-    async def process_async(
-        self,
-        agent: PromptAgent,
-        response: Any,
-    ) -> Any:
-        return _process_response(response)
-
-
 # ---------------------------------------------------------------------------
-# Shared extraction logic
+# Shared extraction logic (also used by Azure processor)
 # ---------------------------------------------------------------------------
 
 
@@ -148,5 +126,9 @@ def _process_embedding(response: Any) -> Any:
 def _stream_generator(response):
     """Yield content chunks from a streaming response."""
     for chunk in response:
-        if hasattr(chunk, "choices") and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
+        if (
+            hasattr(chunk, "choices")
+            and len(chunk.choices) == 1
+            and chunk.choices[0].delta.content is not None
+        ):
             yield chunk.choices[0].delta.content

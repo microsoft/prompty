@@ -10,7 +10,7 @@ packages register their implementations in ``pyproject.toml``:
     jinja2 = "prompty.renderers:Jinja2Renderer"
 
     [project.entry-points."prompty.executors"]
-    openai = "prompty_openai:OpenAIExecutor"
+    openai = "prompty.openai:OpenAIExecutor"
 """
 
 from __future__ import annotations

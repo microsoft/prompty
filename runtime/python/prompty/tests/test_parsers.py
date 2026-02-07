@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from agentschema import PromptAgent
 
+from prompty.core.types import ImagePart, Message, TextPart
 from prompty.parsers import PromptyChatParser
-from prompty.types import ImagePart, Message, TextPart
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -120,7 +120,9 @@ class TestNoThreadInParser:
 
     def test_nonce_marker_treated_as_text(self):
         """Nonce markers from renderer are just text to the parser."""
-        rendered = "system:\nBefore __PROMPTY_THREAD_abc123_conv__ After\n\nuser:\nHello"
+        rendered = (
+            "system:\nBefore __PROMPTY_THREAD_abc123_conv__ After\n\nuser:\nHello"
+        )
         result = self.parser.parse(self.agent, rendered)
         assert all(isinstance(m, Message) for m in result)
         assert "__PROMPTY_THREAD_" in _text(result[0])
@@ -230,7 +232,9 @@ class TestInlineImages:
         assert img.source == "https://example.com/image.png"
 
     def test_text_and_image_mixed(self):
-        rendered = "user:\nLook at this: ![photo](https://example.com/img.png) and this text."
+        rendered = (
+            "user:\nLook at this: ![photo](https://example.com/img.png) and this text."
+        )
         result = self.parser.parse(self.agent, rendered)
         parts = result[0].parts
         text_parts = [p for p in parts if isinstance(p, TextPart)]
