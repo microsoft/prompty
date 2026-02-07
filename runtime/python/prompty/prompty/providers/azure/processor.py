@@ -12,8 +12,8 @@ from typing import Any
 
 from agentschema import PromptAgent
 
+from ...tracing.tracer import trace
 from ..openai.processor import _process_response
-from ..tracing.tracer import trace
 
 __all__ = ["AzureProcessor"]
 

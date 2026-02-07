@@ -18,8 +18,8 @@ from agentschema import (
     PromptAgent,
 )
 
-from .._version import VERSION
-from ..core.types import (
+from ..._version import VERSION
+from ...core.types import (
     AudioPart,
     ContentPart,
     FilePart,
@@ -27,7 +27,7 @@ from ..core.types import (
     Message,
     TextPart,
 )
-from ..tracing.tracer import Tracer, trace
+from ...tracing.tracer import Tracer, trace
 
 __all__ = ["OpenAIExecutor"]
 

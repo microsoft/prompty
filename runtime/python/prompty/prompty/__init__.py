@@ -28,10 +28,6 @@ from agentschema import (
     Tool,
 )
 
-# Provider implementations
-from .azure.executor import AzureExecutor
-from .azure.processor import AzureProcessor
-
 # Loader
 from .core.loader import load, load_async
 
@@ -65,11 +61,15 @@ from .invoker import (
     run_async,
     validate_inputs,
 )
-from .openai.executor import OpenAIExecutor
-from .openai.processor import OpenAIProcessor, ToolCall
 
 # Concrete invokers
 from .parsers import PromptyChatParser
+
+# Provider implementations
+from .providers.azure.executor import AzureExecutor
+from .providers.azure.processor import AzureProcessor
+from .providers.openai.executor import OpenAIExecutor
+from .providers.openai.processor import OpenAIProcessor, ToolCall
 from .renderers import Jinja2Renderer, MustacheRenderer
 
 # Tracing

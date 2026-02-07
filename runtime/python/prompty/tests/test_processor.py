@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 from agentschema import PromptAgent
 
-from prompty.azure.processor import AzureProcessor
-from prompty.openai.processor import (
+from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.openai.processor import (
     OpenAIProcessor,
     ToolCall,
 )

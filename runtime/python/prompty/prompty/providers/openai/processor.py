@@ -13,7 +13,7 @@ from typing import Any
 
 from agentschema import PromptAgent
 
-from ..tracing.tracer import trace
+from ...tracing.tracer import trace
 
 __all__ = ["OpenAIProcessor", "ToolCall"]
 

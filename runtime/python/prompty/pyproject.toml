@@ -57,12 +57,12 @@ mustache = "prompty.renderers.mustache:MustacheRenderer"
 prompty = "prompty.parsers.prompty:PromptyChatParser"
 
 [project.entry-points."prompty.executors"]
-openai = "prompty.openai.executor:OpenAIExecutor"
-azure = "prompty.azure.executor:AzureExecutor"
+openai = "prompty.providers.openai.executor:OpenAIExecutor"
+azure = "prompty.providers.azure.executor:AzureExecutor"
 
 [project.entry-points."prompty.processors"]
-openai = "prompty.openai.processor:OpenAIProcessor"
-azure = "prompty.azure.processor:AzureProcessor"
+openai = "prompty.providers.openai.processor:OpenAIProcessor"
+azure = "prompty.providers.azure.processor:AzureProcessor"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

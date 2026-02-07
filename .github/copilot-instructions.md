@@ -41,6 +41,100 @@ Only the PromptAgent subset — not the full spec:
 
 ---
 
+## Python Coding Rules
+
+### Environment & Tooling
+
+- **Python ≥ 3.11** — use modern syntax: `X | Y` unions, `match`/`case`, `ExceptionGroup`, `type` aliases.
+- **`uv` exclusively** — never use `pip`, `pip install`, `python -m pip`, or `python -m venv`. Use `uv venv`, `uv pip install`, `uv run`, etc. Package installs: `uv pip install -e ".[dev,all]"`.
+- **Flit build system** — `flit_core >=3.11,<4`. Version is dynamic via `_version.py`.
+- **Ruff** for linting and formatting. Config lives in `pyproject.toml`:
+  - Line length: **120**
+  - Target: `py311`
+  - Rules: `E`, `F`, `I` (isort), `UP` (pyupgrade)
+  - `E501` (line too long) is **ignored** (handled by formatter)
+  - `__init__.py` files ignore `F401` (unused imports — they're re-exports)
+  - `tests/test_otel.py` ignores `E402` (imports not at top — conditional skip)
+  - Run: `uv run ruff check .` and `uv run ruff format .`
+
+### Code Style
+
+- **`from __future__ import annotations`** — include at the top of every module for PEP 604 style annotations.
+- **Type hints everywhere** — all function signatures, return types, and class attributes must be annotated. Use `from typing import Any` sparingly; prefer specific types.
+- **Docstrings** — every module gets a module-level docstring explaining purpose and registration key (if applicable). Use imperative mood. Public functions & classes get docstrings; private helpers may omit them.
+- **`__all__`** — define in modules that export public API (especially `core/pipeline.py`, `core/discovery.py`). Not needed in `__init__.py` re-export files.
+- **Private names** — prefix internal helpers with `_` (e.g., `_message_to_wire`, `_build_options`). These can still be imported across sibling modules within the package but signal "not public API".
+- **No bare `except:`** — always catch specific exceptions. Use `except Exception:` at minimum.
+- **f-strings preferred** over `%` formatting or `.format()`.
+- **Constants** — `UPPER_SNAKE_CASE`, defined at module level (e.g., `ROLES`, `RICH_KINDS`, `THREAD_NONCE_PREFIX`).
+
+### Imports
+
+- **Internal code uses relative imports**:
+
+  ```python
+  # Inside core/pipeline.py
+  from .types import Message
+  from .discovery import get_renderer
+  from ..tracing.tracer import trace
+
+  # Inside providers/azure/executor.py (3 dots = up to prompty/)
+  from ..._version import VERSION
+  from ...core.types import Message
+  from ..openai.executor import _build_options, _message_to_wire
+  ```
+
+- **Tests use absolute imports** from the package:
+  ```python
+  from prompty.core.types import Message, TextPart
+  from prompty.providers.openai.executor import OpenAIExecutor
+  from prompty.tracing.tracer import Tracer, trace
+  ```
+- **Users import from `prompty` directly** — everything is re-exported at the top:
+  ```python
+  from prompty import load, prepare, run, Message, Tracer, trace
+  ```
+- **Sort order** enforced by ruff's `I` (isort) rule: stdlib → third-party → local, alphabetized within groups.
+- **Lazy imports for optional deps** — `openai`, `jinja2`, `chevron`, `azure.identity` are imported inside functions/methods, not at module top level, so the package works without them installed:
+  ```python
+  def execute(self, agent, messages):
+      from openai import OpenAI  # lazy — only needed when actually called
+  ```
+
+### Async Conventions
+
+- Every public pipeline function has a sync and async variant: `prepare()` / `prepare_async()`, `run()` / `run_async()`.
+- Protocol classes define both `render()` / `render_async()`, `parse()` / `parse_async()`, etc.
+- Use `aiofiles` for async file I/O (e.g., `load_prompty_async`).
+- Use `pytest-asyncio` for async tests.
+
+### Testing
+
+- All tests in `runtime/python/prompty/tests/`.
+- Run: `.venv/Scripts/python.exe -m pytest tests/ -q` or `uv run pytest tests/ -q`.
+- **Mock external services** — never make real API calls. Use `unittest.mock.patch` to mock SDK clients.
+- **Mock entry points** for discovery tests: patch `prompty.core.discovery.importlib.metadata.entry_points`.
+- Test file naming: `test_<module>.py` — mirrors the module it tests.
+- Fixtures and `.prompty` test files live in `tests/prompts/`.
+- **Coverage**: `pytest-cov` available; `[tool.coverage.report] show_missing = true`.
+
+### Package Management
+
+- **Required deps**: `agentschema`, `pyyaml`, `python-dotenv`, `aiofiles`.
+- **Optional deps** via extras: `[jinja2]`, `[mustache]`, `[openai]`, `[azure]`, `[otel]`, `[all]`, `[dev]`.
+- **Never add optional deps to `dependencies`** — they go in `[project.optional-dependencies]`.
+- **Entry points** register invokers for pluggable discovery — always update `pyproject.toml` when adding a new renderer, parser, executor, or processor.
+- After changing entry points, reinstall: `uv pip install -e ".[dev,all]"`.
+
+### Error Handling
+
+- Raise `InvokerError` (from `core/discovery.py`) for missing invoker registrations.
+- Raise `ValueError` for invalid `.prompty` frontmatter, missing env vars without defaults.
+- Raise `FileNotFoundError` for missing `.prompty` files or `${file:...}` references.
+- Emit `warnings.warn("...", DeprecationWarning)` for legacy property migrations — never silently swallow old formats.
+
+---
+
 ## Architecture
 
 ### How a `.prompty` File is Processed
@@ -96,12 +190,10 @@ PromptAgent
 
 ### What Gets Deleted
 
-| Path                                   | Reason                                                       |
-| -------------------------------------- | ------------------------------------------------------------ |
-| `specification/` (entire directory)    | TypeSpec + emitter moved to AgentSchema                      |
-| `runtime/csharp/` (entire directory)   | Auto-generated from same TypeSpec                            |
-| `runtime/python/prompty/prompty/core/` | 21 auto-generated model files, replaced by `agentschema` dep |
-| `runtime/python/prompty/tests/core/`   | 44 auto-generated test files                                 |
+| Path                                 | Reason                                  |
+| ------------------------------------ | --------------------------------------- |
+| `specification/` (entire directory)  | TypeSpec + emitter moved to AgentSchema |
+| `runtime/csharp/` (entire directory) | Auto-generated from same TypeSpec       |
 
 ### What Stays
 
@@ -121,23 +213,224 @@ prompty/
 │   │       └── ...
 │   ├── python/                       # NEW Python runtime — the rebuild target
 │   │   └── prompty/
-│   │       ├── pyproject.toml
-│   │       └── prompty/
-│   │           ├── __init__.py       # Public API exports
-│   │           ├── _version.py       # VERSION = "2.0.0.dev0"
-│   │           ├── loader.py         # PHASE 1: load() → PromptAgent
-│   │           ├── invoker.py        # PHASE 2: Invoker ABCs + factory
-│   │           ├── renderers.py      # PHASE 3: Jinja2Renderer, MustacheRenderer
-│   │           ├── parsers.py        # PHASE 3: PromptyChatParser
-│   │           ├── executor.py       # PHASE 3: OpenAI/Azure executor
-│   │           ├── processor.py      # PHASE 3: Response processing
-│   │           ├── tracer.py         # KEPT: 352-line tracing framework
-│   │           └── utils.py          # KEPT: frontmatter parsing, file loading
+│   │       ├── pyproject.toml        # Package config, deps, entry points
+│   │       ├── tests/                # All test files
+│   │       └── prompty/              # The package — see "Python Package Layout" below
 │   ├── promptycs/                    # Hand-written C# runtime (separate migration)
 │   └── promptyjs/                    # Hand-written JS runtime (separate migration)
 ├── vscode/prompty/                   # VS Code extension
 └── web/                              # Documentation site
 ```
+
+---
+
+## Python Package Layout
+
+All source code lives under `runtime/python/prompty/prompty/`. The package is organized
+into subpackages by responsibility:
+
+```
+prompty/                              # runtime/python/prompty/prompty/
+├── __init__.py                       # Public API — re-exports everything users need
+├── _version.py                       # VERSION = "2.0.0.dev0"
+├── invoker.py                        # Backward-compat re-export shim (see below)
+│
+├── core/                             # Infrastructure & pipeline logic
+│   ├── __init__.py                   # Re-exports from all core submodules
+│   ├── loader.py                     # load(), load_async() → PromptAgent
+│   ├── migration.py                  # Legacy v1 → v2 frontmatter migration
+│   ├── utils.py                      # Frontmatter parsing, file I/O helpers
+│   ├── types.py                      # Message, ContentPart, TextPart, ImagePart, etc.
+│   ├── protocols.py                  # RendererProtocol, ParserProtocol, ExecutorProtocol, ProcessorProtocol
+│   ├── discovery.py                  # Entry-point-based invoker lookup, InvokerError
+│   └── pipeline.py                   # prepare(), execute(), process(), run(), validate_inputs()
+│
+├── renderers/                        # Template engine implementations
+│   ├── __init__.py                   # Re-exports Jinja2Renderer, MustacheRenderer
+│   ├── _common.py                    # Shared: THREAD_NONCE_PREFIX, _prepare_render_inputs()
+│   ├── jinja2.py                     # Jinja2Renderer (optional dep: jinja2)
+│   └── mustache.py                   # MustacheRenderer (optional dep: chevron)
+│
+├── parsers/                          # Format parser implementations
+│   ├── __init__.py                   # Re-exports PromptyChatParser
+│   └── prompty.py                    # PromptyChatParser — role markers → Message list
+│
+├── providers/                        # LLM provider implementations
+│   ├── __init__.py                   # Docstring explaining how to add a provider
+│   ├── openai/                       # OpenAI provider
+│   │   ├── __init__.py               # Re-exports OpenAIExecutor, OpenAIProcessor, ToolCall
+│   │   ├── executor.py               # OpenAIExecutor + shared wire-format helpers
+│   │   └── processor.py              # OpenAIProcessor + ToolCall + shared response processing
+│   └── azure/                        # Azure OpenAI provider
+│       ├── __init__.py               # Re-exports AzureExecutor, AzureProcessor
+│       ├── executor.py               # AzureExecutor (imports wire helpers from openai)
+│       └── processor.py              # AzureProcessor (imports processing from openai)
+│
+└── tracing/                          # Observability
+    ├── __init__.py                   # Re-exports tracer symbols
+    ├── tracer.py                     # Tracer registry, @trace decorator, PromptyTracer, console_tracer
+    └── otel.py                       # OpenTelemetry backend (optional dep: opentelemetry-api)
+```
+
+### Module Responsibilities
+
+#### `core/` — Infrastructure
+
+| Module         | What it does                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `loader.py`    | `load()` / `load_async()` — parse `.prompty` file → `PromptAgent`. Handles frontmatter, `${env:}`, `${file:}`.           |
+| `migration.py` | `_migrate_legacy()` — converts v1 property names to v2 AgentSchema names with deprecation warnings.                      |
+| `utils.py`     | `parse()` — regex frontmatter/body split. `load_prompty()`, `load_text()`, `load_json()` file helpers.                   |
+| `types.py`     | `Message`, `TextPart`, `ImagePart`, `AudioPart`, `FilePart`, `ContentPart`, `ThreadMarker`, `ROLES`.                     |
+| `protocols.py` | Protocol classes defining the interfaces: `RendererProtocol`, `ParserProtocol`, `ExecutorProtocol`, `ProcessorProtocol`. |
+| `discovery.py` | Entry-point-based lookup: `get_renderer()`, `get_parser()`, `get_executor()`, `get_processor()`, `clear_cache()`.        |
+| `pipeline.py`  | `prepare()`, `execute()`, `process()`, `run()` — orchestrates renderer→parser→executor→processor.                        |
+
+#### `renderers/` — Template Engines
+
+| Module        | What it does                                                                  |
+| ------------- | ----------------------------------------------------------------------------- |
+| `_common.py`  | `THREAD_NONCE_PREFIX`, `_prepare_render_inputs()` — shared rendering helpers. |
+| `jinja2.py`   | `Jinja2Renderer` — renders `agent.instructions` with inputs via Jinja2.       |
+| `mustache.py` | `MustacheRenderer` — renders via Chevron (Mustache).                          |
+
+#### `parsers/` — Format Parsers
+
+| Module       | What it does                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| `prompty.py` | `PromptyChatParser` — splits role markers (`system:`, `user:`, `assistant:`) → `list[Message]`. |
+
+#### `providers/` — LLM Providers
+
+Each provider is a subpackage with `executor.py` and `processor.py`:
+
+| Provider  | Executor         | Processor         | Registration Key | SDK                         |
+| --------- | ---------------- | ----------------- | ---------------- | --------------------------- |
+| `openai/` | `OpenAIExecutor` | `OpenAIProcessor` | `openai`         | `openai` package            |
+| `azure/`  | `AzureExecutor`  | `AzureProcessor`  | `azure`          | `openai` + `azure-identity` |
+
+**Shared code**: Wire-format helpers (`_message_to_wire`, `_part_to_wire`, `_tools_to_wire`, `_build_options`,
+`_schema_to_wire`) live in `providers/openai/executor.py` since Azure uses the same OpenAI SDK. The Azure
+executor imports these directly. Similarly, `_process_response` lives in `providers/openai/processor.py` and
+is imported by the Azure processor.
+
+**Adding a new provider** (e.g. Anthropic):
+
+1. Create `providers/anthropic/` with `__init__.py`, `executor.py`, `processor.py`
+2. Implement `AnthropicExecutor.execute()` / `execute_async()` and `AnthropicProcessor.process()` / `process_async()`
+3. Register entry points in `pyproject.toml`:
+
+   ```toml
+   [project.entry-points."prompty.executors"]
+   anthropic = "prompty.providers.anthropic.executor:AnthropicExecutor"
+
+   [project.entry-points."prompty.processors"]
+   anthropic = "prompty.providers.anthropic.processor:AnthropicProcessor"
+   ```
+
+4. Add optional dependency: `anthropic = ["anthropic"]`
+
+#### `tracing/` — Observability
+
+| Module      | What it does                                                                                  |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| `tracer.py` | `Tracer` registry, `@trace` decorator, `PromptyTracer` (JSON file backend), `console_tracer`. |
+| `otel.py`   | `otel_tracer()` — OpenTelemetry span backend. Optional dep: `opentelemetry-api`.              |
+
+### Top-level Files
+
+| File          | What it does                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `__init__.py` | Public API surface — re-exports everything users need from subpackages. `from prompty import X` works.                                                 |
+| `_version.py` | `VERSION = "2.0.0.dev0"` — read by flit for package version.                                                                                           |
+| `invoker.py`  | Backward-compatibility shim. Re-exports from `core.protocols`, `core.discovery`, `core.pipeline` so `from prompty.invoker import prepare` still works. |
+
+### Entry Points (in `pyproject.toml`)
+
+The invoker discovery system uses Python entry points to find implementations at runtime:
+
+```toml
+[project.entry-points."prompty.renderers"]
+jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
+mustache = "prompty.renderers.mustache:MustacheRenderer"
+
+[project.entry-points."prompty.parsers"]
+prompty = "prompty.parsers.prompty:PromptyChatParser"
+
+[project.entry-points."prompty.executors"]
+openai = "prompty.providers.openai.executor:OpenAIExecutor"
+azure = "prompty.providers.azure.executor:AzureExecutor"
+
+[project.entry-points."prompty.processors"]
+openai = "prompty.providers.openai.processor:OpenAIProcessor"
+azure = "prompty.providers.azure.processor:AzureProcessor"
+```
+
+### Import Conventions
+
+**For users** — import from `prompty` directly:
+
+```python
+from prompty import load, prepare, run, Tracer, trace, Message
+```
+
+**For internal code** — use relative imports within the package:
+
+```python
+# Inside core/pipeline.py
+from .types import Message
+from .discovery import get_renderer
+from ..tracing.tracer import trace
+
+# Inside providers/azure/executor.py
+from ..._version import VERSION
+from ...core.types import Message
+from ..openai.executor import _build_options, _message_to_wire
+from ...tracing.tracer import Tracer, trace
+```
+
+**For tests** — import from the specific submodule:
+
+```python
+from prompty.core.types import Message, TextPart
+from prompty.providers.openai.executor import OpenAIExecutor, _message_to_wire
+from prompty.tracing.tracer import Tracer, trace
+```
+
+### Test Files
+
+All tests live in `runtime/python/prompty/tests/`:
+
+| Test File           | What it covers                                         |
+| ------------------- | ------------------------------------------------------ |
+| `test_loader.py`    | `.prompty` file loading, frontmatter, legacy migration |
+| `test_invoker.py`   | Protocols, discovery, pipeline, thread markers         |
+| `test_renderers.py` | Jinja2 and Mustache template rendering                 |
+| `test_parsers.py`   | Role marker parsing → Message list                     |
+| `test_executor.py`  | OpenAI/Azure executor wire format (mocked API)         |
+| `test_processor.py` | Response extraction — chat, embedding, streaming       |
+| `test_tracer.py`    | Tracer registry, @trace decorator, PromptyTracer       |
+| `test_otel.py`      | OpenTelemetry backend (skipped if otel not installed)  |
+
+Run tests: `uv run pytest tests/ -q` (or `.venv/Scripts/python -m pytest tests/ -q`)
+
+### Dependencies
+
+**Required**: `agentschema`, `pyyaml`, `python-dotenv`, `aiofiles`
+
+**Optional** (install via extras):
+
+| Extra      | Packages                           | What it enables           |
+| ---------- | ---------------------------------- | ------------------------- |
+| `jinja2`   | `jinja2`                           | Jinja2 template rendering |
+| `mustache` | `chevron`                          | Mustache rendering        |
+| `openai`   | `openai`                           | OpenAI provider           |
+| `azure`    | `openai`, `azure-identity`         | Azure OpenAI provider     |
+| `otel`     | `opentelemetry-api>=1.20`          | OTel tracing backend      |
+| `all`      | All of the above                   | Everything                |
+| `dev`      | pytest, ruff, type stubs, otel-sdk | Development               |
+
+Install: `uv pip install -e ".[dev,all]"`
 
 ---
 
@@ -614,98 +907,75 @@ All of the following must pass before moving to Phase 2:
 - `agent.model` is a typed `Model` object
 - `agent.tools` contains typed tool instances (`FunctionTool`, `McpTool`, etc.)
 - Legacy `.prompty` files load with deprecation warnings
-- No imports from `prompty.core` anywhere
 
 ---
 
-## PHASE 2: Revisit the Invokers
+## PHASE 2: Invoker Abstractions (IMPLEMENTED)
 
-### Goal
+### Design
 
-Design the invoker abstractions that operate on `PromptAgent`. The pipeline is:
+The invoker system uses **Protocol classes** (not ABCs) for the four pipeline stages, with
+**entry-point-based discovery** replacing the old `InvokerFactory` decorator pattern:
 
-```
-PromptAgent + inputs → Renderer → rendered string
-                           → Parser → list[dict] (messages)
-                               → Executor → LLM response
-                                   → Processor → final result
-```
+| Component | Protocol            | Defined in          | Discovery Key                |
+| --------- | ------------------- | ------------------- | ---------------------------- |
+| Renderer  | `RendererProtocol`  | `core/protocols.py` | `agent.template.format.kind` |
+| Parser    | `ParserProtocol`    | `core/protocols.py` | `agent.template.parser.kind` |
+| Executor  | `ExecutorProtocol`  | `core/protocols.py` | `agent.model.provider`       |
+| Processor | `ProcessorProtocol` | `core/protocols.py` | `agent.model.provider`       |
 
-### Design Questions to Resolve
+**Discovery** (`core/discovery.py`): Uses `importlib.metadata.entry_points()` to look up
+implementations registered under `prompty.renderers`, `prompty.parsers`, `prompty.executors`,
+`prompty.processors` entry point groups. Results are cached; `clear_cache()` resets.
 
-1. **Factory/registry pattern**: Keep `InvokerFactory` with `@register_renderer("jinja2")` decorators? Or simplify to direct dispatch based on `agent.template.format.kind` and `agent.model.provider`?
+**Pipeline** (`core/pipeline.py`): Orchestrates the full flow:
 
-2. **Invoker receives PromptAgent how**: Constructor injection (current: `Invoker.__init__(self, prompty)`) vs passed per call (`invoker.run(agent, data)`)?
+- `prepare(agent, inputs)` → render + parse → `list[Message]`
+- `execute(agent, messages)` → call LLM → raw response
+- `process(agent, response)` → extract content → final result
+- `run(agent, inputs)` → prepare + execute + process
+- `validate_inputs(agent, inputs)` → check required inputs
+- All have `_async` variants
 
-3. **Executor + Processor**: Keep separate (current) or merge into one stage? Current split: Executor calls API, Processor extracts content. Merging simplifies the pipeline but reduces composability.
+**Backward compatibility**: `prompty/invoker.py` re-exports everything from `core.protocols`,
+`core.discovery`, and `core.pipeline` so `from prompty.invoker import prepare` still works.
 
-4. **Async strategy**: Async-first with sync wrapper? Or sync/async ABCs like current?
+### Implemented Files
 
-5. **Tracing integration**: Keep `@trace` decorator on `.run()` methods (current) or build tracing into the base class?
-
-### Files to Create
-
-| File                    | Contents                                                                            |
-| ----------------------- | ----------------------------------------------------------------------------------- |
-| `prompty/invoker.py`    | `Invoker` ABC, `Renderer`, `Parser`, `Executor`, `Processor` ABCs, `InvokerFactory` |
-| `tests/test_invoker.py` | Factory registration, dispatch logic, pipeline composition                          |
-
-### Key Reference: Old Invoker Pattern
-
-The old runtime (`runtime/prompty/prompty/invoker.py`, 520 lines) has:
-
-- `Invoker` ABC with `invoke()` / `invoke_async()` abstract methods and `run()` / `run_async()` traced wrappers
-- `Renderer(Invoker)` — before rendering, asks Parser to sanitize template content
-- `Parser(Invoker)` — has `sanitize()` and `process()` methods; `run()` calls `invoke()` then `process()`
-- `Executor(Invoker)` — direct pass-through
-- `Processor(Invoker)` — direct pass-through
-- `InvokerFactory` — class-level dicts `_renderers`, `_parsers`, `_executors`, `_processors`; dispatch keys:
-  - Renderer: `template.format` (e.g., `"jinja2"`)
-  - Parser: `{template.parser}.{model.api}` (e.g., `"prompty.chat"`)
-  - Executor: `model.connection["type"]` (e.g., `"azure_openai"`)
-  - Processor: same as executor
-- `NoOp` invoker registered for `"NOOP"` keys and unused parser combos
-- Registration via `@InvokerFactory.register_renderer("jinja2")` decorators
-
-### Phase 2 Gate
-
-- Abstract base classes defined and tested
-- Factory dispatch logic tested (registration, lookup, NOOP handling)
-- Pipeline composition tested (renderer → parser → executor → processor)
-- No concrete implementations yet — those are Phase 3
+| File                        | Contents                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `prompty/core/protocols.py` | `RendererProtocol`, `ParserProtocol`, `ExecutorProtocol`, `ProcessorProtocol`                          |
+| `prompty/core/discovery.py` | `get_renderer()`, `get_parser()`, `get_executor()`, `get_processor()`, `clear_cache()`, `InvokerError` |
+| `prompty/core/pipeline.py`  | `prepare()`, `execute()`, `process()`, `run()`, `validate_inputs()` + async variants                   |
+| `prompty/invoker.py`        | Backward-compat shim — re-exports from `core.*` submodules                                             |
+| `tests/test_invoker.py`     | Protocol conformance, discovery, pipeline composition, thread markers                                  |
 
 ---
 
-## PHASE 3: Individual Invokers
+## PHASE 3: Concrete Implementations (IMPLEMENTED)
 
-### Goal
+### Implemented Invokers
 
-Concrete implementations that plug into Phase 2 abstractions.
+| Invoker             | Type      | Registration Key | Location                                | Optional Dep               |
+| ------------------- | --------- | ---------------- | --------------------------------------- | -------------------------- |
+| `Jinja2Renderer`    | Renderer  | `jinja2`         | `prompty/renderers/jinja2.py`           | `jinja2`                   |
+| `MustacheRenderer`  | Renderer  | `mustache`       | `prompty/renderers/mustache.py`         | `chevron`                  |
+| `PromptyChatParser` | Parser    | `prompty`        | `prompty/parsers/prompty.py`            | —                          |
+| `OpenAIExecutor`    | Executor  | `openai`         | `prompty/providers/openai/executor.py`  | `openai`                   |
+| `AzureExecutor`     | Executor  | `azure`          | `prompty/providers/azure/executor.py`   | `openai`, `azure-identity` |
+| `OpenAIProcessor`   | Processor | `openai`         | `prompty/providers/openai/processor.py` | `openai`                   |
+| `AzureProcessor`    | Processor | `azure`          | `prompty/providers/azure/processor.py`  | `openai`, `azure-identity` |
 
-### Invokers to Implement
+### Implemented Test Files
 
-| Invoker             | Type      | Registration Key   | What It Does                                                     |
-| ------------------- | --------- | ------------------ | ---------------------------------------------------------------- |
-| `Jinja2Renderer`    | Renderer  | `jinja2`           | Renders `agent.instructions` with inputs via Jinja2              |
-| `MustacheRenderer`  | Renderer  | `mustache`         | Same via Chevron (optional dep)                                  |
-| `PromptyChatParser` | Parser    | `prompty.chat`     | Converts role markers → `[{"role": "system", "content": "..."}]` |
-| `OpenAIExecutor`    | Executor  | `openai` / `azure` | Calls chat completions API                                       |
-| `OpenAIProcessor`   | Processor | `openai` / `azure` | Extracts `.choices[0].message.content` or tool calls             |
+| File                      | What it covers                                   |
+| ------------------------- | ------------------------------------------------ |
+| `tests/test_renderers.py` | Jinja2 and Mustache template rendering           |
+| `tests/test_parsers.py`   | Role marker parsing → Message list               |
+| `tests/test_executor.py`  | OpenAI/Azure executor wire format (mocked API)   |
+| `tests/test_processor.py` | Response extraction — chat, embedding, streaming |
 
-### Files to Create
-
-| File                      | Contents                             | Optional Dep        |
-| ------------------------- | ------------------------------------ | ------------------- |
-| `prompty/renderers.py`    | `Jinja2Renderer`, `MustacheRenderer` | `jinja2`, `chevron` |
-| `prompty/parsers.py`      | `PromptyChatParser`                  | —                   |
-| `prompty/executor.py`     | `OpenAIExecutor`                     | `openai`            |
-| `prompty/processor.py`    | `OpenAIProcessor`                    | `openai`            |
-| `tests/test_renderers.py` | Template rendering tests             |                     |
-| `tests/test_parsers.py`   | Role marker parsing tests            |                     |
-| `tests/test_executor.py`  | Mocked LLM call tests                |                     |
-| `tests/test_processor.py` | Response extraction tests            |                     |
-
-### High-Level Public API (After Phase 3)
+### High-Level Public API
 
 ```python
 from prompty import load, prepare, run
@@ -724,13 +994,6 @@ agent = await load_async("path/to/prompt.prompty")
 messages = await prepare_async("path/to/prompt.prompty", inputs={"name": "Jane"})
 result = await run_async("path/to/prompt.prompty", inputs={"name": "Jane"})
 ```
-
-### Phase 3 Gate
-
-- `pytest` — all tests green across all phases
-- `run("basic.prompty", inputs={...})` works end-to-end with a mocked LLM
-- Provider packages installed via extras: `pip install prompty[openai]`
-- Tracing decorator applied to all invoker `.run()` methods
 
 ---
 
@@ -817,21 +1080,26 @@ Use `${file:path/to/config.json}` references in frontmatter to load shared conne
 
 ## Existing Code Reference
 
-### Kept Files (New Runtime)
+### New Runtime Files (Implemented)
 
-**`runtime/python/prompty/prompty/utils.py`** (141 lines):
+**`runtime/python/prompty/prompty/core/utils.py`**:
 
 - `parse(contents: str) -> dict` — regex-based frontmatter/body split, puts body into `instructions` key
 - `load_prompty(path) -> dict` — reads file + calls `parse()`
 - `load_prompty_async(path) -> dict` — async variant
 - `load_text(path)` / `load_json(path)` — file read helpers
 
-**`runtime/python/prompty/prompty/tracer.py`** (352 lines):
+**`runtime/python/prompty/prompty/tracing/tracer.py`**:
 
 - `Tracer` class — context-manager based tracing with pluggable backends
 - `@trace` decorator — wraps functions with tracing
 - `to_dict()` — serialization helper for trace data
 - `PromptyTracer` — console/file-based tracer implementation
+- `console_tracer` — simple console output tracer
+
+**`runtime/python/prompty/prompty/tracing/otel.py`**:
+
+- `otel_tracer()` — OpenTelemetry span backend (optional dep: `opentelemetry-api`)
 
 ### Old Runtime Reference (for porting logic)
 
@@ -839,22 +1107,22 @@ Use `${file:path/to/config.json}` references in frontmatter to load shared conne
 
 - `Prompty` (line ~155): `model`, `inputs`, `outputs`, `tools`, `template`, `instructions`, `additional_instructions`
 - `ModelProperty` (line ~83): `id`, `api`, `connection` (dict), `options` (dict)
-- `load_manifest()` (line ~459): handles all legacy migrations — THIS is the logic to port into `_migrate_legacy()`
+- `load_manifest()` (line ~459): handles all legacy migrations — ported into `core/migration.py:_migrate_legacy()`
 
-**`runtime/prompty/prompty/invoker.py`** — invoker pattern to redesign:
+**`runtime/prompty/prompty/invoker.py`** — old invoker pattern (replaced by protocols + discovery + pipeline):
 
 - `Invoker` ABC: `invoke()` / `invoke_async()` + traced `run()` / `run_async()`
-- `InvokerFactory`: registry + dispatch
+- `InvokerFactory`: registry + dispatch → replaced by `core/discovery.py` entry-point lookup
 - Dispatch keys: renderer=`template.format`, parser=`{parser}.{api}`, executor=`connection.type`
 
-**`runtime/prompty/prompty/renderers.py`** — template rendering to port:
+**`runtime/prompty/prompty/renderers.py`** — old template rendering (ported to `renderers/`):
 
-- `Jinja2Renderer`: renders with `jinja2.Template`
-- `MustacheRenderer`: renders with `chevron.render`
+- `Jinja2Renderer`: → `renderers/jinja2.py`
+- `MustacheRenderer`: → `renderers/mustache.py`
 
-**`runtime/prompty/prompty/parsers.py`** — parser to port:
+**`runtime/prompty/prompty/parsers.py`** — old parser (ported to `parsers/`):
 
-- `PromptyChatParser`: splits on role markers, produces message list
+- `PromptyChatParser`: → `parsers/prompty.py`
 
 ### AgentSchema API Reference
 

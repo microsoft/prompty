@@ -15,10 +15,10 @@ from agentschema import (
     PromptAgent,
 )
 
-from .._version import VERSION
-from ..core.types import Message
+from ..._version import VERSION
+from ...core.types import Message
+from ...tracing.tracer import Tracer, trace
 from ..openai.executor import _build_options, _message_to_wire, _tools_to_wire
-from ..tracing.tracer import Tracer, trace
 
 __all__ = ["AzureExecutor"]
 
