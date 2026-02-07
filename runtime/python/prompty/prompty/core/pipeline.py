@@ -33,6 +33,7 @@ __all__ = [
     "process_async",
     "run",
     "run_async",
+    "headless",
     # Helpers (used by tests)
     "_get_rich_input_names",
     "_inject_thread_markers",
@@ -579,3 +580,87 @@ async def run_async(
     if raw:
         return response
     return await process_async(agent, response)
+
+
+# ---------------------------------------------------------------------------
+# Headless agent construction
+# ---------------------------------------------------------------------------
+
+
+def headless(
+    api: str = "chat",
+    content: str | list | dict = "",
+    *,
+    model: str = "",
+    provider: str = "openai",
+    connection: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+) -> PromptAgent:
+    """Create a ``PromptAgent`` programmatically without a ``.prompty`` file.
+
+    Useful for embedding calls, one-off completions, or cases where a file
+    isn't needed.  The returned agent can be passed to :func:`execute` and
+    :func:`process`.
+
+    Parameters
+    ----------
+    api:
+        The API type: ``"chat"``, ``"embedding"``, ``"image"``, ``"agent"``.
+    content:
+        Content to attach — for embeddings this is the input text/list,
+        for images this is the prompt string. Stored in
+        ``agent.metadata["content"]``.
+    model:
+        Model identifier (e.g. ``"gpt-4"``, ``"text-embedding-ada-002"``).
+    provider:
+        Provider name (``"openai"`` or ``"azure"``).
+    connection:
+        Connection config dict (``kind``, ``apiKey``, ``endpoint``, etc.).
+    options:
+        Model options dict (``temperature``, ``maxOutputTokens``, etc.).
+
+    Returns
+    -------
+    PromptAgent
+        A fully typed agent ready for :func:`execute` / :func:`process`.
+
+    Examples
+    --------
+    >>> from prompty import headless, execute, process
+    >>> agent = headless(
+    ...     api="embedding",
+    ...     model="text-embedding-ada-002",
+    ...     provider="azure",
+    ...     connection={
+    ...         "kind": "key",
+    ...         "endpoint": "https://my.openai.azure.com",
+    ...         "apiKey": "sk-...",
+    ...     },
+    ...     content="hello world",
+    ... )
+    >>> response = execute(agent, agent.metadata["content"])
+    >>> result = process(agent, response)
+    """
+    from agentschema import AgentDefinition
+
+    data: dict[str, Any] = {
+        "kind": "prompt",
+        "name": "headless",
+        "model": {
+            "id": model,
+            "provider": provider,
+            "apiType": api,
+        },
+        "metadata": {
+            "content": content,
+        },
+    }
+
+    if connection:
+        data["model"]["connection"] = connection
+    if options:
+        data["model"]["options"] = options
+
+    agent = AgentDefinition.load(data)
+    assert isinstance(agent, PromptAgent)
+    return agent

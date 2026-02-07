@@ -12,6 +12,7 @@ from .loader import load, load_async
 from .pipeline import (
     execute,
     execute_async,
+    headless,
     prepare,
     prepare_async,
     process,
@@ -30,11 +31,13 @@ from .protocols import (
 from .types import (
     RICH_KINDS,
     ROLES,
+    AsyncPromptyStream,
     AudioPart,
     ContentPart,
     FilePart,
     ImagePart,
     Message,
+    PromptyStream,
     TextPart,
     ThreadMarker,
 )

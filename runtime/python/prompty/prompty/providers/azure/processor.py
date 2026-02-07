@@ -31,7 +31,7 @@ class AzureProcessor:
         agent: PromptAgent,
         response: Any,
     ) -> Any:
-        return _process_response(response)
+        return _process_response(response, agent)
 
     @trace
     async def process_async(
@@ -39,4 +39,4 @@ class AzureProcessor:
         agent: PromptAgent,
         response: Any,
     ) -> Any:
-        return _process_response(response)
+        return _process_response(response, agent)

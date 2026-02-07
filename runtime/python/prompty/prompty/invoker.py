@@ -31,6 +31,7 @@ from .core.pipeline import (
     _inject_thread_markers,  # noqa: F401
     execute,
     execute_async,
+    headless,
     prepare,
     prepare_async,
     process,
@@ -73,4 +74,6 @@ __all__ = [
     "run_async",
     # Validation
     "validate_inputs",
+    # Headless
+    "headless",
 ]

@@ -997,6 +997,224 @@ result = await run_async("path/to/prompt.prompty", inputs={"name": "Jane"})
 
 ---
 
+## PHASE 4: Feature Gaps — Structured Output, API Types, Streaming, Agent Loop, Headless
+
+### Overview
+
+Phase 4 closes the gaps between the old runtime and the new v2 runtime. The old runtime
+supported multiple API types (chat, embedding, image, agent), streaming wrappers with tracing,
+structured output via `response_format`, and a `headless()` convenience API. The new runtime
+currently only supports `chat.completions`.
+
+### Decisions Made
+
+| Item                                 | Decision                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| Structured output (`outputSchema`)   | **Yes** — convert `outputSchema` → OpenAI `response_format`               |
+| Embedding API (`apiType: embedding`) | **Yes** — dispatch to `embeddings.create()`                               |
+| Image generation (`apiType: image`)  | **Yes** — dispatch to `images.generate()`                                 |
+| Agent loop (`apiType: agent`)        | **Yes** — auto tool-call execution loop                                   |
+| Streaming wrappers                   | **Yes** — `PromptyStream` / `AsyncPromptyStream` with tracing             |
+| `headless()` convenience API         | **Yes** — helper function wrapping `PromptAgent` construction             |
+| Serverless provider                  | **No** — API keeps changing, defer indefinitely                           |
+| Runtime connection override          | **No** — `LoadContext.pre_process` with `${env:}` covers this             |
+| Dynamic tools from prompt body       | **Deferred** — frontmatter `tools:` is sufficient for now                 |
+| Raw HTTP instead of SDK providers    | **Later** — keep SDK-based providers, design allows adding raw HTTP later |
+
+### Implementation Order
+
+1. Structured output (highest impact, sets patterns)
+2. API type dispatch (embedding + image)
+3. Streaming wrappers
+4. Agent loop
+5. `headless()` API
+
+---
+
+### Step 4.1: Structured Output (`outputSchema` → `response_format`) — IMPLEMENTED
+
+**What**: When `agent.outputSchema` is defined, convert it to OpenAI's `response_format`
+parameter so the LLM returns structured JSON matching the schema.
+
+**Files modified**:
+
+| File                            | Change                                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `providers/openai/executor.py`  | Added `_property_to_json_schema()`, `_output_schema_to_wire()`, wired into `_build_args()`           |
+| `providers/azure/executor.py`   | Imported `_output_schema_to_wire`, wired into `_build_args()`                                        |
+| `providers/openai/processor.py` | Updated `_process_response()` to accept optional `agent`, JSON-parse when `outputSchema` present     |
+| `providers/azure/processor.py`  | Updated `process()`/`process_async()` to pass `agent` through                                        |
+| `tests/test_executor.py`        | Added `TestPropertyToJsonSchema`, `TestOutputSchemaToWire`, `TestBuildArgsResponseFormat` (14 tests) |
+| `tests/test_processor.py`       | Added `TestStructuredOutput` (7 tests)                                                               |
+
+**Key design note**: Test helpers must use `AgentDefinition.load()` (not `PromptAgent.load()`)
+because `outputSchema` is a base field populated by `AgentDefinition.load()`, not by
+`PromptAgent.load()` which only handles prompt-specific fields.
+
+---
+
+### Step 4.2: API Type Dispatch (Embedding + Image) — IMPLEMENTED
+
+**What**: Executors dispatch on `agent.model.apiType` to support `chat`, `embedding`,
+and `image` API types in addition to the default chat completions.
+
+**Files modified**:
+
+| File                            | Change                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `providers/openai/executor.py`  | Refactored `execute()`/`execute_async()` to dispatch on `apiType`. Renamed     |
+|                                 | `_build_args` → `_build_chat_args`, added `_build_embedding_args`,             |
+|                                 | `_build_image_args`. Added per-type execution methods.                         |
+| `providers/azure/executor.py`   | Same dispatch pattern, imports shared helpers from OpenAI executor.            |
+| `providers/openai/processor.py` | Added `ImagesResponse` import, `_process_image()` function, and dispatch in    |
+|                                 | `_process_response()`. Embedding was already handled.                          |
+| `tests/test_executor.py`        | Added `TestEmbeddingDispatch` (3 tests), `TestImageDispatch` (2 tests),        |
+|                                 | `TestUnsupportedApiType` (1 test). Updated `_build_args` → `_build_chat_args`. |
+| `tests/test_processor.py`       | Added `TestImageProcessing` (5 tests), `TestEmbeddingProcessing` (3 tests).    |
+
+**Dispatch logic**: `api_type = agent.model.apiType or "chat"` → branches to `_execute_chat`,
+`_execute_embedding`, or `_execute_image`. Unknown values raise `ValueError`.
+
+---
+
+### Step 4.3: Streaming Wrappers (`PromptyStream` / `AsyncPromptyStream`) — IMPLEMENTED
+
+**What**: Wrap streaming iterators with tracing-aware wrappers that accumulate chunks
+and flush to the tracer on exhaustion.
+
+**Files modified**:
+
+| File                            | Change                                                                  |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `core/types.py`                 | Added `PromptyStream(Iterator)` and `AsyncPromptyStream(AsyncIterator)` |
+| `providers/openai/executor.py`  | Wraps streaming responses in `PromptyStream` / `AsyncPromptyStream`     |
+| `providers/azure/executor.py`   | Same wrapping                                                           |
+| `providers/openai/processor.py` | Added `_async_stream_generator()`, handles `AsyncIterator` in dispatch  |
+| `__init__.py`                   | Re-exports `PromptyStream`, `AsyncPromptyStream`                        |
+| `tests/test_streaming.py`       | 16 tests: sync/async iteration, accumulation, processor integration     |
+
+**Design**: `PromptyStream` wraps raw SDK iterator, accumulates chunks for tracing.
+The processor's `_stream_generator` / `_async_stream_generator` then extracts delta
+content from each chunk. Both wrappers compose correctly — tracing fires when the
+inner `PromptyStream` is exhausted by the generator.
+
+---
+
+### Step 4.4: Agent Loop — IMPLEMENTED
+
+**What**: When `agent.model.apiType == "agent"`, the executor runs a loop: call the LLM,
+if it returns `tool_calls`, execute the tool functions, append results to the conversation,
+and call the LLM again — repeating until the LLM returns a normal response.
+
+**Files modified**:
+
+| File                           | Change                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `providers/openai/executor.py` | Added `_execute_agent()` / `_execute_agent_async()` with tool-call loop     |
+| `providers/azure/executor.py`  | Delegates to OpenAI executor's agent loop via class attribute binding       |
+| `tests/test_executor.py`       | Added `TestAgentLoop` (6 tests): single/multi iteration, missing tool, etc. |
+
+**Tool registration**: `agent.metadata["tool_functions"]` dict maps tool names to callables.
+Sync mode raises `ValueError` for async tools. Async mode uses `inspect.iscoroutinefunction()`
+to properly `await` async tool functions.
+
+---
+
+### Step 4.5: `headless()` Convenience API — IMPLEMENTED
+
+**What**: Create a `PromptAgent` programmatically without a `.prompty` file. Useful for
+embedding calls, one-off completions, or any case where a file isn't needed.
+
+**Files modified**:
+
+| File                    | Change                                                            |
+| ----------------------- | ----------------------------------------------------------------- |
+| `core/pipeline.py`      | Added `headless()` function                                       |
+| `core/__init__.py`      | Re-exports `headless`                                             |
+| `invoker.py`            | Re-exports `headless` (backward-compat shim)                      |
+| `__init__.py`           | Re-exports `headless`                                             |
+| `tests/test_invoker.py` | Added `TestHeadless` (9 tests): defaults, types, connection, etc. |
+
+**Signature**:
+
+```python
+def headless(
+    api: str = "chat",
+    content: str | list | dict = "",
+    *,
+    model: str = "",
+    provider: str = "openai",
+    connection: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+) -> PromptAgent:
+```
+
+Content is stored in `agent.metadata["content"]` for later use with `execute()`.
+
+---
+
+### Phase 4 Gate
+
+All of the following must pass:
+
+- `pytest tests/` — all tests green (298 tests passing)
+- `ruff check .` — clean
+- `agent.outputSchema` → `response_format` works in both OpenAI and Azure executors
+- `apiType: embedding` calls `embeddings.create()` and returns vectors
+- `apiType: image` calls `images.generate()` and returns URLs
+- Streaming responses are wrapped in `PromptyStream` / `AsyncPromptyStream` with tracing
+- Agent loop executes tool calls and loops until completion
+- `headless()` creates a valid `PromptAgent` usable with `execute()` + `process()`
+
+**Phase 4 Gate: PASSED** — 298 tests, ruff clean.
+
+---
+
+## Post-Phase 4: API Alignment & Type Safety — IMPLEMENTED
+
+### OpenAI API Alignment (verified against https://platform.openai.com/docs/api-reference/chat)
+
+Reviewed our executor wire format against the current OpenAI Chat Completions API reference
+and applied the following fixes:
+
+| Issue                                  | Before                                 | After                                                          | Reason                                                                                  |
+| -------------------------------------- | -------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `maxOutputTokens` mapping              | `max_tokens`                           | `max_completion_tokens`                                        | `max_tokens` is deprecated, not compatible with o-series reasoning models               |
+| `strict` in tool definitions           | Inside JSON Schema `parameters` object | At function definition level (`func_def["strict"]`)            | `strict` is not a JSON Schema keyword; API expects it as sibling of `name`/`parameters` |
+| `additionalProperties` in strict tools | Missing                                | `additionalProperties: false` in parameters schema when strict | Required by API when strict mode is enabled                                             |
+
+**Already correct** (no changes needed):
+
+- Tool wire format `{"type": "function", "function": {...}}`
+- `response_format` with `json_schema` for structured output
+- `finish_reason == "tool_calls"` in agent loop
+- Message roles: `system`, `user`, `assistant`
+- Options: `temperature`, `top_p`, `frequency_penalty`, `presence_penalty`, `stop`, `seed`
+- Streaming: `stream: true` with wrapped response
+- Azure OpenAI uses the same `openai` Python SDK, so all parameter names and formats are identical
+
+**Files modified**:
+
+| File                           | Change                                                                                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providers/openai/executor.py` | `_build_options`: `max_tokens` → `max_completion_tokens`; `_tools_to_wire`: `strict` on func def; `_schema_to_wire`: `additionalProperties: false` replaces `strict: true` |
+| `tests/test_executor.py`       | Updated `TestBuildOptions`, `TestSchemaToWire` assertions; added `test_strict_on_function_def`                                                                             |
+
+### Pyright Type Safety Fixes
+
+Resolved all Pyright/Pylance errors across source and test files:
+
+| File                           | Issue                                                                                           | Fix                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `providers/openai/executor.py` | `agent.metadata` is `dict[str, Any] \| None`, `.get()` fails                                    | Explicit `_meta = agent.metadata if agent.metadata is not None else {}` |
+| `providers/azure/executor.py`  | Class attribute binding `_execute_agent = _OpenAIExecutor._execute_agent` — invalid `self` type | Proper method delegation with explicit `self` forwarding                |
+| `tests/test_executor.py`       | `agent.metadata["tool_functions"]` — subscript on `None`                                        | Added `assert agent.metadata is not None` guards with `pyright: ignore` |
+| `tests/test_invoker.py`        | Same metadata indexing issue                                                                    | Same fix                                                                |
+| `tests/test_processor.py`      | `response.__class__ = ImagesResponse` — type mismatch on MagicMock                              | Added `type: ignore[assignment]` + `pyright: ignore`                    |
+| `tests/test_streaming.py`      | `iter([])` — needs type annotation                                                              | Used `Iterator` type annotation from `collections.abc`                  |
+
+---
+
 ## .prompty File Format (v2)
 
 ### Structure

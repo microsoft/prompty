@@ -2,20 +2,26 @@
 
 The parser produces these types. Executors transform them into
 provider-specific wire format (OpenAI, Anthropic, etc.).
+
+Also provides streaming wrappers (``PromptyStream``, ``AsyncPromptyStream``)
+that accumulate chunks and flush to the tracer on exhaustion.
 """
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
 __all__ = [
+    "AsyncPromptyStream",
     "ContentPart",
     "ImagePart",
     "FilePart",
     "AudioPart",
     "TextPart",
     "Message",
+    "PromptyStream",
     "ThreadMarker",
     "RICH_KINDS",
     "ROLES",
@@ -175,3 +181,72 @@ def _part_to_dict(part: ContentPart) -> dict[str, Any]:
         return d
     else:
         return {"kind": part.kind}
+
+
+# ---------------------------------------------------------------------------
+# Streaming wrappers
+# ---------------------------------------------------------------------------
+
+
+class PromptyStream(Iterator):
+    """Tracing-aware wrapper for synchronous LLM streaming responses.
+
+    Accumulates all chunks as they are yielded. When the iterator is
+    exhausted, the accumulated items are flushed to the tracer.
+    """
+
+    def __init__(self, name: str, iterator: Iterator) -> None:
+        self.name = name
+        self.iterator = iterator
+        self.items: list[Any] = []
+        self.__name__ = "PromptyStream"
+
+    def __iter__(self) -> PromptyStream:
+        return self
+
+    def __next__(self) -> Any:
+        from ..tracing.tracer import Tracer, to_dict
+
+        try:
+            item = self.iterator.__next__()
+            self.items.append(item)
+            return item
+        except StopIteration:
+            if self.items:
+                with Tracer.start("PromptyStream") as t:
+                    t("signature", f"{self.name}.PromptyStream")
+                    t("inputs", "None")
+                    t("result", [to_dict(s) for s in self.items])
+            raise
+
+
+class AsyncPromptyStream(AsyncIterator):
+    """Tracing-aware wrapper for asynchronous LLM streaming responses.
+
+    Accumulates all chunks as they are yielded. When the async iterator
+    is exhausted, the accumulated items are flushed to the tracer.
+    """
+
+    def __init__(self, name: str, iterator: AsyncIterator) -> None:
+        self.name = name
+        self.iterator = iterator
+        self.items: list[Any] = []
+        self.__name__ = "AsyncPromptyStream"
+
+    def __aiter__(self) -> AsyncPromptyStream:
+        return self
+
+    async def __anext__(self) -> Any:
+        from ..tracing.tracer import Tracer, to_dict
+
+        try:
+            item = await self.iterator.__anext__()
+            self.items.append(item)
+            return item
+        except StopAsyncIteration:
+            if self.items:
+                with Tracer.start("AsyncPromptyStream") as t:
+                    t("signature", f"{self.name}.AsyncPromptyStream")
+                    t("inputs", "None")
+                    t("result", [to_dict(s) for s in self.items])
+            raise

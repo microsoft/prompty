@@ -725,3 +725,94 @@ class TestRichInputNames:
 
         agent = _make_agent(inputSchema=schema)
         assert _get_rich_input_names(agent) == {}
+
+
+# ---------------------------------------------------------------------------
+# headless() API
+# ---------------------------------------------------------------------------
+
+
+class TestHeadless:
+    def test_returns_prompt_agent(self):
+        from agentschema import PromptAgent
+
+        from prompty.core.pipeline import headless
+
+        agent = headless()
+        assert isinstance(agent, PromptAgent)
+
+    def test_default_values(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless()
+        assert agent.model.apiType == "chat"
+        assert agent.model.provider == "openai"
+        assert agent.name == "headless"
+
+    def test_custom_api_type(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(api="embedding", model="text-embedding-ada-002")
+        assert agent.model.apiType == "embedding"
+        assert agent.model.id == "text-embedding-ada-002"
+
+    def test_content_in_metadata(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(content="hello world")
+        assert agent.metadata is not None
+        assert agent.metadata["content"] == "hello world"
+
+    def test_content_list(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(content=["hello", "world"])
+        assert agent.metadata is not None  # pyright: ignore[reportPossiblyUnbound]
+        assert agent.metadata["content"] == [
+            "hello",
+            "world",
+        ]  # pyright: ignore[reportOptionalSubscript]
+
+    def test_custom_provider(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(provider="azure", model="gpt-4")
+        assert agent.model.provider == "azure"
+
+    def test_connection_config(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(
+            connection={
+                "kind": "key",
+                "endpoint": "https://my.openai.azure.com",
+                "apiKey": "sk-test",
+            }
+        )
+        conn = agent.model.connection
+        assert conn is not None
+        from agentschema import ApiKeyConnection
+
+        assert isinstance(conn, ApiKeyConnection)
+        assert conn.apiKey == "sk-test"
+        assert conn.endpoint == "https://my.openai.azure.com"
+
+    def test_options_config(self):
+        from prompty.core.pipeline import headless
+
+        agent = headless(
+            options={
+                "temperature": 0.5,
+                "maxOutputTokens": 100,
+            }
+        )
+        assert agent.model.options is not None
+        assert agent.model.options.temperature == 0.5
+        assert agent.model.options.maxOutputTokens == 100
+
+    def test_import_from_top_level(self):
+        from prompty import headless as h
+
+        agent = h(api="image", model="dall-e-3", content="a cat")
+        assert agent.model.apiType == "image"
+        assert agent.model.id == "dall-e-3"
