@@ -87,9 +87,7 @@ def validate_inputs(
             elif prop.example is not None:
                 result[name] = prop.example
             elif prop.required:
-                raise ValueError(
-                    f"Required input '{name}' not provided and has no default value."
-                )
+                raise ValueError(f"Required input '{name}' not provided and has no default value.")
 
     # Strict mode: reject unknown keys
     if schema.strict:
@@ -112,9 +110,7 @@ def _get_rich_input_names(agent: PromptAgent) -> dict[str, str]:
     """Return {property_name: kind} for all rich-kind inputs."""
     if agent.inputSchema is None:
         return {}
-    return {
-        p.name: p.kind for p in agent.inputSchema.properties if p.kind in RICH_KINDS
-    }
+    return {p.name: p.kind for p in agent.inputSchema.properties if p.kind in RICH_KINDS}
 
 
 def _inject_thread_markers(
@@ -270,9 +266,7 @@ def _dict_content_to_part(d: dict[str, Any]) -> ContentPart:
         source = d.get("source", "")
         if not source and "image_url" in d:
             url_data = d["image_url"]
-            source = (
-                url_data.get("url", "") if isinstance(url_data, dict) else str(url_data)
-            )
+            source = url_data.get("url", "") if isinstance(url_data, dict) else str(url_data)
         return ImagePart(
             source=source,
             detail=d.get("detail"),
@@ -342,10 +336,7 @@ def prepare(
             "*",
         ):
             parser_kind = agent.template.parser.kind
-        if (
-            agent.template.format is not None
-            and agent.template.format.strict is not None
-        ):
+        if agent.template.format is not None and agent.template.format.strict is not None:
             is_strict = agent.template.format.strict
 
     template = agent.instructions or ""
@@ -403,10 +394,7 @@ async def prepare_async(
             "*",
         ):
             parser_kind = agent.template.parser.kind
-        if (
-            agent.template.format is not None
-            and agent.template.format.strict is not None
-        ):
+        if agent.template.format is not None and agent.template.format.strict is not None:
             is_strict = agent.template.format.strict
 
     template = agent.instructions or ""

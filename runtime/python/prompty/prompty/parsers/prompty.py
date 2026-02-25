@@ -36,9 +36,7 @@ _BOUNDARY_RE = re.compile(
 )
 
 # Markdown image regex — ``![alt](url)``
-_IMAGE_RE = re.compile(
-    r"(?P<alt>!\[[^\]]*\])\((?P<filename>[^\s\)]+)(?:\s+[^\)]*)?\)", re.MULTILINE
-)
+_IMAGE_RE = re.compile(r"(?P<alt>!\[[^\]]*\])\((?P<filename>[^\s\)]+)(?:\s+[^\)]*)?\)", re.MULTILINE)
 
 
 class PromptyChatParser:
@@ -148,9 +146,7 @@ class PromptyChatParser:
             m = _BOUNDARY_RE.match(stripped)
             if m:
                 if content_buffer:
-                    yield self._build_message(
-                        role, content_buffer, attrs, nonce, base_path
-                    )
+                    yield self._build_message(role, content_buffer, attrs, nonce, base_path)
                     content_buffer = []
 
                 role = m.group(1).strip().lower()

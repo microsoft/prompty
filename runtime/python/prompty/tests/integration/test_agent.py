@@ -39,11 +39,7 @@ def _agent_messages() -> list[Message]:
     return [
         Message(
             role="system",
-            parts=[
-                TextPart(
-                    value="You are a helpful assistant. Use tools when needed. Be brief."
-                )
-            ],
+            parts=[TextPart(value="You are a helpful assistant. Use tools when needed. Be brief.")],
         ),
         Message(
             role="user",

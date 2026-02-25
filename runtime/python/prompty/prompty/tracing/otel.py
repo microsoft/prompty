@@ -93,13 +93,9 @@ def otel_tracer(
                 # Check for exception in result
                 if key == "result" and isinstance(value, dict) and "exception" in value:
                     exc_info = value["exception"]
-                    span.set_status(
-                        Status(StatusCode.ERROR, str(exc_info.get("message", "")))
-                    )
+                    span.set_status(Status(StatusCode.ERROR, str(exc_info.get("message", ""))))
                     span.set_attribute("exception.type", str(exc_info.get("type", "")))
-                    span.set_attribute(
-                        "exception.message", str(exc_info.get("message", ""))
-                    )
+                    span.set_attribute("exception.message", str(exc_info.get("message", "")))
                     tb = exc_info.get("traceback")
                     if tb:
                         if isinstance(tb, list):
@@ -111,9 +107,7 @@ def otel_tracer(
                 # Use verbose expansion for structured data
                 sanitized = sanitize(key, value)
                 if isinstance(sanitized, (dict, list)):
-                    verbose_trace(
-                        lambda k, v: _set_span_attribute(span, k, v), key, sanitized
-                    )
+                    verbose_trace(lambda k, v: _set_span_attribute(span, k, v), key, sanitized)
                 else:
                     _set_span_attribute(span, key, sanitized)
 

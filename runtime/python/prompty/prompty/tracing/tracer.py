@@ -86,8 +86,8 @@ def sanitize(key: str, value: Any) -> Any:
 def to_dict(obj: Any) -> Any:
     """Recursively convert an object to a JSON-serializable form.
 
-    Handles primitives, datetime, dataclasses, Path, dicts, lists,
-    and falls back to ``str()`` for unknown types.
+    Handles primitives, datetime, dataclasses, Pydantic models,
+    Path, dicts, lists, and falls back to ``str()`` for unknown types.
 
     Args:
         obj: Any Python object.
@@ -109,6 +109,12 @@ def to_dict(obj: Any) -> Any:
         return {k: v if isinstance(v, str) else to_dict(v) for k, v in obj.items()}
     elif isinstance(obj, Path):
         return str(obj)
+    elif hasattr(obj, "model_dump"):
+        # Pydantic models (e.g. OpenAI SDK response objects)
+        try:
+            return to_dict(obj.model_dump())
+        except Exception:
+            return str(obj)
     else:
         return str(obj)
 
@@ -186,9 +192,7 @@ class Tracer:
 
     _tracers: dict[
         str,
-        Callable[
-            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
-        ],
+        Callable[[str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]],
     ] = {}
 
     SIGNATURE = "signature"
@@ -199,9 +203,7 @@ class Tracer:
     def add(
         cls,
         name: str,
-        tracer: Callable[
-            [str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]
-        ],
+        tracer: Callable[[str], contextlib._GeneratorContextManager[Callable[[str, Any], None]]],
     ) -> None:
         """Register a trace backend.
 
@@ -231,9 +233,7 @@ class Tracer:
 
     @classmethod
     @contextlib.contextmanager
-    def start(
-        cls, name: str, attributes: dict[str, Any] | None = None
-    ) -> Iterator[Callable[[str, Any], list[None]]]:
+    def start(cls, name: str, attributes: dict[str, Any] | None = None) -> Iterator[Callable[[str, Any], list[None]]]:
         """Enter all registered backends simultaneously.
 
         Args:
@@ -254,9 +254,7 @@ class Tracer:
                     for key, value in attributes.items():
                         t(key, sanitize(key, to_dict(value)))
 
-            yield lambda key, value: [
-                t(key, sanitize(key, to_dict(value))) for t in traces
-            ]
+            yield lambda key, value: [t(key, sanitize(key, to_dict(value))) for t in traces]
 
 
 # ---------------------------------------------------------------------------
@@ -286,11 +284,7 @@ def _inputs(
     ba.apply_defaults()
 
     ignore_set = set(ignore_params) if ignore_params else set()
-    return {
-        k: to_dict(v)
-        for k, v in ba.arguments.items()
-        if k != "self" and k not in ignore_set
-    }
+    return {k: to_dict(v) for k, v in ba.arguments.items() if k != "self" and k not in ignore_set}
 
 
 def _results(result: Any) -> Any:
@@ -336,11 +330,7 @@ def _trace_sync(
                     {
                         "exception": {
                             "type": type(e).__name__,
-                            "traceback": (
-                                traceback.format_tb(tb=e.__traceback__)
-                                if e.__traceback__
-                                else None
-                            ),
+                            "traceback": (traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
@@ -391,11 +381,7 @@ def _trace_async(
                     {
                         "exception": {
                             "type": type(e).__name__,
-                            "traceback": (
-                                traceback.format_tb(tb=e.__traceback__)
-                                if e.__traceback__
-                                else None
-                            ),
+                            "traceback": (traceback.format_tb(tb=e.__traceback__) if e.__traceback__ else None),
                             "message": str(e),
                             "args": to_dict(e.args),
                         }
@@ -553,11 +539,7 @@ class PromptyTracer:
             # Streamed results may have usage as well
             if "result" in frame and isinstance(frame["result"], list):
                 for result in frame["result"]:
-                    if (
-                        isinstance(result, dict)
-                        and "usage" in result
-                        and isinstance(result["usage"], dict)
-                    ):
+                    if isinstance(result, dict) and "usage" in result and isinstance(result["usage"], dict):
                         frame["__usage"] = self._hoist_item(
                             result["usage"],
                             frame.get("__usage", {}),
@@ -597,10 +579,7 @@ class PromptyTracer:
 
     def _write_trace(self, frame: dict[str, Any]) -> None:
         """Write a completed trace frame to a ``.tracy`` file."""
-        trace_file = (
-            self.output
-            / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
-        )
+        trace_file = self.output / f"{frame['name']}.{datetime.now().strftime('%Y%m%d.%H%M%S')}.tracy"
 
         enriched_frame = {
             "runtime": "python",
@@ -631,8 +610,6 @@ def console_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
     """
     try:
         print(f"Starting {name}")
-        yield lambda key, value: print(
-            f"{key}:\n{json.dumps(to_dict(value), indent=4)}"
-        )
+        yield lambda key, value: print(f"{key}:\n{json.dumps(to_dict(value), indent=4)}")
     finally:
         print(f"Ending {name}")

@@ -335,12 +335,8 @@ class TestReferenceResolution:
         # Create a temp prompty that references a nonexistent file
         import tempfile
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".prompty", delete=False, dir=PROMPTS
-        ) as f:
-            f.write(
-                "---\nname: bad-ref\ninputSchema: ${file:nonexistent.json}\n---\nHello\n"
-            )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".prompty", delete=False, dir=PROMPTS) as f:
+            f.write("---\nname: bad-ref\ninputSchema: ${file:nonexistent.json}\n---\nHello\n")
             tmp_path = f.name
         try:
             with pytest.raises(FileNotFoundError, match="not found"):

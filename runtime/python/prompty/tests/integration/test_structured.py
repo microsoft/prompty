@@ -29,11 +29,7 @@ def _structured_messages() -> list[Message]:
     return [
         Message(
             role="system",
-            parts=[
-                TextPart(
-                    value="You are a data assistant. Always respond with the requested JSON structure."
-                )
-            ],
+            parts=[TextPart(value="You are a data assistant. Always respond with the requested JSON structure.")],
         ),
         Message(
             role="user",

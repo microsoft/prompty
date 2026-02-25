@@ -240,9 +240,7 @@ class TestStructuredOutput:
         assert result == '{"answer": "yes"}'
 
     def test_invalid_json_falls_back(self):
-        agent = _make_agent_with_schema(
-            properties=[{"name": "answer", "kind": "string"}]
-        )
+        agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         response = _mock_chat_completion("not valid json {")
         result = self.processor.process(agent, response)
         assert isinstance(result, str)
@@ -250,9 +248,7 @@ class TestStructuredOutput:
 
     def test_tool_calls_not_json_parsed(self):
         """Tool calls should not be affected by outputSchema."""
-        agent = _make_agent_with_schema(
-            properties=[{"name": "answer", "kind": "string"}]
-        )
+        agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         tc = _mock_tool_call("call_1", "func", "{}")
         response = _mock_chat_completion(tool_calls=[tc])
         result = self.processor.process(agent, response)
@@ -261,27 +257,21 @@ class TestStructuredOutput:
 
     def test_none_content_not_json_parsed(self):
         """None content should not be affected by outputSchema."""
-        agent = _make_agent_with_schema(
-            properties=[{"name": "answer", "kind": "string"}]
-        )
+        agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         response = _mock_chat_completion(content=None)
         result = self.processor.process(agent, response)
         assert result is None
 
     @pytest.mark.asyncio
     async def test_async_json_parsed(self):
-        agent = _make_agent_with_schema(
-            properties=[{"name": "value", "kind": "integer"}]
-        )
+        agent = _make_agent_with_schema(properties=[{"name": "value", "kind": "integer"}])
         response = _mock_chat_completion('{"value": 42}')
         result = await self.processor.process_async(agent, response)
         assert isinstance(result, dict)
         assert result["value"] == 42
 
     def test_azure_processor_json_parsed(self):
-        agent = _make_agent_with_schema(
-            properties=[{"name": "answer", "kind": "string"}]
-        )
+        agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         processor = AzureProcessor()
         response = _mock_chat_completion('{"answer": "hello"}')
         result = processor.process(agent, response)

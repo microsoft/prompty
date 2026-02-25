@@ -126,11 +126,7 @@ class MockExecutor:
 
     def execute(self, agent, messages: list[Message]) -> dict:
         content = " | ".join(msg.text for msg in messages if isinstance(msg, Message))
-        return {
-            "choices": [
-                {"message": {"role": "assistant", "content": f"Response to: {content}"}}
-            ]
-        }
+        return {"choices": [{"message": {"role": "assistant", "content": f"Response to: {content}"}}]}
 
     async def execute_async(self, agent, messages: list[Message]) -> dict:
         return self.execute(agent, messages)
@@ -203,9 +199,7 @@ def _make_agent(**overrides) -> Any:
     from agentschema import Model, PromptAgent
 
     agent = mock.Mock(spec=PromptAgent)
-    agent.instructions = overrides.get(
-        "instructions", "system:\nHello {{name}}\n\nuser:\n{{question}}"
-    )
+    agent.instructions = overrides.get("instructions", "system:\nHello {{name}}\n\nuser:\n{{question}}")
     agent.inputSchema = overrides.get("inputSchema", None)
     agent.template = overrides.get("template", None)
     agent.model = overrides.get("model", mock.Mock(spec=Model))
@@ -634,9 +628,7 @@ class TestExecute:
 class TestProcess:
     def test_basic_process(self):
         agent = _make_agent(provider="openai")
-        response = {
-            "choices": [{"message": {"role": "assistant", "content": "Hello!"}}]
-        }
+        response = {"choices": [{"message": {"role": "assistant", "content": "Hello!"}}]}
 
         with _patch_entry_points(processors=[("openai", MockProcessor)]):
             result = process(agent, response)

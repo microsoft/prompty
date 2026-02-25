@@ -11,6 +11,7 @@ from prompty.providers.openai.processor import OpenAIProcessor
 
 from .conftest import (
     _AZURE_EMBEDDING_DEPLOYMENT,
+    _OPENAI_EMBEDDING_MODEL,
     make_azure_agent,
     make_openai_agent,
     skip_azure_embedding,
@@ -28,7 +29,7 @@ class TestOpenAIEmbedding:
     processor = OpenAIProcessor()
 
     def test_single_embedding(self):
-        agent = make_openai_agent(api_type="embedding", model="text-embedding-3-small")
+        agent = make_openai_agent(api_type="embedding", model=_OPENAI_EMBEDDING_MODEL)
         response = self.executor.execute(agent, "Hello world")
         result = self.processor.process(agent, response)
         assert isinstance(result, list)
@@ -36,7 +37,7 @@ class TestOpenAIEmbedding:
         assert isinstance(result[0], float)
 
     def test_batch_embedding(self):
-        agent = make_openai_agent(api_type="embedding", model="text-embedding-3-small")
+        agent = make_openai_agent(api_type="embedding", model=_OPENAI_EMBEDDING_MODEL)
         response = self.executor.execute(agent, ["Hello", "World"])
         result = self.processor.process(agent, response)
         # Batch returns list of lists
@@ -45,7 +46,7 @@ class TestOpenAIEmbedding:
 
     @pytest.mark.asyncio
     async def test_async_embedding(self):
-        agent = make_openai_agent(api_type="embedding", model="text-embedding-3-small")
+        agent = make_openai_agent(api_type="embedding", model=_OPENAI_EMBEDDING_MODEL)
         response = await self.executor.execute_async(agent, "Hello world")
         result = await self.processor.process_async(agent, response)
         assert isinstance(result, list)
@@ -63,9 +64,7 @@ class TestAzureEmbedding:
     processor = AzureProcessor()
 
     def test_single_embedding(self):
-        agent = make_azure_agent(
-            api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT
-        )
+        agent = make_azure_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
         response = self.executor.execute(agent, "Hello world")
         result = self.processor.process(agent, response)
         assert isinstance(result, list)
@@ -74,9 +73,7 @@ class TestAzureEmbedding:
 
     @pytest.mark.asyncio
     async def test_async_embedding(self):
-        agent = make_azure_agent(
-            api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT
-        )
+        agent = make_azure_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
         response = await self.executor.execute_async(agent, "Hello world")
         result = await self.processor.process_async(agent, response)
         assert isinstance(result, list)

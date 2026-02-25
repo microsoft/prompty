@@ -131,9 +131,7 @@ def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
                     if default:
                         data[key] = default
                     else:
-                        raise ValueError(
-                            f"Environment variable '{var_name}' not set for key '{key}'"
-                        )
+                        raise ValueError(f"Environment variable '{var_name}' not set for key '{key}'")
                 else:
                     data[key] = env_val
 

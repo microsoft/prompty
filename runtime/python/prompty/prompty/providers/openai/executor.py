@@ -184,11 +184,9 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
         required: list[str] = []
         for p in prop.properties:
             props[p.name] = _property_to_json_schema(p)
-            if p.required:
-                required.append(p.name)
+            required.append(p.name)
         schema["properties"] = props
-        if required:
-            schema["required"] = required
+        schema["required"] = required
         schema["additionalProperties"] = False
 
     return schema
@@ -209,16 +207,14 @@ def _output_schema_to_wire(agent: PromptAgent) -> dict[str, Any] | None:
 
     for prop in agent.outputSchema.properties:
         properties[prop.name] = _property_to_json_schema(prop)
-        if prop.required:
-            required.append(prop.name)
+        required.append(prop.name)
 
     schema: dict[str, Any] = {
         "type": "object",
         "properties": properties,
         "additionalProperties": False,
+        "required": required,
     }
-    if required:
-        schema["required"] = required
 
     name = (agent.name or "response").lower().replace(" ", "_").replace("-", "_")
 
@@ -357,9 +353,7 @@ class OpenAIExecutor:
             t("result", response)
         return response
 
-    async def _execute_chat_async(
-        self, client: Any, agent: PromptAgent, messages: Any
-    ) -> Any:
+    async def _execute_chat_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
             t("signature", "AsyncOpenAI.chat.completions.create")
@@ -414,13 +408,9 @@ class OpenAIExecutor:
                     fn_name = tc.function.name
                     fn = tool_fns.get(fn_name)
                     if fn is None:
-                        raise ValueError(
-                            f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']"
-                        )
+                        raise ValueError(f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']")
                     if inspect.iscoroutinefunction(fn):
-                        raise ValueError(
-                            f"Cannot execute async tool '{fn_name}' in sync mode"
-                        )
+                        raise ValueError(f"Cannot execute async tool '{fn_name}' in sync mode")
 
                     fn_args = json.loads(tc.function.arguments)
                     result = fn(**fn_args)
@@ -450,9 +440,7 @@ class OpenAIExecutor:
             t("result", response)
         return response
 
-    async def _execute_agent_async(
-        self, client: Any, agent: PromptAgent, messages: Any
-    ) -> Any:
+    async def _execute_agent_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         """Async variant of the agent loop."""
         _meta = agent.metadata if agent.metadata is not None else {}
         tool_fns: dict[str, Any] = _meta.get("tool_functions", {})
@@ -486,9 +474,7 @@ class OpenAIExecutor:
                     fn_name = tc.function.name
                     fn = tool_fns.get(fn_name)
                     if fn is None:
-                        raise ValueError(
-                            f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']"
-                        )
+                        raise ValueError(f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']")
 
                     fn_args = json.loads(tc.function.arguments)
                     if inspect.iscoroutinefunction(fn):
@@ -532,9 +518,7 @@ class OpenAIExecutor:
             t("result", response)
         return response
 
-    async def _execute_embedding_async(
-        self, client: Any, agent: PromptAgent, data: Any
-    ) -> Any:
+    async def _execute_embedding_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
             t("signature", "AsyncOpenAI.embeddings.create")
@@ -556,9 +540,7 @@ class OpenAIExecutor:
             t("result", response)
         return response
 
-    async def _execute_image_async(
-        self, client: Any, agent: PromptAgent, data: Any
-    ) -> Any:
+    async def _execute_image_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
             t("signature", "AsyncOpenAI.images.generate")
@@ -579,9 +561,7 @@ class OpenAIExecutor:
                 kwargs["base_url"] = conn.endpoint
         return kwargs
 
-    def _build_chat_args(
-        self, agent: PromptAgent, messages: list[Message]
-    ) -> dict[str, Any]:
+    def _build_chat_args(self, agent: PromptAgent, messages: list[Message]) -> dict[str, Any]:
         """Build the full arguments dict for chat.completions.create."""
         model = agent.model.id or "gpt-4"
         wire_messages = [_message_to_wire(m) for m in messages]

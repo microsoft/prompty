@@ -337,9 +337,7 @@ class TestPropertyToJsonSchema:
     def test_string_property(self):
         from agentschema import Property
 
-        prop = Property.load(
-            {"name": "answer", "kind": "string", "description": "The answer"}
-        )
+        prop = Property.load({"name": "answer", "kind": "string", "description": "The answer"})
         result = _property_to_json_schema(prop)
         assert result == {"type": "string", "description": "The answer"}
 
@@ -360,9 +358,7 @@ class TestPropertyToJsonSchema:
     def test_enum_values(self):
         from agentschema import Property
 
-        prop = Property.load(
-            {"name": "status", "kind": "string", "enumValues": ["ok", "error"]}
-        )
+        prop = Property.load({"name": "status", "kind": "string", "enumValues": ["ok", "error"]})
         result = _property_to_json_schema(prop)
         assert result["enum"] == ["ok", "error"]
 
@@ -398,7 +394,8 @@ class TestPropertyToJsonSchema:
         assert "name" in result["properties"]
         assert "age" in result["properties"]
         assert result["properties"]["age"]["type"] == "integer"
-        assert result["required"] == ["age"]
+        # strict mode: ALL properties must be in required
+        assert result["required"] == ["name", "age"]
         assert result["additionalProperties"] is False
 
 
@@ -423,7 +420,8 @@ class TestOutputSchemaToWire:
         assert schema["properties"]["answer"]["type"] == "string"
         assert schema["properties"]["answer"]["description"] == "The answer"
         assert schema["properties"]["confidence"]["type"] == "number"
-        assert "confidence" in schema["required"]
+        # strict mode: ALL properties must be in required
+        assert schema["required"] == ["answer", "confidence"]
         assert schema["additionalProperties"] is False
 
     def test_no_output_schema(self):
@@ -745,13 +743,9 @@ class TestAgentLoop:
     def test_single_tool_call_loop(self):
         agent = _make_agent_type_agent()
         assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {
-            "get_weather": lambda location: f"Sunny in {location}"
-        }
+        agent.metadata["tool_functions"] = {"get_weather": lambda location: f"Sunny in {location}"}
 
-        tool_response = _mock_tool_call_response(
-            "get_weather", '{"location": "Seattle"}'
-        )
+        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
         final_response = _mock_final_response()
 
         executor = OpenAIExecutor()
@@ -772,16 +766,10 @@ class TestAgentLoop:
     def test_multiple_iterations(self):
         agent = _make_agent_type_agent()
         assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {
-            "get_weather": lambda location: f"Sunny in {location}"
-        }
+        agent.metadata["tool_functions"] = {"get_weather": lambda location: f"Sunny in {location}"}
 
-        tool_resp_1 = _mock_tool_call_response(
-            "get_weather", '{"location": "Seattle"}', call_id="call_1"
-        )
-        tool_resp_2 = _mock_tool_call_response(
-            "get_weather", '{"location": "Portland"}', call_id="call_2"
-        )
+        tool_resp_1 = _mock_tool_call_response("get_weather", '{"location": "Seattle"}', call_id="call_1")
+        tool_resp_2 = _mock_tool_call_response("get_weather", '{"location": "Portland"}', call_id="call_2")
         final_response = _mock_final_response()
 
         executor = OpenAIExecutor()
@@ -808,9 +796,7 @@ class TestAgentLoop:
         assert agent.metadata is not None
         agent.metadata["tool_functions"] = {}
 
-        tool_response = _mock_tool_call_response(
-            "get_weather", '{"location": "Seattle"}'
-        )
+        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
 
         executor = OpenAIExecutor()
 
@@ -819,9 +805,7 @@ class TestAgentLoop:
             MockClient.return_value = mock_client
             mock_client.chat.completions.create.return_value = tool_response
 
-            with pytest.raises(
-                ValueError, match="Tool function 'get_weather' not found"
-            ):
+            with pytest.raises(ValueError, match="Tool function 'get_weather' not found"):
                 executor.execute(agent, _make_messages())
 
     def test_no_tool_calls_returns_immediately(self):
@@ -851,9 +835,7 @@ class TestAgentLoop:
             "get_weather": lambda location: {"temp": 72, "condition": "sunny"}
         }
 
-        tool_response = _mock_tool_call_response(
-            "get_weather", '{"location": "Seattle"}'
-        )
+        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
         final_response = _mock_final_response()
 
         executor = OpenAIExecutor()
@@ -892,9 +874,7 @@ class TestAgentLoop:
             "get_weather": lambda location: f"Rainy in {location}"
         }
 
-        tool_response = _mock_tool_call_response(
-            "get_weather", '{"location": "London"}'
-        )
+        tool_response = _mock_tool_call_response("get_weather", '{"location": "London"}')
         final_response = _mock_final_response()
 
         executor = AzureExecutor()

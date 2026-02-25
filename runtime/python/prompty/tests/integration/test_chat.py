@@ -17,11 +17,7 @@ def _hello_messages() -> list[Message]:
     return [
         Message(
             role="system",
-            parts=[
-                TextPart(
-                    value="You are a helpful assistant. Reply in one short sentence."
-                )
-            ],
+            parts=[TextPart(value="You are a helpful assistant. Reply in one short sentence.")],
         ),
         Message(role="user", parts=[TextPart(value="Say hello.")]),
     ]

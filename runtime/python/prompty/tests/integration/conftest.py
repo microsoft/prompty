@@ -43,19 +43,36 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 # ---------------------------------------------------------------------------
 
 _OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
+_OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")  # optional: proxy via Azure
+_OPENAI_MODEL = os.environ.get(
+    "OPENAI_MODEL", "gpt-4o-mini"
+)  # override default chat model
+_OPENAI_EMBEDDING_MODEL = os.environ.get(
+    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
+)
+_OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-2")
 _AZURE_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
 _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
 _AZURE_CHAT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "")
 _AZURE_EMBEDDING_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "")
+_AZURE_IMAGE_DEPLOYMENT = os.environ.get("AZURE_OPENAI_IMAGE_DEPLOYMENT", "")
 
 has_openai = bool(_OPENAI_KEY)
 has_azure = bool(_AZURE_KEY and _AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)
 
 skip_openai = pytest.mark.skipif(not has_openai, reason="OPENAI_API_KEY not set")
+skip_openai_image = pytest.mark.skipif(
+    not has_openai,
+    reason="OPENAI_API_KEY not set",
+)
 skip_azure = pytest.mark.skipif(not has_azure, reason="Azure OpenAI env vars not set")
 skip_azure_embedding = pytest.mark.skipif(
     not (has_azure and _AZURE_EMBEDDING_DEPLOYMENT),
     reason="AZURE_OPENAI_EMBEDDING_DEPLOYMENT not set",
+)
+skip_azure_image = pytest.mark.skipif(
+    not (has_azure and _AZURE_IMAGE_DEPLOYMENT),
+    reason="AZURE_OPENAI_IMAGE_DEPLOYMENT not set",
 )
 
 
@@ -67,14 +84,29 @@ skip_azure_embedding = pytest.mark.skipif(
 def make_openai_agent(
     *,
     api_type: str = "chat",
-    model: str = "gpt-4o-mini",
+    model: str | None = None,
     options: dict[str, Any] | None = None,
     tools: list[dict[str, Any]] | None = None,
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a PromptAgent for direct OpenAI."""
+    """Build a PromptAgent for direct OpenAI.
+
+    When ``OPENAI_BASE_URL`` is set, the OpenAI client is pointed at that
+    endpoint (e.g. Azure's ``/openai/v1/`` compat path), allowing Azure
+    credentials to drive the OpenAI code path.
+    """
     from agentschema import AgentDefinition
+
+    if model is None:
+        model = _OPENAI_MODEL
+
+    connection: dict[str, Any] = {
+        "kind": "key",
+        "apiKey": _OPENAI_KEY,
+    }
+    if _OPENAI_BASE_URL:
+        connection["endpoint"] = _OPENAI_BASE_URL
 
     data: dict[str, Any] = {
         "kind": "prompt",
@@ -83,10 +115,7 @@ def make_openai_agent(
             "id": model,
             "provider": "openai",
             "apiType": api_type,
-            "connection": {
-                "kind": "key",
-                "apiKey": _OPENAI_KEY,
-            },
+            "connection": connection,
         },
     }
     if options:

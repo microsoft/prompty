@@ -84,12 +84,7 @@ def _process_response(response: Any, agent: PromptAgent | None = None) -> Any:
     if isinstance(response, ChatCompletion):
         result = _process_chat_completion(response)
         # JSON-parse structured output when outputSchema is defined
-        if (
-            agent is not None
-            and agent.outputSchema
-            and agent.outputSchema.properties
-            and isinstance(result, str)
-        ):
+        if agent is not None and agent.outputSchema and agent.outputSchema.properties and isinstance(result, str):
             try:
                 result = json.loads(result)
             except json.JSONDecodeError:
@@ -154,20 +149,12 @@ def _process_image(response: Any) -> Any:
 def _stream_generator(response):
     """Yield content chunks from a streaming response."""
     for chunk in response:
-        if (
-            hasattr(chunk, "choices")
-            and len(chunk.choices) == 1
-            and chunk.choices[0].delta.content is not None
-        ):
+        if hasattr(chunk, "choices") and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
             yield chunk.choices[0].delta.content
 
 
 async def _async_stream_generator(response):
     """Yield content chunks from an async streaming response."""
     async for chunk in response:
-        if (
-            hasattr(chunk, "choices")
-            and len(chunk.choices) == 1
-            and chunk.choices[0].delta.content is not None
-        ):
+        if hasattr(chunk, "choices") and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
             yield chunk.choices[0].delta.content

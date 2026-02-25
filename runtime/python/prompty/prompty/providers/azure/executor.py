@@ -121,9 +121,7 @@ class AzureExecutor:
             t("result", response)
         return response
 
-    async def _execute_chat_async(
-        self, client: Any, agent: PromptAgent, messages: Any
-    ) -> Any:
+    async def _execute_chat_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
             t("signature", "AsyncAzureOpenAI.chat.completions.create")
@@ -140,9 +138,7 @@ class AzureExecutor:
     def _execute_agent(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         return _OpenAIExecutor._execute_agent(self, client, agent, messages)  # type: ignore[arg-type]
 
-    async def _execute_agent_async(
-        self, client: Any, agent: PromptAgent, messages: Any
-    ) -> Any:
+    async def _execute_agent_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         return await _OpenAIExecutor._execute_agent_async(self, client, agent, messages)  # type: ignore[arg-type]
 
     # -- Embedding ----------------------------------------------------------
@@ -157,9 +153,7 @@ class AzureExecutor:
             t("result", response)
         return response
 
-    async def _execute_embedding_async(
-        self, client: Any, agent: PromptAgent, data: Any
-    ) -> Any:
+    async def _execute_embedding_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
             t("signature", "AsyncAzureOpenAI.embeddings.create")
@@ -181,9 +175,7 @@ class AzureExecutor:
             t("result", response)
         return response
 
-    async def _execute_image_async(
-        self, client: Any, agent: PromptAgent, data: Any
-    ) -> Any:
+    async def _execute_image_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
             t("signature", "AsyncAzureOpenAI.images.generate")
@@ -211,24 +203,20 @@ class AzureExecutor:
                     default_credential = azure.identity.DefaultAzureCredential(
                         exclude_shared_token_cache_credential=True
                     )
-                    kwargs["azure_ad_token_provider"] = (
-                        azure.identity.get_bearer_token_provider(
-                            default_credential,
-                            "https://cognitiveservices.azure.com/.default",
-                        )
+                    kwargs["azure_ad_token_provider"] = azure.identity.get_bearer_token_provider(
+                        default_credential,
+                        "https://cognitiveservices.azure.com/.default",
                     )
                 except ImportError:
                     pass  # azure-identity not installed
 
         # Azure requires api_version
         if "api_version" not in kwargs:
-            kwargs.setdefault("api_version", "2024-06-01")
+            kwargs.setdefault("api_version", "2024-12-01-preview")
 
         return kwargs
 
-    def _build_chat_args(
-        self, agent: PromptAgent, messages: list[Message]
-    ) -> dict[str, Any]:
+    def _build_chat_args(self, agent: PromptAgent, messages: list[Message]) -> dict[str, Any]:
         """Build arguments for Azure chat.completions.create."""
         deployment = agent.model.id or "gpt-4"
         wire_messages = [_message_to_wire(m) for m in messages]

@@ -5,9 +5,7 @@ These tests are skipped if opentelemetry is not installed.
 
 import pytest
 
-otel_api = pytest.importorskip(
-    "opentelemetry", reason="opentelemetry-api not installed"
-)
+otel_api = pytest.importorskip("opentelemetry", reason="opentelemetry-api not installed")
 
 from opentelemetry.sdk.trace import ReadableSpan, TracerProvider  # noqa: E402
 from opentelemetry.sdk.trace.export import (  # noqa: E402
@@ -124,9 +122,7 @@ class TestOtelTracer:
         provider = TracerProvider()
         exporter = _InMemoryExporter()
         provider.add_span_processor(SimpleSpanProcessor(exporter))
-        Tracer.add(
-            "otel", otel_tracer(tracer_name="my.custom.tracer", provider=provider)
-        )
+        Tracer.add("otel", otel_tracer(tracer_name="my.custom.tracer", provider=provider))
 
         with Tracer.start("custom_name_span") as t:
             t("x", 1)

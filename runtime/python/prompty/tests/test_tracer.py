@@ -146,9 +146,7 @@ class TestVerboseTrace:
 
     def test_nested_dict(self):
         calls: list[tuple[str, Any]] = []
-        verbose_trace(
-            lambda k, v: calls.append((k, v)), "p", {"user": {"name": "Jane"}}
-        )
+        verbose_trace(lambda k, v: calls.append((k, v)), "p", {"user": {"name": "Jane"}})
         assert ("p.user.name", "Jane") in calls
 
     def test_list(self):
@@ -344,9 +342,7 @@ class TestTraceDecorator:
         with pytest.raises(ValueError, match="boom"):
             failing()
 
-        result_entry = next(
-            v for k, v in self.log if k == "result" and isinstance(v, dict)
-        )
+        result_entry = next(v for k, v in self.log if k == "result" and isinstance(v, dict))
         assert "exception" in result_entry
         assert result_entry["exception"]["type"] == "ValueError"
         assert result_entry["exception"]["message"] == "boom"
@@ -359,9 +355,7 @@ class TestTraceDecorator:
         with pytest.raises(RuntimeError, match="async boom"):
             asyncio.run(failing())
 
-        result_entry = next(
-            v for k, v in self.log if k == "result" and isinstance(v, dict)
-        )
+        result_entry = next(v for k, v in self.log if k == "result" and isinstance(v, dict))
         assert "exception" in result_entry
         assert result_entry["exception"]["type"] == "RuntimeError"
 

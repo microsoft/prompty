@@ -58,9 +58,7 @@ def parse(contents):
             content["instructions"] = body
             return content
         else:
-            raise ValueError(
-                "Invalid Markdown format: Missing or malformed frontmatter."
-            )
+            raise ValueError("Invalid Markdown format: Missing or malformed frontmatter.")
     else:
         content = yaml.load(contents, Loader=yaml.FullLoader)
         return content
