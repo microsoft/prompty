@@ -11,7 +11,7 @@ from typing import Any
 from agentschema import PromptAgent
 
 from ..tracing.tracer import trace
-from ._common import _prepare_render_inputs
+from ._common import _prepare_render_inputs, _thread_nonces_local
 
 __all__ = ["MustacheRenderer"]
 
@@ -44,7 +44,7 @@ class MustacheRenderer:
         render_inputs, thread_nonces = _prepare_render_inputs(agent, inputs)
         rendered = chevron.render(template, render_inputs)
 
-        self._last_thread_nonces = thread_nonces
+        _thread_nonces_local.nonces = thread_nonces
 
         return rendered
 

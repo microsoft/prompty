@@ -11,3 +11,5 @@ Then register the classes in ``pyproject.toml`` under
 ``[project.entry-points."prompty.executors"]`` and
 ``[project.entry-points."prompty.processors"]``.
 """
+
+from __future__ import annotations

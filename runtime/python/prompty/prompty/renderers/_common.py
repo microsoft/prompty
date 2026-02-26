@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import secrets
+import threading
 from typing import Any
 
 from agentschema import PromptAgent
 
-__all__ = ["THREAD_NONCE_PREFIX", "_prepare_render_inputs"]
+__all__ = ["THREAD_NONCE_PREFIX", "_prepare_render_inputs", "_thread_nonces_local"]
 
 # Prefix used to identify thread nonce markers in rendered output.
 THREAD_NONCE_PREFIX = "__PROMPTY_THREAD_"
+
+# Thread-local storage for nonce mappings, avoiding race conditions
+# when a renderer singleton is used concurrently from multiple threads.
+_thread_nonces_local = threading.local()
 
 
 def _prepare_render_inputs(

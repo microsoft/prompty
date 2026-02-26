@@ -52,7 +52,7 @@ class InvokerError(Exception):
         super().__init__(
             f"No {stage.rstrip('s')} found for '{key}'. "
             f"Install the appropriate package, e.g.: "
-            f"pip install prompty[{key}]"
+            f"uv pip install prompty[{key}]"
         )
         self.group = group
         self.key = key

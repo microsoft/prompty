@@ -44,12 +44,8 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 _OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 _OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")  # optional: proxy via Azure
-_OPENAI_MODEL = os.environ.get(
-    "OPENAI_MODEL", "gpt-4o-mini"
-)  # override default chat model
-_OPENAI_EMBEDDING_MODEL = os.environ.get(
-    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
-)
+_OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")  # override default chat model
+_OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 _OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-2")
 _AZURE_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
 _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")

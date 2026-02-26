@@ -1,18 +1,23 @@
 """Stateless pipeline functions for prompt execution.
 
 Pipeline stages:
-    prepare()  →  render + parse + expand  →  list[Message]
-    execute()  →  single LLM call          →  raw response
-    process()  →  response extraction      →  clean result
-    run()      →  load + prepare + execute + process
+    prepare()       →  render + parse + expand  →  list[Message]
+    execute()       →  single LLM call          →  raw response
+    process()       →  response extraction      →  clean result
+    run()           →  load + prepare + execute + process
+    run_agent()     →  load + prepare + (execute → tool loop) + process
 """
 
 from __future__ import annotations
 
+import inspect
+import json
+from collections.abc import Callable
 from typing import Any
 
 from agentschema import PromptAgent
 
+from ..renderers._common import _thread_nonces_local
 from ..tracing.tracer import trace
 from .discovery import (
     InvokerError,
@@ -33,6 +38,8 @@ __all__ = [
     "process_async",
     "run",
     "run_async",
+    "run_agent",
+    "run_agent_async",
     "headless",
     # Helpers (used by tests)
     "_get_rich_input_names",
@@ -287,6 +294,49 @@ def _dict_content_to_part(d: dict[str, Any]) -> ContentPart:
 
 
 # ---------------------------------------------------------------------------
+# Pipeline: prepare() — shared config resolution
+# ---------------------------------------------------------------------------
+
+
+def _resolve_prepare_config(
+    agent: PromptAgent,
+) -> tuple[str, str, bool]:
+    """Extract format kind, parser kind, and strict flag from an agent's template config."""
+    format_kind = "jinja2"
+    parser_kind = "prompty"
+    is_strict = True
+
+    if agent.template is not None:
+        if agent.template.format is not None and agent.template.format.kind not in (
+            "",
+            "*",
+        ):
+            format_kind = agent.template.format.kind
+        if agent.template.parser is not None and agent.template.parser.kind not in (
+            "",
+            "*",
+        ):
+            parser_kind = agent.template.parser.kind
+        if agent.template.format is not None and agent.template.format.strict is not None:
+            is_strict = agent.template.format.strict
+
+    return format_kind, parser_kind, is_strict
+
+
+def _finalize_messages(
+    messages: list[Message],
+    thread_nonces: dict[str, str],
+    inputs: dict[str, Any],
+    rich_inputs: dict[str, str],
+) -> list[Message]:
+    """Inject thread markers and expand them with actual conversation messages."""
+    expanded: list[Message | ThreadMarker] = list(messages)
+    if thread_nonces:
+        expanded = _inject_thread_markers(messages, thread_nonces)
+    return _expand_thread_markers(expanded, inputs, rich_inputs)
+
+
+# ---------------------------------------------------------------------------
 # Pipeline: prepare()
 # ---------------------------------------------------------------------------
 
@@ -319,55 +369,23 @@ def prepare(
     """
     inputs = validate_inputs(agent, inputs or {})
     rich_inputs = _get_rich_input_names(agent)
-
-    # Determine format and parser kinds
-    format_kind = "jinja2"  # default
-    parser_kind = "prompty"  # default
-    is_strict = True  # default: enforce sanitization
-
-    if agent.template is not None:
-        if agent.template.format is not None and agent.template.format.kind not in (
-            "",
-            "*",
-        ):
-            format_kind = agent.template.format.kind
-        if agent.template.parser is not None and agent.template.parser.kind not in (
-            "",
-            "*",
-        ):
-            parser_kind = agent.template.parser.kind
-        if agent.template.format is not None and agent.template.format.strict is not None:
-            is_strict = agent.template.format.strict
-
+    format_kind, parser_kind, is_strict = _resolve_prepare_config(agent)
     template = agent.instructions or ""
 
-    # Discover parser
     parser = get_parser(parser_kind)
 
-    # Pre-render sanitization (if strict and parser supports it)
     parse_context: dict[str, Any] = {}
     if is_strict and hasattr(parser, "pre_render"):
         template, parse_context = parser.pre_render(template)  # type: ignore[union-attr]
 
-    # Discover renderer and render
-    # The renderer replaces thread-kind inputs with nonce markers
-    # and stashes the nonce→name mapping on _last_thread_nonces
     renderer = get_renderer(format_kind)
     rendered = renderer.render(agent, template, inputs)
 
-    # Retrieve thread nonces emitted by the renderer
-    thread_nonces: dict[str, str] = getattr(renderer, "_last_thread_nonces", {})
+    thread_nonces: dict[str, str] = getattr(_thread_nonces_local, "nonces", {})
+    _thread_nonces_local.nonces = {}
 
-    # Parse into abstract messages
     messages = parser.parse(agent, rendered, **parse_context)
-
-    # Inject ThreadMarker objects where the renderer placed nonce markers
-    expanded: list[Message | ThreadMarker] = list(messages)
-    if thread_nonces:
-        expanded = _inject_thread_markers(messages, thread_nonces)
-
-    # Expand thread markers with actual conversation messages
-    return _expand_thread_markers(expanded, inputs, rich_inputs)
+    return _finalize_messages(messages, thread_nonces, inputs, rich_inputs)
 
 
 @trace
@@ -378,25 +396,7 @@ async def prepare_async(
     """Async variant of :func:`prepare`."""
     inputs = validate_inputs(agent, inputs or {})
     rich_inputs = _get_rich_input_names(agent)
-
-    format_kind = "jinja2"
-    parser_kind = "prompty"
-    is_strict = True
-
-    if agent.template is not None:
-        if agent.template.format is not None and agent.template.format.kind not in (
-            "",
-            "*",
-        ):
-            format_kind = agent.template.format.kind
-        if agent.template.parser is not None and agent.template.parser.kind not in (
-            "",
-            "*",
-        ):
-            parser_kind = agent.template.parser.kind
-        if agent.template.format is not None and agent.template.format.strict is not None:
-            is_strict = agent.template.format.strict
-
+    format_kind, parser_kind, is_strict = _resolve_prepare_config(agent)
     template = agent.instructions or ""
 
     parser = get_parser(parser_kind)
@@ -408,15 +408,11 @@ async def prepare_async(
     renderer = get_renderer(format_kind)
     rendered = await renderer.render_async(agent, template, inputs)
 
-    thread_nonces: dict[str, str] = getattr(renderer, "_last_thread_nonces", {})
+    thread_nonces: dict[str, str] = getattr(_thread_nonces_local, "nonces", {})
+    _thread_nonces_local.nonces = {}
 
     messages = await parser.parse_async(agent, rendered, **parse_context)
-
-    expanded: list[Message | ThreadMarker] = list(messages)
-    if thread_nonces:
-        expanded = _inject_thread_markers(messages, thread_nonces)
-
-    return _expand_thread_markers(expanded, inputs, rich_inputs)
+    return _finalize_messages(messages, thread_nonces, inputs, rich_inputs)
 
 
 # ---------------------------------------------------------------------------
@@ -571,7 +567,273 @@ async def run_async(
 
 
 # ---------------------------------------------------------------------------
-# Headless agent construction
+# Pipeline: run_agent() — agent loop with tool execution
+# ---------------------------------------------------------------------------
+
+_DEFAULT_MAX_ITERATIONS = 10
+
+
+def _execute_tool(
+    fn: Callable[..., Any],
+    fn_name: str,
+    arguments_json: str,
+) -> str:
+    """Execute a tool function with JSON arguments, handling errors gracefully.
+
+    Returns the tool result as a string. On JSON parse error or tool
+    function exception, returns an error message so the model can self-correct.
+    """
+    try:
+        fn_args = json.loads(arguments_json)
+    except json.JSONDecodeError as e:
+        return f"Error: invalid JSON arguments for '{fn_name}': {e}"
+
+    try:
+        result = fn(**fn_args)
+    except Exception as e:
+        return f"Error calling '{fn_name}': {type(e).__name__}: {e}"
+
+    return str(result)
+
+
+async def _execute_tool_async(
+    fn: Callable[..., Any],
+    fn_name: str,
+    arguments_json: str,
+) -> str:
+    """Async variant of :func:`_execute_tool`."""
+    try:
+        fn_args = json.loads(arguments_json)
+    except json.JSONDecodeError as e:
+        return f"Error: invalid JSON arguments for '{fn_name}': {e}"
+
+    try:
+        if inspect.iscoroutinefunction(fn):
+            result = await fn(**fn_args)
+        else:
+            result = fn(**fn_args)
+    except Exception as e:
+        return f"Error calling '{fn_name}': {type(e).__name__}: {e}"
+
+    return str(result)
+
+
+def _has_tool_calls(response: Any) -> bool:
+    """Check if an LLM response contains tool calls."""
+    return (
+        hasattr(response, "choices")
+        and response.choices
+        and response.choices[0].finish_reason == "tool_calls"
+        and response.choices[0].message.tool_calls
+    )
+
+
+def _build_tool_result_messages(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> tuple[list[Message], bool]:
+    """Execute tool calls from the response and build result messages.
+
+    Returns (messages_to_append, had_missing_tool). The messages include
+    the assistant's tool-call message and each tool result.
+    """
+    from .types import TextPart
+
+    tool_calls = response.choices[0].message.tool_calls
+    result_messages: list[Message] = []
+
+    # Assistant message with tool_calls metadata
+    result_messages.append(
+        Message(
+            role="assistant",
+            parts=[],
+            metadata={"tool_calls": [tc.model_dump() for tc in tool_calls]},
+        )
+    )
+
+    for tc in tool_calls:
+        fn_name = tc.function.name
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        elif inspect.iscoroutinefunction(fn):
+            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
+        else:
+            tool_result = _execute_tool(fn, fn_name, tc.function.arguments)
+
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=tool_result)],
+                metadata={"tool_call_id": tc.id, "name": fn_name},
+            )
+        )
+
+    return result_messages, False
+
+
+async def _build_tool_result_messages_async(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> list[Message]:
+    """Async variant of :func:`_build_tool_result_messages`."""
+    from .types import TextPart
+
+    tool_calls = response.choices[0].message.tool_calls
+    result_messages: list[Message] = []
+
+    result_messages.append(
+        Message(
+            role="assistant",
+            parts=[],
+            metadata={"tool_calls": [tc.model_dump() for tc in tool_calls]},
+        )
+    )
+
+    for tc in tool_calls:
+        fn_name = tc.function.name
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        else:
+            tool_result = await _execute_tool_async(fn, fn_name, tc.function.arguments)
+
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=tool_result)],
+                metadata={"tool_call_id": tc.id, "name": fn_name},
+            )
+        )
+
+    return result_messages
+
+
+@trace
+def run_agent(
+    prompt: str | PromptAgent,
+    inputs: dict[str, Any] | None = None,
+    *,
+    tools: dict[str, Callable[..., Any]] | None = None,
+    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+    raw: bool = False,
+) -> Any:
+    """Run a prompt with automatic tool-call execution loop.
+
+    Similar to :func:`run`, but when the LLM returns tool calls, the
+    specified tool functions are executed and their results are sent back
+    to the model. This repeats until the model returns a normal response
+    or *max_iterations* is reached.
+
+    Parameters
+    ----------
+    prompt:
+        Path to a ``.prompty`` file, or a pre-loaded ``PromptAgent``.
+    inputs:
+        Input values for template rendering.
+    tools:
+        Mapping of tool name → callable. Tool names must match the
+        ``name`` field in the ``.prompty`` frontmatter ``tools:`` list.
+    max_iterations:
+        Maximum number of tool-call loop iterations (default 10).
+    raw:
+        If ``True``, skip processing and return the raw final response.
+
+    Returns
+    -------
+    Any
+        The processed result from the final LLM response.
+
+    Raises
+    ------
+    ValueError
+        If *max_iterations* is exceeded.
+    """
+    from ..tracing.tracer import Tracer
+    from .loader import load
+
+    agent = load(prompt) if isinstance(prompt, str) else prompt
+    tools = tools or {}
+    messages = prepare(agent, inputs)
+
+    with Tracer.start("AgentLoop") as t:
+        t("type", "agent")
+        t("tools", list(tools.keys()))
+
+        response = execute(agent, messages)
+        iteration = 0
+
+        while _has_tool_calls(response):
+            iteration += 1
+            if iteration > max_iterations:
+                raise ValueError(
+                    f"Agent loop exceeded max_iterations ({max_iterations}). "
+                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                )
+
+            tool_messages, _ = _build_tool_result_messages(response, tools)
+            messages.extend(tool_messages)
+            response = execute(agent, messages)
+
+        t("iterations", iteration)
+        t("result", response)
+
+    if raw:
+        return response
+    return process(agent, response)
+
+
+@trace
+async def run_agent_async(
+    prompt: str | PromptAgent,
+    inputs: dict[str, Any] | None = None,
+    *,
+    tools: dict[str, Callable[..., Any]] | None = None,
+    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+    raw: bool = False,
+) -> Any:
+    """Async variant of :func:`run_agent`."""
+    from ..tracing.tracer import Tracer
+    from .loader import load_async
+
+    if isinstance(prompt, str):
+        agent = await load_async(prompt)
+    else:
+        agent = prompt
+    tools = tools or {}
+    messages = await prepare_async(agent, inputs)
+
+    with Tracer.start("AgentLoopAsync") as t:
+        t("type", "agent")
+        t("tools", list(tools.keys()))
+
+        response = await execute_async(agent, messages)
+        iteration = 0
+
+        while _has_tool_calls(response):
+            iteration += 1
+            if iteration > max_iterations:
+                raise ValueError(
+                    f"Agent loop exceeded max_iterations ({max_iterations}). "
+                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                )
+
+            tool_messages = await _build_tool_result_messages_async(response, tools)
+            messages.extend(tool_messages)
+            response = await execute_async(agent, messages)
+
+        t("iterations", iteration)
+        t("result", response)
+
+    if raw:
+        return response
+    return await process_async(agent, response)
+
+
 # ---------------------------------------------------------------------------
 
 
@@ -650,5 +912,6 @@ def headless(
         data["model"]["options"] = options
 
     agent = AgentDefinition.load(data)
-    assert isinstance(agent, PromptAgent)
+    if not isinstance(agent, PromptAgent):
+        raise TypeError(f"Expected PromptAgent, got {type(agent).__name__}")
     return agent

@@ -20,6 +20,12 @@ from unittest import mock
 
 import pytest
 
+from prompty.core.pipeline import (
+    _dict_to_message,
+    _expand_thread_markers,
+    _get_rich_input_names,
+    _inject_thread_markers,
+)
 from prompty.core.types import (
     Message,
     TextPart,
@@ -27,10 +33,6 @@ from prompty.core.types import (
 )
 from prompty.invoker import (
     InvokerError,
-    _dict_to_message,
-    _expand_thread_markers,
-    _get_rich_input_names,
-    _inject_thread_markers,
     clear_cache,
     execute,
     get_executor,

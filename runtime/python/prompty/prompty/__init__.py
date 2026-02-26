@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ._version import VERSION
 
 __version__ = VERSION
@@ -27,6 +29,9 @@ from agentschema import (
     Template,
     Tool,
 )
+
+# Connection registry
+from .core.connections import clear_connections, get_connection, register_connection
 
 # Loader
 from .core.loader import load, load_async
@@ -61,6 +66,8 @@ from .invoker import (
     process,
     process_async,
     run,
+    run_agent,
+    run_agent_async,
     run_async,
     validate_inputs,
 )

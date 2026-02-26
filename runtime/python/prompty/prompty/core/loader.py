@@ -87,7 +87,8 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> PromptAgent:
     #    all base fields (name, metadata, inputSchema, etc.)
     ctx = LoadContext(pre_process=_pre_process(path))
     agent = AgentDefinition.load(data, ctx)
-    assert isinstance(agent, PromptAgent)
+    if not isinstance(agent, PromptAgent):
+        raise TypeError(f"Expected PromptAgent, got {type(agent).__name__}")
     return agent
 
 

@@ -95,7 +95,7 @@ def to_dict(obj: Any) -> Any:
     Returns:
         A JSON-serializable representation.
     """
-    if isinstance(obj, str) or isinstance(obj, Number) or isinstance(obj, bool):
+    if isinstance(obj, bool) or isinstance(obj, str) or isinstance(obj, Number):
         return obj
     elif obj is None:
         return None

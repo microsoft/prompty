@@ -12,6 +12,9 @@ everything so that ``from prompty.invoker import X`` continues to work.
 
 from __future__ import annotations
 
+# --- Connections ---
+from .core.connections import clear_connections, get_connection, register_connection
+
 # --- Discovery ---
 from .core.discovery import (
     InvokerError,
@@ -24,11 +27,6 @@ from .core.discovery import (
 
 # --- Pipeline ---
 from .core.pipeline import (
-    _dict_content_to_part,  # noqa: F401
-    _dict_to_message,  # noqa: F401
-    _expand_thread_markers,  # noqa: F401
-    _get_rich_input_names,  # noqa: F401
-    _inject_thread_markers,  # noqa: F401
     execute,
     execute_async,
     headless,
@@ -37,6 +35,8 @@ from .core.pipeline import (
     process,
     process_async,
     run,
+    run_agent,
+    run_agent_async,
     run_async,
     validate_inputs,
 )
@@ -47,10 +47,13 @@ from .core.protocols import (
     ParserProtocol,
     ProcessorProtocol,
     RendererProtocol,
-    _PreRenderable,  # noqa: F401
 )
 
 __all__ = [
+    # Connections
+    "register_connection",
+    "get_connection",
+    "clear_connections",
     # Protocols
     "RendererProtocol",
     "ParserProtocol",
@@ -72,6 +75,8 @@ __all__ = [
     "process_async",
     "run",
     "run_async",
+    "run_agent",
+    "run_agent_async",
     # Validation
     "validate_inputs",
     # Headless

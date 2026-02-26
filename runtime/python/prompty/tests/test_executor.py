@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import MagicMock, patch
 
+import pytest
 from agentschema import AgentDefinition, PromptAgent
 
 from prompty.core.types import AudioPart, FilePart, ImagePart, Message, TextPart
@@ -314,18 +315,59 @@ class TestAzureExecutor:
         ctor_kwargs = MockClient.call_args.kwargs
         assert "azure_endpoint" in ctor_kwargs or "api_key" in ctor_kwargs
 
-    def test_client_kwargs_includes_endpoint(self):
+    def test_resolve_client_with_api_key(self):
         executor = AzureExecutor()
         agent = _make_azure_agent()
-        kwargs = executor._client_kwargs(agent)
-        assert kwargs["azure_endpoint"] == "https://myendpoint.openai.azure.com"
+        with patch("openai.AzureOpenAI") as MockClient:
+            executor._resolve_client(agent)
+        MockClient.assert_called_once()
+        kwargs = MockClient.call_args.kwargs
         assert kwargs["api_key"] == "test-key"
-
-    def test_api_version_default(self):
-        executor = AzureExecutor()
-        agent = _make_azure_agent()
-        kwargs = executor._client_kwargs(agent)
+        assert kwargs["azure_endpoint"] == "https://myendpoint.openai.azure.com"
         assert "api_version" in kwargs
+
+    def test_resolve_client_no_api_key_raises(self):
+        executor = AzureExecutor()
+        agent = _make_azure_agent(
+            model={
+                "id": "gpt-4",
+                "provider": "azure",
+                "apiType": "chat",
+                "connection": {
+                    "kind": "key",
+                    "endpoint": "https://myendpoint.openai.azure.com",
+                    # No apiKey
+                },
+            }
+        )
+        with pytest.raises(ValueError, match="no apiKey"):
+            executor._resolve_client(agent)
+
+    def test_resolve_client_reference_connection(self):
+        from prompty.core.connections import clear_connections, register_connection
+
+        executor = AzureExecutor()
+        agent = cast(
+            PromptAgent,
+            AgentDefinition.load(
+                {
+                    "kind": "prompt",
+                    "name": "test-ref",
+                    "model": {
+                        "id": "gpt-4",
+                        "provider": "azure",
+                        "connection": {"kind": "reference", "name": "my-azure"},
+                    },
+                }
+            ),
+        )
+        mock_client = MagicMock()
+        register_connection("my-azure", client=mock_client)
+        try:
+            client = executor._resolve_client(agent)
+            assert client is mock_client
+        finally:
+            clear_connections()
 
 
 # ---------------------------------------------------------------------------
@@ -675,219 +717,3 @@ class TestUnsupportedApiType:
             MockClient.return_value = MagicMock()
             with pytest.raises(ValueError, match="Unsupported apiType"):
                 executor.execute(agent, _make_messages())
-
-
-# ---------------------------------------------------------------------------
-# Agent Loop (apiType: agent)
-# ---------------------------------------------------------------------------
-
-
-def _make_agent_type_agent(**kwargs) -> PromptAgent:
-    data = {
-        "kind": "prompt",
-        "name": "test-agent",
-        "metadata": {},
-        "model": {
-            "id": "gpt-4",
-            "provider": "openai",
-            "apiType": "agent",
-            "connection": {"kind": "key", "apiKey": "test-key"},
-        },
-        "tools": [
-            {
-                "name": "get_weather",
-                "kind": "function",
-                "description": "Get weather",
-                "parameters": {
-                    "properties": [
-                        {"name": "location", "kind": "string", "description": "City"},
-                    ]
-                },
-            }
-        ],
-    }
-    data.update(kwargs)
-    return cast(PromptAgent, AgentDefinition.load(data))
-
-
-def _mock_tool_call_response(fn_name: str, fn_args: str, call_id: str = "call_1"):
-    """Mock a ChatCompletion with tool_calls."""
-    tc = MagicMock()
-    tc.id = call_id
-    tc.function.name = fn_name
-    tc.function.arguments = fn_args
-    tc.model_dump.return_value = {
-        "id": call_id,
-        "type": "function",
-        "function": {"name": fn_name, "arguments": fn_args},
-    }
-
-    response = MagicMock()
-    response.choices = [MagicMock()]
-    response.choices[0].finish_reason = "tool_calls"
-    response.choices[0].message.tool_calls = [tc]
-    return response
-
-
-def _mock_final_response(content: str = "The weather is sunny."):
-    """Mock a normal ChatCompletion (no tool calls)."""
-    response = MagicMock()
-    response.choices = [MagicMock()]
-    response.choices[0].finish_reason = "stop"
-    response.choices[0].message.tool_calls = None
-    response.choices[0].message.content = content
-    return response
-
-
-class TestAgentLoop:
-    def test_single_tool_call_loop(self):
-        agent = _make_agent_type_agent()
-        assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {"get_weather": lambda location: f"Sunny in {location}"}
-
-        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
-        final_response = _mock_final_response()
-
-        executor = OpenAIExecutor()
-
-        with patch("openai.OpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.side_effect = [
-                tool_response,
-                final_response,
-            ]
-
-            result = executor.execute(agent, _make_messages())
-
-        assert result == final_response
-        assert mock_client.chat.completions.create.call_count == 2
-
-    def test_multiple_iterations(self):
-        agent = _make_agent_type_agent()
-        assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {"get_weather": lambda location: f"Sunny in {location}"}
-
-        tool_resp_1 = _mock_tool_call_response("get_weather", '{"location": "Seattle"}', call_id="call_1")
-        tool_resp_2 = _mock_tool_call_response("get_weather", '{"location": "Portland"}', call_id="call_2")
-        final_response = _mock_final_response()
-
-        executor = OpenAIExecutor()
-
-        with patch("openai.OpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.side_effect = [
-                tool_resp_1,
-                tool_resp_2,
-                final_response,
-            ]
-
-            result = executor.execute(agent, _make_messages())
-
-        assert result == final_response
-        assert mock_client.chat.completions.create.call_count == 3
-
-    def test_missing_tool_function_raises(self):
-        import pytest
-
-        agent = _make_agent_type_agent()
-        # No tool_functions registered
-        assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {}
-
-        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
-
-        executor = OpenAIExecutor()
-
-        with patch("openai.OpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.return_value = tool_response
-
-            with pytest.raises(ValueError, match="Tool function 'get_weather' not found"):
-                executor.execute(agent, _make_messages())
-
-    def test_no_tool_calls_returns_immediately(self):
-        agent = _make_agent_type_agent()
-        assert agent.metadata is not None
-        agent.metadata["tool_functions"] = {}
-
-        final_response = _mock_final_response()
-
-        executor = OpenAIExecutor()
-
-        with patch("openai.OpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.return_value = final_response
-
-            result = executor.execute(agent, _make_messages())
-
-        assert result == final_response
-        assert mock_client.chat.completions.create.call_count == 1
-
-    def test_tool_result_appended_as_string(self):
-        """Tool results are converted to strings."""
-        agent = _make_agent_type_agent()
-        assert agent.metadata is not None  # pyright: ignore[reportPossiblyUnbound]
-        agent.metadata["tool_functions"] = {  # pyright: ignore[reportOptionalSubscript]
-            "get_weather": lambda location: {"temp": 72, "condition": "sunny"}
-        }
-
-        tool_response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
-        final_response = _mock_final_response()
-
-        executor = OpenAIExecutor()
-
-        with patch("openai.OpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.side_effect = [
-                tool_response,
-                final_response,
-            ]
-
-            executor.execute(agent, _make_messages())
-
-        # Second call should have the tool result as a string
-        second_call_args = mock_client.chat.completions.create.call_args_list[1]
-        messages = second_call_args.kwargs["messages"]
-        tool_msg = [m for m in messages if m.get("role") == "tool"][0]
-        assert tool_msg["content"] == "{'temp': 72, 'condition': 'sunny'}"
-
-    def test_azure_agent_loop(self):
-        agent = _make_agent_type_agent(
-            model={
-                "id": "gpt-4",
-                "provider": "azure",
-                "apiType": "agent",
-                "connection": {
-                    "kind": "key",
-                    "endpoint": "https://myendpoint.openai.azure.com",
-                    "apiKey": "test-key",
-                },
-            }
-        )
-        assert agent.metadata is not None  # pyright: ignore[reportPossiblyUnbound]
-        agent.metadata["tool_functions"] = {  # pyright: ignore[reportOptionalSubscript]
-            "get_weather": lambda location: f"Rainy in {location}"
-        }
-
-        tool_response = _mock_tool_call_response("get_weather", '{"location": "London"}')
-        final_response = _mock_final_response()
-
-        executor = AzureExecutor()
-
-        with patch("openai.AzureOpenAI") as MockClient:
-            mock_client = MagicMock()
-            MockClient.return_value = mock_client
-            mock_client.chat.completions.create.side_effect = [
-                tool_response,
-                final_response,
-            ]
-
-            result = executor.execute(agent, _make_messages())
-
-        assert result == final_response
-        assert mock_client.chat.completions.create.call_count == 2

@@ -10,17 +10,17 @@ Also provides shared wire-format helpers used by the Azure executor.
 
 from __future__ import annotations
 
-import inspect
-import json
 from typing import Any
 
 from agentschema import (
     ApiKeyConnection,
     FunctionTool,
     PromptAgent,
+    ReferenceConnection,
 )
 
 from ..._version import VERSION
+from ...core.connections import get_connection
 from ...core.types import (
     AsyncPromptyStream,
     AudioPart,
@@ -33,7 +33,7 @@ from ...core.types import (
 )
 from ...tracing.tracer import Tracer, trace
 
-__all__ = ["OpenAIExecutor"]
+__all__ = ["OpenAIExecutor", "_BaseExecutor"]
 
 
 # ---------------------------------------------------------------------------
@@ -263,246 +263,41 @@ def _build_options(agent: PromptAgent) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # OpenAI Executor
 # ---------------------------------------------------------------------------
+# Base Executor (shared logic for OpenAI and Azure)
+# ---------------------------------------------------------------------------
 
 
-class OpenAIExecutor:
-    """Executor for the OpenAI API (non-Azure).
+class _BaseExecutor:
+    """Shared implementation for OpenAI-SDK-based executors.
 
-    Registered as ``openai`` in ``prompty.executors``.
+    Subclasses must define ``_trace_prefix`` and ``_client_kwargs()``.
     """
 
-    @trace
-    def execute(
-        self,
-        agent: PromptAgent,
-        data: Any,
-    ) -> Any:
-        from openai import OpenAI
-
-        client_kwargs = self._client_kwargs(agent)
-
-        with Tracer.start("OpenAI") as t:
-            t("type", "LLM")
-            t("signature", "OpenAI.ctor")
-            client = OpenAI(
-                default_headers={
-                    "User-Agent": f"prompty/{VERSION}",
-                    "x-ms-useragent": f"prompty/{VERSION}",
-                },
-                **client_kwargs,
-            )
-
-        api_type = agent.model.apiType or "chat"
-
-        if api_type == "chat":
-            return self._execute_chat(client, agent, data)
-        elif api_type == "agent":
-            return self._execute_agent(client, agent, data)
-        elif api_type == "embedding":
-            return self._execute_embedding(client, agent, data)
-        elif api_type == "image":
-            return self._execute_image(client, agent, data)
-        else:
-            raise ValueError(f"Unsupported apiType: {api_type}")
-
-    @trace
-    async def execute_async(
-        self,
-        agent: PromptAgent,
-        data: Any,
-    ) -> Any:
-        from openai import AsyncOpenAI
-
-        client_kwargs = self._client_kwargs(agent)
-
-        with Tracer.start("AsyncOpenAI") as t:
-            t("type", "LLM")
-            t("signature", "AsyncOpenAI.ctor")
-            client = AsyncOpenAI(
-                default_headers={
-                    "User-Agent": f"prompty/{VERSION}",
-                    "x-ms-useragent": f"prompty/{VERSION}",
-                },
-                **client_kwargs,
-            )
-
-        api_type = agent.model.apiType or "chat"
-
-        if api_type == "chat":
-            return await self._execute_chat_async(client, agent, data)
-        elif api_type == "agent":
-            return await self._execute_agent_async(client, agent, data)
-        elif api_type == "embedding":
-            return await self._execute_embedding_async(client, agent, data)
-        elif api_type == "image":
-            return await self._execute_image_async(client, agent, data)
-        else:
-            raise ValueError(f"Unsupported apiType: {api_type}")
+    _trace_prefix: str = "OpenAI"
 
     # -- Chat ---------------------------------------------------------------
 
     def _execute_chat(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
-            t("signature", "OpenAI.chat.completions.create")
+            t("signature", f"{self._trace_prefix}.chat.completions.create")
             args = self._build_chat_args(agent, messages)
             t("inputs", args)
             response = client.chat.completions.create(**args)
             if args.get("stream", False):
-                return PromptyStream("OpenAIExecutor", response)
+                return PromptyStream(f"{self._trace_prefix}Executor", response)
             t("result", response)
         return response
 
     async def _execute_chat_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
-            t("signature", "AsyncOpenAI.chat.completions.create")
+            t("signature", f"Async{self._trace_prefix}.chat.completions.create")
             args = self._build_chat_args(agent, messages)
             t("inputs", args)
             response = await client.chat.completions.create(**args)
             if args.get("stream", False):
-                return AsyncPromptyStream("OpenAIExecutor", response)
-            t("result", response)
-        return response
-
-    # -- Agent loop ---------------------------------------------------------
-
-    def _execute_agent(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
-        """Execute a chat completion loop with automatic tool-call handling.
-
-        When the LLM returns ``tool_calls``, the registered tool functions from
-        ``agent.metadata["tool_functions"]`` are invoked and their results are
-        appended to the conversation. The loop repeats until the LLM returns a
-        normal response (no tool calls).
-        """
-        _meta = agent.metadata if agent.metadata is not None else {}
-        tool_fns: dict[str, Any] = _meta.get("tool_functions", {})
-        wire_messages = [_message_to_wire(m) for m in messages]
-
-        with Tracer.start("AgentLoop") as t:
-            t("type", "agent")
-            t("signature", "OpenAIExecutor.AgentLoop")
-
-            args = self._build_chat_args(agent, messages)
-            t("inputs", args)
-
-            response = client.chat.completions.create(**args)
-
-            while (
-                hasattr(response, "choices")
-                and response.choices
-                and response.choices[0].finish_reason == "tool_calls"
-                and response.choices[0].message.tool_calls
-            ):
-                tool_calls = response.choices[0].message.tool_calls
-
-                # Append assistant message with tool calls
-                wire_messages.append(
-                    {
-                        "role": "assistant",
-                        "tool_calls": [tc.model_dump() for tc in tool_calls],
-                    }
-                )
-
-                for tc in tool_calls:
-                    fn_name = tc.function.name
-                    fn = tool_fns.get(fn_name)
-                    if fn is None:
-                        raise ValueError(f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']")
-                    if inspect.iscoroutinefunction(fn):
-                        raise ValueError(f"Cannot execute async tool '{fn_name}' in sync mode")
-
-                    fn_args = json.loads(tc.function.arguments)
-                    result = fn(**fn_args)
-
-                    wire_messages.append(
-                        {
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "name": fn_name,
-                            "content": str(result),
-                        }
-                    )
-
-                # Rebuild args with updated messages
-                model = agent.model.id or "gpt-4"
-                loop_args: dict[str, Any] = {
-                    "model": model,
-                    "messages": wire_messages,
-                    **_build_options(agent),
-                }
-                tools = _tools_to_wire(agent)
-                if tools:
-                    loop_args["tools"] = tools
-
-                response = client.chat.completions.create(**loop_args)
-
-            t("result", response)
-        return response
-
-    async def _execute_agent_async(self, client: Any, agent: PromptAgent, messages: Any) -> Any:
-        """Async variant of the agent loop."""
-        _meta = agent.metadata if agent.metadata is not None else {}
-        tool_fns: dict[str, Any] = _meta.get("tool_functions", {})
-        wire_messages = [_message_to_wire(m) for m in messages]
-
-        with Tracer.start("AgentLoopAsync") as t:
-            t("type", "agent")
-            t("signature", "OpenAIExecutor.AgentLoopAsync")
-
-            args = self._build_chat_args(agent, messages)
-            t("inputs", args)
-
-            response = await client.chat.completions.create(**args)
-
-            while (
-                hasattr(response, "choices")
-                and response.choices
-                and response.choices[0].finish_reason == "tool_calls"
-                and response.choices[0].message.tool_calls
-            ):
-                tool_calls = response.choices[0].message.tool_calls
-
-                wire_messages.append(
-                    {
-                        "role": "assistant",
-                        "tool_calls": [tc.model_dump() for tc in tool_calls],
-                    }
-                )
-
-                for tc in tool_calls:
-                    fn_name = tc.function.name
-                    fn = tool_fns.get(fn_name)
-                    if fn is None:
-                        raise ValueError(f"Tool function '{fn_name}' not found in agent.metadata['tool_functions']")
-
-                    fn_args = json.loads(tc.function.arguments)
-                    if inspect.iscoroutinefunction(fn):
-                        result = await fn(**fn_args)
-                    else:
-                        result = fn(**fn_args)
-
-                    wire_messages.append(
-                        {
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "name": fn_name,
-                            "content": str(result),
-                        }
-                    )
-
-                model = agent.model.id or "gpt-4"
-                loop_args: dict[str, Any] = {
-                    "model": model,
-                    "messages": wire_messages,
-                    **_build_options(agent),
-                }
-                tools = _tools_to_wire(agent)
-                if tools:
-                    loop_args["tools"] = tools
-
-                response = await client.chat.completions.create(**loop_args)
-
+                return AsyncPromptyStream(f"{self._trace_prefix}Executor", response)
             t("result", response)
         return response
 
@@ -511,7 +306,7 @@ class OpenAIExecutor:
     def _execute_embedding(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
-            t("signature", "OpenAI.embeddings.create")
+            t("signature", f"{self._trace_prefix}.embeddings.create")
             args = self._build_embedding_args(agent, data)
             t("inputs", args)
             response = client.embeddings.create(**args)
@@ -521,7 +316,7 @@ class OpenAIExecutor:
     async def _execute_embedding_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
-            t("signature", "AsyncOpenAI.embeddings.create")
+            t("signature", f"Async{self._trace_prefix}.embeddings.create")
             args = self._build_embedding_args(agent, data)
             t("inputs", args)
             response = await client.embeddings.create(**args)
@@ -533,7 +328,7 @@ class OpenAIExecutor:
     def _execute_image(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
-            t("signature", "OpenAI.images.generate")
+            t("signature", f"{self._trace_prefix}.images.generate")
             args = self._build_image_args(agent, data)
             t("inputs", args)
             response = client.images.generate(**args)
@@ -543,23 +338,14 @@ class OpenAIExecutor:
     async def _execute_image_async(self, client: Any, agent: PromptAgent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
-            t("signature", "AsyncOpenAI.images.generate")
+            t("signature", f"Async{self._trace_prefix}.images.generate")
             args = self._build_image_args(agent, data)
             t("inputs", args)
             response = await client.images.generate(**args)
             t("result", response)
         return response
 
-    def _client_kwargs(self, agent: PromptAgent) -> dict[str, Any]:
-        """Extract client constructor kwargs from the agent connection."""
-        kwargs: dict[str, Any] = {}
-        conn = agent.model.connection
-        if conn and isinstance(conn, ApiKeyConnection):
-            if conn.apiKey:
-                kwargs["api_key"] = conn.apiKey
-            if conn.endpoint:
-                kwargs["base_url"] = conn.endpoint
-        return kwargs
+    # -- Arg builders -------------------------------------------------------
 
     def _build_chat_args(self, agent: PromptAgent, messages: list[Message]) -> dict[str, Any]:
         """Build the full arguments dict for chat.completions.create."""
@@ -587,8 +373,12 @@ class OpenAIExecutor:
         args: dict[str, Any] = {
             "input": data if isinstance(data, list) else [data],
             "model": model,
-            **_build_options(agent),
         }
+        # Only pass through additional properties — standard chat options
+        # (temperature, top_p, etc.) are not valid for the embeddings API.
+        if agent.model.options and agent.model.options.additionalProperties:
+            for k, v in agent.model.options.additionalProperties.items():
+                args[k] = v
         return args
 
     def _build_image_args(self, agent: PromptAgent, data: Any) -> dict[str, Any]:
@@ -597,6 +387,110 @@ class OpenAIExecutor:
         args: dict[str, Any] = {
             "prompt": data,
             "model": model,
-            **_build_options(agent),
         }
+        # Only pass through additional properties — standard chat options
+        # (temperature, top_p, etc.) are not valid for the images API.
+        if agent.model.options and agent.model.options.additionalProperties:
+            for k, v in agent.model.options.additionalProperties.items():
+                args[k] = v
         return args
+
+
+# ---------------------------------------------------------------------------
+# OpenAI Executor
+# ---------------------------------------------------------------------------
+
+
+class OpenAIExecutor(_BaseExecutor):
+    """Executor for the OpenAI API (non-Azure).
+
+    Registered as ``openai`` in ``prompty.executors``.
+
+    Supports ``kind: key`` (direct API key) and ``kind: reference``
+    (pre-registered client via :func:`prompty.register_connection`).
+    """
+
+    _trace_prefix = "OpenAI"
+
+    @trace
+    def execute(self, agent: PromptAgent, data: Any) -> Any:
+        client = self._resolve_client(agent)
+        api_type = agent.model.apiType or "chat"
+
+        if api_type in ("chat", "agent"):
+            return self._execute_chat(client, agent, data)
+        elif api_type == "embedding":
+            return self._execute_embedding(client, agent, data)
+        elif api_type == "image":
+            return self._execute_image(client, agent, data)
+        else:
+            raise ValueError(f"Unsupported apiType: {api_type}")
+
+    @trace
+    async def execute_async(self, agent: PromptAgent, data: Any) -> Any:
+        client = self._resolve_client_async(agent)
+        api_type = agent.model.apiType or "chat"
+
+        if api_type in ("chat", "agent"):
+            return await self._execute_chat_async(client, agent, data)
+        elif api_type == "embedding":
+            return await self._execute_embedding_async(client, agent, data)
+        elif api_type == "image":
+            return await self._execute_image_async(client, agent, data)
+        else:
+            raise ValueError(f"Unsupported apiType: {api_type}")
+
+    def _resolve_client(self, agent: PromptAgent) -> Any:
+        """Resolve the sync OpenAI client from connection config."""
+        from openai import OpenAI
+
+        conn = agent.model.connection
+
+        if isinstance(conn, ReferenceConnection):
+            return get_connection(conn.name)
+
+        kwargs = self._client_kwargs(agent)
+        with Tracer.start("OpenAI") as t:
+            t("type", "LLM")
+            t("signature", "OpenAI.ctor")
+            client = OpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **kwargs,
+            )
+        return client
+
+    def _resolve_client_async(self, agent: PromptAgent) -> Any:
+        """Resolve the async OpenAI client from connection config."""
+        from openai import AsyncOpenAI
+
+        conn = agent.model.connection
+
+        if isinstance(conn, ReferenceConnection):
+            return get_connection(conn.name)
+
+        kwargs = self._client_kwargs(agent)
+        with Tracer.start("AsyncOpenAI") as t:
+            t("type", "LLM")
+            t("signature", "AsyncOpenAI.ctor")
+            client = AsyncOpenAI(
+                default_headers={
+                    "User-Agent": f"prompty/{VERSION}",
+                    "x-ms-useragent": f"prompty/{VERSION}",
+                },
+                **kwargs,
+            )
+        return client
+
+    def _client_kwargs(self, agent: PromptAgent) -> dict[str, Any]:
+        """Extract client constructor kwargs from an ApiKeyConnection."""
+        kwargs: dict[str, Any] = {}
+        conn = agent.model.connection
+        if conn and isinstance(conn, ApiKeyConnection):
+            if conn.apiKey:
+                kwargs["api_key"] = conn.apiKey
+            if conn.endpoint:
+                kwargs["base_url"] = conn.endpoint
+        return kwargs

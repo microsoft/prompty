@@ -1,5 +1,7 @@
 """Pluggable tracing framework for Prompty."""
 
+from __future__ import annotations
+
 from .tracer import (
     PromptyTracer,
     Tracer,

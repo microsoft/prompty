@@ -30,9 +30,7 @@ class TestOpenAIImage:
             model=_OPENAI_IMAGE_MODEL,
             options={"n": 1, "size": "1024x1024"},
         )
-        response = self.executor.execute(
-            agent, "A simple red circle on a white background"
-        )
+        response = self.executor.execute(agent, "A simple red circle on a white background")
         result = self.processor.process(agent, response)
         assert isinstance(result, str)
         # URL (dall-e) or base64 (gpt-image-1)
@@ -51,9 +49,7 @@ class TestAzureImage:
             deployment=_AZURE_IMAGE_DEPLOYMENT,
             options={"n": 1, "size": "1024x1024"},
         )
-        response = self.executor.execute(
-            agent, "A simple red circle on a white background"
-        )
+        response = self.executor.execute(agent, "A simple red circle on a white background")
         result = self.processor.process(agent, response)
         assert isinstance(result, str)
         # gpt-image-1 returns b64_json — validate it's decodable base64

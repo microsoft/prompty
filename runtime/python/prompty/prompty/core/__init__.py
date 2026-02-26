@@ -1,5 +1,8 @@
-"""Core infrastructure — loading, types, protocols, discovery, and pipeline."""
+"""Core infrastructure — loading, types, protocols, discovery, pipeline, and connections."""
 
+from __future__ import annotations
+
+from .connections import clear_connections, get_connection, register_connection
 from .discovery import (
     InvokerError,
     clear_cache,
@@ -18,6 +21,8 @@ from .pipeline import (
     process,
     process_async,
     run,
+    run_agent,
+    run_agent_async,
     run_async,
     validate_inputs,
 )
@@ -26,7 +31,6 @@ from .protocols import (
     ParserProtocol,
     ProcessorProtocol,
     RendererProtocol,
-    _PreRenderable,
 )
 from .types import (
     RICH_KINDS,

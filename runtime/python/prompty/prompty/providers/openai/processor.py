@@ -9,6 +9,7 @@ Also provides shared processing logic used by the Azure processor.
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -98,8 +99,6 @@ def _process_response(response: Any, agent: PromptAgent | None = None) -> Any:
         return _process_image(response)
     else:
         # Check for streaming iterators (sync and async)
-        from collections.abc import AsyncIterator, Iterator
-
         if isinstance(response, Iterator):
             return _stream_generator(response)
         if isinstance(response, AsyncIterator):
@@ -146,15 +145,83 @@ def _process_image(response: Any) -> Any:
         return [d.url or d.b64_json for d in response.data]
 
 
-def _stream_generator(response):
-    """Yield content chunks from a streaming response."""
+def _stream_generator(response: Any) -> Iterator[str | ToolCall]:
+    """Yield content chunks, tool calls, or refusals from a streaming response.
+
+    Handles three types of streaming deltas:
+    - ``delta.content`` — yields content strings
+    - ``delta.tool_calls`` — accumulates partial tool call chunks,
+      yields ``ToolCall`` objects when the stream ends
+    - ``delta.refusal`` — raises ``ValueError`` with the refusal message
+    """
+    tool_call_acc: dict[int, dict[str, str]] = {}
+
     for chunk in response:
-        if hasattr(chunk, "choices") and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
-            yield chunk.choices[0].delta.content
+        if not hasattr(chunk, "choices") or not chunk.choices:
+            continue
+
+        delta = chunk.choices[0].delta
+
+        # Content
+        if hasattr(delta, "content") and delta.content is not None:
+            yield delta.content
+
+        # Tool call deltas — accumulate index-keyed partial chunks
+        if hasattr(delta, "tool_calls") and delta.tool_calls:
+            for tc_delta in delta.tool_calls:
+                idx = tc_delta.index
+                if idx not in tool_call_acc:
+                    tool_call_acc[idx] = {"id": "", "name": "", "arguments": ""}
+                if tc_delta.id:
+                    tool_call_acc[idx]["id"] = tc_delta.id
+                if hasattr(tc_delta, "function") and tc_delta.function:
+                    if tc_delta.function.name:
+                        tool_call_acc[idx]["name"] = tc_delta.function.name
+                    if tc_delta.function.arguments:
+                        tool_call_acc[idx]["arguments"] += tc_delta.function.arguments
+
+        # Refusal
+        if hasattr(delta, "refusal") and delta.refusal is not None:
+            raise ValueError(f"Model refused: {delta.refusal}")
+
+    # Yield accumulated tool calls at the end of the stream
+    for idx in sorted(tool_call_acc):
+        tc = tool_call_acc[idx]
+        yield ToolCall(id=tc["id"], name=tc["name"], arguments=tc["arguments"])
 
 
-async def _async_stream_generator(response):
-    """Yield content chunks from an async streaming response."""
+async def _async_stream_generator(response: Any) -> AsyncIterator[str | ToolCall]:
+    """Yield content chunks, tool calls, or refusals from an async streaming response.
+
+    Async variant of :func:`_stream_generator`.
+    """
+    tool_call_acc: dict[int, dict[str, str]] = {}
+
     async for chunk in response:
-        if hasattr(chunk, "choices") and len(chunk.choices) == 1 and chunk.choices[0].delta.content is not None:
-            yield chunk.choices[0].delta.content
+        if not hasattr(chunk, "choices") or not chunk.choices:
+            continue
+
+        delta = chunk.choices[0].delta
+
+        if hasattr(delta, "content") and delta.content is not None:
+            yield delta.content
+
+        if hasattr(delta, "tool_calls") and delta.tool_calls:
+            for tc_delta in delta.tool_calls:
+                idx = tc_delta.index
+                if idx not in tool_call_acc:
+                    tool_call_acc[idx] = {"id": "", "name": "", "arguments": ""}
+                if tc_delta.id:
+                    tool_call_acc[idx]["id"] = tc_delta.id
+                if hasattr(tc_delta, "function") and tc_delta.function:
+                    if tc_delta.function.name:
+                        tool_call_acc[idx]["name"] = tc_delta.function.name
+                    if tc_delta.function.arguments:
+                        tool_call_acc[idx]["arguments"] += tc_delta.function.arguments
+
+        if hasattr(delta, "refusal") and delta.refusal is not None:
+            raise ValueError(f"Model refused: {delta.refusal}")
+
+    for idx in sorted(tool_call_acc):
+        tc = tool_call_acc[idx]
+        yield ToolCall(id=tc["id"], name=tc["name"], arguments=tc["arguments"])

@@ -11,7 +11,7 @@ from typing import Any
 from agentschema import PromptAgent
 
 from ..tracing.tracer import trace
-from ._common import _prepare_render_inputs
+from ._common import _prepare_render_inputs, _thread_nonces_local
 
 __all__ = ["Jinja2Renderer"]
 
@@ -51,8 +51,8 @@ class Jinja2Renderer:
         t = env.get_template("prompt")
         rendered = t.render(**render_inputs)
 
-        # Stash the nonce mapping for prepare() to retrieve
-        self._last_thread_nonces = thread_nonces
+        # Stash the nonce mapping on thread-local for prepare() to retrieve
+        _thread_nonces_local.nonces = thread_nonces
 
         return rendered
 
