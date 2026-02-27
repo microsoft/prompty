@@ -47,9 +47,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./runtime/python/prompty
-        run: |
-          python -m pytest tests/ -q --tb=short \
-            --cov=prompty --cov-report=term --cov-report=json
+        run: python -m pytest tests/ -q --tb=short --cov=prompty --cov-report=term --cov-report=json
 
   pypi-publish:
     name: upload release to PyPI
@@ -90,9 +88,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./runtime/python/prompty
-        run: |
-          python -m pytest tests/ -q --tb=short \
-            --cov=prompty --cov-report=term
+        run: python -m pytest tests/ -q --tb=short --cov=prompty --cov-report=term
 
       - name: Build package
         working-directory: ./runtime/python/prompty
