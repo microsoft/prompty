@@ -1,5 +1,8 @@
 # Prompty — Python Runtime
 
+[![PyPI](https://img.shields.io/pypi/v/prompty)](https://pypi.org/project/prompty/)
+[![Python 3.11+](https://img.shields.io/pypi/pyversions/prompty)](https://pypi.org/project/prompty/)
+
 Prompty is a markdown file format (`.prompty`) for LLM
 prompts. The Python runtime loads, renders, parses, and
 executes these files. It uses
@@ -11,16 +14,13 @@ as its type system — every `.prompty` file becomes a typed
 
 ```bash
 # Core + Jinja2 renderer + OpenAI provider
-uv pip install prompty[jinja2,openai]
+pip install prompty[jinja2,openai]
 
 # Core + Azure OpenAI provider
-uv pip install prompty[jinja2,azure]
+pip install prompty[jinja2,azure]
 
 # Everything (all renderers, providers, OpenTelemetry)
-uv pip install prompty[all]
-
-# Development (includes test/lint tools)
-uv pip install -e ".[dev,all]"
+pip install prompty[all]
 ```
 
 ### Dependencies
@@ -316,9 +316,12 @@ migrated with deprecation warnings. Key changes:
 - `template: jinja2` → structured `template`
   with `format` and `parser`
 
-## Testing
+## Development
 
 ```bash
+# Install for development
+uv pip install -e ".[dev,all]"
+
 # Unit tests (excludes integration by default)
 uv run pytest tests/ -q
 
