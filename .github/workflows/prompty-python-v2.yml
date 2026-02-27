@@ -2,8 +2,6 @@ name: prompty Python v2 build and publish
 
 on:
   push:
-    paths:
-      - 'runtime/python/**'
     tags:
       - 'python/2.*'
   workflow_dispatch:
