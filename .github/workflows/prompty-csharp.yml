@@ -2,8 +2,6 @@ name: prompty CSharp build and publish
 
 on:
   push:
-    paths:
-      - 'runtime/promptycs/**'
     tags:
       - 'csharp/*'
   workflow_dispatch:

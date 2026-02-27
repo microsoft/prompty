@@ -2,8 +2,8 @@ name: prompty JavaScript build and publish
 
 on:
   push:
-    paths:
-      - "runtime/promptyjs/**"
+    tags:
+      - 'javascript/*'
 
   workflow_dispatch:
   workflow_call:
