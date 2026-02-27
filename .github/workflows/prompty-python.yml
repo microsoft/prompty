@@ -5,7 +5,7 @@ on:
     paths:
       - 'runtime/prompty/**'
     tags:
-      - 'python/*'
+      - 'python/1.*'
   workflow_dispatch:
 
 
