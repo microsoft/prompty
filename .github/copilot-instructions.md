@@ -1453,28 +1453,16 @@ Use `${file:path/to/config.json}` references in frontmatter to load shared conne
 
 - `otel_tracer()` — OpenTelemetry span backend (optional dep: `opentelemetry-api`)
 
-### Old Runtime Reference (for porting logic)
+### Old Runtime (removed)
 
-**`runtime/prompty/prompty/core.py`** — key dataclasses to understand migration:
+The v1 Python runtime (`runtime/prompty/`) has been removed. The v2 runtime at
+`runtime/python/prompty/` is now the only Python implementation. Key porting notes:
 
-- `Prompty` (line ~155): `model`, `inputs`, `outputs`, `tools`, `template`, `instructions`, `additional_instructions`
-- `ModelProperty` (line ~83): `id`, `api`, `connection` (dict), `options` (dict)
-- `load_manifest()` (line ~459): handles all legacy migrations — ported into `core/migration.py:_migrate_legacy()`
-
-**`runtime/prompty/prompty/invoker.py`** — old invoker pattern (replaced by protocols + discovery + pipeline):
-
-- `Invoker` ABC: `invoke()` / `invoke_async()` + traced `run()` / `run_async()`
-- `InvokerFactory`: registry + dispatch → replaced by `core/discovery.py` entry-point lookup
-- Dispatch keys: renderer=`template.format`, parser=`{parser}.{api}`, executor=`connection.type`
-
-**`runtime/prompty/prompty/renderers.py`** — old template rendering (ported to `renderers/`):
-
-- `Jinja2Renderer`: → `renderers/jinja2.py`
-- `MustacheRenderer`: → `renderers/mustache.py`
-
-**`runtime/prompty/prompty/parsers.py`** — old parser (ported to `parsers/`):
-
-- `PromptyChatParser`: → `parsers/prompty.py`
+- `core.py` dataclasses → `core/model.py` (AgentSchema-based)
+- `invoker.py` InvokerFactory → `core/discovery.py` entry-point lookup
+- `renderers.py` → `renderers/jinja2.py`, `renderers/mustache.py`
+- `parsers.py` → `parsers/prompty.py`
+- `load_manifest()` legacy migrations → `core/migration.py:_migrate_legacy()`
 
 ### AgentSchema API Reference
 
