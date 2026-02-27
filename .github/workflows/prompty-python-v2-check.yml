@@ -1,0 +1,93 @@
+name: prompty Python v2 build and test
+on:
+  pull_request:
+    paths:
+      - 'runtime/python/**'
+
+  workflow_call:
+
+env:
+  AZURE_OPENAI_ENDPOINT: https://fake
+  AZURE_OPENAI_KEY: 12342323433
+
+jobs:
+  prompty-v2-tests:
+    name: test python v2 on ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        working-directory: ./runtime/python/prompty
+        run: uv pip install --system -e '.[dev,all]'
+
+      - name: Lint with ruff
+        working-directory: ./runtime/python/prompty
+        run: ruff check .
+
+      - name: Check formatting with ruff
+        working-directory: ./runtime/python/prompty
+        run: ruff format --check .
+
+      - name: Run tests
+        working-directory: ./runtime/python/prompty
+        run: |
+          python -m pytest tests/ -q --tb=short \
+            --cov=prompty --cov-report=term --cov-report=json
+
+  publish-artifacts:
+    name: publish build artifacts
+    runs-on: ubuntu-latest
+    needs: prompty-v2-tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create timestamp tag
+        run: |
+          echo "TAG=v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)" >> "$GITHUB_ENV"
+
+      - name: Rewrite version
+        working-directory: ./runtime/python/prompty
+        run: |
+          echo "VERSION = \"$TAG\"" > ./prompty/_version.py
+          cat ./prompty/_version.py
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        working-directory: ./runtime/python/prompty
+        run: uv pip install --system -e '.[dev,all]'
+
+      - name: Build package
+        working-directory: ./runtime/python/prompty
+        run: |
+          uv pip install --system flit
+          flit build --format wheel
+          flit build --format sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prompty-v2-artifacts
+          path: ./runtime/python/prompty/dist/*

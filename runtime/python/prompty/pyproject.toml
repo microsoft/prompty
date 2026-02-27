@@ -7,6 +7,17 @@ authors = [{ name = "Seth Juarez", email = "seth.juarez@microsoft.com" }]
 requires-python = ">=3.11"
 
 license = { text = "MIT" }
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
 dependencies = [
   "agentschema",
   "pyyaml>=6.0.1",
@@ -15,9 +26,11 @@ dependencies = [
 ]
 
 [project.urls]
+Homepage = "https://prompty.ai"
 Repository = "https://github.com/Microsoft/prompty"
-Documentation = "https://prompty.ai/docs"
+Documentation = "https://prompty.ai"
 Issues = "https://github.com/microsoft/prompty/issues"
+Changelog = "https://github.com/microsoft/prompty/releases"
 
 [project.optional-dependencies]
 jinja2 = ["jinja2"]

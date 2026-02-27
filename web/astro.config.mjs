@@ -56,6 +56,11 @@ export default defineConfig({
           autogenerate: { directory: "guides" },
         },
         {
+          label: "v2 (Alpha)",
+          autogenerate: { directory: "v2" },
+          badge: { text: "Alpha", variant: "caution" },
+        },
+        {
           label: "Contributing",
           autogenerate: { directory: "contributing" },
         },
