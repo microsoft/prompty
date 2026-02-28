@@ -238,45 +238,74 @@ list with `kind`, `default`, etc.
 
 ## Execution Pipeline
 
+### The Four-Step Principle
+
+The Prompty pipeline is a **tree of four independently-traced leaf steps**,
+grouped into composites:
+
 ```text
-PromptAgent + inputs
-     │
-     ▼
-  prepare(agent, inputs)
-     │
-     ├─ Renderer.render(agent, instructions, inputs)
-     │    → rendered string
-     │    Dispatched by: agent.template.format.kind
-     │    (e.g., "jinja2")
-     │
-     ├─ Parser.parse(agent, rendered_string)
-     │    → list[Message]
-     │    Dispatched by: agent.template.parser.kind
-     │    (e.g., "prompty")
-     │
-     └─ Thread expansion:
-        if thread-kind inputs exist, expand nonce
-        markers into Message objects in the list
-     │
-     ▼
-  execute(agent, messages)
-     │
-     ├─ Executor.execute(agent, messages)
-     │    → raw LLM response
-     │    Dispatched by: agent.model.provider
-     │    (e.g., "openai")
-     │
-     ▼
-  process(agent, response)
-     │
-     ├─ Processor.process(agent, response)
-     │    → clean result
-     │    Dispatched by: agent.model.provider
-     │    (e.g., "openai")
-     │
-     ▼
-  Result (string, JSON, embeddings, image URLs)
+execute(prompt, inputs)              → top-level orchestrator
+  │
+  ├── prepare(agent, inputs)         → template → wire format
+  │     ├── render(agent, inputs)    → template + inputs → rendered string
+  │     └── parse(agent, rendered)   → rendered string → list[Message]
+  │
+  └── run(agent, messages)           → LLM call → clean result
+        ├── Executor.execute(...)    → messages → raw LLM response
+        └── process(agent, response) → raw response → clean result
 ```
+
+**Four leaf steps** — each backed by a swappable Protocol, each independently
+traced:
+
+| Step | Protocol | Dispatched by | Trace span |
+|------|----------|---------------|------------|
+| **render** | `RendererProtocol` | `template.format.kind` (e.g. `"jinja2"`) | `Jinja2Renderer.render` |
+| **parse** | `ParserProtocol` | `template.parser.kind` (e.g. `"prompty"`) | `PromptyChatParser.parse` |
+| **executor** | `ExecutorProtocol` | `model.provider` (e.g. `"openai"`) | `OpenAIExecutor.execute` |
+| **process** | `ProcessorProtocol` | `model.provider` (e.g. `"openai"`) | `OpenAIProcessor.process` |
+
+**Two composites** — each creates a parent trace span:
+
+| Composite | Contains | Purpose |
+|-----------|----------|---------|
+| `prepare()` | render + parse + thread expansion | Template → wire-format messages |
+| `run()` | executor + process | Messages → clean result |
+
+**One orchestrator** — `execute()` ties it all together:
+
+```text
+execute("chat.prompty", {"question": "Hello"})
+  ├── load("chat.prompty")  → PromptAgent
+  ├── prepare(agent, inputs)
+  │     ├── Jinja2Renderer.render(...)   ← traced leaf
+  │     └── PromptyChatParser.parse(...) ← traced leaf
+  └── run(agent, messages)
+        ├── OpenAIExecutor.execute(...)  ← traced leaf
+        └── OpenAIProcessor.process(...) ← traced leaf
+```
+
+Users can see exactly where time is spent. Each leaf is independently
+replaceable via the entry-point discovery system.
+
+### Public API Functions
+
+```python
+# Leaf steps (standalone, for debugging/testing)
+render(agent, inputs) → str
+parse(agent, rendered_string) → list[Message]
+process(agent, response) → Any
+
+# Composites
+prepare(agent, inputs) → list[Message]
+run(agent, messages, *, raw=False) → Any
+
+# Top-level orchestrators
+execute(prompt_or_agent, inputs, *, raw=False) → Any
+execute_agent(prompt_or_agent, inputs, *, tools, max_iterations=10, raw=False) → Any
+```
+
+All functions have async variants (`render_async`, `parse_async`, etc.).
 
 ### `prepare()` Details
 
@@ -296,25 +325,18 @@ PromptAgent + inputs
    the end.
 6. Return the final `list[Message]`.
 
-### `execute()` Details
+### `run()` Details
 
-1. Look up executor by `agent.model.provider`
-   (defaults to `"openai"`).
-2. The executor converts abstract `Message` objects
-   to the provider's wire format.
-3. Dispatches on `agent.model.apiType`: `"chat"`
-   (default), `"embedding"`, `"image"`.
-4. Makes the SDK call and returns the raw response.
-
-### `process()` Details
-
-1. Look up processor by `agent.model.provider`.
-2. Dispatches on response type: chat completion →
-   extract content, embedding → extract vectors,
-   image → extract URLs.
-3. If `agent.outputSchema` exists and response is a
-   chat completion, JSON-parse the content.
-4. Streaming responses are wrapped and yield chunks.
+1. Call `Executor.execute(agent, messages)` — the
+   executor converts abstract `Message` objects to
+   the provider's wire format, dispatches on
+   `agent.model.apiType` (`"chat"`, `"embedding"`,
+   `"image"`), and makes the SDK call.
+2. If `raw=True`, return the raw LLM response.
+3. Otherwise call `Processor.process(agent, response)`
+   — extracts content from chat completions,
+   vectors from embeddings, URLs from images,
+   or JSON-parses when `outputSchema` exists.
 
 ### Default Configuration
 
@@ -667,13 +689,13 @@ This design means:
 ### Algorithm
 
 ```text
-function run_agent(prompt, inputs, tools,
-                   max_iterations=10):
+function execute_agent(prompt, inputs, tools,
+                       max_iterations=10):
     agent = load(prompt)     # if string path
     messages = prepare(agent, inputs)
     iteration = 0
 
-    response = execute(agent, messages)
+    response = _invoke_executor(agent, messages)
 
     while has_tool_calls(response):
         iteration += 1
@@ -709,7 +731,7 @@ function run_agent(prompt, inputs, tools,
         # tool_calls metadata (inserted before
         # tool results in the message list)
 
-        response = execute(agent, messages)
+        response = _invoke_executor(agent, messages)
 
     return process(agent, response)
 ```
@@ -956,7 +978,9 @@ When implementing a new language runtime:
 
 - [ ] Renderer, Parser, Executor, Processor interfaces
 - [ ] Discovery mechanism (language-appropriate)
-- [ ] `prepare()`, `execute()`, `process()`, `run()`
+- [ ] Four-step pipeline: `render()`, `parse()`, `prepare()`, `run()`, `execute()`
+- [ ] Composite functions: `prepare()` = render+parse, `run()` = executor+process
+- [ ] Top-level orchestrator: `execute()` = load+prepare+run
 - [ ] Async variants of all pipeline functions
 - [ ] Input validation (`validate_inputs()`)
 - [ ] Tests: protocols, discovery, pipeline
@@ -977,7 +1001,7 @@ When implementing a new language runtime:
 - [ ] Image generation API (`apiType: image`)
 - [ ] Streaming wrappers with tracing
 - [ ] Connection registry
-- [ ] Agent loop (`run_agent` with error recovery)
+- [ ] Agent loop (`execute_agent` with error recovery)
 - [ ] `headless()` for programmatic agent creation
 - [ ] Tests: structured output, streaming, agent loop
 

@@ -1,11 +1,20 @@
 """Stateless pipeline functions for prompt execution.
 
-Pipeline stages:
-    prepare()       →  render + parse + expand  →  list[Message]
-    execute()       →  single LLM call          →  raw response
-    process()       →  response extraction      →  clean result
-    run()           →  load + prepare + execute + process
-    run_agent()     →  load + prepare + (execute → tool loop) + process
+Four-step pipeline with traced boundaries::
+
+    execute()             →  top-level: load + prepare + run
+      ├── prepare()       →  render + parse + thread expansion  →  list[Message]
+      │   ├── render()    →  template + inputs  →  rendered string
+      │   └── parse()     →  rendered string    →  list[Message]
+      └── run()           →  LLM call + result extraction       →  clean result
+          ├── executor    →  messages → raw LLM response
+          └── process()   →  response → clean result
+
+    execute_agent()       →  like execute(), but with a tool-call loop in run()
+
+Each step is independently traced.  Users can bring their own
+Renderer, Parser, Executor, and Processor implementations via the
+plugin discovery system.
 """
 
 from __future__ import annotations
@@ -30,14 +39,24 @@ from .types import RICH_KINDS, ContentPart, Message, ThreadMarker
 
 __all__ = [
     "validate_inputs",
-    "prepare",
-    "prepare_async",
-    "execute",
-    "execute_async",
+    # Leaf steps
+    "render",
+    "render_async",
+    "parse",
+    "parse_async",
     "process",
     "process_async",
+    # Composite steps
+    "prepare",
+    "prepare_async",
     "run",
     "run_async",
+    # Top-level orchestrators
+    "execute",
+    "execute_async",
+    "execute_agent",
+    "execute_agent_async",
+    # Backward-compat aliases
     "run_agent",
     "run_agent_async",
     "headless",
@@ -337,7 +356,105 @@ def _finalize_messages(
 
 
 # ---------------------------------------------------------------------------
-# Pipeline: prepare()
+# Leaf step: render()
+# ---------------------------------------------------------------------------
+
+
+@trace
+def render(
+    agent: PromptAgent,
+    inputs: dict[str, Any] | None = None,
+) -> str:
+    """Render the agent's template with the given inputs.
+
+    Discovers the appropriate renderer via ``agent.template.format.kind``
+    and calls it.  This is one of the four leaf steps in the pipeline,
+    independently traced for observability.
+
+    Parameters
+    ----------
+    agent:
+        A loaded ``PromptAgent``.
+    inputs:
+        Input values for template rendering.
+
+    Returns
+    -------
+    str
+        The rendered template string (before parsing into messages).
+    """
+    inputs = validate_inputs(agent, inputs or {})
+    format_kind, _, _ = _resolve_prepare_config(agent)
+    template = agent.instructions or ""
+    renderer = get_renderer(format_kind)
+    return renderer.render(agent, template, inputs)
+
+
+@trace
+async def render_async(
+    agent: PromptAgent,
+    inputs: dict[str, Any] | None = None,
+) -> str:
+    """Async variant of :func:`render`."""
+    inputs = validate_inputs(agent, inputs or {})
+    format_kind, _, _ = _resolve_prepare_config(agent)
+    template = agent.instructions or ""
+    renderer = get_renderer(format_kind)
+    return await renderer.render_async(agent, template, inputs)
+
+
+# ---------------------------------------------------------------------------
+# Leaf step: parse()
+# ---------------------------------------------------------------------------
+
+
+@trace
+def parse(
+    agent: PromptAgent,
+    rendered: str,
+) -> list[Message]:
+    """Parse a rendered template string into an abstract message array.
+
+    Discovers the appropriate parser via ``agent.template.parser.kind``
+    and calls it.  This is one of the four leaf steps in the pipeline,
+    independently traced for observability.
+
+    Parameters
+    ----------
+    agent:
+        A loaded ``PromptAgent``.
+    rendered:
+        The rendered template string (output from :func:`render`).
+
+    Returns
+    -------
+    list[Message]
+        Parsed message array.
+    """
+    _, parser_kind, is_strict = _resolve_prepare_config(agent)
+    parser = get_parser(parser_kind)
+    context: dict[str, Any] = {}
+    if is_strict and hasattr(parser, "pre_render"):
+        _, context = parser.pre_render(agent.instructions or "")  # type: ignore[union-attr]
+    return parser.parse(agent, rendered, **context)
+
+
+@trace
+async def parse_async(
+    agent: PromptAgent,
+    rendered: str,
+) -> list[Message]:
+    """Async variant of :func:`parse`."""
+    _, parser_kind, is_strict = _resolve_prepare_config(agent)
+    parser = get_parser(parser_kind)
+    context: dict[str, Any] = {}
+    if is_strict and hasattr(parser, "pre_render"):
+        _, context = parser.pre_render(agent.instructions or "")  # type: ignore[union-attr]
+    return await parser.parse_async(agent, rendered, **context)
+
+
+# ---------------------------------------------------------------------------
+# Composite step: prepare() — render + parse + thread expansion
 # ---------------------------------------------------------------------------
 
 
@@ -416,32 +533,19 @@ async def prepare_async(
 
 
 # ---------------------------------------------------------------------------
-# Pipeline: execute()
+# Internal: _invoke_executor / _invoke_executor_async
 # ---------------------------------------------------------------------------
 
 
-@trace
-def execute(
+def _invoke_executor(
     agent: PromptAgent,
     messages: list[Message],
 ) -> Any:
-    """Execute a single LLM call with the given messages.
+    """Discover and call the executor for the agent's provider.
 
-    The executor is discovered via entry point using
-    ``agent.model.provider``. It maps abstract messages to the
-    provider's wire format internally.
-
-    Parameters
-    ----------
-    agent:
-        A loaded ``PromptAgent`` with model configuration.
-    messages:
-        Abstract message array from :func:`prepare`.
-
-    Returns
-    -------
-    Any
-        Raw LLM response (provider-specific).
+    This is the internal leaf step that makes the actual LLM call.
+    It is called by :func:`run` and traced via the executor implementation's
+    own ``@trace`` decorator.
     """
     provider = agent.model.provider or ""
     if not provider:
@@ -450,12 +554,11 @@ def execute(
     return executor.execute(agent, messages)
 
 
-@trace
-async def execute_async(
+async def _invoke_executor_async(
     agent: PromptAgent,
     messages: list[Message],
 ) -> Any:
-    """Async variant of :func:`execute`."""
+    """Async variant of :func:`_invoke_executor`."""
     provider = agent.model.provider or ""
     if not provider:
         raise InvokerError("prompty.executors", "(no provider set)")
@@ -508,18 +611,74 @@ async def process_async(
 
 
 # ---------------------------------------------------------------------------
-# Pipeline: run()
+# Composite step: run() — executor + process
 # ---------------------------------------------------------------------------
 
 
 @trace
 def run(
+    agent: PromptAgent,
+    messages: list[Message],
+    *,
+    raw: bool = False,
+) -> Any:
+    """Execute messages against the LLM and process the response.
+
+    This is the "run" composite step: it calls the executor (LLM call)
+    then the processor (result extraction).  Each sub-step is
+    independently traced via the implementation's ``@trace`` decorator.
+
+    Parameters
+    ----------
+    agent:
+        A loaded ``PromptAgent`` with model configuration.
+    messages:
+        Abstract message array from :func:`prepare`.
+    raw:
+        If ``True``, skip processing and return the raw LLM response.
+
+    Returns
+    -------
+    Any
+        The processed result (or raw response if ``raw=True``).
+    """
+    response = _invoke_executor(agent, messages)
+    if raw:
+        return response
+    return process(agent, response)
+
+
+@trace
+async def run_async(
+    agent: PromptAgent,
+    messages: list[Message],
+    *,
+    raw: bool = False,
+) -> Any:
+    """Async variant of :func:`run`."""
+    response = await _invoke_executor_async(agent, messages)
+    if raw:
+        return response
+    return await process_async(agent, response)
+
+
+# ---------------------------------------------------------------------------
+# Top-level orchestrator: execute() — load + prepare + run
+# ---------------------------------------------------------------------------
+
+
+@trace
+def execute(
     prompt: str | PromptAgent,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
 ) -> Any:
-    """Full pipeline: load → prepare → execute → process.
+    """Full pipeline: load → prepare → run.
+
+    This is the top-level orchestrator matching the v1 ``execute()``
+    signature.  It loads the prompt (if a path), prepares messages,
+    then runs them through the LLM and processor.
 
     Parameters
     ----------
@@ -539,20 +698,17 @@ def run(
 
     agent = load(prompt) if isinstance(prompt, str) else prompt
     messages = prepare(agent, inputs)
-    response = execute(agent, messages)
-    if raw:
-        return response
-    return process(agent, response)
+    return run(agent, messages, raw=raw)
 
 
 @trace
-async def run_async(
+async def execute_async(
     prompt: str | PromptAgent,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
 ) -> Any:
-    """Async variant of :func:`run`."""
+    """Async variant of :func:`execute`."""
     from .loader import load_async
 
     if isinstance(prompt, str):
@@ -560,10 +716,7 @@ async def run_async(
     else:
         agent = prompt
     messages = await prepare_async(agent, inputs)
-    response = await execute_async(agent, messages)
-    if raw:
-        return response
-    return await process_async(agent, response)
+    return await run_async(agent, messages, raw=raw)
 
 
 # ---------------------------------------------------------------------------
@@ -714,7 +867,7 @@ async def _build_tool_result_messages_async(
 
 
 @trace
-def run_agent(
+def execute_agent(
     prompt: str | PromptAgent,
     inputs: dict[str, Any] | None = None,
     *,
@@ -724,7 +877,7 @@ def run_agent(
 ) -> Any:
     """Run a prompt with automatic tool-call execution loop.
 
-    Similar to :func:`run`, but when the LLM returns tool calls, the
+    Similar to :func:`execute`, but when the LLM returns tool calls, the
     specified tool functions are executed and their results are sent back
     to the model. This repeats until the model returns a normal response
     or *max_iterations* is reached.
@@ -764,7 +917,7 @@ def run_agent(
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = execute(agent, messages)
+        response = _invoke_executor(agent, messages)
         iteration = 0
 
         while _has_tool_calls(response):
@@ -777,7 +930,7 @@ def run_agent(
 
             tool_messages, _ = _build_tool_result_messages(response, tools)
             messages.extend(tool_messages)
-            response = execute(agent, messages)
+            response = _invoke_executor(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
@@ -788,7 +941,7 @@ def run_agent(
 
 
 @trace
-async def run_agent_async(
+async def execute_agent_async(
     prompt: str | PromptAgent,
     inputs: dict[str, Any] | None = None,
     *,
@@ -796,7 +949,7 @@ async def run_agent_async(
     max_iterations: int = _DEFAULT_MAX_ITERATIONS,
     raw: bool = False,
 ) -> Any:
-    """Async variant of :func:`run_agent`."""
+    """Async variant of :func:`execute_agent`."""
     from ..tracing.tracer import Tracer
     from .loader import load_async
 
@@ -811,7 +964,7 @@ async def run_agent_async(
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = await execute_async(agent, messages)
+        response = await _invoke_executor_async(agent, messages)
         iteration = 0
 
         while _has_tool_calls(response):
@@ -824,7 +977,7 @@ async def run_agent_async(
 
             tool_messages = await _build_tool_result_messages_async(response, tools)
             messages.extend(tool_messages)
-            response = await execute_async(agent, messages)
+            response = await _invoke_executor_async(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
@@ -832,6 +985,11 @@ async def run_agent_async(
     if raw:
         return response
     return await process_async(agent, response)
+
+
+# Backward-compatibility aliases
+run_agent = execute_agent
+run_agent_async = execute_agent_async
 
 
 # ---------------------------------------------------------------------------
@@ -872,11 +1030,11 @@ def headless(
     Returns
     -------
     PromptAgent
-        A fully typed agent ready for :func:`execute` / :func:`process`.
+        A fully typed agent ready for :func:`run` / :func:`execute`.
 
     Examples
     --------
-    >>> from prompty import headless, execute, process
+    >>> from prompty import headless, run
     >>> agent = headless(
     ...     api="embedding",
     ...     model="text-embedding-ada-002",
@@ -888,8 +1046,7 @@ def headless(
     ...     },
     ...     content="hello world",
     ... )
-    >>> response = execute(agent, agent.metadata["content"])
-    >>> result = process(agent, response)
+    >>> result = run(agent, agent.metadata["content"])
     """
     from agentschema import AgentDefinition
 

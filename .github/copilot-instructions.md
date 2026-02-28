@@ -928,14 +928,17 @@ The invoker system uses **Protocol classes** (not ABCs) for the four pipeline st
 implementations registered under `prompty.renderers`, `prompty.parsers`, `prompty.executors`,
 `prompty.processors` entry point groups. Results are cached; `clear_cache()` resets.
 
-**Pipeline** (`core/pipeline.py`): Orchestrates the full flow:
+**Pipeline** (`core/pipeline.py`): Orchestrates the full flow as a four-step tree:
 
-- `prepare(agent, inputs)` → render + parse → `list[Message]`
-- `execute(agent, messages)` → call LLM → raw response
-- `process(agent, response)` → extract content → final result
-- `run(agent, inputs)` → prepare + execute + process
+- `render(agent, inputs)` → rendered string (leaf)
+- `parse(agent, rendered)` → `list[Message]` (leaf)
+- `prepare(agent, inputs)` → render + parse + thread expansion → `list[Message]`
+- `run(agent, messages)` → executor + process → final result
+- `process(agent, response)` → extract content → final result (leaf)
+- `execute(prompt, inputs)` → top-level: load + prepare + run
+- `execute_agent(prompt, inputs, tools=...)` → agent loop with tool calls
 - `validate_inputs(agent, inputs)` → check required inputs
-- All have `_async` variants
+- All have `_async` variants; `run_agent`/`run_agent_async` are backward-compat aliases
 
 **Backward compatibility**: `prompty/invoker.py` re-exports everything from `core.protocols`,
 `core.discovery`, and `core.pipeline` so `from prompty.invoker import prepare` still works.
@@ -946,7 +949,7 @@ implementations registered under `prompty.renderers`, `prompty.parsers`, `prompt
 | --------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `prompty/core/protocols.py` | `RendererProtocol`, `ParserProtocol`, `ExecutorProtocol`, `ProcessorProtocol`                          |
 | `prompty/core/discovery.py` | `get_renderer()`, `get_parser()`, `get_executor()`, `get_processor()`, `clear_cache()`, `InvokerError` |
-| `prompty/core/pipeline.py`  | `prepare()`, `execute()`, `process()`, `run()`, `validate_inputs()` + async variants                   |
+| `prompty/core/pipeline.py`  | `render()`, `parse()`, `prepare()`, `run()`, `execute()`, `execute_agent()`, `process()`, `validate_inputs()` + async variants |
 | `prompty/invoker.py`        | Backward-compat shim — re-exports from `core.*` submodules                                             |
 | `tests/test_invoker.py`     | Protocol conformance, discovery, pipeline composition, thread markers                                  |
 

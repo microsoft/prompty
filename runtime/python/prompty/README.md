@@ -73,8 +73,8 @@ Say hello to {{name}}.
 ```python
 import prompty
 
-# One-shot: load + render + parse + execute + process
-result = prompty.run(
+# One-shot: load + prepare + run
+result = prompty.execute(
     "greeting.prompty", inputs={"name": "Jane"}
 )
 print(result)
@@ -84,14 +84,13 @@ agent = prompty.load("greeting.prompty")
 messages = prompty.prepare(
     agent, inputs={"name": "Jane"}
 )
-response = prompty.execute(agent, messages)
-result = prompty.process(agent, response)
+result = prompty.run(agent, messages)
 ```
 
 ### 3. Async
 
 ```python
-result = await prompty.run_async(
+result = await prompty.execute_async(
     "greeting.prompty", inputs={"name": "Jane"}
 )
 ```
@@ -103,16 +102,18 @@ result = await prompty.run_async(
 | Function | What it does |
 |----------|-------------|
 | `load(path)` | Parse `.prompty` → `PromptAgent` |
-| `prepare(agent, inputs)` | Render + parse → `list[Message]` |
-| `execute(agent, msgs)` | Call LLM → raw response |
+| `render(agent, inputs)` | Template → rendered string |
+| `parse(agent, rendered)` | Rendered string → `list[Message]` |
+| `prepare(agent, inputs)` | Render + parse + threads → `list[Message]` |
+| `run(agent, msgs)` | Executor + process → clean result |
 | `process(agent, resp)` | Extract content → clean result |
-| `run(agent, inputs)` | All of the above in one call |
-| `run_agent(agent, ...)` | Run with tool-call loop |
+| `execute(prompt, inputs)` | Full pipeline: load + prepare + run |
+| `execute_agent(prompt, ...)` | Full pipeline with tool-call loop |
 | `headless(api, ...)` | Create `PromptAgent` w/o a file |
 | `validate_inputs(...)` | Check required inputs present |
 
 All functions have `_async` variants (e.g.,
-`load_async`, `run_async`, `run_agent_async`).
+`execute_async`, `run_async`, `execute_agent_async`).
 
 ### Agent Mode (Tool Calling)
 
@@ -120,7 +121,7 @@ All functions have `_async` variants (e.g.,
 def get_weather(location: str) -> str:
     return f"72°F and sunny in {location}"
 
-result = prompty.run_agent(
+result = prompty.execute_agent(
     "my-agent.prompty",
     inputs={"question": "Weather in Seattle?"},
     tools={"get_weather": get_weather},
@@ -172,7 +173,7 @@ client = AzureOpenAI(
 prompty.register_connection("my-azure", client=client)
 
 # Now run — executor resolves the client by name
-result = prompty.run(
+result = prompty.execute(
     "my-prompt.prompty", inputs={...}
 )
 ```
@@ -209,7 +210,7 @@ messages = prompty.prepare(
 agent.model.options.additionalProperties = {
     "stream": True,
 }
-response = prompty.execute(agent, messages)
+response = prompty.run(agent, messages, raw=True)
 
 # response is a PromptyStream — iterate for chunks
 for chunk in prompty.process(agent, response):
@@ -232,7 +233,7 @@ Tracer.add(
 )
 
 # All pipeline functions automatically emit traces
-result = prompty.run(
+result = prompty.execute(
     "my-prompt.prompty", inputs={...}
 )
 

@@ -5,8 +5,8 @@ Covers:
 - Entry point discovery (with mocked entry points)
 - Input validation
 - prepare() pipeline (with mock renderer/parser)
-- execute() and process() dispatch
-- run() end-to-end with mocks
+- run() executor+process dispatch
+- execute() end-to-end with mocks
 - Thread marker expansion
 - Rich input kinds
 - Error cases
@@ -25,6 +25,7 @@ from prompty.core.pipeline import (
     _expand_thread_markers,
     _get_rich_input_names,
     _inject_thread_markers,
+    _invoke_executor,
 )
 from prompty.core.types import (
     Message,
@@ -41,7 +42,6 @@ from prompty.invoker import (
     get_renderer,
     prepare,
     process,
-    run,
     validate_inputs,
 )
 
@@ -592,34 +592,34 @@ class TestPrepare:
 
 
 # ---------------------------------------------------------------------------
-# Tests: execute()
+# Tests: _invoke_executor() — raw executor dispatch
 # ---------------------------------------------------------------------------
 
 
-class TestExecute:
-    def test_basic_execute(self):
+class TestInvokeExecutor:
+    def test_basic_invoke(self):
         agent = _make_agent(provider="openai")
         messages = [Message(role="user", parts=[TextPart(value="Hi")])]
 
         with _patch_entry_points(executors=[("openai", MockExecutor)]):
-            result = execute(agent, messages)
+            result = _invoke_executor(agent, messages)
 
         assert "Response to:" in result["choices"][0]["message"]["content"]
 
-    def test_execute_no_provider_raises(self):
+    def test_no_provider_raises(self):
         agent = _make_agent(provider="")
         messages = [Message(role="user", parts=[TextPart(value="Hi")])]
 
         with pytest.raises(InvokerError):
-            execute(agent, messages)
+            _invoke_executor(agent, messages)
 
-    def test_execute_unknown_provider_raises(self):
+    def test_unknown_provider_raises(self):
         agent = _make_agent(provider="unknown")
         messages = [Message(role="user", parts=[TextPart(value="Hi")])]
 
         with _patch_entry_points():
             with pytest.raises(InvokerError, match="executor"):
-                execute(agent, messages)
+                _invoke_executor(agent, messages)
 
 
 # ---------------------------------------------------------------------------
@@ -645,11 +645,11 @@ class TestProcess:
 
 
 # ---------------------------------------------------------------------------
-# Tests: run()
+# Tests: execute() — top-level orchestrator (load + prepare + run)
 # ---------------------------------------------------------------------------
 
 
-class TestRun:
+class TestExecute:
     def _patch_all(self):
         return _patch_entry_points(
             renderers=[("jinja2", MockRenderer)],
@@ -658,26 +658,26 @@ class TestRun:
             processors=[("openai", MockProcessor)],
         )
 
-    def test_run_with_agent(self):
+    def test_execute_with_agent(self):
         agent = _make_agent(
             instructions="system:\nHello\n\nuser:\n{{q}}",
             provider="openai",
         )
 
         with self._patch_all():
-            result = run(agent, {"q": "Hi"})
+            result = execute(agent, {"q": "Hi"})
 
         assert isinstance(result, str)
         assert "Response to:" in result
 
-    def test_run_raw(self):
+    def test_execute_raw(self):
         agent = _make_agent(
             instructions="system:\nHello",
             provider="openai",
         )
 
         with self._patch_all():
-            result = run(agent, {}, raw=True)
+            result = execute(agent, {}, raw=True)
 
         assert isinstance(result, dict)
         assert "choices" in result

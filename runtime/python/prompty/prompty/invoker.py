@@ -28,12 +28,18 @@ from .core.discovery import (
 # --- Pipeline ---
 from .core.pipeline import (
     execute,
+    execute_agent,
+    execute_agent_async,
     execute_async,
     headless,
+    parse,
+    parse_async,
     prepare,
     prepare_async,
     process,
     process_async,
+    render,
+    render_async,
     run,
     run_agent,
     run_agent_async,
@@ -66,15 +72,24 @@ __all__ = [
     "get_executor",
     "get_processor",
     "clear_cache",
-    # Pipeline functions
-    "prepare",
-    "prepare_async",
-    "execute",
-    "execute_async",
+    # Leaf steps
+    "render",
+    "render_async",
+    "parse",
+    "parse_async",
     "process",
     "process_async",
+    # Composite steps
+    "prepare",
+    "prepare_async",
     "run",
     "run_async",
+    # Top-level orchestrators
+    "execute",
+    "execute_async",
+    "execute_agent",
+    "execute_agent_async",
+    # Backward-compat aliases
     "run_agent",
     "run_agent_async",
     # Validation
