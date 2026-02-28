@@ -55,7 +55,7 @@ Say hello to {{name}}.
 ```python
 import prompty
 
-result = prompty.run(
+result = prompty.execute(
     "greeting.prompty",
     inputs={"name": "Jane"},
 )
@@ -75,11 +75,8 @@ agent = prompty.load("greeting.prompty")
 # Render template + parse → list[Message]
 messages = prompty.prepare(agent, inputs={"name": "Jane"})
 
-# Call the LLM → raw response
-response = prompty.execute(agent, messages)
-
-# Extract clean result → string
-result = prompty.process(agent, response)
+# Call the LLM + process → clean result
+result = prompty.run(agent, messages)
 ```
 
 ## Async Support
@@ -87,7 +84,7 @@ result = prompty.process(agent, response)
 Every function has an async variant:
 
 ```python
-result = await prompty.run_async(
+result = await prompty.execute_async(
     "greeting.prompty",
     inputs={"name": "Jane"},
 )

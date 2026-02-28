@@ -22,25 +22,24 @@ and schemas — not raw dicts.
 
 ### Pipeline Architecture
 
-The runtime is a four-stage pipeline with swappable
+The runtime is a four-step pipeline with swappable
 implementations:
 
 ```text
-prepare()  →  render + parse  →  list[Message]
-execute()  →  LLM call        →  raw response
-process()  →  extract content  →  clean result
-run()      →  all of the above
+execute()   →  top-level: load + prepare + run
+  prepare() →  render + parse  →  list[Message]
+  run()     →  executor + process → clean result
 ```
 
-Each stage is a protocol — you can bring your own renderer,
+Each step is a protocol — you can bring your own renderer,
 parser, executor, or processor.
 
 ### Agent Mode
 
-`run_agent()` provides a built-in tool-calling loop:
+`execute_agent()` provides a built-in tool-calling loop:
 
 ```python
-result = prompty.run_agent(
+result = prompty.execute_agent(
     "my-agent.prompty",
     inputs={"question": "What's the weather?"},
     tools={"get_weather": get_weather_fn},
