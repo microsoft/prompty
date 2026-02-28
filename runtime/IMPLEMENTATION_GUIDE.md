@@ -76,8 +76,7 @@ The frontmatter maps directly to AgentSchema's
 
 **Root properties**: `name`, `displayName`,
 `description`, `metadata`, `model`, `inputSchema`,
-`outputSchema`, `tools`, `template`,
-`additionalInstructions`
+`outputSchema`, `tools`, `template`
 
 **Model shorthand**: `model: gpt-4` expands to
 `model: { id: "gpt-4" }` during loading.
@@ -102,25 +101,29 @@ Valid roles: `system`, `user`, `assistant`, `developer`
 The parser splits on these markers to produce a
 message list.
 
-### Thread Separator
+### Thread Inputs
 
-`![thread]` splits `instructions` from
-`additionalInstructions`:
+Conversation history (threads) are handled via a
+`kind: thread` input property in `inputSchema`:
 
-```text
-system:
-You are a helpful assistant.
-
-![thread]
-
-user:
-{{question}}
+```yaml
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: Hello
+    - name: conversation
+      kind: thread
 ```
 
-Everything before `![thread]` → `instructions`
-(the system prompt).
-Everything after → `additionalInstructions`
-(user turn template, typically with `{{variables}}`).
+The caller passes a list of messages as the thread
+input. The renderer emits nonce markers where
+`{{conversation}}` appears, and the parser/pipeline
+expands those nonces into actual `Message` objects.
+
+If no `{{thread_var}}` appears in the template but
+thread-kind inputs are provided, thread messages are
+appended at the end of the message list.
 
 ### Variable References
 
@@ -153,11 +156,6 @@ YAML parse frontmatter
 Migrate legacy properties
      │  Old v1 format → v2 AgentSchema names
      │  Emit deprecation warnings, don't error
-     ▼
-Handle ![thread]
-     │  Split instructions at "\n![thread]"
-     │  Part 1 → instructions
-     │  Part 2 → additionalInstructions
      ▼
 Inject kind: "prompt"
      │  Always — .prompty files are PromptAgents
@@ -257,8 +255,8 @@ PromptAgent + inputs
      │    (e.g., "prompty")
      │
      └─ Thread expansion:
-        if additionalInstructions, render + parse
-        those too, append to message list
+        if thread-kind inputs exist, expand nonce
+        markers into Message objects in the list
      │
      ▼
   execute(agent, messages)
@@ -290,9 +288,12 @@ PromptAgent + inputs
 3. Call `renderer.render(agent, template, inputs)`.
 4. Call
    `parser.parse(agent, rendered_string, **context)`.
-5. If `agent.additionalInstructions` exists, render
-   and parse those too (using the same inputs), then
-   append to the message list.
+5. If thread-kind inputs exist (inputs with
+   `kind: thread` in `inputSchema`), scan the parsed
+   messages for nonce markers and expand them into
+   actual `Message` objects from the thread input.
+   If no markers exist, append thread messages at
+   the end.
 6. Return the final `list[Message]`.
 
 ### `execute()` Details
@@ -946,7 +947,7 @@ When implementing a new language runtime:
 - [ ] Safe YAML parsing
 - [ ] `${env:VAR}` and `${file:path}` resolution
 - [ ] Legacy v1 migration with deprecation warnings
-- [ ] `![thread]` separator handling
+- [ ] Thread-kind input handling (nonce-based)
 - [ ] `kind: "prompt"` injection
 - [ ] AgentSchema type loading → `PromptAgent`
 - [ ] Tests: basic, minimal, legacy, env, file, thread

@@ -274,20 +274,31 @@ assistant:
 I'd be happy to help.
 ```
 
-### Thread Separator
+### Thread Inputs
 
-Everything before `![thread]` → `instructions`.
-Everything after → `additionalInstructions`.
+Conversation history is passed via a `kind: thread`
+input property:
+
+```yaml
+inputSchema:
+  properties:
+    - name: conversation
+      kind: thread
+```
+
+Place `{{conversation}}` in the template where
+thread messages should be injected:
 
 ```text
 system:
 You are a helpful assistant.
-
-![thread]
-
+{{conversation}}
 user:
 {{question}}
 ```
+
+The caller passes a list of messages as the thread
+input value.
 
 ### Variable References
 

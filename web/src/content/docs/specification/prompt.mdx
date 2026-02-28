@@ -178,13 +178,18 @@ The message will look like:
 ```
 
 ## Thread
-The thread section is used to define a thread that is used to store the state of the conversation. This is passed as part of the messages collection to the runtime. For example, this fragment:
+Conversation history (threads) are handled via a `kind: thread` input property in `inputSchema`:
 
+```yaml
+inputSchema:
+  properties:
+    - name: conversation
+      kind: thread
 ```
-![thread]
-```
-will produce a thread item in the messages collection. The runtime
-can then use this information to dynamically inject the thread into the conversation.
+
+Place `{{conversation}}` in the template where thread messages should be injected. The runtime replaces the variable with nonce markers during rendering, then expands them into actual `Message` objects in the parsed message list.
+
+If no `{{thread_var}}` appears in the template but thread-kind inputs are provided, thread messages are appended at the end of the message list.
 
 ## Content
 The content in a messages array can range from a simple string to a full file. The current prompty

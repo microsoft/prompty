@@ -149,9 +149,6 @@ utils.parse()              Split frontmatter (YAML) from body (markdown)
 _migrate_legacy()          Convert old property names → AgentSchema names
      │                     (with deprecation warnings)
      ▼
-Handle ![thread]           Split instructions / additionalInstructions
-     │
-     ▼
 Inject kind: "prompt"      Always — .prompty files are PromptAgents
      │
      ▼
@@ -512,17 +509,10 @@ def load(path: str | Path) -> PromptAgent:
     # 2. Migrate legacy property names
     data = _migrate_legacy(data)
 
-    # 3. Handle ![thread] separator
-    if "instructions" in data and isinstance(data["instructions"], str):
-        if "\n![thread]" in data["instructions"]:
-            parts = data["instructions"].split("\n![thread]", 1)
-            data["instructions"] = parts[0]
-            data["additionalInstructions"] = parts[1].lstrip("\n")
-
-    # 4. Inject kind (Prompty files are always PromptAgents)
+    # 3. Inject kind (Prompty files are always PromptAgents)
     data["kind"] = "prompt"
 
-    # 5. Load via agentschema with pre_process for ${} expansion
+    # 4. Load via agentschema with pre_process for ${} expansion
     ctx = LoadContext(pre_process=_pre_process(path))
     agent = AgentDefinition.load(data, ctx)
     assert isinstance(agent, PromptAgent)
@@ -789,25 +779,24 @@ user:
 {{question}}
 ```
 
-**`threaded.prompty`** — with `![thread]` separator:
+**`threaded.prompty`** — with `kind: thread` input:
 
 ```prompty
 ---
 name: threaded-chat
 model:
   id: gpt-4
+  apiType: chat
 inputSchema:
   properties:
-    question:
+    - name: question
       kind: string
       default: Hello
+    - name: conversation
+      kind: thread
 ---
 system:
-You are a helpful assistant.
-
-![thread]
-
-user:
+You are a helpful assistant.{{conversation}}user:
 {{question}}
 ```
 
@@ -862,8 +851,7 @@ user:
 
 # --- Instructions ---
 # test_load_instructions_from_body: agent.instructions == markdown body
-# test_load_thread_separator: instructions split at ![thread]
-# test_load_additional_instructions: additionalInstructions populated after ![thread]
+# test_load_thread_input_kind: thread-kind input is declared in inputSchema
 
 # --- Model ---
 # test_load_model_shorthand: model: gpt-4 → Model(id="gpt-4")
@@ -1364,7 +1352,7 @@ Resolved all Pyright/Pylance errors across source and test files:
 ### Valid Frontmatter Properties
 
 **Root level**:
-`name`, `displayName`, `description`, `metadata`, `model`, `inputSchema`, `outputSchema`, `tools`, `template`, `additionalInstructions`
+`name`, `displayName`, `description`, `metadata`, `model`, `inputSchema`, `outputSchema`, `tools`, `template`
 
 **Model** (`model:` or shorthand `model: gpt-4`):
 `id`, `provider`, `apiType`, `connection`, `options`
@@ -1379,7 +1367,7 @@ Resolved all Pyright/Pylance errors across source and test files:
 `properties` (list or dict of Property), `examples`, `strict`
 
 **Property** (`inputSchema.properties.X:`):
-`kind` (`string` | `integer` | `float` | `boolean` | `array` | `object`), `description`, `required`, `default`, `value`, `example`, `enumValues`
+`kind` (`string` | `integer` | `float` | `boolean` | `array` | `object` | `thread`), `description`, `required`, `default`, `value`, `example`, `enumValues`
 
 **Template** (`template:`):
 `format` (`{ kind: "jinja2" }`), `parser` (`{ kind: "prompty" }`)
@@ -1399,19 +1387,19 @@ user:       → {"role": "user", "content": "..."}
 assistant:  → {"role": "assistant", "content": "..."}
 ```
 
-### Thread Separator
+### Thread Inputs
 
+Conversation history is handled via `kind: thread` input properties:
+
+```yaml
+inputSchema:
+  properties:
+    - name: conversation
+      kind: thread
 ```
-system:
-You are a helpful assistant.
 
-![thread]
-
-user:
-{{question}}
-```
-
-Everything before `![thread]` → `instructions`. Everything after → `additionalInstructions`.
+Place `{{conversation}}` in the template where thread messages should be injected.
+The renderer emits nonce markers, which the pipeline expands into `Message` objects.
 
 ### Template Syntax
 
