@@ -1,0 +1,61 @@
+{
+  "name": "prompty",
+  "version": "2.0.0-alpha.1",
+  "description": "Prompty runtime — load, render, parse, and execute .prompty files",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "prompty",
+    "llm",
+    "openai",
+    "azure",
+    "prompt-engineering",
+    "ai"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/prompty",
+    "directory": "runtime/typescript/prompty"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "agentschema": "^1.0.0-beta.7",
+    "dotenv": "^16.4.0",
+    "gray-matter": "^4.0.3",
+    "mustache": "^4.2.0",
+    "nunjucks": "^3.2.4",
+    "openai": "^4.80.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.5",
+    "@types/nunjucks": "^3.2.6",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

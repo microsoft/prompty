@@ -1,0 +1,24 @@
+---
+name: chat
+description: A chat prompty with thread support
+model:
+  id: gpt-4o
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      description: The user's question
+    - name: history
+      kind: thread
+      description: Conversation history
+---
+system:
+You are a helpful assistant.
+
+user:
+{{history}}
+{{question}}

@@ -1,0 +1,15 @@
+---
+name: basic
+description: A basic prompty for testing
+model:
+  id: gpt-4o
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}

@@ -1,0 +1,476 @@
+/**
+ * Four-step execution pipeline.
+ *
+ * ```
+ * execute(prompt, inputs)              → top-level orchestrator
+ *   ├── prepare(agent, inputs)         → template → wire format
+ *   │     ├── render(agent, inputs)    → template + inputs → rendered string
+ *   │     └── parse(agent, rendered)   → rendered string → Message[]
+ *   └── run(agent, messages)           → LLM call → clean result
+ *         ├── Executor.execute(...)    → messages → raw LLM response
+ *         └── process(agent, response) → raw response → clean result
+ * ```
+ *
+ * Each leaf step is independently traced. Users can bring their own
+ * Renderer, Parser, Executor, Processor via the registry.
+ *
+ * @module
+ */
+
+import type { PromptAgent, PropertySchema } from "agentschema";
+import {
+  type ContentPart,
+  type ToolCall,
+  type Role,
+  Message,
+  ThreadMarker,
+  RICH_KINDS,
+  dictToMessage,
+  text,
+} from "./types.js";
+import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
+import { getLastNonces, clearLastNonces } from "../renderers/common.js";
+import { traceSpan } from "../tracing/tracer.js";
+import { load } from "./loader.js";
+
+// ---------------------------------------------------------------------------
+// Defaults
+// ---------------------------------------------------------------------------
+
+const DEFAULT_FORMAT = "nunjucks";
+const DEFAULT_PARSER = "prompty";
+const DEFAULT_PROVIDER = "openai";
+const DEFAULT_MAX_ITERATIONS = 10;
+
+// ---------------------------------------------------------------------------
+// Input validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate and fill defaults for agent inputs.
+ */
+export function validateInputs(
+  agent: PromptAgent,
+  inputs: Record<string, unknown>,
+): Record<string, unknown> {
+  const schema = agent.inputSchema;
+  if (!schema?.properties) return { ...inputs };
+
+  const result = { ...inputs };
+
+  for (const prop of schema.properties) {
+    const name = prop.name;
+    if (!name) continue;
+
+    if (result[name] === undefined) {
+      if (prop.default !== undefined) {
+        result[name] = prop.default;
+      } else if (prop.required) {
+        throw new Error(`Missing required input: "${name}"`);
+      }
+    }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Resolve config helpers
+// ---------------------------------------------------------------------------
+
+function resolveFormatKind(agent: PromptAgent): string {
+  return agent.template?.format?.kind ?? DEFAULT_FORMAT;
+}
+
+function resolveParserKind(agent: PromptAgent): string {
+  return agent.template?.parser?.kind ?? DEFAULT_PARSER;
+}
+
+function resolveProvider(agent: PromptAgent): string {
+  return agent.model?.provider ?? DEFAULT_PROVIDER;
+}
+
+function isStrictMode(agent: PromptAgent): boolean {
+  return agent.template?.format?.strict === true;
+}
+
+// ---------------------------------------------------------------------------
+// Leaf steps
+// ---------------------------------------------------------------------------
+
+/**
+ * Render the template with inputs.
+ *
+ * Discovered by: `agent.template.format.kind` (default: "nunjucks").
+ */
+export async function render(
+  agent: PromptAgent,
+  inputs: Record<string, unknown>,
+): Promise<string> {
+  return traceSpan("render", async (emit) => {
+    const formatKind = resolveFormatKind(agent);
+    const renderer = getRenderer(formatKind);
+    const template = agent.instructions ?? "";
+
+    emit("format", formatKind);
+    const result = await renderer.render(agent, template, inputs);
+    emit("rendered_length", result.length);
+    return result;
+  });
+}
+
+/**
+ * Parse a rendered string into abstract messages.
+ *
+ * Discovered by: `agent.template.parser.kind` (default: "prompty").
+ */
+export async function parse(
+  agent: PromptAgent,
+  rendered: string,
+  context?: Record<string, unknown>,
+): Promise<Message[]> {
+  return traceSpan("parse", async (emit) => {
+    const parserKind = resolveParserKind(agent);
+    const parser = getParser(parserKind);
+
+    emit("parser", parserKind);
+    const messages = await parser.parse(agent, rendered, context);
+    emit("message_count", messages.length);
+    return messages;
+  });
+}
+
+/**
+ * Process a raw LLM response into a clean result.
+ *
+ * Discovered by: `agent.model.provider` (default: "openai").
+ */
+export async function process(
+  agent: PromptAgent,
+  response: unknown,
+): Promise<unknown> {
+  return traceSpan("process", async (emit) => {
+    const provider = resolveProvider(agent);
+    const processor = getProcessor(provider);
+
+    emit("provider", provider);
+    return processor.process(agent, response);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Composite: prepare() = render + parse + thread expansion
+// ---------------------------------------------------------------------------
+
+/**
+ * Render template + parse into messages + expand thread markers.
+ */
+export async function prepare(
+  agent: PromptAgent,
+  inputs?: Record<string, unknown>,
+): Promise<Message[]> {
+  return traceSpan("prepare", async (emit) => {
+    const validatedInputs = validateInputs(agent, inputs ?? {});
+
+    // Check for strict mode pre-render
+    const parserKind = resolveParserKind(agent);
+    const parser = getParser(parserKind);
+    let context: Record<string, unknown> | undefined;
+
+    if (isStrictMode(agent) && parser.preRender) {
+      const [sanitized, ctx] = parser.preRender(agent.instructions ?? "");
+      // Temporarily override instructions for rendering
+      const originalInstructions = agent.instructions;
+      agent.instructions = sanitized;
+      context = ctx;
+
+      // Render
+      clearLastNonces();
+      const rendered = await render(agent, validatedInputs);
+      agent.instructions = originalInstructions;
+
+      // Parse
+      const messages = await parse(agent, rendered, context);
+
+      // Thread expansion
+      const nonces = getLastNonces();
+      const expanded = expandThreads(messages, nonces, validatedInputs);
+
+      emit("message_count", expanded.length);
+      return expanded;
+    }
+
+    // Non-strict path
+    clearLastNonces();
+    const rendered = await render(agent, validatedInputs);
+    const messages = await parse(agent, rendered, context);
+
+    // Thread expansion
+    const nonces = getLastNonces();
+    const expanded = expandThreads(messages, nonces, validatedInputs);
+
+    emit("message_count", expanded.length);
+    return expanded;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Composite: run() = executor + process
+// ---------------------------------------------------------------------------
+
+/**
+ * Execute messages against the LLM and process the response.
+ */
+export async function run(
+  agent: PromptAgent,
+  messages: Message[],
+  options?: { raw?: boolean },
+): Promise<unknown> {
+  return traceSpan("run", async (emit) => {
+    const provider = resolveProvider(agent);
+    const executor = getExecutor(provider);
+
+    emit("provider", provider);
+    emit("message_count", messages.length);
+
+    const response = await executor.execute(agent, messages);
+
+    if (options?.raw) return response;
+    return process(agent, response);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Top-level: execute() = load + prepare + run
+// ---------------------------------------------------------------------------
+
+/**
+ * Full pipeline: load → prepare → run.
+ */
+export async function execute(
+  prompt: string | PromptAgent,
+  inputs?: Record<string, unknown>,
+  options?: { raw?: boolean },
+): Promise<unknown> {
+  return traceSpan("execute", async (emit) => {
+    const agent = typeof prompt === "string" ? load(prompt) : prompt;
+
+    emit("agent", agent.name ?? "unnamed");
+    const messages = await prepare(agent, inputs);
+    return run(agent, messages, options);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Agent loop: executeAgent()
+// ---------------------------------------------------------------------------
+
+/**
+ * Run a prompt with automatic tool-call execution loop.
+ */
+export async function executeAgent(
+  prompt: string | PromptAgent,
+  inputs?: Record<string, unknown>,
+  options?: {
+    tools?: Record<string, (...args: unknown[]) => unknown>;
+    maxIterations?: number;
+    raw?: boolean;
+  },
+): Promise<unknown> {
+  return traceSpan("executeAgent", async (emit) => {
+    const agent = typeof prompt === "string" ? load(prompt) : prompt;
+    const tools = options?.tools ?? {};
+    const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+
+    emit("agent", agent.name ?? "unnamed");
+    emit("tools", Object.keys(tools));
+
+    const messages = await prepare(agent, inputs);
+    const provider = resolveProvider(agent);
+    const executor = getExecutor(provider);
+
+    let response = await executor.execute(agent, messages);
+    let iteration = 0;
+
+    while (hasToolCalls(response)) {
+      iteration++;
+      if (iteration > maxIterations) {
+        throw new Error(
+          `Agent loop exceeded maxIterations (${maxIterations}). ` +
+          `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+        );
+      }
+
+      const toolMessages = buildToolResultMessages(response, tools);
+      messages.push(...toolMessages);
+      response = await executor.execute(agent, messages);
+    }
+
+    emit("iterations", iteration);
+
+    if (options?.raw) return response;
+    return process(agent, response);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Thread marker helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Get map of `{propertyName: kind}` for inputs with rich kinds.
+ */
+function getRichInputNames(agent: PromptAgent): Record<string, string> {
+  const result: Record<string, string> = {};
+  const schema = agent.inputSchema;
+  if (!schema?.properties) return result;
+
+  for (const prop of schema.properties) {
+    const kind = prop.kind?.toLowerCase() ?? "";
+    if (RICH_KINDS.has(kind) && prop.name) {
+      result[prop.name] = kind;
+    }
+  }
+  return result;
+}
+
+/**
+ * Expand thread markers: replace nonce strings in message text
+ * with actual conversation messages from inputs.
+ */
+function expandThreads(
+  messages: Message[],
+  nonces: Map<string, string>,
+  inputs: Record<string, unknown>,
+): Message[] {
+  if (nonces.size === 0) return messages;
+
+  // Build nonce → input name lookup
+  const nonceToName = new Map<string, string>();
+  for (const [name, nonce] of nonces) {
+    nonceToName.set(nonce, name);
+  }
+
+  const result: Message[] = [];
+
+  for (const msg of messages) {
+    // Check if any text part contains a nonce
+    let expanded = false;
+    for (const part of msg.parts) {
+      if (part.kind !== "text") continue;
+
+      for (const [nonce, name] of nonceToName) {
+        if (part.value.includes(nonce)) {
+          // Split text around the nonce
+          const before = part.value.slice(0, part.value.indexOf(nonce)).trim();
+          const after = part.value.slice(part.value.indexOf(nonce) + nonce.length).trim();
+
+          if (before) {
+            result.push(new Message(msg.role, [text(before)], { ...msg.metadata }));
+          }
+
+          // Insert thread messages from input
+          const threadMessages = inputs[name];
+          if (Array.isArray(threadMessages)) {
+            for (const tm of threadMessages) {
+              if (tm instanceof Message) {
+                result.push(tm);
+              } else if (typeof tm === "object" && tm !== null) {
+                result.push(dictToMessage(tm as Record<string, unknown>));
+              }
+            }
+          }
+
+          if (after) {
+            result.push(new Message(msg.role, [text(after)], { ...msg.metadata }));
+          }
+
+          expanded = true;
+          break;
+        }
+      }
+
+      if (expanded) break;
+    }
+
+    if (!expanded) {
+      result.push(msg);
+    }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Tool call helpers
+// ---------------------------------------------------------------------------
+
+function hasToolCalls(response: unknown): boolean {
+  if (typeof response !== "object" || response === null) return false;
+  const r = response as Record<string, unknown>;
+
+  // OpenAI ChatCompletion shape
+  const choices = r.choices as unknown[] | undefined;
+  if (!Array.isArray(choices) || choices.length === 0) return false;
+
+  const choice = choices[0] as Record<string, unknown>;
+  const message = choice.message as Record<string, unknown> | undefined;
+  if (!message) return false;
+
+  const toolCalls = message.tool_calls as unknown[] | undefined;
+  return Array.isArray(toolCalls) && toolCalls.length > 0;
+}
+
+function buildToolResultMessages(
+  response: unknown,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+): Message[] {
+  const r = response as Record<string, unknown>;
+  const choices = r.choices as unknown[];
+  const choice = choices[0] as Record<string, unknown>;
+  const message = choice.message as Record<string, unknown>;
+  const toolCalls = message.tool_calls as Record<string, unknown>[];
+
+  const messages: Message[] = [];
+
+  // First, add assistant message with tool_calls metadata
+  const assistantContent = (message.content as string) ?? "";
+  messages.push(
+    new Message("assistant", assistantContent ? [text(assistantContent)] : [], {
+      tool_calls: toolCalls,
+    }),
+  );
+
+  // Then, execute each tool and build tool result messages
+  for (const tc of toolCalls) {
+    const fn = tc.function as Record<string, unknown>;
+    const toolName = fn.name as string;
+    const toolCallId = tc.id as string;
+
+    let result: string;
+    try {
+      const args = JSON.parse(fn.arguments as string);
+      const toolFn = tools[toolName];
+      if (!toolFn) {
+        result = `Error: tool "${toolName}" not found`;
+      } else {
+        const toolResult = toolFn(...(Array.isArray(args) ? args : [args]));
+        result = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
+      }
+    } catch (err) {
+      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    messages.push(
+      new Message("tool", [text(result)], {
+        tool_call_id: toolCallId,
+        name: toolName,
+      }),
+    );
+  }
+
+  return messages;
+}
+
+// Backward-compatibility alias
+export const runAgent = executeAgent;

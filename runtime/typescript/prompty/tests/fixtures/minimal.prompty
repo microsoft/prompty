@@ -1,0 +1,7 @@
+---
+name: minimal
+description: Minimal prompty
+model:
+  id: gpt-4o
+---
+Hello, world!
