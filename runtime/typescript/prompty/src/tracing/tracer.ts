@@ -155,6 +155,62 @@ export async function traceSpan<T>(
 }
 
 // ---------------------------------------------------------------------------
+// @trace() — method decorator
+// ---------------------------------------------------------------------------
+
+/**
+ * Method decorator that wraps a class method with tracing.
+ *
+ * ```typescript
+ * class MyService {
+ *   @traceMethod()
+ *   async chat(question: string): Promise<string> { ... }
+ * }
+ * ```
+ *
+ * @param attributes - Optional key-value pairs to emit at the start of each span.
+ */
+export function traceMethod(attributes?: Record<string, unknown>) {
+  return function (
+    _target: unknown,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ): PropertyDescriptor {
+    const original = descriptor.value;
+
+    descriptor.value = async function (this: unknown, ...args: unknown[]): Promise<unknown> {
+      const span = Tracer.start(propertyKey);
+      const startTime = Date.now();
+
+      try {
+        // Emit optional attributes
+        if (attributes) {
+          for (const [k, v] of Object.entries(attributes)) {
+            span(k, v);
+          }
+        }
+
+        span("inputs", sanitizeValue("inputs", args));
+        const result = await original.apply(this, args);
+        span("result", result);
+        span("duration_ms", Date.now() - startTime);
+        span.end();
+        return result;
+      } catch (err) {
+        span("error", err instanceof Error ? err.message : String(err));
+        span("duration_ms", Date.now() - startTime);
+        span.end();
+        throw err;
+      }
+    };
+
+    // Preserve the original function name
+    Object.defineProperty(descriptor.value, "name", { value: propertyKey });
+    return descriptor;
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Sanitization
 // ---------------------------------------------------------------------------
 

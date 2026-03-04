@@ -8,6 +8,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

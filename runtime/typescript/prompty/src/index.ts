@@ -95,6 +95,7 @@ export { messageToWire, buildChatArgs } from "./providers/openai/wire.js";
 export {
   Tracer,
   trace,
+  traceMethod,
   traceSpan,
   sanitizeValue,
   toSerializable,

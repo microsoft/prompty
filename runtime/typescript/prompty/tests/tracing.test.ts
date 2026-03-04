@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Tracer, trace, traceSpan, sanitizeValue, toSerializable } from "../src/tracing/tracer.js";
+import { Tracer, trace, traceMethod, traceSpan, sanitizeValue, toSerializable } from "../src/tracing/tracer.js";
 import { consoleTracer } from "../src/tracing/console.js";
 
 describe("Tracer", () => {
@@ -94,6 +94,67 @@ describe("traceSpan()", () => {
 
     expect(result).toBe(42);
     expect(events).toContainEqual(["step", "processing"]);
+  });
+});
+
+describe("traceMethod() decorator", () => {
+  beforeEach(() => {
+    Tracer.clear();
+  });
+
+  it("traces a decorated method", async () => {
+    const events: [string, unknown][] = [];
+    Tracer.add("test", () => (key, value) => {
+      events.push([key, value]);
+    });
+
+    class MyService {
+      @traceMethod()
+      async greet(name: string): Promise<string> {
+        return `Hello, ${name}!`;
+      }
+    }
+
+    const svc = new MyService();
+    const result = await svc.greet("World");
+
+    expect(result).toBe("Hello, World!");
+    expect(events.some(([k]) => k === "result")).toBe(true);
+    expect(events.some(([k]) => k === "duration_ms")).toBe(true);
+  });
+
+  it("traces errors from decorated methods", async () => {
+    const events: [string, unknown][] = [];
+    Tracer.add("test", () => (key, value) => {
+      events.push([key, value]);
+    });
+
+    class Failing {
+      @traceMethod()
+      async boom(): Promise<void> {
+        throw new Error("kaboom");
+      }
+    }
+
+    await expect(new Failing().boom()).rejects.toThrow("kaboom");
+    expect(events.some(([k]) => k === "error")).toBe(true);
+  });
+
+  it("emits custom attributes", async () => {
+    const events: [string, unknown][] = [];
+    Tracer.add("test", () => (key, value) => {
+      events.push([key, value]);
+    });
+
+    class Svc {
+      @traceMethod({ version: "2.0" })
+      async op(): Promise<number> {
+        return 1;
+      }
+    }
+
+    await new Svc().op();
+    expect(events).toContainEqual(["version", "2.0"]);
   });
 });
 
