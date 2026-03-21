@@ -14,6 +14,7 @@
 	},
 	"dependencies": {
 		"glob": "^11.1.0",
+		"prompty": "file:../../../../runtime/typescript/prompty",
 		"vscode-languageclient": "^9.0.1"
 	},
 	"devDependencies": {

@@ -26,7 +26,7 @@
 		"LLMOps"
 	],
 	"activationEvents": [
-		"onLanguage:plaintext"
+		"onLanguage:prompty"
 	],
 	"main": "./packages/core/out/extension",
 	"contributes": {
@@ -48,6 +48,16 @@
 					"type": "string",
 					"description": "Current configuration",
 					"default": "default"
+				},
+				"prompty.showV1DeprecationWarnings": {
+					"type": "boolean",
+					"description": "Show deprecation warnings for v1 prompty format properties.",
+					"default": true
+				},
+				"prompty.envFilePath": {
+					"type": "string",
+					"description": "Path to .env file for prompt execution. If not set, searches the workspace hierarchy.",
+					"default": ""
 				}
 			}
 		},

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri, workspace /*, languages */ } from 'vscode';
+import { commands, ExtensionContext, languages, Uri, workspace } from 'vscode';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -9,16 +9,15 @@ import {
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 import { PromptyController } from './controllers/promptyController';
 import { TraceFileProvider, TraceItem } from './providers/traceFileProvider';
-//import { PromptySymbolProvider } from './providers/promptySymbolProvider';
-//import { TracySymbolProvider } from './providers/tracySymbolProvider';
+import { PromptySymbolProvider } from './providers/promptySymbolProvider';
 
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-
 	const promptyController = new PromptyController(context);
 	const traceFileProvider = new TraceFileProvider();
 	TraceFileProvider.createTreeView(context, traceFileProvider, "view-traces", "prompty.refreshTraces");
+
 	context.subscriptions.push(
 		promptyController,
 		commands.registerCommand("prompty.runPrompt", (uri: Uri) => promptyController.run(uri)),
@@ -28,10 +27,8 @@ export function activate(context: ExtensionContext) {
 			}
 			commands.executeCommand("vscode.open", traceItem.trace.uri);
 		}),
-		// Register the custom editor provider for the trace viewer
 		PromptyTraceProvider.register(context),
-		//languages.registerDocumentSymbolProvider({ language: 'prompty' }, new PromptySymbolProvider()),
-		//languages.registerDocumentSymbolProvider({ language: 'tracy' }, new TracySymbolProvider())
+		languages.registerDocumentSymbolProvider({ language: 'prompty' }, new PromptySymbolProvider()),
 	);
 
 	workspace.onDidDeleteFiles((event) => {
@@ -49,7 +46,6 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	// The server is implemented in node
 	startLanguageServer(context);
 }
 
@@ -60,8 +56,7 @@ export function deactivate(): Thenable<void> | undefined {
 	return client.stop();
 }
 
-// ignore unused variable warning
-const startLanguageServer = (context: ExtensionContext) => {
+function startLanguageServer(context: ExtensionContext) {
 	const serverModule = context.asAbsolutePath(path.join("packages", "server", "out", "server.js"));
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
@@ -84,4 +79,4 @@ const startLanguageServer = (context: ExtensionContext) => {
 
 	client = new LanguageClient("promptyLanguageServer", "Prompty", serverOptions, clientOptions);
 	client.start();
-};
+}

@@ -8,8 +8,8 @@ export interface DocumentMetadata {
 	frontMatterStart?: number;
 	frontMatterEnd?: number;
 	frontMatterContent?: Record<string, unknown>;
-	roles: Array<{ name: string; line: number; endLine: number }>;
-	templateVariables: Array<{ name: string; line: number; startChar: number; endChar: number }>;
+	roles: { name: string; line: number; endLine: number }[];
+	templateVariables: { name: string; line: number; startChar: number; endChar: number }[];
 	parseErrors: string[];
 }
 

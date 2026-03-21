@@ -85,7 +85,7 @@ function checkV1Deprecations(document: TextDocument, metadata: DocumentMetadata)
 	const fmStart = metadata.frontMatterStart ?? 0;
 	const fmEnd = metadata.frontMatterEnd ?? lines.length;
 
-	const v1Mappings: Array<{ pattern: RegExp; message: string }> = [
+	const v1Mappings: { pattern: RegExp; message: string }[] = [
 		{ pattern: /^\s+api\s*:/, message: "Deprecated v1 property 'api'. Use 'apiType' under 'model' instead." },
 		{ pattern: /^\s+configuration\s*:/, message: "Deprecated v1 property 'configuration'. Use 'connection' under 'model' instead." },
 		{ pattern: /^\s+api_key\s*:/, message: "Deprecated v1 property 'api_key'. Use 'apiKey' (camelCase) under 'model.connection' instead." },

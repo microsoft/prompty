@@ -1,30 +1,95 @@
-import { ExtensionContext, Uri, Disposable, window } from 'vscode';
-
+import { ExtensionContext, Uri, Disposable, window, workspace } from 'vscode';
+import { execute } from 'prompty';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class PromptyController implements Disposable {
+	private outputChannel = window.createOutputChannel('Prompty');
 
+	constructor(private context: ExtensionContext) {}
 
-	constructor(private context: ExtensionContext) { }
+	public async run(uri: Uri) {
+		const filePath = uri.fsPath;
+		const fileName = path.basename(filePath);
 
-	public run(uri: Uri) {
-		// Logic to run the prompt using the provided URI
-		console.log(`Running prompt for URI: ${uri.fsPath}`);
-		const fileName = uri.fsPath;
-		const terminals = window.terminals;
-		const name = fileName.split(/(\/|\\)/).pop();
-		// find existing terminal with same name
-		let terminal = terminals.find((t) => t.name === name);
-		if (!terminal) {
-			terminal = window.createTerminal(name);
+		this.outputChannel.show(true);
+		this.outputChannel.appendLine(`\n${'─'.repeat(60)}`);
+		this.outputChannel.appendLine(`Running: ${fileName}`);
+		this.outputChannel.appendLine(`${'─'.repeat(60)}`);
+
+		try {
+			this.loadEnvFile(filePath);
+
+			const startTime = Date.now();
+			const result = await execute(filePath);
+			const elapsed = Date.now() - startTime;
+
+			this.outputChannel.appendLine(`\n✓ Completed in ${elapsed}ms\n`);
+
+			if (typeof result === 'string') {
+				this.outputChannel.appendLine(result);
+			} else {
+				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
+			}
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			this.outputChannel.appendLine(`\n✗ Error: ${message}`);
+			window.showErrorMessage(`Prompty execution failed: ${message}`);
 		}
-		terminal.show();
-		// hack on .env - should search for any .env in the project and use that
-		// but for now just use the one in the workspace root
-		terminal.sendText(`prompty --source ${fileName} --env .env`, true);
+	}
+
+	private loadEnvFile(promptyFilePath: string) {
+		const workspaceFolders = workspace.workspaceFolders;
+		if (!workspaceFolders) {
+			return;
+		}
+
+		let searchDir = path.dirname(promptyFilePath);
+		const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+		while (searchDir.length >= workspaceRoot.length) {
+			const envPath = path.join(searchDir, '.env');
+			if (fs.existsSync(envPath)) {
+				this.parseEnvFile(envPath);
+				return;
+			}
+			const parent = path.dirname(searchDir);
+			if (parent === searchDir) {
+				break;
+			}
+			searchDir = parent;
+		}
+	}
+
+	private parseEnvFile(envPath: string) {
+		try {
+			const content = fs.readFileSync(envPath, 'utf-8');
+			for (const line of content.split(/\r?\n/)) {
+				const trimmed = line.trim();
+				if (!trimmed || trimmed.startsWith('#')) {
+					continue;
+				}
+				const eqIndex = trimmed.indexOf('=');
+				if (eqIndex === -1) {
+					continue;
+				}
+				const key = trimmed.slice(0, eqIndex).trim();
+				let value = trimmed.slice(eqIndex + 1).trim();
+				// Strip surrounding quotes
+				if ((value.startsWith('"') && value.endsWith('"')) ||
+					(value.startsWith("'") && value.endsWith("'"))) {
+					value = value.slice(1, -1);
+				}
+				if (!process.env[key]) {
+					process.env[key] = value;
+				}
+			}
+		} catch {
+			// Ignore errors reading .env file
+		}
 	}
 
 	dispose(): void {
-		// Clean up resources
+		this.outputChannel.dispose();
 	}
-
 }
