@@ -1,0 +1,33 @@
+---
+name: test-prompt
+description: A sample v2 prompty file for testing the extension
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: https://api.openai.com/v1
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 500
+inputs:
+  name:
+metadata:
+  authors:
+    - test
+  tags:
+    - sample
+    - v2
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant that answers questions concisely.
+
+user:
+{{question}}

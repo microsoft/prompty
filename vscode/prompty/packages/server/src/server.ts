@@ -286,6 +286,10 @@ connection.onCompletion(async (textDocumentPosition) => {
 	}
 });
 
+connection.onCompletionResolve((item) => {
+	return item;
+});
+
 connection.onHover(async (textDocumentPosition) => {
 	try {
 		const document = documents.get(textDocumentPosition.textDocument.uri);
