@@ -385,11 +385,19 @@ connection.onCompletion(async (textDocumentPosition) => {
 	}
 });
 
+interface InputProperty {
+	name: string;
+	description: string;
+	kind: string;
+	defaultValue: string;
+	required: boolean;
+}
+
 /** Extract input property names from the frontmatter inputSchema section. */
 function extractInputNames(
 	document: TextDocument,
 	metadata: DocumentMetadata
-): { name: string; description: string; kind: string }[] {
+): InputProperty[] {
 	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
 		return [];
 	}
@@ -399,13 +407,32 @@ function extractInputNames(
 		end: { line: metadata.frontMatterEnd, character: 0 },
 	});
 
-	const results: { name: string; description: string; kind: string }[] = [];
+	const results: InputProperty[] = [];
 	const lines = text.split(/\n|\r\n/);
 	let inInputSchema = false;
 	let inProperties = false;
 	let currentName = '';
 	let currentDescription = '';
 	let currentKind = '';
+	let currentDefault = '';
+	let currentRequired = false;
+
+	const flushProperty = () => {
+		if (currentName) {
+			results.push({
+				name: currentName,
+				description: currentDescription,
+				kind: currentKind,
+				defaultValue: currentDefault,
+				required: currentRequired,
+			});
+		}
+		currentName = '';
+		currentDescription = '';
+		currentKind = '';
+		currentDefault = '';
+		currentRequired = false;
+	};
 
 	for (const line of lines) {
 		const trimmed = line.trimStart();
@@ -419,10 +446,7 @@ function extractInputNames(
 
 		// Exit inputSchema when we hit another top-level key
 		if (inInputSchema && /^\S/.test(line) && !/^\s/.test(line)) {
-			// Flush last property
-			if (currentName) {
-				results.push({ name: currentName, description: currentDescription, kind: currentKind });
-			}
+			flushProperty();
 			inInputSchema = false;
 			inProperties = false;
 			continue;
@@ -438,13 +462,8 @@ function extractInputNames(
 				// New property item: "- name: xxx"
 				const nameMatch = trimmed.match(/^-\s*name\s*:\s*(.+)/);
 				if (nameMatch) {
-					// Flush previous
-					if (currentName) {
-						results.push({ name: currentName, description: currentDescription, kind: currentKind });
-					}
+					flushProperty();
 					currentName = nameMatch[1].trim().replace(/^["']|["']$/g, '');
-					currentDescription = '';
-					currentKind = '';
 					continue;
 				}
 
@@ -460,15 +479,23 @@ function extractInputNames(
 					currentKind = kindMatch[1].trim().replace(/^["']|["']$/g, '');
 					continue;
 				}
+
+				const defaultMatch = trimmed.match(/^default\s*:\s*(.+)/);
+				if (defaultMatch && currentName) {
+					currentDefault = defaultMatch[1].trim().replace(/^["']|["']$/g, '');
+					continue;
+				}
+
+				const reqMatch = trimmed.match(/^required\s*:\s*(.+)/);
+				if (reqMatch && currentName) {
+					currentRequired = reqMatch[1].trim().toLowerCase() === 'true';
+					continue;
+				}
 			}
 		}
 	}
 
-	// Flush last
-	if (currentName) {
-		results.push({ name: currentName, description: currentDescription, kind: currentKind });
-	}
-
+	flushProperty();
 	return results;
 }
 
@@ -611,11 +638,21 @@ connection.onHover(async (textDocumentPosition) => {
 			return null;
 		}
 		const { line, character } = textDocumentPosition.position;
-		if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {
+
+		// Body section: hover on {{template variables}}
+		if (line > metadata.frontMatterEnd) {
+			const lineText = document.getText({
+				start: { line, character: 0 },
+				end: { line: line + 1, character: 0 },
+			}).trimEnd();
+			return getTemplateVariableHover(lineText, character, line, document, metadata);
+		}
+
+		if (line <= metadata.frontMatterStart) {
 			return null;
 		}
 
-		// Check for custom hover on known key: value pairs
+		// Frontmatter: check for custom hover on known key: value pairs
 		const lineText = document.getText({
 			start: { line, character: 0 },
 			end: { line: line + 1, character: 0 },
@@ -647,6 +684,58 @@ connection.onHover(async (textDocumentPosition) => {
 		return null;
 	}
 });
+
+/** Hover for {{variable}} tokens in the body — shows input type, description, and default. */
+function getTemplateVariableHover(
+	lineText: string,
+	character: number,
+	line: number,
+	document: TextDocument,
+	metadata: DocumentMetadata,
+) {
+	// Find all {{var}} on this line and check if cursor is inside one
+	const varRegex = /\{\{\s*(\w+(?:\.\w+)*)\s*\}\}/g;
+	let match;
+	while ((match = varRegex.exec(lineText)) !== null) {
+		const start = match.index;
+		const end = start + match[0].length;
+		if (character >= start && character <= end) {
+			const varName = match[1];
+
+			// Look up in inputSchema
+			const inputs = extractInputNames(document, metadata);
+			const input = inputs.find(i => i.name === varName);
+
+			let md: string;
+			if (input) {
+				const parts = [`### \`{{${varName}}}\``];
+				parts.push(`**Type:** \`${input.kind || 'any'}\``);
+				if (input.description) {
+					parts.push(input.description);
+				}
+				if (input.defaultValue !== undefined && input.defaultValue !== '') {
+					parts.push(`**Default:** \`${input.defaultValue}\``);
+				}
+				if (input.required) {
+					parts.push('*Required*');
+				}
+				parts.push('\n---\n*Defined in frontmatter `inputSchema`*');
+				md = parts.join('\n\n');
+			} else {
+				md = `### \`{{${varName}}}\`\n\nTemplate variable — not found in \`inputSchema\`. Make sure it is defined in the frontmatter.`;
+			}
+
+			return {
+				contents: { kind: 'markdown' as const, value: md },
+				range: {
+					start: { line, character: start },
+					end: { line, character: end },
+				},
+			};
+		}
+	}
+	return null;
+}
 
 /**
  * Provides hover descriptions for shorthand and enum values in the frontmatter.
