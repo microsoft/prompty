@@ -157,7 +157,7 @@ export function tokenizeDocument(
 				}
 			}
 
-			// Template variables {{var}}
+			// Template variables {{var}} — highlight as a single variable token so they stand out
 			let varMatch;
 			while ((varMatch = templateVarRegex.exec(line)) !== null) {
 				tokens.push({

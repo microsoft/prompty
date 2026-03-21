@@ -290,7 +290,38 @@ connection.onCompletion(async (textDocumentPosition) => {
 			return null;
 		}
 		const { line, character } = textDocumentPosition.position;
-		if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {
+
+		// Body section: complete {{input}} template variables from inputSchema
+		if (line > metadata.frontMatterEnd) {
+			const lineText = document.getText({
+				start: { line, character: 0 },
+				end: { line, character },
+			});
+			// Check if cursor is inside {{ ... (incomplete template variable)
+			const templateContext = lineText.match(/\{\{\s*(\w*)$/);
+			if (templateContext) {
+				const partialName = templateContext[1];
+				const inputNames = extractInputNames(document, metadata);
+				const items: CompletionItem[] = inputNames
+					.filter(({ name }) => name.startsWith(partialName))
+					.map(({ name, description, kind: propKind }) => {
+						const detail = propKind ? `(${propKind})` : '(input)';
+						return {
+							label: name,
+							kind: CompletionItemKind.Variable,
+							detail: `${detail} from inputSchema`,
+							documentation: description || `Input variable '${name}' defined in frontmatter inputSchema.`,
+							insertText: name + '}}',
+							sortText: `0_${name}`,
+						};
+					});
+				return { isIncomplete: false, items };
+			}
+			return null;
+		}
+
+		// Frontmatter section: YAML completions
+		if (line <= metadata.frontMatterStart) {
 			return null;
 		}
 
@@ -332,6 +363,93 @@ connection.onCompletion(async (textDocumentPosition) => {
 		return null;
 	}
 });
+
+/** Extract input property names from the frontmatter inputSchema section. */
+function extractInputNames(
+	document: TextDocument,
+	metadata: DocumentMetadata
+): { name: string; description: string; kind: string }[] {
+	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+		return [];
+	}
+
+	const text = document.getText({
+		start: { line: metadata.frontMatterStart + 1, character: 0 },
+		end: { line: metadata.frontMatterEnd, character: 0 },
+	});
+
+	const results: { name: string; description: string; kind: string }[] = [];
+	const lines = text.split(/\n|\r\n/);
+	let inInputSchema = false;
+	let inProperties = false;
+	let currentName = '';
+	let currentDescription = '';
+	let currentKind = '';
+
+	for (const line of lines) {
+		const trimmed = line.trimStart();
+
+		// Detect inputSchema: section
+		if (/^inputSchema\s*:/.test(trimmed)) {
+			inInputSchema = true;
+			inProperties = false;
+			continue;
+		}
+
+		// Exit inputSchema when we hit another top-level key
+		if (inInputSchema && /^\S/.test(line) && !/^\s/.test(line)) {
+			// Flush last property
+			if (currentName) {
+				results.push({ name: currentName, description: currentDescription, kind: currentKind });
+			}
+			inInputSchema = false;
+			inProperties = false;
+			continue;
+		}
+
+		if (inInputSchema) {
+			if (/^\s+properties\s*:/.test(line)) {
+				inProperties = true;
+				continue;
+			}
+
+			if (inProperties) {
+				// New property item: "- name: xxx"
+				const nameMatch = trimmed.match(/^-\s*name\s*:\s*(.+)/);
+				if (nameMatch) {
+					// Flush previous
+					if (currentName) {
+						results.push({ name: currentName, description: currentDescription, kind: currentKind });
+					}
+					currentName = nameMatch[1].trim().replace(/^["']|["']$/g, '');
+					currentDescription = '';
+					currentKind = '';
+					continue;
+				}
+
+				// Property fields on subsequent lines
+				const descMatch = trimmed.match(/^description\s*:\s*(.+)/);
+				if (descMatch && currentName) {
+					currentDescription = descMatch[1].trim().replace(/^["']|["']$/g, '');
+					continue;
+				}
+
+				const kindMatch = trimmed.match(/^kind\s*:\s*(.+)/);
+				if (kindMatch && currentName) {
+					currentKind = kindMatch[1].trim().replace(/^["']|["']$/g, '');
+					continue;
+				}
+			}
+		}
+	}
+
+	// Flush last
+	if (currentName) {
+		results.push({ name: currentName, description: currentDescription, kind: currentKind });
+	}
+
+	return results;
+}
 
 function getPromptySnippets(): CompletionItem[] {
 	return [
