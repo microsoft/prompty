@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Format.yaml
+type: object
+properties:
+  kind:
+    type: string
+    default: "*"
+    description: Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
+  strict:
+    type: boolean
+    default: false
+    description: Whether the template can emit structural text for parsing output
+  options:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Options for the template engine
+required:
+  - kind
+description: Template format definition

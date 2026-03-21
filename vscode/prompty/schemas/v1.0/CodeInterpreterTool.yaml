@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CodeInterpreterTool.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: code_interpreter
+    description: The kind identifier for code interpreter tools
+  fileIds:
+    type: array
+    items:
+      type: string
+    description: The IDs of the files to be used by the code interpreter tool.
+required:
+  - kind
+  - fileIds
+allOf:
+  - $ref: Tool.yaml
+description: |-
+  A tool for interpreting and executing code.
+  This tool allows an AI agent to run code snippets and analyze data files.

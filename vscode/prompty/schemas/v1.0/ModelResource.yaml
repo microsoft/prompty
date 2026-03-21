@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelResource.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: model
+    description: The kind identifier for model resources
+  id:
+    type: string
+    description: The unique identifier of the model resource
+required:
+  - kind
+  - id
+allOf:
+  - $ref: Resource.yaml
+description: Represents a model resource required by the agent

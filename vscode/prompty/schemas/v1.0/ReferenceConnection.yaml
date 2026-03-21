@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ReferenceConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: reference
+    description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
+  name:
+    type: string
+    description: The name of the connection
+  target:
+    type: string
+    description: The target resource or service that this connection refers to
+required:
+  - kind
+  - name
+allOf:
+  - $ref: Connection.yaml
+description: Connection configuration for AI services using named connections.

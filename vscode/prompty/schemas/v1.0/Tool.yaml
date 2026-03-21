@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Tool.yaml
+type: object
+properties:
+  kind:
+    $ref: ToolTypes.yaml
+    description: The kind identifier for the tool
+  description:
+    type: string
+    default: ""
+    description: A short description of the tool for metadata purposes
+  bindings:
+    anyOf:
+      - $ref: RecordBinding.yaml
+      - type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              default: ""
+              description: Name of the binding
+            input:
+              type: string
+              description: The input property that will be bound to the tool parameter argument
+          required:
+            - name
+            - input
+    default: []
+    description: Tool argument bindings to input properties
+required:
+  - kind
+description: Represents a tool that can be used in prompts.

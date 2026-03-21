@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OpenApiTool.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: openapi
+    description: The kind identifier for OpenAPI tools
+  connection:
+    $ref: Connection.yaml
+    description: The connection configuration for the OpenAPI tool
+  specification:
+    type: string
+    description: The full OpenAPI specification
+required:
+  - kind
+  - connection
+  - specification
+allOf:
+  - $ref: Tool.yaml

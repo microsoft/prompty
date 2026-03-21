@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RemoteConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: remote
+    description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
+  name:
+    type: string
+    description: The name of the connection
+  endpoint:
+    type: string
+    description: The endpoint URL for the AI service
+required:
+  - kind
+  - name
+  - endpoint
+allOf:
+  - $ref: Connection.yaml
+description: Connection configuration for AI services using named connections.

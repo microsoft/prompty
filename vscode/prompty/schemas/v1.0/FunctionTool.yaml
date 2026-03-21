@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FunctionTool.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: function
+    description: The kind identifier for function tools
+  parameters:
+    $ref: PropertySchema.yaml
+    description: Parameters accepted by the function tool
+  strict:
+    type: boolean
+    default: true
+    description: Indicates whether the function tool enforces strict validation on its parameters
+required:
+  - kind
+  - parameters
+allOf:
+  - $ref: Tool.yaml
+description: Represents a local function tool.

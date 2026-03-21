@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: WebSearchTool.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: bing_search
+    description: The kind identifier for Bing search tools
+  connection:
+    $ref: Connection.yaml
+    description: The connection configuration for the Bing search tool
+  options:
+    $ref: RecordUnknown.yaml
+    description: The configuration options for the Bing search tool
+required:
+  - kind
+  - connection
+allOf:
+  - $ref: Tool.yaml
+description: The Bing search tool.

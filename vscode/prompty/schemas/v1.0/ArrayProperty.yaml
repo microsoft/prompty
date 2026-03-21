@@ -1,0 +1,62 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ArrayProperty.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: array
+  items:
+    anyOf:
+      - $ref: Property.yaml
+      - type: object
+        properties:
+          name:
+            type: string
+            default: ""
+            description: Name of the property
+          kind:
+            anyOf:
+              - type: string
+                const: string
+              - type: string
+                const: integer
+              - type: string
+                const: float
+              - type: string
+                const: boolean
+              - type: string
+                const: array
+              - type: string
+                const: object
+            description: The data type of the input property
+          description:
+            type: string
+            default: ""
+            description: A short description of the input property
+          required:
+            type: boolean
+            default: false
+            description: Whether the property is required
+          default:
+            default: null
+            description: The default value of the property - this represents the default value if none is provided
+          example:
+            default: null
+            description: Example value used for either initialization or tooling
+          enumValues:
+            type: array
+            items: {}
+            default: []
+            description: Allowed enumeration values for the property
+        required:
+          - name
+          - kind
+    description: The type of items contained in the array
+required:
+  - kind
+  - items
+allOf:
+  - $ref: Property.yaml
+description: |-
+  Represents an array property.
+  This extends the base Property model to represent an array of items.

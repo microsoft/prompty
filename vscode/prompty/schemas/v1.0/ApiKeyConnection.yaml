@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ApiKeyConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: key
+    description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
+  endpoint:
+    type: string
+    description: The endpoint URL for the AI service
+  apiKey:
+    type: string
+    description: The API key for authenticating with the AI service
+required:
+  - kind
+  - endpoint
+  - apiKey
+allOf:
+  - $ref: Connection.yaml
+description: Connection configuration for AI services using API keys.

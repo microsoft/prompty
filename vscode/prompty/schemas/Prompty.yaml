@@ -1,72 +1,99 @@
-# JSON Schema for the Prompty v2 frontmatter format.
-# Validates the YAML block between --- delimiters in .prompty files.
+# Prompty v2 Frontmatter Schema
+# Based on AgentSchema v1.0 (https://github.com/microsoft/AgentSchema)
+# Supports both full object syntax and string shorthand constructions.
 
 $schema: "http://json-schema.org/draft-07/schema#"
 $id: "https://prompty.ai/schemas/v2/Prompty.yaml"
-title: Prompty v2 frontmatter schema
+title: Prompty v2 Frontmatter Schema
 description: >-
-  Defines the structure of the YAML frontmatter in a .prompty file.
-  The frontmatter configures the prompt name, model, inputs, outputs,
-  template engine, and tool definitions for the Prompty runtime.
+  Schema for .prompty file frontmatter based on the AgentSchema v1.0
+  PromptAgent specification. Supports shorthand string syntax for
+  model, format, parser, and other fields.
 
 type: object
 required:
   - name
-additionalProperties: false
 
 properties:
+  # --- AgentDefinition properties ---
   $schema:
     type: string
     description: Optional reference to this schema for editor validation.
 
+  kind:
+    type: string
+    description: Agent kind (defaults to 'prompt' for .prompty files).
+    default: prompt
+    enum:
+      - prompt
+      - hosted
+      - workflow
+
   name:
     type: string
-    description: Unique identifier for the prompt.
-
-  description:
-    type: string
-    description: Human-readable description of what the prompt does.
+    description: Human-readable name of the agent.
 
   displayName:
     type: string
-    description: Friendly display name shown in tooling and UIs.
+    description: Display name for UI purposes.
+
+  description:
+    type: string
+    description: Description of the agent's capabilities and purpose.
 
   metadata:
     type: object
     additionalProperties: true
     description: >-
-      Free-form metadata such as authors, tags, version, or any custom
-      key-value pairs that describe the prompt.
-
-  model:
-    description: >-
-      Model configuration. Can be a string shorthand (expands to {id: <value>})
-      or a full model object.
-    oneOf:
-      - type: string
-        description: Shorthand model identifier (e.g. "gpt-4o").
-      - $ref: "#/definitions/model"
+      Additional metadata including authors, tags, and other arbitrary
+      key-value pairs.
 
   inputSchema:
     $ref: "#/definitions/propertySchema"
-    description: Schema describing the input parameters the prompt expects.
+    description: Input parameters that participate in template rendering.
 
   outputSchema:
     $ref: "#/definitions/propertySchema"
-    description: Schema describing the structured output the prompt produces.
+    description: Expected output format and structure from the agent.
+
+  # --- PromptAgent properties ---
+  model:
+    description: >-
+      AI model configuration. String shorthand expands to {id: <value>}
+      (e.g. "gpt-4o" becomes {id: "gpt-4o"}).
+    anyOf:
+      - $ref: "#/definitions/model"
+      - type: string
+
+  tools:
+    description: Tools available to the agent for extended functionality.
+    anyOf:
+      - type: array
+        items:
+          $ref: "#/definitions/tool"
+      - type: object
+        additionalProperties:
+          $ref: "#/definitions/tool"
+    default: []
 
   template:
     $ref: "#/definitions/template"
-    description: Template engine and parser configuration.
+    description: Template configuration for prompt rendering.
 
-  tools:
-    type: array
-    description: Tool definitions available to the model during execution.
-    items:
-      $ref: "#/definitions/tool"
+  instructions:
+    type: string
+    description: >-
+      Give your agent clear directions on what to do and how to do it.
+      Include specific tasks, their order, and any special instructions.
+
+  additionalInstructions:
+    type: string
+    description: >-
+      Additional instructions or context for the agent, used to provide
+      extra guidance.
 
 # ---------------------------------------------------------------------------
-# Reusable type definitions
+# Reusable type definitions (aligned with AgentSchema v1.0)
 # ---------------------------------------------------------------------------
 definitions:
 
@@ -76,28 +103,24 @@ definitions:
     description: Full model configuration including provider, connection, and options.
     required:
       - id
-    additionalProperties: false
     properties:
       id:
         type: string
         description: Model identifier (e.g. "gpt-4o", "claude-3-opus").
       provider:
         type: string
-        description: The model provider.
-        enum:
-          - openai
-          - azure
-          - azure_serverless
-          - anthropic
+        description: >-
+          The model provider (e.g. 'openai', 'azure', 'anthropic').
+          Any provider string is accepted.
       apiType:
-        type: string
-        description: Which API surface to use when calling the model.
-        default: chat
-        enum:
-          - chat
-          - completion
-          - embedding
-          - image
+        description: >-
+          The API type to use (e.g. 'chat', 'responses', 'completion').
+        anyOf:
+          - type: string
+            const: chat
+          - type: string
+            const: responses
+          - type: string
       connection:
         $ref: "#/definitions/connection"
         description: Connection details for authenticating with the model endpoint.
@@ -105,71 +128,44 @@ definitions:
         $ref: "#/definitions/modelOptions"
         description: Model inference options (temperature, tokens, etc.).
 
-  # ── Connection (discriminated union on "kind") ──────────────────────────
+  # ── Connection ──────────────────────────────────────────────────────────
   connection:
-    description: >-
-      Connection configuration, discriminated by the "kind" field.
-      Use "key" for API-key based auth, "reference" to look up a
-      pre-registered connection by name, or "anonymous" for
-      unauthenticated / default-credential access.
-    oneOf:
-      - $ref: "#/definitions/apiKeyConnection"
-      - $ref: "#/definitions/referenceConnection"
-      - $ref: "#/definitions/anonymousConnection"
-
-  apiKeyConnection:
     type: object
     description: >-
-      Authenticate with an explicit API key and endpoint.
-      Use ${env:VAR_NAME} syntax to reference environment variables.
-    required:
-      - kind
-    additionalProperties: false
+      Connection configuration for the model endpoint. Discriminated
+      by the "kind" field. Supports key, reference, remote, and
+      anonymous authentication modes.
     properties:
       kind:
         type: string
-        const: key
-        description: Discriminator – must be "key".
+        description: Authentication kind.
+        enum:
+          - key
+          - reference
+          - remote
+          - anonymous
+      authenticationMode:
+        type: string
+        description: Authority level for the connection.
+        default: system
+        enum:
+          - user
+          - system
+      usageDescription:
+        type: string
+        description: Context on how this connection will be used.
       endpoint:
         type: string
-        description: Base URL of the model endpoint.
+        description: Base URL of the AI service endpoint.
       apiKey:
         type: string
         description: >-
           API key for authentication. Supports ${env:VAR} references
           (e.g. "${env:OPENAI_API_KEY}").
-
-  referenceConnection:
-    type: object
-    description: Look up a pre-registered connection by name from the connection registry.
-    required:
-      - kind
-      - name
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: reference
-        description: Discriminator – must be "reference".
       name:
         type: string
-        description: Name of the registered connection to use.
-
-  anonymousConnection:
-    type: object
-    description: >-
-      Use default or environment-provided credentials without explicit keys.
-    required:
-      - kind
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: anonymous
-        description: Discriminator – must be "anonymous".
-      endpoint:
-        type: string
-        description: Base URL of the model endpoint.
+        description: Name of the registered connection (for reference kind).
+    additionalProperties: true
 
   # ── Model Options ───────────────────────────────────────────────────────
   modelOptions:
@@ -179,6 +175,9 @@ definitions:
       properties are passed through to the provider as-is.
     additionalProperties: true
     properties:
+      kind:
+        type: string
+        description: Discriminator for model options.
       temperature:
         type: number
         description: Sampling temperature. 0 means deterministic.
@@ -186,7 +185,7 @@ definitions:
         type: number
         description: Nucleus sampling probability (0–1).
       topK:
-        type: number
+        type: integer
         description: Top-K sampling – only the K most likely tokens are considered.
       maxOutputTokens:
         type: integer
@@ -199,43 +198,48 @@ definitions:
         description: Penalise tokens based on whether they have appeared at all.
       seed:
         type: integer
-        description: >-
-          Seed for deterministic sampling. Not guaranteed by all providers.
+        description: Seed for deterministic sampling.
       stopSequences:
         type: array
         description: Sequences that cause the model to stop generating.
         items:
           type: string
-      responseFormat:
-        type: object
-        description: >-
-          Provider-specific response format object (e.g. {"type": "json_object"}).
-        additionalProperties: true
+      allowMultipleToolCalls:
+        type: boolean
+        description: Whether to allow multiple tool calls in a single response.
 
   # ── Property Schema (inputSchema / outputSchema) ────────────────────────
   propertySchema:
     type: object
     description: >-
       Describes a set of typed properties, used for both inputSchema and
-      outputSchema as well as tool parameter definitions.
-    additionalProperties: false
+      outputSchema as well as tool parameter definitions. Properties can
+      be an array of named objects or a record (object with property
+      name keys).
     properties:
       properties:
-        type: array
-        description: List of property definitions.
-        items:
-          $ref: "#/definitions/property"
+        description: Property definitions (array or record form).
+        anyOf:
+          - type: array
+            items:
+              $ref: "#/definitions/property"
+          - type: object
+            additionalProperties:
+              $ref: "#/definitions/property"
       examples:
-        type: object
-        description: >-
-          Example values keyed by property name, used for testing and
-          preview rendering.
-        additionalProperties: true
+        type: array
+        description: Example records for the input schema.
+        items:
+          type: object
+          additionalProperties: true
       strict:
         type: boolean
+        default: false
         description: >-
-          When true, the schema is enforced strictly (e.g. for structured
-          output validation).
+          When true, the schema is enforced strictly (only defined
+          properties are allowed).
+    required:
+      - properties
 
   # ── Property ────────────────────────────────────────────────────────────
   property:
@@ -244,7 +248,6 @@ definitions:
     required:
       - name
       - kind
-    additionalProperties: false
     properties:
       name:
         type: string
@@ -252,231 +255,166 @@ definitions:
       kind:
         type: string
         description: >-
-          The logical data type of the property. "thread" represents
-          conversation history; "image", "audio", and "file" are rich
-          content types handled specially by the renderer.
+          The data type of the property.
         enum:
           - string
-          - number
           - integer
+          - float
           - boolean
-          - object
           - array
-          - thread
-          - image
-          - audio
-          - file
+          - object
       description:
         type: string
         description: Human-readable description of the property.
-      default:
-        description: Default value used when the caller does not supply one.
       required:
         type: boolean
+        default: false
         description: Whether the caller must provide this property.
+      default:
+        description: Default value used when the caller does not supply one.
+      example:
+        description: Example value used for initialization or tooling.
       enumValues:
         type: array
         description: >-
-          Allowed values. Maps to "enum" in JSON Schema when converting
-          to a wire-format function schema.
+          Allowed enumeration values for the property.
         items: {}
 
   # ── Template ────────────────────────────────────────────────────────────
   template:
     type: object
-    description: Configuration for the template engine and body parser.
-    additionalProperties: false
+    description: >-
+      Template configuration for prompt rendering. Both format and
+      parser support string shorthand that expands to {kind: <value>}.
+    required:
+      - format
+      - parser
     properties:
       format:
-        type: object
-        description: Template rendering engine settings.
-        additionalProperties: false
-        properties:
-          kind:
-            type: string
-            description: Which template engine to use.
-            enum:
-              - jinja2
-              - mustache
-              - nunjucks
-          strict:
-            type: boolean
-            description: >-
-              When true, undefined variables cause an error instead of
-              rendering as empty.
-          options:
-            type: object
-            description: Engine-specific options passed through to the renderer.
-            additionalProperties: true
+        description: >-
+          Template rendering engine. String shorthand (e.g. "jinja2")
+          expands to {kind: "jinja2"}.
+        anyOf:
+          - $ref: "#/definitions/format"
+          - type: string
       parser:
-        type: object
-        description: Body parser settings.
-        additionalProperties: false
-        properties:
-          kind:
-            type: string
-            description: Which parser to use for the prompt body.
-            enum:
-              - prompty
-          options:
-            type: object
-            description: Parser-specific options.
-            additionalProperties: true
+        description: >-
+          Parser for processing the rendered template into API-compatible
+          format. String shorthand (e.g. "prompty") expands to {kind: "prompty"}.
+        anyOf:
+          - $ref: "#/definitions/parser"
+          - type: string
 
-  # ── Tool (discriminated union on "kind") ─────────────────────────────────
-  tool:
-    description: >-
-      A tool the model can invoke during execution, discriminated by "kind".
-    oneOf:
-      - $ref: "#/definitions/functionTool"
-      - $ref: "#/definitions/openApiTool"
-      - $ref: "#/definitions/mcpTool"
-      - $ref: "#/definitions/bingSearchTool"
-      - $ref: "#/definitions/fileSearchTool"
-      - $ref: "#/definitions/customTool"
-
-  functionTool:
+  format:
     type: object
-    description: >-
-      A function tool whose parameters are defined inline. Converted to the
-      provider's function-calling wire format at execution time.
+    description: Template format definition.
     required:
       - kind
-      - name
-    additionalProperties: false
     properties:
       kind:
         type: string
-        const: function
-        description: Discriminator – must be "function".
+        default: "*"
+        description: Template rendering engine (e.g. 'jinja2', 'mustache').
+      strict:
+        type: boolean
+        default: false
+        description: Whether the template can emit structural text for parsing output.
+      options:
+        type: object
+        additionalProperties: true
+        description: Options for the template engine.
+
+  parser:
+    type: object
+    description: Template parser definition.
+    required:
+      - kind
+    properties:
+      kind:
+        type: string
+        default: "*"
+        description: Parser kind (e.g. 'prompty').
+      options:
+        type: object
+        additionalProperties: true
+        description: Options for the parser.
+
+  # ── Tool ────────────────────────────────────────────────────────────────
+  tool:
+    type: object
+    description: >-
+      A tool the model can invoke during execution. Discriminated by "kind".
+    required:
+      - name
+      - kind
+    properties:
       name:
         type: string
-        description: Function name exposed to the model.
+        description: >-
+          Tool name. For function tools this is the function name,
+          otherwise it is the type identifier.
+      kind:
+        type: string
+        description: >-
+          Tool kind identifier.
+        enum:
+          - function
+          - openapi
+          - mcp
+          - custom
+          - web_search
+          - file_search
+          - code_interpreter
       description:
         type: string
-        description: Human-readable description of what the function does.
+        description: Short description of the tool.
+      bindings:
+        description: Tool argument bindings to input properties.
+        anyOf:
+          - type: array
+            items:
+              $ref: "#/definitions/binding"
+          - type: object
+            additionalProperties:
+              $ref: "#/definitions/binding"
+        default: []
+      # Function tool properties
       parameters:
         $ref: "#/definitions/propertySchema"
-        description: Schema for the function's input parameters.
+        description: Schema for the function's input parameters (function tools).
       strict:
         type: boolean
         description: >-
           When true, the model must produce arguments that exactly match
-          the parameter schema (OpenAI strict mode).
-
-  openApiTool:
-    type: object
-    description: >-
-      A tool backed by an OpenAPI specification. The runtime resolves
-      operations from the spec and exposes them to the model.
-    required:
-      - kind
-      - name
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: openapi
-        description: Discriminator – must be "openapi".
-      name:
-        type: string
-        description: Logical name for the tool.
-      description:
-        type: string
-        description: Human-readable description of the API.
+          the parameter schema (function tools, OpenAI strict mode).
+      # OpenAPI / MCP tool properties
       connection:
         $ref: "#/definitions/connection"
-        description: Connection used to call the API.
+        description: Connection configuration for the tool.
       specification:
         type: string
         description: >-
-          Path or URL to the OpenAPI specification (JSON or YAML).
+          Path or URL to the OpenAPI specification (openapi tools).
           Relative paths are resolved from the .prompty file location.
-
-  mcpTool:
-    type: object
-    description: >-
-      A tool provided by a Model Context Protocol (MCP) server.
-    required:
-      - kind
-      - name
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: mcp
-        description: Discriminator – must be "mcp".
-      name:
-        type: string
-        description: Logical name for the tool.
-      description:
-        type: string
-        description: Human-readable description of the MCP tool.
-      connection:
-        $ref: "#/definitions/connection"
-        description: Connection used to reach the MCP server.
       serverName:
         type: string
-        description: Name of the MCP server providing this tool.
+        description: Name of the MCP server providing this tool (mcp tools).
       serverDescription:
         type: string
-        description: Description of the MCP server.
-
-  bingSearchTool:
-    type: object
-    description: A Bing web-search tool.
-    required:
-      - kind
-      - name
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: bing_search
-        description: Discriminator – must be "bing_search".
-      name:
-        type: string
-        description: Tool name.
-      description:
-        type: string
-        description: Description of the search tool.
-
-  fileSearchTool:
-    type: object
-    description: A file-search / retrieval tool.
-    required:
-      - kind
-      - name
-    additionalProperties: false
-    properties:
-      kind:
-        type: string
-        const: file_search
-        description: Discriminator – must be "file_search".
-      name:
-        type: string
-        description: Tool name.
-      description:
-        type: string
-        description: Description of the file search tool.
-
-  customTool:
-    type: object
-    description: >-
-      A custom tool with an arbitrary configuration. Use this for
-      provider-specific or user-defined tool types.
-    required:
-      - kind
-      - name
+        description: Description of the MCP server (mcp tools).
     additionalProperties: true
+
+  # ── Binding ─────────────────────────────────────────────────────────────
+  binding:
+    type: object
+    description: Binds a tool parameter to an input property.
+    required:
+      - name
+      - input
     properties:
-      kind:
-        type: string
-        const: custom
-        description: Discriminator – must be "custom".
       name:
         type: string
-        description: Tool name.
-      description:
+        description: Name of the binding.
+      input:
         type: string
-        description: Description of the custom tool.
+        description: The input property that will be bound to the tool parameter argument.

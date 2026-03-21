@@ -1,0 +1,40 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ContainerAgent.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: hosted
+    description: Type of agent, e.g., 'hosted'
+  protocols:
+    type: array
+    items:
+      $ref: ProtocolVersionRecord.yaml
+    description: Protocol used by the containerized agent
+  environmentVariables:
+    anyOf:
+      - $ref: RecordEnvironmentVariable.yaml
+      - type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              default: ""
+              description: Name of the environment variable
+            value:
+              type: string
+              description: Environment variable resolution
+          required:
+            - name
+            - value
+    description: Environment variables to set in the container
+required:
+  - kind
+  - protocols
+allOf:
+  - $ref: AgentDefinition.yaml
+description: |-
+  This represents a container based agent hosted by the provider/publisher.
+  The intent is to represent a container application that the user wants to run
+  in a hosted environment that the provider manages.

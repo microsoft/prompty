@@ -1,0 +1,39 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FileSearchTool.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: file_search
+    description: The kind identifier for file search tools
+  connection:
+    $ref: Connection.yaml
+    description: The connection configuration for the file search tool
+  vectorStoreIds:
+    type: array
+    items:
+      type: string
+    description: The IDs of the vector stores to search within.
+  maximumResultCount:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: The maximum number of search results to return.
+  ranker:
+    type: string
+    description: File search ranker.
+  scoreThreshold:
+    type: number
+    description: Ranker search threshold.
+  filters:
+    $ref: RecordUnknown.yaml
+    description: Additional filters to apply during the file search.
+required:
+  - kind
+  - connection
+  - vectorStoreIds
+allOf:
+  - $ref: Tool.yaml
+description: |-
+  A tool for searching files.
+  This tool allows an AI agent to search for files based on a query.

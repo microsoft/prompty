@@ -1,0 +1,43 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AgentDefinition.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: prompt
+      - type: string
+        const: hosted
+      - type: string
+        const: workflow
+    description: Kind represented by the document
+  name:
+    type: string
+    default: ""
+    description: Human-readable name of the agent
+  displayName:
+    type: string
+    default: ""
+    description: Display name of the agent for UI purposes
+  description:
+    type: string
+    default: ""
+    description: Description of the agent's capabilities and purpose
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Additional metadata including authors, tags, and other arbitrary properties
+  inputSchema:
+    $ref: PropertySchema.yaml
+    description: Input parameters that participate in template rendering
+  outputSchema:
+    $ref: PropertySchema.yaml
+    description: Expected output format and structure from the agent
+required:
+  - kind
+  - name
+description: |-
+  The following is a specification for defining AI agents with structured metadata, inputs, outputs, tools, and templates.
+  It provides a way to create reusable and composable AI agents that can be executed with specific configurations.
+  The specification includes metadata about the agent, model configuration, input parameters, expected outputs,
+  available tools, and template configurations for prompt rendering.

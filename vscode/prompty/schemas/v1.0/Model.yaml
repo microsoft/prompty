@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Model.yaml
+type: object
+properties:
+  id:
+    type: string
+    default: ""
+    description: The unique identifier of the model - can be used as the single property shorthand
+  provider:
+    type: string
+    description: The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+  apiType:
+    anyOf:
+      - type: string
+        const: chat
+      - type: string
+        const: responses
+      - type: string
+    description: The type of API to use for the model (e.g., 'chat', 'response', etc.)
+  connection:
+    $ref: Connection.yaml
+    description: The connection configuration for the model
+  options:
+    $ref: ModelOptions.yaml
+    description: Additional options for the model
+required:
+  - id
+description: |-
+  Model for defining the structure and behavior of AI agents.
+  This model includes properties for specifying the model's provider, connection details, and various options.
+  It allows for flexible configuration of AI models to suit different use cases and requirements.

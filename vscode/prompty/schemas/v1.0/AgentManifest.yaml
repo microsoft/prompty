@@ -1,0 +1,63 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AgentManifest.yaml
+type: object
+properties:
+  name:
+    type: string
+    default: ""
+    description: Name of the manifest
+  displayName:
+    type: string
+    default: ""
+    description: Human-readable name of the manifest
+  description:
+    type: string
+    default: ""
+    description: Description of the agent's capabilities and purpose
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Additional metadata including authors, tags, and other arbitrary properties
+  template:
+    $ref: AgentDefinition.yaml
+    description: The agent that this manifest is based on
+  parameters:
+    $ref: PropertySchema.yaml
+    description: Parameters for configuring the agent's behavior and execution
+  resources:
+    anyOf:
+      - $ref: RecordResource.yaml
+      - type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              default: ""
+              description: Name of the resource
+            kind:
+              type: string
+              description: The kind of resource (e.g., model, tool)
+          required:
+            - name
+            - kind
+    description: Resources required by the agent, such as models or tools
+required:
+  - name
+  - displayName
+  - template
+  - parameters
+  - resources
+description: |-
+  The following represents a manifest that can be used to create agents dynamically.
+  It includes parameters that can be used to configure the agent's behavior.
+  These parameters include values that can be used as publisher parameters that can
+  be used to describe additional variables that have been tested and are known to work.
+
+  Variables described here are then used to project into a prompt agent that can be executed.
+  Once parameters are provided, these can be referenced in the manifest using the following notation:
+
+  `{{myParameter}}`
+
+  This allows for dynamic configuration of the agent based on the provided parameters.
+  (This notation is used elsewhere, but only the `param` scope is supported here)

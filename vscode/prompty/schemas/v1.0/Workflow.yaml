@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Workflow.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: workflow
+    description: Type of agent, e.g., 'workflow'
+  trigger:
+    $ref: RecordUnknown.yaml
+    description: The steps that make up the workflow
+required:
+  - kind
+allOf:
+  - $ref: AgentDefinition.yaml
+description: |-
+  A workflow agent that can orchestrate multiple steps and actions.
+  This agent type is designed to handle complex workflows that may involve
+  multiple tools, models, and decision points.
+
+  The workflow agent can be configured with a series of steps that define
+  the flow of execution, including conditional logic and parallel processing.
+  This allows for the creation of sophisticated AI-driven processes that can
+  adapt to various scenarios and requirements.
+
+  Note: The detailed structure of the workflow steps and actions is not defined here
+  and would need to be implemented based on specific use cases and requirements.

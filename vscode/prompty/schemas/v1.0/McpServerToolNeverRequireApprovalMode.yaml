@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: McpServerToolNeverRequireApprovalMode.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: never
+    description: The kind identifier for never approval mode
+required:
+  - kind
+allOf:
+  - $ref: McpServerApprovalMode.yaml

@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Connection.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: remote
+      - type: string
+        const: reference
+      - type: string
+        const: key
+      - type: string
+        const: anonymous
+    description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
+  authenticationMode:
+    anyOf:
+      - type: string
+        const: user
+      - type: string
+        const: system
+    default: system
+    description: The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
+  usageDescription:
+    type: string
+    description: The usage description for the connection, providing context on how this connection will be used
+required:
+  - kind
+  - authenticationMode
+description: |-
+  Connection configuration for AI agents.
+  `provider`, `kind`, and `endpoint` are required properties here,
+  but this section can accept additional via options.

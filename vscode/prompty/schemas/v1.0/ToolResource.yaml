@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolResource.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: tool
+    description: The kind identifier for tool resources
+  id:
+    type: string
+    description: The unique identifier of the tool resource
+  options:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Configuration options for the tool resource
+required:
+  - kind
+  - id
+  - options
+allOf:
+  - $ref: Resource.yaml
+description: Represents a tool resource required by the agent

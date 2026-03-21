@@ -1,0 +1,50 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelOptions.yaml
+type: object
+properties:
+  frequencyPenalty:
+    type: number
+    description: The frequency penalty to apply to the model's output
+  maxOutputTokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: The maximum number of tokens to generate in the output
+  presencePenalty:
+    type: number
+    description: The presence penalty to apply to the model's output
+  seed:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: A random seed for deterministic output
+  temperature:
+    type: number
+    description: The temperature to use for sampling
+  topK:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: The top-K sampling value
+  topP:
+    type: number
+    description: The top-P sampling value
+  stopSequences:
+    type: array
+    items:
+      type: string
+    description: Stop sequences to end generation
+  allowMultipleToolCalls:
+    type: boolean
+    description: Whether to allow multiple tool calls in a single response
+  additionalProperties:
+    $ref: RecordUnknown.yaml
+    description: Additional custom properties for model options
+  kind:
+    type: string
+    description: Discriminator property for ModelOptions.
+required:
+  - kind
+description: |-
+  Options for configuring the behavior of the AI model.
+  `kind` is a required property here, but this section can accept additional via options.

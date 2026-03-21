@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: McpServerToolSpecifyApprovalMode.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: specify
+    description: The kind identifier for specify approval mode
+  alwaysRequireApprovalTools:
+    type: array
+    items:
+      type: string
+    description: List of tools that always require approval
+  neverRequireApprovalTools:
+    type: array
+    items:
+      type: string
+    description: List of tools that never require approval
+required:
+  - kind
+  - alwaysRequireApprovalTools
+  - neverRequireApprovalTools
+allOf:
+  - $ref: McpServerApprovalMode.yaml

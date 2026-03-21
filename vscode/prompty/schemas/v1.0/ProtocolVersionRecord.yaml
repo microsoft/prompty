@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ProtocolVersionRecord.yaml
+type: object
+properties:
+  protocol:
+    anyOf:
+      - type: string
+        const: responses
+      - type: string
+        const: activity
+      - type: string
+    description: The protocol type.
+  version:
+    type: string
+    description: The version string for the protocol, e.g. 'v0.1.1'.
+required:
+  - protocol
+  - version

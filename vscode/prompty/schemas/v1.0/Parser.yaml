@@ -1,0 +1,15 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Parser.yaml
+type: object
+properties:
+  kind:
+    type: string
+    default: "*"
+    description: Parser used to process the rendered template into API-compatible format
+  options:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Options for the parser
+required:
+  - kind
+description: Template parser definition

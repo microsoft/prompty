@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Resource.yaml
+type: object
+properties:
+  kind:
+    type: string
+    description: The kind of resource (e.g., model, tool)
+required:
+  - kind
+description: |-
+  Represents a resource required by the agent
+  Resources can include databases, APIs, or other external systems
+  that the agent needs to interact with to perform its tasks

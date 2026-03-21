@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Binding.yaml
+type: object
+properties:
+  input:
+    type: string
+    description: The input property that will be bound to the tool parameter argument
+required:
+  - input
+description: Represents a binding between an input property and a tool parameter.

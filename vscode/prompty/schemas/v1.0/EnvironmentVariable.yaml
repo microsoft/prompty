@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EnvironmentVariable.yaml
+type: object
+properties:
+  value:
+    type: string
+    description: Environment variable resolution
+required:
+  - value
+description: Definition for an environment variable used in containerized agents.

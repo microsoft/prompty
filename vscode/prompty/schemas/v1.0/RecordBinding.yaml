@@ -1,0 +1,6 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RecordBinding.yaml
+type: object
+properties: {}
+unevaluatedProperties:
+  $ref: Binding.yaml

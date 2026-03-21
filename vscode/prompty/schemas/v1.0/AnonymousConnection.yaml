@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnonymousConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: anonymous
+    description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
+  endpoint:
+    type: string
+    description: The endpoint for authenticating with the AI service
+required:
+  - kind
+  - endpoint
+allOf:
+  - $ref: Connection.yaml

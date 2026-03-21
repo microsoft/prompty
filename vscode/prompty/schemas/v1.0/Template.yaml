@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Template.yaml
+type: object
+properties:
+  format:
+    anyOf:
+      - $ref: Format.yaml
+      - type: string
+    description: Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
+  parser:
+    anyOf:
+      - $ref: Parser.yaml
+      - type: string
+    description: Parser used to process the rendered template into API-compatible format
+required:
+  - format
+  - parser
+description: |-
+  Template model for defining prompt templates.
+
+  This model specifies the rendering engine used for slot filling prompts,
+  the parser used to process the rendered template into API-compatible format,
+  and additional options for the template engine.
+
+  It allows for the creation of reusable templates that can be filled with dynamic data
+  and processed to generate prompts for AI models.
