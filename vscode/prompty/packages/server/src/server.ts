@@ -125,6 +125,21 @@ function checkV1Deprecations(document: TextDocument, metadata: DocumentMetadata)
 	return diagnostics;
 }
 
+/** Create a VirtualDocument that contains only the YAML frontmatter content (between --- delimiters). */
+function createFrontMatterVirtualDocument(
+	textDocument: TextDocument,
+	metadata: DocumentMetadata
+): VirtualDocument | null {
+	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+		return null;
+	}
+	return new VirtualDocument(
+		textDocument,
+		metadata.frontMatterStart + 1,
+		metadata.frontMatterEnd - 1
+	);
+}
+
 async function validateTextDocument(textDocument: TextDocument) {
 	try {
 		const metadata = documentMetadata.get(textDocument);
@@ -132,11 +147,10 @@ async function validateTextDocument(textDocument: TextDocument) {
 			return;
 		}
 
-		const virtualDocument = new VirtualDocument(
-			textDocument,
-			metadata.frontMatterStart + 1,
-			metadata.frontMatterEnd - 1
-		);
+		const virtualDocument = createFrontMatterVirtualDocument(textDocument, metadata);
+		if (!virtualDocument) {
+			return;
+		}
 
 		const allDiagnostics = await getYamlDiagnostics(virtualDocument);
 
@@ -276,26 +290,43 @@ connection.onCompletion(async (textDocumentPosition) => {
 			return null;
 		}
 		const { line, character } = textDocumentPosition.position;
-		if (line <= metadata.frontMatterStart) {
+		if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {
 			return null;
-		} else if (line < metadata.frontMatterEnd) {
-			const completion = await yamlLanguageServer.doComplete(document, textDocumentPosition.position, false);
+		}
 
-			// Add snippet completions at root level (no indentation)
-			const lineText = document.getText({
-				start: { line, character: 0 },
-				end: { line, character },
-			});
-			if (/^\s{0,1}\S{0,20}$/.test(lineText)) {
-				const snippets = getPromptySnippets();
-				if (completion && completion.items) {
-					completion.items.push(...snippets);
+		// Use VirtualDocument so yaml-language-server only sees pure YAML
+		const virtualDocument = createFrontMatterVirtualDocument(document, metadata);
+		if (!virtualDocument) {
+			return null;
+		}
+		const virtualPosition = virtualDocument.toVirtualPosition(textDocumentPosition.position);
+		const completion = await yamlLanguageServer.doComplete(virtualDocument, virtualPosition, false);
+
+		// Map completion edit ranges back to real document positions
+		if (completion && completion.items) {
+			for (const item of completion.items) {
+				if (item.textEdit && 'range' in item.textEdit) {
+					item.textEdit.range = {
+						start: virtualDocument.toRealPosition(item.textEdit.range.start),
+						end: virtualDocument.toRealPosition(item.textEdit.range.end),
+					};
 				}
 			}
-
-			return completion;
 		}
-		return null;
+
+		// Add snippet completions at root level (no indentation)
+		const lineText = document.getText({
+			start: { line, character: 0 },
+			end: { line, character },
+		});
+		if (/^\s{0,1}\S{0,20}$/.test(lineText)) {
+			const snippets = getPromptySnippets();
+			if (completion && completion.items) {
+				completion.items.push(...snippets);
+			}
+		}
+
+		return completion;
 	} catch (error) {
 		logger.error(`Error during completion: ${error}`);
 		return null;
@@ -441,13 +472,25 @@ connection.onHover(async (textDocumentPosition) => {
 			return null;
 		}
 		const { line } = textDocumentPosition.position;
-		if (line <= metadata.frontMatterStart) {
+		if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {
 			return null;
-		} else if (line < metadata.frontMatterEnd) {
-			const hover = await yamlLanguageServer.doHover(document, textDocumentPosition.position);
-			if (hover && hover.contents) {
-				return hover;
+		}
+
+		const virtualDocument = createFrontMatterVirtualDocument(document, metadata);
+		if (!virtualDocument) {
+			return null;
+		}
+		const virtualPosition = virtualDocument.toVirtualPosition(textDocumentPosition.position);
+		const hover = await yamlLanguageServer.doHover(virtualDocument, virtualPosition);
+		if (hover && hover.contents) {
+			// Map hover range back to real positions
+			if (hover.range) {
+				hover.range = {
+					start: virtualDocument.toRealPosition(hover.range.start),
+					end: virtualDocument.toRealPosition(hover.range.end),
+				};
 			}
+			return hover;
 		}
 		return null;
 	} catch (error) {
