@@ -9,6 +9,8 @@ import {
 	InitializeParams,
 	TextDocumentSyncKind,
 	InitializeResult,
+	Diagnostic,
+	DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 
 import { URI } from "vscode-uri";
@@ -16,11 +18,11 @@ import { URI } from "vscode-uri";
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
-import { getSemanticTokenLegend } from './utils/semantic-tokens';
+import { getSemanticTokenLegend, tokenizeDocument } from './utils/semantic-tokens';
 import { getLanguageService } from "yaml-language-server";
 import * as fs from "fs/promises";
 import { Logger } from './utils/logger';
-import { DocumentMetadataStore } from './utils/document-metadata';
+import { DocumentMetadataStore, DocumentMetadata } from './utils/document-metadata';
 import { VirtualDocument } from './utils/virtual-document';
 import * as path from 'path';
 
@@ -38,7 +40,6 @@ const options = {
 // logger
 const logger = new Logger(connection.console);
 const schemaRequestService = async (uri: string): Promise<string> => {
-	//console.log(`Fetching schema for ${uri}`);
 	if (/^file:\/\//.test(uri)) {
 		const fsPath = URI.parse(uri).fsPath;
 		const schema = await fs.readFile(fsPath, { encoding: "utf-8" });
@@ -51,9 +52,7 @@ const yamlLanguageServer = getLanguageService({
 	schemaRequestService,
 	workspaceContext: {
 		resolveRelativePath: (relativePath: string) => {
-			const schemaUri = URI.file(path.join(options.basePath, relativePath)).toString();
-			//console.log(`Using schema URI: ${schemaUri}`);
-			return schemaUri;
+			return URI.file(path.join(options.basePath, relativePath)).toString();
 		},
 	},
 });
@@ -62,80 +61,151 @@ const yamlLanguageServer = getLanguageService({
 const documents = new TextDocuments(TextDocument);
 const documentMetadata = new DocumentMetadataStore(logger);
 
-async function validateTextDocument(textDocument: TextDocument) {
-	const metadata = documentMetadata.get(textDocument);
-	if (metadata.frontMatterStart === undefined) {
-		return;
-	}
-	if (metadata.frontMatterEnd === undefined) {
-		return;
-	}
-	const virtualDocument = new VirtualDocument(
-		textDocument,
-		metadata.frontMatterStart + 1,
-		metadata.frontMatterEnd - 1
-	);
-	await validateYAMLDocument(virtualDocument);
-}
-
-async function validateYAMLDocument(textDocument: VirtualDocument) {
-	logger.debug(`Validating document: ${textDocument.uri}`);
-	const virtualYamlDiagnostics = await yamlLanguageServer.doValidation(textDocument, false);
-	const yamlDiagnostics = virtualYamlDiagnostics
+async function getYamlDiagnostics(virtualDocument: VirtualDocument): Promise<Diagnostic[]> {
+	const virtualYamlDiagnostics = await yamlLanguageServer.doValidation(virtualDocument, false);
+	return virtualYamlDiagnostics
 		.filter((d) => {
-			const diagnosticText = textDocument.getText(d.range).trim();
+			const diagnosticText = virtualDocument.getText(d.range).trim();
 			return !/\$\{[^}]+\}/.test(diagnosticText);
 		})
-		.map((s) => {
-			return {
-				...s,
-				range: {
-					start: textDocument.toRealPosition(s.range.start),
-					end: textDocument.toRealPosition(s.range.end),
-				},
-				source: `\nyaml-schema: ${s.source?.split("/").pop()}`,
-			};
-		});
+		.map((s) => ({
+			...s,
+			range: {
+				start: virtualDocument.toRealPosition(s.range.start),
+				end: virtualDocument.toRealPosition(s.range.end),
+			},
+			source: `\nyaml-schema: ${s.source?.split("/").pop()}`,
+		}));
+}
 
-	//console.log(`YAML Diagnostics: ${JSON.stringify(yamlDiagnostics)}`);
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: yamlDiagnostics });
+function checkV1Deprecations(document: TextDocument, metadata: DocumentMetadata): Diagnostic[] {
+	const diagnostics: Diagnostic[] = [];
+	const text = document.getText();
+	const lines = text.split(/\n|\r\n/);
+	const fmStart = metadata.frontMatterStart ?? 0;
+	const fmEnd = metadata.frontMatterEnd ?? lines.length;
+
+	const v1Mappings: Array<{ pattern: RegExp; message: string }> = [
+		{ pattern: /^\s+api\s*:/, message: "Deprecated v1 property 'api'. Use 'apiType' under 'model' instead." },
+		{ pattern: /^\s+configuration\s*:/, message: "Deprecated v1 property 'configuration'. Use 'connection' under 'model' instead." },
+		{ pattern: /^\s+api_key\s*:/, message: "Deprecated v1 property 'api_key'. Use 'apiKey' (camelCase) under 'model.connection' instead." },
+		{ pattern: /^\s+azure_endpoint\s*:/, message: "Deprecated v1 property 'azure_endpoint'. Use 'endpoint' under 'model.connection' instead." },
+		{ pattern: /^\s+azure_deployment\s*:/, message: "Deprecated v1 property 'azure_deployment'. Use 'model.id' instead." },
+		{ pattern: /^\s+max_tokens\s*:/, message: "Deprecated v1 property 'max_tokens'. Use 'maxOutputTokens' under 'model.options' instead." },
+		{ pattern: /^\s+top_p\s*:/, message: "Deprecated v1 property 'top_p'. Use 'topP' (camelCase) under 'model.options' instead." },
+		{ pattern: /^\s+frequency_penalty\s*:/, message: "Deprecated v1 property 'frequency_penalty'. Use 'frequencyPenalty' under 'model.options' instead." },
+		{ pattern: /^\s+presence_penalty\s*:/, message: "Deprecated v1 property 'presence_penalty'. Use 'presencePenalty' under 'model.options' instead." },
+		{ pattern: /^inputs\s*:/, message: "Deprecated v1 property 'inputs'. Use 'inputSchema' with 'properties' array instead." },
+		{ pattern: /^outputs\s*:/, message: "Deprecated v1 property 'outputs'. Use 'outputSchema' instead." },
+		{ pattern: /^template\s*:\s*jinja2/, message: "Deprecated v1 template format. Use 'template: { format: { kind: jinja2 } }' instead." },
+		{ pattern: /^authors\s*:/, message: "Deprecated v1 property 'authors'. Move to 'metadata.authors' instead." },
+		{ pattern: /^tags\s*:/, message: "Deprecated v1 property 'tags'. Move to 'metadata.tags' instead." },
+		{ pattern: /^version\s*:/, message: "Deprecated v1 property 'version'. Move to 'metadata.version' instead." },
+	];
+
+	for (let i = fmStart + 1; i < fmEnd; i++) {
+		for (const mapping of v1Mappings) {
+			if (mapping.pattern.test(lines[i])) {
+				diagnostics.push({
+					severity: DiagnosticSeverity.Warning,
+					range: {
+						start: { line: i, character: 0 },
+						end: { line: i, character: lines[i].length },
+					},
+					message: mapping.message,
+					source: 'prompty',
+				});
+			}
+		}
+	}
+
+	return diagnostics;
+}
+
+async function validateTextDocument(textDocument: TextDocument) {
+	try {
+		const metadata = documentMetadata.get(textDocument);
+		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+			return;
+		}
+
+		const virtualDocument = new VirtualDocument(
+			textDocument,
+			metadata.frontMatterStart + 1,
+			metadata.frontMatterEnd - 1
+		);
+
+		const allDiagnostics = await getYamlDiagnostics(virtualDocument);
+
+		// Add v1 deprecation warnings
+		if (metadata.frontMatterContent) {
+			const v1Diagnostics = checkV1Deprecations(textDocument, metadata);
+			allDiagnostics.push(...v1Diagnostics);
+		}
+
+		// Add parse errors
+		for (const error of metadata.parseErrors) {
+			allDiagnostics.push({
+				severity: DiagnosticSeverity.Error,
+				range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
+				message: error,
+				source: 'prompty',
+			});
+		}
+
+		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: allDiagnostics });
+	} catch (error) {
+		logger.error(`Error validating document: ${error}`);
+	}
 }
 
 connection.onInitialize((params: InitializeParams) => {
-	//const capabilities = params.capabilities;
-	//logger.debug(`Initializing server for ${params.clientInfo?.name || "unknown"}`);
-	//console.log(`Initializing server for ${params.clientInfo?.name || "unknown"}`);
-
-
 	documents.onDidOpen((e) => {
-		//console.log(`Document opened: ${e.document.uri}`);
 		documentMetadata.set(e.document);
 	});
 
 	documents.onDidClose((e) => {
-		//console.log(`Document closed: ${e.document.uri}`);
 		documentMetadata.delete(e.document.uri);
 	});
 
 	documents.onDidChangeContent((e) => {
-		//console.log(`Document changed: ${e.document.uri}`);
 		documentMetadata.set(e.document);
 		validateTextDocument(e.document);
 	});
 
 	connection.onShutdown(() => {
-		//console.log("Shutting down...");
+		// cleanup
 	});
 
+	connection.onRequest("textDocument/semanticTokens/full", async (requestParams) => {
+		try {
+			const document = documents.get(requestParams.textDocument.uri);
+			if (!document) {
+				return { data: [] };
+			}
+			const metadata = documentMetadata.get(document);
+			const tokens = tokenizeDocument(document.getText(), metadata.frontMatterEnd);
 
+			// Build semantic tokens data array (relative encoding)
+			const data: number[] = [];
+			let prevLine = 0;
+			let prevChar = 0;
 
-	connection.onRequest("textDocument/semanticTokens/full", async () => {
-		//console.log(`Received semantic tokens request for ${params.textDocument.uri}`);
-		// Here you would implement the logic to return semantic tokens for the document.
-		// For now, we will return an empty array of tokens.
-		return {
-			data: [],
-		};
+			tokens.sort((a, b) => a.line - b.line || a.startChar - b.startChar);
+
+			for (const token of tokens) {
+				const deltaLine = token.line - prevLine;
+				const deltaChar = deltaLine === 0 ? token.startChar - prevChar : token.startChar;
+				data.push(deltaLine, deltaChar, token.length, token.tokenType, 0);
+				prevLine = token.line;
+				prevChar = token.startChar;
+			}
+
+			return { data };
+		} catch (error) {
+			logger.error(`Error computing semantic tokens: ${error}`);
+			return { data: [] };
+		}
 	});
 
 	const { basePath, yamlSchemaPath } = params.initializationOptions;
@@ -149,7 +219,6 @@ connection.onInitialize((params: InitializeParams) => {
 
 	// uri for the schema
 	const schemaUri = URI.file(path.join(basePath, yamlSchemaPath)).toString();
-	//console.log(`Using schema URI: ${schemaUri}`);
 
 	yamlLanguageServer.configure({
 		customTags: [],
@@ -171,7 +240,6 @@ connection.onInitialize((params: InitializeParams) => {
 			semanticTokensProvider: {
 				documentSelector: [
 					{
-						// This should be a list of all the document selectors that the server supports.
 						scheme: "file",
 						pattern: "**/*.prompty",
 					}
@@ -185,12 +253,9 @@ connection.onInitialize((params: InitializeParams) => {
 				firstTriggerCharacter: ":",
 				moreTriggerCharacter: ["\n"],
 			},
-			// Tell the client that the server supports code completion
 			completionProvider: {
 				resolveProvider: true,
-				/* This config should come from the config of the document (template engine) */
 				triggerCharacters: ["{", ":"],
-
 			},
 		},
 	};
@@ -198,81 +263,56 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onCompletion(async (textDocumentPosition) => {
-	//logger.debug(`Received completion request for ${textDocumentPosition.textDocument.uri}`);
-	//.log(`Received completion request for ${textDocumentPosition.textDocument.uri}`);
-	// Here you would implement the logic to return completion items for the document.
-	// For now, we will return an empty array of completion items.
-
-	const document = documents.get(textDocumentPosition.textDocument.uri);
-	if (!document) {
-		return null;
-	}
-	const metadata = documentMetadata.get(document);
-	if (metadata.frontMatterStart === undefined) {
-		return null;
-	}
-	if (metadata.frontMatterEnd === undefined) {
-		return null;
-	}
-	const { line } = textDocumentPosition.position;
-	if (line <= metadata.frontMatterStart) {
-		return null;
-	} else if (line < metadata.frontMatterEnd) {
-		try {
-			const completion = await yamlLanguageServer.doComplete(document, textDocumentPosition.position, false);
-			return completion;
-		} catch (error) {
-			console.error(`Error during completion: ${error}`);
+	try {
+		const document = documents.get(textDocumentPosition.textDocument.uri);
+		if (!document) {
 			return null;
 		}
+		const metadata = documentMetadata.get(document);
+		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+			return null;
+		}
+		const { line } = textDocumentPosition.position;
+		if (line <= metadata.frontMatterStart) {
+			return null;
+		} else if (line < metadata.frontMatterEnd) {
+			const completion = await yamlLanguageServer.doComplete(document, textDocumentPosition.position, false);
+			return completion;
+		}
+		return null;
+	} catch (error) {
+		logger.error(`Error during completion: ${error}`);
+		return null;
 	}
 });
 
 connection.onHover(async (textDocumentPosition) => {
-	//logger.debug(`Received hover request for ${textDocumentPosition.textDocument.uri}`);
-	//console.log(`Received hover request for ${textDocumentPosition.textDocument.uri}`);
-	// Here you would implement the logic to return hover information for the document.
-	const document = documents.get(textDocumentPosition.textDocument.uri);
-	if (!document) {
-		return null;
-	}
-	const metadata = documentMetadata.get(document);
-
-	if (metadata.frontMatterStart === undefined) {
-		return null;
-	}
-
-	if (metadata.frontMatterEnd === undefined) {
-		return null;
-	}
-
-	const { line } = textDocumentPosition.position;
-
-	if (line <= metadata.frontMatterStart) {
-		return null;
-	} else if (line < metadata.frontMatterEnd) {
-		try { 
-		const hover = await yamlLanguageServer.doHover(document, textDocumentPosition.position);
-
-		//console.log(`Hover: ${JSON.stringify(hover?.contents)}`);
-		if (hover && hover.contents) {
-			// Process hover contents
-			return hover;
+	try {
+		const document = documents.get(textDocumentPosition.textDocument.uri);
+		if (!document) {
+			return null;
 		}
+		const metadata = documentMetadata.get(document);
+		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+			return null;
+		}
+		const { line } = textDocumentPosition.position;
+		if (line <= metadata.frontMatterStart) {
+			return null;
+		} else if (line < metadata.frontMatterEnd) {
+			const hover = await yamlLanguageServer.doHover(document, textDocumentPosition.position);
+			if (hover && hover.contents) {
+				return hover;
+			}
+		}
+		return null;
 	} catch (error) {
-		console.error(`Error during hover: ${error}`);
+		logger.error(`Error during hover: ${error}`);
+		return null;
 	}
-
-}
-	return null;
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-connection.onDocumentOnTypeFormatting((params) => {
-	//logger.debug(`Received on type formatting request for ${params.textDocument.uri}`);
-	//console.log(`Received on type formatting request for ${params.textDocument.uri}`);
-	// Here you would implement the logic to return formatting edits for the document.
-	// For now, we will return an empty array of text edits.
+connection.onDocumentOnTypeFormatting((_params) => {
 	return null;
 });
 

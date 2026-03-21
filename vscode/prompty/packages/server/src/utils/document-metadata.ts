@@ -7,7 +7,10 @@ import { Logger } from "./logger";
 export interface DocumentMetadata {
 	frontMatterStart?: number;
 	frontMatterEnd?: number;
-	variables: string[];
+	frontMatterContent?: Record<string, unknown>;
+	roles: Array<{ name: string; line: number; endLine: number }>;
+	templateVariables: Array<{ name: string; line: number; startChar: number; endChar: number }>;
+	parseErrors: string[];
 }
 
 export class DocumentMetadataStore {
@@ -29,33 +32,106 @@ export class DocumentMetadataStore {
 	}
 
 	private parseDocument(document: TextDocument): DocumentMetadata {
-		//this.logger.debug(`Parsing document ${document.uri}...`);
-		//console.log(`Parsing document ${document.uri}...`);
 		const text = document.getText();
 		const lines = text.split(/\n|\r\n/);
 		let inFrontMatter = false;
 		let frontMatterStart: number | undefined;
 		let frontMatterEnd: number | undefined;
+		const roles: DocumentMetadata['roles'] = [];
+		const templateVariables: DocumentMetadata['templateVariables'] = [];
+		const parseErrors: string[] = [];
+
+		const roleRegex = /^\s*#?\s*(system|user|assistant|developer|tool|function)\s*(\[.*?\])?\s*:\s*$/i;
+		const templateVarRegex = /\{\{(\s*\w+(?:\.\w+)*\s*)\}\}/g;
+
+		let currentRoleStart: number | undefined;
+		let currentRoleName: string | undefined;
+
 		for (let i = 0; i < lines.length; i++) {
-			if (/^---$/.test(lines[i])) {
+			const line = lines[i];
+
+			// Detect frontmatter boundaries
+			if (/^---\s*$/.test(line)) {
 				if (inFrontMatter) {
 					frontMatterEnd = i;
 					inFrontMatter = false;
-				} else {
+				} else if (frontMatterStart === undefined) {
 					frontMatterStart = i;
 					inFrontMatter = true;
 				}
+				continue;
+			}
+
+			// Scan body (after frontmatter) for roles and template variables
+			if (frontMatterEnd !== undefined && i > frontMatterEnd) {
+				const roleMatch = line.match(roleRegex);
+				if (roleMatch) {
+					if (currentRoleName !== undefined && currentRoleStart !== undefined) {
+						roles.push({ name: currentRoleName, line: currentRoleStart, endLine: i - 1 });
+					}
+					currentRoleName = roleMatch[1].toLowerCase();
+					currentRoleStart = i;
+				}
+
+				let varMatch;
+				while ((varMatch = templateVarRegex.exec(line)) !== null) {
+					templateVariables.push({
+						name: varMatch[1].trim(),
+						line: i,
+						startChar: varMatch.index,
+						endChar: varMatch.index + varMatch[0].length,
+					});
+				}
 			}
 		}
-		//const metadata = { frontMatterStart, frontMatterEnd };
-		//console.log(`Parsed document metadata: ${JSON.stringify(metadata)}`);
-		return { frontMatterStart, frontMatterEnd, variables: [] };
+
+		// Close last role section
+		if (currentRoleName !== undefined && currentRoleStart !== undefined) {
+			roles.push({ name: currentRoleName, line: currentRoleStart, endLine: lines.length - 1 });
+		}
+
+		// Parse frontmatter YAML content
+		let frontMatterContent: Record<string, unknown> | undefined;
+		if (frontMatterStart !== undefined && frontMatterEnd !== undefined) {
+			const yamlContent = lines.slice(frontMatterStart + 1, frontMatterEnd).join('\n');
+			try {
+				const parsed = this.parseYaml(yamlContent);
+				if (parsed && typeof parsed === 'object') {
+					frontMatterContent = parsed as Record<string, unknown>;
+				}
+			} catch (e) {
+				parseErrors.push(`Failed to parse frontmatter YAML: ${e}`);
+			}
+		}
+
+		return { frontMatterStart, frontMatterEnd, frontMatterContent, roles, templateVariables, parseErrors };
+	}
+
+	private parseYaml(content: string): unknown {
+		try {
+			const result: Record<string, unknown> = {};
+			const lines = content.split('\n');
+			let currentKey: string | undefined;
+			for (const line of lines) {
+				const keyMatch = line.match(/^(\w[\w-]*)\s*:/);
+				if (keyMatch) {
+					currentKey = keyMatch[1];
+					const valueStr = line.slice(line.indexOf(':') + 1).trim();
+					if (valueStr) {
+						result[currentKey] = valueStr;
+					} else {
+						result[currentKey] = {};
+					}
+				}
+			}
+			return Object.keys(result).length > 0 ? result : undefined;
+		} catch {
+			return undefined;
+		}
 	}
 
 	public set(document: TextDocument) {
-		this.logger.debug(`Setting metadata for document ${document.uri}...`);
 		const metadata = this.parseDocument(document);
-
 		this.store.set(document.uri, metadata);
 	}
 
