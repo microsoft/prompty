@@ -1,6 +1,9 @@
 scopeName: source.prompty
 patterns:
   - include: "#frontmatter"
+  - include: "#template-variable"
+  - include: "#env-variable"
+  - include: "#inline-image"
   - include: "#thread"
   - include: "#prompt-tools"
   - include: "#assistant-tool-call"
@@ -128,4 +131,46 @@ repository:
       - include: "#template-variable"
       - include: "#inline-image"
       - include: "#env-variable"
-      - include: text.html.markdown
+      - include: "#markdown-heading"
+      - include: "#markdown-bold"
+      - include: "#markdown-italic"
+      - include: "#markdown-code"
+      - include: "#markdown-link"
+
+  # ── Inline markdown patterns (replaces full text.html.markdown to avoid greedy consumption) ──
+  markdown-heading:
+    match: ^(#{1,6})\s+(.+)$
+    captures:
+      "1": { name: punctuation.definition.heading.markdown }
+      "2": { name: markup.heading.markdown }
+
+  markdown-bold:
+    match: (\*\*|__)(.+?)(\*\*|__)
+    captures:
+      "1": { name: punctuation.definition.bold.markdown }
+      "2": { name: markup.bold.markdown }
+      "3": { name: punctuation.definition.bold.markdown }
+
+  markdown-italic:
+    match: (?<!\*|_)(\*|_)(?!\*|_)(.+?)(?<!\*|_)(\*|_)(?!\*|_)
+    captures:
+      "1": { name: punctuation.definition.italic.markdown }
+      "2": { name: markup.italic.markdown }
+      "3": { name: punctuation.definition.italic.markdown }
+
+  markdown-code:
+    match: (`)([^`]+)(`)
+    captures:
+      "1": { name: punctuation.definition.raw.markdown }
+      "2": { name: markup.inline.raw.string.markdown }
+      "3": { name: punctuation.definition.raw.markdown }
+
+  markdown-link:
+    match: (\[)([^\]]*)(\])(\()([^\)]*)(\))
+    captures:
+      "1": { name: punctuation.definition.link.begin.markdown }
+      "2": { name: string.other.link.title.markdown }
+      "3": { name: punctuation.definition.link.end.markdown }
+      "4": { name: punctuation.definition.metadata.begin.markdown }
+      "5": { name: markup.underline.link.markdown }
+      "6": { name: punctuation.definition.metadata.end.markdown }
