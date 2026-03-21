@@ -471,9 +471,20 @@ connection.onHover(async (textDocumentPosition) => {
 		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
 			return null;
 		}
-		const { line } = textDocumentPosition.position;
+		const { line, character } = textDocumentPosition.position;
 		if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {
 			return null;
+		}
+
+		// Check for custom hover on known key: value pairs
+		const lineText = document.getText({
+			start: { line, character: 0 },
+			end: { line: line + 1, character: 0 },
+		}).trimEnd();
+
+		const customHover = getValueHover(lineText, character, line);
+		if (customHover) {
+			return customHover;
 		}
 
 		const virtualDocument = createFrontMatterVirtualDocument(document, metadata);
@@ -483,7 +494,6 @@ connection.onHover(async (textDocumentPosition) => {
 		const virtualPosition = virtualDocument.toVirtualPosition(textDocumentPosition.position);
 		const hover = await yamlLanguageServer.doHover(virtualDocument, virtualPosition);
 		if (hover && hover.contents) {
-			// Map hover range back to real positions
 			if (hover.range) {
 				hover.range = {
 					start: virtualDocument.toRealPosition(hover.range.start),
@@ -498,6 +508,90 @@ connection.onHover(async (textDocumentPosition) => {
 		return null;
 	}
 });
+
+/**
+ * Provides hover descriptions for shorthand and enum values in the frontmatter.
+ * Matches `key: value` patterns and returns a description if the cursor is over the value.
+ */
+function getValueHover(lineText: string, character: number, line: number) {
+	const kvMatch = lineText.match(/^(\s*)([\w-]+)\s*:\s*(.+?)\s*$/);
+	if (!kvMatch) {
+		return null;
+	}
+	const [, indent, key, value] = kvMatch;
+	const valueStart = lineText.indexOf(value, indent.length + key.length + 1);
+	const valueEnd = valueStart + value.length;
+
+	if (character < valueStart || character > valueEnd) {
+		return null;
+	}
+
+	const desc = VALUE_DESCRIPTIONS[key]?.[value];
+	if (!desc) {
+		return null;
+	}
+
+	return {
+		contents: { kind: 'markdown' as const, value: `**\`${value}\`** — ${desc}` },
+		range: {
+			start: { line, character: valueStart },
+			end: { line, character: valueEnd },
+		},
+	};
+}
+
+/** Descriptions for known values, keyed by property name then value. */
+const VALUE_DESCRIPTIONS: Record<string, Record<string, string>> = {
+	kind: {
+		// Agent kinds
+		prompt: 'A prompt-based agent that uses template rendering and model invocation.',
+		hosted: 'A hosted agent running as an external service.',
+		workflow: 'A workflow agent that orchestrates multiple steps or sub-agents.',
+		// Connection kinds
+		key: 'Authenticate with an explicit API key and endpoint. Use `${env:VAR}` to reference environment variables.',
+		reference: 'Look up a pre-registered connection by name from the connection registry.',
+		remote: 'Connect to a remote AI service endpoint with delegated authentication.',
+		anonymous: 'Use default or environment-provided credentials without explicit keys.',
+		// Tool kinds
+		function: 'A function tool whose parameters are defined inline. Converted to the provider\'s function-calling wire format.',
+		openapi: 'A tool backed by an OpenAPI specification. Operations are resolved from the spec.',
+		mcp: 'A tool provided by a Model Context Protocol (MCP) server.',
+		custom: 'A custom tool with arbitrary configuration for provider-specific or user-defined types.',
+		web_search: 'A web search tool for retrieving information from the internet.',
+		file_search: 'A file search / retrieval tool for searching through uploaded files.',
+		code_interpreter: 'A code interpreter tool that can execute code in a sandboxed environment.',
+		// Property kinds
+		string: 'Text value (e.g. a question, name, or free-form input).',
+		integer: 'Whole number value (e.g. count, index).',
+		float: 'Decimal number value (e.g. temperature, score).',
+		boolean: 'True/false value (e.g. a flag or toggle).',
+		array: 'A list of values.',
+		object: 'A structured key-value object.',
+	},
+	format: {
+		jinja2: 'Jinja2 template engine — Python-style syntax with filters and control flow.',
+		mustache: 'Mustache — logic-less templates with `{{variable}}` syntax.',
+		handlebars: 'Handlebars — extends Mustache with helpers and block expressions.',
+		nunjucks: 'Nunjucks — JavaScript port of Jinja2 with full feature parity.',
+	},
+	parser: {
+		prompty: 'Prompty parser — splits template output into role-based messages using role markers (`system:`, `user:`, etc.).',
+		plain: 'Plain parser — passes the rendered template through as a single string with no role splitting.',
+	},
+	provider: {
+		openai: 'OpenAI API (`api.openai.com`).',
+		azure: 'Azure OpenAI Service (`*.openai.azure.com`).',
+		anthropic: 'Anthropic Claude API (`api.anthropic.com`).',
+	},
+	apiType: {
+		chat: 'Chat completions API — send messages, get assistant responses.',
+		responses: 'Responses API — newer stateful API with built-in tool handling.',
+	},
+	authenticationMode: {
+		system: 'The system (application) authenticates on behalf of the user.',
+		user: 'The user authenticates directly (e.g. interactive OAuth flow).',
+	},
+};
 
 connection.onDocumentOnTypeFormatting((_params) => {
 	return null;
