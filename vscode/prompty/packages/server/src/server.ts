@@ -11,6 +11,9 @@ import {
 	InitializeResult,
 	Diagnostic,
 	DiagnosticSeverity,
+	CompletionItem,
+	CompletionItemKind,
+	InsertTextFormat,
 } from 'vscode-languageserver/node';
 
 import { URI } from "vscode-uri";
@@ -272,11 +275,24 @@ connection.onCompletion(async (textDocumentPosition) => {
 		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
 			return null;
 		}
-		const { line } = textDocumentPosition.position;
+		const { line, character } = textDocumentPosition.position;
 		if (line <= metadata.frontMatterStart) {
 			return null;
 		} else if (line < metadata.frontMatterEnd) {
 			const completion = await yamlLanguageServer.doComplete(document, textDocumentPosition.position, false);
+
+			// Add snippet completions at root level (no indentation)
+			const lineText = document.getText({
+				start: { line, character: 0 },
+				end: { line, character },
+			});
+			if (/^\s{0,1}\S{0,20}$/.test(lineText)) {
+				const snippets = getPromptySnippets();
+				if (completion && completion.items) {
+					completion.items.push(...snippets);
+				}
+			}
+
 			return completion;
 		}
 		return null;
@@ -285,6 +301,107 @@ connection.onCompletion(async (textDocumentPosition) => {
 		return null;
 	}
 });
+
+function getPromptySnippets(): CompletionItem[] {
+	return [
+		{
+			label: 'model (full)',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'model:',
+				'  id: ${1:gpt-4o}',
+				'  provider: ${2|openai,azure,azure_serverless|}',
+				'  apiType: ${3|chat,completion,embedding|}',
+				'  connection:',
+				'    kind: ${4|key,reference,anonymous|}',
+				'    endpoint: ${5:https://api.openai.com/v1}',
+				'    apiKey: \\${env:${6:OPENAI_API_KEY}}',
+				'  options:',
+				'    temperature: ${7:0.7}',
+				'    maxOutputTokens: ${8:1000}',
+			].join('\n'),
+			detail: 'Full model configuration with connection and options',
+			documentation: 'Inserts a complete model block with provider, connection, and inference options.',
+			sortText: '0_model_full',
+		},
+		{
+			label: 'model (shorthand)',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: 'model: ${1:gpt-4o}',
+			detail: 'Shorthand: model: <model-id>',
+			documentation: 'Shorthand model definition. Equivalent to model: { id: "<model-id>" }.',
+			sortText: '0_model_short',
+		},
+		{
+			label: 'inputSchema',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'inputSchema:',
+				'  properties:',
+				'    - name: ${1:input_name}',
+				'      kind: ${2|string,number,boolean,thread,image,object,array|}',
+				'      description: ${3:Description}',
+				'      default: ${4:default_value}',
+			].join('\n'),
+			detail: 'Input parameter schema',
+			documentation: 'Defines typed input parameters with defaults for template rendering.',
+			sortText: '0_inputSchema',
+		},
+		{
+			label: 'template',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'template:',
+				'  format:',
+				'    kind: ${1|jinja2,mustache,nunjucks|}',
+				'  parser:',
+				'    kind: ${2|prompty|}',
+			].join('\n'),
+			detail: 'Template engine configuration',
+			documentation: 'Configures the template rendering engine and body parser.',
+			sortText: '0_template',
+		},
+		{
+			label: 'tools (function)',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'tools:',
+				'  - name: ${1:function_name}',
+				'    kind: function',
+				'    description: ${2:What the function does}',
+				'    parameters:',
+				'      properties:',
+				'        - name: ${3:param_name}',
+				'          kind: ${4|string,number,boolean,object,array|}',
+				'          description: ${5:Parameter description}',
+			].join('\n'),
+			detail: 'Function tool definition',
+			documentation: 'Defines a function tool the model can call during execution.',
+			sortText: '0_tools_function',
+		},
+		{
+			label: 'metadata',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'metadata:',
+				'  authors:',
+				'    - ${1:author}',
+				'  tags:',
+				'    - ${2:tag}',
+				'  version: ${3:1.0}',
+			].join('\n'),
+			detail: 'Prompt metadata (authors, tags, version)',
+			documentation: 'Free-form metadata about the prompt.',
+			sortText: '0_metadata',
+		},
+	];
+}
 
 connection.onCompletionResolve((item) => {
 	return item;
