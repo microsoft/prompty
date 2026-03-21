@@ -301,17 +301,38 @@ connection.onCompletion(async (textDocumentPosition) => {
 			const templateContext = lineText.match(/\{\{\s*(\w*)$/);
 			if (templateContext) {
 				const partialName = templateContext[1];
+
+				// Check what's after the cursor to avoid doubling }}
+				const restOfLine = document.getText({
+					start: { line, character },
+					end: { line: line + 1, character: 0 },
+				});
+				const closingMatch = restOfLine.match(/^(\w*)\s*(\}\})?/);
+				const trailingWord = closingMatch?.[1] ?? '';
+				const hasClosingBraces = !!closingMatch?.[2];
+
+				// Calculate replacement range: from start of partial name to end of existing text + braces
+				const replaceStart = character - partialName.length;
+				const replaceEnd = character + trailingWord.length + (hasClosingBraces ? 2 : 0);
+
 				const inputNames = extractInputNames(document, metadata);
 				const items: CompletionItem[] = inputNames
 					.filter(({ name }) => name.startsWith(partialName))
 					.map(({ name, description, kind: propKind }) => {
 						const detail = propKind ? `(${propKind})` : '(input)';
+						const suffix = hasClosingBraces ? '' : '}}';
 						return {
 							label: name,
 							kind: CompletionItemKind.Variable,
 							detail: `${detail} from inputSchema`,
 							documentation: description || `Input variable '${name}' defined in frontmatter inputSchema.`,
-							insertText: name + '}}',
+							textEdit: {
+								range: {
+									start: { line, character: replaceStart },
+									end: { line, character: replaceEnd },
+								},
+								newText: name + suffix,
+							},
 							sortText: `0_${name}`,
 						};
 					});

@@ -61,6 +61,11 @@
 				}
 			}
 		},
+		"configurationDefaults": {
+			"[prompty]": {
+				"editor.semanticHighlighting.enabled": true
+			}
+		},
 		"languages": [
 			{
 				"id": "prompty",
