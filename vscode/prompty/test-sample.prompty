@@ -17,9 +17,14 @@ inputSchema:
       kind: string
       description: The question to answer
       required: true
+    - name: context
+      kind: string
+      description: Optional context
+      default: ""
 ---
 system:
 You are a helpful assistant that answers questions concisely.
+Use the following context if provided: {{context}}
 
-user:
+user[name="Alice"]:
 {{question}}

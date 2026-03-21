@@ -201,7 +201,7 @@ connection.onInitialize((params: InitializeParams) => {
 				return { data: [] };
 			}
 			const metadata = documentMetadata.get(document);
-			const tokens = tokenizeDocument(document.getText(), metadata.frontMatterEnd);
+			const tokens = tokenizeDocument(document.getText(), metadata.frontMatterStart, metadata.frontMatterEnd);
 
 			// Build semantic tokens data array (relative encoding)
 			const data: number[] = [];

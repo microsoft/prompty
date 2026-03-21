@@ -1,49 +1,131 @@
 scopeName: source.prompty
 patterns:
-  - include: "#prelude"
+  - include: "#frontmatter"
   - include: "#thread"
   - include: "#prompt-tools"
   - include: "#assistant-tool-call"
   - include: "#prompt"
 
 repository:
-  prelude:
-    begin: ^---$
-    end: ^---$
-    contentName: frontmatter
+  # ── Frontmatter (YAML between --- delimiters) ──────────────────────────
+  frontmatter:
+    begin: ^(---)$
+    end: ^(---)$
+    beginCaptures:
+      "1": { name: punctuation.definition.frontmatter.begin.prompty }
+    endCaptures:
+      "1": { name: punctuation.definition.frontmatter.end.prompty }
+    contentName: meta.embedded.block.yaml
     patterns:
+      - include: "#env-variable"
       - include: source.yaml
 
+  # ── Environment variable references: ${env:VAR_NAME} ───────────────────
+  env-variable:
+    match: (\$\{)(env)(:)(\w+)(?:(:)([^}]*))?(\})
+    captures:
+      "1": { name: punctuation.definition.variable.begin.prompty }
+      "2": { name: keyword.other.env.prompty }
+      "3": { name: punctuation.separator.prompty }
+      "4": { name: variable.other.environment.prompty }
+      "5": { name: punctuation.separator.prompty }
+      "6": { name: string.unquoted.default-value.prompty }
+      "7": { name: punctuation.definition.variable.end.prompty }
+
+  # ── Template variables: {{variable}} or {{obj.property}} ───────────────
+  template-variable:
+    match: (\{\{)\s*(\w+(?:\.\w+)*)\s*(\}\})
+    captures:
+      "1": { name: punctuation.definition.template.begin.prompty }
+      "2": { name: variable.other.template.prompty }
+      "3": { name: punctuation.definition.template.end.prompty }
+
+  # ── Inline images: ![alt](path) ────────────────────────────────────────
+  inline-image:
+    match: (!\[)([^\]]*)(\])(\()([^\s)]+)(?:\s+[^)]*)?\)
+    captures:
+      "1": { name: punctuation.definition.image.begin.prompty }
+      "2": { name: string.other.image-alt.prompty }
+      "3": { name: punctuation.definition.image.middle.prompty }
+      "4": { name: punctuation.definition.link.begin.prompty }
+      "5": { name: markup.underline.link.image.prompty }
+
+  # ── Role attributes: [key="value", key2="value2"] ──────────────────────
+  role-attributes:
+    begin: (\[)
+    end: (\])
+    beginCaptures:
+      "1": { name: punctuation.definition.attributes.begin.prompty }
+    endCaptures:
+      "1": { name: punctuation.definition.attributes.end.prompty }
+    patterns:
+      - match: (\w+)\s*(=)\s*(\"?)([^\"]*)(\"?)
+        captures:
+          "1": { name: entity.other.attribute-name.prompty }
+          "2": { name: punctuation.separator.key-value.prompty }
+          "3": { name: punctuation.definition.string.begin.prompty }
+          "4": { name: string.quoted.double.prompty }
+          "5": { name: punctuation.definition.string.end.prompty }
+      - match: ","
+        name: punctuation.separator.comma.prompty
+
+  # ── Thread sections: ![thread] ... ![thread] ───────────────────────────
   thread:
-    begin: \!\[\s*thread\s*\]
-    end: \!\[\s*thread\s*\]
-    contentName: thread
+    begin: (!\[)\s*(thread)\s*(\])
+    end: (!\[)\s*(thread)\s*(\])
     beginCaptures:
-      "0": { name: entity.name.type }
+      "1": { name: punctuation.definition.thread.begin.prompty }
+      "2": { name: keyword.control.thread.prompty }
+      "3": { name: punctuation.definition.thread.end.prompty }
+    endCaptures:
+      "1": { name: punctuation.definition.thread.begin.prompty }
+      "2": { name: keyword.control.thread.prompty }
+      "3": { name: punctuation.definition.thread.end.prompty }
+    contentName: meta.thread.prompty
 
+  # ── Assistant tool call sections ────────────────────────────────────────
   assistant-tool-call:
-    begin: ^\s*#?\s*(assistant)\s*(\[(\s*type\s*=\s*\"tool_call\")\])\s*:\s*$
-    end: ^(?=\s*#?\s*(assistant|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    begin: ^\s*(#?\s*)(assistant)\s*(\[\s*type\s*=\s*\"tool_call\"\s*\])\s*(:)\s*$
+    end: ^(?=\s*#?\s*(assistant|system|user|developer|tool)(\[.*?\])?\s*:\s*$)
     beginCaptures:
-      "0": { name: entity.name.type }
-    contentName: tool-call
+      "2": { name: entity.name.tag.role.prompty }
+      "3":
+        patterns:
+          - include: "#role-attributes"
+      "4": { name: punctuation.separator.prompty }
+    contentName: meta.section.tool-call.prompty
     patterns:
+      - include: "#env-variable"
       - include: source.yaml
 
+  # ── Tools sections ─────────────────────────────────────────────────────
   prompt-tools:
-    begin: ^\s*#?\s*(tools)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$
-    end: ^(?=\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    begin: ^\s*(#?\s*)(tools)(\[.*?\])?\s*(:)\s*$
+    end: ^(?=\s*#?\s*(assistant|function|system|user|developer|tool)(\[.*?\])?\s*:\s*$)
     beginCaptures:
-      "0": { name: entity.name.type }
-    contentName: tools
+      "2": { name: entity.name.tag.role.prompty }
+      "3":
+        patterns:
+          - include: "#role-attributes"
+      "4": { name: punctuation.separator.prompty }
+    contentName: meta.section.tools.prompty
     patterns:
+      - include: "#env-variable"
       - include: source.yaml
-      
+
+  # ── Role-delimited message sections (system, user, assistant, etc.) ────
   prompt:
-    begin: ^\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$
-    end: ^(?=\s*#?\s*(assistant|function|system|user|tool)(\[((\w+)*\s*=\s*\"?([^\"]*)\"?\s*(,?)\s*)+\])?\s*:\s*$)
+    begin: ^\s*(#?\s*)(system|user|assistant|developer|tool|function)(\[.*?\])?\s*(:)\s*$
+    end: ^(?=\s*#?\s*(system|user|assistant|developer|tool|function)(\[.*?\])?\s*:\s*$)
     beginCaptures:
-      "0": { name: entity.name.type }
-    contentName: content
+      "2": { name: entity.name.tag.role.prompty }
+      "3":
+        patterns:
+          - include: "#role-attributes"
+      "4": { name: punctuation.separator.prompty }
+    contentName: meta.section.message.prompty
     patterns:
+      - include: "#template-variable"
+      - include: "#inline-image"
+      - include: "#env-variable"
       - include: text.html.markdown
