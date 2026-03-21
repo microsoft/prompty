@@ -24,10 +24,13 @@ properties:
     type: string
     description: Agent kind (defaults to 'prompt' for .prompty files).
     default: prompt
-    enum:
-      - prompt
-      - hosted
-      - workflow
+    oneOf:
+      - const: prompt
+        description: A prompt-based agent that uses template rendering and model invocation.
+      - const: hosted
+        description: A hosted agent running as an external service.
+      - const: workflow
+        description: A workflow agent that orchestrates multiple steps or sub-agents.
 
   name:
     type: string
@@ -107,19 +110,23 @@ definitions:
       provider:
         type: string
         description: >-
-          The model provider (e.g. 'openai', 'azure', 'anthropic').
-        enum:
-          - openai
-          - azure
-          - anthropic
+          The model provider.
+        oneOf:
+          - const: openai
+            description: OpenAI API (api.openai.com)
+          - const: azure
+            description: Azure OpenAI Service (*.openai.azure.com)
+          - const: anthropic
+            description: Anthropic Claude API (api.anthropic.com)
       apiType:
         type: string
         description: >-
-          The API type to use for the model (e.g. 'chat', 'responses').
-          Common values are 'chat' and 'responses', but any string is accepted.
-        enum:
-          - chat
-          - responses
+          The API surface to use when calling the model.
+        oneOf:
+          - const: chat
+            description: Chat completions API — send messages, get assistant responses.
+          - const: responses
+            description: Responses API — newer stateful API with built-in tool handling.
       connection:
         $ref: "#/definitions/connection"
         description: Connection details for authenticating with the model endpoint.
@@ -137,19 +144,27 @@ definitions:
     properties:
       kind:
         type: string
-        description: Authentication kind.
-        enum:
-          - key
-          - reference
-          - remote
-          - anonymous
+        description: >-
+          Authentication kind for the connection.
+        oneOf:
+          - const: key
+            description: Authenticate with an explicit API key and endpoint. Use ${env:VAR} to reference environment variables.
+          - const: reference
+            description: Look up a pre-registered connection by name from the connection registry.
+          - const: remote
+            description: Connect to a remote AI service endpoint with delegated authentication.
+          - const: anonymous
+            description: Use default or environment-provided credentials without explicit keys.
       authenticationMode:
         type: string
-        description: Authority level for the connection.
+        description: >-
+          Authority level for the connection — who is making the request.
         default: system
-        enum:
-          - user
-          - system
+        oneOf:
+          - const: system
+            description: The system (application) authenticates on behalf of the user.
+          - const: user
+            description: The user authenticates directly (e.g. interactive OAuth flow).
       usageDescription:
         type: string
         description: Context on how this connection will be used.
@@ -252,13 +267,19 @@ definitions:
         type: string
         description: >-
           The data type of the property.
-        enum:
-          - string
-          - integer
-          - float
-          - boolean
-          - array
-          - object
+        oneOf:
+          - const: string
+            description: Text value (e.g. a question, name, or free-form input).
+          - const: integer
+            description: Whole number value (e.g. count, index).
+          - const: float
+            description: Decimal number value (e.g. temperature, score).
+          - const: boolean
+            description: True/false value (e.g. a flag or toggle).
+          - const: array
+            description: A list of values.
+          - const: object
+            description: A structured key-value object.
       description:
         type: string
         description: Human-readable description of the property.
@@ -292,11 +313,15 @@ definitions:
           expands to {kind: "jinja2"}.
         anyOf:
           - type: string
-            enum:
-              - jinja2
-              - mustache
-              - handlebars
-              - nunjucks
+            oneOf:
+              - const: jinja2
+                description: Jinja2 template engine — Python-style syntax with filters and control flow.
+              - const: mustache
+                description: Mustache — logic-less templates with {{variable}} syntax.
+              - const: handlebars
+                description: Handlebars — extends Mustache with helpers and block expressions.
+              - const: nunjucks
+                description: Nunjucks — JavaScript port of Jinja2 with full feature parity.
           - $ref: "#/definitions/format"
       parser:
         description: >-
@@ -304,9 +329,11 @@ definitions:
           format. String shorthand (e.g. "prompty") expands to {kind: "prompty"}.
         anyOf:
           - type: string
-            enum:
-              - prompty
-              - plain
+            oneOf:
+              - const: prompty
+                description: Prompty parser — splits template output into role-based messages using role markers (system:, user:, etc.).
+              - const: plain
+                description: Plain parser — passes the rendered template through as a single string with no role splitting.
           - $ref: "#/definitions/parser"
 
   format:
@@ -318,12 +345,16 @@ definitions:
       kind:
         type: string
         default: "*"
-        description: Template rendering engine (e.g. 'jinja2', 'mustache').
-        enum:
-          - jinja2
-          - mustache
-          - handlebars
-          - nunjucks
+        description: Template rendering engine.
+        oneOf:
+          - const: jinja2
+            description: Jinja2 template engine — Python-style syntax with filters and control flow.
+          - const: mustache
+            description: Mustache — logic-less templates with {{variable}} syntax.
+          - const: handlebars
+            description: Handlebars — extends Mustache with helpers and block expressions.
+          - const: nunjucks
+            description: Nunjucks — JavaScript port of Jinja2 with full feature parity.
       strict:
         type: boolean
         default: false
@@ -342,10 +373,12 @@ definitions:
       kind:
         type: string
         default: "*"
-        description: Parser kind (e.g. 'prompty').
-        enum:
-          - prompty
-          - plain
+        description: Parser used to process the rendered template.
+        oneOf:
+          - const: prompty
+            description: Prompty parser — splits template output into role-based messages using role markers (system:, user:, etc.).
+          - const: plain
+            description: Plain parser — passes the rendered template through as a single string with no role splitting.
       options:
         type: object
         additionalProperties: true
@@ -369,14 +402,21 @@ definitions:
         type: string
         description: >-
           Tool kind identifier.
-        enum:
-          - function
-          - openapi
-          - mcp
-          - custom
-          - web_search
-          - file_search
-          - code_interpreter
+        oneOf:
+          - const: function
+            description: A function tool whose parameters are defined inline. Converted to the provider's function-calling wire format.
+          - const: openapi
+            description: A tool backed by an OpenAPI specification. Operations are resolved from the spec.
+          - const: mcp
+            description: A tool provided by a Model Context Protocol (MCP) server.
+          - const: custom
+            description: A custom tool with arbitrary configuration for provider-specific or user-defined types.
+          - const: web_search
+            description: A web search tool for retrieving information from the internet.
+          - const: file_search
+            description: A file search / retrieval tool for searching through uploaded files.
+          - const: code_interpreter
+            description: A code interpreter tool that can execute code in a sandboxed environment.
       description:
         type: string
         description: Short description of the tool.
