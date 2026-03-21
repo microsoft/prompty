@@ -174,9 +174,6 @@ definitions:
       properties are passed through to the provider as-is.
     additionalProperties: true
     properties:
-      kind:
-        type: string
-        description: Discriminator for model options.
       temperature:
         type: number
         description: Sampling temperature. 0 means deterministic.
