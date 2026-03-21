@@ -53,7 +53,26 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	);
 
 	// ── Existing features ────────────────────────────────────────
-	const promptyController = new PromptyController(context);
+	// ── Status bar connection selector ───────────────────────────
+	const statusBarItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	statusBarItem.command = "prompty.setDefaultConnection";
+	statusBarItem.tooltip = "Prompty: Active Connection";
+
+	async function updateStatusBar() {
+		const profiles = await connectionStore.getProfiles();
+		const defaultConn = profiles.find(p => p.isDefault) ?? profiles[0];
+		if (defaultConn) {
+			statusBarItem.text = `$(plug) ${defaultConn.name}`;
+			statusBarItem.show();
+		} else {
+			statusBarItem.text = "$(plug) No Connection";
+			statusBarItem.show();
+		}
+	}
+	updateStatusBar();
+	connectionStore.onDidChange(() => updateStatusBar());
+
+	const promptyController = new PromptyController(context, connectionStore, connectionRegistry);
 	const traceFileProvider = new TraceFileProvider();
 	TraceFileProvider.createTreeView(context, traceFileProvider, "view-traces", "prompty.refreshTraces");
 
@@ -63,6 +82,7 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 		connectionStore,
 		connectionsTreeProvider,
 		connectionsView,
+		statusBarItem,
 		...connectionCommandDisposables,
 		// Existing
 		promptyController,

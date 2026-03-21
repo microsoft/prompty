@@ -1,12 +1,18 @@
 import { ExtensionContext, Uri, Disposable, window, workspace } from 'vscode';
-import { execute } from 'prompty';
+import { execute, registerConnection, clearConnections } from 'prompty';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ConnectionStore } from '../connections/store';
+import { ConnectionProviderRegistry } from '../connections/registry';
 
 export class PromptyController implements Disposable {
 	private outputChannel = window.createOutputChannel('Prompty');
 
-	constructor(private context: ExtensionContext) {}
+	constructor(
+		private context: ExtensionContext,
+		private connectionStore?: ConnectionStore,
+		private connectionRegistry?: ConnectionProviderRegistry
+	) {}
 
 	public async run(uri: Uri) {
 		const filePath = uri.fsPath;
@@ -19,6 +25,7 @@ export class PromptyController implements Disposable {
 
 		try {
 			this.loadEnvFile(filePath);
+			await this.bridgeConnections();
 
 			const startTime = Date.now();
 			const result = await execute(filePath);
@@ -35,6 +42,85 @@ export class PromptyController implements Disposable {
 			const message = error instanceof Error ? error.message : String(error);
 			this.outputChannel.appendLine(`\n✗ Error: ${message}`);
 			window.showErrorMessage(`Prompty execution failed: ${message}`);
+		}
+	}
+
+	/**
+	 * Bridge sidebar connections into the prompty runtime registry.
+	 * This makes sidebar connections available as `kind: reference`
+	 * connections in prompty files.
+	 */
+	private async bridgeConnections(): Promise<void> {
+		if (!this.connectionStore || !this.connectionRegistry) {
+			return;
+		}
+
+		try {
+			clearConnections();
+			const profiles = await this.connectionStore.getProfiles();
+
+			for (const profile of profiles) {
+				try {
+					const secret = await this.connectionStore.getSecret(profile.id);
+					const client = await this.connectionRegistry.createClient(profile, secret);
+
+					// Register by connection name (for kind: reference matching)
+					registerConnection(profile.name, client);
+
+					// Also register by ID for programmatic access
+					registerConnection(profile.id, client);
+
+					// If this is a provider default, also register as the provider name
+					if (profile.isDefault) {
+						registerConnection(profile.providerType, client);
+					}
+
+					this.outputChannel.appendLine(`  ✓ Connection: ${profile.name}`);
+				} catch (err: unknown) {
+					const msg = err instanceof Error ? err.message : String(err);
+					this.outputChannel.appendLine(`  ⚠ Connection "${profile.name}": ${msg}`);
+				}
+			}
+
+			// Also inject API keys into env vars for ${env:VAR} resolution
+			await this.bridgeEnvVars(profiles);
+		} catch {
+			// Non-fatal — execution can still work with .env files
+		}
+	}
+
+	/**
+	 * For connections with API keys, set common env vars so ${env:VAR}
+	 * references in prompty files resolve without a .env file.
+	 */
+	private async bridgeEnvVars(profiles: import('../connections/types').ConnectionProfile[]): Promise<void> {
+		for (const profile of profiles) {
+			if (profile.authType !== 'api-key') continue;
+
+			const secret = await this.connectionStore!.getSecret(profile.id);
+			if (!secret) continue;
+
+			// Set provider-specific env vars if not already set
+			switch (profile.providerType) {
+				case 'openai':
+					if (!process.env.OPENAI_API_KEY) {
+						process.env.OPENAI_API_KEY = secret;
+					}
+					break;
+				case 'azure-openai':
+					if (!process.env.AZURE_OPENAI_API_KEY) {
+						process.env.AZURE_OPENAI_API_KEY = secret;
+					}
+					if ('endpoint' in profile && !process.env.AZURE_OPENAI_ENDPOINT) {
+						process.env.AZURE_OPENAI_ENDPOINT = (profile as any).endpoint;
+					}
+					break;
+				case 'anthropic':
+					if (!process.env.ANTHROPIC_API_KEY) {
+						process.env.ANTHROPIC_API_KEY = secret;
+					}
+					break;
+			}
 		}
 	}
 
@@ -75,7 +161,6 @@ export class PromptyController implements Disposable {
 				}
 				const key = trimmed.slice(0, eqIndex).trim();
 				let value = trimmed.slice(eqIndex + 1).trim();
-				// Strip surrounding quotes
 				if ((value.startsWith('"') && value.endsWith('"')) ||
 					(value.startsWith("'") && value.endsWith("'"))) {
 					value = value.slice(1, -1);
