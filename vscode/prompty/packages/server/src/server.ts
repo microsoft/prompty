@@ -198,10 +198,13 @@ connection.onInitialize((params: InitializeParams) => {
 		try {
 			const document = documents.get(requestParams.textDocument.uri);
 			if (!document) {
+				logger.info("[SemanticTokens] No document found");
 				return { data: [] };
 			}
 			const metadata = documentMetadata.get(document);
+			logger.info(`[SemanticTokens] Processing ${requestParams.textDocument.uri}, frontMatter: ${metadata.frontMatterStart}-${metadata.frontMatterEnd}`);
 			const tokens = tokenizeDocument(document.getText(), metadata.frontMatterStart, metadata.frontMatterEnd);
+			logger.info(`[SemanticTokens] Generated ${tokens.length} tokens`);
 
 			// Build semantic tokens data array (relative encoding)
 			const data: number[] = [];
@@ -218,6 +221,7 @@ connection.onInitialize((params: InitializeParams) => {
 				prevChar = token.startChar;
 			}
 
+			logger.info(`[SemanticTokens] Returning ${data.length / 5} encoded tokens`);
 			return { data };
 		} catch (error) {
 			logger.error(`Error computing semantic tokens: ${error}`);

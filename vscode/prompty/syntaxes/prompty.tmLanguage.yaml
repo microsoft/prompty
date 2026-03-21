@@ -37,11 +37,12 @@ repository:
 
   # ── Template variables: {{variable}} or {{obj.property}} ───────────────
   template-variable:
+    name: meta.template.expression.prompty
     match: (\{\{)\s*(\w+(?:\.\w+)*)\s*(\}\})
     captures:
-      "1": { name: punctuation.definition.template.begin.prompty }
-      "2": { name: variable.other.template.prompty }
-      "3": { name: punctuation.definition.template.end.prompty }
+      "1": { name: punctuation.section.interpolation.begin.prompty }
+      "2": { name: constant.other.placeholder.prompty }
+      "3": { name: punctuation.section.interpolation.end.prompty }
 
   # ── Inline images: ![alt](path) ────────────────────────────────────────
   inline-image:

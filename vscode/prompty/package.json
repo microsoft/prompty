@@ -141,6 +141,14 @@
 				}
 			}
 		],
+		"semanticTokenScopes": [
+			{
+				"language": "prompty",
+				"scopes": {
+					"variable": ["constant.other.placeholder"]
+				}
+			}
+		],
 		"activationEvents": [
 			"onLanguage:prompty"
 		],

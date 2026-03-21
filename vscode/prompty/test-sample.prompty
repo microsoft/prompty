@@ -21,6 +21,10 @@ inputSchema:
       kind: string
       description: Optional context
       default: ""
+    - name: thread
+      kind: thread
+      description: Optional thread for conversation history
+      default: {}
 ---
 system:
 You are a helpful assistant that answers questions concisely.

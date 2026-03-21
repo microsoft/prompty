@@ -77,16 +77,17 @@
       }
     },
     "template-variable": {
+      "name": "meta.template.expression.prompty",
       "match": "(\\{\\{)\\s*(\\w+(?:\\.\\w+)*)\\s*(\\}\\})",
       "captures": {
         "1": {
-          "name": "punctuation.definition.template.begin.prompty"
+          "name": "punctuation.section.interpolation.begin.prompty"
         },
         "2": {
-          "name": "variable.other.template.prompty"
+          "name": "constant.other.placeholder.prompty"
         },
         "3": {
-          "name": "punctuation.definition.template.end.prompty"
+          "name": "punctuation.section.interpolation.end.prompty"
         }
       }
     },
