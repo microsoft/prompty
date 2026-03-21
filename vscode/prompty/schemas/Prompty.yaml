@@ -62,18 +62,15 @@ properties:
       AI model configuration. String shorthand expands to {id: <value>}
       (e.g. "gpt-4o" becomes {id: "gpt-4o"}).
     anyOf:
-      - $ref: "#/definitions/model"
       - type: string
+        description: Model ID shorthand (e.g. "gpt-4o", "claude-3-sonnet").
+      - $ref: "#/definitions/model"
 
   tools:
     description: Tools available to the agent for extended functionality.
-    anyOf:
-      - type: array
-        items:
-          $ref: "#/definitions/tool"
-      - type: object
-        additionalProperties:
-          $ref: "#/definitions/tool"
+    type: array
+    items:
+      $ref: "#/definitions/tool"
     default: []
 
   template:
@@ -111,16 +108,18 @@ definitions:
         type: string
         description: >-
           The model provider (e.g. 'openai', 'azure', 'anthropic').
-          Any provider string is accepted.
+        enum:
+          - openai
+          - azure
+          - anthropic
       apiType:
+        type: string
         description: >-
-          The API type to use (e.g. 'chat', 'responses', 'completion').
-        anyOf:
-          - type: string
-            const: chat
-          - type: string
-            const: responses
-          - type: string
+          The API type to use for the model (e.g. 'chat', 'responses').
+          Common values are 'chat' and 'responses', but any string is accepted.
+        enum:
+          - chat
+          - responses
       connection:
         $ref: "#/definitions/connection"
         description: Connection details for authenticating with the model endpoint.
@@ -295,15 +294,23 @@ definitions:
           Template rendering engine. String shorthand (e.g. "jinja2")
           expands to {kind: "jinja2"}.
         anyOf:
-          - $ref: "#/definitions/format"
           - type: string
+            enum:
+              - jinja2
+              - mustache
+              - handlebars
+              - nunjucks
+          - $ref: "#/definitions/format"
       parser:
         description: >-
           Parser for processing the rendered template into API-compatible
           format. String shorthand (e.g. "prompty") expands to {kind: "prompty"}.
         anyOf:
-          - $ref: "#/definitions/parser"
           - type: string
+            enum:
+              - prompty
+              - plain
+          - $ref: "#/definitions/parser"
 
   format:
     type: object
@@ -315,6 +322,11 @@ definitions:
         type: string
         default: "*"
         description: Template rendering engine (e.g. 'jinja2', 'mustache').
+        enum:
+          - jinja2
+          - mustache
+          - handlebars
+          - nunjucks
       strict:
         type: boolean
         default: false
@@ -334,6 +346,9 @@ definitions:
         type: string
         default: "*"
         description: Parser kind (e.g. 'prompty').
+        enum:
+          - prompty
+          - plain
       options:
         type: object
         additionalProperties: true
