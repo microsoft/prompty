@@ -116,6 +116,42 @@
 					"light": "icons/promptyTrace_light.svg",
 					"dark": "icons/promptyTrace_dark.svg"
 				}
+			},
+			{
+				"command": "prompty.addConnection",
+				"category": "Prompty",
+				"title": "Add Connection",
+				"icon": "$(add)"
+			},
+			{
+				"command": "prompty.editConnection",
+				"category": "Prompty",
+				"title": "Edit Connection",
+				"icon": "$(edit)"
+			},
+			{
+				"command": "prompty.deleteConnection",
+				"category": "Prompty",
+				"title": "Delete Connection",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "prompty.testConnection",
+				"category": "Prompty",
+				"title": "Test Connection",
+				"icon": "$(plug)"
+			},
+			{
+				"command": "prompty.setDefaultConnection",
+				"category": "Prompty",
+				"title": "Set as Default",
+				"icon": "$(star-full)"
+			},
+			{
+				"command": "prompty.refreshConnections",
+				"category": "Prompty",
+				"title": "Refresh Connections",
+				"icon": "$(refresh)"
 			}
 		],
 		"customEditors": [
@@ -165,6 +201,16 @@
 					"command": "prompty.refreshTraces",
 					"when": "view == view-traces",
 					"group": "navigation@1"
+				},
+				{
+					"command": "prompty.addConnection",
+					"when": "view == view-connections",
+					"group": "navigation@1"
+				},
+				{
+					"command": "prompty.refreshConnections",
+					"when": "view == view-connections",
+					"group": "navigation@2"
 				}
 			],
 			"view/item/context": [
@@ -172,6 +218,26 @@
 					"command": "prompty.viewTrace",
 					"when": "view == view-traces && viewItem == trace",
 					"group": "inline"
+				},
+				{
+					"command": "prompty.testConnection",
+					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"group": "inline@1"
+				},
+				{
+					"command": "prompty.editConnection",
+					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"group": "1_modify@1"
+				},
+				{
+					"command": "prompty.setDefaultConnection",
+					"when": "view == view-connections && viewItem =~ /^connection-/ && viewItem != connection-default",
+					"group": "1_modify@2"
+				},
+				{
+					"command": "prompty.deleteConnection",
+					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"group": "2_danger@1"
 				}
 			]
 		},
@@ -186,6 +252,11 @@
 		},
 		"views": {
 			"prompty-explorer": [
+				{
+					"id": "view-connections",
+					"name": "Connections",
+					"icon": "$(plug)"
+				},
 				{
 					"id": "view-traces",
 					"name": "Traces",
