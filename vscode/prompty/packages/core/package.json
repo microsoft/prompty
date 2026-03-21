@@ -13,7 +13,9 @@
 		"vscode": "^1.98.0"
 	},
 	"dependencies": {
+		"@azure/identity": "^4.6.0",
 		"glob": "^11.1.0",
+		"openai": "^4.80.0",
 		"prompty": "file:../../../../runtime/typescript/prompty",
 		"vscode-languageclient": "^9.0.1"
 	},
