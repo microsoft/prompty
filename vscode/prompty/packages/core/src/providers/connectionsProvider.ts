@@ -9,6 +9,18 @@ import {
 
 // ─── Tree Items ───────────────────────────────────────────────────────
 
+export class PropertyTreeItem extends vscode.TreeItem {
+	constructor(
+		public readonly key: string,
+		public readonly value: string
+	) {
+		super(key, vscode.TreeItemCollapsibleState.None);
+		this.description = value;
+		this.contextValue = "connection-property";
+		this.iconPath = new vscode.ThemeIcon("symbol-field");
+	}
+}
+
 export class ConnectionTreeItem extends vscode.TreeItem {
 	constructor(
 		public readonly profile: ConnectionProfile,
@@ -117,7 +129,7 @@ export class ProviderGroupItem extends vscode.TreeItem {
 
 // ─── Tree Data Provider ───────────────────────────────────────────────
 
-type TreeItem = ProviderGroupItem | ConnectionTreeItem;
+type TreeItem = ProviderGroupItem | ConnectionTreeItem | PropertyTreeItem;
 
 export class ConnectionsTreeDataProvider
 	implements vscode.TreeDataProvider<TreeItem>
@@ -154,7 +166,45 @@ export class ConnectionsTreeDataProvider
 			return this.getConnectionItems(element.connections);
 		}
 
+		if (element instanceof ConnectionTreeItem) {
+			return this.getPropertyItems(element.profile);
+		}
+
 		return [];
+	}
+
+	private getPropertyItems(profile: ConnectionProfile): PropertyTreeItem[] {
+		const items: PropertyTreeItem[] = [];
+		const skip = new Set(["id", "name", "isDefault", "metadata"]);
+
+		for (const [key, value] of Object.entries(profile)) {
+			if (skip.has(key) || value === undefined || value === null) {
+				continue;
+			}
+
+			let display: string;
+			if (key === "authType") {
+				display = String(value);
+				items.push(new PropertyTreeItem("auth", display));
+			} else if (key === "providerType") {
+				items.push(new PropertyTreeItem("provider", String(value)));
+			} else if (key === "endpoint") {
+				try {
+					display = new URL(String(value)).hostname;
+				} catch {
+					display = String(value);
+				}
+				items.push(new PropertyTreeItem("endpoint", display));
+			} else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+				items.push(new PropertyTreeItem(key, String(value)));
+			}
+		}
+
+		if (profile.isDefault) {
+			items.push(new PropertyTreeItem("default", "★ yes"));
+		}
+
+		return items;
 	}
 
 	private async getRootItems(): Promise<ProviderGroupItem[]> {
@@ -222,7 +272,7 @@ export class ConnectionsTreeDataProvider
 				new ConnectionTreeItem(
 					conn,
 					status,
-					vscode.TreeItemCollapsibleState.None
+					vscode.TreeItemCollapsibleState.Collapsed
 				)
 			);
 		}
