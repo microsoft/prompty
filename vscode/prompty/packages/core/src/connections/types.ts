@@ -13,6 +13,7 @@ export type ConnectionProviderType =
 	| "openai"
 	| "azure-openai"
 	| "anthropic"
+	| "foundry"
 	| string; // extensible for external providers
 
 /** Connection health status */
@@ -83,12 +84,25 @@ export interface AnthropicConnectionProfile extends BaseConnectionProfile {
 	model?: string;
 }
 
+/** Microsoft Foundry connection profile */
+export interface FoundryConnectionProfile extends BaseConnectionProfile {
+	providerType: "foundry";
+	authType: "azure-default-credential";
+	/** Foundry project endpoint */
+	endpoint: string;
+	/** Optional named connection within the Foundry project */
+	connectionName?: string;
+	/** Optional connection type (e.g., 'model', 'index', 'storage') */
+	connectionType?: string;
+}
+
 /** Union of all built-in connection profile types */
 export type ConnectionProfile =
 	| OpenAIConnectionProfile
 	| AzureKeyConnectionProfile
 	| AzureCredentialConnectionProfile
 	| AnthropicConnectionProfile
+	| FoundryConnectionProfile
 	| BaseConnectionProfile;
 
 // ─── Connection Provider Interface ────────────────────────────────────

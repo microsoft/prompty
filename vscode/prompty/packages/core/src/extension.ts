@@ -19,6 +19,7 @@ import { OpenAIConnectionProvider } from './connections/providers/openai';
 import { AzureKeyConnectionProvider } from './connections/providers/azure-key';
 import { AzureCredentialConnectionProvider } from './connections/providers/azure-credential';
 import { AnthropicConnectionProvider } from './connections/providers/anthropic';
+import { FoundryConnectionProvider } from './connections/providers/foundry';
 import type { PromptyExtensionAPI } from './connections/api';
 
 let client: LanguageClient;
@@ -37,6 +38,7 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	connectionRegistry.registerProvider(new AzureKeyConnectionProvider());
 	connectionRegistry.registerProvider(new AzureCredentialConnectionProvider());
 	connectionRegistry.registerProvider(new AnthropicConnectionProvider());
+	connectionRegistry.registerProvider(new FoundryConnectionProvider());
 
 	// Register the Connections sidebar view
 	const connectionsView = window.createTreeView("view-connections", {

@@ -95,6 +95,14 @@ export class PromptyController implements Disposable {
 	 */
 	private async bridgeEnvVars(profiles: import('../connections/types').ConnectionProfile[]): Promise<void> {
 		for (const profile of profiles) {
+			// Foundry connections: inject project endpoint
+			if (profile.providerType === 'foundry' && 'endpoint' in profile) {
+				if (!process.env.AZURE_AI_PROJECT_ENDPOINT) {
+					process.env.AZURE_AI_PROJECT_ENDPOINT = (profile as any).endpoint;
+				}
+				continue;
+			}
+
 			if (profile.authType !== 'api-key') continue;
 
 			const secret = await this.connectionStore!.getSecret(profile.id);

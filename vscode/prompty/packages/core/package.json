@@ -13,6 +13,7 @@
 		"vscode": "^1.98.0"
 	},
 	"dependencies": {
+		"@azure/ai-projects": "^2.0.1",
 		"@azure/identity": "^4.6.0",
 		"glob": "^11.1.0",
 		"openai": "^4.80.0",
