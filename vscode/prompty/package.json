@@ -225,6 +225,11 @@
 					"group": "inline@1"
 				},
 				{
+					"command": "prompty.testConnection",
+					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"group": "0_test@1"
+				},
+				{
 					"command": "prompty.editConnection",
 					"when": "view == view-connections && viewItem =~ /^connection-/",
 					"group": "1_modify@1"
