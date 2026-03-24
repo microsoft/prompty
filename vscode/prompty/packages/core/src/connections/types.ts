@@ -11,7 +11,6 @@ export type ConnectionAuthType =
 /** Supported AI provider types */
 export type ConnectionProviderType =
 	| "openai"
-	| "azure-openai"
 	| "anthropic"
 	| "foundry"
 	| string; // extensible for external providers
@@ -49,31 +48,6 @@ export interface OpenAIConnectionProfile extends BaseConnectionProfile {
 	model?: string;
 }
 
-/** Azure OpenAI connection with API key */
-export interface AzureKeyConnectionProfile extends BaseConnectionProfile {
-	providerType: "azure-openai";
-	authType: "api-key";
-	/** Azure OpenAI endpoint (e.g., https://{resource}.openai.azure.com/) */
-	endpoint: string;
-	/** Default deployment name */
-	deployment?: string;
-	/** API version (defaults to latest) */
-	apiVersion?: string;
-}
-
-/** Azure OpenAI connection with DefaultAzureCredential */
-export interface AzureCredentialConnectionProfile
-	extends BaseConnectionProfile {
-	providerType: "azure-openai";
-	authType: "azure-default-credential";
-	/** Azure OpenAI endpoint */
-	endpoint: string;
-	/** Default deployment name */
-	deployment?: string;
-	/** API version */
-	apiVersion?: string;
-}
-
 /** Anthropic connection profile */
 export interface AnthropicConnectionProfile extends BaseConnectionProfile {
 	providerType: "anthropic";
@@ -99,8 +73,6 @@ export interface FoundryConnectionProfile extends BaseConnectionProfile {
 /** Union of all built-in connection profile types */
 export type ConnectionProfile =
 	| OpenAIConnectionProfile
-	| AzureKeyConnectionProfile
-	| AzureCredentialConnectionProfile
 	| AnthropicConnectionProfile
 	| FoundryConnectionProfile
 	| BaseConnectionProfile;

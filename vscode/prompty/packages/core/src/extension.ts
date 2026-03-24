@@ -16,8 +16,6 @@ import { ConnectionStore } from './connections/store';
 import { ConnectionsTreeDataProvider } from './providers/connectionsProvider';
 import { registerConnectionCommands } from './connections/commands';
 import { OpenAIConnectionProvider } from './connections/providers/openai';
-import { AzureKeyConnectionProvider } from './connections/providers/azure-key';
-import { AzureCredentialConnectionProvider } from './connections/providers/azure-credential';
 import { AnthropicConnectionProvider } from './connections/providers/anthropic';
 import { FoundryConnectionProvider } from './connections/providers/foundry';
 import type { PromptyExtensionAPI } from './connections/api';
@@ -34,11 +32,9 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	);
 
 	// Register built-in connection providers
-	connectionRegistry.registerProvider(new OpenAIConnectionProvider());
-	connectionRegistry.registerProvider(new AzureKeyConnectionProvider());
-	connectionRegistry.registerProvider(new AzureCredentialConnectionProvider());
-	connectionRegistry.registerProvider(new AnthropicConnectionProvider());
 	connectionRegistry.registerProvider(new FoundryConnectionProvider());
+	connectionRegistry.registerProvider(new OpenAIConnectionProvider());
+	connectionRegistry.registerProvider(new AnthropicConnectionProvider());
 
 	// Register the Connections sidebar view
 	const connectionsView = window.createTreeView("view-connections", {

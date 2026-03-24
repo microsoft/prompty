@@ -3,9 +3,8 @@ export { ConnectionStore } from "./store";
 export type {
 	BaseConnectionProfile,
 	OpenAIConnectionProfile,
-	AzureKeyConnectionProfile,
-	AzureCredentialConnectionProfile,
 	AnthropicConnectionProfile,
+	FoundryConnectionProfile,
 	ConnectionProfile,
 	ConnectionProviderType,
 	ConnectionAuthType,

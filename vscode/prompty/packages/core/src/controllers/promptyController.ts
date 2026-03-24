@@ -115,14 +115,6 @@ export class PromptyController implements Disposable {
 						process.env.OPENAI_API_KEY = secret;
 					}
 					break;
-				case 'azure-openai':
-					if (!process.env.AZURE_OPENAI_API_KEY) {
-						process.env.AZURE_OPENAI_API_KEY = secret;
-					}
-					if ('endpoint' in profile && !process.env.AZURE_OPENAI_ENDPOINT) {
-						process.env.AZURE_OPENAI_ENDPOINT = (profile as any).endpoint;
-					}
-					break;
 				case 'anthropic':
 					if (!process.env.ANTHROPIC_API_KEY) {
 						process.env.ANTHROPIC_API_KEY = secret;
