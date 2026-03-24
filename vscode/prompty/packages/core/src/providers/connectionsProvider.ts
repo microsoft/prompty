@@ -73,9 +73,12 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 		public readonly status: ConnectionStatus,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState
 	) {
-		super(profile.name, collapsibleState);
+		super(
+			profile.isDefault ? `★ ${profile.name}` : profile.name,
+			collapsibleState
+		);
 
-		this.contextValue = `connection-${profile.authType}`;
+		this.contextValue = `conn-profile-${profile.authType}`;
 		this.description = this.getDescription();
 		this.iconPath = this.getIcon();
 		this.tooltip = this.getTooltip();
@@ -124,9 +127,6 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 		if ("deployment" in this.profile) {
 			parts.push((this.profile as any).deployment as string);
 		}
-		if (this.profile.isDefault) {
-			parts.push("★");
-		}
 		return parts.filter(Boolean).join(" · ");
 	}
 
@@ -168,9 +168,10 @@ export class ProviderGroupItem extends vscode.TreeItem {
 				: vscode.TreeItemCollapsibleState.Collapsed
 		);
 		this.contextValue = "provider-group";
-		// Use custom SVG for Foundry, ThemeIcon for others
-		if (providerType === "foundry" && _extensionPath) {
-			this.iconPath = iconPath(_extensionPath, "foundry");
+		// Use custom SVGs for known providers, ThemeIcon for others
+		const customIconProviders = ["foundry", "openai", "anthropic"];
+		if (customIconProviders.includes(providerType) && _extensionPath) {
+			this.iconPath = iconPath(_extensionPath, providerType);
 		} else {
 			this.iconPath = new vscode.ThemeIcon(iconId);
 		}

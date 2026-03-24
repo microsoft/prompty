@@ -14,7 +14,8 @@ import {
 export class ConnectionWizard {
 	constructor(
 		private readonly store: ConnectionStore,
-		private readonly registry: ConnectionProviderRegistry
+		private readonly registry: ConnectionProviderRegistry,
+		private readonly extensionPath?: string
 	) {}
 
 	/**
@@ -155,9 +156,17 @@ export class ConnectionWizard {
 
 		for (const provider of providers) {
 			for (const pt of provider.providerTypes) {
+				const customIconProviders = ["foundry", "openai", "anthropic"];
+				const hasCustomIcon = customIconProviders.includes(pt) && this.extensionPath;
 				items.push({
-					label: `$(${provider.iconId}) ${provider.label}`,
+					label: provider.label,
 					description: pt,
+					iconPath: hasCustomIcon
+						? {
+							dark: vscode.Uri.file(require("path").join(this.extensionPath!, "icons", "dark", `${pt}.svg`)),
+							light: vscode.Uri.file(require("path").join(this.extensionPath!, "icons", "light", `${pt}.svg`)),
+						}
+						: new vscode.ThemeIcon(provider.iconId),
 					provider,
 					providerType: pt,
 				});

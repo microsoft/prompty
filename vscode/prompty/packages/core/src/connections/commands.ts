@@ -17,7 +17,7 @@ export function registerConnectionCommands(
 	registry: ConnectionProviderRegistry,
 	treeProvider: ConnectionsTreeDataProvider
 ): vscode.Disposable[] {
-	const wizard = new ConnectionWizard(store, registry);
+	const wizard = new ConnectionWizard(store, registry, context.extensionPath);
 
 	const disposables: vscode.Disposable[] = [];
 

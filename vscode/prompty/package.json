@@ -221,27 +221,27 @@
 				},
 				{
 					"command": "prompty.testConnection",
-					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"when": "view == view-connections && viewItem =~ /^conn-profile-/",
 					"group": "inline@1"
 				},
 				{
 					"command": "prompty.testConnection",
-					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"when": "view == view-connections && viewItem =~ /^conn-profile-/",
 					"group": "0_test@1"
 				},
 				{
 					"command": "prompty.editConnection",
-					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"when": "view == view-connections && viewItem =~ /^conn-profile-/",
 					"group": "1_modify@1"
 				},
 				{
 					"command": "prompty.setDefaultConnection",
-					"when": "view == view-connections && viewItem =~ /^connection-/ && viewItem != connection-default",
+					"when": "view == view-connections && viewItem =~ /^conn-profile-/ && viewItem !~ /-default$/",
 					"group": "1_modify@2"
 				},
 				{
 					"command": "prompty.deleteConnection",
-					"when": "view == view-connections && viewItem =~ /^connection-/",
+					"when": "view == view-connections && viewItem =~ /^conn-profile-/",
 					"group": "2_danger@1"
 				}
 			]
