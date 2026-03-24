@@ -63,9 +63,20 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 			);
 
 			const start = Date.now();
-			// Get an OpenAI client to verify the connection works
+			// Use a lightweight chat completion to verify the connection
 			const openAIClient = projectClient.getOpenAIClient();
-			await openAIClient.models.list();
+			// Try listing models first; if that 404s, try a simple completion
+			try {
+				await openAIClient.models.list();
+			} catch {
+				// models.list() may not be available on all Foundry endpoints
+				// Just verify we can create the client without error
+				await openAIClient.chat.completions.create({
+					model: "gpt-4o-mini",
+					messages: [{ role: "user", content: "hi" }],
+					max_tokens: 1,
+				});
+			}
 			const latencyMs = Date.now() - start;
 
 			return {

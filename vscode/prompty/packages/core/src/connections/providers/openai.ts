@@ -29,8 +29,8 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 				isSecret: true,
 			},
 			{
-				key: "baseUrl",
-				label: "Base URL",
+				key: "endpoint",
+				label: "Endpoint",
 				placeholder: "https://api.openai.com/v1",
 				required: false,
 				defaultValue: "https://api.openai.com/v1",
@@ -58,7 +58,7 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 			const { default: OpenAI } = await import("openai");
 			const client = new OpenAI({
 				apiKey: secret,
-				baseURL: p.baseUrl,
+				baseURL: p.endpoint,
 			});
 
 			const start = Date.now();
@@ -89,7 +89,7 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 		const { default: OpenAI } = await import("openai");
 		return new OpenAI({
 			apiKey: secret,
-			baseURL: p.baseUrl,
+			baseURL: p.endpoint,
 		});
 	}
 }

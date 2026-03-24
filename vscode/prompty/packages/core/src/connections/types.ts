@@ -2,11 +2,11 @@ import * as vscode from "vscode";
 
 // ─── Connection Profile Types ─────────────────────────────────────────
 
-/** Authentication method for a connection */
+/** Authentication method for a connection — maps to AgentSchema Connection.kind */
 export type ConnectionAuthType =
-	| "api-key"
-	| "azure-default-credential"
-	| "anonymous";
+	| "key"                        // AgentSchema: ApiKeyConnection
+	| "foundry"                    // AgentSchema: FoundryConnection (Entra ID)
+	| "anonymous";                 // AgentSchema: AnonymousConnection
 
 /** Supported AI provider types */
 export type ConnectionProviderType =
@@ -38,35 +38,35 @@ export interface BaseConnectionProfile {
 	metadata?: Record<string, unknown>;
 }
 
-/** OpenAI connection profile */
+/** OpenAI connection profile — maps to AgentSchema ApiKeyConnection */
 export interface OpenAIConnectionProfile extends BaseConnectionProfile {
 	providerType: "openai";
-	authType: "api-key";
-	/** API base URL (defaults to https://api.openai.com/v1) */
-	baseUrl?: string;
+	authType: "key";
+	/** API base URL (defaults to https://api.openai.com/v1) — maps to ApiKeyConnection.endpoint */
+	endpoint?: string;
 	/** Default model to use */
 	model?: string;
 }
 
-/** Anthropic connection profile */
+/** Anthropic connection profile — maps to AgentSchema ApiKeyConnection */
 export interface AnthropicConnectionProfile extends BaseConnectionProfile {
 	providerType: "anthropic";
-	authType: "api-key";
-	/** API base URL (defaults to https://api.anthropic.com) */
-	baseUrl?: string;
+	authType: "key";
+	/** API base URL (defaults to https://api.anthropic.com) — maps to ApiKeyConnection.endpoint */
+	endpoint?: string;
 	/** Default model to use */
 	model?: string;
 }
 
-/** Microsoft Foundry connection profile */
+/** Microsoft Foundry connection profile — maps to AgentSchema FoundryConnection */
 export interface FoundryConnectionProfile extends BaseConnectionProfile {
 	providerType: "foundry";
-	authType: "azure-default-credential";
-	/** Foundry project endpoint */
+	authType: "foundry";
+	/** Foundry project endpoint — maps to FoundryConnection.endpoint */
 	endpoint: string;
-	/** Optional named connection within the Foundry project */
+	/** Named connection within the Foundry project — maps to FoundryConnection.name */
 	connectionName?: string;
-	/** Optional connection type (e.g., 'model', 'index', 'storage') */
+	/** Connection type (e.g., 'model', 'index', 'storage') — maps to FoundryConnection.connectionType */
 	connectionType?: string;
 }
 

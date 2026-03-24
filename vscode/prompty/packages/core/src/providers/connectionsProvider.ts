@@ -261,7 +261,7 @@ export class ConnectionsTreeDataProvider
 				this.connectionStatuses.get(conn.id) ?? "untested";
 
 			// Check if secret is needed but missing
-			if (conn.authType === "api-key" && status === "untested") {
+			if (conn.authType === "key" && status === "untested") {
 				const secret = await this.store.getSecret(conn.id);
 				if (!secret) {
 					status = "missing-secret";

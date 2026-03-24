@@ -108,6 +108,9 @@ export function registerConnectionCommands(
 		vscode.commands.registerCommand(
 			"prompty.testConnection",
 			async (item?: ConnectionTreeItem) => {
+				const outputChannel = vscode.window.createOutputChannel("Prompty Connections", { log: true });
+				outputChannel.show(true);
+
 				let profileId: string;
 
 				if (item) {
@@ -127,31 +130,55 @@ export function registerConnectionCommands(
 				}
 
 				const profile = await store.getProfile(profileId);
-				if (!profile) return;
+				if (!profile) {
+					outputChannel.error(`Profile not found: ${profileId}`);
+					return;
+				}
+
+				outputChannel.info(`Testing connection: ${profile.name}`);
+				outputChannel.info(`  Provider: ${profile.providerType}`);
+				outputChannel.info(`  Auth: ${profile.authType}`);
+				outputChannel.info(`  Profile: ${JSON.stringify(profile, null, 2)}`);
 
 				const secret = await store.getSecret(profileId);
+				outputChannel.info(`  Secret present: ${!!secret}`);
+				if (secret) {
+					outputChannel.info(`  Secret length: ${secret.length}`);
+				}
 
-				const result = await vscode.window.withProgress(
-					{
-						location: vscode.ProgressLocation.Notification,
-						title: `Testing "${profile.name}"...`,
-					},
-					() => registry.testConnection(profile, secret)
-				);
+				try {
+					const result = await vscode.window.withProgress(
+						{
+							location: vscode.ProgressLocation.Notification,
+							title: `Testing "${profile.name}"...`,
+						},
+						async () => {
+							outputChannel.info("  Calling registry.testConnection()...");
+							const r = await registry.testConnection(profile, secret);
+							outputChannel.info(`  Result: ${JSON.stringify(r)}`);
+							return r;
+						}
+					);
 
-				if (result.success) {
-					treeProvider.setConnectionStatus(
-						profileId,
-						"configured"
-					);
-					vscode.window.showInformationMessage(
-						`✅ ${result.message}`
-					);
-				} else {
+					if (result.success) {
+						treeProvider.setConnectionStatus(
+							profileId,
+							"configured"
+						);
+						vscode.window.showInformationMessage(
+							`✅ ${result.message}`
+						);
+					} else {
+						treeProvider.setConnectionStatus(profileId, "error");
+						vscode.window.showWarningMessage(
+							`⚠️ ${result.message}`
+						);
+					}
+				} catch (err: unknown) {
+					const msg = err instanceof Error ? err.stack ?? err.message : String(err);
+					outputChannel.error(`  Unhandled error: ${msg}`);
 					treeProvider.setConnectionStatus(profileId, "error");
-					vscode.window.showWarningMessage(
-						`⚠️ ${result.message}`
-					);
+					vscode.window.showErrorMessage(`Test failed: ${msg}`);
 				}
 			}
 		)

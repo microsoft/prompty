@@ -223,15 +223,21 @@ export class ConnectionWizard {
 		values: Record<string, string>,
 		fields: ConnectionField[]
 	): ConnectionProfile {
+		// Determine auth type — aligns with AgentSchema Connection.kind
+		let authType: string;
+		if (providerType === "foundry") {
+			authType = "foundry";
+		} else if (fields.some((f) => f.isSecret)) {
+			authType = "key";
+		} else {
+			authType = "anonymous";
+		}
+
 		const profile: Record<string, unknown> = {
 			id,
 			name: values.name || `${providerType} connection`,
 			providerType,
-			authType:
-				providerType === "azure-openai" &&
-				!fields.some((f) => f.isSecret)
-					? "azure-default-credential"
-					: "api-key",
+			authType,
 		};
 
 		// Copy non-secret values to profile

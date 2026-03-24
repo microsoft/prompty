@@ -34,8 +34,8 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 				isSecret: true,
 			},
 			{
-				key: "baseUrl",
-				label: "Base URL",
+				key: "endpoint",
+				label: "Endpoint",
 				placeholder: "https://api.anthropic.com",
 				required: false,
 				defaultValue: "https://api.anthropic.com",
@@ -61,11 +61,10 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 		const p = profile as AnthropicConnectionProfile;
 
 		try {
-			// Use fetch to test the Anthropic API directly
-			const baseUrl = p.baseUrl ?? "https://api.anthropic.com";
+			const endpoint = p.endpoint ?? "https://api.anthropic.com";
 			const start = Date.now();
 
-			const response = await fetch(`${baseUrl}/v1/messages`, {
+			const response = await fetch(`${endpoint}/v1/messages`, {
 				method: "POST",
 				headers: {
 					"x-api-key": secret,
@@ -111,13 +110,10 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 
 		const p = profile as AnthropicConnectionProfile;
 
-		// Return a config object that the runtime bridge will use
-		// The prompty runtime doesn't have a native Anthropic executor yet,
-		// so we return the connection details for the bridge to handle
 		return {
 			type: "anthropic",
 			apiKey: secret,
-			baseUrl: p.baseUrl ?? "https://api.anthropic.com",
+			endpoint: p.endpoint ?? "https://api.anthropic.com",
 			model: p.model,
 		};
 	}

@@ -103,7 +103,7 @@ export class PromptyController implements Disposable {
 				continue;
 			}
 
-			if (profile.authType !== 'api-key') continue;
+			if (profile.authType !== 'key') continue;
 
 			const secret = await this.connectionStore!.getSecret(profile.id);
 			if (!secret) continue;
