@@ -5,7 +5,20 @@ import {
 	ConnectionField,
 	ConnectionTestResult,
 	FoundryConnectionProfile,
+	ModelInfo,
 } from "../types";
+
+/** Foundry project deployments API response */
+interface FoundryDeployment {
+	name: string;
+	properties?: {
+		model?: { name: string };
+	};
+}
+
+interface FoundryDeploymentsResponse {
+	value: FoundryDeployment[];
+}
 
 export class FoundryConnectionProvider implements IConnectionProvider {
 	readonly id = "foundry";
@@ -36,13 +49,17 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 				placeholder: "Optional — named connection within the project",
 				required: false,
 			},
-			{
-				key: "connectionType",
-				label: "Connection Type",
-				placeholder: "e.g., model, index, storage",
-				required: false,
-			},
 		];
+	}
+
+	/** Get a bearer token via DefaultAzureCredential for the Azure AI Foundry scope */
+	private async getBearerToken(): Promise<string> {
+		const { DefaultAzureCredential } = await import("@azure/identity");
+		const credential = new DefaultAzureCredential();
+		const tokenResponse = await credential.getToken(
+			"https://ai.azure.com/.default"
+		);
+		return tokenResponse.token;
 	}
 
 	async testConnection(
@@ -51,53 +68,38 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		const p = profile as FoundryConnectionProfile;
 
 		try {
-			const { AIProjectClient } = await import("@azure/ai-projects");
-			const { DefaultAzureCredential } = await import(
-				"@azure/identity"
-			);
-
-			const credential = new DefaultAzureCredential();
-			const projectClient = new AIProjectClient(
-				p.endpoint,
-				credential
-			);
+			const token = await this.getBearerToken();
+			const endpoint = p.endpoint.replace(/\/$/, "");
+			const url = `${endpoint}/deployments?api-version=v1`;
 
 			const start = Date.now();
-			// Use a lightweight chat completion to verify the connection
-			const openAIClient = projectClient.getOpenAIClient();
-			// Try listing models first; if that 404s, try a simple completion
-			try {
-				await openAIClient.models.list();
-			} catch {
-				// models.list() may not be available on all Foundry endpoints
-				// Just verify we can create the client without error
-				await openAIClient.chat.completions.create({
-					model: "gpt-4o-mini",
-					messages: [{ role: "user", content: "hi" }],
-					max_tokens: 1,
-				});
-			}
+			const response = await fetch(url, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			});
 			const latencyMs = Date.now() - start;
+
+			if (!response.ok) {
+				const body = await response.text();
+				return {
+					success: false,
+					message: `${response.status}: ${body.slice(0, 200)}`,
+				};
+			}
+
+			const data = (await response.json()) as FoundryDeploymentsResponse;
+			const count = data.value?.length ?? 0;
 
 			return {
 				success: true,
-				message: `Connected to Foundry project (${latencyMs}ms)`,
+				message: `Connected — ${count} deployment${count !== 1 ? "s" : ""} available (${latencyMs}ms)`,
 				latencyMs,
 			};
 		} catch (error: unknown) {
 			const message =
 				error instanceof Error ? error.message : String(error);
-
-			if (
-				message.includes("Cannot find module") ||
-				message.includes("@azure/ai-projects")
-			) {
-				return {
-					success: false,
-					message:
-						"@azure/ai-projects not installed. Run: npm install @azure/ai-projects @azure/identity",
-				};
-			}
 
 			if (
 				message.includes("CredentialUnavailableError") ||
@@ -117,6 +119,32 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		}
 	}
 
+	async listModels(profile: ConnectionProfile): Promise<ModelInfo[]> {
+		const p = profile as FoundryConnectionProfile;
+
+		const token = await this.getBearerToken();
+		const endpoint = p.endpoint.replace(/\/$/, "");
+		const url = `${endpoint}/deployments?api-version=v1`;
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			const body = await response.text();
+			throw new Error(`Failed to list models: ${response.status} ${body.slice(0, 200)}`);
+		}
+
+		const data = (await response.json()) as FoundryDeploymentsResponse;
+		return (data.value ?? []).map((d) => ({
+			id: d.name,
+			modelName: d.properties?.model?.name,
+		}));
+	}
+
 	async createClient(profile: ConnectionProfile): Promise<unknown> {
 		const p = profile as FoundryConnectionProfile;
 
@@ -126,7 +154,6 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		const credential = new DefaultAzureCredential();
 		const projectClient = new AIProjectClient(p.endpoint, credential);
 
-		// Return the OpenAI-compatible client for model access
 		return projectClient.getOpenAIClient();
 	}
 }

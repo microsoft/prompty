@@ -5,6 +5,7 @@ import {
 	OpenAIConnectionProfile,
 	ConnectionField,
 	ConnectionTestResult,
+	ModelInfo,
 } from "../types";
 
 export class OpenAIConnectionProvider implements IConnectionProvider {
@@ -91,5 +92,33 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 			apiKey: secret,
 			baseURL: p.endpoint,
 		});
+	}
+
+	async listModels(
+		profile: ConnectionProfile,
+		secret?: string
+	): Promise<ModelInfo[] | undefined> {
+		const p = profile as OpenAIConnectionProfile;
+		if (!secret) return undefined;
+
+		try {
+			const { default: OpenAI } = await import("openai");
+			const client = new OpenAI({
+				apiKey: secret,
+				baseURL: p.endpoint,
+			});
+
+			const response = await client.models.list();
+			const models: ModelInfo[] = [];
+			for await (const model of response) {
+				models.push({
+					id: model.id,
+					ownedBy: model.owned_by,
+				});
+			}
+			return models.sort((a, b) => a.id.localeCompare(b.id));
+		} catch {
+			return undefined;
+		}
 	}
 }

@@ -66,8 +66,8 @@ export interface FoundryConnectionProfile extends BaseConnectionProfile {
 	endpoint: string;
 	/** Named connection within the Foundry project — maps to FoundryConnection.name */
 	connectionName?: string;
-	/** Connection type (e.g., 'model', 'index', 'storage') — maps to FoundryConnection.connectionType */
-	connectionType?: string;
+	/** Always "model" for Foundry connections in Prompty */
+	connectionType: "model";
 }
 
 /** Union of all built-in connection profile types */
@@ -76,6 +76,20 @@ export type ConnectionProfile =
 	| AnthropicConnectionProfile
 	| FoundryConnectionProfile
 	| BaseConnectionProfile;
+
+// ─── Model Discovery Types ───────────────────────────────────────────
+
+/** Discovered model from a connection */
+export interface ModelInfo {
+	/** Model ID / deployment name */
+	id: string;
+	/** Underlying model name (e.g., "gpt-4o" for a deployment named "my-gpt4") */
+	modelName?: string;
+	/** Owner or publisher */
+	ownedBy?: string;
+	/** Capabilities (e.g., chat_completion, embeddings) */
+	capabilities?: Record<string, string>;
+}
 
 // ─── Connection Provider Interface ────────────────────────────────────
 
@@ -127,6 +141,15 @@ export interface IConnectionProvider {
 	 * @param secret The API key (if applicable)
 	 */
 	createClient(profile: ConnectionProfile, secret?: string): Promise<unknown>;
+
+	/**
+	 * List available models for this connection.
+	 * Returns undefined if model discovery is not supported.
+	 */
+	listModels?(
+		profile: ConnectionProfile,
+		secret?: string
+	): Promise<ModelInfo[] | undefined>;
 }
 
 /** Field definition for the connection wizard */

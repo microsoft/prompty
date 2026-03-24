@@ -247,6 +247,11 @@ export class ConnectionWizard {
 			}
 		}
 
+		// Foundry connections are always model connections
+		if (providerType === "foundry") {
+			profile.connectionType = "model";
+		}
+
 		return profile as unknown as ConnectionProfile;
 	}
 }

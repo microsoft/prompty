@@ -28,7 +28,8 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	const connectionStore = new ConnectionStore(context.secrets);
 	const connectionsTreeProvider = new ConnectionsTreeDataProvider(
 		connectionStore,
-		connectionRegistry
+		connectionRegistry,
+		context.extensionPath
 	);
 
 	// Register built-in connection providers

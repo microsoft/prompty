@@ -165,6 +165,8 @@ export function registerConnectionCommands(
 							profileId,
 							"configured"
 						);
+						// Auto-fetch models on successful connection test
+						treeProvider.fetchModels(profile, secret ?? undefined);
 						vscode.window.showInformationMessage(
 							`✅ ${result.message}`
 						);

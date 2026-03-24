@@ -1,11 +1,24 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { ConnectionStore } from "../connections/store";
 import { ConnectionProviderRegistry } from "../connections/registry";
 import {
 	ConnectionProfile,
 	ConnectionStatus,
 	ConnectionProviderType,
+	ModelInfo,
 } from "../connections/types";
+
+/** Resolve a dark/light icon pair from the extension's icons directory */
+function iconPath(extensionPath: string, name: string): { dark: vscode.Uri; light: vscode.Uri } {
+	return {
+		dark: vscode.Uri.file(path.join(extensionPath, "icons", "dark", `${name}.svg`)),
+		light: vscode.Uri.file(path.join(extensionPath, "icons", "light", `${name}.svg`)),
+	};
+}
+
+// Lazy-initialized extension path (set once from the tree data provider)
+let _extensionPath = "";
 
 // ─── Tree Items ───────────────────────────────────────────────────────
 
@@ -18,6 +31,39 @@ export class PropertyTreeItem extends vscode.TreeItem {
 		this.description = value;
 		this.contextValue = "connection-property";
 		this.iconPath = new vscode.ThemeIcon("symbol-field");
+	}
+}
+
+export class ModelTreeItem extends vscode.TreeItem {
+	constructor(public readonly model: ModelInfo) {
+		super(model.id, vscode.TreeItemCollapsibleState.None);
+		this.description = model.modelName ?? model.ownedBy;
+		this.contextValue = "connection-model";
+		this.iconPath = _extensionPath ? iconPath(_extensionPath, "model") : new vscode.ThemeIcon("hubot");
+		if (model.modelName && model.modelName !== model.id) {
+			this.tooltip = `${model.id} → ${model.modelName}`;
+		}
+	}
+}
+
+export class SectionTreeItem extends vscode.TreeItem {
+	constructor(
+		label: string,
+		public readonly sectionType: "properties" | "models",
+		public readonly profile: ConnectionProfile,
+		iconId: string,
+		childCount?: number
+	) {
+		super(label, vscode.TreeItemCollapsibleState.Collapsed);
+		this.contextValue = `connection-section-${sectionType}`;
+		if (sectionType === "models" && _extensionPath) {
+			this.iconPath = iconPath(_extensionPath, "models");
+		} else {
+			this.iconPath = new vscode.ThemeIcon(iconId);
+		}
+		if (childCount !== undefined) {
+			this.description = `${childCount}`;
+		}
 	}
 }
 
@@ -39,6 +85,29 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 		}
 	}
 
+	private getIcon(): vscode.ThemeIcon {
+		switch (this.status) {
+			case "configured":
+				return new vscode.ThemeIcon(
+					"plug",
+					new vscode.ThemeColor("testing.iconPassed")
+				);
+			case "missing-secret":
+				return new vscode.ThemeIcon(
+					"plug",
+					new vscode.ThemeColor("problemsWarningIcon.foreground")
+				);
+			case "error":
+				return new vscode.ThemeIcon(
+					"plug",
+					new vscode.ThemeColor("problemsErrorIcon.foreground")
+				);
+			case "untested":
+			default:
+				return new vscode.ThemeIcon("plug");
+		}
+	}
+
 	private getDescription(): string {
 		const parts: string[] = [];
 		if ("endpoint" in this.profile) {
@@ -56,32 +125,9 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 			parts.push((this.profile as any).deployment as string);
 		}
 		if (this.profile.isDefault) {
-			parts.push("★ default");
+			parts.push("★");
 		}
 		return parts.filter(Boolean).join(" · ");
-	}
-
-	private getIcon(): vscode.ThemeIcon {
-		switch (this.status) {
-			case "configured":
-				return new vscode.ThemeIcon(
-					"pass-filled",
-					new vscode.ThemeColor("testing.iconPassed")
-				);
-			case "missing-secret":
-				return new vscode.ThemeIcon(
-					"warning",
-					new vscode.ThemeColor("problemsWarningIcon.foreground")
-				);
-			case "error":
-				return new vscode.ThemeIcon(
-					"error",
-					new vscode.ThemeColor("problemsErrorIcon.foreground")
-				);
-			case "untested":
-			default:
-				return new vscode.ThemeIcon("circle-outline");
-		}
 	}
 
 	private getTooltip(): vscode.MarkdownString {
@@ -122,14 +168,24 @@ export class ProviderGroupItem extends vscode.TreeItem {
 				: vscode.TreeItemCollapsibleState.Collapsed
 		);
 		this.contextValue = "provider-group";
-		this.iconPath = new vscode.ThemeIcon(iconId);
+		// Use custom SVG for Foundry, ThemeIcon for others
+		if (providerType === "foundry" && _extensionPath) {
+			this.iconPath = iconPath(_extensionPath, "foundry");
+		} else {
+			this.iconPath = new vscode.ThemeIcon(iconId);
+		}
 		this.description = `${connections.length} connection${connections.length !== 1 ? "s" : ""}`;
 	}
 }
 
 // ─── Tree Data Provider ───────────────────────────────────────────────
 
-type TreeItem = ProviderGroupItem | ConnectionTreeItem | PropertyTreeItem;
+type TreeItem =
+	| ProviderGroupItem
+	| ConnectionTreeItem
+	| SectionTreeItem
+	| PropertyTreeItem
+	| ModelTreeItem;
 
 export class ConnectionsTreeDataProvider
 	implements vscode.TreeDataProvider<TreeItem>
@@ -141,15 +197,20 @@ export class ConnectionsTreeDataProvider
 
 	private connectionStatuses = new Map<string, ConnectionStatus>();
 
+	private modelCache = new Map<string, ModelInfo[]>();
+
 	constructor(
 		private readonly store: ConnectionStore,
-		private readonly registry: ConnectionProviderRegistry
+		private readonly registry: ConnectionProviderRegistry,
+		extensionPath: string
 	) {
+		_extensionPath = extensionPath;
 		store.onDidChange(() => this.refresh());
 		registry.onProvidersChanged(() => this.refresh());
 	}
 
 	refresh(): void {
+		this.modelCache.clear();
 		this._onDidChangeTreeData.fire(undefined);
 	}
 
@@ -167,7 +228,65 @@ export class ConnectionsTreeDataProvider
 		}
 
 		if (element instanceof ConnectionTreeItem) {
-			return this.getPropertyItems(element.profile);
+			return this.getSectionItems(element.profile);
+		}
+
+		if (element instanceof SectionTreeItem) {
+			if (element.sectionType === "properties") {
+				return this.getPropertyItems(element.profile);
+			}
+			if (element.sectionType === "models") {
+				return this.getModelItems(element.profile);
+			}
+		}
+
+		return [];
+	}
+
+	private getSectionItems(profile: ConnectionProfile): SectionTreeItem[] {
+		const items: SectionTreeItem[] = [];
+		items.push(
+			new SectionTreeItem("Properties", "properties", profile, "list-unordered")
+		);
+
+		// Only show Models section for providers that support model discovery
+		const provider = this.registry.getProviderForType(profile.providerType);
+		if (provider?.listModels) {
+			const cachedModels = this.modelCache.get(profile.id);
+			items.push(
+				new SectionTreeItem(
+					"Models",
+					"models",
+					profile,
+					"library",
+					cachedModels?.length
+				)
+			);
+		}
+
+		return items;
+	}
+
+	private async getModelItems(profile: ConnectionProfile): Promise<ModelTreeItem[]> {
+		// Check cache first
+		const cached = this.modelCache.get(profile.id);
+		if (cached) {
+			return cached.map((m) => new ModelTreeItem(m));
+		}
+
+		// Fetch from provider
+		const provider = this.registry.getProviderForType(profile.providerType);
+		if (!provider?.listModels) return [];
+
+		try {
+			const secret = await this.store.getSecret(profile.id);
+			const models = await provider.listModels(profile, secret ?? undefined);
+			if (models) {
+				this.modelCache.set(profile.id, models);
+				return models.map((m) => new ModelTreeItem(m));
+			}
+		} catch {
+			// Model discovery failed — show empty
 		}
 
 		return [];
@@ -283,7 +402,23 @@ export class ConnectionsTreeDataProvider
 	/** Update the status of a connection (after testing, etc.) */
 	setConnectionStatus(connectionId: string, status: ConnectionStatus): void {
 		this.connectionStatuses.set(connectionId, status);
-		this.refresh();
+		this._onDidChangeTreeData.fire(undefined);
+	}
+
+	/** Fetch and cache models for a connection (called after successful test) */
+	async fetchModels(profile: ConnectionProfile, secret?: string): Promise<void> {
+		const provider = this.registry.getProviderForType(profile.providerType);
+		if (!provider?.listModels) return;
+
+		try {
+			const models = await provider.listModels(profile, secret);
+			if (models) {
+				this.modelCache.set(profile.id, models);
+				this._onDidChangeTreeData.fire(undefined);
+			}
+		} catch {
+			// Model fetch failed silently — user can expand Models section to retry
+		}
 	}
 
 	dispose(): void {
