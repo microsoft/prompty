@@ -13,8 +13,7 @@ from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from typing import Any
 
-from agentschema import PromptAgent
-
+from ...model import Prompty
 from ...tracing.tracer import trace
 
 __all__ = ["OpenAIProcessor", "ToolCall"]
@@ -39,7 +38,7 @@ class OpenAIProcessor:
     @trace
     def process(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -47,7 +46,7 @@ class OpenAIProcessor:
     @trace
     async def process_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -58,7 +57,7 @@ class OpenAIProcessor:
 # ---------------------------------------------------------------------------
 
 
-def _process_response(response: Any, agent: PromptAgent | None = None) -> Any:
+def _process_response(response: Any, agent: Prompty | None = None) -> Any:
     """Extract clean result from a raw LLM response object.
 
     Supports:

@@ -86,13 +86,13 @@ def make_openai_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a PromptAgent for direct OpenAI.
+    """Build a Prompty for direct OpenAI.
 
     When ``OPENAI_BASE_URL`` is set, the OpenAI client is pointed at that
     endpoint (e.g. Azure's ``/openai/v1/`` compat path), allowing Azure
     credentials to drive the OpenAI code path.
     """
-    from agentschema import AgentDefinition
+    from prompty.model import Prompty
 
     if model is None:
         model = _OPENAI_MODEL
@@ -105,7 +105,6 @@ def make_openai_agent(
         connection["endpoint"] = _OPENAI_BASE_URL
 
     data: dict[str, Any] = {
-        "kind": "prompt",
         "name": "integration-test",
         "model": {
             "id": model,
@@ -122,7 +121,7 @@ def make_openai_agent(
         data["outputSchema"] = output_schema
     if metadata is not None:
         data["metadata"] = metadata
-    return AgentDefinition.load(data)
+    return Prompty.load(data)
 
 
 def make_azure_agent(
@@ -134,14 +133,13 @@ def make_azure_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a PromptAgent for Azure OpenAI."""
-    from agentschema import AgentDefinition
+    """Build a Prompty for Azure OpenAI."""
+    from prompty.model import Prompty
 
     if deployment is None:
         deployment = _AZURE_CHAT_DEPLOYMENT
 
     data: dict[str, Any] = {
-        "kind": "prompt",
         "name": "integration-test-azure",
         "model": {
             "id": deployment,
@@ -162,4 +160,4 @@ def make_azure_agent(
         data["outputSchema"] = output_schema
     if metadata is not None:
         data["metadata"] = metadata
-    return AgentDefinition.load(data)
+    return Prompty.load(data)

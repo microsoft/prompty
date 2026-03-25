@@ -5,13 +5,12 @@ All tests mock the OpenAI API — no real API calls are made.
 
 from __future__ import annotations
 
-from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
-from agentschema import AgentDefinition, PromptAgent
 
 from prompty.core.types import AudioPart, FilePart, ImagePart, Message, TextPart
+from prompty.model import Prompty
 from prompty.providers.azure.executor import AzureExecutor
 from prompty.providers.openai.executor import (
     OpenAIExecutor,
@@ -29,9 +28,8 @@ from prompty.providers.openai.executor import (
 # ---------------------------------------------------------------------------
 
 
-def _make_agent(**kwargs) -> PromptAgent:
+def _make_agent(**kwargs) -> Prompty:
     data = {
-        "kind": "prompt",
         "name": "test",
         "model": {
             "id": "gpt-4",
@@ -42,12 +40,11 @@ def _make_agent(**kwargs) -> PromptAgent:
         },
     }
     data.update(kwargs)
-    return cast(PromptAgent, AgentDefinition.load(data))
+    return Prompty.load(data)
 
 
-def _make_azure_agent(**kwargs) -> PromptAgent:
+def _make_azure_agent(**kwargs) -> Prompty:
     data = {
-        "kind": "prompt",
         "name": "test-azure",
         "model": {
             "id": "gpt-4",
@@ -62,7 +59,7 @@ def _make_azure_agent(**kwargs) -> PromptAgent:
         },
     }
     data.update(kwargs)
-    return cast(PromptAgent, AgentDefinition.load(data))
+    return Prompty.load(data)
 
 
 def _make_messages() -> list[Message]:
@@ -217,7 +214,7 @@ class TestSchemaToWire:
                 }
             ]
         )
-        from agentschema import FunctionTool
+        from prompty.model import FunctionTool
 
         tool = agent.tools[0]
         assert isinstance(tool, FunctionTool)
@@ -347,19 +344,15 @@ class TestAzureExecutor:
         from prompty.core.connections import clear_connections, register_connection
 
         executor = AzureExecutor()
-        agent = cast(
-            PromptAgent,
-            AgentDefinition.load(
-                {
-                    "kind": "prompt",
-                    "name": "test-ref",
-                    "model": {
-                        "id": "gpt-4",
-                        "provider": "azure",
-                        "connection": {"kind": "reference", "name": "my-azure"},
-                    },
-                }
-            ),
+        agent = Prompty.load(
+            {
+                "name": "test-ref",
+                "model": {
+                    "id": "gpt-4",
+                    "provider": "azure",
+                    "connection": {"kind": "reference", "name": "my-azure"},
+                },
+            }
         )
         mock_client = MagicMock()
         register_connection("my-azure", client=mock_client)
@@ -377,35 +370,35 @@ class TestAzureExecutor:
 
 class TestPropertyToJsonSchema:
     def test_string_property(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load({"name": "answer", "kind": "string", "description": "The answer"})
         result = _property_to_json_schema(prop)
         assert result == {"type": "string", "description": "The answer"}
 
     def test_integer_property(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load({"name": "count", "kind": "integer"})
         result = _property_to_json_schema(prop)
         assert result == {"type": "integer"}
 
     def test_float_to_number(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load({"name": "score", "kind": "float"})
         result = _property_to_json_schema(prop)
         assert result["type"] == "number"
 
     def test_enum_values(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load({"name": "status", "kind": "string", "enumValues": ["ok", "error"]})
         result = _property_to_json_schema(prop)
         assert result["enum"] == ["ok", "error"]
 
     def test_array_with_items(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load(
             {
@@ -419,7 +412,7 @@ class TestPropertyToJsonSchema:
         assert result["items"] == {"type": "string"}
 
     def test_object_with_properties(self):
-        from agentschema import Property
+        from prompty.model import Property
 
         prop = Property.load(
             {
@@ -565,9 +558,8 @@ class TestBuildArgsResponseFormat:
 # ---------------------------------------------------------------------------
 
 
-def _make_embedding_agent(**kwargs) -> PromptAgent:
+def _make_embedding_agent(**kwargs) -> Prompty:
     data = {
-        "kind": "prompt",
         "name": "test-embed",
         "model": {
             "id": "text-embedding-ada-002",
@@ -577,12 +569,11 @@ def _make_embedding_agent(**kwargs) -> PromptAgent:
         },
     }
     data.update(kwargs)
-    return cast(PromptAgent, AgentDefinition.load(data))
+    return Prompty.load(data)
 
 
-def _make_image_agent(**kwargs) -> PromptAgent:
+def _make_image_agent(**kwargs) -> Prompty:
     data = {
-        "kind": "prompt",
         "name": "test-image",
         "model": {
             "id": "dall-e-3",
@@ -592,7 +583,7 @@ def _make_image_agent(**kwargs) -> PromptAgent:
         },
     }
     data.update(kwargs)
-    return cast(PromptAgent, AgentDefinition.load(data))
+    return Prompty.load(data)
 
 
 class TestEmbeddingDispatch:

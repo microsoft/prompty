@@ -1,9 +1,9 @@
-"""Prompty loader — loads .prompty files into typed PromptAgent objects.
+"""Prompty loader — loads .prompty files into typed Prompty objects.
 
 The loader splits frontmatter (YAML) from the markdown body, resolves
 ``${protocol:value}`` references (env vars, file includes), migrates legacy
-property names, injects ``kind: "prompt"``, and finally delegates to
-``AgentDefinition.load()`` from the ``agentschema`` package.
+property names, and finally delegates to ``Prompty.load()`` from the
+generated model package.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from agentschema import AgentDefinition, LoadContext, PromptAgent
 
+from ..model import LoadContext, Prompty
 from .migration import migrate
 from .utils import load_prompty, load_prompty_async
 
@@ -28,8 +28,8 @@ __all__ = ["load", "load_async"]
 # ---------------------------------------------------------------------------
 
 
-def load(path: str | Path) -> PromptAgent:
-    """Load a ``.prompty`` file and return a typed ``PromptAgent``.
+def load(path: str | Path) -> Prompty:
+    """Load a ``.prompty`` file and return a typed ``Prompty``.
 
     Parameters
     ----------
@@ -38,8 +38,8 @@ def load(path: str | Path) -> PromptAgent:
 
     Returns
     -------
-    PromptAgent
-        Fully typed agent definition from *agentschema*.
+    Prompty
+        Fully typed prompt definition.
     """
     path = Path(path).resolve()
     if not path.exists():
@@ -52,7 +52,7 @@ def load(path: str | Path) -> PromptAgent:
     return _build_agent(data, path)
 
 
-async def load_async(path: str | Path) -> PromptAgent:
+async def load_async(path: str | Path) -> Prompty:
     """Async variant of :func:`load`."""
     path = Path(path).resolve()
     if not path.exists():
@@ -67,8 +67,8 @@ async def load_async(path: str | Path) -> PromptAgent:
 # ---------------------------------------------------------------------------
 
 
-def _build_agent(data: dict[str, Any] | str, path: Path) -> PromptAgent:
-    """Shared pipeline that transforms raw frontmatter dict into a PromptAgent."""
+def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
+    """Shared pipeline that transforms raw frontmatter dict into a Prompty."""
 
     # Handle body-only files (no frontmatter — parse returns a string)
     if isinstance(data, str):
@@ -79,16 +79,9 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> PromptAgent:
     # 2. Migrate legacy property names (with deprecation warnings)
     data = migrate(data)
 
-    # 3. Inject kind — .prompty files are always PromptAgents
-    data["kind"] = "prompt"
-
-    # 4. Load via agentschema with pre_process for ${protocol:value} expansion
-    #    Use AgentDefinition.load() which dispatches on kind and populates
-    #    all base fields (name, metadata, inputSchema, etc.)
+    # 3. Load via Prompty.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path))
-    agent = AgentDefinition.load(data, ctx)
-    if not isinstance(agent, PromptAgent):
-        raise TypeError(f"Expected PromptAgent, got {type(agent).__name__}")
+    agent = Prompty.load(data, ctx)
     return agent
 
 
@@ -99,7 +92,7 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> PromptAgent:
 
 def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
     """Return a ``pre_process`` callback that resolves ``${protocol:value}``
-    references in every dict the agentschema loader visits.
+    references in every dict the loader visits.
 
     Supported protocols:
 

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from agentschema import PromptAgent
 
 from prompty.core.types import ImagePart, Message, TextPart
+from prompty.model import Prompty
 from prompty.parsers import PromptyChatParser
 
 # ---------------------------------------------------------------------------
@@ -13,10 +13,10 @@ from prompty.parsers import PromptyChatParser
 # ---------------------------------------------------------------------------
 
 
-def _make_agent(**kwargs) -> PromptAgent:
-    data = {"kind": "prompt", "name": "test", "model": "gpt-4"}
+def _make_agent(**kwargs) -> Prompty:
+    data = {"name": "test", "model": "gpt-4"}
     data.update(kwargs)
-    return PromptAgent.load(data)
+    return Prompty.load(data)
 
 
 def _text(msg: Message) -> str:

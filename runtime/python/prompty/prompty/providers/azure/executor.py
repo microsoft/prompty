@@ -16,14 +16,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from agentschema import (
-    ApiKeyConnection,
-    PromptAgent,
-    ReferenceConnection,
-)
-
 from ..._version import VERSION
 from ...core.connections import get_connection
+from ...model import (
+    ApiKeyConnection,
+    Prompty,
+    ReferenceConnection,
+)
 from ...tracing.tracer import Tracer, trace
 from ..openai.executor import _BaseExecutor
 
@@ -45,7 +44,7 @@ class AzureExecutor(_BaseExecutor):
     _trace_prefix = "AzureOpenAI"
 
     @trace
-    def execute(self, agent: PromptAgent, data: Any) -> Any:
+    def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
         api_type = agent.model.apiType or "chat"
 
@@ -59,7 +58,7 @@ class AzureExecutor(_BaseExecutor):
             raise ValueError(f"Unsupported apiType: {api_type}")
 
     @trace
-    async def execute_async(self, agent: PromptAgent, data: Any) -> Any:
+    async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
         api_type = agent.model.apiType or "chat"
 
@@ -72,7 +71,7 @@ class AzureExecutor(_BaseExecutor):
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
-    def _resolve_client(self, agent: PromptAgent) -> Any:
+    def _resolve_client(self, agent: Prompty) -> Any:
         """Resolve the sync Azure OpenAI client from connection config."""
         conn = agent.model.connection
 
@@ -84,7 +83,7 @@ class AzureExecutor(_BaseExecutor):
 
         raise ValueError(f"Azure executor requires connection kind 'key' or 'reference', got: {type(conn).__name__}")
 
-    def _resolve_client_async(self, agent: PromptAgent) -> Any:
+    def _resolve_client_async(self, agent: Prompty) -> Any:
         """Resolve the async Azure OpenAI client from connection config."""
         conn = agent.model.connection
 

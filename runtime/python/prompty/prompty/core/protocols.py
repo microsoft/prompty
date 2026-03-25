@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from agentschema import PromptAgent
-
+from ..model import Prompty
 from .types import Message
 
 __all__ = [
@@ -37,14 +36,14 @@ class RendererProtocol(Protocol):
 
     def render(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         template: str,
         inputs: dict[str, Any],
     ) -> str: ...
 
     async def render_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         template: str,
         inputs: dict[str, Any],
     ) -> str: ...
@@ -61,14 +60,14 @@ class ParserProtocol(Protocol):
 
     def parse(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         rendered: str,
         **context: Any,
     ) -> list[Message]: ...
 
     async def parse_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         rendered: str,
         **context: Any,
     ) -> list[Message]: ...
@@ -90,13 +89,13 @@ class ExecutorProtocol(Protocol):
 
     def execute(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         messages: list[Message],
     ) -> Any: ...
 
     async def execute_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         messages: list[Message],
     ) -> Any: ...
 
@@ -107,12 +106,12 @@ class ProcessorProtocol(Protocol):
 
     def process(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any: ...
 
     async def process_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any: ...

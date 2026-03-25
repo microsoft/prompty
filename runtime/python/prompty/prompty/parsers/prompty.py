@@ -15,8 +15,6 @@ import secrets
 from pathlib import Path
 from typing import Any
 
-from agentschema import PromptAgent
-
 from ..core.types import (
     ROLES,
     ContentPart,
@@ -24,6 +22,7 @@ from ..core.types import (
     Message,
     TextPart,
 )
+from ..model import Prompty
 from ..tracing.tracer import trace
 
 __all__ = ["PromptyChatParser"]
@@ -79,7 +78,7 @@ class PromptyChatParser:
     @trace
     def parse(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -88,7 +87,7 @@ class PromptyChatParser:
         Parameters
         ----------
         agent:
-            The loaded PromptAgent (used for resolving file paths).
+            The loaded Prompty (used for resolving file paths).
         rendered:
             The rendered template text.
         **context:
@@ -102,7 +101,7 @@ class PromptyChatParser:
 
     def _parse(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -113,7 +112,7 @@ class PromptyChatParser:
     @trace
     async def parse_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -121,7 +120,7 @@ class PromptyChatParser:
 
     # ---- internal parsing ----
 
-    def _resolve_base_path(self, agent: PromptAgent) -> Path | None:
+    def _resolve_base_path(self, agent: Prompty) -> Path | None:
         """Try to find a base path from agent metadata for resolving relative images."""
         # The agent doesn't store the file path directly, but metadata may have it
         if agent.metadata and "source_path" in agent.metadata:

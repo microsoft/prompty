@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import cast
 from unittest.mock import MagicMock
 
 import pytest
-from agentschema import AgentDefinition, PromptAgent
 
+from prompty.model import Prompty
 from prompty.providers.azure.processor import AzureProcessor
 from prompty.providers.openai.processor import (
     OpenAIProcessor,
@@ -19,11 +18,8 @@ from prompty.providers.openai.processor import (
 # ---------------------------------------------------------------------------
 
 
-def _make_agent() -> PromptAgent:
-    return cast(
-        PromptAgent,
-        AgentDefinition.load({"kind": "prompt", "name": "test", "model": "gpt-4"}),
-    )
+def _make_agent() -> Prompty:
+    return Prompty.load({"name": "test", "model": "gpt-4"})
 
 
 def _mock_chat_completion(content: str | None = "Hello!", tool_calls=None):  # type: ignore[assignment]
@@ -199,19 +195,15 @@ class TestAsync:
 # ---------------------------------------------------------------------------
 
 
-def _make_agent_with_schema(**schema_properties) -> PromptAgent:
+def _make_agent_with_schema(**schema_properties) -> Prompty:
     """Create an agent with an outputSchema."""
     props = schema_properties.get("properties", [])
-    return cast(
-        PromptAgent,
-        AgentDefinition.load(
-            {
-                "kind": "prompt",
-                "name": "test",
-                "model": "gpt-4",
-                "outputSchema": {"properties": props},
-            }
-        ),
+    return Prompty.load(
+        {
+            "name": "test",
+            "model": "gpt-4",
+            "outputSchema": {"properties": props},
+        }
     )
 
 

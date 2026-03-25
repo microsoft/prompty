@@ -2,13 +2,13 @@
 
 ## Overall Architecture
 
-Prompty v2 is a ground-up rebuild. The type system lives in `agentschema` (pip dependency). Prompty loads `.prompty` files into `PromptAgent` objects and runs them through a stateless pipeline.
+Prompty v2 is a ground-up rebuild. The type system lives in `prompty.model` (generated model types). Prompty loads `.prompty` files into `Prompty` objects and runs them through a stateless pipeline.
 
 **Pipeline:**
 
 ```
-.prompty file → load() → PromptAgent
-PromptAgent + inputs → prepare() → list[Message]
+.prompty file → load() → Prompty
+Prompty + inputs → prepare() → list[Message]
 list[Message] → execute() → raw LLM response
 raw response → process() → clean result
 ```
@@ -19,13 +19,13 @@ raw response → process() → clean result
 
 ## Phase 1: Loader ✅ COMPLETE
 
-Loads `.prompty` files → typed `PromptAgent` from `agentschema`.
+Loads `.prompty` files → typed `Prompty` objects.
 
 ### Files
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `prompty/loader.py` | 163 | `load()` / `load_async()` — parse frontmatter, migrate legacy, inject `kind: "prompt"`, resolve `${env:}` / `${file:}`, call `AgentDefinition.load()` |
+| `prompty/loader.py` | 163 | `load()` / `load_async()` — parse frontmatter, migrate legacy, resolve `${env:}` / `${file:}`, call `Prompty.load()` |
 | `prompty/migration.py` | 236 | `_migrate_legacy()` — converts v1 property names → v2 AgentSchema names with deprecation warnings |
 | `prompty/utils.py` | 67 | `parse()` — regex frontmatter/body split; `load_prompty()` / `load_prompty_async()` — file I/O |
 | `prompty/tracer.py` | 639 | `Tracer` class, `@trace` decorator (sync+async), `PromptyTracer` (JSON file backend), `console_tracer` |
@@ -36,8 +36,8 @@ Loads `.prompty` files → typed `PromptAgent` from `agentschema`.
 
 ### Key decisions
 
-- `agentschema` is a pip dependency, no code generation
-- No `kind` in `.prompty` files — loader injects `kind: "prompt"`
+- Generated model types in `prompty.model`, no external `agentschema` dependency
+- No `kind` needed — `Prompty` is flat (no abstract dispatch)
 - Markdown body → `instructions`
 - Thread position is determined by template variable placement (not `![thread]` syntax)
 - Thread-kind inputs are declared in `inputSchema` with `kind: thread`
@@ -49,7 +49,7 @@ Loads `.prompty` files → typed `PromptAgent` from `agentschema`.
 
 ## Phase 2: Invoker Architecture ✅ COMPLETE
 
-Stateless pipeline operating on `PromptAgent`. All implementations discovered via Python entry points.
+Stateless pipeline operating on `Prompty`. All implementations discovered via Python entry points.
 
 ### Files
 
@@ -113,7 +113,8 @@ Stateless pipeline operating on `PromptAgent`. All implementations discovered vi
 
 ### `__init__.py` exports (updated)
 
-- agentschema re-exports: `AgentDefinition`, `PromptAgent`, `Model`, `ModelOptions`, `Connection`, all connection subtypes, `Template`, `Format`, `Parser`, `PropertySchema`, `Property`, `Tool`, all tool subtypes, `LoadContext`, `SaveContext`
+- Model type re-exports: `Prompty`, `Model`, `ModelOptions`, `Connection`, all connection subtypes, `Template`, `Format`, `Parser`, `PropertySchema`, `Property`, `Tool`, all tool subtypes, `LoadContext`, `SaveContext`
+- Backward-compat aliases: `PromptAgent = Prompty`, `AgentDefinition = Prompty`
 - Loader: `load`, `load_async`
 - Pipeline: `prepare`, `prepare_async`, `execute`, `execute_async`, `process`, `process_async`, `run`, `run_async`, `validate_inputs`
 - Protocols: `RendererProtocol`, `ParserProtocol`, `ExecutorProtocol`, `ProcessorProtocol`

@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from agentschema import PromptAgent
-
+from ..model import Prompty
 from ..tracing.tracer import trace
 from ._common import _prepare_render_inputs, _thread_nonces_local
 
@@ -27,7 +26,7 @@ class Jinja2Renderer:
     @trace
     def render(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         template: str,
         inputs: dict[str, Any],
     ) -> str:
@@ -35,7 +34,7 @@ class Jinja2Renderer:
 
     def _render(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         template: str,
         inputs: dict[str, Any],
     ) -> str:
@@ -59,7 +58,7 @@ class Jinja2Renderer:
     @trace
     async def render_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         template: str,
         inputs: dict[str, Any],
     ) -> str:

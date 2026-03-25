@@ -6,7 +6,7 @@ import secrets
 import threading
 from typing import Any
 
-from agentschema import PromptAgent
+from ..model import Prompty
 
 __all__ = ["THREAD_NONCE_PREFIX", "_prepare_render_inputs", "_thread_nonces_local"]
 
@@ -19,7 +19,7 @@ _thread_nonces_local = threading.local()
 
 
 def _prepare_render_inputs(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, str]]:
     """Replace thread-kind input values with nonce markers.

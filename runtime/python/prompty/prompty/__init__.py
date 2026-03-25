@@ -4,32 +4,7 @@ from ._version import VERSION
 
 __version__ = VERSION
 
-# Core API
-# Re-export key agentschema types for convenience
-from agentschema import (
-    AgentDefinition,
-    AnonymousConnection,
-    ApiKeyConnection,
-    Connection,
-    CustomTool,
-    Format,
-    FunctionTool,
-    LoadContext,
-    McpTool,
-    Model,
-    ModelOptions,
-    OpenApiTool,
-    Parser,
-    PromptAgent,
-    Property,
-    PropertySchema,
-    ReferenceConnection,
-    RemoteConnection,
-    SaveContext,
-    Template,
-    Tool,
-)
-
+# Re-export generated model types
 # Connection registry
 from .core.connections import clear_connections, get_connection, register_connection
 
@@ -77,6 +52,36 @@ from .invoker import (
     run_async,
     validate_inputs,
 )
+from .model import (
+    AnonymousConnection,
+    ApiKeyConnection,
+    ArrayProperty,
+    Binding,
+    Connection,
+    CustomTool,
+    Format,
+    FoundryConnection,
+    FunctionTool,
+    LoadContext,
+    McpApprovalMode,
+    McpTool,
+    Model,
+    ModelOptions,
+    OAuthConnection,
+    ObjectProperty,
+    OpenApiTool,
+    Prompty,
+    Property,
+    PropertySchema,
+    ReferenceConnection,
+    RemoteConnection,
+    SaveContext,
+    Template,
+    Tool,
+)
+from .model import (
+    Parser as SchemaParser,
+)
 
 # Concrete invokers
 from .parsers import PromptyChatParser
@@ -99,3 +104,7 @@ from .tracing.tracer import (
     trace_span,
     verbose_trace,
 )
+
+# Backward-compat aliases (will be removed in a future version)
+PromptAgent = Prompty
+AgentDefinition = Prompty

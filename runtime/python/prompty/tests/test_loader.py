@@ -7,17 +7,17 @@ import warnings
 from pathlib import Path
 
 import pytest
-from agentschema import (
+
+from prompty import load
+from prompty.model import (
     ApiKeyConnection,
     CustomTool,
     FunctionTool,
     McpTool,
     OpenApiTool,
-    PromptAgent,
+    Prompty,
     ReferenceConnection,
 )
-
-from prompty import load
 
 PROMPTS = Path(__file__).parent / "prompts"
 
@@ -47,14 +47,14 @@ class TestBasicLoading:
         assert agent.model.id == "gpt-4"
 
     def test_load_returns_prompt_agent(self):
-        """load() always returns a PromptAgent."""
+        """load() always returns a Prompty."""
         agent = load(PROMPTS / "minimal.prompty")
-        assert isinstance(agent, PromptAgent)
+        assert isinstance(agent, Prompty)
 
     def test_load_kind_is_prompt(self):
-        """kind is always 'prompt' for .prompty files."""
+        """Prompty is always a Prompty (no kind field — flat model)."""
         agent = load(PROMPTS / "minimal.prompty")
-        assert agent.kind == "prompt"
+        assert isinstance(agent, Prompty)
 
     def test_load_missing_file(self):
         """FileNotFoundError for non-existent files."""
@@ -65,7 +65,7 @@ class TestBasicLoading:
         """A prompt with no model specified still loads."""
         agent = load(PROMPTS / "no_model.prompty")
         assert agent.name == "no-model"
-        assert agent.model is not None  # agentschema provides a default
+        assert agent.model is not None  # model provides a default
 
 
 # ---------------------------------------------------------------------------
@@ -386,10 +386,9 @@ class TestLegacyMigration:
             del os.environ["AZURE_OPENAI_API_KEY"]
 
     def test_load_legacy_basic(self):
-        """Old-format prompty loads and produces a valid PromptAgent."""
+        """Old-format prompty loads and produces a valid Prompty."""
         agent, _ = self._load_legacy()
-        assert isinstance(agent, PromptAgent)
-        assert agent.kind == "prompt"
+        assert isinstance(agent, Prompty)
 
     def test_load_legacy_deprecation_warnings(self):
         """Legacy loading emits DeprecationWarning."""
@@ -501,17 +500,16 @@ class TestShorthand:
         assert "{{question}}" in agent.instructions
 
     def test_empty_frontmatter(self):
-        """Empty frontmatter (---\\n---) produces a valid PromptAgent."""
+        """Empty frontmatter (---\\n---) produces a valid Prompty."""
         agent = load(PROMPTS / "shorthand_empty_frontmatter.prompty")
-        assert isinstance(agent, PromptAgent)
-        assert agent.kind == "prompt"
+        assert isinstance(agent, Prompty)
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
 
     def test_body_only(self):
         """File with no frontmatter at all still loads."""
         agent = load(PROMPTS / "shorthand_body_only.prompty")
-        assert isinstance(agent, PromptAgent)
+        assert isinstance(agent, Prompty)
         assert agent.instructions is not None
         assert "answers questions concisely" in agent.instructions
 
@@ -539,7 +537,7 @@ class TestShorthand:
         """Frontmatter with only a name — no model, no schema."""
         agent = load(PROMPTS / "shorthand_name_only.prompty")
         assert agent.name == "just-a-name"
-        assert agent.model is not None  # agentschema provides default Model
+        assert agent.model is not None  # Prompty.load() provides default Model
         assert agent.model.id == ""
         assert agent.inputSchema is None
         assert agent.instructions is not None
@@ -569,7 +567,7 @@ class TestAsyncLoading:
         from prompty import load_async
 
         agent = await load_async(PROMPTS / "minimal.prompty")
-        assert isinstance(agent, PromptAgent)
+        assert isinstance(agent, Prompty)
         assert agent.name == "minimal"
         assert agent.model.id == "gpt-4"
 

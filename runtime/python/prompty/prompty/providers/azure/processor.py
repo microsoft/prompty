@@ -10,8 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from agentschema import PromptAgent
-
+from ...model import Prompty
 from ...tracing.tracer import trace
 from ..openai.processor import _process_response
 
@@ -28,7 +27,7 @@ class AzureProcessor:
     @trace
     def process(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -36,7 +35,7 @@ class AzureProcessor:
     @trace
     async def process_async(
         self,
-        agent: PromptAgent,
+        agent: Prompty,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)

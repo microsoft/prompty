@@ -197,10 +197,10 @@ def _patch_entry_points(**groups):
 
 
 def _make_agent(**overrides) -> Any:
-    """Create a minimal mock PromptAgent for testing."""
-    from agentschema import Model, PromptAgent
+    """Create a minimal mock Prompty for testing."""
+    from prompty.model import Model, Prompty
 
-    agent = mock.Mock(spec=PromptAgent)
+    agent = mock.Mock(spec=Prompty)
     agent.instructions = overrides.get("instructions", "system:\nHello {{name}}\n\nuser:\n{{question}}")
     agent.inputSchema = overrides.get("inputSchema", None)
     agent.template = overrides.get("template", None)
@@ -286,7 +286,7 @@ class TestValidateInputs:
         assert result == {"foo": "bar"}
 
     def test_defaults_applied(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -302,7 +302,7 @@ class TestValidateInputs:
         assert result["name"] == "World"
 
     def test_example_as_fallback(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -319,7 +319,7 @@ class TestValidateInputs:
         assert result["name"] == "Jane"
 
     def test_required_missing_raises(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -337,7 +337,7 @@ class TestValidateInputs:
             validate_inputs(agent, {})
 
     def test_strict_rejects_unknown(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -353,7 +353,7 @@ class TestValidateInputs:
             validate_inputs(agent, {"name": "ok", "extra": "bad"})
 
     def test_provided_overrides_default(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -548,8 +548,8 @@ class TestPrepare:
         assert "How?" in messages[1].text
 
     def test_prepare_with_template_config(self):
-        from agentschema import Format, Template
-        from agentschema import Parser as SchemaParser
+        from prompty.model import Format, Template
+        from prompty.model import Parser as SchemaParser
 
         fmt = mock.Mock(spec=Format)
         fmt.kind = "jinja2"
@@ -694,7 +694,7 @@ class TestRichInputNames:
         assert _get_rich_input_names(agent) == {}
 
     def test_detects_thread(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "history"
@@ -708,7 +708,7 @@ class TestRichInputNames:
         assert result == {"history": "thread"}
 
     def test_ignores_string(self):
-        from agentschema import Property, PropertySchema
+        from prompty.model import Property, PropertySchema
 
         p = Property()
         p.name = "name"
@@ -728,12 +728,11 @@ class TestRichInputNames:
 
 class TestHeadless:
     def test_returns_prompt_agent(self):
-        from agentschema import PromptAgent
-
         from prompty.core.pipeline import headless
+        from prompty.model import Prompty
 
         agent = headless()
-        assert isinstance(agent, PromptAgent)
+        assert isinstance(agent, Prompty)
 
     def test_default_values(self):
         from prompty.core.pipeline import headless
@@ -785,7 +784,7 @@ class TestHeadless:
         )
         conn = agent.model.connection
         assert conn is not None
-        from agentschema import ApiKeyConnection
+        from prompty.model import ApiKeyConnection
 
         assert isinstance(conn, ApiKeyConnection)
         assert conn.apiKey == "sk-test"

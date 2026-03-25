@@ -5,10 +5,8 @@
 
 Prompty is a markdown file format (`.prompty`) for LLM
 prompts. The Python runtime loads, renders, parses, and
-executes these files. It uses
-[AgentSchema](https://microsoft.github.io/AgentSchema/)
-as its type system — every `.prompty` file becomes a typed
-`PromptAgent`.
+executes these files. Every `.prompty` file becomes a typed
+`Prompty` object.
 
 ## Installation
 
@@ -27,7 +25,7 @@ pip install prompty[all]
 
 | Package | Required | Purpose |
 |---------|----------|---------|
-| `agentschema` | ✅ | Type system (PromptAgent, etc.) |
+| `prompty.model` | ✅ | Type system (Prompty, etc.) |
 | `pyyaml` | ✅ | YAML frontmatter parsing |
 | `python-dotenv` | ✅ | `.env` file loading |
 | `aiofiles` | ✅ | Async file I/O |
@@ -101,7 +99,7 @@ result = await prompty.execute_async(
 
 | Function | What it does |
 |----------|-------------|
-| `load(path)` | Parse `.prompty` → `PromptAgent` |
+| `load(path)` | Parse `.prompty` → `Prompty` |
 | `render(agent, inputs)` | Template → rendered string |
 | `parse(agent, rendered)` | Rendered string → `list[Message]` |
 | `prepare(agent, inputs)` | Render + parse + threads → `list[Message]` |
@@ -109,7 +107,7 @@ result = await prompty.execute_async(
 | `process(agent, resp)` | Extract content → clean result |
 | `execute(prompt, inputs)` | Full pipeline: load + prepare + run |
 | `execute_agent(prompt, ...)` | Full pipeline with tool-call loop |
-| `headless(api, ...)` | Create `PromptAgent` w/o a file |
+| `headless(api, ...)` | Create `Prompty` w/o a file |
 | `validate_inputs(...)` | Check required inputs present |
 
 All functions have `_async` variants (e.g.,

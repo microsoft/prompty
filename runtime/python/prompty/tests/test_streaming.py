@@ -195,14 +195,9 @@ class TestProcessorStreaming:
         stream = PromptyStream("test", iter(chunks))
 
         processor = OpenAIProcessor()
-        from typing import cast
+        from prompty.model import Prompty
 
-        from agentschema import AgentDefinition, PromptAgent
-
-        agent = cast(
-            PromptAgent,
-            AgentDefinition.load({"kind": "prompt", "name": "test", "model": "gpt-4"}),
-        )
+        agent = Prompty.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         # Result should be a generator
         collected = list(result)
@@ -219,14 +214,9 @@ class TestProcessorStreaming:
         stream = PromptyStream("test", iter(chunks))
 
         processor = OpenAIProcessor()
-        from typing import cast
+        from prompty.model import Prompty
 
-        from agentschema import AgentDefinition, PromptAgent
-
-        agent = cast(
-            PromptAgent,
-            AgentDefinition.load({"kind": "prompt", "name": "test", "model": "gpt-4"}),
-        )
+        agent = Prompty.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         collected = list(result)
         assert collected == ["Hello", "world"]
@@ -242,14 +232,9 @@ class TestProcessorStreaming:
         stream = AsyncPromptyStream("test", _AsyncIter(chunks))
 
         processor = OpenAIProcessor()
-        from typing import cast
+        from prompty.model import Prompty
 
-        from agentschema import AgentDefinition, PromptAgent
-
-        agent = cast(
-            PromptAgent,
-            AgentDefinition.load({"kind": "prompt", "name": "test", "model": "gpt-4"}),
-        )
+        agent = Prompty.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         # Result should be an async generator
         collected = [item async for item in result]

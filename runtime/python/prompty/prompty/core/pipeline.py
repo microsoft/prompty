@@ -24,8 +24,7 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from agentschema import PromptAgent
-
+from ..model import Prompty
 from ..renderers._common import _thread_nonces_local
 from ..tracing.tracer import trace
 from .discovery import (
@@ -75,7 +74,7 @@ __all__ = [
 
 
 def validate_inputs(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate and fill defaults for inputs against ``agent.inputSchema``.
@@ -83,7 +82,7 @@ def validate_inputs(
     Parameters
     ----------
     agent:
-        The loaded PromptAgent.
+        The loaded Prompty.
     inputs:
         User-provided input values.
 
@@ -132,7 +131,7 @@ def validate_inputs(
 # ---------------------------------------------------------------------------
 
 
-def _get_rich_input_names(agent: PromptAgent) -> dict[str, str]:
+def _get_rich_input_names(agent: Prompty) -> dict[str, str]:
     """Return {property_name: kind} for all rich-kind inputs."""
     if agent.inputSchema is None:
         return {}
@@ -318,7 +317,7 @@ def _dict_content_to_part(d: dict[str, Any]) -> ContentPart:
 
 
 def _resolve_prepare_config(
-    agent: PromptAgent,
+    agent: Prompty,
 ) -> tuple[str, str, bool]:
     """Extract format kind, parser kind, and strict flag from an agent's template config."""
     format_kind = "jinja2"
@@ -362,7 +361,7 @@ def _finalize_messages(
 
 @trace
 def render(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any] | None = None,
 ) -> str:
     """Render the agent's template with the given inputs.
@@ -374,7 +373,7 @@ def render(
     Parameters
     ----------
     agent:
-        A loaded ``PromptAgent``.
+        A loaded ``Prompty``.
     inputs:
         Input values for template rendering.
 
@@ -392,7 +391,7 @@ def render(
 
 @trace
 async def render_async(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any] | None = None,
 ) -> str:
     """Async variant of :func:`render`."""
@@ -410,7 +409,7 @@ async def render_async(
 
 @trace
 def parse(
-    agent: PromptAgent,
+    agent: Prompty,
     rendered: str,
 ) -> list[Message]:
     """Parse a rendered template string into an abstract message array.
@@ -422,7 +421,7 @@ def parse(
     Parameters
     ----------
     agent:
-        A loaded ``PromptAgent``.
+        A loaded ``Prompty``.
     rendered:
         The rendered template string (output from :func:`render`).
 
@@ -441,7 +440,7 @@ def parse(
 
 @trace
 async def parse_async(
-    agent: PromptAgent,
+    agent: Prompty,
     rendered: str,
 ) -> list[Message]:
     """Async variant of :func:`parse`."""
@@ -460,7 +459,7 @@ async def parse_async(
 
 @trace
 def prepare(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Render, parse, and expand a prompt into a message array.
@@ -475,7 +474,7 @@ def prepare(
     Parameters
     ----------
     agent:
-        A loaded ``PromptAgent``.
+        A loaded ``Prompty``.
     inputs:
         Input values for template rendering.
 
@@ -507,7 +506,7 @@ def prepare(
 
 @trace
 async def prepare_async(
-    agent: PromptAgent,
+    agent: Prompty,
     inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async variant of :func:`prepare`."""
@@ -538,7 +537,7 @@ async def prepare_async(
 
 
 def _invoke_executor(
-    agent: PromptAgent,
+    agent: Prompty,
     messages: list[Message],
 ) -> Any:
     """Discover and call the executor for the agent's provider.
@@ -555,7 +554,7 @@ def _invoke_executor(
 
 
 async def _invoke_executor_async(
-    agent: PromptAgent,
+    agent: Prompty,
     messages: list[Message],
 ) -> Any:
     """Async variant of :func:`_invoke_executor`."""
@@ -573,7 +572,7 @@ async def _invoke_executor_async(
 
 @trace
 def process(
-    agent: PromptAgent,
+    agent: Prompty,
     response: Any,
 ) -> Any:
     """Extract a clean result from a raw LLM response.
@@ -581,7 +580,7 @@ def process(
     Parameters
     ----------
     agent:
-        The ``PromptAgent`` used for the call.
+        The ``Prompty`` used for the call.
     response:
         Raw response from :func:`execute`.
 
@@ -599,7 +598,7 @@ def process(
 
 @trace
 async def process_async(
-    agent: PromptAgent,
+    agent: Prompty,
     response: Any,
 ) -> Any:
     """Async variant of :func:`process`."""
@@ -617,7 +616,7 @@ async def process_async(
 
 @trace
 def run(
-    agent: PromptAgent,
+    agent: Prompty,
     messages: list[Message],
     *,
     raw: bool = False,
@@ -631,7 +630,7 @@ def run(
     Parameters
     ----------
     agent:
-        A loaded ``PromptAgent`` with model configuration.
+        A loaded ``Prompty`` with model configuration.
     messages:
         Abstract message array from :func:`prepare`.
     raw:
@@ -650,7 +649,7 @@ def run(
 
 @trace
 async def run_async(
-    agent: PromptAgent,
+    agent: Prompty,
     messages: list[Message],
     *,
     raw: bool = False,
@@ -669,7 +668,7 @@ async def run_async(
 
 @trace
 def execute(
-    prompt: str | PromptAgent,
+    prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
@@ -683,7 +682,7 @@ def execute(
     Parameters
     ----------
     prompt:
-        Path to a ``.prompty`` file, or a pre-loaded ``PromptAgent``.
+        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
     inputs:
         Input values for template rendering.
     raw:
@@ -703,7 +702,7 @@ def execute(
 
 @trace
 async def execute_async(
-    prompt: str | PromptAgent,
+    prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
@@ -868,7 +867,7 @@ async def _build_tool_result_messages_async(
 
 @trace
 def execute_agent(
-    prompt: str | PromptAgent,
+    prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
     tools: dict[str, Callable[..., Any]] | None = None,
@@ -885,7 +884,7 @@ def execute_agent(
     Parameters
     ----------
     prompt:
-        Path to a ``.prompty`` file, or a pre-loaded ``PromptAgent``.
+        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
     inputs:
         Input values for template rendering.
     tools:
@@ -942,7 +941,7 @@ def execute_agent(
 
 @trace
 async def execute_agent_async(
-    prompt: str | PromptAgent,
+    prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
     tools: dict[str, Callable[..., Any]] | None = None,
@@ -1003,8 +1002,8 @@ def headless(
     provider: str = "openai",
     connection: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
-) -> PromptAgent:
-    """Create a ``PromptAgent`` programmatically without a ``.prompty`` file.
+) -> Prompty:
+    """Create a ``Prompty`` programmatically without a ``.prompty`` file.
 
     Useful for embedding calls, one-off completions, or cases where a file
     isn't needed.  The returned agent can be passed to :func:`execute` and
@@ -1029,7 +1028,7 @@ def headless(
 
     Returns
     -------
-    PromptAgent
+    Prompty
         A fully typed agent ready for :func:`run` / :func:`execute`.
 
     Examples
@@ -1048,10 +1047,8 @@ def headless(
     ... )
     >>> result = run(agent, agent.metadata["content"])
     """
-    from agentschema import AgentDefinition
 
     data: dict[str, Any] = {
-        "kind": "prompt",
         "name": "headless",
         "model": {
             "id": model,
@@ -1068,7 +1065,5 @@ def headless(
     if options:
         data["model"]["options"] = options
 
-    agent = AgentDefinition.load(data)
-    if not isinstance(agent, PromptAgent):
-        raise TypeError(f"Expected PromptAgent, got {type(agent).__name__}")
+    agent = Prompty.load(data)
     return agent

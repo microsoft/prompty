@@ -11,7 +11,6 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from agentschema import AgentDefinition, PromptAgent
 
 from prompty.core.pipeline import (
     _build_tool_result_messages,
@@ -22,16 +21,16 @@ from prompty.core.pipeline import (
     execute_agent_async,
 )
 from prompty.core.types import Message, TextPart
+from prompty.model import Prompty
 
 # ---------------------------------------------------------------------------
 # Mock helpers
 # ---------------------------------------------------------------------------
 
 
-def _make_agent() -> PromptAgent:
-    """Create a minimal PromptAgent with a function tool."""
+def _make_agent() -> Prompty:
+    """Create a minimal Prompty with a function tool."""
     data = {
-        "kind": "prompt",
         "name": "test-agent",
         "model": {
             "id": "gpt-4",
@@ -52,8 +51,7 @@ def _make_agent() -> PromptAgent:
         ],
         "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
     }
-    agent = AgentDefinition.load(data)
-    assert isinstance(agent, PromptAgent)
+    agent = Prompty.load(data)
     return agent
 
 
