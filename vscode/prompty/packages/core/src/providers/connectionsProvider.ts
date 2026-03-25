@@ -244,7 +244,7 @@ export class ConnectionsTreeDataProvider
 		return [];
 	}
 
-	private getSectionItems(profile: ConnectionProfile): SectionTreeItem[] {
+	private async getSectionItems(profile: ConnectionProfile): Promise<SectionTreeItem[]> {
 		const items: SectionTreeItem[] = [];
 		items.push(
 			new SectionTreeItem("Properties", "properties", profile, "list-unordered")
@@ -253,6 +253,10 @@ export class ConnectionsTreeDataProvider
 		// Only show Models section for providers that support model discovery
 		const provider = this.registry.getProviderForType(profile.providerType);
 		if (provider?.listModels) {
+			// Auto-fetch models on first expand if not cached
+			if (!this.modelCache.has(profile.id)) {
+				await this.fetchModels(profile);
+			}
 			const cachedModels = this.modelCache.get(profile.id);
 			items.push(
 				new SectionTreeItem(
@@ -406,20 +410,29 @@ export class ConnectionsTreeDataProvider
 		this._onDidChangeTreeData.fire(undefined);
 	}
 
-	/** Fetch and cache models for a connection (called after successful test) */
+	/** Fetch and cache models for a connection (called during tree expansion or after test) */
 	async fetchModels(profile: ConnectionProfile, secret?: string): Promise<void> {
 		const provider = this.registry.getProviderForType(profile.providerType);
 		if (!provider?.listModels) return;
 
 		try {
+			if (!secret) {
+				secret = (await this.store.getSecret(profile.id)) ?? undefined;
+			}
 			const models = await provider.listModels(profile, secret);
 			if (models) {
 				this.modelCache.set(profile.id, models);
-				this._onDidChangeTreeData.fire(undefined);
 			}
 		} catch {
-			// Model fetch failed silently — user can expand Models section to retry
+			// Model fetch failed — show empty
 		}
+	}
+
+	/** Clear cached models for a connection and re-fetch */
+	async refreshModels(profile: ConnectionProfile): Promise<void> {
+		this.modelCache.delete(profile.id);
+		await this.fetchModels(profile);
+		this._onDidChangeTreeData.fire(undefined);
 	}
 
 	dispose(): void {

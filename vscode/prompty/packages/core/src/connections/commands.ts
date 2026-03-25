@@ -5,6 +5,7 @@ import { ConnectionWizard } from "./wizard";
 import {
 	ConnectionsTreeDataProvider,
 	ConnectionTreeItem,
+	SectionTreeItem,
 } from "../providers/connectionsProvider";
 
 /**
@@ -218,6 +219,24 @@ export function registerConnectionCommands(
 				await store.setDefault(profileId);
 				vscode.window.showInformationMessage(
 					`"${profileName}" set as default.`
+				);
+			}
+		)
+	);
+
+	// ─── Refresh Models ─────────────────────────────────────────
+
+	disposables.push(
+		vscode.commands.registerCommand(
+			"prompty.refreshModels",
+			async (item?: SectionTreeItem) => {
+				if (!item || item.sectionType !== "models") return;
+				await vscode.window.withProgress(
+					{
+						location: vscode.ProgressLocation.Notification,
+						title: `Refreshing models for "${item.profile.name}"...`,
+					},
+					() => treeProvider.refreshModels(item.profile)
 				);
 			}
 		)

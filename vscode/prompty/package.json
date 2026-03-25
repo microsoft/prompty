@@ -148,6 +148,12 @@
 				"icon": "$(star-full)"
 			},
 			{
+				"command": "prompty.refreshModels",
+				"category": "Prompty",
+				"title": "Refresh Models",
+				"icon": "$(refresh)"
+			},
+			{
 				"command": "prompty.refreshConnections",
 				"category": "Prompty",
 				"title": "Refresh Connections",
@@ -243,6 +249,11 @@
 					"command": "prompty.deleteConnection",
 					"when": "view == view-connections && viewItem =~ /^conn-profile-/",
 					"group": "2_danger@1"
+				},
+				{
+					"command": "prompty.refreshModels",
+					"when": "view == view-connections && viewItem == connection-section-models",
+					"group": "inline"
 				}
 			]
 		},

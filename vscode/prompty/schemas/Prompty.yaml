@@ -226,17 +226,21 @@ definitions:
       Describes a set of typed properties, used for both inputSchema and
       outputSchema as well as tool parameter definitions. Properties can
       be an array of named objects or a record (object with property
-      name keys).
+      name keys). Record values support scalar shorthand.
     properties:
       properties:
-        description: Property definitions (array or record form).
+        description: >-
+          Property definitions. Supports three forms:
+          (1) Array of named property objects (each must include 'name').
+          (2) Record/dict where keys are property names and values are property objects (no 'name' needed).
+          (3) Record with scalar shorthand values — e.g. `firstName: "Jane"` expands to `{kind: string, example: "Jane"}`.
         anyOf:
           - type: array
             items:
-              $ref: "#/definitions/property"
+              $ref: "#/definitions/propertyArrayItem"
           - type: object
             additionalProperties:
-              $ref: "#/definitions/property"
+              $ref: "#/definitions/propertyRecordValue"
       examples:
         type: array
         description: Example records for the input schema.
@@ -249,24 +253,22 @@ definitions:
         description: >-
           When true, the schema is enforced strictly (only defined
           properties are allowed).
-    required:
-      - properties
 
-  # ── Property ────────────────────────────────────────────────────────────
-  property:
+  # ── Property (array form — requires name) ──────────────────────────────
+  propertyArrayItem:
     type: object
-    description: A single typed property definition.
+    description: >-
+      A single typed property definition used in array form.
+      Requires 'name' since there is no key to infer it from.
     required:
       - name
-      - kind
     properties:
       name:
         type: string
         description: Property name (used as the key in input/output objects).
       kind:
         type: string
-        description: >-
-          The data type of the property.
+        description: The data type of the property.
         oneOf:
           - const: string
             description: Text value (e.g. a question, name, or free-form input).
@@ -280,6 +282,8 @@ definitions:
             description: A list of values.
           - const: object
             description: A structured key-value object.
+          - const: thread
+            description: Conversation thread — a list of messages for multi-turn context.
       description:
         type: string
         description: Human-readable description of the property.
@@ -293,9 +297,90 @@ definitions:
         description: Example value used for initialization or tooling.
       enumValues:
         type: array
-        description: >-
-          Allowed enumeration values for the property.
+        description: Allowed enumeration values for the property.
         items: {}
+      # ArrayProperty extension
+      items:
+        $ref: "#/definitions/propertyRecordValue"
+        description: Item type for array-kind properties.
+      # ObjectProperty extension
+      properties:
+        description: Nested properties for object-kind properties.
+        anyOf:
+          - type: array
+            items:
+              $ref: "#/definitions/propertyArrayItem"
+          - type: object
+            additionalProperties:
+              $ref: "#/definitions/propertyRecordValue"
+    additionalProperties: true
+
+  # ── Property (record/dict value — name comes from key) ─────────────────
+  propertyRecordValue:
+    description: >-
+      A property value in record form. Supports:
+      (1) Full object with kind, description, etc. (name inferred from key).
+      (2) Scalar shorthand — string, number, or boolean expands to
+          {kind: <inferred>, example: <value>}.
+    anyOf:
+      - type: string
+        description: >-
+          String shorthand — expands to {kind: "string", example: <value>}.
+      - type: number
+        description: >-
+          Number shorthand — expands to {kind: "float" or "integer", example: <value>}.
+      - type: integer
+        description: >-
+          Integer shorthand — expands to {kind: "integer", example: <value>}.
+      - type: boolean
+        description: >-
+          Boolean shorthand — expands to {kind: "boolean", example: <value>}.
+      - type: object
+        description: Full property definition (name inferred from the record key).
+        properties:
+          name:
+            type: string
+            description: Optional — usually inferred from the record key.
+          kind:
+            type: string
+            description: The data type of the property.
+            oneOf:
+              - const: string
+                description: Text value (e.g. a question, name, or free-form input).
+              - const: integer
+                description: Whole number value (e.g. count, index).
+              - const: float
+                description: Decimal number value (e.g. temperature, score).
+              - const: boolean
+                description: True/false value (e.g. a flag or toggle).
+              - const: array
+                description: A list of values.
+              - const: object
+                description: A structured key-value object.
+              - const: thread
+                description: Conversation thread — a list of messages for multi-turn context.
+          description:
+            type: string
+            description: Human-readable description of the property.
+          required:
+            type: boolean
+            default: false
+            description: Whether the caller must provide this property.
+          default:
+            description: Default value used when the caller does not supply one.
+          example:
+            description: Example value used for initialization or tooling.
+          enumValues:
+            type: array
+            description: Allowed enumeration values for the property.
+            items: {}
+          # ArrayProperty extension
+          items:
+            description: Item type for array-kind properties.
+          # ObjectProperty extension
+          properties:
+            description: Nested properties for object-kind properties.
+        additionalProperties: true
 
   # ── Template ────────────────────────────────────────────────────────────
   template:
