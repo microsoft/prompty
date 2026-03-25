@@ -9,3 +9,5 @@ obj/
 .venv/
 __pycache__/
 .coverage
+.mypy_cache/
+.pytest_cache/
