@@ -1,6 +1,9 @@
 import { ExtensionContext, Uri, Disposable, window, workspace } from 'vscode';
-import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, consoleTracer } from 'prompty';
-import type { PromptAgent } from 'prompty';
+import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, consoleTracer } from '@prompty/core';
+import type { PromptAgent } from '@prompty/core';
+// Import provider packages to trigger auto-registration of executors/processors
+import '@prompty/openai';
+import '@prompty/foundry';
 import type { FoundryConnectionProfile } from '../connections/types';
 import * as path from 'path';
 import * as fs from 'fs';

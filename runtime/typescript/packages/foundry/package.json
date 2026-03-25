@@ -1,0 +1,61 @@
+{
+  "name": "@prompty/foundry",
+  "version": "2.0.0-alpha.1",
+  "description": "Microsoft Foundry provider for Prompty — executor and processor for Azure AI Foundry",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "prompty",
+    "azure",
+    "foundry",
+    "llm",
+    "ai"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/prompty",
+    "directory": "runtime/typescript/packages/foundry"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@prompty/core": "^2.0.0-alpha.1",
+    "@prompty/openai": "^2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "@azure/ai-projects": "^2.0.1",
+    "@azure/identity": "^4.13.1",
+    "openai": "^4.80.0"
+  },
+  "devDependencies": {
+    "@prompty/core": "^2.0.0-alpha.1",
+    "@prompty/openai": "^2.0.0-alpha.1",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

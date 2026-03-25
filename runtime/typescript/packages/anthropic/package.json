@@ -1,0 +1,54 @@
+{
+  "name": "@prompty/anthropic",
+  "version": "2.0.0-alpha.1",
+  "description": "Anthropic provider for Prompty — executor and processor for Anthropic APIs (scaffolding)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "prompty",
+    "anthropic",
+    "claude",
+    "llm",
+    "ai"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/prompty",
+    "directory": "runtime/typescript/packages/anthropic"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@prompty/core": "^2.0.0-alpha.1"
+  },
+  "devDependencies": {
+    "@prompty/core": "file:../core",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

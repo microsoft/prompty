@@ -7,6 +7,7 @@ import {
 	ServerOptions,
 	TransportKind
 } from 'vscode-languageclient/node';
+import { registerExecutor, registerProcessor } from '@prompty/core';
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 import { PromptyController } from './controllers/promptyController';
 import { TraceFileProvider, TraceItem } from './providers/traceFileProvider';
@@ -117,6 +118,10 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	const api: PromptyExtensionAPI = {
 		registerConnectionProvider: (provider) =>
 			connectionRegistry.registerProvider(provider),
+		registerExecutor: (key, executor) =>
+			registerExecutor(key, executor),
+		registerProcessor: (key, processor) =>
+			registerProcessor(key, processor),
 		getConnections: () => connectionStore.getProfiles(),
 		onConnectionsChanged: (listener) => {
 			const disposable = connectionStore.onDidChange(async () => {
