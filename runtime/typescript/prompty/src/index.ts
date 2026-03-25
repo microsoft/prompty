@@ -84,6 +84,8 @@ export { OpenAIExecutor } from "./providers/openai/index.js";
 export { OpenAIProcessor } from "./providers/openai/index.js";
 export { AzureExecutor } from "./providers/azure/index.js";
 export { AzureProcessor } from "./providers/azure/index.js";
+export { FoundryExecutor } from "./providers/foundry/index.js";
+export { FoundryProcessor } from "./providers/foundry/index.js";
 
 // Wire format utilities
 export { messageToWire, buildChatArgs } from "./providers/openai/wire.js";
@@ -123,6 +125,7 @@ export {
   ApiKeyConnection,
   ReferenceConnection,
   AnonymousConnection,
+  FoundryConnection,
   LoadContext,
   SaveContext,
   Tool,
@@ -141,6 +144,8 @@ import { OpenAIExecutor } from "./providers/openai/executor.js";
 import { OpenAIProcessor } from "./providers/openai/processor.js";
 import { AzureExecutor } from "./providers/azure/executor.js";
 import { AzureProcessor } from "./providers/azure/processor.js";
+import { FoundryExecutor } from "./providers/foundry/executor.js";
+import { FoundryProcessor } from "./providers/foundry/processor.js";
 
 // Renderers
 registerRenderer("nunjucks", new NunjucksRenderer());
@@ -153,7 +158,9 @@ registerParser("prompty", new PromptyChatParser());
 // Executors
 registerExecutor("openai", new OpenAIExecutor());
 registerExecutor("azure", new AzureExecutor());
+registerExecutor("foundry", new FoundryExecutor());
 
 // Processors
 registerProcessor("openai", new OpenAIProcessor());
 registerProcessor("azure", new AzureProcessor());
+registerProcessor("foundry", new FoundryProcessor());

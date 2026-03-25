@@ -1,5 +1,7 @@
 import { ExtensionContext, Uri, Disposable, window, workspace } from 'vscode';
-import { execute, registerConnection, clearConnections } from 'prompty';
+import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, consoleTracer } from 'prompty';
+import type { PromptAgent } from 'prompty';
+import type { FoundryConnectionProfile } from '../connections/types';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConnectionStore } from '../connections/store';
@@ -27,9 +29,28 @@ export class PromptyController implements Disposable {
 			this.loadEnvFile(filePath);
 			await this.bridgeConnections();
 
+			// Register a tracer that pipes to the output channel
+			Tracer.add('vscode-output', (signature) => {
+				this.outputChannel.appendLine(`  [trace] ── ${signature}`);
+				return (key, value) => {
+					if (key === '__end__') return;
+					const display = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+					this.outputChannel.appendLine(`  [trace]    ${key}: ${display}`);
+				};
+			});
+
+			// Load the agent, apply default connection if underspecified, then execute
+			const agent = load(filePath);
+			await this.applyDefaultConnection(agent);
+
 			const startTime = Date.now();
-			const result = await execute(filePath);
+			this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
+			this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
+			this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
+			const result = await execute(agent);
 			const elapsed = Date.now() - startTime;
+
+			Tracer.remove('vscode-output');
 
 			this.outputChannel.appendLine(`\n✓ Completed in ${elapsed}ms\n`);
 
@@ -39,9 +60,68 @@ export class PromptyController implements Disposable {
 				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 			}
 		} catch (error: unknown) {
+			Tracer.remove('vscode-output');
 			const message = error instanceof Error ? error.message : String(error);
 			this.outputChannel.appendLine(`\n✗ Error: ${message}`);
 			window.showErrorMessage(`Prompty execution failed: ${message}`);
+		}
+	}
+
+	/**
+	 * Apply the sidebar's default connection to the agent if the frontmatter
+	 * doesn't already specify a usable connection.
+	 *
+	 * Cascading precedence:
+	 * 1. Frontmatter connection (explicit in .prompty file) — kept as-is
+	 * 2. Default sidebar connection for the provider — applied here
+	 * 3. Nothing — execution will fail at the executor level
+	 */
+	private async applyDefaultConnection(agent: PromptAgent): Promise<void> {
+		if (!this.connectionStore) return;
+
+		const conn = agent.model?.connection;
+
+		// If the frontmatter already specifies a usable connection, respect it
+		if (conn instanceof ReferenceConnection && conn.name) return;
+		if (conn instanceof FoundryConnection && conn.endpoint) return;
+		if (conn && 'apiKey' in conn && (conn as any).apiKey) return;
+
+		// No usable connection — find the default from the sidebar
+		// First try matching the explicit provider, then fall back to any default
+		const provider = agent.model?.provider;
+		let defaultProfile = provider
+			? await this.connectionStore.getDefault(provider)
+			: undefined;
+
+		if (!defaultProfile) {
+			// No provider specified or no match — use any default connection
+			const profiles = await this.connectionStore.getProfiles();
+			defaultProfile = profiles.find(p => p.isDefault) ?? profiles[0];
+		}
+
+		if (!defaultProfile) return;
+
+		if (!agent.model) {
+			agent.model = new Model();
+		}
+
+		// Set the provider to match the resolved connection
+		agent.model.provider = defaultProfile.providerType;
+
+		// Build the appropriate agentschema connection type
+		if (defaultProfile.providerType === 'foundry') {
+			const foundryProfile = defaultProfile as FoundryConnectionProfile;
+			const foundryConn = new FoundryConnection();
+			foundryConn.endpoint = foundryProfile.endpoint;
+			if (foundryProfile.connectionName) {
+				foundryConn.name = foundryProfile.connectionName;
+			}
+			agent.model.connection = foundryConn;
+		} else {
+			// For other providers, use reference to the pre-registered client
+			const ref = new ReferenceConnection();
+			ref.name = defaultProfile.name;
+			agent.model.connection = ref;
 		}
 	}
 
