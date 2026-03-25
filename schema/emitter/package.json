@@ -1,7 +1,7 @@
 {
   "name": "agentschema-emitter",
   "version": "0.2.0",
-  "description": "TypeSpec emitter for generating AgentSchema runtime libraries",
+  "description": "TypeSpec emitter for generating Prompty runtime libraries",
   "license": "MIT",
   "repository": {
     "type": "git",

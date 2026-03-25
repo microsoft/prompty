@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty.model import OpenApiTool
+from prompty import OpenApiTool
 
 
 def test_load_json_openapitool():

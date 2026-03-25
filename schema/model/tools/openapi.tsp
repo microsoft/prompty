@@ -2,7 +2,7 @@ import "../core.tsp";
 import "../tools.tsp";
 import "../connection.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 /*
  * The OpenAPI tool.

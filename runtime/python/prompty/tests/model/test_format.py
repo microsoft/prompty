@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty.model import Format
+from prompty import Format
 
 
 def test_load_json_format():

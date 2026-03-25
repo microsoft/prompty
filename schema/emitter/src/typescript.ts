@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
 import * as nunjucks from "nunjucks";
@@ -62,7 +62,7 @@ interface TypeScriptContextContext {
  * Generate TypeScript code from TypeSpec models.
  */
 export const generateTypeScript = async (
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
@@ -270,7 +270,7 @@ function buildTestContext(node: TypeNode): BaseTestContext {
  */
 function buildContextContext(namespace?: string): TypeScriptContextContext {
   return {
-    header: "AgentSchema Context",
+    header: "Prompty Context",
     package: namespace,
   };
 }
@@ -342,7 +342,7 @@ function getUniqueImportTypes(node: TypeNode): string[] {
  * Write generated TypeScript content to file.
  */
 async function emitTypeScriptFile(
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   filename: string,
   content: string,
   outputDir?: string

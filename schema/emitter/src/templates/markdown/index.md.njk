@@ -1,6 +1,6 @@
 ---
-title: "AgentSchema"
-description: "Overview of declarative agent types in AgentSchema."
+title: "Prompty"
+description: "Overview of declarative agent types in Prompty."
 slug: "reference/index"
 sidebar:
   order: 1

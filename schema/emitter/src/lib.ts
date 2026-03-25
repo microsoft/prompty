@@ -8,7 +8,7 @@ export interface EmitTarget {
   "format"?: boolean;
   "namespace"?: string;
 }
-export interface AgentSchemaEmitterOptions {
+export interface PromptyEmitterOptions {
   "root-object": string;
   "emit-targets"?: EmitTarget[];
   "root-namespace"?: string;
@@ -17,7 +17,7 @@ export interface AgentSchemaEmitterOptions {
   "schema-output-dir"?: string;
 }
 
-const AgentSchemaEmitterOptionsSchema: JSONSchemaType<AgentSchemaEmitterOptions> = {
+const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -92,7 +92,7 @@ const AgentSchemaEmitterOptionsSchema: JSONSchemaType<AgentSchemaEmitterOptions>
 export const $lib = createTypeSpecLibrary({
   name: "agentschema-emitter",
   diagnostics: {},
-  emitter: { options: AgentSchemaEmitterOptionsSchema },
+  emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     samples: { description: "Sample values for properties" },
     shorthands: { description: "Shorthand models creation" },

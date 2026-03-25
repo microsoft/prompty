@@ -3,7 +3,7 @@ using System.Text.Json;
 using YamlDotNet.Serialization;
 
 #pragma warning disable IDE0130
-namespace AgentSchema;
+namespace Prompty;
 #pragma warning restore IDE0130
 
 /// <summary>

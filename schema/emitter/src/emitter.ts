@@ -7,7 +7,7 @@ const __dirname = dirname(__filename);
 
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { resolveModel, TypeNode } from "./ast.js";
-import { AgentSchemaEmitterOptions, EmitTarget } from "./lib.js";
+import { PromptyEmitterOptions, EmitTarget } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
 import { generatePython } from "./python.js";
 import { generateCsharp } from "./csharp.js";
@@ -22,7 +22,7 @@ export interface GeneratorOptions {
 
 /**
  * Filter nodes based on omit-models option.
- * Matches against model name (e.g., "AgentManifest") or fully qualified name (e.g., "AgentSchema.AgentManifest")
+ * Matches against model name (e.g., "AgentManifest") or fully qualified name (e.g., "Prompty.AgentManifest")
  */
 export function filterNodes(nodes: TypeNode[], options?: GeneratorOptions): TypeNode[] {
   const omitModels = options?.omitModels || [];
@@ -37,7 +37,7 @@ export function filterNodes(nodes: TypeNode[], options?: GeneratorOptions): Type
 
 // Generator function type for code emitters
 type GeneratorFn = (
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   templateDir: string,
   model: TypeNode,
   target: EmitTarget,
@@ -55,7 +55,7 @@ const generators: Record<string, GeneratorFn> = {
 };
 
 
-export async function $onEmit(context: EmitContext<AgentSchemaEmitterOptions>) {
+export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
 
   const options = {
     emitterOutputDir: context.emitterOutputDir,
@@ -74,7 +74,7 @@ export async function $onEmit(context: EmitContext<AgentSchemaEmitterOptions>) {
     );
   }
 
-  const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "AgentSchema", options["root-alias"] || "AgentSchema");
+  const model = resolveModel(context.program, m[0], new Set(), options["root-namespace"] || "Prompty", options["root-alias"] || "Prompty");
   if (options["root-alias"]) {
     model.typeName = {
       namespace: model.typeName.namespace,

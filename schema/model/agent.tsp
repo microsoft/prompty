@@ -5,7 +5,7 @@ import "./properties.tsp";
 import "./tools.tsp";
 import "./template.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 /**
  * A Prompty is a markdown file format for LLM prompts. The frontmatter defines

@@ -7,7 +7,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 #pragma warning disable IDE0130
-namespace AgentSchema;
+namespace Prompty;
 #pragma warning restore IDE0130
 
 /// <summary>

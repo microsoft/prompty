@@ -2,7 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, resolve } from "path";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import {
   enumerateTypes,
   PropertyNode,
@@ -45,7 +45,7 @@ export const pythonTypeMapper: Record<string, string> = {
  * Prepares pure data contexts and delegates rendering to Nunjucks templates.
  */
 export const generatePython = async (
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
@@ -56,7 +56,7 @@ export const generatePython = async (
 
   const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
 
-  // Determine package name from root node namespace (e.g., "AgentSchema" -> "agentschema")
+  // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase();
 
   // Emit py.typed marker for PEP 561 compliance
@@ -225,7 +225,7 @@ function buildTestContext(node: TypeNode, packageName: string): BaseTestContext 
  */
 function buildLoadContextContext(packageName?: string): PythonLoadContextContext {
   return {
-    header: "AgentSchema LoadContext",
+    header: "Prompty LoadContext",
     package: packageName,
   };
 }
@@ -299,7 +299,7 @@ function getUniqueImportTypes(node: TypeNode): string[] {
  * Write generated Python content to file using TypeSpec's emitFile API.
  */
 async function emitPythonFile(
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   filename: string,
   content: string,
   outputDir?: string

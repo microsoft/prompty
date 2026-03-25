@@ -1,7 +1,7 @@
 import "agentschema-emitter";
 import "./core.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 /**
  * Represents a single property.
@@ -95,6 +95,7 @@ model ObjectProperty extends Property {
   })
   properties: Properties = #[];
 }
+
 
 alias Properties = Record<Property> | Named<
   Property,

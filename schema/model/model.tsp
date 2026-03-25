@@ -1,7 +1,7 @@
 import "./core.tsp";
 import "./connection.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 alias apiType = "chat" | "responses" | string;
 /**

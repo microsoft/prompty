@@ -1,7 +1,7 @@
 import "agentschema-emitter";
 import "./core.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 alias ConnectionType =
   | "remote"

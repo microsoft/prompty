@@ -44,19 +44,19 @@ export interface GenerateOptions {
 
   /**
    * Root object to start generation from.
-   * @default "AgentSchema.AgentManifest"
+   * @default "Prompty.Prompty"
    */
   rootObject?: string;
 
   /**
    * List of model names to omit from generation.
-   * Can be simple names (e.g., "AgentManifest") or fully qualified (e.g., "AgentSchema.AgentManifest")
+   * Can be simple names (e.g., "AgentManifest") or fully qualified (e.g., "Prompty.AgentManifest")
    */
   omit?: string[];
 
   /**
    * Root namespace for the generated code.
-   * @default "AgentSchema"
+   * @default "Prompty"
    */
   namespace?: string;
 
@@ -89,7 +89,7 @@ export interface GenerateResult {
 }
 
 /**
- * Generate AgentSchema runtime libraries.
+ * Generate Prompty runtime libraries.
  * 
  * @example
  * ```typescript
@@ -98,7 +98,7 @@ export interface GenerateResult {
  * await generate({
  *   output: './generated',
  *   targets: ['python', 'csharp'],
- *   rootObject: 'AgentSchema.AgentDefinition',
+ *   rootObject: 'Prompty.AgentDefinition',
  *   omit: ['AgentManifest']
  * });
  * ```
@@ -107,9 +107,9 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
   const {
     output,
     targets = ["python", "csharp", "typescript", "go"],
-    rootObject = "AgentSchema.AgentManifest",
+    rootObject = "Prompty.Prompty",
     omit = [],
-    namespace = "AgentSchema",
+    namespace = "Prompty",
     rootAlias,
     generateTests = true,
     format = true,

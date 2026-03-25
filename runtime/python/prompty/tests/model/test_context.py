@@ -1,5 +1,5 @@
-# AgentSchema LoadContext
-from agentschema._context import LoadContext, SaveContext
+# Prompty LoadContext
+from prompty.model._context import LoadContext, SaveContext
 
 
 class TestLoadContext:

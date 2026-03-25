@@ -3,7 +3,7 @@ emit:
 options:
   "agentschema-emitter":
     emitter-output-dir: "{cwd}/tsp-output"
-    root-object: "AgentSchema.Prompty"
+    root-object: "Prompty.Prompty"
     emit-targets:
       - type: TypeScript
         output-dir: "../runtime/typescript/packages/core/src/model"

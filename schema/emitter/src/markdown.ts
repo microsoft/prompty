@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
 import * as nunjucks from "nunjucks";
@@ -22,7 +22,7 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   }, {} as T);
 }
 
-export const generateMarkdown = async (context: EmitContext<AgentSchemaEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
 
   const rootObject = context.options["root-alias"] || "AgentDefinition";
   // set up template environment
@@ -163,7 +163,7 @@ export const generateAlternates = (node: TypeNode): { title: string; description
   }
 };
 
-const emitMarkdownFile = async (context: EmitContext<AgentSchemaEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
+const emitMarkdownFile = async (context: EmitContext<PromptyEmitterOptions>, name: string, markdown: string, outputDir?: string) => {
   const dir = outputDir || `${context.emitterOutputDir}/markdown`;
   await emitFile(context.program, {
     path: resolvePath(dir, `${name}.md`),

@@ -1,6 +1,6 @@
 import "agentschema-emitter";
 
-namespace AgentSchema;
+namespace Prompty;
 
 model Named<
   Item,

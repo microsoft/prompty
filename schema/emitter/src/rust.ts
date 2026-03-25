@@ -2,7 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
@@ -67,7 +67,7 @@ interface RustLibContext {
  * Main entry point for Rust code generation.
  */
 export const generateRust = async (
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
@@ -197,7 +197,7 @@ function buildTestContext(node: TypeNode): BaseTestContext {
  * Build context for rendering the context.rs file.
  */
 function buildContextContext(): RustContextContext {
-  return { header: "AgentSchema Context" };
+  return { header: "Prompty Context" };
 }
 
 /**
@@ -272,7 +272,7 @@ function getUniqueImportTypes(node: TypeNode, polymorphicTypeNames: Set<string>)
  * Write generated Rust content to file.
  */
 async function emitRustFile(
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   filename: string,
   content: string,
   outputDir?: string

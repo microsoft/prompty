@@ -4,7 +4,7 @@ import { generate, TargetLanguage } from "./generate.js";
 import { parseArgs } from "util";
 
 const HELP = `
-agentschema-generate - Generate AgentSchema runtime libraries
+agentschema-generate - Generate Prompty runtime libraries
 
 Usage:
   npx agentschema-generate [options]
@@ -12,9 +12,9 @@ Usage:
 Options:
   -o, --output <dir>       Output directory (required)
   -t, --targets <list>     Comma-separated list of targets (default: python,csharp,typescript,go)
-  -r, --root-object <name> Root object to generate from (default: AgentSchema.AgentManifest)
+  -r, --root-object <name> Root object to generate from (default: Prompty.Prompty)
   --omit <list>            Comma-separated list of models to omit
-  -n, --namespace <name>   Root namespace for generated code (default: AgentSchema)
+  -n, --namespace <name>   Root namespace for generated code (default: Prompty)
   --no-tests               Skip generating test files
   --no-format              Skip running formatters
   -h, --help               Show this help message
@@ -27,7 +27,7 @@ Examples:
   npx agentschema-generate -o ./lib -t python,csharp
 
   # Generate AgentDefinition instead of AgentManifest
-  npx agentschema-generate -o ./lib -r AgentSchema.AgentDefinition
+  npx agentschema-generate -o ./lib -r Prompty.AgentDefinition
 
   # Omit specific models
   npx agentschema-generate -o ./lib --omit AgentManifest,ContainerAgent
@@ -84,10 +84,10 @@ async function main() {
   // Parse omit list
   const omit = values.omit ? values.omit.split(",").map(m => m.trim()) : [];
 
-  console.log(`\n🚀 AgentSchema Generator\n`);
+  console.log(`\n🚀 Prompty Generator\n`);
   console.log(`  Output:      ${output}`);
   console.log(`  Targets:     ${targets.join(", ")}`);
-  console.log(`  Root Object: ${values["root-object"] || "AgentSchema.AgentManifest"}`);
+  console.log(`  Root Object: ${values["root-object"] || "Prompty.Prompty"}`);
   if (omit.length > 0) {
     console.log(`  Omitting:    ${omit.join(", ")}`);
   }
@@ -96,7 +96,7 @@ async function main() {
   const result = await generate({
     output,
     targets,
-    rootObject: values["root-object"] || "AgentSchema.AgentManifest",
+    rootObject: values["root-object"] || "Prompty.Prompty",
     omit,
     namespace: values.namespace,
     generateTests: !values["no-tests"],

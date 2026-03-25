@@ -3,7 +3,7 @@ import "./core.tsp";
 import "./tools";
 import "./properties.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 /**
  * Represents a binding between an input property and a tool parameter.

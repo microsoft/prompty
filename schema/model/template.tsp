@@ -1,7 +1,7 @@
 import "agentschema-emitter";
 import "./core.tsp";
 
-namespace AgentSchema;
+namespace Prompty;
 
 /**
  * Template model for defining prompt templates.

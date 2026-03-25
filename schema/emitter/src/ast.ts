@@ -37,7 +37,7 @@ const getModelType = (model: Model, rootNamespace: string, rootAlias: string): T
   if (rootAlias) {
     return {
       namespace: namespace,
-      name: name.replace("AgentSchema", rootAlias)
+      name: name.replace("Prompty", rootAlias)
     };
   }
 

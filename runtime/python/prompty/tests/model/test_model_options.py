@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty.model import ModelOptions
+from prompty import ModelOptions
 
 
 def test_load_json_modeloptions():

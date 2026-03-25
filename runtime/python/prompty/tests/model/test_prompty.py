@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty.model import Prompty
+from prompty import Prompty
 
 
 def test_load_json_prompty():

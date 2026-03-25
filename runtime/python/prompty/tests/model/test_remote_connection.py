@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty.model import RemoteConnection
+from prompty import RemoteConnection
 
 
 def test_load_json_remoteconnection():

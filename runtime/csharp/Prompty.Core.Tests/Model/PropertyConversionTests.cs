@@ -2,7 +2,7 @@
 using Xunit;
 
 #pragma warning disable IDE0130
-namespace AgentSchema;
+namespace Prompty;
 #pragma warning restore IDE0130
 
 

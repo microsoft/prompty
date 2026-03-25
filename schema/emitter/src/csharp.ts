@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
 import * as nunjucks from "nunjucks";
@@ -57,7 +57,7 @@ const numberTypes = [
   "float",
 ]
 
-export const generateCsharp = async (context: EmitContext<AgentSchemaEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   // set up template environment
   const templatePath = path.resolve(templateDir, 'csharp');
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
@@ -493,7 +493,7 @@ const isNumber = (prop: PropertyNode): boolean => {
   return numberTypes.includes(prop.typeName.name);
 };
 
-const emitCsharpFile = async (context: EmitContext<AgentSchemaEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
+const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
   outputDir = outputDir || `${context.emitterOutputDir}/CSharp`;
   const typePath = type.typeName.namespace.split(".");
 

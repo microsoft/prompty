@@ -2,7 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, resolve } from "path";
-import { EmitTarget, AgentSchemaEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
@@ -67,7 +67,7 @@ interface GoContextContext {
  * Main entry point for Go code generation.
  */
 export const generateGo = async (
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
@@ -78,7 +78,7 @@ export const generateGo = async (
 
   const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
 
-  // Determine package name from root node namespace (e.g., "AgentSchema" -> "agentschema")
+  // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase().replace(/\./g, '');
 
   // Collect all polymorphic type names across all nodes
@@ -202,7 +202,7 @@ function buildTestContext(node: TypeNode, packageName: string): BaseTestContext 
  */
 function buildContextContext(packageName: string): GoContextContext {
   return {
-    header: "AgentSchema Context",
+    header: "Prompty Context",
     packageName,
   };
 }
@@ -271,7 +271,7 @@ function getUniqueImportTypes(node: TypeNode): string[] {
  * Write generated Go content to file.
  */
 async function emitGoFile(
-  context: EmitContext<AgentSchemaEmitterOptions>,
+  context: EmitContext<PromptyEmitterOptions>,
   filename: string,
   content: string,
   outputDir?: string
