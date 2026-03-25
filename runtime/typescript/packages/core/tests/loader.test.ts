@@ -35,11 +35,10 @@ describe("Loader", () => {
     expect(() => load(resolve(FIXTURES, "nonexistent.prompty"))).toThrow();
   });
 
-  it("loads chat prompty with inputSchema", () => {
+  it("loads chat prompty with inputs", () => {
     const agent = load(resolve(FIXTURES, "chat.prompty"));
     expect(agent.name).toBe("chat");
-    expect(agent.inputSchema).toBeDefined();
-    expect(agent.inputSchema!.properties).toBeDefined();
-    expect(agent.inputSchema!.properties!.length).toBeGreaterThan(0);
+    expect(agent.inputs).toBeDefined();
+    expect(agent.inputs!.length).toBeGreaterThan(0);
   });
 });

@@ -7,8 +7,8 @@
  */
 
 import OpenAI from "openai";
-import type { PromptAgent } from "agentschema";
-import { ApiKeyConnection, ReferenceConnection } from "agentschema";
+import type { Prompty } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection } from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import type { Message } from "@prompty/core";
 import { getConnection } from "@prompty/core";
@@ -16,7 +16,7 @@ import { traceSpan } from "@prompty/core";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
-  async execute(agent: PromptAgent, messages: Message[]): Promise<unknown> {
+  async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
     return traceSpan("OpenAIExecutor.execute", async (emit) => {
       const client = this.resolveClient(agent);
       const apiType = agent.model?.apiType ?? "chat";
@@ -38,7 +38,7 @@ export class OpenAIExecutor implements Executor {
     });
   }
 
-  protected resolveClient(agent: PromptAgent): OpenAI {
+  protected resolveClient(agent: Prompty): OpenAI {
     const conn = agent.model?.connection;
 
     if (conn instanceof ReferenceConnection) {
@@ -49,7 +49,7 @@ export class OpenAIExecutor implements Executor {
     return new OpenAI(kwargs);
   }
 
-  protected clientKwargs(agent: PromptAgent): Record<string, unknown> {
+  protected clientKwargs(agent: Prompty): Record<string, unknown> {
     const kwargs: Record<string, unknown> = {};
     const conn = agent.model?.connection;
 
@@ -63,7 +63,7 @@ export class OpenAIExecutor implements Executor {
 
   private async executeChat(
     client: OpenAI,
-    agent: PromptAgent,
+    agent: Prompty,
     messages: Message[],
   ): Promise<unknown> {
     const args = buildChatArgs(agent, messages);
@@ -72,7 +72,7 @@ export class OpenAIExecutor implements Executor {
 
   private async executeEmbedding(
     client: OpenAI,
-    agent: PromptAgent,
+    agent: Prompty,
     data: unknown,
   ): Promise<unknown> {
     const args = buildEmbeddingArgs(agent, data);
@@ -81,7 +81,7 @@ export class OpenAIExecutor implements Executor {
 
   private async executeImage(
     client: OpenAI,
-    agent: PromptAgent,
+    agent: Prompty,
     data: unknown,
   ): Promise<unknown> {
     const args = buildImageArgs(agent, data);

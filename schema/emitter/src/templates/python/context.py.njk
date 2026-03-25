@@ -1,0 +1,127 @@
+{# Template for generating LoadContext and SaveContext classes #}
+{% from "macros.njk" import fileHeader %}
+{{ fileHeader(header) }}
+import json
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
+
+import yaml
+
+
+@dataclass
+class LoadContext:
+    """
+    Context for customizing the loading process of agent definitions.
+
+    Provides hooks for pre-processing input data before parsing and
+    post-processing output data after instantiation.
+    """
+
+    pre_process: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
+    """Optional callback to transform input data before parsing."""
+
+    post_process: Optional[Callable[[Any], Any]] = None
+    """Optional callback to transform the result after instantiation."""
+
+    def process_input(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply pre-processing to input data if a pre_process callback is set.
+
+        Args:
+            data: The raw input dictionary to process.
+
+        Returns:
+            The processed dictionary, or the original if no callback is set.
+        """
+        if self.pre_process is not None:
+            return self.pre_process(data)
+        return data
+
+    def process_output(self, result: Any) -> Any:
+        """
+        Apply post-processing to the result if a post_process callback is set.
+
+        Args:
+            result: The instantiated object to process.
+
+        Returns:
+            The processed result, or the original if no callback is set.
+        """
+        if self.post_process is not None:
+            return self.post_process(result)
+        return result
+
+
+@dataclass
+class SaveContext:
+    """
+    Context for customizing the serialization process of agent definitions.
+
+    Provides hooks for pre-processing the object before serialization and
+    post-processing the dictionary after serialization.
+    """
+
+    pre_save: Optional[Callable[[Any], Any]] = None
+    """Optional callback to transform the object before serialization."""
+
+    post_save: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
+    """Optional callback to transform the dictionary after serialization."""
+
+    collection_format: str = "object"
+    """Output format for collections: 'object' (name as key) or 'array' (list of dicts)."""
+
+    use_shorthand: bool = True
+    """Use shorthand scalar representation when possible (e.g., {"myTool": "function"})."""
+
+    def process_object(self, obj: Any) -> Any:
+        """
+        Apply pre-processing to the object if a pre_save callback is set.
+
+        Args:
+            obj: The object to process before serialization.
+
+        Returns:
+            The processed object, or the original if no callback is set.
+        """
+        if self.pre_save is not None:
+            return self.pre_save(obj)
+        return obj
+
+    def process_dict(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply post-processing to the dictionary if a post_save callback is set.
+
+        Args:
+            data: The serialized dictionary to process.
+
+        Returns:
+            The processed dictionary, or the original if no callback is set.
+        """
+        if self.post_save is not None:
+            return self.post_save(data)
+        return data
+
+    def to_yaml(self, data: dict[str, Any]) -> str:
+        """
+        Convert the dictionary to a YAML string.
+
+        Args:
+            data: The dictionary to convert.
+
+        Returns:
+            The YAML string representation.
+        """
+        return yaml.dump(data, default_flow_style=False, sort_keys=False)
+
+    def to_json(self, data: dict[str, Any], indent: int = 2) -> str:
+        """
+        Convert the dictionary to a JSON string.
+
+        Args:
+            data: The dictionary to convert.
+            indent: Number of spaces for indentation.
+
+        Returns:
+            The JSON string representation.
+        """
+        return json.dumps(data, indent=indent)

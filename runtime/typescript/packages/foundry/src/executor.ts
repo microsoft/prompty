@@ -13,8 +13,8 @@
  */
 
 import type OpenAI from "openai";
-import type { PromptAgent } from "agentschema";
-import { FoundryConnection, ReferenceConnection } from "agentschema";
+import type { Prompty } from "@prompty/core";
+import { FoundryConnection, ReferenceConnection } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
 
@@ -28,7 +28,7 @@ function getResourceEndpoint(projectEndpoint: string): string {
 }
 
 export class FoundryExecutor extends OpenAIExecutor {
-  protected override resolveClient(agent: PromptAgent): OpenAI {
+  protected override resolveClient(agent: Prompty): OpenAI {
     const conn = agent.model?.connection;
 
     // Pre-registered client by name

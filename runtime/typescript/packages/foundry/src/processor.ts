@@ -6,13 +6,13 @@
  * @module
  */
 
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import { processResponse } from "@prompty/openai";
 import { traceSpan } from "@prompty/core";
 
 export class FoundryProcessor implements Processor {
-  async process(agent: PromptAgent, response: unknown): Promise<unknown> {
+  async process(agent: Prompty, response: unknown): Promise<unknown> {
     return traceSpan("FoundryProcessor.process", async () => {
       return processResponse(agent, response);
     });

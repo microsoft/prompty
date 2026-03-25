@@ -1,4 +1,4 @@
-"""Integration tests — structured output (outputSchema → response_format) against real endpoints."""
+"""Integration tests — structured output (outputs → response_format) against real endpoints."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class TestOpenAIStructuredOutput:
         messages = _structured_messages()
         response = self.executor.execute(agent, messages)
         result = self.processor.process(agent, response)
-        # Processor should JSON-parse when outputSchema is present
+        # Processor should JSON-parse when outputs is present
         assert isinstance(result, dict)
         assert "city" in result
         assert "population" in result

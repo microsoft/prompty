@@ -111,21 +111,23 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             }
             if tool.description:
                 func_def["description"] = tool.description
-            if tool.parameters and tool.parameters.properties:
+            if tool.parameters:
                 func_def["parameters"] = _schema_to_wire(tool.parameters)
             if hasattr(tool, "strict") and tool.strict:
                 func_def["strict"] = True
+                if "parameters" in func_def:
+                    func_def["parameters"]["additionalProperties"] = False
             wire_tools.append({"type": "function", "function": func_def})
 
     return wire_tools if wire_tools else None
 
 
-def _schema_to_wire(schema) -> dict[str, Any]:
-    """Convert a PropertySchema to a JSON Schema dict for OpenAI tools."""
-    properties: dict[str, Any] = {}
+def _schema_to_wire(properties: list) -> dict[str, Any]:
+    """Convert a list of Property instances to a JSON Schema dict for OpenAI tools."""
+    props_dict: dict[str, Any] = {}
     required: list[str] = []
 
-    for prop in schema.properties:
+    for prop in properties:
         prop_schema: dict[str, Any] = {}
         kind_map = {
             "string": "string",
@@ -141,16 +143,14 @@ def _schema_to_wire(schema) -> dict[str, Any]:
             prop_schema["description"] = prop.description
         if prop.enumValues:
             prop_schema["enum"] = prop.enumValues
-        properties[prop.name] = prop_schema
+        props_dict[prop.name] = prop_schema
 
         if prop.required:
             required.append(prop.name)
 
-    result: dict[str, Any] = {"type": "object", "properties": properties}
+    result: dict[str, Any] = {"type": "object", "properties": props_dict}
     if required:
         result["required"] = required
-    if schema.strict:
-        result["additionalProperties"] = False
     return result
 
 
@@ -192,19 +192,19 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
 
 
 def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
-    """Convert ``agent.outputSchema`` to OpenAI ``response_format``.
+    """Convert ``agent.outputs`` to OpenAI ``response_format``.
 
     Returns ``None`` when no output schema is defined.  When present,
     produces a ``json_schema`` response format with ``strict: True``
     and ``additionalProperties: False`` at each object level.
     """
-    if not agent.outputSchema or not agent.outputSchema.properties:
+    if not agent.outputs:
         return None
 
     properties: dict[str, Any] = {}
     required: list[str] = []
 
-    for prop in agent.outputSchema.properties:
+    for prop in agent.outputs:
         properties[prop.name] = _property_to_json_schema(prop)
         required.append(prop.name)
 

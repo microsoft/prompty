@@ -77,7 +77,7 @@ def validate_inputs(
     agent: Prompty,
     inputs: dict[str, Any],
 ) -> dict[str, Any]:
-    """Validate and fill defaults for inputs against ``agent.inputSchema``.
+    """Validate and fill defaults for inputs against ``agent.inputs``.
 
     Parameters
     ----------
@@ -94,14 +94,12 @@ def validate_inputs(
     Raises
     ------
     ValueError
-        If required inputs are missing or unknown inputs are provided
-        in strict mode.
+        If required inputs are missing.
     """
-    if agent.inputSchema is None:
+    if not agent.inputs:
         return dict(inputs)
 
-    schema = agent.inputSchema
-    props = {p.name: p for p in schema.properties}
+    props = {p.name: p for p in agent.inputs}
     result = dict(inputs)
 
     # Apply defaults for missing inputs
@@ -114,15 +112,6 @@ def validate_inputs(
             elif prop.required:
                 raise ValueError(f"Required input '{name}' not provided and has no default value.")
 
-    # Strict mode: reject unknown keys
-    if schema.strict:
-        unknown = set(result.keys()) - set(props.keys())
-        if unknown:
-            raise ValueError(
-                f"Unknown input(s) in strict mode: {', '.join(sorted(unknown))}. "
-                f"Declared inputs: {', '.join(sorted(props.keys()))}"
-            )
-
     return result
 
 
@@ -133,9 +122,9 @@ def validate_inputs(
 
 def _get_rich_input_names(agent: Prompty) -> dict[str, str]:
     """Return {property_name: kind} for all rich-kind inputs."""
-    if agent.inputSchema is None:
+    if not agent.inputs:
         return {}
-    return {p.name: p.kind for p in agent.inputSchema.properties if p.kind in RICH_KINDS}
+    return {p.name: p.kind for p in agent.inputs if p.kind in RICH_KINDS}
 
 
 def _inject_thread_markers(
@@ -465,7 +454,7 @@ def prepare(
     """Render, parse, and expand a prompt into a message array.
 
     Pipeline:
-        1. Validate inputs against ``agent.inputSchema``
+        1. Validate inputs against ``agent.inputs``
         2. Discover parser; if ``Format.strict``, call ``pre_render()``
         3. Discover renderer; call ``render()``
         4. Call ``parser.parse()``

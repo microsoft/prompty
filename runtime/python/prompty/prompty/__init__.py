@@ -72,7 +72,6 @@ from .model import (
     OpenApiTool,
     Prompty,
     Property,
-    PropertySchema,
     ReferenceConnection,
     RemoteConnection,
     SaveContext,

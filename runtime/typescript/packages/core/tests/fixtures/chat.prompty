@@ -7,14 +7,13 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY:test-key}
-inputSchema:
-  properties:
-    - name: question
-      kind: string
-      description: The user's question
-    - name: history
-      kind: thread
-      description: Conversation history
+inputs:
+  - name: question
+    kind: string
+    description: The user's question
+  - name: history
+    kind: thread
+    description: Conversation history
 ---
 system:
 You are a helpful assistant.

@@ -10,19 +10,17 @@ def test_load_json_functiontool():
     {
       "kind": "function",
       "parameters": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
       "strict": true
@@ -40,16 +38,15 @@ def test_load_yaml_functiontool():
     yaml_data = r"""
     kind: function
     parameters:
-      properties:
-        firstName:
-          kind: string
-          value: Jane
-        lastName:
-          kind: string
-          value: Doe
-        question:
-          kind: string
-          value: What is the meaning of life?
+      firstName:
+        kind: string
+        default: Jane
+      lastName:
+        kind: string
+        default: Doe
+      question:
+        kind: string
+        default: What is the meaning of life?
     strict: true
     
     """
@@ -66,19 +63,17 @@ def test_roundtrip_json_functiontool():
     {
       "kind": "function",
       "parameters": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
       "strict": true
@@ -99,19 +94,17 @@ def test_to_json_functiontool():
     {
       "kind": "function",
       "parameters": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
       "strict": true
@@ -131,19 +124,17 @@ def test_to_yaml_functiontool():
     {
       "kind": "function",
       "parameters": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
       "strict": true
@@ -161,25 +152,23 @@ def test_load_json_functiontool_1():
     json_data = r"""
     {
       "kind": "function",
-      "parameters": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
+      "parameters": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
       "strict": true
     }
     """
@@ -195,16 +184,15 @@ def test_load_yaml_functiontool_1():
     yaml_data = r"""
     kind: function
     parameters:
-      properties:
-        - name: firstName
-          kind: string
-          value: Jane
-        - name: lastName
-          kind: string
-          value: Doe
-        - name: question
-          kind: string
-          value: What is the meaning of life?
+      - name: firstName
+        kind: string
+        default: Jane
+      - name: lastName
+        kind: string
+        default: Doe
+      - name: question
+        kind: string
+        default: What is the meaning of life?
     strict: true
     
     """
@@ -220,25 +208,23 @@ def test_roundtrip_json_functiontool_1():
     json_data = r"""
     {
       "kind": "function",
-      "parameters": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
+      "parameters": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
       "strict": true
     }
     """
@@ -256,25 +242,23 @@ def test_to_json_functiontool_1():
     json_data = r"""
     {
       "kind": "function",
-      "parameters": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
+      "parameters": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
       "strict": true
     }
     """
@@ -291,25 +275,23 @@ def test_to_yaml_functiontool_1():
     json_data = r"""
     {
       "kind": "function",
-      "parameters": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
+      "parameters": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
       "strict": true
     }
     """

@@ -1,0 +1,162 @@
+{#
+  C#-Specific Macros for AgentSchema Emitter
+  ==========================================
+  
+  These macros handle C#-specific rendering logic, making templates
+  self-contained and easier to debug.
+  
+  Usage in C# templates:
+    {% import "_macros.njk" as cs %}
+    {{ cs.csharpType(prop, typeMapper) }}
+#}
+
+{# ============================================================================
+   Type Rendering
+   ============================================================================ #}
+
+{#
+  Convert a property to its C# type.
+  
+  @param prop - PropertyNode with type information
+  @param typeMapper - Record<string, string> mapping TypeSpec types to C# types
+#}
+{% macro csharpType(prop, typeMapper) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else prop.typeName.name -%}
+{%- if not baseType %}{% set baseType = "object" %}{% endif -%}
+{%- if prop.isDict -%}
+IDictionary<string, object?>
+{%- elif prop.isCollection -%}
+IList<{{ baseType }}>
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{%- if prop.isOptional %}?{% endif -%}
+{% endmacro %}
+
+{#
+  Render C# type without optional marker (for generics, casts, etc.)
+#}
+{% macro csharpTypeNoOptional(prop, typeMapper) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else prop.typeName.name -%}
+{%- if not baseType %}{% set baseType = "object" %}{% endif -%}
+{%- if prop.isDict -%}
+IDictionary<string, object?>
+{%- elif prop.isCollection -%}
+IList<{{ baseType }}>
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{% endmacro %}
+
+{# ============================================================================
+   Property Name Rendering
+   ============================================================================ #}
+
+{#
+  Convert property name to PascalCase for C#.
+  
+  @param name - The property name (snake_case or camelCase)
+#}
+{% macro pascalCase(name) %}
+{%- set result = name | replace(r/_([a-z])/g, '$1' | upper) -%}
+{{ result[0] | upper }}{{ result | slice(1) }}
+{%- endmacro %}
+
+{# ============================================================================
+   Default Value Rendering
+   ============================================================================ #}
+
+{#
+  Render the default value for a C# property.
+  
+  @param prop - PropertyNode with type and default value information
+  @param typeMapper - Type mapper
+#}
+{% macro defaultValue(prop, typeMapper) %}
+{%- if prop.isCollection %} = []
+{%- elif prop.isOptional %}
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "string" %} = "{{ prop.defaultValue if prop.defaultValue else "" }}"
+{%- elif prop.typeName.name == "boolean" %} = {{ "true" if prop.defaultValue else "false" }}
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "float32" or prop.typeName.name == "float64" %} = {{ prop.defaultValue if prop.defaultValue else "0" }}
+{%- elif prop.typeName.name == "integer" or prop.typeName.name == "int32" or prop.typeName.name == "int64" %} = {{ prop.defaultValue if prop.defaultValue else "0" }}
+{%- elif prop.typeName.name == "dictionary" %} = new Dictionary<string, object?>()
+{%- endif -%}
+{%- endif -%}
+{% endmacro %}
+
+{# ============================================================================
+   Load Method Helpers
+   ============================================================================ #}
+
+{#
+  Render property assignment in Load() method.
+  
+  @param prop - PropertyNode being assigned
+  @param varName - Variable name to assign to (e.g., "instance")
+  @param dictName - Dict variable name to read from (e.g., "data")
+  @param parentTypeName - Name of the parent type
+  @param typeMapper - Type mapper
+#}
+{% macro loadProperty(prop, varName, dictName, parentTypeName, typeMapper) %}
+{%- set propName = prop.name[0] | upper + prop.name | slice(1) -%}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else prop.typeName.name -%}
+{%- if prop.isScalar or prop.isDict -%}
+{{ varName }}.{{ propName }} = {{ dictName }}.GetValue<{{ baseType }}{% if prop.isOptional %}?{% endif %}>("{{ prop.name }}");
+{%- elif prop.isCollection -%}
+{{ varName }}.{{ propName }} = {{ parentTypeName }}.Load{{ propName }}({{ dictName }}["{{ prop.name }}"], context);
+{%- else -%}
+{{ varName }}.{{ propName }} = {{ prop.typeName.name }}.Load({{ dictName }}.GetDictionary("{{ prop.name }}"), context);
+{%- endif -%}
+{% endmacro %}
+
+{# ============================================================================
+   Save Method Helpers
+   ============================================================================ #}
+
+{#
+  Render property serialization in Save() method.
+  
+  @param prop - PropertyNode being serialized
+  @param varName - Variable name of the object (e.g., "obj")
+  @param dictName - Dict variable name to write to (e.g., "result")
+  @param parentTypeName - Name of the parent type
+#}
+{% macro saveProperty(prop, varName, dictName, parentTypeName) %}
+{%- set propName = prop.name[0] | upper + prop.name | slice(1) -%}
+{%- if prop.isScalar or prop.isDict -%}
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ propName }};
+{%- elif prop.isCollection -%}
+{{ dictName }}["{{ prop.name }}"] = {{ parentTypeName }}.Save{{ propName }}({{ varName }}.{{ propName }}, context);
+{%- else -%}
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ propName }}.Save(context);
+{%- endif -%}
+{% endmacro %}
+
+{# ============================================================================
+   Summary/Documentation Helpers
+   ============================================================================ #}
+
+{#
+  Render XML summary comment for a property.
+  
+  @param prop - PropertyNode with description
+#}
+{% macro summary(prop) %}
+/// <summary>
+/// {{ prop.description }}
+/// </summary>
+{% endmacro %}
+
+{#
+  Render XML summary comment for a class.
+  
+  @param description - Class description
+#}
+{% macro classSummary(description) %}
+/// <summary>
+{%- for line in description.split('\n') %}
+/// {{ line }}
+{%- endfor %}
+/// </summary>
+{% endmacro %}

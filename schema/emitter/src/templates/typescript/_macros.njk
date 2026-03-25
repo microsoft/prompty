@@ -1,0 +1,165 @@
+{#
+  TypeScript-Specific Macros for AgentSchema Emitter
+  ==================================================
+  
+  These macros handle TypeScript-specific rendering logic.
+  
+  Usage in TypeScript templates:
+    {% import "_macros.njk" as ts %}
+    {{ ts.tsType(prop, typeMapper) }}
+#}
+
+
+{# ============================================================================
+   Type Rendering
+   ============================================================================ #}
+
+{#
+  Convert a property to its TypeScript type annotation.
+  
+  @param prop - PropertyNode with type information
+  @param typeMapper - Record<string, string> mapping TypeSpec types to TypeScript types
+#}
+{% macro tsType(prop, typeMapper) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else (typeMapper[prop.typeName.name] or prop.typeName.name) -%}
+{%- if not baseType %}{% set baseType = "unknown" %}{% endif -%}
+{%- if prop.isDict and prop.isOptional -%}
+Record<string, unknown> | undefined
+{%- elif prop.isDict -%}
+Record<string, unknown>
+{%- elif prop.isCollection -%}
+{{ baseType }}[]
+{%- elif prop.isOptional -%}
+{{ baseType }} | undefined
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Default Value Rendering
+   ============================================================================ #}
+
+{#
+  Render the default value assignment for a class property.
+  
+  @param prop - PropertyNode with type and default value information
+  @param typeMapper - Record<string, string> for type lookups
+#}
+{% macro defaultValue(prop, typeMapper) -%}
+{% if prop.isCollection and not prop.isDict %} = []
+{%- elif prop.isDict %} = {}
+{%- elif prop.isOptional %}
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "boolean" %} = {{ "true" if prop.defaultValue else "false" }}
+{%- elif prop.typeName.name == "string" %} = "{{ prop.defaultValue if prop.defaultValue else "" }}"
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "integer" or prop.typeName.name == "int32" or prop.typeName.name == "int64" or prop.typeName.name == "float32" or prop.typeName.name == "float64" %} = {{ prop.defaultValue if prop.defaultValue else "0" }}
+{%- else %} = {{ prop.defaultValue if prop.defaultValue else "undefined" }}
+{%- endif -%}
+{%- endif -%}
+{% endmacro %}
+
+
+{#
+  Render the default initialization value for the constructor.
+  
+  @param prop - PropertyNode with type and default value information
+  @param typeMapper - Record<string, string> for type lookups
+#}
+{% macro defaultInitValue(prop, typeMapper) -%}
+{%- if prop.isCollection -%}[]
+{%- elif prop.isDict -%}{}
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "boolean" -%}{{ "true" if prop.defaultValue else "false" }}
+{%- elif prop.typeName.name == "string" -%}"{{ prop.defaultValue if prop.defaultValue else "" }}"
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "integer" or prop.typeName.name == "int32" or prop.typeName.name == "int64" or prop.typeName.name == "float32" or prop.typeName.name == "float64" -%}{{ prop.defaultValue if prop.defaultValue else "0" }}
+{%- else -%}undefined
+{%- endif -%}
+{%- else -%}undefined!
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Property Load Rendering
+   ============================================================================ #}
+
+{#
+  Render the property loading code.
+  
+  @param prop - PropertyNode
+  @param instanceVar - Name of the instance variable
+  @param dataVar - Name of the data variable
+  @param classCtx - Class context
+#}
+{% macro loadProperty(prop, instanceVar, dataVar, classCtx) -%}
+{%- set propName = prop.name -%}
+{%- if prop.isCollection and not prop.isDict -%}
+{%- if prop.isScalar -%}
+{{ instanceVar }}.{{ propName }} = Array.isArray({{ dataVar }}["{{ propName }}"]) ? ({{ dataVar }}["{{ propName }}"] as unknown[]).map(v => String(v)) : [];
+{%- else -%}
+{{ instanceVar }}.{{ propName }} = {{ classCtx.node.typeName.name }}.load{{ pascalCase(prop.name) }}({{ dataVar }}["{{ propName }}"], context);
+{%- endif -%}
+{%- elif prop.isDict -%}
+{{ instanceVar }}.{{ propName }} = {{ dataVar }}["{{ propName }}"] as Record<string, unknown>;
+{%- elif not prop.isScalar -%}
+{{ instanceVar }}.{{ propName }} = {{ prop.typeName.name }}.load({{ dataVar }}["{{ propName }}"] as Record<string, unknown>, context);
+{%- elif prop.typeName.name == "string" -%}
+{{ instanceVar }}.{{ propName }} = String({{ dataVar }}["{{ propName }}"]);
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "integer" or prop.typeName.name == "int32" or prop.typeName.name == "int64" or prop.typeName.name == "float32" or prop.typeName.name == "float64" -%}
+{{ instanceVar }}.{{ propName }} = Number({{ dataVar }}["{{ propName }}"]);
+{%- elif prop.typeName.name == "boolean" -%}
+{{ instanceVar }}.{{ propName }} = Boolean({{ dataVar }}["{{ propName }}"]);
+{%- else -%}
+{{ instanceVar }}.{{ propName }} = {{ dataVar }}["{{ propName }}"] as {{ prop.typeName.name }};
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Property Save Rendering
+   ============================================================================ #}
+
+{#
+  Render the property saving code.
+  
+  @param prop - PropertyNode
+  @param objVar - Name of the object variable
+  @param resultVar - Name of the result variable
+  @param classCtx - Class context
+#}
+{% macro saveProperty(prop, objVar, resultVar, classCtx) -%}
+{%- set propName = prop.name -%}
+{%- if prop.isCollection and not prop.isScalar and not prop.isDict -%}
+{{ resultVar }}["{{ propName }}"] = {{ classCtx.node.typeName.name }}.save{{ pascalCase(prop.name) }}({{ objVar }}.{{ propName }}, context);
+{%- elif not prop.isScalar and not prop.isDict -%}
+{{ resultVar }}["{{ propName }}"] = {{ objVar }}.{{ propName }}?.save(context);
+{%- else -%}
+{{ resultVar }}["{{ propName }}"] = {{ objVar }}.{{ propName }};
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   String Utilities
+   ============================================================================ #}
+
+{#
+  Convert a string to PascalCase.
+  
+  @param str - The string to convert
+#}
+{% macro pascalCase(str) -%}
+{{ str.charAt(0).toUpperCase() + str.slice(1) }}
+{%- endmacro %}
+
+
+{#
+  Convert a string to kebab-case.
+  
+  @param str - The string to convert
+#}
+{% macro kebabCase(str) -%}
+{{ str | lower | replace("_", "-") }}
+{%- endmacro %}

@@ -13,7 +13,7 @@ import {
 } from "../src/core/registry.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import { Message } from "../src/core/types.js";
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "@prompty/core";
 
 const mockRenderer: Renderer = {
   async render(_agent, template, inputs) {

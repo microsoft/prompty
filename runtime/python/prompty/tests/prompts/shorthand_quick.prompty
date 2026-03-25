@@ -1,11 +1,10 @@
 ---
 name: quick-prompt
 model: gpt-4o-mini
-inputSchema:
-  properties:
-    - name: topic
-      kind: string
-      default: Python
+inputs:
+  - name: topic
+    kind: string
+    default: Python
 ---
 system:
 You are a concise technical writer.

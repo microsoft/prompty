@@ -17,16 +17,14 @@ _TOOLS = [
         "name": "get_weather",
         "kind": "function",
         "description": "Get the current weather for a city. Always call this when asked about weather.",
-        "parameters": {
-            "properties": [
-                {
-                    "name": "city",
-                    "kind": "string",
-                    "description": "The city name, e.g. 'Seattle'",
-                    "required": True,
-                }
-            ]
-        },
+        "parameters": [
+            {
+                "name": "city",
+                "kind": "string",
+                "description": "The city name, e.g. 'Seattle'",
+                "required": True,
+            }
+        ],
     }
 ]
 

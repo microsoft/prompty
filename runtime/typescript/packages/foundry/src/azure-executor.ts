@@ -5,13 +5,13 @@
  */
 
 import OpenAI, { AzureOpenAI } from "openai";
-import type { PromptAgent } from "agentschema";
-import { ApiKeyConnection, ReferenceConnection } from "agentschema";
+import type { Prompty } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
 
 export class AzureExecutor extends OpenAIExecutor {
-  protected override resolveClient(agent: PromptAgent): OpenAI {
+  protected override resolveClient(agent: Prompty): OpenAI {
     const conn = agent.model?.connection;
 
     if (conn instanceof ReferenceConnection) {
@@ -22,7 +22,7 @@ export class AzureExecutor extends OpenAIExecutor {
     return new AzureOpenAI(kwargs as ConstructorParameters<typeof AzureOpenAI>[0]);
   }
 
-  protected override clientKwargs(agent: PromptAgent): Record<string, unknown> {
+  protected override clientKwargs(agent: Prompty): Record<string, unknown> {
     const kwargs: Record<string, unknown> = {};
     const conn = agent.model?.connection;
 

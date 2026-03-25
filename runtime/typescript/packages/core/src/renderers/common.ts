@@ -1,7 +1,7 @@
 /**
  * Shared renderer utilities — nonce-based thread marker injection.
  *
- * When inputs contain thread-kind values (`kind: "thread"` in inputSchema),
+ * When inputs contain thread-kind values (`kind: "thread"` in inputs),
  * the renderer substitutes a unique nonce string instead of the actual value.
  * After parsing, the pipeline replaces nonce strings with ThreadMarker objects.
  *
@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "../model/prompty.js";
 import { RICH_KINDS } from "../core/types.js";
 
 /** Map of input name → nonce string (set during rendering, read during prepare). */
@@ -21,7 +21,7 @@ let lastNonces: Map<string, string> = new Map();
  * @returns `[modifiedInputs, noncesMap]`
  */
 export function prepareRenderInputs(
-  agent: PromptAgent,
+  agent: Prompty,
   inputs: Record<string, unknown>,
 ): [Record<string, unknown>, Map<string, string>] {
   const nonces = new Map<string, string>();
@@ -55,12 +55,12 @@ export function clearLastNonces(): void {
  * Get map of `{propertyName: kind}` for inputs with rich kinds
  * (thread, image, file, audio).
  */
-function getRichInputNames(agent: PromptAgent): Record<string, string> {
+function getRichInputNames(agent: Prompty): Record<string, string> {
   const result: Record<string, string> = {};
-  const schema = agent.inputSchema;
-  if (!schema?.properties) return result;
+  const props = agent.inputs;
+  if (!props || props.length === 0) return result;
 
-  for (const prop of schema.properties) {
+  for (const prop of props) {
     const kind = prop.kind?.toLowerCase() ?? "";
     if (RICH_KINDS.has(kind) && prop.name) {
       result[prop.name] = kind;

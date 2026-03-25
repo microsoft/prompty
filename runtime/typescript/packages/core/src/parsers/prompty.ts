@@ -11,7 +11,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import { randomBytes } from "node:crypto";
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "../model/prompty.js";
 import {
   type ContentPart,
   type ImagePart,
@@ -57,7 +57,7 @@ export class PromptyChatParser implements Parser {
   // ---- parse ----
 
   async parse(
-    agent: PromptAgent,
+    agent: Prompty,
     rendered: string,
     context?: Record<string, unknown>,
   ): Promise<Message[]> {
@@ -68,7 +68,7 @@ export class PromptyChatParser implements Parser {
 
   // ---- internal parsing ----
 
-  private resolveBasePath(agent: PromptAgent): string | undefined {
+  private resolveBasePath(agent: Prompty): string | undefined {
     const meta = agent.metadata as Record<string, unknown> | undefined;
     if (meta && typeof meta.source_path === "string") {
       return resolve(meta.source_path, "..");

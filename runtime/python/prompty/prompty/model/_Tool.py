@@ -12,7 +12,7 @@ from ._Binding import Binding
 from ._Connection import Connection
 from ._context import LoadContext, SaveContext
 from ._McpApprovalMode import McpApprovalMode
-from ._PropertySchema import PropertySchema
+from ._Property import Property
 
 
 @dataclass
@@ -201,7 +201,7 @@ class FunctionTool(Tool):
     ----------
     kind : str
         The kind identifier for function tools
-    parameters : PropertySchema
+    parameters : list[Property]
         Parameters accepted by the function tool
     strict : Optional[bool]
         Indicates whether the function tool enforces strict validation on its parameters
@@ -210,7 +210,7 @@ class FunctionTool(Tool):
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="function")
-    parameters: PropertySchema = field(default_factory=PropertySchema)
+    parameters: list[Property] = field(default_factory=list)
     strict: bool | None = None
 
     @staticmethod
@@ -236,12 +236,65 @@ class FunctionTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "parameters" in data:
-            instance.parameters = PropertySchema.load(data["parameters"], context)
+            instance.parameters = FunctionTool.load_parameters(
+                data["parameters"], context
+            )
         if data is not None and "strict" in data:
             instance.strict = data["strict"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+    @staticmethod
+    def load_parameters(
+        data: dict | list, context: LoadContext | None
+    ) -> list[Property]:
+        if isinstance(data, dict):
+            # convert simple named parameters to list of Property
+            result = []
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
+                else:
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "": v})
+            data = result
+        return [Property.load(item, context) for item in data]
+
+    @staticmethod
+    def save_parameters(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        if context is None:
+            context = SaveContext()
+
+        if context.collection_format == "array":
+            return [item.save(context) for item in items]
+
+        # Object format: use name as key
+        result: dict[str, Any] = {}
+        for item in items:
+            item_data = item.save(context)
+            name = item_data.pop("name", None)
+            if name:
+                # Check if we can use shorthand (only primary property set)
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                    shorthand_prop = item._shorthand_property
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
+                        result[name] = item_data[shorthand_prop]
+                        continue
+                result[name] = item_data
+            else:
+                # No name, fall back to array format for this item
+                if "_unnamed" not in result:
+                    result["_unnamed"] = []
+                result["_unnamed"].append(item_data)
+        return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.
@@ -261,7 +314,7 @@ class FunctionTool(Tool):
         if obj.kind is not None:
             result["kind"] = obj.kind
         if obj.parameters is not None:
-            result["parameters"] = obj.parameters.save(context)
+            result["parameters"] = FunctionTool.save_parameters(obj.parameters, context)
         if obj.strict is not None:
             result["strict"] = obj.strict
 

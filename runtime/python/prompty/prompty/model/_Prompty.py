@@ -9,7 +9,7 @@ from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
 from ._Model import Model
-from ._PropertySchema import PropertySchema
+from ._Property import Property
 from ._Template import Template
 from ._Tool import Tool
 
@@ -33,9 +33,9 @@ class Prompty:
         Description of the prompt's purpose
     metadata : Optional[dict[str, Any]]
         Additional metadata including authors, tags, and other arbitrary properties
-    inputSchema : Optional[PropertySchema]
+    inputs : list[Property]
         Input parameters that participate in template rendering
-    outputSchema : Optional[PropertySchema]
+    outputs : list[Property]
         Expected output format and structure
     model : Model
         AI model configuration
@@ -45,8 +45,6 @@ class Prompty:
         Template configuration for prompt rendering
     instructions : Optional[str]
         Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
-    additionalInstructions : Optional[str]
-        Additional instructions or context for extra guidance
     """
 
     _shorthand_property: ClassVar[str | None] = None
@@ -55,13 +53,12 @@ class Prompty:
     displayName: str | None = None
     description: str | None = None
     metadata: dict[str, Any] | None = None
-    inputSchema: PropertySchema | None = None
-    outputSchema: PropertySchema | None = None
+    inputs: list[Property] = field(default_factory=list)
+    outputs: list[Property] = field(default_factory=list)
     model: Model = field(default_factory=Model)
     tools: list[Tool] = field(default_factory=list)
     template: Template | None = None
     instructions: str | None = None
-    additionalInstructions: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Prompty":
@@ -91,10 +88,10 @@ class Prompty:
             instance.description = data["description"]
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
-        if data is not None and "inputSchema" in data:
-            instance.inputSchema = PropertySchema.load(data["inputSchema"], context)
-        if data is not None and "outputSchema" in data:
-            instance.outputSchema = PropertySchema.load(data["outputSchema"], context)
+        if data is not None and "inputs" in data:
+            instance.inputs = Prompty.load_inputs(data["inputs"], context)
+        if data is not None and "outputs" in data:
+            instance.outputs = Prompty.load_outputs(data["outputs"], context)
         if data is not None and "model" in data:
             instance.model = Model.load(data["model"], context)
         if data is not None and "tools" in data:
@@ -103,11 +100,107 @@ class Prompty:
             instance.template = Template.load(data["template"], context)
         if data is not None and "instructions" in data:
             instance.instructions = data["instructions"]
-        if data is not None and "additionalInstructions" in data:
-            instance.additionalInstructions = data["additionalInstructions"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+    @staticmethod
+    def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if isinstance(data, dict):
+            # convert simple named inputs to list of Property
+            result = []
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
+                else:
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "kind": v})
+            data = result
+        return [Property.load(item, context) for item in data]
+
+    @staticmethod
+    def save_inputs(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        if context is None:
+            context = SaveContext()
+
+        if context.collection_format == "array":
+            return [item.save(context) for item in items]
+
+        # Object format: use name as key
+        result: dict[str, Any] = {}
+        for item in items:
+            item_data = item.save(context)
+            name = item_data.pop("name", None)
+            if name:
+                # Check if we can use shorthand (only primary property set)
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                    shorthand_prop = item._shorthand_property
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
+                        result[name] = item_data[shorthand_prop]
+                        continue
+                result[name] = item_data
+            else:
+                # No name, fall back to array format for this item
+                if "_unnamed" not in result:
+                    result["_unnamed"] = []
+                result["_unnamed"].append(item_data)
+        return result
+
+    @staticmethod
+    def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if isinstance(data, dict):
+            # convert simple named outputs to list of Property
+            result = []
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
+                else:
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "": v})
+            data = result
+        return [Property.load(item, context) for item in data]
+
+    @staticmethod
+    def save_outputs(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        if context is None:
+            context = SaveContext()
+
+        if context.collection_format == "array":
+            return [item.save(context) for item in items]
+
+        # Object format: use name as key
+        result: dict[str, Any] = {}
+        for item in items:
+            item_data = item.save(context)
+            name = item_data.pop("name", None)
+            if name:
+                # Check if we can use shorthand (only primary property set)
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                    shorthand_prop = item._shorthand_property
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
+                        result[name] = item_data[shorthand_prop]
+                        continue
+                result[name] = item_data
+            else:
+                # No name, fall back to array format for this item
+                if "_unnamed" not in result:
+                    result["_unnamed"] = []
+                result["_unnamed"].append(item_data)
+        return result
 
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
@@ -180,10 +273,10 @@ class Prompty:
             result["description"] = obj.description
         if obj.metadata is not None:
             result["metadata"] = obj.metadata
-        if obj.inputSchema is not None:
-            result["inputSchema"] = obj.inputSchema.save(context)
-        if obj.outputSchema is not None:
-            result["outputSchema"] = obj.outputSchema.save(context)
+        if obj.inputs is not None:
+            result["inputs"] = Prompty.save_inputs(obj.inputs, context)
+        if obj.outputs is not None:
+            result["outputs"] = Prompty.save_outputs(obj.outputs, context)
         if obj.model is not None:
             result["model"] = obj.model.save(context)
         if obj.tools is not None:
@@ -192,8 +285,6 @@ class Prompty:
             result["template"] = obj.template.save(context)
         if obj.instructions is not None:
             result["instructions"] = obj.instructions
-        if obj.additionalInstructions is not None:
-            result["additionalInstructions"] = obj.additionalInstructions
 
         if context is not None:
             result = context.process_dict(result)

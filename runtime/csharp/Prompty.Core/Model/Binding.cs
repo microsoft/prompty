@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Text.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using System.Text.Json;
 using YamlDotNet.Serialization;
-using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
-namespace Prompty.Core;
+namespace AgentSchema;
 #pragma warning restore IDE0130
 
 /// <summary>
 /// Represents a binding between an input property and a tool parameter.
 /// </summary>
-[JsonConverter(typeof(BindingJsonConverter))]
-public class Binding : IYamlConvertible
+public class Binding
 {
+    /// <summary>
+    /// The shorthand property name for this type, if any.
+    /// </summary>
+    public static string? ShorthandProperty => "input";
+
     /// <summary>
     /// Initializes a new instance of <see cref="Binding"/>.
     /// </summary>
@@ -35,39 +36,189 @@ public class Binding : IYamlConvertible
     public string Input { get; set; } = string.Empty;
 
 
-    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
+    #region Load Methods
+
+    /// <summary>
+    /// Load a Binding instance from a dictionary.
+    /// </summary>
+    /// <param name="data">The dictionary containing the data.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Binding instance.</returns>
+    public static Binding Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
-        if (parser.TryConsume<Scalar>(out var scalar))
+        if (context is not null)
         {
-            // check for non-numeric characters to differentiate strings from numbers
-            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
-            {
-                var stringValue = scalar.Value;
-                Input = stringValue;
-                return;
-            }
-            else
-            {
-                throw new YamlException($"Unexpected scalar value '' when parsing Binding. Expected one of the supported shorthand types or a mapping.");
-            }
+            data = context.ProcessInput(data);
         }
 
-        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-        if (node == null)
+        // Note: Alternate (shorthand) representations are handled by the converter
+
+
+        // Create new instance
+        var instance = new Binding();
+
+
+        if (data.TryGetValue("name", out var nameValue) && nameValue is not null)
         {
-            throw new YamlException("Expected a mapping node for type Binding");
+            instance.Name = nameValue?.ToString()!;
         }
 
+        if (data.TryGetValue("input", out var inputValue) && inputValue is not null)
+        {
+            instance.Input = inputValue?.ToString()!;
+        }
+
+        if (context is not null)
+        {
+            instance = context.ProcessOutput(instance);
+        }
+        return instance;
     }
 
-    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
+
+
+    #endregion
+
+    #region Save Methods
+
+    /// <summary>
+    /// Save the Binding instance to a dictionary.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The dictionary representation of this instance.</returns>
+    public Dictionary<string, object?> Save(SaveContext? context = null)
     {
-        emitter.Emit(new MappingStart());
+        var obj = this;
+        if (context is not null)
+        {
+            obj = context.ProcessObject(obj);
+        }
 
-        emitter.Emit(new Scalar("name"));
-        nestedObjectSerializer(Name);
 
-        emitter.Emit(new Scalar("input"));
-        nestedObjectSerializer(Input);
+        var result = new Dictionary<string, object?>();
+
+
+        if (obj.Name is not null)
+        {
+            result["name"] = obj.Name;
+        }
+
+        if (obj.Input is not null)
+        {
+            result["input"] = obj.Input;
+        }
+
+
+        if (context is not null)
+        {
+            result = context.ProcessDict(result);
+        }
+
+        return result;
     }
+
+
+    /// <summary>
+    /// Convert the Binding instance to a YAML string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The YAML string representation of this instance.</returns>
+    public string ToYaml(SaveContext? context = null)
+    {
+        context ??= new SaveContext();
+        return context.ToYaml(Save(context));
+    }
+
+    /// <summary>
+    /// Convert the Binding instance to a JSON string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <param name="indent">Whether to indent the output. Defaults to true.</param>
+    /// <returns>The JSON string representation of this instance.</returns>
+    public string ToJson(SaveContext? context = null, bool indent = true)
+    {
+        context ??= new SaveContext();
+        return context.ToJson(Save(context), indent);
+    }
+
+    /// <summary>
+    /// Load a Binding instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Binding instance.</returns>
+    public static Binding FromJson(string json, LoadContext? context = null)
+    {
+        using var doc = JsonDocument.Parse(json);
+        Dictionary<string, object?> dict;
+        // Handle alternate representations
+        if (doc.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            var value = JsonUtils.GetJsonElementValue(doc.RootElement);
+            dict = value switch
+            {
+                string stringValue => new Dictionary<string, object?>
+                {
+                    ["input"] = stringValue,
+                },
+                _ => new Dictionary<string, object?>
+                {
+                    ["input"] = value
+                }
+            };
+        }
+        else
+        {
+            dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
+                ?? throw new ArgumentException("Failed to parse JSON as dictionary");
+        }
+
+        return Load(dict, context);
+    }
+
+    /// <summary>
+    /// Load a Binding instance from a YAML string.
+    /// </summary>
+    /// <param name="yaml">The YAML string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Binding instance.</returns>
+    public static Binding FromYaml(string yaml, LoadContext? context = null)
+    {
+        // Handle alternate representations - try object first, fall back to scalar
+        Dictionary<string, object?>? dictResult = null;
+        try
+        {
+            dictResult = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml);
+        }
+        catch (YamlDotNet.Core.YamlException)
+        {
+            // Not a dictionary, will be handled as scalar below
+        }
+
+        Dictionary<string, object?> dict;
+        if (dictResult is not null)
+        {
+            dict = dictResult;
+        }
+        else
+        {
+            // Parse as scalar with proper type inference
+            var parsed = YamlUtils.ParseScalar(yaml);
+            dict = parsed switch
+            {
+                string stringValue => new Dictionary<string, object?>
+                {
+                    ["input"] = stringValue,
+                },
+                _ => new Dictionary<string, object?>
+                {
+                    ["input"] = parsed
+                }
+            };
+        }
+
+        return Load(dict, context);
+    }
+
+    #endregion
 }

@@ -4,7 +4,7 @@
  * @module
  */
 
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "@prompty/core";
 import type { ContentPart, Message } from "@prompty/core";
 
 /**
@@ -60,7 +60,7 @@ function partToWire(part: ContentPart): Record<string, unknown> {
  * Build chat completion arguments from agent config and messages.
  */
 export function buildChatArgs(
-  agent: PromptAgent,
+  agent: Prompty,
   messages: Message[],
 ): Record<string, unknown> {
   const model = agent.model?.id ?? "gpt-4";
@@ -91,7 +91,7 @@ export function buildChatArgs(
  * Build embedding arguments.
  */
 export function buildEmbeddingArgs(
-  agent: PromptAgent,
+  agent: Prompty,
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id ?? "text-embedding-ada-002";
@@ -105,7 +105,7 @@ export function buildEmbeddingArgs(
  * Build image generation arguments.
  */
 export function buildImageArgs(
-  agent: PromptAgent,
+  agent: Prompty,
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id ?? "dall-e-3";
@@ -120,7 +120,7 @@ export function buildImageArgs(
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildOptions(agent: PromptAgent): Record<string, unknown> {
+function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
@@ -144,7 +144,7 @@ function buildOptions(agent: PromptAgent): Record<string, unknown> {
   return result;
 }
 
-function toolsToWire(agent: PromptAgent): Record<string, unknown>[] {
+function toolsToWire(agent: Prompty): Record<string, unknown>[] {
   const tools = agent.tools;
   if (!tools || tools.length === 0) return [];
 
@@ -160,14 +160,14 @@ function toolsToWire(agent: PromptAgent): Record<string, unknown>[] {
     }));
 }
 
-function outputSchemaToWire(agent: PromptAgent): Record<string, unknown> | null {
-  const schema = agent.outputSchema;
-  if (!schema?.properties || schema.properties.length === 0) return null;
+function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
+  const outputs = agent.outputs;
+  if (!outputs || outputs.length === 0) return null;
 
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
 
-  for (const prop of schema.properties) {
+  for (const prop of outputs) {
     if (!prop.name) continue;
     properties[prop.name] = {
       type: prop.kind ?? "string",

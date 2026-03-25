@@ -1,0 +1,445 @@
+{#
+  Rust-Specific Macros for AgentSchema Emitter
+  =============================================
+
+  Usage in Rust templates:
+    {% import "_macros.njk" as rust %}
+    {{ rust.rustType(prop, typeMapper, polymorphicTypeNames) }}
+#}
+
+{% from "macros.njk" import separator, firstOrDefault %}
+
+
+{#
+  Render Rust type for a property.
+  - Dict fields -> serde_json::Value
+  - Non-scalar collection fields -> serde_json::Value (can be array OR dict in JSON)
+  - Scalar collections -> Vec<T> or Option<Vec<T>> if optional
+  - Polymorphic fields -> serde_json::Value (never Optional, Null represents absence)
+  - Optional non-polymorphic non-Value fields -> Option<T>
+  - Required fields -> T
+#}
+{% macro rustType(prop, typeMapper, polymorphicTypeNames) -%}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else (typeMapper[prop.typeName.name] or prop.typeName.name) -%}
+{%- if not baseType -%}{%- set baseType = "serde_json::Value" -%}{%- endif -%}
+{%- if prop.isDict -%}
+serde_json::Value
+{%- elif prop.isCollection and not prop.isScalar -%}
+serde_json::Value
+{%- elif prop.isCollection and prop.isScalar -%}
+{%- if prop.isOptional -%}
+Option<Vec<{{ typeMapper[prop.typeName.name] or "serde_json::Value" }}>>
+{%- else -%}
+Vec<{{ typeMapper[prop.typeName.name] or "serde_json::Value" }}>
+{%- endif -%}
+{%- elif prop.typeName.name in polymorphicTypeNames -%}
+serde_json::Value
+{%- elif prop.isOptional -%}
+Option<{{ baseType }}>
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{%- endmacro %}
+
+
+{#
+  Render the default value for a Rust field.
+  NOTE: polymorphicTypeNames must be passed so we can default serde_json::Value fields to Null.
+#}
+{% macro defaultValue(prop, typeMapper, polymorphicTypeNames) -%}
+{%- if prop.isDict -%}
+serde_json::Value::Null
+{%- elif prop.isCollection and not prop.isScalar -%}
+serde_json::Value::Null
+{%- elif prop.isCollection and prop.isScalar -%}
+{%- if prop.isOptional -%}
+None
+{%- else -%}
+Vec::new()
+{%- endif -%}
+{%- elif prop.typeName.name in polymorphicTypeNames -%}
+serde_json::Value::Null
+{%- elif prop.isOptional -%}
+None
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "boolean" -%}
+{{ "true" if prop.defaultValue else "false" }}
+{%- elif prop.typeName.name == "string" -%}
+String::from("{{ prop.defaultValue if prop.defaultValue else "" }}")
+{%- elif prop.typeName.name in ["int32", "int64", "integer", "float", "float32", "float64", "number", "numeric"] -%}
+0
+{%- else -%}
+Default::default()
+{%- endif -%}
+{%- else -%}
+Default::default()
+{%- endif -%}
+{%- endmacro %}
+
+
+{#
+  Render load code for a single property.
+  Polymorphic fields are always serde_json::Value (never Option-wrapped).
+  Optional non-polymorphic non-scalar fields are wrapped in Some().
+#}
+{% macro loadProperty(prop, varName, typeMapper, polymorphicTypeNames) -%}
+{%- set propNameRust = prop.name | snakeCase -%}
+{%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
+        if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
+            result.{{ propNameRust }} = val.clone();
+        }
+{%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
+        if let Some(arr) = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()) {
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_bool()).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_bool()).collect();
+{%- endif %}
+{%- elif prop.typeName.name == "int32" %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_i64().map(|n| n as i32)).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_i64().map(|n| n as i32)).collect();
+{%- endif %}
+{%- elif prop.typeName.name in ["int64", "integer"] %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_i64()).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_i64()).collect();
+{%- endif %}
+{%- elif prop.typeName.name == "float32" %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
+{%- endif %}
+{%- elif prop.typeName.name in ["float64", "number", "float", "numeric"] %}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().filter_map(|v| v.as_f64()).collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().filter_map(|v| v.as_f64()).collect();
+{%- endif %}
+{%- else %}
+{# generic/any/unknown type - clone the serde_json::Value elements #}
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(arr.iter().cloned().collect());
+{%- else %}
+            result.{{ propNameRust }} = arr.iter().cloned().collect();
+{%- endif %}
+{%- endif %}
+        }
+{%- elif prop.isDict %}
+        if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
+            result.{{ propNameRust }} = val.clone();
+        }
+{%- elif prop.isScalar %}
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_str()).map(|s| s.to_string());
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_bool());
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_bool()).unwrap_or({{ "true" if prop.defaultValue else "false" }});
+{%- endif %}
+{%- elif prop.typeName.name == "int32" %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).map(|n| n as i32);
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+{%- endif %}
+{%- elif prop.typeName.name in ["int64", "integer"] %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64());
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).unwrap_or(0);
+{%- endif %}
+{%- elif prop.typeName.name == "float32" %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).map(|n| n as f32);
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+{%- endif %}
+{%- elif prop.typeName.name in ["float64", "number", "float", "numeric"] %}
+{%- if prop.isOptional %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64());
+{%- else %}
+        result.{{ propNameRust }} = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).unwrap_or(0.0);
+{%- endif %}
+{%- else %}
+{# any/unknown scalar type - use serde_json::Value #}
+        if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
+{%- if prop.isOptional %}
+            result.{{ propNameRust }} = Some(val.clone());
+{%- else %}
+            result.{{ propNameRust }} = val.clone();
+{%- endif %}
+        }
+{%- endif %}
+{%- else %}
+{%- if prop.typeName.name in polymorphicTypeNames %}
+{# Polymorphic: type is serde_json::Value, never use Option wrapping #}
+        if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
+            result.{{ propNameRust }} = val.clone();
+        }
+{%- else %}
+{# Non-scalar, non-polymorphic: load from nested object #}
+        if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
+            if val.is_object() || val.is_array() {
+{%- if prop.isOptional %}
+                result.{{ propNameRust }} = Some({{ prop.typeName.name }}::load_from_value(val));
+{%- else %}
+                result.{{ propNameRust }} = {{ prop.typeName.name }}::load_from_value(val);
+{%- endif %}
+            }
+        }
+{%- endif %}
+{%- endif %}
+{%- endmacro %}
+
+
+{#
+  Render save code for a single property.
+#}
+{% macro saveProperty(prop, polymorphicTypeNames) -%}
+{%- set propNameRust = prop.name | snakeCase -%}
+{%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
+        if !self.{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), self.{{ propNameRust }}.clone());
+        }
+{%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
+{%- if prop.isOptional %}
+        if let Some(ref items) = self.{{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
+        }
+{%- else %}
+        if !self.{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value(&self.{{ propNameRust }}).unwrap_or(serde_json::Value::Null));
+        }
+{%- endif %}
+{%- elif prop.isDict %}
+        if !self.{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), self.{{ propNameRust }}.clone());
+        }
+{%- elif prop.isScalar %}
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+        if let Some(ref val) = self.{{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::String(val.clone()));
+        }
+{%- else %}
+        if !self.{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::String(self.{{ propNameRust }}.clone()));
+        }
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+        if let Some(val) = self.{{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::Bool(val));
+        }
+{%- else %}
+        result.insert("{{ prop.name }}".to_string(), serde_json::Value::Bool(self.{{ propNameRust }}));
+{%- endif %}
+{%- else %}
+{%- if prop.isOptional %}
+        if let Some(ref val) = self.{{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        }
+{%- else %}
+        result.insert("{{ prop.name }}".to_string(), serde_json::to_value(self.{{ propNameRust }}).unwrap_or(serde_json::Value::Null));
+{%- endif %}
+{%- endif %}
+{%- else %}
+{%- if prop.typeName.name in polymorphicTypeNames %}
+{# Polymorphic: type is serde_json::Value, check is_null() #}
+        if !self.{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), self.{{ propNameRust }}.clone());
+        }
+{%- else %}
+{# Non-scalar, non-polymorphic #}
+{%- if prop.isOptional %}
+        if let Some(ref val) = self.{{ propNameRust }} {
+            let nested = val.to_value();
+            if !nested.is_null() {
+                result.insert("{{ prop.name }}".to_string(), nested);
+            }
+        }
+{%- else %}
+        {
+            let nested = self.{{ propNameRust }}.to_value();
+            if !nested.is_null() {
+                result.insert("{{ prop.name }}".to_string(), nested);
+            }
+        }
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endmacro %}
+
+
+{#
+  Generate a typed accessor method for a non-scalar collection or dict field.
+  Non-scalar collection fields are stored as serde_json::Value (can be array OR dict in JSON).
+  This accessor parses them into typed Vec<T>.
+#}
+{% macro typedAccessor(prop) -%}
+{%- set propNameRust = prop.name | snakeCase -%}
+{%- if prop.isCollection and not prop.isScalar and not prop.isDict %}
+    /// Returns typed `Vec<{{ prop.typeName.name }}>` by parsing the stored JSON value.
+    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
+    /// Returns `None` if the field is null or cannot be parsed.
+    pub fn as_{{ propNameRust }}(&self) -> Option<Vec<{{ prop.typeName.name }}>> {
+        match &self.{{ propNameRust }} {
+            serde_json::Value::Array(arr) => {
+                Some(arr.iter().map({{ prop.typeName.name }}::load_from_value).collect())
+            }
+            serde_json::Value::Object(obj) => {
+                let result: Vec<{{ prop.typeName.name }}> = obj
+                    .iter()
+                    .map(|(name, value)| {
+                        let mut v = if value.is_object() {
+                            value.clone()
+                        } else {
+                            serde_json::json!({ "value": value })
+                        };
+                        if let serde_json::Value::Object(ref mut m) = v {
+                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
+                        }
+                        {{ prop.typeName.name }}::load_from_value(&v)
+                    })
+                    .collect();
+                Some(result)
+            }
+            _ => None,
+        }
+    }
+{%- elif prop.isDict %}
+    /// Returns typed reference to the map if the field is an object.
+    /// Returns `None` if the field is null or not an object.
+    pub fn as_{{ propNameRust }}_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.{{ propNameRust }}.as_object()
+    }
+{%- endif -%}
+{%- endmacro %}
+
+
+{#
+  Render an expression that initializes a field from a JSON value.
+  Used for struct initialization syntax to avoid clippy::field_reassign_with_default.
+#}
+{% macro fieldInitializer(prop, varName, typeMapper, polymorphicTypeNames) -%}
+{%- set propNameRust = prop.name | snakeCase -%}
+{%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
+{{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
+{%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()).unwrap_or_default()
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_bool()).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_bool()).collect()).unwrap_or_default()
+{%- endif %}
+{%- elif prop.typeName.name == "int32" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_i64().map(|n| n as i32)).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_i64().map(|n| n as i32)).collect()).unwrap_or_default()
+{%- endif %}
+{%- elif prop.typeName.name in ["int64", "integer"] %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_i64()).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_i64()).collect()).unwrap_or_default()
+{%- endif %}
+{%- elif prop.typeName.name == "float32" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect()).unwrap_or_default()
+{%- endif %}
+{%- elif prop.typeName.name in ["float64", "number", "float", "numeric"] %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect()).unwrap_or_default()
+{%- endif %}
+{%- else %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.to_vec())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()).map(|arr| arr.to_vec()).unwrap_or_default()
+{%- endif %}
+{%- endif %}
+{%- elif prop.isDict %}
+{{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
+{%- elif prop.isScalar %}
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_str()).map(|s| s.to_string())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_str()).unwrap_or_default().to_string()
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_bool())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_bool()).unwrap_or({{ "true" if prop.defaultValue else "false" }})
+{%- endif %}
+{%- elif prop.typeName.name == "int32" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).map(|n| n as i32)
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).unwrap_or(0) as i32
+{%- endif %}
+{%- elif prop.typeName.name in ["int64", "integer"] %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_i64()).unwrap_or(0)
+{%- endif %}
+{%- elif prop.typeName.name == "float32" %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).map(|n| n as f32)
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32
+{%- endif %}
+{%- elif prop.typeName.name in ["float64", "number", "float", "numeric"] %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64())
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_f64()).unwrap_or(0.0)
+{%- endif %}
+{%- else %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").cloned()
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
+{%- endif %}
+{%- endif %}
+{%- else %}
+{%- if prop.typeName.name in polymorphicTypeNames %}
+{{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
+{%- else %}
+{%- if prop.isOptional %}
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array()).map({{ prop.typeName.name }}::load_from_value)
+{%- else %}
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array()).map({{ prop.typeName.name }}::load_from_value).unwrap_or_default()
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endmacro %}

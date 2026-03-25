@@ -17,7 +17,7 @@
  * @module
  */
 
-import type { PromptAgent, PropertySchema } from "agentschema";
+import type { Prompty } from "../model/prompty.js";
 import {
   type ContentPart,
   type ToolCall,
@@ -50,15 +50,15 @@ const DEFAULT_MAX_ITERATIONS = 10;
  * Validate and fill defaults for agent inputs.
  */
 export function validateInputs(
-  agent: PromptAgent,
+  agent: Prompty,
   inputs: Record<string, unknown>,
 ): Record<string, unknown> {
-  const schema = agent.inputSchema;
-  if (!schema?.properties) return { ...inputs };
+  const props = agent.inputs;
+  if (!props || props.length === 0) return { ...inputs };
 
   const result = { ...inputs };
 
-  for (const prop of schema.properties) {
+  for (const prop of props) {
     const name = prop.name;
     if (!name) continue;
 
@@ -78,19 +78,19 @@ export function validateInputs(
 // Resolve config helpers
 // ---------------------------------------------------------------------------
 
-function resolveFormatKind(agent: PromptAgent): string {
+function resolveFormatKind(agent: Prompty): string {
   return agent.template?.format?.kind ?? DEFAULT_FORMAT;
 }
 
-function resolveParserKind(agent: PromptAgent): string {
+function resolveParserKind(agent: Prompty): string {
   return agent.template?.parser?.kind ?? DEFAULT_PARSER;
 }
 
-function resolveProvider(agent: PromptAgent): string {
+function resolveProvider(agent: Prompty): string {
   return agent.model?.provider ?? DEFAULT_PROVIDER;
 }
 
-function isStrictMode(agent: PromptAgent): boolean {
+function isStrictMode(agent: Prompty): boolean {
   return agent.template?.format?.strict === true;
 }
 
@@ -104,7 +104,7 @@ function isStrictMode(agent: PromptAgent): boolean {
  * Discovered by: `agent.template.format.kind` (default: "nunjucks").
  */
 export async function render(
-  agent: PromptAgent,
+  agent: Prompty,
   inputs: Record<string, unknown>,
 ): Promise<string> {
   return traceSpan("render", async (emit) => {
@@ -125,7 +125,7 @@ export async function render(
  * Discovered by: `agent.template.parser.kind` (default: "prompty").
  */
 export async function parse(
-  agent: PromptAgent,
+  agent: Prompty,
   rendered: string,
   context?: Record<string, unknown>,
 ): Promise<Message[]> {
@@ -146,7 +146,7 @@ export async function parse(
  * Discovered by: `agent.model.provider` (default: "openai").
  */
 export async function process(
-  agent: PromptAgent,
+  agent: Prompty,
   response: unknown,
 ): Promise<unknown> {
   return traceSpan("process", async (emit) => {
@@ -166,7 +166,7 @@ export async function process(
  * Render template + parse into messages + expand thread markers.
  */
 export async function prepare(
-  agent: PromptAgent,
+  agent: Prompty,
   inputs?: Record<string, unknown>,
 ): Promise<Message[]> {
   return traceSpan("prepare", async (emit) => {
@@ -222,7 +222,7 @@ export async function prepare(
  * Execute messages against the LLM and process the response.
  */
 export async function run(
-  agent: PromptAgent,
+  agent: Prompty,
   messages: Message[],
   options?: { raw?: boolean },
 ): Promise<unknown> {
@@ -248,7 +248,7 @@ export async function run(
  * Full pipeline: load → prepare → run.
  */
 export async function execute(
-  prompt: string | PromptAgent,
+  prompt: string | Prompty,
   inputs?: Record<string, unknown>,
   options?: { raw?: boolean },
 ): Promise<unknown> {
@@ -269,7 +269,7 @@ export async function execute(
  * Run a prompt with automatic tool-call execution loop.
  */
 export async function executeAgent(
-  prompt: string | PromptAgent,
+  prompt: string | Prompty,
   inputs?: Record<string, unknown>,
   options?: {
     tools?: Record<string, (...args: unknown[]) => unknown>;
@@ -320,12 +320,12 @@ export async function executeAgent(
 /**
  * Get map of `{propertyName: kind}` for inputs with rich kinds.
  */
-function getRichInputNames(agent: PromptAgent): Record<string, string> {
+function getRichInputNames(agent: Prompty): Record<string, string> {
   const result: Record<string, string> = {};
-  const schema = agent.inputSchema;
-  if (!schema?.properties) return result;
+  const props = agent.inputs;
+  if (!props || props.length === 0) return result;
 
-  for (const prop of schema.properties) {
+  for (const prop of props) {
     const kind = prop.kind?.toLowerCase() ?? "";
     if (RICH_KINDS.has(kind) && prop.name) {
       result[prop.name] = kind;

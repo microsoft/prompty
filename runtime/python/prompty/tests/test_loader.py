@@ -87,14 +87,14 @@ class TestInstructions:
         assert agent.instructions.strip().startswith("system:")
 
     def test_load_thread_input_kind(self):
-        """Thread-kind input is declared in inputSchema."""
+        """Thread-kind input is declared in inputs."""
         agent = load(PROMPTS / "threaded.prompty")
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
         assert "{{conversation}}" in agent.instructions
-        # thread-kind input should be in the schema
-        assert agent.inputSchema is not None
-        thread_props = [p for p in agent.inputSchema.properties if p.kind == "thread"]
+        # thread-kind input should be in the inputs list
+        assert len(agent.inputs) > 0
+        thread_props = [p for p in agent.inputs if p.kind == "thread"]
         assert len(thread_props) == 1
         assert thread_props[0].name == "conversation"
 
@@ -159,13 +159,13 @@ class TestModel:
 
 class TestSchema:
     def test_load_input_schema(self):
-        """inputSchema.properties loaded from basic.prompty."""
+        """inputs loaded from basic.prompty."""
         os.environ["AZURE_OPENAI_ENDPOINT"] = "https://test.openai.azure.com/"
         os.environ["AZURE_OPENAI_API_KEY"] = "test-key-123"
         try:
             agent = load(PROMPTS / "basic.prompty")
-            assert agent.inputSchema is not None
-            props = agent.inputSchema.properties
+            assert len(agent.inputs) > 0
+            props = agent.inputs
             assert len(props) == 3
             names = [p.name for p in props]
             assert "firstName" in names
@@ -181,8 +181,8 @@ class TestSchema:
         os.environ["AZURE_OPENAI_API_KEY"] = "test-key-123"
         try:
             agent = load(PROMPTS / "basic.prompty")
-            assert agent.inputSchema is not None
-            props = {p.name: p for p in agent.inputSchema.properties}
+            assert len(agent.inputs) > 0
+            props = {p.name: p for p in agent.inputs}
             assert props["firstName"].kind == "string"
         finally:
             del os.environ["AZURE_OPENAI_ENDPOINT"]
@@ -204,14 +204,14 @@ class TestTools:
         assert isinstance(tool, FunctionTool)
         assert tool.name == "get_current_weather"
         assert tool.kind == "function"
-        assert len(tool.parameters.properties) > 0
+        assert len(tool.parameters) > 0
 
     def test_load_tools_function_params(self):
         """FunctionTool parameters have correct properties."""
         agent = load(PROMPTS / "tools_function.prompty")
         tool = agent.tools[0]
         assert isinstance(tool, FunctionTool)
-        param_names = [p.name for p in tool.parameters.properties]
+        param_names = [p.name for p in tool.parameters]
         assert "location" in param_names
 
     def test_load_tools_mcp(self):
@@ -325,8 +325,8 @@ class TestReferenceResolution:
     def test_load_file_resolution(self):
         """${file:path} loads JSON file content."""
         agent = load(PROMPTS / "file_ref.prompty")
-        assert agent.inputSchema is not None
-        props = agent.inputSchema.properties
+        assert len(agent.inputs) > 0
+        props = agent.inputs
         assert len(props) == 1
         assert props[0].name == "question"
 
@@ -336,7 +336,7 @@ class TestReferenceResolution:
         import tempfile
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".prompty", delete=False, dir=PROMPTS) as f:
-            f.write("---\nname: bad-ref\ninputSchema: ${file:nonexistent.json}\n---\nHello\n")
+            f.write("---\nname: bad-ref\ninputs: ${file:nonexistent.json}\n---\nHello\n")
             tmp_path = f.name
         try:
             with pytest.raises(FileNotFoundError, match="not found"):
@@ -431,20 +431,20 @@ class TestLegacyMigration:
         assert agent.model.apiType == "chat"
 
     def test_load_legacy_inputs(self):
-        """inputs → inputSchema.properties."""
+        """inputs (dict) → inputs (list)."""
         agent, _ = self._load_legacy()
-        assert agent.inputSchema is not None
-        props = agent.inputSchema.properties
+        assert len(agent.inputs) > 0
+        props = agent.inputs
         names = [p.name for p in props]
         assert "firstName" in names
         assert "lastName" in names
         assert "question" in names
 
     def test_load_legacy_inputs_type_to_kind(self):
-        """inputs.X.type → inputSchema.properties.X.kind."""
+        """inputs.X.type → inputs.X.kind."""
         agent, _ = self._load_legacy()
-        assert agent.inputSchema is not None
-        props = {p.name: p for p in agent.inputSchema.properties}
+        assert len(agent.inputs) > 0
+        props = {p.name: p for p in agent.inputs}
         assert props["firstName"].kind == "string"
 
     def test_load_legacy_metadata_hoisting(self):
@@ -514,12 +514,12 @@ class TestShorthand:
         assert "answers questions concisely" in agent.instructions
 
     def test_quick_prompt(self):
-        """Compact prompt with model string + inline inputSchema."""
+        """Compact prompt with model string + inline inputs."""
         agent = load(PROMPTS / "shorthand_quick.prompty")
         assert agent.name == "quick-prompt"
         assert agent.model.id == "gpt-4o-mini"
-        assert agent.inputSchema is not None
-        props = agent.inputSchema.properties
+        assert len(agent.inputs) > 0
+        props = agent.inputs
         assert len(props) == 1
         assert props[0].name == "topic"
         assert props[0].default == "Python"
@@ -539,7 +539,7 @@ class TestShorthand:
         assert agent.name == "just-a-name"
         assert agent.model is not None  # Prompty.load() provides default Model
         assert agent.model.id == ""
-        assert agent.inputSchema is None
+        assert len(agent.inputs) == 0
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
 
@@ -550,8 +550,8 @@ class TestShorthand:
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
         assert "{{conversation}}" in agent.instructions
-        assert agent.inputSchema is not None
-        thread_props = [p for p in agent.inputSchema.properties if p.kind == "thread"]
+        assert agent.inputs is not None
+        thread_props = [p for p in agent.inputs if p.kind == "thread"]
         assert len(thread_props) == 1
 
 

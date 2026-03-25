@@ -143,15 +143,13 @@ class TestToolsToWire:
                     "name": "get_weather",
                     "kind": "function",
                     "description": "Get weather",
-                    "parameters": {
-                        "properties": [
-                            {
-                                "name": "location",
-                                "kind": "string",
-                                "description": "City",
-                            }
-                        ]
-                    },
+                    "parameters": [
+                        {
+                            "name": "location",
+                            "kind": "string",
+                            "description": "City",
+                        }
+                    ],
                 }
             ]
         )
@@ -174,12 +172,9 @@ class TestToolsToWire:
                     "name": "strict_fn",
                     "kind": "function",
                     "strict": True,
-                    "parameters": {
-                        "properties": [
-                            {"name": "x", "kind": "string"},
-                        ],
-                        "strict": True,
-                    },
+                    "parameters": [
+                        {"name": "x", "kind": "string"},
+                    ],
                 }
             ]
         )
@@ -200,17 +195,14 @@ class TestSchemaToWire:
                 {
                     "name": "test",
                     "kind": "function",
-                    "parameters": {
-                        "properties": [
-                            {"name": "x", "kind": "integer", "description": "A number"},
-                            {
-                                "name": "y",
-                                "kind": "string",
-                                "enumValues": ["a", "b"],
-                            },
-                        ],
-                        "strict": True,
-                    },
+                    "parameters": [
+                        {"name": "x", "kind": "integer", "description": "A number"},
+                        {
+                            "name": "y",
+                            "kind": "string",
+                            "enumValues": ["a", "b"],
+                        },
+                    ],
                 }
             ]
         )
@@ -221,7 +213,6 @@ class TestSchemaToWire:
         result = _schema_to_wire(tool.parameters)
         assert result["properties"]["x"]["type"] == "integer"
         assert result["properties"]["y"]["enum"] == ["a", "b"]
-        assert result["additionalProperties"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -259,11 +250,9 @@ class TestOpenAIExecutor:
                     "name": "get_weather",
                     "kind": "function",
                     "description": "Get weather",
-                    "parameters": {
-                        "properties": [
-                            {"name": "loc", "kind": "string"},
-                        ]
-                    },
+                    "parameters": [
+                        {"name": "loc", "kind": "string"},
+                    ],
                 }
             ]
         )
@@ -364,7 +353,7 @@ class TestAzureExecutor:
 
 
 # ---------------------------------------------------------------------------
-# Structured Output (outputSchema → response_format)
+# Structured Output (outputs → response_format)
 # ---------------------------------------------------------------------------
 
 
@@ -437,12 +426,10 @@ class TestPropertyToJsonSchema:
 class TestOutputSchemaToWire:
     def test_simple_schema(self):
         agent = _make_agent(
-            outputSchema={
-                "properties": [
-                    {"name": "answer", "kind": "string", "description": "The answer"},
-                    {"name": "confidence", "kind": "float", "required": True},
-                ]
-            }
+            outputs=[
+                {"name": "answer", "kind": "string", "description": "The answer"},
+                {"name": "confidence", "kind": "float", "required": True},
+            ]
         )
         result = _output_schema_to_wire(agent)
         assert result is not None
@@ -466,18 +453,16 @@ class TestOutputSchemaToWire:
 
     def test_nested_object(self):
         agent = _make_agent(
-            outputSchema={
-                "properties": [
-                    {
-                        "name": "person",
-                        "kind": "object",
-                        "properties": [
-                            {"name": "name", "kind": "string"},
-                            {"name": "age", "kind": "integer"},
-                        ],
-                    }
-                ]
-            }
+            outputs=[
+                {
+                    "name": "person",
+                    "kind": "object",
+                    "properties": [
+                        {"name": "name", "kind": "string"},
+                        {"name": "age", "kind": "integer"},
+                    ],
+                }
+            ]
         )
         result = _output_schema_to_wire(agent)
         assert result is not None
@@ -489,15 +474,13 @@ class TestOutputSchemaToWire:
 
     def test_array_property(self):
         agent = _make_agent(
-            outputSchema={
-                "properties": [
-                    {
-                        "name": "items",
-                        "kind": "array",
-                        "items": {"name": "item", "kind": "string"},
-                    }
-                ]
-            }
+            outputs=[
+                {
+                    "name": "items",
+                    "kind": "array",
+                    "items": {"name": "item", "kind": "string"},
+                }
+            ]
         )
         result = _output_schema_to_wire(agent)
         assert result is not None
@@ -509,11 +492,9 @@ class TestOutputSchemaToWire:
     def test_name_from_agent(self):
         agent = _make_agent(
             name="My Cool Agent",
-            outputSchema={
-                "properties": [
-                    {"name": "x", "kind": "string"},
-                ]
-            },
+            outputs=[
+                {"name": "x", "kind": "string"},
+            ],
         )
         result = _output_schema_to_wire(agent)
         assert result is not None
@@ -523,11 +504,9 @@ class TestOutputSchemaToWire:
 class TestBuildArgsResponseFormat:
     def test_response_format_included(self):
         agent = _make_agent(
-            outputSchema={
-                "properties": [
-                    {"name": "answer", "kind": "string"},
-                ]
-            }
+            outputs=[
+                {"name": "answer", "kind": "string"},
+            ]
         )
         executor = OpenAIExecutor()
         args = executor._build_chat_args(agent, _make_messages())
@@ -542,11 +521,9 @@ class TestBuildArgsResponseFormat:
 
     def test_azure_response_format_included(self):
         agent = _make_azure_agent(
-            outputSchema={
-                "properties": [
-                    {"name": "result", "kind": "string"},
-                ]
-            }
+            outputs=[
+                {"name": "result", "kind": "string"},
+            ]
         )
         executor = AzureExecutor()
         args = executor._build_chat_args(agent, _make_messages())

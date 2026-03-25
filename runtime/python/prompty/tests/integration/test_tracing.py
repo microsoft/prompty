@@ -251,16 +251,14 @@ class TestAzureAgentTracing:
                         "name": "get_weather",
                         "kind": "function",
                         "description": "Get the current weather for a city.",
-                        "parameters": {
-                            "properties": [
-                                {
-                                    "name": "city",
-                                    "kind": "string",
-                                    "description": "City name",
-                                    "required": True,
-                                }
-                            ]
-                        },
+                        "parameters": [
+                            {
+                                "name": "city",
+                                "kind": "string",
+                                "description": "City name",
+                                "required": True,
+                            }
+                        ],
                     }
                 ],
                 metadata={"tool_functions": {"get_weather": get_weather}},

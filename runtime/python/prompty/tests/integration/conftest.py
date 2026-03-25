@@ -118,7 +118,7 @@ def make_openai_agent(
     if tools:
         data["tools"] = tools
     if output_schema:
-        data["outputSchema"] = output_schema
+        data["outputs"] = output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
     if metadata is not None:
         data["metadata"] = metadata
     return Prompty.load(data)
@@ -157,7 +157,7 @@ def make_azure_agent(
     if tools:
         data["tools"] = tools
     if output_schema:
-        data["outputSchema"] = output_schema
+        data["outputs"] = output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
     if metadata is not None:
         data["metadata"] = metadata
     return Prompty.load(data)

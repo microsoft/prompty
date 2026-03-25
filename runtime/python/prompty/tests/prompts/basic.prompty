@@ -15,17 +15,16 @@ model:
   options:
     temperature: 0.7
     maxOutputTokens: 1000
-inputSchema:
-  properties:
-    - name: firstName
-      kind: string
-      default: Jane
-    - name: lastName
-      kind: string
-      default: Doe
-    - name: question
-      kind: string
-      default: What is the meaning of life?
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
 template:
   format:
     kind: jinja2

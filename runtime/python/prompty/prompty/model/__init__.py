@@ -21,7 +21,6 @@ from ._ModelOptions import ModelOptions
 from ._Parser import Parser
 from ._Prompty import Prompty
 from ._Property import ArrayProperty, ObjectProperty, Property
-from ._PropertySchema import PropertySchema
 from ._Template import Template
 from ._Tool import CustomTool, FunctionTool, McpTool, OpenApiTool, Tool
 
@@ -31,7 +30,6 @@ __all__ = [
     "Property",
     "ObjectProperty",
     "ArrayProperty",
-    "PropertySchema",
     "Connection",
     "ReferenceConnection",
     "RemoteConnection",

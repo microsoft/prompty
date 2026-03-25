@@ -1,0 +1,218 @@
+{#
+  C# Test Template
+  ================
+  Renders C# xUnit test file for a type.
+  
+  Expected context:
+    - node: TypeNode
+    - namespace: string
+    - examples: Array<{ json: string[], yaml: string[], validations: Array<{ key, value, startDelim, endDelim }> }>
+    - alternates: Array<{ title, scalar, value, validations: Array<{ key, value, delimiter }> }>
+#}
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace {{ namespace }};
+#pragma warning restore IDE0130
+
+
+public class {{ node.typeName.name }}ConversionTests
+{   {% for sample in examples %}
+    [Fact]
+    public void LoadYamlInput{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        string yamlData = """
+{%- for line in sample.yaml %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var instance = {{ node.typeName.name }}.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        
+        {%- for validation in sample.validations %}
+        {%- if validation.value == "True" or validation.value == "False" %}
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key  }});
+        {%- elif validation.startDelim == '@"' %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}.Replace("\r\n", "\n"), instance.{{ validation.key }});
+        {%- else %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}, instance.{{ validation.key }});
+        {%- endif %}
+        {%- endfor %}
+    }
+
+    [Fact]
+    public void LoadJsonInput{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        string jsonData = """
+{%- for line in sample.json %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var instance = {{ node.typeName.name }}.FromJson(jsonData);
+        Assert.NotNull(instance);
+        {%- for validation in sample.validations %}
+        {%- if validation.value == "True" or validation.value == "False" %}
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key  }});
+        {%- elif validation.startDelim == '@"' %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}.Replace("\r\n", "\n"), instance.{{ validation.key }});
+        {%- else %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}, instance.{{ validation.key }});
+        {%- endif %}
+        {%- endfor %}
+    }
+
+    [Fact]
+    public void RoundtripJson{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{%- for line in sample.json %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var original = {{ node.typeName.name }}.FromJson(jsonData);
+        Assert.NotNull(original);
+        
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+        
+        var reloaded = {{ node.typeName.name }}.FromJson(json);
+        Assert.NotNull(reloaded);
+        {%- for validation in sample.validations %}
+        {%- if validation.value == "True" or validation.value == "False" %}
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(reloaded.{{ validation.key  }});
+        {%- elif validation.startDelim == '@"' %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}.Replace("\r\n", "\n"), reloaded.{{ validation.key }});
+        {%- else %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}, reloaded.{{ validation.key }});
+        {%- endif %}
+        {%- endfor %}
+    }
+
+    [Fact]
+    public void RoundtripYaml{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+{%- for line in sample.yaml %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var original = {{ node.typeName.name }}.FromYaml(yamlData);
+        Assert.NotNull(original);
+        
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+        
+        var reloaded = {{ node.typeName.name }}.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        {%- for validation in sample.validations %}
+        {%- if validation.value == "True" or validation.value == "False" %}
+        Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(reloaded.{{ validation.key  }});
+        {%- elif validation.startDelim == '@"' %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}.Replace("\r\n", "\n"), reloaded.{{ validation.key }});
+        {%- else %}
+        Assert.Equal({{ validation.startDelim | safe }}{{ validation.value | safe }}{{ validation.endDelim | safe }}, reloaded.{{ validation.key }});
+        {%- endif %}
+        {%- endfor %}
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        string jsonData = """
+{%- for line in sample.json %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var instance = {{ node.typeName.name }}.FromJson(jsonData);
+        var json = instance.ToJson();
+        
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml{% if not loop.first %}{{loop.index - 1}}{% endif %}()
+    {
+        string yamlData = """
+{%- for line in sample.yaml %}
+{{ line | safe }}
+{%- endfor %}
+""";
+
+        var instance = {{ node.typeName.name }}.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+        
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+    {%- endfor %}
+
+    {%- if alternates.length > 0 %}
+    {% for alt in alternates -%}
+    [Fact]
+    public void LoadJsonFrom{{ alt.scalar | title }}()
+    {
+        // alternate representation as {{ alt.scalar }}
+        {%- if alt.scalar == "string" %}
+        var data = "{{ alt.value | replace('"', '\\"') | safe }}";
+        {%- else %}
+        var data = "{% if alt.value == "True" %}true{% elif alt.value == "False" %}false{% else %}{{ alt.value | safe }}{% endif %}";
+        {%- endif %}
+        var instance = {{ node.typeName.name }}.FromJson(data);
+        Assert.NotNull(instance);
+        {%- for item in alt.validations %}
+        {%- if item.value == "True" or item.value == "False" %}
+        Assert.NotNull(instance.{{ item.key }});
+        Assert.IsType<bool>(instance.{{ item.key }});
+        Assert.{% if item.value == "False" %}False{% else %}True{% endif %}((bool)instance.{{ item.key }});
+        {%- elif item.value | isFloat %}
+        Assert.NotNull(instance.{{ item.key }});
+        Assert.True(instance.{{ item.key }} is float || instance.{{ item.key }} is double || instance.{{ item.key }} is int || instance.{{ item.key }} is long);
+        Assert.Equal({{ item.value | safe }}, Convert.ToDouble(instance.{{ item.key }}), 5);
+        {%- else %}
+        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});   
+        {%- endif %}
+        {%- endfor %}
+    }
+
+
+    [Fact]
+    public void LoadYamlFrom{{ alt.scalar | title }}()
+    {
+        // alternate representation as {{ alt.scalar }}
+        {%- if alt.scalar == "string" %}
+        var data = "{{ alt.value | replace('"', '\\"') | safe }}";
+        {%- else %}
+        var data = "{% if alt.value == "True" %}true{% elif alt.value == "False" %}false{% else %}{{ alt.value | safe }}{% endif %}";
+        {%- endif %}
+        var instance = {{ node.typeName.name }}.FromYaml(data);
+        Assert.NotNull(instance);
+        
+        {%- for item in alt.validations %}
+        {%- if item.value == "True" or item.value == "False" %}
+        Assert.NotNull(instance.{{ item.key }});
+        Assert.IsType<bool>(instance.{{ item.key }});
+        Assert.{% if item.value == "False" %}False{% else %}True{% endif %}((bool)instance.{{ item.key }});
+        {%- elif item.value | isFloat %}
+        Assert.NotNull(instance.{{ item.key }});
+        Assert.True(instance.{{ item.key }} is float || instance.{{ item.key }} is double || instance.{{ item.key }} is int || instance.{{ item.key }} is long);
+        Assert.Equal({{ item.value | safe }}, Convert.ToDouble(instance.{{ item.key }}), 5);
+        {%- else %}
+        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});   
+        {%- endif %}
+        {%- endfor %}
+    }
+    {% endfor %}
+    {%- endif %}
+}

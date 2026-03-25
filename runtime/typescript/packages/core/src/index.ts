@@ -94,29 +94,40 @@ export {
 } from "./tracing/index.js";
 
 // ---------------------------------------------------------------------------
-// Re-export key agentschema types for convenience
+// Re-export generated model types
 // ---------------------------------------------------------------------------
 
 export {
-  AgentDefinition,
-  PromptAgent,
+  Prompty,
   Model,
   ModelOptions,
   Template,
   Format,
-  Parser as AgentSchemaParser,
+  Parser as SchemaParser,
   Property,
-  PropertySchema,
+  ArrayProperty,
+  ObjectProperty,
   Connection,
   ApiKeyConnection,
   ReferenceConnection,
+  RemoteConnection,
   AnonymousConnection,
   FoundryConnection,
+  OAuthConnection,
   LoadContext,
   SaveContext,
   Tool,
   FunctionTool,
-} from "agentschema";
+  CustomTool,
+  McpTool,
+  OpenApiTool,
+  McpApprovalMode,
+  Binding,
+} from "./model/index.js";
+
+// Backward-compat aliases (will be removed in a future version)
+export { Prompty as PromptAgent } from "./model/index.js";
+export { Prompty as AgentDefinition } from "./model/index.js";
 
 // ---------------------------------------------------------------------------
 // Auto-register built-in renderers and parsers

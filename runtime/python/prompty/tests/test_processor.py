@@ -191,18 +191,18 @@ class TestAsync:
 
 
 # ---------------------------------------------------------------------------
-# Structured Output (JSON parsing with outputSchema)
+# Structured Output (JSON parsing with outputs)
 # ---------------------------------------------------------------------------
 
 
 def _make_agent_with_schema(**schema_properties) -> Prompty:
-    """Create an agent with an outputSchema."""
+    """Create an agent with outputs."""
     props = schema_properties.get("properties", [])
     return Prompty.load(
         {
             "name": "test",
             "model": "gpt-4",
-            "outputSchema": {"properties": props},
+            "outputs": props,
         }
     )
 
@@ -239,7 +239,7 @@ class TestStructuredOutput:
         assert result == "not valid json {"
 
     def test_tool_calls_not_json_parsed(self):
-        """Tool calls should not be affected by outputSchema."""
+        """Tool calls should not be affected by outputs."""
         agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         tc = _mock_tool_call("call_1", "func", "{}")
         response = _mock_chat_completion(tool_calls=[tc])
@@ -248,7 +248,7 @@ class TestStructuredOutput:
         assert isinstance(result[0], ToolCall)
 
     def test_none_content_not_json_parsed(self):
-        """None content should not be affected by outputSchema."""
+        """None content should not be affected by outputs."""
         agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         response = _mock_chat_completion(content=None)
         result = self.processor.process(agent, response)

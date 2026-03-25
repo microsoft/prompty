@@ -16,7 +16,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { PromptAgent } from "agentschema";
+import { Prompty } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 
 // ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ import type { Renderer, Parser, Executor, Processor } from "../src/core/interfac
 // ---------------------------------------------------------------------------
 
 class MockRenderer implements Renderer {
-  async render(_agent: PromptAgent, template: string, inputs: Record<string, unknown>): Promise<string> {
+  async render(_agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string> {
     let result = template;
     for (const [key, val] of Object.entries(inputs)) {
       result = result.replace(`{{${key}}}`, String(val));
@@ -34,13 +34,13 @@ class MockRenderer implements Renderer {
 }
 
 class MockParser implements Parser {
-  async parse(_agent: PromptAgent, rendered: string): Promise<Message[]> {
+  async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
     return [new Message("user", [text(rendered)])];
   }
 }
 
 class MockExecutor implements Executor {
-  async execute(_agent: PromptAgent, _messages: Message[]): Promise<unknown> {
+  async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
     return {
       choices: [{
         message: { role: "assistant", content: "Mock response" },
@@ -50,7 +50,7 @@ class MockExecutor implements Executor {
 }
 
 class MockProcessor implements Processor {
-  async process(_agent: PromptAgent, response: unknown): Promise<unknown> {
+  async process(_agent: Prompty, response: unknown): Promise<unknown> {
     const r = response as Record<string, unknown>;
     const choices = r.choices as Record<string, unknown>[];
     const msg = choices[0].message as Record<string, unknown>;
@@ -62,8 +62,8 @@ class MockProcessor implements Processor {
 // Setup: register mock implementations for a test provider
 // ---------------------------------------------------------------------------
 
-function makeAgent(overrides?: Partial<{ name: string; model: string; instructions: string }>): PromptAgent {
-  return new PromptAgent({
+function makeAgent(overrides?: Partial<{ name: string; model: string; instructions: string }>): Prompty {
+  return new Prompty({
     name: overrides?.name ?? "test",
     model: overrides?.model ?? "gpt-4o",
     instructions: overrides?.instructions ?? "Hello, {{name}}!",
@@ -87,10 +87,8 @@ describe("Pipeline", () => {
 
     it("fills defaults for missing inputs", () => {
       const agent = makeAgent();
-      const { PropertySchema, Property } = require("agentschema");
-      const schema = new PropertySchema();
-      schema.properties = [new Property({ name: "x", default: 42 })];
-      agent.inputSchema = schema;
+      const { Property } = require("@prompty/core");
+      agent.inputs = [new Property({ name: "x", default: 42 })];
 
       const result = validateInputs(agent, {});
       expect(result.x).toBe(42);
@@ -98,10 +96,8 @@ describe("Pipeline", () => {
 
     it("throws on missing required input", () => {
       const agent = makeAgent();
-      const { PropertySchema, Property } = require("agentschema");
-      const schema = new PropertySchema();
-      schema.properties = [new Property({ name: "x", required: true })];
-      agent.inputSchema = schema;
+      const { Property } = require("@prompty/core");
+      agent.inputs = [new Property({ name: "x", required: true })];
 
       expect(() => validateInputs(agent, {})).toThrow("Missing required input");
     });
@@ -176,7 +172,7 @@ describe("Pipeline", () => {
     it("handles tool call loops", async () => {
       let callCount = 0;
       class ToolCallExecutor implements Executor {
-        async execute(_agent: PromptAgent, messages: Message[]): Promise<unknown> {
+        async execute(_agent: Prompty, messages: Message[]): Promise<unknown> {
           callCount++;
           if (callCount === 1) {
             return {

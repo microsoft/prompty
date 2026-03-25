@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { MustacheRenderer } from "../src/renderers/mustache.js";
-import { PromptAgent } from "agentschema";
+import { Prompty } from "@prompty/core";
 
-const agent = new PromptAgent({ name: "test", model: "gpt-4o" });
+const agent = new Prompty({ name: "test", model: "gpt-4o" });
 
 describe("NunjucksRenderer", () => {
   const renderer = new NunjucksRenderer();

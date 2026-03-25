@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "prompty-schema",
+  "description": "TypeSpec models and code generation for Prompty",
+  "scripts": {
+    "build:emitter": "cd emitter && npm run build",
+    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml",
+    "build": "npm run build:emitter && npm run generate"
+  },
+  "dependencies": {
+    "agentschema-emitter": "file:./emitter",
+    "@typespec/compiler": "latest",
+    "@typespec/json-schema": "latest"
+  }
+}

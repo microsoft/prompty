@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { messageToWire, buildChatArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
 import { Message, text } from "@prompty/core";
-import { PromptAgent } from "agentschema";
+import { Prompty } from "@prompty/core";
 
 describe("messageToWire", () => {
   it("converts a simple text message", () => {
@@ -36,7 +36,7 @@ describe("messageToWire", () => {
 });
 
 describe("processResponse", () => {
-  const agent = new PromptAgent({ name: "test", model: "gpt-4o" });
+  const agent = new Prompty({ name: "test", model: "gpt-4o" });
 
   it("extracts content from chat completion", () => {
     const response = {

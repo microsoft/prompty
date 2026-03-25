@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
-import { PromptAgent } from "agentschema";
+import { Prompty } from "@prompty/core";
 
 const parser = new PromptyChatParser();
-const agent = new PromptAgent({ name: "test", model: "gpt-4o" });
+const agent = new Prompty({ name: "test", model: "gpt-4o" });
 
 describe("PromptyChatParser", () => {
   it("parses basic role markers", async () => {

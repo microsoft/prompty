@@ -21,28 +21,24 @@ def test_load_json_prompty():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -111,22 +107,20 @@ def test_load_yaml_prompty():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        firstName:
-          kind: string
-          value: Jane
-        lastName:
-          kind: string
-          value: Doe
-        question:
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        answer:
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      firstName:
+        kind: string
+        default: Jane
+      lastName:
+        kind: string
+        default: Doe
+      question:
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      answer:
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -208,28 +202,24 @@ def test_roundtrip_json_prompty():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -305,28 +295,24 @@ def test_to_json_prompty():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -386,28 +372,24 @@ def test_to_yaml_prompty():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -466,28 +448,24 @@ def test_load_json_prompty_1():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -555,22 +533,20 @@ def test_load_yaml_prompty_1():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        firstName:
-          kind: string
-          value: Jane
-        lastName:
-          kind: string
-          value: Doe
-        question:
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        answer:
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      firstName:
+        kind: string
+        default: Jane
+      lastName:
+        kind: string
+        default: Doe
+      question:
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      answer:
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -652,28 +628,24 @@ def test_roundtrip_json_prompty_1():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -748,28 +720,24 @@ def test_to_json_prompty_1():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -828,28 +796,24 @@ def test_to_yaml_prompty_1():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -907,31 +871,27 @@ def test_load_json_prompty_2():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -998,22 +958,20 @@ def test_load_yaml_prompty_2():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        firstName:
-          kind: string
-          value: Jane
-        lastName:
-          kind: string
-          value: Doe
-        question:
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      firstName:
+        kind: string
+        default: Jane
+      lastName:
+        kind: string
+        default: Doe
+      question:
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      - name: answer
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -1095,31 +1053,27 @@ def test_roundtrip_json_prompty_2():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1193,31 +1147,27 @@ def test_to_json_prompty_2():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1275,31 +1225,27 @@ def test_to_yaml_prompty_2():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1356,31 +1302,27 @@ def test_load_json_prompty_3():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1446,22 +1388,20 @@ def test_load_yaml_prompty_3():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        firstName:
-          kind: string
-          value: Jane
-        lastName:
-          kind: string
-          value: Doe
-        question:
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      firstName:
+        kind: string
+        default: Jane
+      lastName:
+        kind: string
+        default: Doe
+      question:
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      - name: answer
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -1543,31 +1483,27 @@ def test_roundtrip_json_prompty_3():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1640,31 +1576,27 @@ def test_to_json_prompty_3():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1721,31 +1653,27 @@ def test_to_yaml_prompty_3():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": {
-          "firstName": {
-            "kind": "string",
-            "value": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "value": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
+      "inputs": {
+        "firstName": {
+          "kind": "string",
+          "default": "Jane"
+        },
+        "lastName": {
+          "kind": "string",
+          "default": "Doe"
+        },
+        "question": {
+          "kind": "string",
+          "default": "What is the meaning of life?"
         }
       },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -1801,31 +1729,27 @@ def test_load_json_prompty_4():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -1894,22 +1818,20 @@ def test_load_yaml_prompty_4():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        - name: firstName
-          kind: string
-          value: Jane
-        - name: lastName
-          kind: string
-          value: Doe
-        - name: question
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        answer:
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      - name: firstName
+        kind: string
+        default: Jane
+      - name: lastName
+        kind: string
+        default: Doe
+      - name: question
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      answer:
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -1991,31 +1913,27 @@ def test_roundtrip_json_prompty_4():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2091,31 +2009,27 @@ def test_to_json_prompty_4():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2175,31 +2089,27 @@ def test_to_yaml_prompty_4():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2258,31 +2168,27 @@ def test_load_json_prompty_5():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2350,22 +2256,20 @@ def test_load_yaml_prompty_5():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        - name: firstName
-          kind: string
-          value: Jane
-        - name: lastName
-          kind: string
-          value: Doe
-        - name: question
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        answer:
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      - name: firstName
+        kind: string
+        default: Jane
+      - name: lastName
+        kind: string
+        default: Doe
+      - name: question
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      answer:
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -2447,31 +2351,27 @@ def test_roundtrip_json_prompty_5():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2546,31 +2446,27 @@ def test_to_json_prompty_5():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2629,31 +2525,27 @@ def test_to_yaml_prompty_5():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": {
+        "answer": {
+          "kind": "string",
+          "description": "The answer to the user's question."
         }
       },
       "model": {
@@ -2711,34 +2603,30 @@ def test_load_json_prompty_6():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -2805,22 +2693,20 @@ def test_load_yaml_prompty_6():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        - name: firstName
-          kind: string
-          value: Jane
-        - name: lastName
-          kind: string
-          value: Doe
-        - name: question
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      - name: firstName
+        kind: string
+        default: Jane
+      - name: lastName
+        kind: string
+        default: Doe
+      - name: question
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      - name: answer
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -2902,34 +2788,30 @@ def test_roundtrip_json_prompty_6():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3003,34 +2885,30 @@ def test_to_json_prompty_6():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3088,34 +2966,30 @@ def test_to_yaml_prompty_6():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3172,34 +3046,30 @@ def test_load_json_prompty_7():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3265,22 +3135,20 @@ def test_load_yaml_prompty_7():
       tags:
         - example
         - prompt
-    inputSchema:
-      properties:
-        - name: firstName
-          kind: string
-          value: Jane
-        - name: lastName
-          kind: string
-          value: Doe
-        - name: question
-          kind: string
-          value: What is the meaning of life?
-    outputSchema:
-      properties:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
+    inputs:
+      - name: firstName
+        kind: string
+        default: Jane
+      - name: lastName
+        kind: string
+        default: Doe
+      - name: question
+        kind: string
+        default: What is the meaning of life?
+    outputs:
+      - name: answer
+        kind: string
+        description: The answer to the user's question.
     model:
       id: gpt-35-turbo
       connection:
@@ -3362,34 +3230,30 @@ def test_roundtrip_json_prompty_7():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3462,34 +3326,30 @@ def test_to_json_prompty_7():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {
@@ -3546,34 +3406,30 @@ def test_to_yaml_prompty_7():
           "prompt"
         ]
       },
-      "inputSchema": {
-        "properties": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "value": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "value": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "value": "What is the meaning of life?"
-          }
-        ]
-      },
-      "outputSchema": {
-        "properties": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ]
-      },
+      "inputs": [
+        {
+          "name": "firstName",
+          "kind": "string",
+          "default": "Jane"
+        },
+        {
+          "name": "lastName",
+          "kind": "string",
+          "default": "Doe"
+        },
+        {
+          "name": "question",
+          "kind": "string",
+          "default": "What is the meaning of life?"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "answer",
+          "kind": "string",
+          "description": "The answer to the user's question."
+        }
+      ],
       "model": {
         "id": "gpt-35-turbo",
         "connection": {

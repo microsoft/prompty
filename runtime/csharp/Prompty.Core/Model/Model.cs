@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Text.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
+using System.Text.Json;
 using YamlDotNet.Serialization;
-using YamlDotNet.RepresentationModel;
 
 #pragma warning disable IDE0130
-namespace Prompty.Core;
+namespace AgentSchema;
 #pragma warning restore IDE0130
 
 /// <summary>
@@ -14,9 +11,13 @@ namespace Prompty.Core;
 /// This model includes properties for specifying the model&#39;s provider, connection details, and various options.
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
-[JsonConverter(typeof(ModelJsonConverter))]
-public class Model : IYamlConvertible
+public class Model
 {
+    /// <summary>
+    /// The shorthand property name for this type, if any.
+    /// </summary>
+    public static string? ShorthandProperty => "id";
+
     /// <summary>
     /// Initializes a new instance of <see cref="Model"/>.
     /// </summary>
@@ -32,9 +33,14 @@ public class Model : IYamlConvertible
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The publisher of the model (e.g., 'openai', 'azure', 'anthropic')
+    /// The provider of the model (e.g., 'openai', 'azure', 'anthropic')
     /// </summary>
-    public string? Publisher { get; set; }
+    public string? Provider { get; set; }
+
+    /// <summary>
+    /// The type of API to use for the model (e.g., 'chat', 'response', etc.)
+    /// </summary>
+    public string? ApiType { get; set; }
 
     /// <summary>
     /// The connection configuration for the model
@@ -47,57 +53,219 @@ public class Model : IYamlConvertible
     public ModelOptions? Options { get; set; }
 
 
-    public void Read(IParser parser, Type expectedType, ObjectDeserializer nestedObjectDeserializer)
+    #region Load Methods
+
+    /// <summary>
+    /// Load a Model instance from a dictionary.
+    /// </summary>
+    /// <param name="data">The dictionary containing the data.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Model instance.</returns>
+    public static Model Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
-        if (parser.TryConsume<Scalar>(out var scalar))
+        if (context is not null)
         {
-            // check for non-numeric characters to differentiate strings from numbers
-            if (scalar.Value.Length > 0 && scalar.Value.Any(c => !char.IsDigit(c) && c != '.' && c != '-'))
-            {
-                var stringValue = scalar.Value;
-                Id = stringValue;
-                return;
-            }
-            else
-            {
-                throw new YamlException($"Unexpected scalar value '' when parsing Model. Expected one of the supported shorthand types or a mapping.");
-            }
+            data = context.ProcessInput(data);
         }
 
-        var node = nestedObjectDeserializer(typeof(YamlMappingNode)) as YamlMappingNode;
-        if (node == null)
+        // Note: Alternate (shorthand) representations are handled by the converter
+
+
+        // Create new instance
+        var instance = new Model();
+
+
+        if (data.TryGetValue("id", out var idValue) && idValue is not null)
         {
-            throw new YamlException("Expected a mapping node for type Model");
+            instance.Id = idValue?.ToString()!;
         }
 
+        if (data.TryGetValue("provider", out var providerValue) && providerValue is not null)
+        {
+            instance.Provider = providerValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("apiType", out var apiTypeValue) && apiTypeValue is not null)
+        {
+            instance.ApiType = apiTypeValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("connection", out var connectionValue) && connectionValue is not null)
+        {
+            instance.Connection = Connection.Load(connectionValue.GetDictionary(), context);
+        }
+
+        if (data.TryGetValue("options", out var optionsValue) && optionsValue is not null)
+        {
+            instance.Options = ModelOptions.Load(optionsValue.GetDictionary(), context);
+        }
+
+        if (context is not null)
+        {
+            instance = context.ProcessOutput(instance);
+        }
+        return instance;
     }
 
-    public void Write(IEmitter emitter, ObjectSerializer nestedObjectSerializer)
+
+
+    #endregion
+
+    #region Save Methods
+
+    /// <summary>
+    /// Save the Model instance to a dictionary.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The dictionary representation of this instance.</returns>
+    public Dictionary<string, object?> Save(SaveContext? context = null)
     {
-        emitter.Emit(new MappingStart());
-
-        emitter.Emit(new Scalar("id"));
-        nestedObjectSerializer(Id);
-
-        if (Publisher != null)
+        var obj = this;
+        if (context is not null)
         {
-            emitter.Emit(new Scalar("publisher"));
-            nestedObjectSerializer(Publisher);
+            obj = context.ProcessObject(obj);
         }
 
 
-        if (Connection != null)
+        var result = new Dictionary<string, object?>();
+
+
+        if (obj.Id is not null)
         {
-            emitter.Emit(new Scalar("connection"));
-            nestedObjectSerializer(Connection);
+            result["id"] = obj.Id;
+        }
+
+        if (obj.Provider is not null)
+        {
+            result["provider"] = obj.Provider;
+        }
+
+        if (obj.ApiType is not null)
+        {
+            result["apiType"] = obj.ApiType;
+        }
+
+        if (obj.Connection is not null)
+        {
+            result["connection"] = obj.Connection?.Save(context);
+        }
+
+        if (obj.Options is not null)
+        {
+            result["options"] = obj.Options?.Save(context);
         }
 
 
-        if (Options != null)
+        if (context is not null)
         {
-            emitter.Emit(new Scalar("options"));
-            nestedObjectSerializer(Options);
+            result = context.ProcessDict(result);
         }
 
+        return result;
     }
+
+
+    /// <summary>
+    /// Convert the Model instance to a YAML string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The YAML string representation of this instance.</returns>
+    public string ToYaml(SaveContext? context = null)
+    {
+        context ??= new SaveContext();
+        return context.ToYaml(Save(context));
+    }
+
+    /// <summary>
+    /// Convert the Model instance to a JSON string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <param name="indent">Whether to indent the output. Defaults to true.</param>
+    /// <returns>The JSON string representation of this instance.</returns>
+    public string ToJson(SaveContext? context = null, bool indent = true)
+    {
+        context ??= new SaveContext();
+        return context.ToJson(Save(context), indent);
+    }
+
+    /// <summary>
+    /// Load a Model instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Model instance.</returns>
+    public static Model FromJson(string json, LoadContext? context = null)
+    {
+        using var doc = JsonDocument.Parse(json);
+        Dictionary<string, object?> dict;
+        // Handle alternate representations
+        if (doc.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            var value = JsonUtils.GetJsonElementValue(doc.RootElement);
+            dict = value switch
+            {
+                string stringValue => new Dictionary<string, object?>
+                {
+                    ["id"] = stringValue,
+                },
+                _ => new Dictionary<string, object?>
+                {
+                    ["id"] = value
+                }
+            };
+        }
+        else
+        {
+            dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
+                ?? throw new ArgumentException("Failed to parse JSON as dictionary");
+        }
+
+        return Load(dict, context);
+    }
+
+    /// <summary>
+    /// Load a Model instance from a YAML string.
+    /// </summary>
+    /// <param name="yaml">The YAML string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded Model instance.</returns>
+    public static Model FromYaml(string yaml, LoadContext? context = null)
+    {
+        // Handle alternate representations - try object first, fall back to scalar
+        Dictionary<string, object?>? dictResult = null;
+        try
+        {
+            dictResult = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml);
+        }
+        catch (YamlDotNet.Core.YamlException)
+        {
+            // Not a dictionary, will be handled as scalar below
+        }
+
+        Dictionary<string, object?> dict;
+        if (dictResult is not null)
+        {
+            dict = dictResult;
+        }
+        else
+        {
+            // Parse as scalar with proper type inference
+            var parsed = YamlUtils.ParseScalar(yaml);
+            dict = parsed switch
+            {
+                string stringValue => new Dictionary<string, object?>
+                {
+                    ["id"] = stringValue,
+                },
+                _ => new Dictionary<string, object?>
+                {
+                    ["id"] = parsed
+                }
+            };
+        }
+
+        return Load(dict, context);
+    }
+
+    #endregion
 }

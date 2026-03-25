@@ -1,10 +1,9 @@
 /**
- * Prompty loader — loads .prompty files into typed PromptAgent objects.
+ * Prompty loader — loads .prompty files into typed Prompty objects.
  *
  * Splits frontmatter (YAML) from the markdown body, resolves
  * `${protocol:value}` references (env vars, file includes),
- * injects `kind: "prompt"`, and delegates to `AgentDefinition.load()`
- * from the `agentschema` package.
+ * and delegates to `Prompty.load()`.
  *
  * @module
  */
@@ -12,7 +11,8 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname, extname } from "node:path";
 import matter from "gray-matter";
-import { AgentDefinition, LoadContext, PromptAgent } from "agentschema";
+import { LoadContext } from "../model/context.js";
+import { Prompty } from "../model/prompty.js";
 import "dotenv/config";
 
 // ---------------------------------------------------------------------------
@@ -20,12 +20,12 @@ import "dotenv/config";
 // ---------------------------------------------------------------------------
 
 /**
- * Load a `.prompty` file and return a typed `PromptAgent`.
+ * Load a `.prompty` file and return a typed `Prompty`.
  *
  * @param path - File system path to a `.prompty` file.
- * @returns Fully typed agent definition from agentschema.
+ * @returns Fully typed Prompty definition.
  */
-export function load(path: string): PromptAgent {
+export function load(path: string): Prompty {
   const resolved = resolve(path);
   const raw = readFileSync(resolved, "utf-8");
   return buildAgent(raw, resolved);
@@ -35,7 +35,7 @@ export function load(path: string): PromptAgent {
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-function buildAgent(raw: string, filePath: string): PromptAgent {
+function buildAgent(raw: string, filePath: string): Prompty {
   // 1. Split frontmatter + body
   const { data, content } = matter(raw);
 
@@ -45,18 +45,11 @@ function buildAgent(raw: string, filePath: string): PromptAgent {
     frontmatter.instructions = content.trim();
   }
 
-  // 2. Inject kind — .prompty files are always PromptAgents
-  frontmatter.kind = "prompt";
-
-  // 3. Load via agentschema with preProcess for ${protocol:value} expansion
+  // 2. Load via Prompty.load() with preProcess for ${protocol:value} expansion
   const ctx = new LoadContext({
     preProcess: makePreProcess(filePath) as (data: Record<string, unknown>) => Record<string, unknown>,
   });
-  const agent = AgentDefinition.load(frontmatter, ctx);
-  if (!(agent instanceof PromptAgent)) {
-    throw new TypeError(`Expected PromptAgent, got ${agent?.constructor?.name}`);
-  }
-  return agent;
+  return Prompty.load(frontmatter, ctx);
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +58,7 @@ function buildAgent(raw: string, filePath: string): PromptAgent {
 
 /**
  * Return a `preProcess` callback that resolves `${protocol:value}`
- * references in every dict the agentschema loader visits.
+ * references in every dict the loader visits.
  *
  * Supported protocols:
  * - `${env:VAR_NAME}` — environment variable (required)
@@ -126,6 +119,6 @@ function loadFileContent(path: string): unknown {
   if (ext === ".json") {
     return JSON.parse(raw);
   }
-  // For YAML we return raw string — agentschema handles YAML natively
+  // For YAML we return raw string — the loader handles YAML natively
   return raw;
 }

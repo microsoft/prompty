@@ -1,23 +1,23 @@
+
 using Xunit;
-using System.Text.Json;
 
 #pragma warning disable IDE0130
-namespace Prompty.Core;
+namespace AgentSchema;
 #pragma warning restore IDE0130
 
 
 public class BindingConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
         string yamlData = """
-        name: my-tool
-        input: input-variable
-        
-        """;
+name: my-tool
+input: input-variable
 
-        var instance = YamlSerializer.Deserialize<Binding>(yamlData);
+""";
+
+        var instance = Binding.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("my-tool", instance.Name);
@@ -28,23 +28,104 @@ public class BindingConversionTests
     public void LoadJsonInput()
     {
         string jsonData = """
-        {
-          "name": "my-tool",
-          "input": "input-variable"
-        }
-        """;
+{
+  "name": "my-tool",
+  "input": "input-variable"
+}
+""";
 
-        var instance = JsonSerializer.Deserialize<Binding>(jsonData);
+        var instance = Binding.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("my-tool", instance.Name);
         Assert.Equal("input-variable", instance.Input);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "name": "my-tool",
+  "input": "input-variable"
+}
+""";
+
+        var original = Binding.FromJson(jsonData);
+        Assert.NotNull(original);
+        
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+        
+        var reloaded = Binding.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("my-tool", reloaded.Name);
+        Assert.Equal("input-variable", reloaded.Input);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+name: my-tool
+input: input-variable
+
+""";
+
+        var original = Binding.FromYaml(yamlData);
+        Assert.NotNull(original);
+        
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+        
+        var reloaded = Binding.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("my-tool", reloaded.Name);
+        Assert.Equal("input-variable", reloaded.Input);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "name": "my-tool",
+  "input": "input-variable"
+}
+""";
+
+        var instance = Binding.FromJson(jsonData);
+        var json = instance.ToJson();
+        
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+name: my-tool
+input: input-variable
+
+""";
+
+        var instance = Binding.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+        
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
     }
     [Fact]
     public void LoadJsonFromString()
     {
         // alternate representation as string
         var data = "\"example\"";
-        var instance = JsonSerializer.Deserialize<Binding>(data);
+        var instance = Binding.FromJson(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }
@@ -55,9 +136,9 @@ public class BindingConversionTests
     {
         // alternate representation as string
         var data = "\"example\"";
-        var instance = YamlSerializer.Deserialize<Binding>(data);
+        var instance = Binding.FromYaml(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }
-
+    
 }

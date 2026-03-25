@@ -1,0 +1,296 @@
+{#
+  Python-Specific Macros for AgentSchema Emitter
+  ==============================================
+  
+  These macros handle Python-specific rendering logic that was previously
+  implemented as TypeScript functions passed to templates. By moving this
+  logic into macros, templates become self-contained and easier to debug.
+  
+  Usage in Python templates:
+    {% import "_macros.njk" as py %}
+    {{ py.pythonType(prop, typeMapper) }}
+#}
+
+{# Import shared macros #}
+{% from "macros.njk" import separator, firstOrDefault, validationValue %}
+
+
+{# ============================================================================
+   Type Rendering
+   ============================================================================ #}
+
+{#
+  Convert a property to its Python type annotation.
+  
+  Handles:
+  - Scalar types (string -> str, number -> float, etc.)
+  - Collections (list[T])
+  - Optionals (Optional[T])
+  - Dictionaries (dict[str, Any])
+  - Optional dictionaries (Optional[dict[str, Any]])
+  
+  @param prop - PropertyNode with type information
+  @param typeMapper - Record<string, string> mapping TypeSpec types to Python types
+  
+  Usage: {{ pythonType(prop, typeMapper) }}
+#}
+{% macro pythonType(prop, typeMapper) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else (typeMapper[prop.typeName.name] or prop.typeName.name) -%}
+{%- if not baseType %}{% set baseType = "Any" %}{% endif -%}
+{%- if prop.isDict and prop.isOptional -%}
+Optional[dict[str, Any]]
+{%- elif prop.isDict -%}
+dict[str, Any]
+{%- elif prop.isCollection -%}
+list[{{ baseType }}]
+{%- elif prop.isOptional -%}
+Optional[{{ baseType }}]
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{% endmacro %}
+
+
+{#
+  Render the Python type for display in docstrings.
+  Same as pythonType but uses Optional[] syntax for clarity.
+  
+  @param prop - PropertyNode with type information  
+  @param typeMapper - Record<string, string> mapping TypeSpec types to Python types
+#}
+{% macro pythonTypeDocstring(prop, typeMapper) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else (typeMapper[prop.typeName.name] or prop.typeName.name) -%}
+{%- if not baseType %}{% set baseType = "Any" %}{% endif -%}
+{%- if prop.isDict -%}
+dict[str, Any]
+{%- elif prop.isCollection -%}
+list[{{ baseType }}]
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{%- if prop.isOptional %}Optional[{{ baseType }}]{% endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Default Value Rendering
+   ============================================================================ #}
+
+{#
+  Render the default value assignment for a dataclass field.
+  
+  Handles:
+  - Collections -> field(default_factory=list)
+  - Optionals -> None
+  - Booleans -> field(default=True/False)
+  - Strings -> field(default="...")
+  - Numbers -> field(default=0.0)
+  - Complex types -> field(default_factory=TypeName)
+  
+  @param prop - PropertyNode with type and default value information
+  @param typeMapper - Record<string, string> for type lookups
+  
+  Usage: {{ defaultValue(prop, typeMapper) }}
+#}
+{% macro defaultValue(prop, typeMapper) -%}
+{% if prop.isCollection %} = field(default_factory=list)
+{%- elif prop.isOptional %} = None
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "boolean" %} = field(default={{ "True" if prop.defaultValue else "False" }})
+{%- elif prop.typeName.name == "string" %} = field(default="{{ prop.defaultValue if prop.defaultValue else "" }}")
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "numeric" %} = field(default={{ prop.defaultValue if prop.defaultValue else "0.0" }})
+{%- elif prop.typeName.name == "dictionary" %} = field(default_factory=dict)
+{%- elif prop.typeName.name == "int64" or prop.typeName.name == "int32" or prop.typeName.name == "integer" %} = field(default={{ prop.defaultValue if prop.defaultValue else "0" }})
+{%- elif prop.typeName.name == "float64" or prop.typeName.name == "float32" or prop.typeName.name == "float" %} = field(default={{ prop.defaultValue if prop.defaultValue else "0.0" }})
+{%- else %} = field(default={{ prop.defaultValue if prop.defaultValue else "None" }})
+{%- endif -%}
+{%- else %} = field(default_factory={{ prop.typeName.name }})
+{%- endif -%}
+{%- endmacro %}
+
+
+{# ============================================================================
+   Property Assignment Rendering (for load() method)
+   ============================================================================ #}
+
+{#
+  Render property assignment statement for loading from dict.
+  
+  Handles:
+  - Scalars and dicts -> direct assignment from dict
+  - Collections -> call load_<propname> method
+  - Complex types -> call Type.load() method
+  
+  @param prop - PropertyNode being assigned
+  @param varName - Variable name to assign to (e.g., "instance")
+  @param dictName - Dict variable name to read from (e.g., "data")
+  @param parentTypeName - Name of the parent type (for collection loaders)
+  
+  Usage: {{ setInstance(prop, "instance", "data", node.typeName.name) }}
+#}
+{% macro setInstance(prop, varName, dictName, parentTypeName) %}
+{%- if prop.isScalar or prop.isDict -%}
+{{ varName }}.{{ prop.name }} = {{ dictName }}["{{ prop.name }}"]
+{%- elif prop.isCollection -%}
+{{ varName }}.{{ prop.name }} = {{ parentTypeName }}.load_{{ prop.name }}({{ dictName }}["{{ prop.name }}"], context)
+{%- else -%}
+{{ varName }}.{{ prop.name }} = {{ prop.typeName.name }}.load({{ dictName }}["{{ prop.name }}"], context)
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Property Serialization Rendering (for save() method)
+   ============================================================================ #}
+
+{#
+  Render property serialization statement for saving to dict.
+  
+  Handles:
+  - Scalars and dicts -> direct assignment to dict
+  - Collections -> map save() over items
+  - Complex types -> call .save() method
+  
+  @param prop - PropertyNode being serialized
+  @param varName - Variable name of the object (e.g., "self")
+  @param dictName - Dict variable name to write to (e.g., "result")
+  
+  Usage: {{ saveProperty(prop, "self", "result") }}
+#}
+{% macro saveProperty(prop, varName, dictName, parentTypeName) %}
+{%- if prop.isScalar or prop.isDict -%}
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name }}
+{%- elif prop.isCollection -%}
+{{ dictName }}["{{ prop.name }}"] = {{ parentTypeName }}.save_{{ prop.name }}({{ varName }}.{{ prop.name }}, context)
+{%- else -%}
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name }}.save(context)
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Docstring Rendering
+   ============================================================================ #}
+
+{#
+  Render a Python docstring with proper formatting.
+  
+  @param description - The description text
+  
+  Usage: {{ docstring(node.description) }}
+#}
+{% macro docstring(description) %}
+{%- if description -%}
+"""{%- for line in description.split('\n') %}
+    {{ line }}
+    {%- endfor %}
+    """
+{%- endif -%}
+{% endmacro %}
+
+
+{#
+  Render a docstring for a class with attributes section.
+  
+  @param description - Class description
+  @param properties - Array of PropertyNode
+  @param typeMapper - Type mapper for rendering types
+  
+  Usage: {{ classDocstring(node.description, node.properties, typeMapper) }}
+#}
+{% macro classDocstring(description, properties, typeMapper) %}
+"""{%- for line in description.split('\n') %}
+    {{ line }}
+    {%- endfor %}
+{%- if properties.length > 0 %}
+
+    Attributes
+    ----------
+{%- for prop in properties %}
+    {{ prop.name }} : {{ pythonType(prop, typeMapper) }}
+        {{ prop.description }}
+{%- endfor %}
+{%- endif %}
+    """
+{% endmacro %}
+
+
+{# ============================================================================
+   Import Helpers
+   ============================================================================ #}
+
+{#
+  Render import statement for a type from its module.
+  
+  @param typeName - Name of the type to import
+  
+  Usage: {{ importType(typeName) }}
+#}
+{% macro importType(typeName) %}
+from ._{{ typeName }} import {{ typeName }}
+{% endmacro %}
+
+
+{# ============================================================================
+   Alternate/Shorthand Helpers
+   ============================================================================ #}
+
+{#
+  Render alternate type check in load() method.
+  
+  @param alt - Alternate object with scalar and alternate properties
+  
+  Usage: {{ alternateCheck(alt) }}
+#}
+{% macro alternateCheck(alt) %}
+if isinstance(data, {{ alt.scalar }}):
+    data = {{ alt.alternate }}
+{% endmacro %}
+
+
+{# ============================================================================
+   Polymorphism Helpers
+   ============================================================================ #}
+
+{#
+  Render discriminator-based type loading.
+  
+  @param discriminator - Name of discriminator property
+  @param types - Array of {value, instance} for each discriminated type
+  @param defaultInstance - Default instance for unknown discriminators
+  @param parentTypeName - Name of the parent type
+  @param isAbstract - Whether the parent type is abstract
+  
+  Usage: {{ polymorphicLoader(node.discriminator, polymorphicTypes.types, polymorphicTypes.default, node.typeName.name, node.isAbstract) }}
+#}
+{% macro polymorphicLoader(discriminator, types, defaultInstance, parentTypeName, isAbstract) %}
+@staticmethod
+def load_{{ discriminator }}(data: dict, pre_process: Optional[Callable[[Any], Any]]) -> "{{ parentTypeName }}":
+    # load polymorphic {{ parentTypeName }} instance
+    if data is not None and "{{ discriminator }}" in data:
+        discriminator_value = str(data["{{ discriminator }}"]).lower()
+{%- for type in types %}
+        {% if loop.first %}if{% else %}elif{% endif %} discriminator_value == "{{ type.value }}":
+            return {{ type.instance.typeName.name }}.load(data, pre_process)
+{%- endfor %}
+{%- if defaultInstance %}
+        else:
+{%- if defaultInstance.instance.typeName.name == parentTypeName %}
+            # create new instance (stop recursion)
+            return {{ parentTypeName }}()
+{%- else %}
+            # load default instance
+            return {{ defaultInstance.instance.typeName.name }}.load(data, pre_process)
+{%- endif %}
+{%- else %}
+        else:
+            raise ValueError(f"Unknown {{ parentTypeName }} discriminator value: {discriminator_value}")
+{%- endif %}
+    else:
+{%- if isAbstract %}
+        raise ValueError("Missing {{ parentTypeName }} discriminator property: '{{ discriminator }}'")
+{%- else %}
+        # create new instance
+        return {{ parentTypeName }}()
+{%- endif %}
+{% endmacro %}

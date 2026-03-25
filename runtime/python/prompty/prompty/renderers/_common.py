@@ -28,10 +28,10 @@ def _prepare_render_inputs(
     has thread values replaced by unique marker strings, and
     *thread_nonces* maps each marker to the input property name.
     """
-    if agent.inputSchema is None:
+    if not agent.inputs:
         return dict(inputs), {}
 
-    thread_props = {p.name for p in agent.inputSchema.properties if p.kind == "thread"}
+    thread_props = {p.name for p in agent.inputs if p.kind == "thread"}
 
     if not thread_props:
         return dict(inputs), {}

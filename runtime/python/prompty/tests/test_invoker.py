@@ -202,7 +202,7 @@ def _make_agent(**overrides) -> Any:
 
     agent = mock.Mock(spec=Prompty)
     agent.instructions = overrides.get("instructions", "system:\nHello {{name}}\n\nuser:\n{{question}}")
-    agent.inputSchema = overrides.get("inputSchema", None)
+    agent.inputs = overrides.get("inputs", [])
     agent.template = overrides.get("template", None)
     agent.model = overrides.get("model", mock.Mock(spec=Model))
     agent.model.provider = overrides.get("provider", "openai")
@@ -286,23 +286,19 @@ class TestValidateInputs:
         assert result == {"foo": "bar"}
 
     def test_defaults_applied(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
         p.kind = "string"
         p.default = "World"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-        schema.strict = False
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         result = validate_inputs(agent, {})
         assert result["name"] == "World"
 
     def test_example_as_fallback(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
@@ -310,16 +306,12 @@ class TestValidateInputs:
         p.default = None
         p.example = "Jane"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-        schema.strict = False
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         result = validate_inputs(agent, {})
         assert result["name"] == "Jane"
 
     def test_required_missing_raises(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
@@ -328,43 +320,34 @@ class TestValidateInputs:
         p.example = None
         p.required = True
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-        schema.strict = False
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         with pytest.raises(ValueError, match="Required input 'name'"):
             validate_inputs(agent, {})
 
     def test_strict_rejects_unknown(self):
-        from prompty.model import Property, PropertySchema
+        """Strict mode no longer exists on inputs (PropertySchema removed)."""
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
         p.kind = "string"
         p.default = "X"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-        schema.strict = True
-
-        agent = _make_agent(inputSchema=schema)
-        with pytest.raises(ValueError, match="Unknown input"):
-            validate_inputs(agent, {"name": "ok", "extra": "bad"})
+        agent = _make_agent(inputs=[p])
+        # Without PropertySchema, strict mode doesn't apply — unknown keys are allowed
+        result = validate_inputs(agent, {"name": "ok", "extra": "allowed"})
+        assert result["name"] == "ok"
+        assert result["extra"] == "allowed"
 
     def test_provided_overrides_default(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
         p.kind = "string"
         p.default = "Default"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-        schema.strict = False
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         result = validate_inputs(agent, {"name": "Custom"})
         assert result["name"] == "Custom"
 
@@ -694,30 +677,24 @@ class TestRichInputNames:
         assert _get_rich_input_names(agent) == {}
 
     def test_detects_thread(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "history"
         p.kind = "thread"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         result = _get_rich_input_names(agent)
         assert result == {"history": "thread"}
 
     def test_ignores_string(self):
-        from prompty.model import Property, PropertySchema
+        from prompty.model import Property
 
         p = Property()
         p.name = "name"
         p.kind = "string"
 
-        schema = mock.Mock(spec=PropertySchema)
-        schema.properties = [p]
-
-        agent = _make_agent(inputSchema=schema)
+        agent = _make_agent(inputs=[p])
         assert _get_rich_input_names(agent) == {}
 
 

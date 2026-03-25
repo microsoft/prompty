@@ -6,13 +6,13 @@
  * @module
  */
 
-import type { PromptAgent } from "agentschema";
+import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 
 export class OpenAIProcessor implements Processor {
-  async process(agent: PromptAgent, response: unknown): Promise<unknown> {
+  async process(agent: Prompty, response: unknown): Promise<unknown> {
     return traceSpan("OpenAIProcessor.process", async (emit) => {
       return processResponse(agent, response);
     });
@@ -22,7 +22,7 @@ export class OpenAIProcessor implements Processor {
 /**
  * Extract clean content from an OpenAI response.
  */
-export function processResponse(agent: PromptAgent, response: unknown): unknown {
+export function processResponse(agent: Prompty, response: unknown): unknown {
   if (typeof response !== "object" || response === null) return response;
 
   const r = response as Record<string, unknown>;
@@ -49,7 +49,7 @@ export function processResponse(agent: PromptAgent, response: unknown): unknown 
 }
 
 function processChatCompletion(
-  agent: PromptAgent,
+  agent: Prompty,
   response: Record<string, unknown>,
 ): unknown {
   const choices = response.choices as Record<string, unknown>[];
@@ -76,8 +76,8 @@ function processChatCompletion(
   const content = message.content as string | null;
   if (content === null) return null;
 
-  // Structured output — JSON parse when outputSchema exists
-  if (agent.outputSchema?.properties && agent.outputSchema.properties.length > 0) {
+  // Structured output — JSON parse when outputs schema exists
+  if (agent.outputs && agent.outputs.length > 0) {
     try {
       return JSON.parse(content);
     } catch {

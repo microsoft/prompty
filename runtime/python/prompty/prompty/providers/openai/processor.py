@@ -67,7 +67,7 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
     - Iterators (streaming) → generator of content chunks
     - Passthrough for unknown types
 
-    When *agent* has an ``outputSchema`` with properties, a string result
+    When *agent* has ``outputs`` with properties, a string result
     from a ``ChatCompletion`` is automatically JSON-parsed.
     """
     # Import response types lazily to keep the module importable
@@ -83,8 +83,8 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
 
     if isinstance(response, ChatCompletion):
         result = _process_chat_completion(response)
-        # JSON-parse structured output when outputSchema is defined
-        if agent is not None and agent.outputSchema and agent.outputSchema.properties and isinstance(result, str):
+        # JSON-parse structured output when outputs is defined
+        if agent is not None and agent.outputs and isinstance(result, str):
             try:
                 result = json.loads(result)
             except json.JSONDecodeError:

@@ -1,0 +1,167 @@
+{#
+  Shared Macros for AgentSchema Emitters
+  ======================================
+  
+  These macros provide language-agnostic utilities for property filtering,
+  type checking, and common rendering patterns. Language-specific emitters
+  should import and use these macros for consistency.
+  
+  Usage in language templates:
+    {% from "macros.njk" import requiredProps, optionalProps %}
+#}
+
+{# ============================================================================
+   Property Filtering Macros
+   ============================================================================ #}
+
+{#
+  Get required (non-optional) properties from a list.
+  Usage: {% for prop in requiredProps(node.properties) %}
+#}
+{% macro requiredProps(properties) %}
+{%- for prop in properties %}{% if not prop.isOptional %}{{ prop | dump }},{% endif %}{% endfor -%}
+{% endmacro %}
+
+{#
+  Get optional properties from a list.
+  Usage: {% for prop in optionalProps(node.properties) %}
+#}
+{% macro optionalProps(properties) %}
+{%- for prop in properties %}{% if prop.isOptional %}{{ prop | dump }},{% endif %}{% endfor -%}
+{% endmacro %}
+
+{#
+  Get collection (array/list) properties that are complex types.
+  Usage: {% for prop in collectionProps(node.properties) %}
+#}
+{% macro collectionProps(properties) %}
+{%- for prop in properties %}{% if prop.isCollection and not prop.isScalar and not prop.isDict %}{{ prop | dump }},{% endif %}{% endfor -%}
+{% endmacro %}
+
+{#
+  Get scalar properties only.
+  Usage: {% for prop in scalarProps(node.properties) %}
+#}
+{% macro scalarProps(properties) %}
+{%- for prop in properties %}{% if prop.isScalar %}{{ prop | dump }},{% endif %}{% endfor -%}
+{% endmacro %}
+
+{#
+  Get complex (non-scalar) properties.
+  Usage: {% for prop in complexProps(node.properties) %}
+#}
+{% macro complexProps(properties) %}
+{%- for prop in properties %}{% if not prop.isScalar and not prop.isDict %}{{ prop | dump }},{% endif %}{% endfor -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Comment/Documentation Helpers
+   ============================================================================ #}
+
+{#
+  Wrap text as single-line comment.
+  Usage: {{ comment("This is a comment", "# ") }}
+#}
+{% macro comment(text, prefix) %}
+{%- if text %}{{ prefix }}{{ text }}{% endif -%}
+{% endmacro %}
+
+{#
+  Wrap multiline text as block comment.
+  Usage: {{ blockComment(description, "# ") }}
+#}
+{% macro blockComment(text, prefix) %}
+{%- if text -%}
+{%- for line in text.split('\n') %}
+{{ prefix }}{{ line }}
+{%- endfor -%}
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Validation/Test Helpers  
+   ============================================================================ #}
+
+{#
+  Render a validation assertion based on value type.
+  This is a helper for test generation - language templates should customize.
+  
+  Usage: {{ validationValue(value, delimeter) }}
+#}
+{% macro validationValue(value, delimeter) %}
+{%- if delimeter %}{{ delimeter }}{{ value }}{{ delimeter }}{% else %}{{ value }}{% endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   String Transformation Helpers
+   ============================================================================ #}
+
+{#
+  Convert to lowercase.
+  Usage: {{ lower("Hello") }} -> "hello"
+#}
+{% macro lower(text) %}{{ text | lower }}{% endmacro %}
+
+{#
+  Convert to uppercase.
+  Usage: {{ upper("Hello") }} -> "HELLO"
+#}
+{% macro upper(text) %}{{ text | upper }}{% endmacro %}
+
+{#
+  Join array with separator.
+  Usage: {{ joinArray(items, ", ") }}
+#}
+{% macro joinArray(items, separator) %}{{ items | join(separator) }}{% endmacro %}
+
+
+{# ============================================================================
+   Conditional Helpers
+   ============================================================================ #}
+
+{#
+  Render content only if value is truthy.
+  Usage: {% call ifTruthy(prop.description) %}{{ prop.description }}{% endcall %}
+#}
+{% macro ifTruthy(value) %}
+{%- if value %}{{ caller() }}{% endif -%}
+{% endmacro %}
+
+{#
+  Render first value if truthy, otherwise second.
+  Usage: {{ firstOrDefault(prop.defaultValue, "None") }}
+#}
+{% macro firstOrDefault(value, defaultValue) %}
+{%- if value %}{{ value }}{% else %}{{ defaultValue }}{% endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   File Header Rendering
+   ============================================================================ #}
+
+{#
+  Render a file header comment (optional, for documentation purposes).
+  Usage: {{ fileHeader("LoadContext") }}
+#}
+{% macro fileHeader(title) %}
+{%- if title -%}
+# {{ title }}
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Loop Helpers
+   ============================================================================ #}
+
+{#
+  Render separator between items (not after last).
+  Usage: {% for item in items %}{{ item }}{{ separator(loop, ", ") }}{% endfor %}
+#}
+{% macro separator(loop, sep) %}
+{%- if not loop.last %}{{ sep }}{% endif -%}
+{% endmacro %}

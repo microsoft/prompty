@@ -115,42 +115,56 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
 
             model["options"] = params
 
-    # --- inputs → inputSchema.properties ---
-    if "inputs" in data and "inputSchema" not in data:
-        _deprecation("inputs", "inputSchema")
-        raw_inputs = data.pop("inputs")
-        if isinstance(raw_inputs, dict):
-            properties: list[dict[str, Any]] = []
-            for name, spec in raw_inputs.items():
-                if isinstance(spec, dict):
-                    prop: dict[str, Any] = {"name": name}
-                    # type → kind
-                    if "type" in spec:
-                        _deprecation(f"inputs.{name}.type", f"inputSchema.properties.{name}.kind")
-                        prop["kind"] = spec.pop("type")
-                    else:
-                        prop["kind"] = "string"
-                    # sample → default
-                    if "sample" in spec:
-                        _deprecation(
-                            f"inputs.{name}.sample",
-                            f"inputSchema.properties.{name}.default",
-                        )
-                        prop["default"] = spec.pop("sample")
-                    # copy remaining fields
-                    for k, v in spec.items():
-                        if k not in prop:
-                            prop[k] = v
-                    properties.append(prop)
+    # --- inputs (old dict format) → inputs (list format) ---
+    raw_inputs = data.get("inputs")
+    if isinstance(raw_inputs, dict):
+        _deprecation("inputs (dict format)", "inputs (list format)")
+        properties: list[dict[str, Any]] = []
+        for name, spec in raw_inputs.items():
+            if isinstance(spec, dict):
+                prop: dict[str, Any] = {"name": name}
+                # type → kind
+                if "type" in spec:
+                    _deprecation(f"inputs.{name}.type", f"inputs.{name}.kind")
+                    prop["kind"] = spec.pop("type")
                 else:
-                    # Simple scalar: firstName: Jane
-                    properties.append({"name": name, "kind": "string", "default": spec})
-            data["inputSchema"] = {"properties": properties}
+                    prop["kind"] = "string"
+                # sample → default
+                if "sample" in spec:
+                    _deprecation(
+                        f"inputs.{name}.sample",
+                        f"inputs.{name}.default",
+                    )
+                    prop["default"] = spec.pop("sample")
+                # copy remaining fields
+                for k, v in spec.items():
+                    if k not in prop:
+                        prop[k] = v
+                properties.append(prop)
+            else:
+                # Simple scalar: firstName: Jane
+                properties.append({"name": name, "kind": "string", "default": spec})
+        data["inputs"] = properties
 
-    # --- outputs → outputSchema ---
-    if "outputs" in data and "outputSchema" not in data:
-        _deprecation("outputs", "outputSchema")
-        data["outputSchema"] = data.pop("outputs")
+    # --- inputSchema → inputs ---
+    if "inputSchema" in data:
+        _deprecation("inputSchema", "inputs")
+        schema_data = data.pop("inputSchema")
+        if "inputs" not in data:
+            if isinstance(schema_data, dict) and "properties" in schema_data:
+                data["inputs"] = schema_data["properties"]
+            else:
+                data["inputs"] = schema_data
+
+    # --- outputSchema → outputs ---
+    if "outputSchema" in data:
+        _deprecation("outputSchema", "outputs")
+        schema_data = data.pop("outputSchema")
+        if "outputs" not in data:
+            if isinstance(schema_data, dict) and "properties" in schema_data:
+                data["outputs"] = schema_data["properties"]
+            else:
+                data["outputs"] = schema_data
 
     # --- Root metadata fields ---
     metadata = data.get("metadata", {})
@@ -197,7 +211,7 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
 
     # --- sample (root) ---
     if "sample" in data:
-        _deprecation("sample (root)", "inputSchema with value/example fields")
+        _deprecation("sample (root)", "inputs with default/example fields")
         data.pop("sample")
 
     data["model"] = model

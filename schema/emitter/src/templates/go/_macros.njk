@@ -1,0 +1,435 @@
+{#
+  Go-Specific Macros for AgentSchema Emitter
+  ==========================================
+  
+  These macros handle Go-specific rendering logic.
+  
+  Usage in Go templates:
+    {% import "_macros.njk" as go %}
+    {{ go.goType(prop, typeMapper) }}
+#}
+
+{# Import shared macros #}
+{% from "macros.njk" import separator, firstOrDefault, validationValue %}
+
+
+{# ============================================================================
+   Comment Rendering
+   ============================================================================ #}
+
+{#
+  Format a multi-line description as Go comment lines.
+  Each line is prefixed with "// ".
+  
+  @param text - Multi-line description text
+  
+  Usage: {{ goComment("Some description") }}
+#}
+{% macro goComment(text) -%}
+{%- if text -%}
+{%- set lines = text.split('\n') -%}
+{%- for line in lines -%}
+// {{ line }}
+{% endfor -%}
+{%- endif -%}
+{%- endmacro %}
+
+
+{#
+  Escape a string value for use in Go code.
+  Handles quotes, backslashes, newlines, etc.
+  
+  @param value - String value to escape
+  @param delimeter - Quote character (" or empty)
+  
+  Usage: {{ goEscape(value, '"') }}
+#}
+{% macro goEscape(value, delimeter) -%}
+{%- if delimeter == "\"" -%}
+{{ value | replace("\\", "\\\\") | replace("\"", "\\\"") | replace("\n", "\\n") | replace("\r", "\\r") | replace("\t", "\\t") }}
+{%- else -%}
+{{ value }}
+{%- endif -%}
+{%- endmacro %}
+
+
+{# ============================================================================
+   Type Rendering
+   ============================================================================ #}
+
+{#
+  Convert a property to its Go type annotation.
+  
+  Handles:
+  - Scalar types (string, int32, float64, bool, etc.)
+  - Collections ([]T)
+  - Pointers for optionals (*T)
+  - Maps (map[string]interface{})
+  
+  @param prop - PropertyNode with type information
+  @param typeMapper - Record<string, string> mapping TypeSpec types to Go types
+  
+  Usage: {{ goType(prop, typeMapper) }}
+#}
+{% macro goType(prop, typeMapper, polymorphicTypeNames) %}
+{%- set baseType = typeMapper[prop.typeName.name] if prop.isScalar else (typeMapper[prop.typeName.name] or prop.typeName.name) -%}
+{%- if not baseType %}{% set baseType = "interface{}" %}{% endif -%}
+{%- if prop.isDict -%}
+map[string]interface{}
+{%- elif prop.isCollection and prop.typeName.name in polymorphicTypeNames -%}
+[]interface{}
+{%- elif prop.isCollection -%}
+[]{{ baseType }}
+{%- elif not prop.isScalar and prop.typeName.name in polymorphicTypeNames -%}
+interface{}
+{%- elif prop.isOptional -%}
+*{{ baseType }}
+{%- else -%}
+{{ baseType }}
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Property Name Rendering
+   ============================================================================ #}
+
+{#
+  Render property name in PascalCase for exported fields.
+  Handles both snake_case and camelCase input.
+  
+  @param name - Property name (may be camelCase or snake_case)
+  
+  Usage: {{ propName(prop.name) }}
+#}
+{% macro propName(name) %}{{ name | pascalCase }}{% endmacro %}
+
+
+{# ============================================================================
+   JSON/YAML Tag Rendering
+   ============================================================================ #}
+
+{#
+  Render struct field tags for JSON and YAML serialization.
+  
+  @param prop - PropertyNode with name and optional flag
+  
+  Usage: {{ structTags(prop) }}
+#}
+{% macro structTags(prop) -%}
+`json:"{{ prop.name }}{% if prop.isOptional %},omitempty{% endif %}" yaml:"{{ prop.name }}{% if prop.isOptional %},omitempty{% endif %}"`
+{%- endmacro %}
+
+
+{# ============================================================================
+   Default Value Rendering
+   ============================================================================ #}
+
+{#
+  Render the default value initialization for a field.
+  
+  @param prop - PropertyNode with type and default value information
+  @param typeMapper - Record<string, string> for type lookups
+  
+  Usage: {{ defaultValue(prop, typeMapper) }}
+#}
+{% macro defaultValue(prop, typeMapper) -%}
+{%- if prop.isCollection -%}
+make([]{{ typeMapper[prop.typeName.name] if prop.isScalar else prop.typeName.name }}, 0)
+{%- elif prop.isDict -%}
+make(map[string]interface{})
+{%- elif prop.isOptional -%}
+nil
+{%- elif prop.isScalar -%}
+{%- if prop.typeName.name == "boolean" -%}
+{{ "true" if prop.defaultValue else "false" }}
+{%- elif prop.typeName.name == "string" -%}
+"{{ prop.defaultValue if prop.defaultValue else "" }}"
+{%- elif prop.typeName.name == "number" or prop.typeName.name == "integer" or prop.typeName.name == "int32" or prop.typeName.name == "int64" or prop.typeName.name == "float32" or prop.typeName.name == "float64" -%}
+{{ prop.defaultValue if prop.defaultValue else "0" }}
+{%- else -%}
+nil
+{%- endif -%}
+{%- else -%}
+nil
+{%- endif -%}
+{% endmacro %}
+
+
+{# ============================================================================
+   Load Property Rendering
+   ============================================================================ #}
+
+{#
+  Render the property loading code from map[string]interface{}.
+  
+  @param prop - PropertyNode
+  @param varName - Variable name containing the data
+  @param typeMapper - Type mapping dictionary
+  @param polymorphicTypeNames - Array of type names that are polymorphic (return interface{})
+  
+  Usage: {{ loadProperty(prop, "data", typeMapper, polymorphicTypeNames) }}
+#}
+{% macro loadProperty(prop, varName, typeMapper, polymorphicTypeNames) -%}
+{%- set propNameGo = propName(prop.name) -%}
+{%- if prop.isCollection and not prop.isDict -%}
+{%- if prop.isScalar -%}
+{%- if prop.typeName.name == "unknown" or prop.typeName.name == "any" -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.{{ propNameGo }} = arr
+			}
+		}
+{%- else -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.{{ propNameGo }} = make([]{{ typeMapper[prop.typeName.name] }}, len(arr))
+				for i, v := range arr {
+					result.{{ propNameGo }}[i] = v.({{ typeMapper[prop.typeName.name] }})
+				}
+			}
+		}
+{%- endif -%}
+{%- else -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				{%- if prop.typeName.name in polymorphicTypeNames %}
+				result.{{ propNameGo }} = make([]interface{}, len(arr))
+				{%- else %}
+				result.{{ propNameGo }} = make([]{{ prop.typeName.name }}, len(arr))
+				{%- endif %}
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := Load{{ prop.typeName.name }}(item, ctx)
+						{%- if prop.typeName.name in polymorphicTypeNames %}
+						// Polymorphic type - store as interface{}
+						result.{{ propNameGo }}[i] = loaded
+						{%- else %}
+						result.{{ propNameGo }}[i] = loaded
+						{%- endif %}
+					}
+				}
+			}
+		}
+{%- endif -%}
+{%- elif prop.isDict -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.{{ propNameGo }} = m
+			}
+		}
+{%- elif prop.isScalar -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+{%- if prop.typeName.name == "unknown" or prop.typeName.name == "any" -%}
+{%- if prop.isOptional -%}
+			result.{{ propNameGo }} = &val
+{%- else -%}
+			result.{{ propNameGo }} = val
+{%- endif -%}
+{%- elif prop.typeName.name == "int32" or prop.typeName.name == "int64" or prop.typeName.name == "integer" -%}
+{%- if prop.isOptional -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			var v {{ typeMapper[prop.typeName.name] or "int" }}
+			switch n := val.(type) {
+			case int:
+				v = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case int32:
+				v = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case int64:
+				v = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case float64:
+				v = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			}
+			result.{{ propNameGo }} = &v
+{%- else -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			switch n := val.(type) {
+			case int:
+				result.{{ propNameGo }} = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case int32:
+				result.{{ propNameGo }} = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case int64:
+				result.{{ propNameGo }} = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			case float64:
+				result.{{ propNameGo }} = {{ typeMapper[prop.typeName.name] or "int" }}(n)
+			}
+{%- endif -%}
+{%- elif prop.typeName.name == "float32" -%}
+{%- if prop.isOptional -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			var v float32
+			switch n := val.(type) {
+			case int:
+				v = float32(n)
+			case int32:
+				v = float32(n)
+			case int64:
+				v = float32(n)
+			case float32:
+				v = n
+			case float64:
+				v = float32(n)
+			}
+			result.{{ propNameGo }} = &v
+{%- else -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			switch n := val.(type) {
+			case int:
+				result.{{ propNameGo }} = float32(n)
+			case int32:
+				result.{{ propNameGo }} = float32(n)
+			case int64:
+				result.{{ propNameGo }} = float32(n)
+			case float32:
+				result.{{ propNameGo }} = n
+			case float64:
+				result.{{ propNameGo }} = float32(n)
+			}
+{%- endif -%}
+{%- elif prop.typeName.name == "float64" or prop.typeName.name == "number" or prop.typeName.name == "float" or prop.typeName.name == "numeric" -%}
+{%- if prop.isOptional -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			var v float64
+			switch n := val.(type) {
+			case int:
+				v = float64(n)
+			case int32:
+				v = float64(n)
+			case int64:
+				v = float64(n)
+			case float32:
+				v = float64(n)
+			case float64:
+				v = n
+			}
+			result.{{ propNameGo }} = &v
+{%- else -%}
+			// Handle various numeric types from JSON/YAML/roundtrip
+			switch n := val.(type) {
+			case int:
+				result.{{ propNameGo }} = float64(n)
+			case int32:
+				result.{{ propNameGo }} = float64(n)
+			case int64:
+				result.{{ propNameGo }} = float64(n)
+			case float32:
+				result.{{ propNameGo }} = float64(n)
+			case float64:
+				result.{{ propNameGo }} = n
+			}
+{%- endif -%}
+{%- else -%}
+{%- if prop.isOptional -%}
+			v := val.({{ typeMapper[prop.typeName.name] or "interface{}" }})
+			result.{{ propNameGo }} = &v
+{%- else -%}
+			result.{{ propNameGo }} = val.({{ typeMapper[prop.typeName.name] or "interface{}" }})
+{%- endif -%}
+{%- endif -%}
+		}
+{%- else -%}
+		if val, ok := {{ varName }}["{{ prop.name }}"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, _ := Load{{ prop.typeName.name }}(m, ctx)
+{%- if prop.isOptional %}
+				{%- if prop.typeName.name in polymorphicTypeNames %}
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
+				result.{{ propNameGo }} = loaded
+				{%- else %}
+				result.{{ propNameGo }} = &loaded
+				{%- endif %}
+{%- else %}
+				{%- if prop.typeName.name in polymorphicTypeNames %}
+				// Polymorphic type - keep as interface{}
+				result.{{ propNameGo }} = loaded
+				{%- else %}
+				result.{{ propNameGo }} = loaded
+				{%- endif %}
+{%- endif %}
+			}
+		}
+{%- endif -%}
+{%- endmacro %}
+
+
+{# ============================================================================
+   Save Property Rendering
+   ============================================================================ #}
+
+{#
+  Render the property saving code to map[string]interface{}.
+  
+  @param prop - PropertyNode
+  
+  Usage: {{ saveProperty(prop) }}
+#}
+{% macro saveProperty(prop, polymorphicTypeNames) -%}
+{%- set propNameGo = propName(prop.name) -%}
+{%- if prop.isCollection and not prop.isDict -%}
+{%- if prop.isScalar -%}
+	result["{{ prop.name }}"] = obj.{{ propNameGo }}
+{%- elif prop.typeName.name in polymorphicTypeNames -%}
+	if obj.{{ propNameGo }} != nil {
+		arr := make([]interface{}, len(obj.{{ propNameGo }}))
+		for i, item := range obj.{{ propNameGo }} {
+			// Handle polymorphic type via type switch
+			switch v := item.(type) {
+			case interface{ Save(*SaveContext) map[string]interface{} }:
+				arr[i] = v.Save(ctx)
+			default:
+				arr[i] = item
+			}
+		}
+		result["{{ prop.name }}"] = arr
+	}
+{%- else -%}
+	if obj.{{ propNameGo }} != nil {
+		arr := make([]interface{}, len(obj.{{ propNameGo }}))
+		for i, item := range obj.{{ propNameGo }} {
+			arr[i] = item.Save(ctx)
+		}
+		result["{{ prop.name }}"] = arr
+	}
+{%- endif -%}
+{%- elif prop.isDict -%}
+{%- if prop.isOptional -%}
+	if obj.{{ propNameGo }} != nil {
+		result["{{ prop.name }}"] = obj.{{ propNameGo }}
+	}
+{%- else -%}
+	result["{{ prop.name }}"] = obj.{{ propNameGo }}
+{%- endif -%}
+{%- elif prop.isScalar and not prop.isOptional -%}
+	result["{{ prop.name }}"] = obj.{{ propNameGo }}
+{%- elif prop.isOptional -%}
+	if obj.{{ propNameGo }} != nil {
+{%- if prop.isScalar -%}
+		result["{{ prop.name }}"] = *obj.{{ propNameGo }}
+{%- elif prop.typeName.name in polymorphicTypeNames %}
+	// Handle polymorphic type (stored as interface{} without pointer)
+	if obj.{{ propNameGo }} != nil {
+		switch v := obj.{{ propNameGo }}.(type) {
+		case interface{ Save(*SaveContext) map[string]interface{} }:
+			result["{{ prop.name }}"] = v.Save(ctx)
+		default:
+			result["{{ prop.name }}"] = obj.{{ propNameGo }}
+		}
+	}
+{%- else %}
+		result["{{ prop.name }}"] = obj.{{ propNameGo }}.Save(ctx)
+{%- endif -%}
+	}
+{%- else -%}
+	{%- if not prop.isScalar and prop.typeName.name in polymorphicTypeNames %}
+	// Handle polymorphic type via type switch
+	switch v := obj.{{ propNameGo }}.(type) {
+	case interface{ Save(*SaveContext) map[string]interface{} }:
+		result["{{ prop.name }}"] = v.Save(ctx)
+	default:
+		result["{{ prop.name }}"] = obj.{{ propNameGo }}
+	}
+	{%- else %}
+	result["{{ prop.name }}"] = obj.{{ propNameGo }}.Save(ctx)
+	{%- endif %}
+{%- endif -%}
+{%- endmacro %}

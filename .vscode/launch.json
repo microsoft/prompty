@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Prompty Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode/prompty"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/vscode/prompty/out/**/*.js"
+      ],
+      "preLaunchTask": "build-extension"
+    },
+    {
+      "name": "Run Prompty Extension (no build)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode/prompty"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/vscode/prompty/out/**/*.js"
+      ]
+    }
+  ]
+}

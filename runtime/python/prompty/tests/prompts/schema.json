@@ -1,9 +1,7 @@
-{
-  "properties": [
-    {
-      "name": "question",
-      "kind": "string",
-      "default": "What is AI?"
-    }
-  ]
-}
+[
+  {
+    "name": "question",
+    "kind": "string",
+    "default": "What is AI?"
+  }
+]
