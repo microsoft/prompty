@@ -1,0 +1,6 @@
+{
+  "packages/core": "2.0.0-alpha.1",
+  "packages/openai": "2.0.0-alpha.1",
+  "packages/foundry": "2.0.0-alpha.1",
+  "packages/anthropic": "2.0.0-alpha.1"
+}

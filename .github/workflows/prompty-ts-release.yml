@@ -1,0 +1,47 @@
+name: TypeScript Release
+on:
+  push:
+    branches: [main]
+    paths: ['runtime/typescript/**']
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: runtime/typescript/.release-please-config.json
+          manifest-file: runtime/typescript/.release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: runtime/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test
+      # Publish in dependency order — OIDC trusted publisher auth
+      - run: npm publish --workspace=packages/core --access public
+      - run: npm publish --workspace=packages/openai --access public
+      - run: npm publish --workspace=packages/foundry --access public
+      - run: npm publish --workspace=packages/anthropic --access public

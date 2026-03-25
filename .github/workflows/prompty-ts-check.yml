@@ -1,0 +1,28 @@
+name: TypeScript CI
+on:
+  push:
+    branches: [main]
+    paths: ['runtime/typescript/**']
+  pull_request:
+    paths: ['runtime/typescript/**']
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: runtime/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test
+      - run: npm run lint
