@@ -1,5 +1,5 @@
 import { ExtensionContext, Uri, Disposable, window, workspace, commands } from 'vscode';
-import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, PromptyTracer, traceSpan } from '@prompty/core';
+import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
@@ -51,36 +51,22 @@ export class PromptyController implements Disposable {
 			});
 			Tracer.add('prompty-file', promptyTracer.factory);
 
+			// Load agent first so we can apply sidebar connections
+			const agent = load(filePath);
+			await this.applyDefaultConnection(agent);
+
+			this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
+			this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
+			this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
+
 			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)
 			const promptName = path.basename(filePath, '.prompty');
 			const startTime = Date.now();
 			const result = await traceSpan(promptName, async (emit) => {
 				emit('type', 'vscode');
+				emit('signature', 'prompty.vscode.execute');
 				emit('description', 'Prompty VS Code Execution');
-				emit('inputs', { prompt_path: filePath });
-
-				// Load
-				const agent = await traceSpan('load', async (loadEmit) => {
-					loadEmit('signature', 'prompty.load');
-					loadEmit('description', 'Load a prompty file.');
-					loadEmit('inputs', { prompty_file: filePath });
-					const a = load(filePath);
-					await this.applyDefaultConnection(a);
-					loadEmit('result', {
-						name: a.name ?? '',
-						description: a.description ?? '',
-						model: {
-							id: a.model?.id ?? '',
-							api: (a.model as any)?.apiType ?? 'chat',
-							provider: a.model?.provider ?? '',
-						},
-					});
-					return a;
-				});
-
-				this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
-				this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
-				this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
+				emit('inputs', { prompt_path: filePath, inputs: {} });
 
 				const executionResult = await execute(agent);
 				emit('result', executionResult);

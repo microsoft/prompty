@@ -30,7 +30,7 @@ import {
 } from "./types.js";
 import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
-import { traceSpan } from "../tracing/tracer.js";
+import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
 
 // ---------------------------------------------------------------------------
@@ -94,6 +94,52 @@ function isStrictMode(agent: Prompty): boolean {
   return agent.template?.format?.strict === true;
 }
 
+/** Serialize agent for trace output, matching Python's load result shape. */
+function serializeAgent(agent: Prompty): Record<string, unknown> {
+  const model = agent.model;
+  return sanitizeValue("agent", {
+    name: agent.name ?? "",
+    description: agent.description ?? "",
+    metadata: agent.metadata ?? {},
+    model: {
+      id: model?.id ?? "",
+      api: (model as unknown as Record<string, unknown>)?.apiType ?? "chat",
+      provider: model?.provider ?? "",
+      connection: model?.connection ?? {},
+    },
+    inputs: agent.inputs?.map(p => ({
+      name: p.name ?? "",
+      kind: p.kind ?? "",
+      description: p.description ?? "",
+      required: p.required ?? false,
+      default: p.default,
+      example: p.example,
+    })) ?? [],
+    outputs: agent.outputs?.map(p => ({
+      name: p.name ?? "",
+      kind: p.kind ?? "",
+      description: p.description ?? "",
+    })) ?? [],
+    tools: agent.tools?.map(t => ({
+      name: t.name ?? "",
+      kind: t.kind ?? "",
+    })) ?? [],
+    template: {
+      format: agent.template?.format?.kind ?? DEFAULT_FORMAT,
+      parser: agent.template?.parser?.kind ?? DEFAULT_PARSER,
+    },
+    instructions: agent.instructions ?? "",
+  }) as Record<string, unknown>;
+}
+
+/** Serialize messages for trace output, matching Python's parser result. */
+function serializeMessages(messages: Message[]): unknown[] {
+  return messages.map(m => ({
+    role: m.role,
+    content: m.text,
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Leaf steps
 // ---------------------------------------------------------------------------
@@ -107,16 +153,16 @@ export async function render(
   agent: Prompty,
   inputs: Record<string, unknown>,
 ): Promise<string> {
-  return traceSpan("render", async (emit) => {
-    const formatKind = resolveFormatKind(agent);
-    const renderer = getRenderer(formatKind);
+  const formatKind = resolveFormatKind(agent);
+  const renderer = getRenderer(formatKind);
+
+  return traceSpan(renderer.constructor?.name ?? "Renderer", async (emit) => {
     const template = agent.instructions ?? "";
 
-    emit("signature", "prompty.render");
-    emit("description", "Render template with inputs");
-    emit("inputs", { format: formatKind, template_length: template.length, input_keys: Object.keys(inputs) });
+    emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
+    emit("inputs", { data: inputs });
     const result = await renderer.render(agent, template, inputs);
-    emit("result", { rendered_length: result.length });
+    emit("result", result);
     return result;
   });
 }
@@ -131,15 +177,14 @@ export async function parse(
   rendered: string,
   context?: Record<string, unknown>,
 ): Promise<Message[]> {
-  return traceSpan("parse", async (emit) => {
-    const parserKind = resolveParserKind(agent);
-    const parser = getParser(parserKind);
+  const parserKind = resolveParserKind(agent);
+  const parser = getParser(parserKind);
 
-    emit("signature", "prompty.parse");
-    emit("description", "Parse rendered text into messages");
-    emit("inputs", { parser: parserKind, rendered_length: rendered.length });
+  return traceSpan(parser.constructor?.name ?? "Parser", async (emit) => {
+    emit("signature", `prompty.parsers.${parser.constructor?.name ?? "Parser"}.parse`);
+    emit("inputs", rendered);
     const messages = await parser.parse(agent, rendered, context);
-    emit("result", { message_count: messages.length });
+    emit("result", serializeMessages(messages));
     return messages;
   });
 }
@@ -153,13 +198,12 @@ export async function process(
   agent: Prompty,
   response: unknown,
 ): Promise<unknown> {
-  return traceSpan("process", async (emit) => {
-    const provider = resolveProvider(agent);
-    const processor = getProcessor(provider);
+  const provider = resolveProvider(agent);
+  const processor = getProcessor(provider);
 
-    emit("signature", "prompty.process");
-    emit("description", "Process raw LLM response");
-    emit("inputs", { provider });
+  return traceSpan(processor.constructor?.name ?? "Processor", async (emit) => {
+    emit("signature", `prompty.processors.${processor.constructor?.name ?? "Processor"}.process`);
+    emit("inputs", response);
     const result = await processor.process(agent, response);
     emit("result", result);
     return result;
@@ -182,7 +226,7 @@ export async function prepare(
     emit("description", "Render and parse into messages");
 
     const validatedInputs = validateInputs(agent, inputs ?? {});
-    emit("inputs", { input_keys: Object.keys(validatedInputs) });
+    emit("inputs", validatedInputs);
 
     // Check for strict mode pre-render
     const parserKind = resolveParserKind(agent);
@@ -208,7 +252,7 @@ export async function prepare(
       const nonces = getLastNonces();
       const expanded = expandThreads(messages, nonces, validatedInputs);
 
-      emit("result", { message_count: expanded.length });
+      emit("result", serializeMessages(expanded));
       return expanded;
     }
 
@@ -221,7 +265,7 @@ export async function prepare(
     const nonces = getLastNonces();
     const expanded = expandThreads(messages, nonces, validatedInputs);
 
-    emit("result", { message_count: expanded.length });
+    emit("result", serializeMessages(expanded));
     return expanded;
   });
 }
@@ -244,9 +288,16 @@ export async function run(
 
     emit("signature", "prompty.run");
     emit("description", "Execute LLM call and process response");
-    emit("inputs", { provider, message_count: messages.length });
+    emit("inputs", serializeMessages(messages));
 
-    const response = await executor.execute(agent, messages);
+    // Wrap executor in its own trace span (matching Python's Executor.invoke frame)
+    const response = await traceSpan(executor.constructor?.name ?? "Executor", async (execEmit) => {
+      execEmit("signature", `prompty.executors.${executor.constructor?.name ?? "Executor"}.execute`);
+      execEmit("inputs", serializeMessages(messages));
+      const raw = await executor.execute(agent, messages);
+      execEmit("result", raw);
+      return raw;
+    });
 
     if (options?.raw) {
       emit("result", response);
@@ -271,11 +322,20 @@ export async function execute(
   options?: { raw?: boolean },
 ): Promise<unknown> {
   return traceSpan("execute", async (emit) => {
-    const agent = typeof prompt === "string" ? load(prompt) : prompt;
+    const agent = typeof prompt === "string"
+      ? await traceSpan("load", async (loadEmit) => {
+          loadEmit("signature", "prompty.load");
+          loadEmit("description", "Load a prompty file.");
+          loadEmit("inputs", { prompty_file: prompt });
+          const loaded = load(prompt);
+          loadEmit("result", serializeAgent(loaded));
+          return loaded;
+        })
+      : prompt;
 
     emit("signature", "prompty.execute");
     emit("description", "Execute a prompty");
-    emit("inputs", { agent: agent.name ?? "unnamed", input_keys: Object.keys(inputs ?? {}) });
+    emit("inputs", { prompt: serializeAgent(agent), inputs: inputs ?? {} });
     const messages = await prepare(agent, inputs);
     const result = await run(agent, messages, options);
     emit("result", result);
@@ -300,13 +360,22 @@ export async function executeAgent(
   },
 ): Promise<unknown> {
   return traceSpan("executeAgent", async (emit) => {
-    const agent = typeof prompt === "string" ? load(prompt) : prompt;
+    const agent = typeof prompt === "string"
+      ? await traceSpan("load", async (loadEmit) => {
+          loadEmit("signature", "prompty.load");
+          loadEmit("description", "Load a prompty file.");
+          loadEmit("inputs", { prompty_file: prompt });
+          const loaded = load(prompt);
+          loadEmit("result", serializeAgent(loaded));
+          return loaded;
+        })
+      : prompt;
     const tools = options?.tools ?? {};
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
 
     emit("signature", "prompty.executeAgent");
     emit("description", "Execute a prompty with tool calling");
-    emit("inputs", { agent: agent.name ?? "unnamed", tools: Object.keys(tools) });
+    emit("inputs", { prompt: serializeAgent(agent), tools: Object.keys(tools), inputs: inputs ?? {} });
 
     const messages = await prepare(agent, inputs);
     const provider = resolveProvider(agent);
