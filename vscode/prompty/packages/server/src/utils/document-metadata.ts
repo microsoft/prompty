@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { parse as parseYamlContent } from "yaml";
 import { Logger } from "./logger";
 
 export interface DocumentMetadata {
@@ -109,22 +110,7 @@ export class DocumentMetadataStore {
 
 	private parseYaml(content: string): unknown {
 		try {
-			const result: Record<string, unknown> = {};
-			const lines = content.split('\n');
-			let currentKey: string | undefined;
-			for (const line of lines) {
-				const keyMatch = line.match(/^(\w[\w-]*)\s*:/);
-				if (keyMatch) {
-					currentKey = keyMatch[1];
-					const valueStr = line.slice(line.indexOf(':') + 1).trim();
-					if (valueStr) {
-						result[currentKey] = valueStr;
-					} else {
-						result[currentKey] = {};
-					}
-				}
-			}
-			return Object.keys(result).length > 0 ? result : undefined;
+			return parseYamlContent(content);
 		} catch {
 			return undefined;
 		}

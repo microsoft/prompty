@@ -343,110 +343,76 @@ interface InputProperty {
 	required: boolean;
 }
 
-/** Extract input property names from the frontmatter inputs section. */
+/** Extract input property names from the parsed frontmatter inputs section. */
 function extractInputNames(
-	document: TextDocument,
+	_document: TextDocument,
 	metadata: DocumentMetadata
 ): InputProperty[] {
-	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+	const content = metadata.frontMatterContent;
+	if (!content) {
 		return [];
 	}
 
-	const text = document.getText({
-		start: { line: metadata.frontMatterStart + 1, character: 0 },
-		end: { line: metadata.frontMatterEnd, character: 0 },
-	});
+	const inputs = content['inputs'] ?? content['inputSchema'];
+	if (!inputs) {
+		return [];
+	}
 
 	const results: InputProperty[] = [];
-	const lines = text.split(/\n|\r\n/);
-	let inInputSchema = false;
-	let inProperties = false;
-	let currentName = '';
-	let currentDescription = '';
-	let currentKind = '';
-	let currentDefault = '';
-	let currentRequired = false;
 
-	const flushProperty = () => {
-		if (currentName) {
-			results.push({
-				name: currentName,
-				description: currentDescription,
-				kind: currentKind,
-				defaultValue: currentDefault,
-				required: currentRequired,
-			});
-		}
-		currentName = '';
-		currentDescription = '';
-		currentKind = '';
-		currentDefault = '';
-		currentRequired = false;
-	};
-
-	for (const line of lines) {
-		const trimmed = line.trimStart();
-
-		// Detect inputs: section (also support legacy inputSchema:)
-		if (/^inputs\s*:/.test(trimmed) || /^inputSchema\s*:/.test(trimmed)) {
-			inInputSchema = true;
-			inProperties = true;
-			continue;
-		}
-
-		// Exit inputs when we hit another top-level key
-		if (inInputSchema && /^\S/.test(line) && !/^\s/.test(line)) {
-			flushProperty();
-			inInputSchema = false;
-			inProperties = false;
-			continue;
-		}
-
-		if (inInputSchema) {
-			// Legacy nested properties: section (inputSchema.properties)
-			if (/^\s+properties\s*:/.test(line)) {
-				inProperties = true;
-				continue;
+	if (Array.isArray(inputs)) {
+		// Array format: inputs: [{ name: "foo", kind: "string", ... }]
+		for (const item of inputs) {
+			if (item && typeof item === 'object' && 'name' in item) {
+				results.push({
+					name: String(item.name ?? ''),
+					description: String(item.description ?? ''),
+					kind: String(item.kind ?? ''),
+					defaultValue: item.default != null ? String(item.default) : '',
+					required: Boolean(item.required),
+				});
 			}
-
-			if (inProperties) {
-				// New property item: "- name: xxx"
-				const nameMatch = trimmed.match(/^-\s*name\s*:\s*(.+)/);
-				if (nameMatch) {
-					flushProperty();
-					currentName = nameMatch[1].trim().replace(/^["']|["']$/g, '');
-					continue;
+		}
+	} else if (typeof inputs === 'object' && inputs !== null) {
+		// Record format: inputs: { foo: { kind: "string", ... } }
+		for (const [name, value] of Object.entries(inputs)) {
+			if (name === 'properties' && Array.isArray(value)) {
+				// Legacy inputSchema.properties array
+				for (const item of value) {
+					if (item && typeof item === 'object' && 'name' in item) {
+						results.push({
+							name: String(item.name ?? ''),
+							description: String(item.description ?? ''),
+							kind: String(item.kind ?? ''),
+							defaultValue: item.default != null ? String(item.default) : '',
+							required: Boolean(item.required),
+						});
+					}
 				}
-
-				// Property fields on subsequent lines
-				const descMatch = trimmed.match(/^description\s*:\s*(.+)/);
-				if (descMatch && currentName) {
-					currentDescription = descMatch[1].trim().replace(/^["']|["']$/g, '');
-					continue;
-				}
-
-				const kindMatch = trimmed.match(/^kind\s*:\s*(.+)/);
-				if (kindMatch && currentName) {
-					currentKind = kindMatch[1].trim().replace(/^["']|["']$/g, '');
-					continue;
-				}
-
-				const defaultMatch = trimmed.match(/^default\s*:\s*(.+)/);
-				if (defaultMatch && currentName) {
-					currentDefault = defaultMatch[1].trim().replace(/^["']|["']$/g, '');
-					continue;
-				}
-
-				const reqMatch = trimmed.match(/^required\s*:\s*(.+)/);
-				if (reqMatch && currentName) {
-					currentRequired = reqMatch[1].trim().toLowerCase() === 'true';
-					continue;
-				}
+				return results;
+			}
+			if (value && typeof value === 'object') {
+				const v = value as Record<string, unknown>;
+				results.push({
+					name,
+					description: String(v.description ?? ''),
+					kind: String(v.kind ?? ''),
+					defaultValue: v.default != null ? String(v.default) : '',
+					required: Boolean(v.required),
+				});
+			} else {
+				// Shorthand: inputs: { foo: "default value" }
+				results.push({
+					name,
+					description: '',
+					kind: typeof value === 'string' ? 'string' : '',
+					defaultValue: value != null ? String(value) : '',
+					required: false,
+				});
 			}
 		}
 	}
 
-	flushProperty();
 	return results;
 }
 
