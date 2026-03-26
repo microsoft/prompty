@@ -112,9 +112,11 @@ export async function render(
     const renderer = getRenderer(formatKind);
     const template = agent.instructions ?? "";
 
-    emit("format", formatKind);
+    emit("signature", "prompty.render");
+    emit("description", "Render template with inputs");
+    emit("inputs", { format: formatKind, template_length: template.length, input_keys: Object.keys(inputs) });
     const result = await renderer.render(agent, template, inputs);
-    emit("rendered_length", result.length);
+    emit("result", { rendered_length: result.length });
     return result;
   });
 }
@@ -133,9 +135,11 @@ export async function parse(
     const parserKind = resolveParserKind(agent);
     const parser = getParser(parserKind);
 
-    emit("parser", parserKind);
+    emit("signature", "prompty.parse");
+    emit("description", "Parse rendered text into messages");
+    emit("inputs", { parser: parserKind, rendered_length: rendered.length });
     const messages = await parser.parse(agent, rendered, context);
-    emit("message_count", messages.length);
+    emit("result", { message_count: messages.length });
     return messages;
   });
 }
@@ -153,8 +157,12 @@ export async function process(
     const provider = resolveProvider(agent);
     const processor = getProcessor(provider);
 
-    emit("provider", provider);
-    return processor.process(agent, response);
+    emit("signature", "prompty.process");
+    emit("description", "Process raw LLM response");
+    emit("inputs", { provider });
+    const result = await processor.process(agent, response);
+    emit("result", result);
+    return result;
   });
 }
 
@@ -170,7 +178,11 @@ export async function prepare(
   inputs?: Record<string, unknown>,
 ): Promise<Message[]> {
   return traceSpan("prepare", async (emit) => {
+    emit("signature", "prompty.prepare");
+    emit("description", "Render and parse into messages");
+
     const validatedInputs = validateInputs(agent, inputs ?? {});
+    emit("inputs", { input_keys: Object.keys(validatedInputs) });
 
     // Check for strict mode pre-render
     const parserKind = resolveParserKind(agent);
@@ -196,7 +208,7 @@ export async function prepare(
       const nonces = getLastNonces();
       const expanded = expandThreads(messages, nonces, validatedInputs);
 
-      emit("message_count", expanded.length);
+      emit("result", { message_count: expanded.length });
       return expanded;
     }
 
@@ -209,7 +221,7 @@ export async function prepare(
     const nonces = getLastNonces();
     const expanded = expandThreads(messages, nonces, validatedInputs);
 
-    emit("message_count", expanded.length);
+    emit("result", { message_count: expanded.length });
     return expanded;
   });
 }
@@ -230,13 +242,19 @@ export async function run(
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
 
-    emit("provider", provider);
-    emit("message_count", messages.length);
+    emit("signature", "prompty.run");
+    emit("description", "Execute LLM call and process response");
+    emit("inputs", { provider, message_count: messages.length });
 
     const response = await executor.execute(agent, messages);
 
-    if (options?.raw) return response;
-    return process(agent, response);
+    if (options?.raw) {
+      emit("result", response);
+      return response;
+    }
+    const result = await process(agent, response);
+    emit("result", result);
+    return result;
   });
 }
 
@@ -255,9 +273,13 @@ export async function execute(
   return traceSpan("execute", async (emit) => {
     const agent = typeof prompt === "string" ? load(prompt) : prompt;
 
-    emit("agent", agent.name ?? "unnamed");
+    emit("signature", "prompty.execute");
+    emit("description", "Execute a prompty");
+    emit("inputs", { agent: agent.name ?? "unnamed", input_keys: Object.keys(inputs ?? {}) });
     const messages = await prepare(agent, inputs);
-    return run(agent, messages, options);
+    const result = await run(agent, messages, options);
+    emit("result", result);
+    return result;
   });
 }
 
@@ -282,8 +304,9 @@ export async function executeAgent(
     const tools = options?.tools ?? {};
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
 
-    emit("agent", agent.name ?? "unnamed");
-    emit("tools", Object.keys(tools));
+    emit("signature", "prompty.executeAgent");
+    emit("description", "Execute a prompty with tool calling");
+    emit("inputs", { agent: agent.name ?? "unnamed", tools: Object.keys(tools) });
 
     const messages = await prepare(agent, inputs);
     const provider = resolveProvider(agent);
@@ -308,8 +331,13 @@ export async function executeAgent(
 
     emit("iterations", iteration);
 
-    if (options?.raw) return response;
-    return process(agent, response);
+    if (options?.raw) {
+      emit("result", response);
+      return response;
+    }
+    const result = await process(agent, response);
+    emit("result", result);
+    return result;
   });
 }
 
