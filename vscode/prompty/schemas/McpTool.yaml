@@ -16,8 +16,8 @@ properties:
     type: string
     description: The description of the MCP tool
   approvalMode:
-    $ref: McpServerApprovalMode.yaml
-    description: The approval mode for the MCP tool, either 'auto' or 'manual'
+    $ref: McpApprovalMode.yaml
+    description: The approval mode for the MCP tool
   allowedTools:
     type: array
     items:

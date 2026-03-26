@@ -40,11 +40,4 @@ properties:
   additionalProperties:
     $ref: RecordUnknown.yaml
     description: Additional custom properties for model options
-  kind:
-    type: string
-    description: Discriminator property for ModelOptions.
-required:
-  - kind
-description: |-
-  Options for configuring the behavior of the AI model.
-  `kind` is a required property here, but this section can accept additional via options.
+description: Options for configuring the behavior of the AI model.

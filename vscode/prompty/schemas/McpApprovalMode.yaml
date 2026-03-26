@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: McpApprovalMode.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: always
+      - type: string
+        const: never
+      - type: string
+        const: specify
+    description: "The approval mode: 'always', 'never', or 'specify'"
+  alwaysRequireApprovalTools:
+    type: array
+    items:
+      type: string
+    description: List of tools that always require approval (only used when kind is 'specify')
+  neverRequireApprovalTools:
+    type: array
+    items:
+      type: string
+    description: List of tools that never require approval (only used when kind is 'specify')
+required:
+  - kind
+description: |-
+  The approval mode for MCP server tools.
+  When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
+  to control per-tool approval. For "always" and "never", those fields are ignored.

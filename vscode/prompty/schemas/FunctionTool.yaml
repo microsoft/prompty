@@ -1,17 +1,12 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: PropertySchema.yaml
+$id: FunctionTool.yaml
 type: object
 properties:
-  examples:
-    type: array
-    items:
-      $ref: RecordUnknown.yaml
-    description: Example records for the input schema
-  strict:
-    type: boolean
-    default: false
-    description: Whether the input schema is strict - if true, only the defined properties are allowed
-  properties:
+  kind:
+    type: string
+    const: function
+    description: The kind identifier for function tools
+  parameters:
     anyOf:
       - $ref: RecordProperty.yaml
       - type: array
@@ -59,9 +54,14 @@ properties:
           required:
             - name
             - kind
-    description: The input properties for the schema
+    description: Parameters accepted by the function tool
+  strict:
+    type: boolean
+    default: true
+    description: Indicates whether the function tool enforces strict validation on its parameters
 required:
-  - properties
-description: |-
-  Definition for the property schema of a model.
-  This includes the properties and example records.
+  - kind
+  - parameters
+allOf:
+  - $ref: Tool.yaml
+description: Represents a local function tool.

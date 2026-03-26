@@ -1,557 +1,182 @@
-# Prompty v2 Frontmatter Schema
-# Based on AgentSchema v1.0 (https://github.com/microsoft/AgentSchema)
-# Supports both full object syntax and string shorthand constructions.
-
-$schema: "http://json-schema.org/draft-07/schema#"
-$id: "https://prompty.ai/schemas/v2/Prompty.yaml"
-title: Prompty v2 Frontmatter Schema
-description: >-
-  Schema for .prompty file frontmatter based on the AgentSchema v1.0
-  PromptAgent specification. Supports shorthand string syntax for
-  model, format, parser, and other fields.
-
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Prompty.yaml
 type: object
-required:
-  - name
-
 properties:
-  # --- AgentDefinition properties ---
-  $schema:
-    type: string
-    description: Optional reference to this schema for editor validation.
-
-  kind:
-    type: string
-    description: Agent kind (defaults to 'prompt' for .prompty files).
-    default: prompt
-    oneOf:
-      - const: prompt
-        description: A prompt-based agent that uses template rendering and model invocation.
-      - const: hosted
-        description: A hosted agent running as an external service.
-      - const: workflow
-        description: A workflow agent that orchestrates multiple steps or sub-agents.
-
   name:
     type: string
-    description: Human-readable name of the agent.
-
+    default: ""
+    description: Human-readable name of the prompt
   displayName:
     type: string
-    description: Display name for UI purposes.
-
+    default: ""
+    description: Display name for UI purposes
   description:
     type: string
-    description: Description of the agent's capabilities and purpose.
-
+    default: ""
+    description: Description of the prompt's purpose
   metadata:
-    type: object
-    additionalProperties: true
-    description: >-
-      Additional metadata including authors, tags, and other arbitrary
-      key-value pairs.
-
-  inputSchema:
-    $ref: "#/definitions/propertySchema"
-    description: Input parameters that participate in template rendering.
-
-  outputSchema:
-    $ref: "#/definitions/propertySchema"
-    description: Expected output format and structure from the agent.
-
-  # --- PromptAgent properties ---
-  model:
-    description: >-
-      AI model configuration. String shorthand expands to {id: <value>}
-      (e.g. "gpt-4o" becomes {id: "gpt-4o"}).
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Additional metadata including authors, tags, and other arbitrary properties
+  inputs:
     anyOf:
-      - type: string
-        description: Model ID shorthand (e.g. "gpt-4o", "claude-3-sonnet").
-      - $ref: "#/definitions/model"
-
-  tools:
-    description: Tools available to the agent for extended functionality.
-    type: array
-    items:
-      $ref: "#/definitions/tool"
-    default: []
-
-  template:
-    $ref: "#/definitions/template"
-    description: Template configuration for prompt rendering.
-
-  instructions:
-    type: string
-    description: >-
-      Give your agent clear directions on what to do and how to do it.
-      Include specific tasks, their order, and any special instructions.
-
-  additionalInstructions:
-    type: string
-    description: >-
-      Additional instructions or context for the agent, used to provide
-      extra guidance.
-
-# ---------------------------------------------------------------------------
-# Reusable type definitions (aligned with AgentSchema v1.0)
-# ---------------------------------------------------------------------------
-definitions:
-
-  # ── Model ────────────────────────────────────────────────────────────────
-  model:
-    type: object
-    description: Full model configuration including provider, connection, and options.
-    required:
-      - id
-    properties:
-      id:
-        type: string
-        description: Model identifier (e.g. "gpt-4o", "claude-3-opus").
-      provider:
-        type: string
-        description: >-
-          The model provider.
-        oneOf:
-          - const: openai
-            description: OpenAI API (api.openai.com)
-          - const: azure
-            description: Azure OpenAI Service (*.openai.azure.com)
-          - const: anthropic
-            description: Anthropic Claude API (api.anthropic.com)
-      apiType:
-        type: string
-        description: >-
-          The API surface to use when calling the model.
-        oneOf:
-          - const: chat
-            description: Chat completions API — send messages, get assistant responses.
-          - const: responses
-            description: Responses API — newer stateful API with built-in tool handling.
-      connection:
-        $ref: "#/definitions/connection"
-        description: Connection details for authenticating with the model endpoint.
-      options:
-        $ref: "#/definitions/modelOptions"
-        description: Model inference options (temperature, tokens, etc.).
-
-  # ── Connection ──────────────────────────────────────────────────────────
-  connection:
-    type: object
-    description: >-
-      Connection configuration for the model endpoint. Discriminated
-      by the "kind" field. Supports key, reference, remote, and
-      anonymous authentication modes.
-    properties:
-      kind:
-        type: string
-        description: >-
-          Authentication kind for the connection.
-        oneOf:
-          - const: key
-            description: Authenticate with an explicit API key and endpoint. Use ${env:VAR} to reference environment variables.
-          - const: reference
-            description: Look up a pre-registered connection by name from the connection registry.
-          - const: remote
-            description: Connect to a remote AI service endpoint with delegated authentication.
-          - const: anonymous
-            description: Use default or environment-provided credentials without explicit keys.
-      authenticationMode:
-        type: string
-        description: >-
-          Authority level for the connection — who is making the request.
-        default: system
-        oneOf:
-          - const: system
-            description: The system (application) authenticates on behalf of the user.
-          - const: user
-            description: The user authenticates directly (e.g. interactive OAuth flow).
-      usageDescription:
-        type: string
-        description: Context on how this connection will be used.
-      endpoint:
-        type: string
-        description: Base URL of the AI service endpoint.
-      apiKey:
-        type: string
-        description: >-
-          API key for authentication. Supports ${env:VAR} references
-          (e.g. "${env:OPENAI_API_KEY}").
-      name:
-        type: string
-        description: Name of the registered connection (for reference kind).
-    additionalProperties: true
-
-  # ── Model Options ───────────────────────────────────────────────────────
-  modelOptions:
-    type: object
-    description: >-
-      Parameters that control model inference behaviour. Unknown
-      properties are passed through to the provider as-is.
-    additionalProperties: true
-    properties:
-      temperature:
-        type: number
-        description: Sampling temperature. 0 means deterministic.
-      topP:
-        type: number
-        description: Nucleus sampling probability (0–1).
-      topK:
-        type: integer
-        description: Top-K sampling – only the K most likely tokens are considered.
-      maxOutputTokens:
-        type: integer
-        description: Maximum number of tokens to generate in the response.
-      frequencyPenalty:
-        type: number
-        description: Penalise tokens based on how often they have appeared so far.
-      presencePenalty:
-        type: number
-        description: Penalise tokens based on whether they have appeared at all.
-      seed:
-        type: integer
-        description: Seed for deterministic sampling.
-      stopSequences:
-        type: array
-        description: Sequences that cause the model to stop generating.
-        items:
-          type: string
-      allowMultipleToolCalls:
-        type: boolean
-        description: Whether to allow multiple tool calls in a single response.
-
-  # ── Property Schema (inputSchema / outputSchema) ────────────────────────
-  propertySchema:
-    type: object
-    description: >-
-      Describes a set of typed properties, used for both inputSchema and
-      outputSchema as well as tool parameter definitions. Properties can
-      be an array of named objects or a record (object with property
-      name keys). Record values support scalar shorthand.
-    properties:
-      properties:
-        description: >-
-          Property definitions. Supports three forms:
-          (1) Array of named property objects (each must include 'name').
-          (2) Record/dict where keys are property names and values are property objects (no 'name' needed).
-          (3) Record with scalar shorthand values — e.g. `firstName: "Jane"` expands to `{kind: string, example: "Jane"}`.
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/definitions/propertyArrayItem"
-          - type: object
-            additionalProperties:
-              $ref: "#/definitions/propertyRecordValue"
-      examples:
-        type: array
-        description: Example records for the input schema.
+      - $ref: RecordProperty.yaml
+      - type: array
         items:
           type: object
-          additionalProperties: true
-      strict:
-        type: boolean
-        default: false
-        description: >-
-          When true, the schema is enforced strictly (only defined
-          properties are allowed).
-
-  # ── Property (array form — requires name) ──────────────────────────────
-  propertyArrayItem:
-    type: object
-    description: >-
-      A single typed property definition used in array form.
-      Requires 'name' since there is no key to infer it from.
-    required:
-      - name
-    properties:
-      name:
-        type: string
-        description: Property name (used as the key in input/output objects).
-      kind:
-        type: string
-        description: The data type of the property.
-        oneOf:
-          - const: string
-            description: Text value (e.g. a question, name, or free-form input).
-          - const: integer
-            description: Whole number value (e.g. count, index).
-          - const: float
-            description: Decimal number value (e.g. temperature, score).
-          - const: boolean
-            description: True/false value (e.g. a flag or toggle).
-          - const: array
-            description: A list of values.
-          - const: object
-            description: A structured key-value object.
-          - const: thread
-            description: Conversation thread — a list of messages for multi-turn context.
-      description:
-        type: string
-        description: Human-readable description of the property.
-      required:
-        type: boolean
-        default: false
-        description: Whether the caller must provide this property.
-      default:
-        description: Default value used when the caller does not supply one.
-      example:
-        description: Example value used for initialization or tooling.
-      enumValues:
-        type: array
-        description: Allowed enumeration values for the property.
-        items: {}
-      # ArrayProperty extension
-      items:
-        $ref: "#/definitions/propertyRecordValue"
-        description: Item type for array-kind properties.
-      # ObjectProperty extension
-      properties:
-        description: Nested properties for object-kind properties.
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/definitions/propertyArrayItem"
-          - type: object
-            additionalProperties:
-              $ref: "#/definitions/propertyRecordValue"
-    additionalProperties: true
-
-  # ── Property (record/dict value — name comes from key) ─────────────────
-  propertyRecordValue:
-    description: >-
-      A property value in record form. Supports:
-      (1) Full object with kind, description, etc. (name inferred from key).
-      (2) Scalar shorthand — string, number, or boolean expands to
-          {kind: <inferred>, example: <value>}.
-    anyOf:
-      - type: string
-        description: >-
-          String shorthand — expands to {kind: "string", example: <value>}.
-      - type: number
-        description: >-
-          Number shorthand — expands to {kind: "float" or "integer", example: <value>}.
-      - type: integer
-        description: >-
-          Integer shorthand — expands to {kind: "integer", example: <value>}.
-      - type: boolean
-        description: >-
-          Boolean shorthand — expands to {kind: "boolean", example: <value>}.
-      - type: object
-        description: Full property definition (name inferred from the record key).
-        properties:
-          name:
-            type: string
-            description: Optional — usually inferred from the record key.
-          kind:
-            type: string
-            description: The data type of the property.
-            oneOf:
-              - const: string
-                description: Text value (e.g. a question, name, or free-form input).
-              - const: integer
-                description: Whole number value (e.g. count, index).
-              - const: float
-                description: Decimal number value (e.g. temperature, score).
-              - const: boolean
-                description: True/false value (e.g. a flag or toggle).
-              - const: array
-                description: A list of values.
-              - const: object
-                description: A structured key-value object.
-              - const: thread
-                description: Conversation thread — a list of messages for multi-turn context.
-          description:
-            type: string
-            description: Human-readable description of the property.
-          required:
-            type: boolean
-            default: false
-            description: Whether the caller must provide this property.
-          default:
-            description: Default value used when the caller does not supply one.
-          example:
-            description: Example value used for initialization or tooling.
-          enumValues:
-            type: array
-            description: Allowed enumeration values for the property.
-            items: {}
-          # ArrayProperty extension
-          items:
-            description: Item type for array-kind properties.
-          # ObjectProperty extension
           properties:
-            description: Nested properties for object-kind properties.
-        additionalProperties: true
-
-  # ── Template ────────────────────────────────────────────────────────────
+            name:
+              type: string
+              default: ""
+              description: Name of the property
+            kind:
+              anyOf:
+                - type: string
+                  const: string
+                - type: string
+                  const: integer
+                - type: string
+                  const: float
+                - type: string
+                  const: boolean
+                - type: string
+                  const: array
+                - type: string
+                  const: object
+              description: The data type of the input property
+            description:
+              type: string
+              default: ""
+              description: A short description of the input property
+            required:
+              type: boolean
+              default: false
+              description: Whether the property is required
+            default:
+              default: null
+              description: The default value of the property - this represents the default value if none is provided
+            example:
+              default: null
+              description: Example value used for either initialization or tooling
+            enumValues:
+              type: array
+              items: {}
+              default: []
+              description: Allowed enumeration values for the property
+          required:
+            - name
+            - kind
+    description: Input parameters that participate in template rendering
+  outputs:
+    anyOf:
+      - $ref: RecordProperty.yaml
+      - type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              default: ""
+              description: Name of the property
+            kind:
+              anyOf:
+                - type: string
+                  const: string
+                - type: string
+                  const: integer
+                - type: string
+                  const: float
+                - type: string
+                  const: boolean
+                - type: string
+                  const: array
+                - type: string
+                  const: object
+              description: The data type of the input property
+            description:
+              type: string
+              default: ""
+              description: A short description of the input property
+            required:
+              type: boolean
+              default: false
+              description: Whether the property is required
+            default:
+              default: null
+              description: The default value of the property - this represents the default value if none is provided
+            example:
+              default: null
+              description: Example value used for either initialization or tooling
+            enumValues:
+              type: array
+              items: {}
+              default: []
+              description: Allowed enumeration values for the property
+          required:
+            - name
+            - kind
+    description: Expected output format and structure
+  model:
+    anyOf:
+      - $ref: Model.yaml
+      - type: string
+    description: AI model configuration
+  tools:
+    anyOf:
+      - $ref: RecordTool.yaml
+      - type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              default: ""
+              description: Name of the tool. If a function tool, this is the function name, otherwise it is the type
+            kind:
+              $ref: ToolTypes.yaml
+              description: The kind identifier for the tool
+            description:
+              type: string
+              default: ""
+              description: A short description of the tool for metadata purposes
+            bindings:
+              anyOf:
+                - $ref: RecordBinding.yaml
+                - type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        default: ""
+                        description: Name of the binding
+                      input:
+                        type: string
+                        description: The input property that will be bound to the tool parameter argument
+                    required:
+                      - name
+                      - input
+              default: []
+              description: Tool argument bindings to input properties
+          required:
+            - name
+            - kind
+    default: []
+    description: Tools available for extended functionality
   template:
-    type: object
-    description: >-
-      Template configuration for prompt rendering. Both format and
-      parser support string shorthand that expands to {kind: <value>}.
-    required:
-      - format
-      - parser
-    properties:
-      format:
-        description: >-
-          Template rendering engine. String shorthand (e.g. "jinja2")
-          expands to {kind: "jinja2"}.
-        anyOf:
-          - type: string
-            oneOf:
-              - const: jinja2
-                description: Jinja2 template engine — Python-style syntax with filters and control flow.
-              - const: mustache
-                description: Mustache — logic-less templates with {{variable}} syntax.
-              - const: handlebars
-                description: Handlebars — extends Mustache with helpers and block expressions.
-              - const: nunjucks
-                description: Nunjucks — JavaScript port of Jinja2 with full feature parity.
-          - $ref: "#/definitions/format"
-      parser:
-        description: >-
-          Parser for processing the rendered template into API-compatible
-          format. String shorthand (e.g. "prompty") expands to {kind: "prompty"}.
-        anyOf:
-          - type: string
-            oneOf:
-              - const: prompty
-                description: Prompty parser — splits template output into role-based messages using role markers (system:, user:, etc.).
-              - const: plain
-                description: Plain parser — passes the rendered template through as a single string with no role splitting.
-          - $ref: "#/definitions/parser"
+    $ref: Template.yaml
+    description: Template configuration for prompt rendering
+  instructions:
+    type: string
+    default: ""
+    description: Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
+required:
+  - name
+  - model
+description: |-
+  A Prompty is a markdown file format for LLM prompts. The frontmatter defines
+  structured metadata including model configuration, input/output schemas, tools,
+  and template settings. The markdown body becomes the instructions.
 
-  format:
-    type: object
-    description: Template format definition.
-    required:
-      - kind
-    properties:
-      kind:
-        type: string
-        default: "*"
-        description: Template rendering engine.
-        oneOf:
-          - const: jinja2
-            description: Jinja2 template engine — Python-style syntax with filters and control flow.
-          - const: mustache
-            description: Mustache — logic-less templates with {{variable}} syntax.
-          - const: handlebars
-            description: Handlebars — extends Mustache with helpers and block expressions.
-          - const: nunjucks
-            description: Nunjucks — JavaScript port of Jinja2 with full feature parity.
-      strict:
-        type: boolean
-        default: false
-        description: Whether the template can emit structural text for parsing output.
-      options:
-        type: object
-        additionalProperties: true
-        description: Options for the template engine.
-
-  parser:
-    type: object
-    description: Template parser definition.
-    required:
-      - kind
-    properties:
-      kind:
-        type: string
-        default: "*"
-        description: Parser used to process the rendered template.
-        oneOf:
-          - const: prompty
-            description: Prompty parser — splits template output into role-based messages using role markers (system:, user:, etc.).
-          - const: plain
-            description: Plain parser — passes the rendered template through as a single string with no role splitting.
-      options:
-        type: object
-        additionalProperties: true
-        description: Options for the parser.
-
-  # ── Tool ────────────────────────────────────────────────────────────────
-  tool:
-    type: object
-    description: >-
-      A tool the model can invoke during execution. Discriminated by "kind".
-    required:
-      - name
-      - kind
-    properties:
-      name:
-        type: string
-        description: >-
-          Tool name. For function tools this is the function name,
-          otherwise it is the type identifier.
-      kind:
-        type: string
-        description: >-
-          Tool kind identifier.
-        oneOf:
-          - const: function
-            description: A function tool whose parameters are defined inline. Converted to the provider's function-calling wire format.
-          - const: openapi
-            description: A tool backed by an OpenAPI specification. Operations are resolved from the spec.
-          - const: mcp
-            description: A tool provided by a Model Context Protocol (MCP) server.
-          - const: custom
-            description: A custom tool with arbitrary configuration for provider-specific or user-defined types.
-          - const: web_search
-            description: A web search tool for retrieving information from the internet.
-          - const: file_search
-            description: A file search / retrieval tool for searching through uploaded files.
-          - const: code_interpreter
-            description: A code interpreter tool that can execute code in a sandboxed environment.
-      description:
-        type: string
-        description: Short description of the tool.
-      bindings:
-        description: Tool argument bindings to input properties.
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/definitions/binding"
-          - type: object
-            additionalProperties:
-              $ref: "#/definitions/binding"
-        default: []
-      # Function tool properties
-      parameters:
-        $ref: "#/definitions/propertySchema"
-        description: Schema for the function's input parameters (function tools).
-      strict:
-        type: boolean
-        description: >-
-          When true, the model must produce arguments that exactly match
-          the parameter schema (function tools, OpenAI strict mode).
-      # OpenAPI / MCP tool properties
-      connection:
-        $ref: "#/definitions/connection"
-        description: Connection configuration for the tool.
-      specification:
-        type: string
-        description: >-
-          Path or URL to the OpenAPI specification (openapi tools).
-          Relative paths are resolved from the .prompty file location.
-      serverName:
-        type: string
-        description: Name of the MCP server providing this tool (mcp tools).
-      serverDescription:
-        type: string
-        description: Description of the MCP server (mcp tools).
-    additionalProperties: true
-
-  # ── Binding ─────────────────────────────────────────────────────────────
-  binding:
-    type: object
-    description: Binds a tool parameter to an input property.
-    required:
-      - name
-      - input
-    properties:
-      name:
-        type: string
-        description: Name of the binding.
-      input:
-        type: string
-        description: The input property that will be bound to the tool parameter argument.
+  This is the single root type for the Prompty schema — there is no abstract base
+  class or kind discriminator. A .prompty file always produces a Prompty instance.

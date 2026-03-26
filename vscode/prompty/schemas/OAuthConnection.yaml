@@ -1,0 +1,37 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OAuthConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: oauth
+    description: The connection kind for OAuth authentication
+  endpoint:
+    type: string
+    description: The endpoint URL for the service
+  clientId:
+    type: string
+    description: The OAuth client ID
+  clientSecret:
+    type: string
+    description: The OAuth client secret
+  tokenUrl:
+    type: string
+    description: The OAuth token endpoint URL
+  scopes:
+    type: array
+    items:
+      type: string
+    description: OAuth scopes to request
+required:
+  - kind
+  - endpoint
+  - clientId
+  - clientSecret
+  - tokenUrl
+allOf:
+  - $ref: Connection.yaml
+description: |-
+  Connection configuration using OAuth 2.0 client credentials.
+  Useful for tools and services that require OAuth authentication,
+  such as MCP servers, OpenAPI endpoints, or other REST APIs.

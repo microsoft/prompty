@@ -1,6 +1,12 @@
 emit:
+  - "@typespec/json-schema"
   - "agentschema-emitter"
 options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{cwd}/../vscode/prompty/schemas"
+    emitAllModels: true
+    emitAllRefs: true
+    file-type: yaml
   "agentschema-emitter":
     emitter-output-dir: "{cwd}/tsp-output"
     root-object: "Prompty.Prompty"

@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FoundryConnection.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: foundry
+    description: The connection kind for Foundry project access
+  endpoint:
+    type: string
+    description: The Foundry project endpoint URL
+  name:
+    type: string
+    description: The named connection within the Foundry project
+  connectionType:
+    type: string
+    description: The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
+required:
+  - kind
+  - endpoint
+allOf:
+  - $ref: Connection.yaml
+description: |-
+  Connection configuration for Microsoft Foundry projects.
+  Provides project-scoped access to models, tools, and services
+  via Entra ID (DefaultAzureCredential) authentication.

@@ -12,6 +12,10 @@ properties:
         const: key
       - type: string
         const: anonymous
+      - type: string
+        const: foundry
+      - type: string
+        const: oauth
     description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
   authenticationMode:
     anyOf:
