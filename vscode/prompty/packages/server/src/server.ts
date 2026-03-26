@@ -340,7 +340,41 @@ interface InputProperty {
 	description: string;
 	kind: string;
 	defaultValue: string;
+	example: string;
 	required: boolean;
+}
+
+/** Infer a property kind from a JS value's type. */
+function inferKind(value: unknown): string {
+	switch (typeof value) {
+		case 'string': return 'string';
+		case 'number': return Number.isInteger(value) ? 'integer' : 'float';
+		case 'boolean': return 'boolean';
+		default:
+			if (Array.isArray(value)) return 'array';
+			if (value && typeof value === 'object') return 'object';
+			return '';
+	}
+}
+
+/** Build an InputProperty from raw parsed fields. Infers kind from default/example when not explicit. */
+function toInputProperty(
+	name: string,
+	kind: unknown,
+	description: unknown,
+	defaultValue: unknown,
+	example: unknown,
+	required: unknown,
+): InputProperty {
+	const resolvedKind = kind ? String(kind) : inferKind(defaultValue ?? example);
+	return {
+		name,
+		description: String(description ?? ''),
+		kind: resolvedKind,
+		defaultValue: defaultValue != null ? String(defaultValue) : '',
+		example: example != null ? String(example) : '',
+		required: Boolean(required),
+	};
 }
 
 /** Extract input property names from the parsed frontmatter inputs section. */
@@ -364,13 +398,14 @@ function extractInputNames(
 		// Array format: inputs: [{ name: "foo", kind: "string", ... }]
 		for (const item of inputs) {
 			if (item && typeof item === 'object' && 'name' in item) {
-				results.push({
-					name: String(item.name ?? ''),
-					description: String(item.description ?? ''),
-					kind: String(item.kind ?? ''),
-					defaultValue: item.default != null ? String(item.default) : '',
-					required: Boolean(item.required),
-				});
+				results.push(toInputProperty(
+					String(item.name ?? ''),
+					item.kind,
+					item.description,
+					item.default,
+					item.example,
+					item.required,
+				));
 			}
 		}
 	} else if (typeof inputs === 'object' && inputs !== null) {
@@ -380,35 +415,24 @@ function extractInputNames(
 				// Legacy inputSchema.properties array
 				for (const item of value) {
 					if (item && typeof item === 'object' && 'name' in item) {
-						results.push({
-							name: String(item.name ?? ''),
-							description: String(item.description ?? ''),
-							kind: String(item.kind ?? ''),
-							defaultValue: item.default != null ? String(item.default) : '',
-							required: Boolean(item.required),
-						});
+						results.push(toInputProperty(
+							String(item.name ?? ''),
+							item.kind,
+							item.description,
+							item.default,
+							item.example,
+							item.required,
+						));
 					}
 				}
 				return results;
 			}
 			if (value && typeof value === 'object') {
 				const v = value as Record<string, unknown>;
-				results.push({
-					name,
-					description: String(v.description ?? ''),
-					kind: String(v.kind ?? ''),
-					defaultValue: v.default != null ? String(v.default) : '',
-					required: Boolean(v.required),
-				});
+				results.push(toInputProperty(name, v.kind, v.description, v.default, v.example, v.required));
 			} else {
-				// Shorthand: inputs: { foo: "default value" }
-				results.push({
-					name,
-					description: '',
-					kind: typeof value === 'string' ? 'string' : '',
-					defaultValue: value != null ? String(value) : '',
-					required: false,
-				});
+				// Shorthand: inputs: { foo: "example value" }
+				results.push(toInputProperty(name, undefined, undefined, undefined, value, false));
 			}
 		}
 	}
@@ -631,6 +655,9 @@ function getTemplateVariableHover(
 				}
 				if (input.defaultValue !== undefined && input.defaultValue !== '') {
 					parts.push(`**Default:** \`${input.defaultValue}\``);
+				}
+				if (input.example !== undefined && input.example !== '') {
+					parts.push(`**Example:** \`${input.example}\``);
 				}
 				if (input.required) {
 					parts.push('*Required*');
