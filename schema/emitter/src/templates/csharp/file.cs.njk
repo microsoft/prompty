@@ -89,13 +89,10 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
                 }
                 else
                 {
-                    // Value is a scalar, use it as the primary property
-                    var newDict = new Dictionary<string, object?>
-                    {
-                        ["name"] = kvp.Key,
-                        ["{{ collection.type[0] }}"] = kvp.Value
-                    };
-                    result.Add({{ collection.prop.typeName.name }}.Load(newDict, context));
+                    // Value is a scalar — let Load() infer kind from value
+                    var prop = {{ collection.prop.typeName.name }}.Load(kvp.Value, context);
+                    prop.Name = kvp.Key;
+                    result.Add(prop);
                 }
             }
         }

@@ -200,12 +200,10 @@ export class Prompty {
           (value as Record<string, unknown>)["name"] = key;
           result.push(Property.load(value as Record<string, unknown>, context));
         } else {
-          // Value is a scalar, use it as the primary property
-          const newObj: Record<string, unknown> = {
-            name: key,
-            kind: value,
-          };
-          result.push(Property.load(newObj, context));
+          // Value is a scalar — let Property.load() infer kind from value
+          const prop = Property.load(value as Record<string, unknown>, context);
+          prop.name = key;
+          result.push(prop);
         }
       }
     } else if (Array.isArray(data)) {
@@ -238,11 +236,10 @@ export class Prompty {
           (value as Record<string, unknown>)["name"] = key;
           result.push(Property.load(value as Record<string, unknown>, context));
         } else {
-          // Value is a scalar, use it as the primary property
-          const newObj: Record<string, unknown> = {
-            name: key,
-          };
-          result.push(Property.load(newObj, context));
+          // Value is a scalar — let Property.load() infer kind from value
+          const prop = Property.load(value as Record<string, unknown>, context);
+          prop.name = key;
+          result.push(prop);
         }
       }
     } else if (Array.isArray(data)) {
@@ -275,12 +272,10 @@ export class Prompty {
           (value as Record<string, unknown>)["name"] = key;
           result.push(Tool.load(value as Record<string, unknown>, context));
         } else {
-          // Value is a scalar, use it as the primary property
-          const newObj: Record<string, unknown> = {
-            name: key,
-            kind: value,
-          };
-          result.push(Tool.load(newObj, context));
+          // Value is a scalar — let Tool.load() infer kind from value
+          const prop = Tool.load(value as Record<string, unknown>, context);
+          prop.name = key;
+          result.push(prop);
         }
       }
     } else if (Array.isArray(data)) {

@@ -42,11 +42,9 @@ def _make_agent() -> Prompty:
                 "name": "get_weather",
                 "kind": "function",
                 "description": "Get weather",
-                "parameters": {
-                    "properties": [
-                        {"name": "location", "kind": "string", "description": "City"},
-                    ]
-                },
+                "parameters": [
+                    {"name": "location", "kind": "string", "description": "City"},
+                ],
             }
         ],
         "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},

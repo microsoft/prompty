@@ -133,12 +133,10 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
           (value as Record<string, unknown>)["name"] = key;
           result.push({{ collection.prop.typeName.name }}.load(value as Record<string, unknown>, context));
         } else {
-          // Value is a scalar, use it as the primary property
-          const newObj: Record<string, unknown> = {
-            name: key,
-            {% if collection.type[0] %}"{{ collection.type[0] }}": value{% endif %}
-          };
-          result.push({{ collection.prop.typeName.name }}.load(newObj, context));
+          // Value is a scalar — let {{ collection.prop.typeName.name }}.load() infer kind from value
+          const prop = {{ collection.prop.typeName.name }}.load(value as Record<string, unknown>, context);
+          prop.name = key;
+          result.push(prop);
         }
       }
     } else if (Array.isArray(data)) {

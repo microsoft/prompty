@@ -107,16 +107,16 @@ class Prompty:
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
-            # convert simple named inputs to list of Property
-            result = []
+            result: list[Property] = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    prop = Property.load({"name": k, **v}, context)
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
+                    # Scalar — let Property.load() infer kind from value
+                    prop = Property.load(v, context)
+                    prop.name = k
+                result.append(prop)
+            return result
         return [Property.load(item, context) for item in data]
 
     @staticmethod
@@ -156,16 +156,16 @@ class Prompty:
     @staticmethod
     def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
-            # convert simple named outputs to list of Property
-            result = []
+            result: list[Property] = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    prop = Property.load({"name": k, **v}, context)
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
-            data = result
+                    # Scalar — let Property.load() infer kind from value
+                    prop = Property.load(v, context)
+                    prop.name = k
+                result.append(prop)
+            return result
         return [Property.load(item, context) for item in data]
 
     @staticmethod
@@ -205,16 +205,16 @@ class Prompty:
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
         if isinstance(data, dict):
-            # convert simple named tools to list of Tool
-            result = []
+            result: list[Tool] = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    prop = Tool.load({"name": k, **v}, context)
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
+                    # Scalar — let Tool.load() infer kind from value
+                    prop = Tool.load(v, context)
+                    prop.name = k
+                result.append(prop)
+            return result
         return [Tool.load(item, context) for item in data]
 
     @staticmethod

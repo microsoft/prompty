@@ -92,16 +92,16 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
     @staticmethod
     def load_{{ collection.prop.name }}(data: dict | list, context: Optional[LoadContext]) -> list[{{ collection.prop.typeName.name }}]:
         if isinstance(data, dict):
-            # convert simple named {{ collection.prop.name }} to list of {{ collection.prop.typeName.name }}
-            result = []
+            result: list[{{ collection.prop.typeName.name }}] = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    prop = {{ collection.prop.typeName.name }}.load({"name": k, **v}, context)
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "{{collection.type[0]}}": v})
-            data = result
+                    # Scalar — let {{ collection.prop.typeName.name }}.load() infer kind from value
+                    prop = {{ collection.prop.typeName.name }}.load(v, context)
+                    prop.name = k
+                result.append(prop)
+            return result
         return [{{ collection.prop.typeName.name }}.load(item, context) for item in data]
 
     @staticmethod

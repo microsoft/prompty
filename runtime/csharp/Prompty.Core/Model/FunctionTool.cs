@@ -104,13 +104,10 @@ public class FunctionTool : Tool
                 }
                 else
                 {
-                    // Value is a scalar, use it as the primary property
-                    var newDict = new Dictionary<string, object?>
-                    {
-                        ["name"] = kvp.Key,
-                        ["example"] = kvp.Value
-                    };
-                    result.Add(Property.Load(newDict, context));
+                    // Value is a scalar — let Load() infer kind from value
+                    var prop = Property.Load(kvp.Value, context);
+                    prop.Name = kvp.Key;
+                    result.Add(prop);
                 }
             }
         }

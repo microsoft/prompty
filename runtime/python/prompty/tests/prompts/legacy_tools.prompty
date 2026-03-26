@@ -13,10 +13,9 @@ model:
         kind: function
         description: Get weather
         parameters:
-          properties:
-            - name: location
-              kind: string
-              description: The city
+          - name: location
+            kind: string
+            description: The city
 inputs:
   question: What is the weather?
 ---
