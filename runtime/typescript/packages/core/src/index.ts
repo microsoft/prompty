@@ -88,6 +88,7 @@ export {
   sanitizeValue,
   toSerializable,
   consoleTracer,
+  PromptyTracer,
   type TracerBackend,
   type TracerFactory,
   type SpanEmitter,

@@ -1,5 +1,5 @@
-import { ExtensionContext, Uri, Disposable, window, workspace } from 'vscode';
-import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, consoleTracer } from '@prompty/core';
+import { ExtensionContext, Uri, Disposable, window, workspace, commands } from 'vscode';
+import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, PromptyTracer, traceSpan } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
@@ -28,11 +28,19 @@ export class PromptyController implements Disposable {
 		this.outputChannel.appendLine(`Running: ${fileName}`);
 		this.outputChannel.appendLine(`${'─'.repeat(60)}`);
 
+		// Determine the .runs output directory (workspace root)
+		const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath
+			?? path.dirname(filePath);
+		const runsDir = path.join(workspaceRoot, '.runs');
+
+		// Create a file-writing tracer for .tracy output
+		const promptyTracer = new PromptyTracer({ outputDir: runsDir });
+
 		try {
 			this.loadEnvFile(filePath);
 			await this.bridgeConnections();
 
-			// Register a tracer that pipes to the output channel
+			// Register tracers: output channel + file writer
 			Tracer.add('vscode-output', (signature) => {
 				this.outputChannel.appendLine(`  [trace] ── ${signature}`);
 				return (key, value) => {
@@ -41,19 +49,48 @@ export class PromptyController implements Disposable {
 					this.outputChannel.appendLine(`  [trace]    ${key}: ${display}`);
 				};
 			});
+			Tracer.add('prompty-file', promptyTracer.factory);
 
-			// Load the agent, apply default connection if underspecified, then execute
-			const agent = load(filePath);
-			await this.applyDefaultConnection(agent);
-
+			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)
+			const promptName = path.basename(filePath, '.prompty');
 			const startTime = Date.now();
-			this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
-			this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
-			this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
-			const result = await execute(agent);
+			const result = await traceSpan(promptName, async (emit) => {
+				emit('type', 'vscode');
+				emit('description', 'Prompty VS Code Execution');
+				emit('inputs', { prompt_path: filePath });
+
+				// Load
+				const agent = await traceSpan('load', async (loadEmit) => {
+					loadEmit('signature', 'prompty.load');
+					loadEmit('description', 'Load a prompty file.');
+					loadEmit('inputs', { prompty_file: filePath });
+					const a = load(filePath);
+					await this.applyDefaultConnection(a);
+					loadEmit('result', {
+						name: a.name ?? '',
+						description: a.description ?? '',
+						model: {
+							id: a.model?.id ?? '',
+							api: (a.model as any)?.apiType ?? 'chat',
+							provider: a.model?.provider ?? '',
+						},
+					});
+					return a;
+				});
+
+				this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
+				this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
+				this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
+
+				const executionResult = await execute(agent);
+				emit('result', executionResult);
+				return executionResult;
+			});
+
 			const elapsed = Date.now() - startTime;
 
 			Tracer.remove('vscode-output');
+			Tracer.remove('prompty-file');
 
 			this.outputChannel.appendLine(`\n✓ Completed in ${elapsed}ms\n`);
 
@@ -62,8 +99,25 @@ export class PromptyController implements Disposable {
 			} else {
 				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 			}
+
+			// Auto-open the .tracy file in the trace viewer
+			if (promptyTracer.lastTracePath) {
+				const traceUri = Uri.file(promptyTracer.lastTracePath);
+				this.outputChannel.appendLine(`  → Trace: ${promptyTracer.lastTracePath}`);
+				try {
+					await commands.executeCommand('vscode.openWith', traceUri, 'prompty.traceViewer');
+				} catch {
+					// Fall back to default text editor if custom editor isn't available
+					try {
+						await window.showTextDocument(traceUri, { preview: true, viewColumn: 2 });
+					} catch {
+						// Ignore — trace file is still on disk
+					}
+				}
+			}
 		} catch (error: unknown) {
 			Tracer.remove('vscode-output');
+			Tracer.remove('prompty-file');
 			const message = error instanceof Error ? error.message : String(error);
 			this.outputChannel.appendLine(`\n✗ Error: ${message}`);
 			window.showErrorMessage(`Prompty execution failed: ${message}`);
