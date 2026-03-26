@@ -13,8 +13,12 @@ import { traceSpan } from "@prompty/core";
 
 export class FoundryProcessor implements Processor {
   async process(agent: Prompty, response: unknown): Promise<unknown> {
-    return traceSpan("FoundryProcessor.process", async () => {
-      return processResponse(agent, response);
+    return traceSpan("FoundryProcessor", async (emit) => {
+      emit("signature", "prompty.foundry.processor.FoundryProcessor.invoke");
+      emit("inputs", { data: response });
+      const result = processResponse(agent, response);
+      emit("result", result);
+      return result;
     });
   }
 }

@@ -198,16 +198,10 @@ export async function process(
   agent: Prompty,
   response: unknown,
 ): Promise<unknown> {
+  // Delegates directly — the processor implementation creates its own trace span
   const provider = resolveProvider(agent);
   const processor = getProcessor(provider);
-
-  return traceSpan(processor.constructor?.name ?? "Processor", async (emit) => {
-    emit("signature", `prompty.processors.${processor.constructor?.name ?? "Processor"}.process`);
-    emit("inputs", response);
-    const result = await processor.process(agent, response);
-    emit("result", result);
-    return result;
-  });
+  return processor.process(agent, response);
 }
 
 // ---------------------------------------------------------------------------
@@ -290,19 +284,14 @@ export async function run(
     emit("description", "Execute LLM call and process response");
     emit("inputs", serializeMessages(messages));
 
-    // Wrap executor in its own trace span (matching Python's Executor.invoke frame)
-    const response = await traceSpan(executor.constructor?.name ?? "Executor", async (execEmit) => {
-      execEmit("signature", `prompty.executors.${executor.constructor?.name ?? "Executor"}.execute`);
-      execEmit("inputs", serializeMessages(messages));
-      const raw = await executor.execute(agent, messages);
-      execEmit("result", raw);
-      return raw;
-    });
+    // executor.execute() creates its own trace span (e.g. "FoundryExecutor", "OpenAIExecutor")
+    const response = await executor.execute(agent, messages);
 
     if (options?.raw) {
       emit("result", response);
       return response;
     }
+    // process() delegates to the provider's processor which creates its own trace span
     const result = await process(agent, response);
     emit("result", result);
     return result;

@@ -13,9 +13,9 @@
  */
 
 import type OpenAI from "openai";
-import type { Prompty } from "@prompty/core";
+import type { Prompty, Message } from "@prompty/core";
 import { FoundryConnection, ReferenceConnection } from "@prompty/core";
-import { getConnection } from "@prompty/core";
+import { getConnection, traceSpan } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
 
 /**
@@ -28,6 +28,33 @@ function getResourceEndpoint(projectEndpoint: string): string {
 }
 
 export class FoundryExecutor extends OpenAIExecutor {
+  override async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+    return traceSpan("FoundryExecutor", async (emit) => {
+      emit("signature", "prompty.foundry.executor.FoundryExecutor.invoke");
+      emit("inputs", { data: messages });
+      const client = this.resolveClient(agent);
+      const apiType = agent.model?.apiType ?? "chat";
+
+      let result: unknown;
+      switch (apiType) {
+        case "chat":
+        case "agent":
+          result = await this.executeChat(client, agent, messages);
+          break;
+        case "embedding":
+          result = await this.executeEmbedding(client, agent, messages);
+          break;
+        case "image":
+          result = await this.executeImage(client, agent, messages);
+          break;
+        default:
+          throw new Error(`Unsupported apiType: ${apiType}`);
+      }
+      emit("result", result);
+      return result;
+    });
+  }
+
   protected override resolveClient(agent: Prompty): OpenAI {
     const conn = agent.model?.connection;
 

@@ -13,8 +13,12 @@ import { traceSpan } from "@prompty/core";
 
 export class OpenAIProcessor implements Processor {
   async process(agent: Prompty, response: unknown): Promise<unknown> {
-    return traceSpan("OpenAIProcessor.process", async (emit) => {
-      return processResponse(agent, response);
+    return traceSpan("OpenAIProcessor", async (emit) => {
+      emit("signature", "prompty.openai.processor.OpenAIProcessor.invoke");
+      emit("inputs", { data: response });
+      const result = processResponse(agent, response);
+      emit("result", result);
+      return result;
     });
   }
 }

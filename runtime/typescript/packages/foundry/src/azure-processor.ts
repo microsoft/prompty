@@ -13,8 +13,12 @@ import { traceSpan } from "@prompty/core";
 
 export class AzureProcessor implements Processor {
   async process(agent: Prompty, response: unknown): Promise<unknown> {
-    return traceSpan("AzureProcessor.process", async (emit) => {
-      return processResponse(agent, response);
+    return traceSpan("AzureProcessor", async (emit) => {
+      emit("signature", "prompty.azure.processor.AzureProcessor.invoke");
+      emit("inputs", { data: response });
+      const result = processResponse(agent, response);
+      emit("result", result);
+      return result;
     });
   }
 }

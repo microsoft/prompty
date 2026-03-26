@@ -17,24 +17,30 @@ import { buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
   async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
-    return traceSpan("OpenAIExecutor.execute", async (emit) => {
+    return traceSpan("OpenAIExecutor", async (emit) => {
+      emit("signature", "prompty.openai.executor.OpenAIExecutor.invoke");
       const client = this.resolveClient(agent);
       const apiType = agent.model?.apiType ?? "chat";
 
-      emit("api_type", apiType);
-      emit("model", agent.model?.id ?? "unknown");
+      emit("inputs", { data: messages });
 
+      let result: unknown;
       switch (apiType) {
         case "chat":
         case "agent":
-          return this.executeChat(client, agent, messages);
+          result = await this.executeChat(client, agent, messages);
+          break;
         case "embedding":
-          return this.executeEmbedding(client, agent, messages);
+          result = await this.executeEmbedding(client, agent, messages);
+          break;
         case "image":
-          return this.executeImage(client, agent, messages);
+          result = await this.executeImage(client, agent, messages);
+          break;
         default:
           throw new Error(`Unsupported apiType: ${apiType}`);
       }
+      emit("result", result);
+      return result;
     });
   }
 
@@ -61,7 +67,7 @@ export class OpenAIExecutor implements Executor {
     return kwargs;
   }
 
-  private async executeChat(
+  protected async executeChat(
     client: OpenAI,
     agent: Prompty,
     messages: Message[],
@@ -70,7 +76,7 @@ export class OpenAIExecutor implements Executor {
     return client.chat.completions.create(args as unknown as Parameters<typeof client.chat.completions.create>[0]);
   }
 
-  private async executeEmbedding(
+  protected async executeEmbedding(
     client: OpenAI,
     agent: Prompty,
     data: unknown,
@@ -79,7 +85,7 @@ export class OpenAIExecutor implements Executor {
     return client.embeddings.create(args as unknown as Parameters<typeof client.embeddings.create>[0]);
   }
 
-  private async executeImage(
+  protected async executeImage(
     client: OpenAI,
     agent: Prompty,
     data: unknown,
