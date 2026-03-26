@@ -59,6 +59,25 @@ export class PromptyController implements Disposable {
 			this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
 			this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
 
+			// Build sample inputs from example values on inputSchema properties.
+			// This is extension-only behavior — the core runtime does NOT treat
+			// examples as defaults; it only fills from `default`.
+			const sampleInputs: Record<string, unknown> = {};
+			if (agent.inputs) {
+				for (const prop of agent.inputs) {
+					if (!prop.name) continue;
+					if (prop.example !== undefined) {
+						sampleInputs[prop.name] = prop.example;
+					} else if (prop.default !== undefined) {
+						sampleInputs[prop.name] = prop.default;
+					}
+				}
+			}
+
+			if (Object.keys(sampleInputs).length > 0) {
+				this.outputChannel.appendLine(`  → Inputs (from examples): ${JSON.stringify(sampleInputs)}`);
+			}
+
 			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)
 			const promptName = path.basename(filePath, '.prompty');
 			const startTime = Date.now();
@@ -66,9 +85,9 @@ export class PromptyController implements Disposable {
 				emit('type', 'vscode');
 				emit('signature', 'prompty.vscode.execute');
 				emit('description', 'Prompty VS Code Execution');
-				emit('inputs', { prompt_path: filePath, inputs: {} });
+				emit('inputs', { prompt_path: filePath, inputs: sampleInputs });
 
-				const executionResult = await execute(agent);
+				const executionResult = await execute(agent, sampleInputs);
 				emit('result', executionResult);
 				return executionResult;
 			});
