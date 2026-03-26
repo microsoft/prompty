@@ -34,18 +34,28 @@ export class FoundryExecutor extends OpenAIExecutor {
       emit("signature", "prompty.foundry.executor.FoundryExecutor.invoke");
       emit("inputs", { data: messages });
 
-      // Trace client construction
-      const client = await traceSpan("AzureOpenAI", async (ctorEmit) => {
-        ctorEmit("signature", "AzureOpenAI.ctor");
-        const kwargs = this.clientKwargs(agent);
-        ctorEmit("inputs", sanitizeValue("ctor", kwargs));
-        const c = this.resolveClient(agent);
-        ctorEmit("result", c.constructor?.name ?? "AzureOpenAI");
-        return c;
+      const client = this.resolveClient(agent);
+      const clientName = client.constructor?.name ?? "OpenAI";
+
+      // Trace what client we resolved and how
+      await traceSpan(clientName, async (ctorEmit) => {
+        ctorEmit("signature", `${clientName}.ctor`);
+        const conn = agent.model?.connection;
+        if (conn instanceof ReferenceConnection) {
+          ctorEmit("inputs", { source: "reference", name: conn.name });
+        } else if (conn instanceof FoundryConnection) {
+          ctorEmit("inputs", sanitizeValue("ctor", {
+            endpoint: conn.endpoint ? getResourceEndpoint(conn.endpoint) : undefined,
+            deployment: agent.model?.id,
+            apiVersion: "2025-04-01-preview",
+            auth: "DefaultAzureCredential",
+          }));
+        }
+        ctorEmit("result", clientName);
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.dispatchApiCall(client, agent, messages, apiType);
+      const result = await this.dispatchApiCall(client, clientName, agent, messages, apiType);
       emit("result", result);
       return result;
     });
@@ -53,6 +63,7 @@ export class FoundryExecutor extends OpenAIExecutor {
 
   private async dispatchApiCall(
     client: OpenAI,
+    clientName: string,
     agent: Prompty,
     messages: Message[],
     apiType: string,
@@ -61,37 +72,37 @@ export class FoundryExecutor extends OpenAIExecutor {
       case "chat":
       case "agent": {
         const args = buildChatArgs(agent, messages);
-        return traceSpan("create", async (emit) => {
-          emit("signature", "AzureOpenAI.chat.completions.create");
-          emit("inputs", sanitizeValue("create", args));
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.chat.completions.create`);
+          callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
             args as unknown as Parameters<typeof client.chat.completions.create>[0],
           );
-          emit("result", result);
+          callEmit("result", result);
           return result;
         });
       }
       case "embedding": {
         const args = buildEmbeddingArgs(agent, messages);
-        return traceSpan("create", async (emit) => {
-          emit("signature", "AzureOpenAI.embeddings.create");
-          emit("inputs", sanitizeValue("create", args));
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.embeddings.create`);
+          callEmit("inputs", sanitizeValue("create", args));
           const result = await client.embeddings.create(
             args as unknown as Parameters<typeof client.embeddings.create>[0],
           );
-          emit("result", result);
+          callEmit("result", result);
           return result;
         });
       }
       case "image": {
         const args = buildImageArgs(agent, messages);
-        return traceSpan("generate", async (emit) => {
-          emit("signature", "AzureOpenAI.images.generate");
-          emit("inputs", sanitizeValue("generate", args));
+        return traceSpan("generate", async (callEmit) => {
+          callEmit("signature", `${clientName}.images.generate`);
+          callEmit("inputs", sanitizeValue("generate", args));
           const result = await client.images.generate(
             args as unknown as Parameters<typeof client.images.generate>[0],
           );
-          emit("result", result);
+          callEmit("result", result);
           return result;
         });
       }

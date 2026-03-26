@@ -17,18 +17,23 @@ export class AzureExecutor extends OpenAIExecutor {
       emit("signature", "prompty.azure.executor.AzureExecutor.invoke");
       emit("inputs", { data: messages });
 
-      // Trace client construction
-      const client = await traceSpan("AzureOpenAI", async (ctorEmit) => {
-        ctorEmit("signature", "AzureOpenAI.ctor");
-        const kwargs = this.clientKwargs(agent);
-        ctorEmit("inputs", sanitizeValue("ctor", kwargs));
-        const c = this.resolveClient(agent);
-        ctorEmit("result", c.constructor?.name ?? "AzureOpenAI");
-        return c;
+      const client = this.resolveClient(agent);
+      const clientName = client.constructor?.name ?? "AzureOpenAI";
+
+      // Trace what client we resolved and how
+      await traceSpan(clientName, async (ctorEmit) => {
+        ctorEmit("signature", `${clientName}.ctor`);
+        const conn = agent.model?.connection;
+        if (conn instanceof ReferenceConnection) {
+          ctorEmit("inputs", { source: "reference", name: conn.name });
+        } else {
+          ctorEmit("inputs", sanitizeValue("ctor", this.clientKwargs(agent)));
+        }
+        ctorEmit("result", clientName);
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.dispatchApiCall(client, agent, messages, apiType);
+      const result = await this.dispatchApiCall(client, clientName, agent, messages, apiType);
       emit("result", result);
       return result;
     });
@@ -36,6 +41,7 @@ export class AzureExecutor extends OpenAIExecutor {
 
   private async dispatchApiCall(
     client: OpenAI,
+    clientName: string,
     agent: Prompty,
     messages: Message[],
     apiType: string,
@@ -45,7 +51,7 @@ export class AzureExecutor extends OpenAIExecutor {
       case "agent": {
         const args = buildChatArgs(agent, messages);
         return traceSpan("create", async (callEmit) => {
-          callEmit("signature", "AzureOpenAI.chat.completions.create");
+          callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
             args as unknown as Parameters<typeof client.chat.completions.create>[0],
@@ -57,7 +63,7 @@ export class AzureExecutor extends OpenAIExecutor {
       case "embedding": {
         const args = buildEmbeddingArgs(agent, messages);
         return traceSpan("create", async (callEmit) => {
-          callEmit("signature", "AzureOpenAI.embeddings.create");
+          callEmit("signature", `${clientName}.embeddings.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.embeddings.create(
             args as unknown as Parameters<typeof client.embeddings.create>[0],
@@ -69,7 +75,7 @@ export class AzureExecutor extends OpenAIExecutor {
       case "image": {
         const args = buildImageArgs(agent, messages);
         return traceSpan("generate", async (callEmit) => {
-          callEmit("signature", "AzureOpenAI.images.generate");
+          callEmit("signature", `${clientName}.images.generate`);
           callEmit("inputs", sanitizeValue("generate", args));
           const result = await client.images.generate(
             args as unknown as Parameters<typeof client.images.generate>[0],

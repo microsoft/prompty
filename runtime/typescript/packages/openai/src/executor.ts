@@ -21,18 +21,23 @@ export class OpenAIExecutor implements Executor {
       emit("signature", "prompty.openai.executor.OpenAIExecutor.invoke");
       emit("inputs", { data: messages });
 
-      // Trace client construction
-      const client = await traceSpan("OpenAI", async (ctorEmit) => {
-        ctorEmit("signature", "OpenAI.ctor");
-        const kwargs = this.clientKwargs(agent);
-        ctorEmit("inputs", sanitizeValue("ctor", kwargs));
-        const c = this.resolveClient(agent);
-        ctorEmit("result", c.constructor?.name ?? "OpenAI");
-        return c;
+      const client = this.resolveClient(agent);
+      const clientName = client.constructor?.name ?? "OpenAI";
+
+      // Trace what client we resolved and how
+      await traceSpan(clientName, async (ctorEmit) => {
+        ctorEmit("signature", `${clientName}.ctor`);
+        const conn = agent.model?.connection;
+        if (conn instanceof ReferenceConnection) {
+          ctorEmit("inputs", { source: "reference", name: conn.name });
+        } else {
+          ctorEmit("inputs", sanitizeValue("ctor", this.clientKwargs(agent)));
+        }
+        ctorEmit("result", clientName);
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.executeApiCall(client, agent, messages, apiType);
+      const result = await this.executeApiCall(client, clientName, agent, messages, apiType);
       emit("result", result);
       return result;
     });
@@ -41,60 +46,52 @@ export class OpenAIExecutor implements Executor {
   /** Dispatch to the appropriate API and trace the call. */
   private async executeApiCall(
     client: OpenAI,
+    clientName: string,
     agent: Prompty,
     messages: Message[],
     apiType: string,
   ): Promise<unknown> {
     switch (apiType) {
       case "chat":
-      case "agent":
-        return this.executeChatTraced(client, agent, messages);
-      case "embedding":
-        return this.executeEmbeddingTraced(client, agent, messages);
-      case "image":
-        return this.executeImageTraced(client, agent, messages);
+      case "agent": {
+        const args = buildChatArgs(agent, messages);
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.chat.completions.create`);
+          callEmit("inputs", sanitizeValue("create", args));
+          const result = await client.chat.completions.create(
+            args as unknown as Parameters<typeof client.chat.completions.create>[0],
+          );
+          callEmit("result", result);
+          return result;
+        });
+      }
+      case "embedding": {
+        const args = buildEmbeddingArgs(agent, messages);
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.embeddings.create`);
+          callEmit("inputs", sanitizeValue("create", args));
+          const result = await client.embeddings.create(
+            args as unknown as Parameters<typeof client.embeddings.create>[0],
+          );
+          callEmit("result", result);
+          return result;
+        });
+      }
+      case "image": {
+        const args = buildImageArgs(agent, messages);
+        return traceSpan("generate", async (callEmit) => {
+          callEmit("signature", `${clientName}.images.generate`);
+          callEmit("inputs", sanitizeValue("generate", args));
+          const result = await client.images.generate(
+            args as unknown as Parameters<typeof client.images.generate>[0],
+          );
+          callEmit("result", result);
+          return result;
+        });
+      }
       default:
         throw new Error(`Unsupported apiType: ${apiType}`);
     }
-  }
-
-  private async executeChatTraced(client: OpenAI, agent: Prompty, messages: Message[]): Promise<unknown> {
-    const args = buildChatArgs(agent, messages);
-    return traceSpan("create", async (emit) => {
-      emit("signature", `${client.constructor?.name ?? "OpenAI"}.chat.completions.create`);
-      emit("inputs", sanitizeValue("create", args));
-      const result = await client.chat.completions.create(
-        args as unknown as Parameters<typeof client.chat.completions.create>[0],
-      );
-      emit("result", result);
-      return result;
-    });
-  }
-
-  private async executeEmbeddingTraced(client: OpenAI, agent: Prompty, data: unknown): Promise<unknown> {
-    const args = buildEmbeddingArgs(agent, data);
-    return traceSpan("create", async (emit) => {
-      emit("signature", `${client.constructor?.name ?? "OpenAI"}.embeddings.create`);
-      emit("inputs", sanitizeValue("create", args));
-      const result = await client.embeddings.create(
-        args as unknown as Parameters<typeof client.embeddings.create>[0],
-      );
-      emit("result", result);
-      return result;
-    });
-  }
-
-  private async executeImageTraced(client: OpenAI, agent: Prompty, data: unknown): Promise<unknown> {
-    const args = buildImageArgs(agent, data);
-    return traceSpan("generate", async (emit) => {
-      emit("signature", `${client.constructor?.name ?? "OpenAI"}.images.generate`);
-      emit("inputs", sanitizeValue("generate", args));
-      const result = await client.images.generate(
-        args as unknown as Parameters<typeof client.images.generate>[0],
-      );
-      emit("result", result);
-      return result;
-    });
   }
 
   protected resolveClient(agent: Prompty): OpenAI {
