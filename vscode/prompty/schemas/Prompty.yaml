@@ -180,3 +180,4 @@ description: |-
 
   This is the single root type for the Prompty schema — there is no abstract base
   class or kind discriminator. A .prompty file always produces a Prompty instance.
+additionalProperties: false

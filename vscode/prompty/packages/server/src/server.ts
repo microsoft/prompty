@@ -81,50 +81,6 @@ async function getYamlDiagnostics(virtualDocument: VirtualDocument): Promise<Dia
 		}));
 }
 
-function checkV1Deprecations(document: TextDocument, metadata: DocumentMetadata): Diagnostic[] {
-	const diagnostics: Diagnostic[] = [];
-	const text = document.getText();
-	const lines = text.split(/\n|\r\n/);
-	const fmStart = metadata.frontMatterStart ?? 0;
-	const fmEnd = metadata.frontMatterEnd ?? lines.length;
-
-	const v1Mappings: { pattern: RegExp; message: string }[] = [
-		{ pattern: /^\s+api\s*:/, message: "Deprecated v1 property 'api'. Use 'apiType' under 'model' instead." },
-		{ pattern: /^\s+configuration\s*:/, message: "Deprecated v1 property 'configuration'. Use 'connection' under 'model' instead." },
-		{ pattern: /^\s+api_key\s*:/, message: "Deprecated v1 property 'api_key'. Use 'apiKey' (camelCase) under 'model.connection' instead." },
-		{ pattern: /^\s+azure_endpoint\s*:/, message: "Deprecated v1 property 'azure_endpoint'. Use 'endpoint' under 'model.connection' instead." },
-		{ pattern: /^\s+azure_deployment\s*:/, message: "Deprecated v1 property 'azure_deployment'. Use 'model.id' instead." },
-		{ pattern: /^\s+max_tokens\s*:/, message: "Deprecated v1 property 'max_tokens'. Use 'maxOutputTokens' under 'model.options' instead." },
-		{ pattern: /^\s+top_p\s*:/, message: "Deprecated v1 property 'top_p'. Use 'topP' (camelCase) under 'model.options' instead." },
-		{ pattern: /^\s+frequency_penalty\s*:/, message: "Deprecated v1 property 'frequency_penalty'. Use 'frequencyPenalty' under 'model.options' instead." },
-		{ pattern: /^\s+presence_penalty\s*:/, message: "Deprecated v1 property 'presence_penalty'. Use 'presencePenalty' under 'model.options' instead." },
-		{ pattern: /^inputs\s*:/, message: "Deprecated v1 property 'inputs'. Use 'inputSchema' with 'properties' array instead." },
-		{ pattern: /^outputs\s*:/, message: "Deprecated v1 property 'outputs'. Use 'outputSchema' instead." },
-		{ pattern: /^template\s*:\s*jinja2/, message: "Deprecated v1 template format. Use 'template: { format: { kind: jinja2 } }' instead." },
-		{ pattern: /^authors\s*:/, message: "Deprecated v1 property 'authors'. Move to 'metadata.authors' instead." },
-		{ pattern: /^tags\s*:/, message: "Deprecated v1 property 'tags'. Move to 'metadata.tags' instead." },
-		{ pattern: /^version\s*:/, message: "Deprecated v1 property 'version'. Move to 'metadata.version' instead." },
-	];
-
-	for (let i = fmStart + 1; i < fmEnd; i++) {
-		for (const mapping of v1Mappings) {
-			if (mapping.pattern.test(lines[i])) {
-				diagnostics.push({
-					severity: DiagnosticSeverity.Warning,
-					range: {
-						start: { line: i, character: 0 },
-						end: { line: i, character: lines[i].length },
-					},
-					message: mapping.message,
-					source: 'prompty',
-				});
-			}
-		}
-	}
-
-	return diagnostics;
-}
-
 /** Create a VirtualDocument that contains only the YAML frontmatter content (between --- delimiters). */
 function createFrontMatterVirtualDocument(
 	textDocument: TextDocument,
@@ -153,12 +109,6 @@ async function validateTextDocument(textDocument: TextDocument) {
 		}
 
 		const allDiagnostics = await getYamlDiagnostics(virtualDocument);
-
-		// Add v1 deprecation warnings
-		if (metadata.frontMatterContent) {
-			const v1Diagnostics = checkV1Deprecations(textDocument, metadata);
-			allDiagnostics.push(...v1Diagnostics);
-		}
 
 		// Add parse errors
 		for (const error of metadata.parseErrors) {
@@ -291,7 +241,7 @@ connection.onCompletion(async (textDocumentPosition) => {
 		}
 		const { line, character } = textDocumentPosition.position;
 
-		// Body section: complete {{input}} template variables from inputSchema
+		// Body section: complete {{input}} template variables from inputs
 		if (line > metadata.frontMatterEnd) {
 			const lineText = document.getText({
 				start: { line, character: 0 },
@@ -324,8 +274,8 @@ connection.onCompletion(async (textDocumentPosition) => {
 						return {
 							label: name,
 							kind: CompletionItemKind.Variable,
-							detail: `${detail} from inputSchema`,
-							documentation: description || `Input variable '${name}' defined in frontmatter inputSchema.`,
+							detail: `${detail} from inputs`,
+							documentation: description || `Input variable '${name}' defined in frontmatter inputs.`,
 							textEdit: {
 								range: {
 									start: { line, character: replaceStart },
@@ -393,7 +343,7 @@ interface InputProperty {
 	required: boolean;
 }
 
-/** Extract input property names from the frontmatter inputSchema section. */
+/** Extract input property names from the frontmatter inputs section. */
 function extractInputNames(
 	document: TextDocument,
 	metadata: DocumentMetadata
@@ -437,14 +387,14 @@ function extractInputNames(
 	for (const line of lines) {
 		const trimmed = line.trimStart();
 
-		// Detect inputSchema: section
-		if (/^inputSchema\s*:/.test(trimmed)) {
+		// Detect inputs: section (also support legacy inputSchema:)
+		if (/^inputs\s*:/.test(trimmed) || /^inputSchema\s*:/.test(trimmed)) {
 			inInputSchema = true;
-			inProperties = false;
+			inProperties = true;
 			continue;
 		}
 
-		// Exit inputSchema when we hit another top-level key
+		// Exit inputs when we hit another top-level key
 		if (inInputSchema && /^\S/.test(line) && !/^\s/.test(line)) {
 			flushProperty();
 			inInputSchema = false;
@@ -453,6 +403,7 @@ function extractInputNames(
 		}
 
 		if (inInputSchema) {
+			// Legacy nested properties: section (inputSchema.properties)
 			if (/^\s+properties\s*:/.test(line)) {
 				inProperties = true;
 				continue;
@@ -532,20 +483,19 @@ function getPromptySnippets(): CompletionItem[] {
 			sortText: '0_model_short',
 		},
 		{
-			label: 'inputSchema',
+			label: 'inputs',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			insertText: [
-				'inputSchema:',
-				'  properties:',
-				'    - name: ${1:input_name}',
-				'      kind: ${2|string,integer,float,boolean,object,array|}',
-				'      description: ${3:Description}',
-				'      default: ${4:default_value}',
+				'inputs:',
+				'  - name: ${1:input_name}',
+				'    kind: ${2|string,integer,float,boolean,object,array|}',
+				'    description: ${3:Description}',
+				'    default: ${4:default_value}',
 			].join('\n'),
-			detail: 'Input parameter schema',
+			detail: 'Input parameters',
 			documentation: 'Defines typed input parameters with defaults for template rendering.',
-			sortText: '0_inputSchema',
+			sortText: '0_inputs',
 		},
 		{
 			label: 'template (shorthand)',
@@ -702,7 +652,7 @@ function getTemplateVariableHover(
 		if (character >= start && character <= end) {
 			const varName = match[1];
 
-			// Look up in inputSchema
+			// Look up in inputs
 			const inputs = extractInputNames(document, metadata);
 			const input = inputs.find(i => i.name === varName);
 
@@ -719,10 +669,10 @@ function getTemplateVariableHover(
 				if (input.required) {
 					parts.push('*Required*');
 				}
-				parts.push('\n---\n*Defined in frontmatter `inputSchema`*');
+				parts.push('\n---\n*Defined in frontmatter `inputs`*');
 				md = parts.join('\n\n');
 			} else {
-				md = `### \`{{${varName}}}\`\n\nTemplate variable — not found in \`inputSchema\`. Make sure it is defined in the frontmatter.`;
+				md = `### \`{{${varName}}}\`\n\nTemplate variable — not found in \`inputs\`. Make sure it is defined in the frontmatter.`;
 			}
 
 			return {

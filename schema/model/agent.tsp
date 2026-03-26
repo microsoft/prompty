@@ -1,9 +1,12 @@
 import "agentschema-emitter";
+import "@typespec/json-schema";
 import "./core.tsp";
 import "./model.tsp";
 import "./properties.tsp";
 import "./tools.tsp";
 import "./template.tsp";
+
+using TypeSpec.JsonSchema;
 
 namespace Prompty;
 
@@ -15,6 +18,7 @@ namespace Prompty;
  * This is the single root type for the Prompty schema — there is no abstract base
  * class or kind discriminator. A .prompty file always produces a Prompty instance.
  */
+@extension("additionalProperties", false)
 model Prompty {
   // Identity & metadata
   @doc("Human-readable name of the prompt")
