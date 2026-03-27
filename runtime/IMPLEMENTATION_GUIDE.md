@@ -844,13 +844,15 @@ Accumulate by index: concatenate `function.name` and
 ## Tracing
 
 Tracing is opt-in and pluggable. The tracer registry
-holds named backends.
+holds named backends. Runtimes MUST support the
+`.tracy` file format for run visualization.
 
 ### Tracing Architecture
 
 ```text
 Tracer.add("console", console_tracer_fn)
 Tracer.add("otel", otel_tracer_fn)
+Tracer.add("prompty", prompty_tracer_fn)
 
 # Pipeline functions use:
 with Tracer.start("operation_name") as t:
@@ -861,36 +863,357 @@ with Tracer.start("operation_name") as t:
 
 ### Tracer Contract
 
-A tracer backend is a function/callable:
+A tracer backend is a **factory function**:
 
 ```text
-tracer_fn(operation_name: string) → ContextManager
+tracer_factory(span_name: string) → span_callback | null
 ```
 
-The context manager receives `(key, value)` calls
-during its lifetime.
+The factory is called when a new span starts. It
+returns a callback that receives `(key, value)` pairs
+during the span's lifetime. The special key `"__end__"`
+signals span completion.
 
-### What Gets Traced
+```text
+span_callback(key: string, value: any) → void
+```
 
-| Operation | Trace Name | Key Data |
-|-----------|-----------|----------|
-| Loading | `load` | path, agent name |
-| Rendering | `Renderer.render` | template type, inputs |
-| Parsing | `Parser.parse` | message count |
-| Execution | `chat.completions` | model, options, msgs |
-| Processing | `Processor.process` | response type |
-| Agent loop | `AgentLoop` | tools, iterations |
+### `.tracy` File Format
 
-### Serialization
+The `.tracy` file is a JSON document written by the
+`PromptyTracer` backend. It captures a complete
+execution trace for visualization in the VS Code
+extension's trace viewer.
 
-The `to_dict()` helper converts complex objects for
-tracing. Key rules:
+#### Top-Level Structure
 
-- Check for `model_dump()` (Pydantic v2) first.
-- Then `to_dict()` on the object itself.
-- Booleans before numbers (booleans are subtypes of
-  int in Python).
-- Dataclasses, dicts, lists, primitives all handled.
+```json
+{
+  "runtime": "typescript",
+  "version": "2.0.0",
+  "trace": { /* root trace frame */ }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `runtime` | string | Language runtime (`"python"`, `"typescript"`, `"csharp"`, etc.) |
+| `version` | string | Runtime version |
+| `trace` | object | Root trace frame (see Frame Structure) |
+
+#### File Naming
+
+```text
+<prompt-name>.<YYYYMMDD>.<HHmmss>.tracy
+```
+
+Example: `basic-chat.20260326.143507.tracy`
+
+Written to a `.runs/` directory in the workspace root.
+
+#### Frame Structure
+
+Every frame in the trace tree has the same shape:
+
+```json
+{
+  "name": "FoundryExecutor",
+  "signature": "prompty.foundry.executor.FoundryExecutor.invoke",
+  "description": "Optional human description",
+  "inputs": { /* what went in */ },
+  "result": { /* what came out */ },
+  "__time": {
+    "start": "2026-03-26T10:25:42.072706",
+    "end": "2026-03-26T10:25:46.358027",
+    "duration": 4285
+  },
+  "__usage": {
+    "prompt_tokens": 52,
+    "completion_tokens": 19,
+    "total_tokens": 71
+  },
+  "__frames": [ /* child frames */ ]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Frame display name — use the class name for invoker steps |
+| `signature` | string | No | Qualified path for programmatic identification |
+| `description` | string | No | Human-readable description |
+| `inputs` | any | No | Data passed into this step |
+| `result` | any | No | Data returned from this step |
+| `__time` | object | Yes | `{start, end, duration}` — see Time Format |
+| `__usage` | object | No | Token usage — hoisted from child frames |
+| `__frames` | array | No | Child frames (nested spans) |
+
+Additional keys emitted via `span("key", value)` are
+preserved on the frame as-is (e.g., `type`, `iterations`).
+
+#### Time Format
+
+```json
+{
+  "start": "2026-03-26T10:25:42.072706",
+  "end": "2026-03-26T10:25:46.358027",
+  "duration": 4285
+}
+```
+
+- `start` / `end`: ISO 8601 **without timezone**,
+  microsecond precision: `YYYY-MM-DDTHH:MM:SS.ffffff`
+- `duration`: milliseconds (integer), computed as
+  `end - start`
+
+#### Usage Hoisting
+
+When a frame's `result` contains a `usage` object
+(e.g., from an LLM API response), the tracer
+extracts it into `__usage` on that frame AND
+propagates it up to all ancestor frames by
+**summing** token counts.
+
+```text
+run.__usage = executor.__usage + processor.__usage
+execute.__usage = run.__usage
+root.__usage = execute.__usage
+```
+
+This allows any level of the tree to show total
+token consumption for its subtree.
+
+### Trace Tree Structure
+
+Every runtime MUST produce a trace tree matching
+this structure. Frame names and signatures MUST
+reflect the **actual** classes/functions used at
+runtime — never hardcoded labels.
+
+```text
+<prompt-name>                              ← root wrapper
+  sig: prompty.<context>.execute           (context = "cli", "vscode", etc.)
+  inputs: { prompt_path, inputs }
+  result: <final output>
+  │
+  └── execute                              ← pipeline orchestrator
+        sig: prompty.execute
+        inputs: { prompt: <serialized agent>, inputs: <user inputs> }
+        result: <final output>
+        │
+        ├── prepare                        ← template → messages
+        │     sig: prompty.prepare
+        │     inputs: <validated inputs>
+        │     result: [<serialized messages>]
+        │     │
+        │     ├── <RendererClass>          ← e.g. "NunjucksRenderer", "Jinja2Renderer"
+        │     │     sig: prompty.renderers.<RendererClass>.render
+        │     │     inputs: { data: <template inputs> }
+        │     │     result: <rendered string>
+        │     │
+        │     └── <ParserClass>            ← e.g. "PromptyChatParser"
+        │           sig: prompty.parsers.<ParserClass>.parse
+        │           inputs: <rendered string>
+        │           result: [{ role, content }, ...]
+        │
+        └── run                            ← LLM call → result
+              sig: prompty.run
+              inputs: [<serialized messages>]
+              result: <processed output>
+              │
+              ├── <ExecutorClass>          ← e.g. "FoundryExecutor", "OpenAIExecutor"
+              │     sig: prompty.<provider>.executor.<Class>.invoke
+              │     inputs: { data: <messages> }
+              │     result: <raw API response>
+              │     │
+              │     ├── <ClientClass>      ← e.g. "AzureOpenAI", "OpenAI"
+              │     │     sig: <ClientClass>.ctor
+              │     │     inputs: <sanitized constructor kwargs>
+              │     │     result: <class name>
+              │     │
+              │     └── create             ← the actual SDK API call
+              │           sig: <ClientClass>.chat.completions.create
+              │           inputs: <wire format args>
+              │           result: <raw response>
+              │
+              └── <ProcessorClass>         ← e.g. "FoundryProcessor", "OpenAIProcessor"
+                    sig: prompty.<provider>.processor.<Class>.invoke
+                    inputs: { data: <raw response> }
+                    result: <processed output>
+```
+
+### Frame Name Rules
+
+Frame names MUST reflect what is actually executing:
+
+| Frame | Name Source | Example |
+|-------|------------|---------|
+| Root | Prompt file basename (no `.prompty`) | `basic-chat` |
+| Renderer | `renderer.constructor.name` or class name | `NunjucksRenderer`, `Jinja2Renderer` |
+| Parser | `parser.constructor.name` or class name | `PromptyChatParser` |
+| Executor | `executor.constructor.name` or class name | `FoundryExecutor`, `OpenAIExecutor` |
+| Processor | `processor.constructor.name` or class name | `FoundryProcessor`, `OpenAIProcessor` |
+| Client ctor | `client.constructor.name` (the actual SDK class) | `AzureOpenAI`, `OpenAI` |
+| API call | The SDK method name | `create`, `generate` |
+
+**Never hardcode class names in trace output.** Use
+the actual runtime type — if someone registers a
+custom executor, its real class name should appear.
+
+For **client ctor inputs**, trace what actually
+happened:
+- If a pre-registered client was used (reference
+  connection), trace `{source: "reference", name: "..."}`
+- If a new client was constructed, trace the
+  constructor kwargs (with secrets sanitized)
+
+### Per-Frame Data Contracts
+
+#### `load` frame
+
+```json
+{
+  "inputs": { "prompty_file": "/path/to/chat.prompty" },
+  "result": {
+    "name": "basic-chat",
+    "description": "A chat prompt",
+    "model": { "id": "gpt-4", "api": "chat", "provider": "foundry" },
+    "inputs": [{ "name": "question", "kind": "string" }],
+    "outputs": [],
+    "tools": [],
+    "template": { "format": "nunjucks", "parser": "prompty" },
+    "instructions": "system:\nYou are helpful.\n\nuser:\n{{question}}"
+  }
+}
+```
+
+The load result should be the **full serialized agent**
+with sensitive fields (apiKey, secrets) redacted.
+
+#### Renderer frame
+
+```json
+{
+  "inputs": { "data": { "question": "What is 2+2?" } },
+  "result": "system:\nYou are helpful.\n\nuser:\nWhat is 2+2?"
+}
+```
+
+The renderer traces the actual template inputs and
+the rendered output string.
+
+#### Parser frame
+
+```json
+{
+  "inputs": "system:\nYou are helpful.\n\nuser:\nWhat is 2+2?",
+  "result": [
+    { "role": "system", "content": "You are helpful." },
+    { "role": "user", "content": "What is 2+2?" }
+  ]
+}
+```
+
+#### Executor frame
+
+The executor's own frame wraps two sub-frames:
+
+1. **Client ctor**: how the SDK client was obtained
+2. **API call**: the actual SDK method invocation with
+   full wire-format arguments and raw response
+
+```json
+{
+  "inputs": { "data": [{"role": "system", ...}, {"role": "user", ...}] },
+  "result": { "choices": [...], "usage": {...}, ... }
+}
+```
+
+#### API call sub-frame
+
+```json
+{
+  "name": "create",
+  "signature": "AzureOpenAI.chat.completions.create",
+  "inputs": {
+    "model": "gpt-4o-mini",
+    "messages": [
+      { "role": "system", "content": "You are helpful." },
+      { "role": "user", "content": "What is 2+2?" }
+    ],
+    "temperature": 0.7
+  },
+  "result": { "id": "chatcmpl-...", "choices": [...], "usage": {...} }
+}
+```
+
+This is the most valuable frame for debugging — it
+shows exactly what went over the wire and what came
+back.
+
+#### Processor frame
+
+```json
+{
+  "inputs": { "data": { "choices": [...], "usage": {...} } },
+  "result": "4"
+}
+```
+
+### Sanitization
+
+Before writing to `.tracy`, all frame data MUST be
+sanitized to redact sensitive values. The sanitizer
+walks the data tree and replaces values whose keys
+match sensitive patterns:
+
+**Keys to redact** (case-insensitive match):
+
+- `api_key`, `apiKey`, `api-key`
+- `secret`, `password`, `token`, `credential`
+- `authorization`, `auth`
+
+**Replacement value**: `"***REDACTED***"`
+
+The sanitizer must be **recursive** — it walks into
+nested objects and arrays.
+
+### PromptyTracer Implementation
+
+Each runtime MUST provide a `PromptyTracer` class that:
+
+1. **Maintains a frame stack** — new spans push frames,
+   `__end__` pops them.
+2. **Nests child frames** — when a frame ends with
+   items still on the stack, it becomes a child
+   (`__frames`) of the parent.
+3. **Computes `__time`** — start on push, end on pop,
+   duration as `end - start` in milliseconds.
+4. **Hoists `__usage`** — extracts from `result.usage`,
+   sums across children, propagates to ancestors.
+5. **Writes the `.tracy` file** when the root frame
+   ends (stack becomes empty).
+6. **Exposes `lastTracePath`** — so callers (e.g., the
+   VS Code extension) can find the written file.
+
+The `PromptyTracer` factory MUST be bound to the
+instance so it can be passed directly to
+`Tracer.add()`:
+
+```typescript
+// TypeScript
+const tracer = new PromptyTracer({ outputDir: ".runs" });
+Tracer.add("prompty", tracer.factory);
+// ... execute ...
+console.log(tracer.lastTracePath);
+```
+
+```python
+# Python
+tracer = PromptyTracer(output_dir=".runs")
+Tracer.add("prompty", tracer)
+# ... execute ...
+print(tracer.last_trace_path)
+```
 
 ---
 
@@ -1008,10 +1331,23 @@ When implementing a new language runtime:
 ### Phase 5: Tracing
 
 - [ ] Tracer registry (add/remove backends)
-- [ ] `@trace` decorator or equivalent
+- [ ] `traceSpan()` / `@trace` decorator or equivalent
 - [ ] Console tracer
+- [ ] `PromptyTracer` — `.tracy` file writer
+  - [ ] Frame stack with push/pop
+  - [ ] `__time` computation (ISO 8601, ms duration)
+  - [ ] `__usage` hoisting from results + children
+  - [ ] `.tracy` JSON file writing on root frame end
+  - [ ] `lastTracePath` for callers
+- [ ] Pipeline trace integration
+  - [ ] Renderer/Parser frames use actual class names
+  - [ ] Executor frame with client ctor + API call sub-frames
+  - [ ] Processor frame with actual class name
+  - [ ] Full data in inputs/result (not summaries)
+  - [ ] Sensitive data sanitization (apiKey, secrets)
 - [ ] OpenTelemetry backend (optional dependency)
-- [ ] Tests: tracer registry, decorator, serialization
+- [ ] Tests: tracer registry, PromptyTracer file output,
+  frame nesting, usage hoisting, sanitization
 
 ### Phase 6: Polish
 
