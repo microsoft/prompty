@@ -54,6 +54,8 @@ class AzureExecutor(_BaseExecutor):
             return self._execute_embedding(client, agent, data)
         elif api_type == "image":
             return self._execute_image(client, agent, data)
+        elif api_type == "responses":
+            return self._execute_responses(client, agent, data)
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
@@ -68,6 +70,8 @@ class AzureExecutor(_BaseExecutor):
             return await self._execute_embedding_async(client, agent, data)
         elif api_type == "image":
             return await self._execute_image_async(client, agent, data)
+        elif api_type == "responses":
+            return await self._execute_responses_async(client, agent, data)
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 

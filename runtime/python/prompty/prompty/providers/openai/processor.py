@@ -64,11 +64,13 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
     - ``ChatCompletion`` → content string or list of ToolCall
     - ``Completion`` → text string
     - ``CreateEmbeddingResponse`` → embedding vector(s)
+    - ``ImagesResponse`` → URL or base64 data
+    - ``Response`` (Responses API) → text, tool calls, or structured output
     - Iterators (streaming) → generator of content chunks
     - Passthrough for unknown types
 
     When *agent* has ``outputs`` with properties, a string result
-    from a ``ChatCompletion`` is automatically JSON-parsed.
+    from a ``ChatCompletion`` or ``Response`` is automatically JSON-parsed.
     """
     # Import response types lazily to keep the module importable
     # even without openai installed
@@ -80,6 +82,12 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
     except ImportError:
         # If openai isn't installed, just pass through
         return response
+
+    # Try importing Responses API type (available in newer SDK versions)
+    try:
+        from openai.types.responses import Response as ResponsesResponse
+    except ImportError:
+        ResponsesResponse = None  # type: ignore[assignment, misc]
 
     if isinstance(response, ChatCompletion):
         result = _process_chat_completion(response)
@@ -96,7 +104,12 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
         return _process_embedding(response)
     elif isinstance(response, ImagesResponse):
         return _process_image(response)
+    elif ResponsesResponse is not None and isinstance(response, ResponsesResponse):
+        return _process_responses_api(response, agent)
     else:
+        # Also check by duck-typing for Responses API (object == "response")
+        if hasattr(response, "object") and response.object == "response" and hasattr(response, "output"):
+            return _process_responses_api(response, agent)
         # Check for streaming iterators (sync and async)
         if isinstance(response, Iterator):
             return _stream_generator(response)
@@ -142,6 +155,72 @@ def _process_image(response: Any) -> Any:
         return response.data[0].url or response.data[0].b64_json
     else:
         return [d.url or d.b64_json for d in response.data]
+
+
+def _process_responses_api(response: Any, agent: Prompty | None = None) -> Any:
+    """Extract from a Responses API response.
+
+    Handles:
+    - Text content from ``output_text`` or output message items
+    - Function tool calls from ``function_call`` output items
+    - JSON-parsed content when ``agent.outputs`` is defined
+    - Error responses
+    """
+    # Check for errors
+    if hasattr(response, "error") and response.error:
+        error = response.error
+        msg = getattr(error, "message", str(error))
+        raise ValueError(f"Responses API error: {msg}")
+
+    output = getattr(response, "output", []) or []
+
+    # Collect function calls
+    func_calls: list[ToolCall] = []
+    for item in output:
+        item_type = getattr(item, "type", None)
+        if item_type == "function_call":
+            func_calls.append(
+                ToolCall(
+                    id=getattr(item, "call_id", None) or getattr(item, "id", None) or "",
+                    name=getattr(item, "name", None) or "",
+                    arguments=getattr(item, "arguments", None) or "",
+                )
+            )
+
+    if func_calls:
+        return func_calls
+
+    # Text content — use output_text convenience field
+    output_text = getattr(response, "output_text", None)
+    if output_text is not None:
+        if agent is not None and agent.outputs and isinstance(output_text, str):
+            try:
+                return json.loads(output_text)
+            except json.JSONDecodeError:
+                pass
+        return output_text
+
+    # Fallback: extract from output message items
+    texts: list[str] = []
+    for item in output:
+        item_type = getattr(item, "type", None)
+        if item_type == "message":
+            content = getattr(item, "content", []) or []
+            for part in content:
+                part_type = getattr(part, "type", None)
+                if part_type in ("output_text", "text"):
+                    texts.append(getattr(part, "text", ""))
+
+    if texts:
+        text = "".join(texts)
+        if agent is not None and agent.outputs and isinstance(text, str):
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
+        return text
+
+    return response
 
 
 def _stream_generator(response: Any) -> Iterator[str | ToolCall]:

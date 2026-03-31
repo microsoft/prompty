@@ -26,7 +26,6 @@ from ...core.types import (
 )
 from ...model import (
     ApiKeyConnection,
-    FunctionTool,
     Prompty,
     ReferenceConnection,
 )
@@ -105,13 +104,13 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
 
     wire_tools: list[dict[str, Any]] = []
     for tool in agent.tools:
-        if isinstance(tool, FunctionTool):
+        if getattr(tool, "kind", None) == "function":
             func_def: dict[str, Any] = {
                 "name": tool.name,
             }
             if tool.description:
                 func_def["description"] = tool.description
-            if tool.parameters:
+            if hasattr(tool, "parameters") and tool.parameters:
                 func_def["parameters"] = _schema_to_wire(tool.parameters)
             if hasattr(tool, "strict") and tool.strict:
                 func_def["strict"] = True
@@ -228,7 +227,7 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
 
 
 def _build_options(agent: Prompty) -> dict[str, Any]:
-    """Extract model options into kwargs for the API call."""
+    """Extract model options into kwargs for the chat completions API call."""
     opts: dict[str, Any] = {}
     if agent.model.options is None:
         return opts
@@ -257,6 +256,118 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
                 opts[k] = v
 
     return opts
+
+
+# ---------------------------------------------------------------------------
+# Responses API wire format helpers
+# ---------------------------------------------------------------------------
+
+
+def _build_responses_options(agent: Prompty) -> dict[str, Any]:
+    """Extract model options for the Responses API (different param names)."""
+    opts: dict[str, Any] = {}
+    if agent.model.options is None:
+        return opts
+
+    mo = agent.model.options
+
+    if mo.temperature is not None:
+        opts["temperature"] = mo.temperature
+    if mo.maxOutputTokens is not None:
+        opts["max_output_tokens"] = mo.maxOutputTokens
+    if mo.topP is not None:
+        opts["top_p"] = mo.topP
+
+    # Pass through additional properties
+    if mo.additionalProperties:
+        for k, v in mo.additionalProperties.items():
+            if k not in opts:
+                opts[k] = v
+
+    return opts
+
+
+def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
+    """Convert agent tools to Responses API flat tool format.
+
+    Unlike Chat Completions (``{type: "function", function: {...}}``),
+    the Responses API uses a flat structure: ``{type: "function", name: ..., parameters: ...}``.
+    """
+    if not agent.tools:
+        return None
+
+    wire_tools: list[dict[str, Any]] = []
+    for tool in agent.tools:
+        if getattr(tool, "kind", None) == "function":
+            tool_def: dict[str, Any] = {
+                "type": "function",
+                "name": tool.name,
+            }
+            if tool.description:
+                tool_def["description"] = tool.description
+            if hasattr(tool, "parameters") and tool.parameters:
+                tool_def["parameters"] = _schema_to_wire(tool.parameters)
+            if hasattr(tool, "strict") and tool.strict:
+                tool_def["strict"] = True
+                if "parameters" in tool_def:
+                    tool_def["parameters"]["additionalProperties"] = False
+            wire_tools.append(tool_def)
+
+    return wire_tools if wire_tools else None
+
+
+def _output_schema_to_responses_wire(agent: Prompty) -> dict[str, Any] | None:
+    """Convert ``agent.outputs`` to Responses API ``text.format`` config.
+
+    Returns ``None`` when no output schema is defined. The Responses API
+    uses ``text: {format: {type: "json_schema", ...}}`` instead of
+    Chat Completions' ``response_format``.
+    """
+    if not agent.outputs:
+        return None
+
+    properties: dict[str, Any] = {}
+    required: list[str] = []
+
+    for prop in agent.outputs:
+        properties[prop.name] = _property_to_json_schema(prop)
+        required.append(prop.name)
+
+    name = (agent.name or "response").lower().replace(" ", "_").replace("-", "_")
+
+    return {
+        "format": {
+            "type": "json_schema",
+            "name": name,
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "additionalProperties": False,
+            },
+        },
+    }
+
+
+def _message_to_responses_input(msg: Message) -> dict[str, Any]:
+    """Convert a Message to Responses API input format.
+
+    Tool result messages are converted to ``function_call_output`` items.
+    Other messages become ``EasyInputMessage`` dicts.
+    """
+    content = msg.to_text_content()
+
+    # Tool result messages → function_call_output
+    if msg.metadata.get("tool_call_id"):
+        return {
+            "type": "function_call_output",
+            "call_id": msg.metadata["tool_call_id"],
+            "output": content if isinstance(content, str) else str(content),
+        }
+
+    role = "user" if msg.role == "tool" else msg.role
+    return {"role": role, "content": content}
 
 
 # ---------------------------------------------------------------------------
@@ -394,6 +505,76 @@ class _BaseExecutor:
                 args[k] = v
         return args
 
+    # -- Responses API -------------------------------------------------------
+
+    def _execute_responses(self, client: Any, agent: Prompty, messages: Any) -> Any:
+        with Tracer.start("responses.create") as t:
+            t("type", "LLM")
+            t("signature", f"{self._trace_prefix}.responses.create")
+            args = self._build_responses_args(agent, messages)
+            t("inputs", args)
+            response = client.responses.create(**args)
+            if args.get("stream", False):
+                return PromptyStream(f"{self._trace_prefix}Executor", response)
+            t("result", response)
+        return response
+
+    async def _execute_responses_async(self, client: Any, agent: Prompty, messages: Any) -> Any:
+        with Tracer.start("responses.create") as t:
+            t("type", "LLM")
+            t("signature", f"Async{self._trace_prefix}.responses.create")
+            args = self._build_responses_args(agent, messages)
+            t("inputs", args)
+            response = await client.responses.create(**args)
+            if args.get("stream", False):
+                return AsyncPromptyStream(f"{self._trace_prefix}Executor", response)
+            t("result", response)
+        return response
+
+    def _build_responses_args(self, agent: Prompty, messages: list[Message]) -> dict[str, Any]:
+        """Build the full arguments dict for responses.create.
+
+        Key differences from chat.completions.create:
+        - System messages → ``instructions`` parameter
+        - Other messages → ``input`` as EasyInputMessage list
+        - ``maxOutputTokens`` → ``max_output_tokens``
+        - Tools use flat format (not nested ``function:``)
+        - Structured output → ``text.format`` (not ``response_format``)
+        """
+        model = agent.model.id or "gpt-4o"
+
+        system_parts: list[str] = []
+        input_messages: list[dict[str, Any]] = []
+
+        for msg in messages:
+            if msg.role in ("system", "developer"):
+                system_parts.append(msg.text)
+            else:
+                input_messages.append(_message_to_responses_input(msg))
+
+        args: dict[str, Any] = {
+            "model": model,
+            "input": input_messages,
+        }
+
+        if system_parts:
+            args["instructions"] = "\n\n".join(system_parts)
+
+        # Model options (Responses-specific mapping)
+        args.update(_build_responses_options(agent))
+
+        # Tools (flat format)
+        tools = _responses_tools_to_wire(agent)
+        if tools:
+            args["tools"] = tools
+
+        # Structured output (text.format)
+        text_config = _output_schema_to_responses_wire(agent)
+        if text_config:
+            args["text"] = text_config
+
+        return args
+
 
 # ---------------------------------------------------------------------------
 # OpenAI Executor
@@ -422,6 +603,8 @@ class OpenAIExecutor(_BaseExecutor):
             return self._execute_embedding(client, agent, data)
         elif api_type == "image":
             return self._execute_image(client, agent, data)
+        elif api_type == "responses":
+            return self._execute_responses(client, agent, data)
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
@@ -436,6 +619,8 @@ class OpenAIExecutor(_BaseExecutor):
             return await self._execute_embedding_async(client, agent, data)
         elif api_type == "image":
             return await self._execute_image_async(client, agent, data)
+        elif api_type == "responses":
+            return await self._execute_responses_async(client, agent, data)
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
