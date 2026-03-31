@@ -290,8 +290,9 @@ export class ConnectionsTreeDataProvider
 				this.modelCache.set(profile.id, models);
 				return models.map((m) => new ModelTreeItem(m));
 			}
-		} catch {
-			// Model discovery failed — show empty
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : String(err);
+			console.error(`[Prompty] Model discovery failed for "${profile.name}": ${msg}`);
 		}
 
 		return [];
@@ -423,8 +424,9 @@ export class ConnectionsTreeDataProvider
 			if (models) {
 				this.modelCache.set(profile.id, models);
 			}
-		} catch {
-			// Model fetch failed — show empty
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : String(err);
+			console.error(`[Prompty] Model fetch failed for "${profile.name}": ${msg}`);
 		}
 	}
 

@@ -49,17 +49,55 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 				placeholder: "Optional — named connection within the project",
 				required: false,
 			},
+			{
+				key: "tenantId",
+				label: "Tenant ID",
+				placeholder: "Optional — Azure AD tenant ID if resource is in a different tenant",
+				required: false,
+			},
 		];
 	}
 
-	/** Get a bearer token via DefaultAzureCredential for the Azure AI Foundry scope */
-	private async getBearerToken(): Promise<string> {
+	/** Scope used for Azure AI Foundry bearer tokens */
+	private static readonly TOKEN_SCOPE = "https://ai.azure.com/.default";
+
+	/**
+	 * Get a bearer token via DefaultAzureCredential.
+	 * Returns both the token and which credential source succeeded for diagnostics.
+	 */
+	private async getBearerToken(tenantId?: string): Promise<{ token: string; source: string }> {
 		const { DefaultAzureCredential } = await import("@azure/identity");
-		const credential = new DefaultAzureCredential();
-		const tokenResponse = await credential.getToken(
-			"https://ai.azure.com/.default"
-		);
-		return tokenResponse.token;
+		const credentialOptions = tenantId ? { tenantId } : undefined;
+		const credential = new DefaultAzureCredential(credentialOptions);
+
+		try {
+			const tokenResponse = await credential.getToken(
+				FoundryConnectionProvider.TOKEN_SCOPE,
+				tenantId ? { tenantId } : undefined
+			);
+
+			// Detect which credential source was used
+			let source = "DefaultAzureCredential";
+			const credType = (credential as any)._selectedCredential?.constructor?.name
+				?? (credential as any).selectedCredential?.constructor?.name;
+			if (credType) {
+				source = credType;
+			}
+
+			return { token: tokenResponse.token, source };
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : String(err);
+
+			// Provide a clear diagnostic about what was tried
+			if (msg.includes("CredentialUnavailableError") || msg.includes("DefaultAzureCredential")) {
+				throw new Error(
+					`No Azure credentials found (scope: ${FoundryConnectionProvider.TOKEN_SCOPE}). ` +
+					`Tried: EnvironmentCredential, AzureCliCredential, AzurePowerShellCredential, VisualStudioCodeCredential. ` +
+					`Sign in via: az login, VS Code Azure account, or set AZURE_CLIENT_ID + AZURE_TENANT_ID + AZURE_CLIENT_SECRET`
+				);
+			}
+			throw new Error(`Azure credential error: ${msg}`);
+		}
 	}
 
 	async testConnection(
@@ -68,9 +106,11 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		const p = profile as FoundryConnectionProfile;
 
 		try {
-			const token = await this.getBearerToken();
+			const { token, source } = await this.getBearerToken(p.tenantId);
 			const endpoint = p.endpoint.replace(/\/$/, "");
 			const url = `${endpoint}/deployments?api-version=v1`;
+
+			console.log(`[Foundry] Testing "${p.name}" — credential: ${source}, endpoint: ${endpoint}`);
 
 			const start = Date.now();
 			const response = await fetch(url, {
@@ -83,6 +123,7 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 
 			if (!response.ok) {
 				const body = await response.text();
+				console.warn(`[Foundry] Test failed for "${p.name}": ${response.status} ${body.slice(0, 300)}`);
 				return {
 					success: false,
 					message: `${response.status}: ${body.slice(0, 200)}`,
@@ -92,25 +133,17 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 			const data = (await response.json()) as FoundryDeploymentsResponse;
 			const count = data.value?.length ?? 0;
 
+			console.log(`[Foundry] Test OK for "${p.name}": ${count} deployments (${source}, ${latencyMs}ms)`);
+
 			return {
 				success: true,
-				message: `Connected — ${count} deployment${count !== 1 ? "s" : ""} available (${latencyMs}ms)`,
+				message: `Connected — ${count} deployment${count !== 1 ? "s" : ""} available · ${source} (${latencyMs}ms)`,
 				latencyMs,
 			};
 		} catch (error: unknown) {
 			const message =
 				error instanceof Error ? error.message : String(error);
-
-			if (
-				message.includes("CredentialUnavailableError") ||
-				message.includes("DefaultAzureCredential")
-			) {
-				return {
-					success: false,
-					message:
-						"No Azure credentials found. Sign in via: az login, VS Code Azure account, or set environment variables.",
-				};
-			}
+			console.error(`[Foundry] Test error for "${p.name}": ${message}`);
 
 			return {
 				success: false,
@@ -121,10 +154,23 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 
 	async listModels(profile: ConnectionProfile): Promise<ModelInfo[]> {
 		const p = profile as FoundryConnectionProfile;
-
-		const token = await this.getBearerToken();
 		const endpoint = p.endpoint.replace(/\/$/, "");
 		const url = `${endpoint}/deployments?api-version=v1`;
+
+		console.log(`[Foundry] Listing models for "${p.name}" — ${endpoint}/deployments`);
+
+		let source: string;
+		let token: string;
+		try {
+			const result = await this.getBearerToken(p.tenantId);
+			token = result.token;
+			source = result.source;
+			console.log(`[Foundry] Authenticated via ${source}`);
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : String(err);
+			console.error(`[Foundry] Auth failed for "${p.name}": ${msg}`);
+			throw err;
+		}
 
 		const response = await fetch(url, {
 			headers: {
@@ -135,14 +181,28 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 
 		if (!response.ok) {
 			const body = await response.text();
-			throw new Error(`Failed to list models: ${response.status} ${body.slice(0, 200)}`);
+			const detail = `${response.status} ${response.statusText} — ${body.slice(0, 300)}`;
+			console.error(`[Foundry] Model list failed for "${p.name}" (${source}): ${detail}`);
+
+			// Detect tenant mismatch and give a clear hint
+			if (body.includes("tenant") && body.includes("does not match")) {
+				throw new Error(
+					`Tenant mismatch for "${p.name}": your credential is in a different tenant than the Foundry resource. ` +
+					`Edit the connection and set the Tenant ID field, or run: az login --tenant <correct-tenant-id>`
+				);
+			}
+
+			throw new Error(`Failed to list models (${source}): ${detail}`);
 		}
 
 		const data = (await response.json()) as FoundryDeploymentsResponse;
-		return (data.value ?? []).map((d) => ({
+		const models = (data.value ?? []).map((d) => ({
 			id: d.name,
 			modelName: d.properties?.model?.name,
 		}));
+
+		console.log(`[Foundry] Found ${models.length} models for "${p.name}": ${models.map(m => m.id).join(", ")}`);
+		return models;
 	}
 
 	async createClient(profile: ConnectionProfile): Promise<unknown> {
@@ -151,7 +211,8 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		const { AIProjectClient } = await import("@azure/ai-projects");
 		const { DefaultAzureCredential } = await import("@azure/identity");
 
-		const credential = new DefaultAzureCredential();
+		const credentialOptions = p.tenantId ? { tenantId: p.tenantId } : undefined;
+		const credential = new DefaultAzureCredential(credentialOptions);
 		const projectClient = new AIProjectClient(p.endpoint, credential);
 
 		return projectClient.getOpenAIClient();

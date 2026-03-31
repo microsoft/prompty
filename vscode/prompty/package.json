@@ -26,7 +26,10 @@
 		"LLMOps"
 	],
 	"activationEvents": [
-		"onLanguage:prompty"
+		"onLanguage:prompty",
+		"onView:view-connections",
+		"onView:view-traces",
+		"workspaceContains:**/*.prompty"
 	],
 	"main": "./packages/core/out/extension",
 	"contributes": {

@@ -66,6 +66,8 @@ export interface FoundryConnectionProfile extends BaseConnectionProfile {
 	endpoint: string;
 	/** Named connection within the Foundry project — maps to FoundryConnection.name */
 	connectionName?: string;
+	/** Azure AD tenant ID — use when the resource is in a different tenant than the default credential */
+	tenantId?: string;
 	/** Always "model" for Foundry connections in Prompty */
 	connectionType: "model";
 }

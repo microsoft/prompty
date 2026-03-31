@@ -19,8 +19,9 @@ export function registerConnectionCommands(
 	treeProvider: ConnectionsTreeDataProvider
 ): vscode.Disposable[] {
 	const wizard = new ConnectionWizard(store, registry, context.extensionPath);
+	const outputChannel = vscode.window.createOutputChannel("Prompty · Connections", { log: true });
 
-	const disposables: vscode.Disposable[] = [];
+	const disposables: vscode.Disposable[] = [outputChannel];
 
 	// ─── Add Connection ──────────────────────────────────────────
 
@@ -109,7 +110,6 @@ export function registerConnectionCommands(
 		vscode.commands.registerCommand(
 			"prompty.testConnection",
 			async (item?: ConnectionTreeItem) => {
-				const outputChannel = vscode.window.createOutputChannel("Prompty Connections", { log: true });
 				outputChannel.show(true);
 
 				let profileId: string;

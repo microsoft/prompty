@@ -11,7 +11,7 @@ import { ConnectionStore } from '../connections/store';
 import { ConnectionProviderRegistry } from '../connections/registry';
 
 export class PromptyController implements Disposable {
-	private outputChannel = window.createOutputChannel('Prompty');
+	private outputChannel = window.createOutputChannel('Prompty · Run');
 
 	constructor(
 		private context: ExtensionContext,
@@ -24,9 +24,7 @@ export class PromptyController implements Disposable {
 		const fileName = path.basename(filePath);
 
 		this.outputChannel.show(true);
-		this.outputChannel.appendLine(`\n${'─'.repeat(60)}`);
-		this.outputChannel.appendLine(`Running: ${fileName}`);
-		this.outputChannel.appendLine(`${'─'.repeat(60)}`);
+		this.outputChannel.appendLine(`\nRunning: ${fileName}`);
 
 		// Determine the .runs output directory (workspace root)
 		const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath
@@ -35,29 +33,18 @@ export class PromptyController implements Disposable {
 
 		// Create a file-writing tracer for .tracy output
 		const promptyTracer = new PromptyTracer({ outputDir: runsDir });
+		let agent: PromptAgent | undefined;
 
 		try {
 			this.loadEnvFile(filePath);
 			await this.bridgeConnections();
 
-			// Register tracers: output channel + file writer
-			Tracer.add('vscode-output', (signature) => {
-				this.outputChannel.appendLine(`  [trace] ── ${signature}`);
-				return (key, value) => {
-					if (key === '__end__') return;
-					const display = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-					this.outputChannel.appendLine(`  [trace]    ${key}: ${display}`);
-				};
-			});
+			// Register file tracer only — no verbose output channel trace
 			Tracer.add('prompty-file', promptyTracer.factory);
 
 			// Load agent first so we can apply sidebar connections
-			const agent = load(filePath);
+			agent = load(filePath);
 			await this.applyDefaultConnection(agent);
-
-			this.outputChannel.appendLine(`  → Provider: ${agent.model?.provider ?? 'unset'}`);
-			this.outputChannel.appendLine(`  → Model: ${agent.model?.id ?? 'unset'}`);
-			this.outputChannel.appendLine(`  → Connection: ${agent.model?.connection?.constructor?.name ?? 'none'} (${(agent.model?.connection as any)?.endpoint ?? (agent.model?.connection as any)?.name ?? 'no name'})`);
 
 			// Build sample inputs from example values on inputSchema properties.
 			// This is extension-only behavior — the core runtime does NOT treat
@@ -74,17 +61,12 @@ export class PromptyController implements Disposable {
 				}
 			}
 
-			if (Object.keys(sampleInputs).length > 0) {
-				this.outputChannel.appendLine(`  → Inputs (from examples): ${JSON.stringify(sampleInputs)}`);
-			}
-
 			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)
 			const promptName = path.basename(filePath, '.prompty');
 			const startTime = Date.now();
 			const result = await traceSpan(promptName, async (emit) => {
 				emit('type', 'vscode');
 				emit('signature', 'prompty.vscode.execute');
-				emit('description', 'Prompty VS Code Execution');
 				emit('inputs', { prompt_path: filePath, inputs: sampleInputs });
 
 				const executionResult = await execute(agent, sampleInputs);
@@ -94,38 +76,72 @@ export class PromptyController implements Disposable {
 
 			const elapsed = Date.now() - startTime;
 
-			Tracer.remove('vscode-output');
 			Tracer.remove('prompty-file');
 
-			this.outputChannel.appendLine(`\n✓ Completed in ${elapsed}ms\n`);
-
+			// Show result
+			this.outputChannel.appendLine('');
 			if (typeof result === 'string') {
 				this.outputChannel.appendLine(result);
 			} else {
 				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 			}
 
-			// Auto-open the .tracy file in the trace viewer
+			this.outputChannel.appendLine(`\n✓ ${elapsed}ms`);
+
+			// Point to tracy file and auto-open it
 			if (promptyTracer.lastTracePath) {
+				this.outputChannel.appendLine(`→ ${promptyTracer.lastTracePath}`);
 				const traceUri = Uri.file(promptyTracer.lastTracePath);
-				this.outputChannel.appendLine(`  → Trace: ${promptyTracer.lastTracePath}`);
 				try {
 					await commands.executeCommand('vscode.openWith', traceUri, 'prompty.traceViewer');
 				} catch {
-					// Fall back to default text editor if custom editor isn't available
 					try {
 						await window.showTextDocument(traceUri, { preview: true, viewColumn: 2 });
 					} catch {
-						// Ignore — trace file is still on disk
+						// Trace file is still on disk
 					}
 				}
 			}
 		} catch (error: unknown) {
-			Tracer.remove('vscode-output');
 			Tracer.remove('prompty-file');
-			const message = error instanceof Error ? error.message : String(error);
-			this.outputChannel.appendLine(`\n✗ Error: ${message}`);
-			window.showErrorMessage(`Prompty execution failed: ${message}`);
+
+			// Build a descriptive error message
+			let message: string;
+			if (error instanceof Error) {
+				message = error.message;
+
+				// OpenAI SDK errors carry extra context
+				const status = (error as any).status;
+				const code = (error as any).code;
+				const type = (error as any).type;
+
+				const parts: string[] = [];
+				if (status) parts.push(`${status}`);
+				if (code) parts.push(code);
+				if (type) parts.push(type);
+
+				if (parts.length > 0) {
+					message = `[${parts.join(' · ')}] ${message}`;
+				}
+
+				// Include model/endpoint hints for common errors
+				if (status === 404) {
+					const modelId = agent?.model?.id;
+					const endpoint = (agent?.model?.connection as any)?.endpoint;
+					if (modelId) message += `\n  Model: ${modelId}`;
+					if (endpoint) message += `\n  Endpoint: ${endpoint}`;
+					message += '\n  Hint: Check that the model/deployment exists at this endpoint';
+				} else if (status === 401 || status === 403) {
+					message += '\n  Hint: Check your API key or authentication';
+				} else if (status === 429) {
+					message += '\n  Hint: Rate limited — wait a moment and retry';
+				}
+			} else {
+				message = String(error);
+			}
+
+			this.outputChannel.appendLine(`\n✗ ${message}`);
+			window.showErrorMessage(`Prompty: ${error instanceof Error ? error.message : message}`);
 		}
 	}
 

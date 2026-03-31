@@ -4,6 +4,7 @@ import { commands, ExtensionContext, languages, Uri, window, workspace } from 'v
 import {
 	LanguageClient,
 	LanguageClientOptions,
+	RevealOutputChannelOn,
 	ServerOptions,
 	TransportKind
 } from 'vscode-languageclient/node';
@@ -161,8 +162,10 @@ function startLanguageServer(context: ExtensionContext) {
 			basePath: context.asAbsolutePath("schemas"),
 			yamlSchemaPath: "Prompty.yaml",
 		},
+		// Don't auto-show the output channel — diagnostics appear inline in the editor
+		revealOutputChannelOn: RevealOutputChannelOn.Never,
 	};
 
-	client = new LanguageClient("promptyLanguageServer", "Prompty", serverOptions, clientOptions);
+	client = new LanguageClient("promptyLanguageServer", "Prompty · Language Server", serverOptions, clientOptions);
 	client.start();
 }
