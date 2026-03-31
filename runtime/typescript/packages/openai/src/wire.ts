@@ -230,21 +230,28 @@ function propertyToJsonSchema(prop: {
   if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
 
   // Array items
-  if (prop.kind === "array" && prop.items) {
-    schema.items = propertyToJsonSchema(prop.items as typeof prop);
+  if (prop.kind === "array") {
+    schema.items = prop.items
+      ? propertyToJsonSchema(prop.items as typeof prop)
+      : { type: "string" };
   }
 
   // Nested object
-  if (prop.kind === "object" && prop.properties) {
-    const nested: Record<string, unknown> = {};
-    const req: string[] = [];
-    for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
-      if (!p.name) continue;
-      nested[p.name] = propertyToJsonSchema(p);
-      req.push(p.name);
+  if (prop.kind === "object") {
+    if (prop.properties) {
+      const nested: Record<string, unknown> = {};
+      const req: string[] = [];
+      for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
+        if (!p.name) continue;
+        nested[p.name] = propertyToJsonSchema(p);
+        req.push(p.name);
+      }
+      schema.properties = nested;
+      schema.required = req;
+    } else {
+      schema.properties = {};
+      schema.required = [];
     }
-    schema.properties = nested;
-    schema.required = req;
     schema.additionalProperties = false;
   }
 

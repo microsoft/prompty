@@ -172,19 +172,26 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
     if prop.enumValues:
         schema["enum"] = prop.enumValues
 
-    # Array items
-    if prop.kind == "array" and hasattr(prop, "items") and prop.items is not None:
-        schema["items"] = _property_to_json_schema(prop.items)
+    # Array items — default to string if unspecified
+    if prop.kind == "array":
+        if hasattr(prop, "items") and prop.items is not None:
+            schema["items"] = _property_to_json_schema(prop.items)
+        else:
+            schema["items"] = {"type": "string"}
 
     # Object properties (with strict additionalProperties: False)
-    if prop.kind == "object" and hasattr(prop, "properties") and prop.properties:
-        props: dict[str, Any] = {}
-        required: list[str] = []
-        for p in prop.properties:
-            props[p.name] = _property_to_json_schema(p)
-            required.append(p.name)
-        schema["properties"] = props
-        schema["required"] = required
+    if prop.kind == "object":
+        if hasattr(prop, "properties") and prop.properties:
+            props: dict[str, Any] = {}
+            required: list[str] = []
+            for p in prop.properties:
+                props[p.name] = _property_to_json_schema(p)
+                required.append(p.name)
+            schema["properties"] = props
+            schema["required"] = required
+        else:
+            schema["properties"] = {}
+            schema["required"] = []
         schema["additionalProperties"] = False
 
     return schema
