@@ -1,10 +1,9 @@
 import { ExtensionContext, Uri, Disposable, window, workspace, commands } from 'vscode';
-import { load, execute, registerConnection, clearConnections, ReferenceConnection, FoundryConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
+import { load, execute, registerConnection, clearConnections, ReferenceConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
 import '@prompty/foundry';
-import type { FoundryConnectionProfile } from '../connections/types';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConnectionStore } from '../connections/store';
@@ -127,10 +126,15 @@ export class PromptyController implements Disposable {
 				// Include model/endpoint hints for common errors
 				if (status === 404) {
 					const modelId = agent?.model?.id;
-					const endpoint = (agent?.model?.connection as any)?.endpoint;
+					const conn = agent?.model?.connection;
+					const connName = conn instanceof ReferenceConnection ? conn.name : undefined;
+					const endpoint = (conn as any)?.endpoint
+						?? (error as any)?.response?.url
+						?? (error as any)?.url;
 					if (modelId) message += `\n  Model: ${modelId}`;
+					if (connName) message += `\n  Connection: ${connName}`;
 					if (endpoint) message += `\n  Endpoint: ${endpoint}`;
-					message += '\n  Hint: Check that the model/deployment exists at this endpoint';
+					message += '\n  Hint: Check that the model/deployment name matches exactly';
 				} else if (status === 401 || status === 403) {
 					message += '\n  Hint: Check your API key or authentication';
 				} else if (status === 429) {
@@ -161,7 +165,7 @@ export class PromptyController implements Disposable {
 
 		// If the frontmatter already specifies a usable connection, respect it
 		if (conn instanceof ReferenceConnection && conn.name) return;
-		if (conn instanceof FoundryConnection && conn.endpoint) return;
+		if (conn && 'endpoint' in conn && (conn as any).endpoint) return;
 		if (conn && 'apiKey' in conn && (conn as any).apiKey) return;
 
 		// No usable connection — find the default from the sidebar
@@ -186,21 +190,11 @@ export class PromptyController implements Disposable {
 		// Set the provider to match the resolved connection
 		agent.model.provider = defaultProfile.providerType;
 
-		// Build the appropriate agentschema connection type
-		if (defaultProfile.providerType === 'foundry') {
-			const foundryProfile = defaultProfile as FoundryConnectionProfile;
-			const foundryConn = new FoundryConnection();
-			foundryConn.endpoint = foundryProfile.endpoint;
-			if (foundryProfile.connectionName) {
-				foundryConn.name = foundryProfile.connectionName;
-			}
-			agent.model.connection = foundryConn;
-		} else {
-			// For other providers, use reference to the pre-registered client
-			const ref = new ReferenceConnection();
-			ref.name = defaultProfile.name;
-			agent.model.connection = ref;
-		}
+		// Always use reference to the pre-registered client from bridgeConnections().
+		// The client was already created with the correct tenant ID, auth, etc.
+		const ref = new ReferenceConnection();
+		ref.name = defaultProfile.name;
+		agent.model.connection = ref;
 	}
 
 	/**

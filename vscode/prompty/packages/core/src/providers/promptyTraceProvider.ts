@@ -34,9 +34,6 @@ export class PromptyTraceProvider implements vscode.CustomTextEditorProvider {
 		webviewPanel.webview.html = this._getHtmlForWebview(webviewPanel.webview);
 
 		const updateWebview = () => {
-			console.log("Updating webview with document content");
-			console.log("Document URI:", document.uri.toString());
-			//console.log("Document Text:", document.getText());
 			webviewPanel.webview.postMessage({
 				command: "trace",
 				/* maybe do some format checking here */
@@ -63,11 +60,8 @@ export class PromptyTraceProvider implements vscode.CustomTextEditorProvider {
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage((message) => {
-			console.log("Received message from webview:", JSON.stringify(message));
 			if (message.command === "ready") {
 				updateWebview();
-			} else {
-				console.log("Message", JSON.stringify(message));
 			}
 			/*
 			const command = message.command;

@@ -208,13 +208,28 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 	async createClient(profile: ConnectionProfile): Promise<unknown> {
 		const p = profile as FoundryConnectionProfile;
 
-		const { AIProjectClient } = await import("@azure/ai-projects");
-		const { DefaultAzureCredential } = await import("@azure/identity");
+		const { DefaultAzureCredential, getBearerTokenProvider } = await import("@azure/identity");
 
 		const credentialOptions = p.tenantId ? { tenantId: p.tenantId } : undefined;
 		const credential = new DefaultAzureCredential(credentialOptions);
-		const projectClient = new AIProjectClient(p.endpoint, credential);
 
-		return projectClient.getOpenAIClient();
+		// Extract the resource base endpoint from the project endpoint
+		// e.g. "https://foo.services.ai.azure.com/api/projects/bar" → "https://foo.services.ai.azure.com"
+		const url = new URL(p.endpoint);
+		const resourceEndpoint = `${url.protocol}//${url.host}`;
+
+		const scope = "https://cognitiveservices.azure.com/.default";
+		const azureADTokenProvider = getBearerTokenProvider(credential, scope);
+
+		const { AzureOpenAI } = await import("openai");
+		const client = new AzureOpenAI({
+			endpoint: resourceEndpoint,
+			azureADTokenProvider,
+			apiVersion: "2025-04-01-preview",
+		});
+
+		console.log(`[Foundry] Client for "${p.name}": endpoint=${resourceEndpoint}, apiVersion=2025-04-01-preview`);
+
+		return client;
 	}
 }
