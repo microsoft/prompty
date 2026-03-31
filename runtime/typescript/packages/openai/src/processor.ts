@@ -44,7 +44,7 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
   // Image response
   if (r.data && Array.isArray(r.data)) {
     const data = r.data as Record<string, unknown>[];
-    if (data.length > 0 && "url" in data[0]) {
+    if (data.length > 0 && ("url" in data[0] || "b64_json" in data[0])) {
       return processImage(r);
     }
   }

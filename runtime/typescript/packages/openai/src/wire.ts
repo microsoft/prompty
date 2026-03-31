@@ -63,7 +63,7 @@ export function buildChatArgs(
   agent: Prompty,
   messages: Message[],
 ): Record<string, unknown> {
-  const model = agent.model?.id ?? "gpt-4";
+  const model = agent.model?.id || "gpt-4";
   const wireMessages = messages.map(messageToWire);
 
   const args: Record<string, unknown> = {
@@ -89,36 +89,62 @@ export function buildChatArgs(
 
 /**
  * Build embedding arguments.
+ * Only additionalProperties are passed — chat options are not valid here.
  */
 export function buildEmbeddingArgs(
   agent: Prompty,
   data: unknown,
 ): Record<string, unknown> {
-  const model = agent.model?.id ?? "text-embedding-ada-002";
-  return {
+  const model = agent.model?.id || "text-embedding-ada-002";
+  const args: Record<string, unknown> = {
     input: Array.isArray(data) ? data : [data],
     model,
   };
+  const extra = agent.model?.options?.additionalProperties;
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) {
+      args[k] = v;
+    }
+  }
+  return args;
 }
 
 /**
  * Build image generation arguments.
+ * Only additionalProperties are passed — chat options are not valid here.
  */
 export function buildImageArgs(
   agent: Prompty,
   data: unknown,
 ): Record<string, unknown> {
-  const model = agent.model?.id ?? "dall-e-3";
-  return {
+  const model = agent.model?.id || "dall-e-3";
+  const args: Record<string, unknown> = {
     prompt: typeof data === "string" ? data : String(data),
     model,
-    ...buildOptions(agent),
   };
+  const extra = agent.model?.options?.additionalProperties;
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) {
+      args[k] = v;
+    }
+  }
+  return args;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Map AgentSchema kind strings to JSON Schema type strings. */
+const KIND_TO_JSON_TYPE: Record<string, string> = {
+  string: "string",
+  integer: "integer",
+  float: "number",
+  number: "number",
+  boolean: "boolean",
+  array: "array",
+  object: "object",
+};
 
 function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
@@ -127,37 +153,114 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   if (opts.temperature !== undefined) result.temperature = opts.temperature;
-  if (opts.maxOutputTokens !== undefined) result.max_tokens = opts.maxOutputTokens;
+  if (opts.maxOutputTokens !== undefined) result.max_completion_tokens = opts.maxOutputTokens;
   if (opts.topP !== undefined) result.top_p = opts.topP;
   if (opts.frequencyPenalty !== undefined) result.frequency_penalty = opts.frequencyPenalty;
   if (opts.presencePenalty !== undefined) result.presence_penalty = opts.presencePenalty;
-  if ((opts as unknown as Record<string, unknown>).stop !== undefined) result.stop = (opts as unknown as Record<string, unknown>).stop;
+  if (opts.stopSequences !== undefined) result.stop = opts.stopSequences;
   if (opts.seed !== undefined) result.seed = opts.seed;
 
-  // Pass through additionalProperties
+  // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
     for (const [k, v] of Object.entries(opts.additionalProperties)) {
-      result[k] = v;
+      if (!(k in result)) {
+        result[k] = v;
+      }
     }
   }
 
   return result;
 }
 
+/** Convert a Property list to a JSON Schema `{type: "object", properties: ...}`. */
+function schemaToWire(properties: unknown[]): Record<string, unknown> {
+  const props: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const p of properties as Array<{ name?: string; kind?: string; description?: string; required?: boolean; enumValues?: unknown[] }>) {
+    if (!p.name) continue;
+    const schema: Record<string, unknown> = {
+      type: KIND_TO_JSON_TYPE[p.kind ?? "string"] ?? "string",
+    };
+    if (p.description) schema.description = p.description;
+    if (p.enumValues && p.enumValues.length > 0) schema.enum = p.enumValues;
+    props[p.name] = schema;
+    if (p.required) required.push(p.name);
+  }
+
+  const result: Record<string, unknown> = { type: "object", properties: props };
+  if (required.length > 0) result.required = required;
+  return result;
+}
+
+/** Convert a single Property to a JSON Schema definition (recursive for structured output). */
+function propertyToJsonSchema(prop: {
+  kind?: string;
+  description?: string;
+  enumValues?: unknown[];
+  items?: unknown;
+  properties?: unknown[];
+}): Record<string, unknown> {
+  const schema: Record<string, unknown> = {
+    type: KIND_TO_JSON_TYPE[prop.kind ?? "string"] ?? "string",
+  };
+
+  if (prop.description) schema.description = prop.description;
+  if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
+
+  // Array items
+  if (prop.kind === "array" && prop.items) {
+    schema.items = propertyToJsonSchema(prop.items as typeof prop);
+  }
+
+  // Nested object
+  if (prop.kind === "object" && prop.properties) {
+    const nested: Record<string, unknown> = {};
+    const req: string[] = [];
+    for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
+      if (!p.name) continue;
+      nested[p.name] = propertyToJsonSchema(p);
+      req.push(p.name);
+    }
+    schema.properties = nested;
+    schema.required = req;
+    schema.additionalProperties = false;
+  }
+
+  return schema;
+}
+
 function toolsToWire(agent: Prompty): Record<string, unknown>[] {
   const tools = agent.tools;
   if (!tools || tools.length === 0) return [];
 
-  return tools
-    .filter((t) => (t as unknown as Record<string, unknown>).type === "function" || t.constructor?.name === "FunctionTool")
-    .map((t) => ({
-      type: "function",
-      function: {
-        name: t.name,
-        description: t.description ?? "",
-        parameters: (t as { save?: () => Record<string, unknown> }).save?.() ?? {},
-      },
-    }));
+  const result: Record<string, unknown>[] = [];
+
+  for (const t of tools) {
+    if (t.kind !== "function") continue;
+
+    const funcDef: Record<string, unknown> = { name: t.name };
+    if (t.description) funcDef.description = t.description;
+
+    // Serialize parameters via schemaToWire
+    const params = (t as { parameters?: unknown[] }).parameters;
+    if (params && Array.isArray(params)) {
+      funcDef.parameters = schemaToWire(params);
+    }
+
+    // Strict mode
+    const strict = (t as { strict?: boolean }).strict;
+    if (strict) {
+      funcDef.strict = true;
+      if (funcDef.parameters) {
+        (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+      }
+    }
+
+    result.push({ type: "function", function: funcDef });
+  }
+
+  return result;
 }
 
 function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
@@ -169,17 +272,16 @@ function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
 
   for (const prop of outputs) {
     if (!prop.name) continue;
-    properties[prop.name] = {
-      type: prop.kind ?? "string",
-      ...(prop.description && { description: prop.description }),
-    };
-    if (prop.required) required.push(prop.name);
+    properties[prop.name] = propertyToJsonSchema(prop as Parameters<typeof propertyToJsonSchema>[0]);
+    required.push(prop.name);
   }
+
+  const name = (agent.name || "response").toLowerCase().replace(/[\s-]/g, "_");
 
   return {
     type: "json_schema",
     json_schema: {
-      name: "response",
+      name,
       strict: true,
       schema: {
         type: "object",

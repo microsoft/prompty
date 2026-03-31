@@ -1,0 +1,29 @@
+---
+name: agent-loop
+description: An agent that uses tools in a loop
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: agent
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+inputs:
+  - name: question
+    kind: string
+    default: What is the weather in Seattle and New York?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        description: The city name
+        required: true
+---
+system:
+You are a helpful assistant. Use the available tools to answer questions.
+
+user:
+{{question}}

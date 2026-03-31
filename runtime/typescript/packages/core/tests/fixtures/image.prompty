@@ -1,0 +1,20 @@
+---
+name: image-gen
+description: An image generation prompt
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+inputs:
+  - name: description
+    kind: string
+    default: A cute cat wearing a top hat
+---
+{{description}}

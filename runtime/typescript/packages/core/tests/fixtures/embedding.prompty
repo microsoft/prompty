@@ -1,0 +1,16 @@
+---
+name: embedding
+description: An embedding prompt
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+inputs:
+  - name: text
+    kind: string
+    default: Hello, world!
+---
+{{text}}

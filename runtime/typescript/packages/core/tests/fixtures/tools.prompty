@@ -1,0 +1,32 @@
+---
+name: tool-calling
+description: A prompt with function tools
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+inputs:
+  - name: question
+    kind: string
+    default: What is the weather in Seattle?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        description: The city name
+        required: true
+      - name: unit
+        kind: string
+        description: Temperature unit (celsius or fahrenheit)
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}

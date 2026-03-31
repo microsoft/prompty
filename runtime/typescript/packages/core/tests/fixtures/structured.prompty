@@ -1,0 +1,32 @@
+---
+name: structured-output
+description: A prompt with structured output schema
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY:test-key}
+inputs:
+  - name: topic
+    kind: string
+    default: quantum computing
+outputs:
+  - name: summary
+    kind: string
+    description: A brief summary
+    required: true
+  - name: keyPoints
+    kind: array
+    description: Key points about the topic
+    required: true
+  - name: confidence
+    kind: number
+    description: Confidence score 0-1
+---
+system:
+You are a research assistant that returns structured data.
+
+user:
+Summarize {{topic}} for me.
