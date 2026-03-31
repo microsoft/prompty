@@ -13,7 +13,7 @@ import type { Executor } from "@prompty/core";
 import type { Message } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "./wire.js";
+import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
   async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
@@ -91,6 +91,22 @@ export class OpenAIExecutor implements Executor {
           const result = await client.images.generate(
             args as unknown as Parameters<typeof client.images.generate>[0],
           );
+          callEmit("result", result);
+          return result;
+        });
+      }
+      case "responses": {
+        const args = buildResponsesArgs(agent, messages);
+        const isStreaming = !!args.stream;
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.responses.create`);
+          callEmit("inputs", sanitizeValue("create", args));
+          const result = await client.responses.create(
+            args as unknown as Parameters<typeof client.responses.create>[0],
+          );
+          if (isStreaming) {
+            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+          }
           callEmit("result", result);
           return result;
         });

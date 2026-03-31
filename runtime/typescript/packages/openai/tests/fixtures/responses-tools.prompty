@@ -1,0 +1,37 @@
+---
+name: e2e-responses-tools
+description: Responses API with function tools
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: responses
+  connection:
+    kind: reference
+    name: mock-openai
+  options:
+    temperature: 0
+tools:
+  - name: get_weather
+    kind: function
+    description: Get weather for a city
+    parameters:
+      properties:
+        - name: city
+          kind: string
+          description: City name
+          required: true
+inputs:
+  - name: question
+    kind: string
+    default: What is the weather in Seattle?
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant with tools.
+
+user:
+{{question}}

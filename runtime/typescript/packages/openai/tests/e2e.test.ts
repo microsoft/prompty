@@ -33,21 +33,26 @@ import * as os from "os";
 let lastChatArgs: Record<string, unknown> | null = null;
 let lastEmbeddingArgs: Record<string, unknown> | null = null;
 let lastImageArgs: Record<string, unknown> | null = null;
+let lastResponsesArgs: Record<string, unknown> | null = null;
 
 /** How many times chat.completions.create was called (for agent loop). */
 let chatCallCount = 0;
 
 /** Override to return tool_calls on first call (for agent loop tests). */
 let chatResponder: ((args: Record<string, unknown>) => unknown) | null = null;
+let responsesResponder: ((args: Record<string, unknown>) => unknown) | null = null;
 
 function resetMock() {
   lastChatArgs = null;
   lastEmbeddingArgs = null;
   lastImageArgs = null;
+  lastResponsesArgs = null;
   chatCallCount = 0;
   chatResponder = null;
+  responsesResponder = null;
   // Restore default create (streaming tests may replace it)
   mockOpenAIClient.chat.completions.create = defaultChatCreate;
+  mockOpenAIClient.responses.create = defaultResponsesCreate;
 }
 
 const defaultChatCreate = async (args: Record<string, unknown>) => {
@@ -63,12 +68,32 @@ const defaultChatCreate = async (args: Record<string, unknown>) => {
   };
 };
 
+const defaultResponsesCreate = async (args: Record<string, unknown>) => {
+  lastResponsesArgs = args;
+  if (responsesResponder) return responsesResponder(args);
+  return {
+    id: "resp_mock_123",
+    object: "response",
+    output: [
+      {
+        type: "message",
+        content: [{ type: "output_text", text: "Hello from Responses API!" }],
+      },
+    ],
+    output_text: "Hello from Responses API!",
+    usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+  };
+};
+
 const mockOpenAIClient = {
   constructor: { name: "OpenAI" },
   chat: {
     completions: {
       create: defaultChatCreate,
     },
+  },
+  responses: {
+    create: defaultResponsesCreate,
   },
   embeddings: {
     create: async (args: Record<string, unknown>) => {
@@ -578,6 +603,126 @@ describe("E2E Pipeline", () => {
 
       const streamFrame = findFrame(trace, "PromptyStream");
       expect(streamFrame).toBeDefined();
+    });
+  });
+
+  // =========================================================================
+  // Responses API
+  // =========================================================================
+
+  describe("Responses API", () => {
+    it("calls responses.create and returns text", async () => {
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "responses.prompty"),
+        { name: "Seth" },
+      );
+
+      expect(result).toBe("Hello from Responses API!");
+
+      // Verify it called responses.create, not chat.completions.create
+      expect(lastResponsesArgs).toBeDefined();
+      expect(lastChatArgs).toBeNull();
+
+      // Check wire format
+      expect(lastResponsesArgs!.model).toBe("gpt-4o");
+      expect(lastResponsesArgs!.instructions).toContain("helpful assistant");
+      expect(lastResponsesArgs!.max_output_tokens).toBe(500);
+      expect(lastResponsesArgs!.temperature).toBe(0.7);
+
+      const input = lastResponsesArgs!.input as Record<string, unknown>[];
+      expect(input.length).toBe(1);
+      expect(input[0].role).toBe("user");
+      expect(input[0].content).toContain("Seth");
+    });
+
+    it("handles structured output via text.format", async () => {
+      responsesResponder = () => ({
+        id: "resp_struct",
+        object: "response",
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: '{"summary":"Quantum bits","score":8}' }],
+          },
+        ],
+        output_text: '{"summary":"Quantum bits","score":8}',
+      });
+
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "responses-structured.prompty"),
+      );
+
+      expect(result).toEqual({ summary: "Quantum bits", score: 8 });
+
+      // Verify text.format was sent
+      expect(lastResponsesArgs!.text).toBeDefined();
+      const text = lastResponsesArgs!.text as Record<string, unknown>;
+      const format = text.format as Record<string, unknown>;
+      expect(format.type).toBe("json_schema");
+      expect(format.name).toBe("e2e_responses_structured");
+    });
+
+    it("handles tool calls from Responses API", async () => {
+      responsesResponder = () => ({
+        id: "resp_tools",
+        object: "response",
+        output: [
+          {
+            type: "function_call",
+            call_id: "call_resp_1",
+            name: "get_weather",
+            arguments: '{"city":"Seattle"}',
+          },
+        ],
+      });
+
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "responses-tools.prompty"),
+      );
+
+      expect(Array.isArray(result)).toBe(true);
+      const toolCalls = result as { id: string; name: string; arguments: string }[];
+      expect(toolCalls[0].id).toBe("call_resp_1");
+      expect(toolCalls[0].name).toBe("get_weather");
+
+      // Verify flat tool format
+      const tools = lastResponsesArgs!.tools as Record<string, unknown>[];
+      expect(tools.length).toBe(1);
+      expect(tools[0].type).toBe("function");
+      expect(tools[0].name).toBe("get_weather");
+      expect(tools[0].function).toBeUndefined(); // flat, not nested
+    });
+
+    it("produces correct trace tree", async () => {
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      await execute(path.resolve(FIXTURES, "responses.prompty"), { name: "Seth" });
+
+      const { trace } = readTrace();
+      expect(trace.name).toBe("execute");
+
+      // Find the executor span — should reference responses.create
+      function findSignature(frame: TraceFrame): string | null {
+        if (frame.signature === "OpenAI.responses.create") return frame.signature as string;
+        for (const child of frame.__frames ?? []) {
+          const found = findSignature(child);
+          if (found) return found;
+        }
+        return null;
+      }
+
+      const sig = findSignature(trace);
+      expect(sig).toBe("OpenAI.responses.create");
     });
   });
 });

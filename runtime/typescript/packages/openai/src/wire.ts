@@ -313,3 +313,171 @@ function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Responses API wire format
+// ---------------------------------------------------------------------------
+
+/**
+ * Build Responses API arguments from agent config and messages.
+ *
+ * Key differences from Chat Completions:
+ * - System messages → `instructions` parameter
+ * - Other messages → `input` as EasyInputMessage[]
+ * - `maxOutputTokens` → `max_output_tokens`
+ * - Structured output → `text.format` (not `response_format`)
+ * - Tools use flat `{ type: "function", name, parameters }` (not nested `function:`)
+ */
+export function buildResponsesArgs(
+  agent: Prompty,
+  messages: Message[],
+): Record<string, unknown> {
+  const model = agent.model?.id || "gpt-4o";
+
+  // Separate system messages as instructions, rest as input
+  const systemParts: string[] = [];
+  const inputMessages: Record<string, unknown>[] = [];
+
+  for (const msg of messages) {
+    if (msg.role === "system" || msg.role === "developer") {
+      systemParts.push(msg.text);
+    } else {
+      inputMessages.push(messageToResponsesInput(msg));
+    }
+  }
+
+  const args: Record<string, unknown> = {
+    model,
+    input: inputMessages,
+  };
+
+  // Set instructions from system messages
+  if (systemParts.length > 0) {
+    args.instructions = systemParts.join("\n\n");
+  }
+
+  // Map model options
+  const responseOpts = buildResponsesOptions(agent);
+  Object.assign(args, responseOpts);
+
+  // Tools
+  const tools = responsesToolsToWire(agent);
+  if (tools.length > 0) {
+    args.tools = tools;
+  }
+
+  // Structured output via text.format
+  const textConfig = outputSchemaToResponsesWire(agent);
+  if (textConfig) {
+    args.text = textConfig;
+  }
+
+  return args;
+}
+
+/** Convert a Message to Responses API EasyInputMessage format. */
+function messageToResponsesInput(msg: Message): Record<string, unknown> {
+  const content = msg.toTextContent();
+
+  // Tool result messages → function_call_output
+  if (msg.metadata.tool_call_id) {
+    return {
+      type: "function_call_output",
+      call_id: msg.metadata.tool_call_id,
+      output: typeof content === "string" ? content : JSON.stringify(content),
+    };
+  }
+
+  const role = msg.role === "tool" ? "user" : msg.role;
+  return { role, content };
+}
+
+/** Build Responses-specific model options. */
+function buildResponsesOptions(agent: Prompty): Record<string, unknown> {
+  const opts = agent.model?.options;
+  if (!opts) return {};
+
+  const result: Record<string, unknown> = {};
+
+  if (opts.temperature !== undefined) result.temperature = opts.temperature;
+  if (opts.maxOutputTokens !== undefined) result.max_output_tokens = opts.maxOutputTokens;
+  if (opts.topP !== undefined) result.top_p = opts.topP;
+
+  // Pass through additionalProperties — but don't overwrite mapped keys
+  if (opts.additionalProperties) {
+    for (const [k, v] of Object.entries(opts.additionalProperties)) {
+      if (!(k in result)) {
+        result[k] = v;
+      }
+    }
+  }
+
+  return result;
+}
+
+/** Convert agent tools to Responses API tool format. */
+function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
+  const tools = agent.tools;
+  if (!tools || tools.length === 0) return [];
+
+  const result: Record<string, unknown>[] = [];
+
+  for (const t of tools) {
+    if (t.kind !== "function") continue;
+
+    // Responses API uses flat tool format (not nested under "function:")
+    const tool: Record<string, unknown> = {
+      type: "function",
+      name: t.name,
+    };
+    if (t.description) tool.description = t.description;
+
+    const params = (t as { parameters?: unknown[] }).parameters;
+    if (params && Array.isArray(params)) {
+      tool.parameters = schemaToWire(params);
+    }
+
+    const strict = (t as { strict?: boolean }).strict;
+    if (strict) {
+      tool.strict = true;
+      if (tool.parameters) {
+        (tool.parameters as Record<string, unknown>).additionalProperties = false;
+      }
+    }
+
+    result.push(tool);
+  }
+
+  return result;
+}
+
+/** Convert outputSchema to Responses API text.format config. */
+function outputSchemaToResponsesWire(agent: Prompty): Record<string, unknown> | null {
+  const outputs = agent.outputs;
+  if (!outputs || outputs.length === 0) return null;
+
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const prop of outputs) {
+    if (!prop.name) continue;
+    properties[prop.name] = propertyToJsonSchema(prop as Parameters<typeof propertyToJsonSchema>[0]);
+    required.push(prop.name);
+  }
+
+  const name = (agent.name || "response").toLowerCase().replace(/[\s-]/g, "_");
+
+  return {
+    format: {
+      type: "json_schema",
+      name,
+      strict: true,
+      schema: {
+        type: "object",
+        properties,
+        required,
+        additionalProperties: false,
+      },
+    },
+  };
+}

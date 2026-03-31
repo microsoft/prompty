@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "../src/wire.js";
+import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
 import {
   Prompty,
@@ -529,5 +529,205 @@ describe("processResponse edge cases", () => {
     expect(processResponse(agent, "just a string")).toBe("just a string");
     expect(processResponse(agent, null)).toBeNull();
     expect(processResponse(agent, 42)).toBe(42);
+  });
+});
+
+// ===========================================================================
+// buildResponsesArgs
+// ===========================================================================
+
+describe("buildResponsesArgs", () => {
+  it("separates system messages into instructions", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const msgs = [
+      new Message("system", [text("You are helpful.")]),
+      new Message("user", [text("Hello")]),
+    ];
+    const args = buildResponsesArgs(agent, msgs);
+
+    expect(args.instructions).toBe("You are helpful.");
+    expect(args.input).toEqual([{ role: "user", content: "Hello" }]);
+    expect(args.model).toBe("gpt-4o");
+  });
+
+  it("maps maxOutputTokens to max_output_tokens (not max_completion_tokens)", () => {
+    const agent = makeAgent({ apiType: "responses", options: { maxOutputTokens: 500 } });
+    const args = buildResponsesArgs(agent, []);
+
+    expect(args.max_output_tokens).toBe(500);
+    expect(args.max_completion_tokens).toBeUndefined();
+  });
+
+  it("maps temperature and topP", () => {
+    const agent = makeAgent({ apiType: "responses", options: { temperature: 0.7, topP: 0.9 } });
+    const args = buildResponsesArgs(agent, []);
+
+    expect(args.temperature).toBe(0.7);
+    expect(args.top_p).toBe(0.9);
+  });
+
+  it("does NOT include frequency_penalty/presence_penalty", () => {
+    const agent = makeAgent({
+      apiType: "responses",
+      options: { frequencyPenalty: 0.5, presencePenalty: 0.5 },
+    });
+    const args = buildResponsesArgs(agent, []);
+
+    expect(args.frequency_penalty).toBeUndefined();
+    expect(args.presence_penalty).toBeUndefined();
+  });
+
+  it("passes additionalProperties through", () => {
+    const agent = makeAgent({
+      apiType: "responses",
+      options: { additionalProperties: { store: true, previous_response_id: "resp_123" } },
+    });
+    const args = buildResponsesArgs(agent, []);
+
+    expect(args.store).toBe(true);
+    expect(args.previous_response_id).toBe("resp_123");
+  });
+
+  it("uses flat tool format (not nested function:)", () => {
+    const agent = makeAgent({
+      apiType: "responses",
+      tools: [
+        new FunctionTool({
+          name: "get_weather",
+          kind: "function",
+          description: "Get weather",
+          parameters: [
+            new Property({ name: "city", kind: "string", required: true }),
+          ] as FunctionTool["parameters"],
+        }),
+      ],
+    });
+    const args = buildResponsesArgs(agent, []);
+
+    const tools = args.tools as Record<string, unknown>[];
+    expect(tools.length).toBe(1);
+    expect(tools[0].type).toBe("function");
+    expect(tools[0].name).toBe("get_weather");
+    // Flat format — no `function:` wrapper
+    expect(tools[0].function).toBeUndefined();
+    expect(tools[0].parameters).toBeDefined();
+  });
+
+  it("uses text.format for structured output (not response_format)", () => {
+    const agent = makeAgent({
+      name: "test_structured",
+      apiType: "responses",
+      outputs: [
+        new Property({ name: "summary", kind: "string" }),
+        new Property({ name: "score", kind: "integer" }),
+      ],
+    });
+    const args = buildResponsesArgs(agent, []);
+
+    expect(args.response_format).toBeUndefined();
+    expect(args.text).toBeDefined();
+    const textConfig = args.text as Record<string, unknown>;
+    const format = textConfig.format as Record<string, unknown>;
+    expect(format.type).toBe("json_schema");
+    expect(format.name).toBe("test_structured");
+    expect(format.strict).toBe(true);
+    expect(format.schema).toBeDefined();
+  });
+
+  it("combines multiple system messages", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const msgs = [
+      new Message("system", [text("Rule 1.")]),
+      new Message("developer", [text("Rule 2.")]),
+      new Message("user", [text("Hello")]),
+    ];
+    const args = buildResponsesArgs(agent, msgs);
+
+    expect(args.instructions).toBe("Rule 1.\n\nRule 2.");
+    expect((args.input as unknown[]).length).toBe(1);
+  });
+
+  it("converts tool result messages to function_call_output", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const msgs = [
+      new Message("tool", [text("72°F")], { tool_call_id: "call_123" }),
+    ];
+    const args = buildResponsesArgs(agent, msgs);
+
+    const input = args.input as Record<string, unknown>[];
+    expect(input.length).toBe(1);
+    expect(input[0].type).toBe("function_call_output");
+    expect(input[0].call_id).toBe("call_123");
+    expect(input[0].output).toBe("72°F");
+  });
+});
+
+// ===========================================================================
+// processResponse — Responses API
+// ===========================================================================
+
+describe("processResponse Responses API", () => {
+  it("extracts text from output_text", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const response = {
+      object: "response",
+      output: [
+        {
+          type: "message",
+          content: [{ type: "output_text", text: "Hello!" }],
+        },
+      ],
+      output_text: "Hello!",
+    };
+    expect(processResponse(agent, response)).toBe("Hello!");
+  });
+
+  it("extracts function tool calls", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const response = {
+      object: "response",
+      output: [
+        {
+          type: "function_call",
+          call_id: "call_abc",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+        },
+      ],
+    };
+    const result = processResponse(agent, response) as { id: string; name: string; arguments: string }[];
+    expect(result.length).toBe(1);
+    expect(result[0].id).toBe("call_abc");
+    expect(result[0].name).toBe("get_weather");
+    expect(result[0].arguments).toBe('{"city":"NYC"}');
+  });
+
+  it("JSON-parses structured output from Responses API", () => {
+    const agent = makeAgent({
+      apiType: "responses",
+      outputs: [
+        new Property({ name: "summary", kind: "string" }),
+        new Property({ name: "score", kind: "integer" }),
+      ],
+    });
+    const response = {
+      object: "response",
+      output: [
+        { type: "message", content: [{ type: "output_text", text: '{"summary":"test","score":5}' }] },
+      ],
+      output_text: '{"summary":"test","score":5}',
+    };
+    expect(processResponse(agent, response)).toEqual({ summary: "test", score: 5 });
+  });
+
+  it("falls back to message content when output_text is absent", () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const response = {
+      object: "response",
+      output: [
+        { type: "message", content: [{ type: "output_text", text: "Fallback text" }] },
+      ],
+    };
+    expect(processResponse(agent, response)).toBe("Fallback text");
   });
 });

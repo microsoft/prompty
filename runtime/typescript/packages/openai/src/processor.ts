@@ -39,6 +39,11 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
 
   const r = response as Record<string, unknown>;
 
+  // Responses API — has output[] and object === "response"
+  if (r.object === "response" && Array.isArray(r.output)) {
+    return processResponsesApi(agent, r);
+  }
+
   // ChatCompletion
   if (r.choices) {
     return processChatCompletion(agent, r);
@@ -132,6 +137,84 @@ async function* streamGenerator(
     const tc = toolCallAcc.get(idx)!;
     yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Responses API processing
+// ---------------------------------------------------------------------------
+
+/**
+ * Process a Responses API response.
+ *
+ * Extracts:
+ * - Text content from `output_text` or output message items
+ * - Function tool calls from `function_call` output items
+ * - JSON-parsed content when outputSchema is present
+ */
+function processResponsesApi(
+  agent: Prompty,
+  response: Record<string, unknown>,
+): unknown {
+  const output = response.output as Record<string, unknown>[];
+
+  // Collect function calls
+  const funcCalls: ToolCall[] = [];
+  for (const item of output) {
+    if (item.type === "function_call") {
+      funcCalls.push({
+        id: (item.call_id ?? item.id ?? "") as string,
+        name: item.name as string,
+        arguments: item.arguments as string,
+      });
+    }
+  }
+
+  if (funcCalls.length > 0) {
+    return funcCalls;
+  }
+
+  // Text content — use output_text convenience field
+  const outputText = response.output_text as string | undefined;
+  if (outputText !== undefined) {
+    // Structured output — JSON parse when outputs schema exists
+    if (agent.outputs && agent.outputs.length > 0) {
+      try {
+        return JSON.parse(outputText);
+      } catch {
+        return outputText;
+      }
+    }
+    return outputText;
+  }
+
+  // Fallback: extract from output message items
+  const texts: string[] = [];
+  for (const item of output) {
+    if (item.type === "message") {
+      const content = item.content as Record<string, unknown>[] | undefined;
+      if (content) {
+        for (const part of content) {
+          if (part.type === "output_text" || part.type === "text") {
+            texts.push(part.text as string);
+          }
+        }
+      }
+    }
+  }
+
+  if (texts.length > 0) {
+    const text = texts.join("");
+    if (agent.outputs && agent.outputs.length > 0) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+    return text;
+  }
+
+  return response;
 }
 
 // ---------------------------------------------------------------------------

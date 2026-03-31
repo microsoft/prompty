@@ -1,0 +1,28 @@
+---
+name: e2e-responses
+description: E2E test for Responses API
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: responses
+  connection:
+    kind: reference
+    name: mock-openai
+  options:
+    temperature: 0.7
+    maxOutputTokens: 500
+inputs:
+  - name: name
+    kind: string
+    default: Seth
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Hello, my name is {{name}}.

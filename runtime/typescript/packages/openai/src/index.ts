@@ -8,7 +8,7 @@
 
 export { OpenAIExecutor } from "./executor.js";
 export { OpenAIProcessor, processResponse } from "./processor.js";
-export { messageToWire, buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "./wire.js";
+export { messageToWire, buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
 
 // Auto-register on import
 import { registerExecutor, registerProcessor } from "@prompty/core";
