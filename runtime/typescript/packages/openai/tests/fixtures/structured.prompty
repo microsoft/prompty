@@ -1,0 +1,32 @@
+---
+name: e2e-structured
+description: E2E test for structured output
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-openai
+inputs:
+  - name: topic
+    kind: string
+    default: quantum computing
+outputs:
+  - name: summary
+    kind: string
+    description: A brief summary
+  - name: confidence
+    kind: float
+    description: Confidence score
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+Return structured JSON about the topic.
+
+user:
+Summarize {{topic}}.

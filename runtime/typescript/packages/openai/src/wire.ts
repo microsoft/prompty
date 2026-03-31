@@ -118,10 +118,31 @@ export function buildImageArgs(
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id || "dall-e-3";
-  const args: Record<string, unknown> = {
-    prompt: typeof data === "string" ? data : String(data),
-    model,
-  };
+
+  // Extract prompt text: data may be a string, or a Message[] from the parser
+  let prompt: string;
+  if (typeof data === "string") {
+    prompt = data;
+  } else if (Array.isArray(data)) {
+    // Messages have .parts[].value for text content, or a .text getter
+    prompt = data
+      .map((m: { text?: string; parts?: { kind: string; value: string }[] }) => {
+        if (typeof m.text === "string") return m.text;
+        if (Array.isArray(m.parts)) {
+          return m.parts
+            .filter((p) => p.kind === "text")
+            .map((p) => p.value)
+            .join("");
+        }
+        return String(m);
+      })
+      .join("\n")
+      .trim();
+  } else {
+    prompt = String(data);
+  }
+
+  const args: Record<string, unknown> = { prompt, model };
   const extra = agent.model?.options?.additionalProperties;
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {

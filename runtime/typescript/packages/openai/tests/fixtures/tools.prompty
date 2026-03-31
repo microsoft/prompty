@@ -1,0 +1,34 @@
+---
+name: e2e-tools
+description: E2E test for function tool calling
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-openai
+inputs:
+  - name: question
+    kind: string
+    default: What is the weather in Seattle?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather
+    parameters:
+      - name: city
+        kind: string
+        description: The city name
+        required: true
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}

@@ -1,0 +1,21 @@
+---
+name: e2e-embedding
+description: E2E test for embedding
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: reference
+    name: mock-openai
+inputs:
+  - name: text
+    kind: string
+    default: Hello world
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+{{text}}

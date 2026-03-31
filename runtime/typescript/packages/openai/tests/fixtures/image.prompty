@@ -1,0 +1,24 @@
+---
+name: e2e-image
+description: E2E test for image generation
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: reference
+    name: mock-openai
+  options:
+    additionalProperties:
+      size: "1024x1024"
+inputs:
+  - name: description
+    kind: string
+    default: A cute cat
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+{{description}}
