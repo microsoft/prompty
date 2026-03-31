@@ -46,24 +46,28 @@ function resetMock() {
   lastImageArgs = null;
   chatCallCount = 0;
   chatResponder = null;
+  // Restore default create (streaming tests may replace it)
+  mockOpenAIClient.chat.completions.create = defaultChatCreate;
 }
+
+const defaultChatCreate = async (args: Record<string, unknown>) => {
+  lastChatArgs = args;
+  chatCallCount++;
+  if (chatResponder) return chatResponder(args);
+  return {
+    choices: [{
+      message: { role: "assistant", content: "Hello from mock!" },
+      finish_reason: "stop",
+    }],
+    usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+  };
+};
 
 const mockOpenAIClient = {
   constructor: { name: "OpenAI" },
   chat: {
     completions: {
-      create: async (args: Record<string, unknown>) => {
-        lastChatArgs = args;
-        chatCallCount++;
-        if (chatResponder) return chatResponder(args);
-        return {
-          choices: [{
-            message: { role: "assistant", content: "Hello from mock!" },
-            finish_reason: "stop",
-          }],
-          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
-        };
-      },
+      create: defaultChatCreate,
     },
   },
   embeddings: {
@@ -421,6 +425,159 @@ describe("E2E Pipeline", () => {
 
       // Should record iterations
       expect(trace.iterations).toBe(1);
+    });
+  });
+
+  // =========================================================================
+  // Streaming
+  // =========================================================================
+
+  describe("streaming", () => {
+    it("returns an async generator that yields content chunks", async () => {
+      // Mock streaming response: an async iterable of chunk objects
+      const chunks = [
+        { choices: [{ delta: { content: "Hello" }, finish_reason: null }] },
+        { choices: [{ delta: { content: " world" }, finish_reason: null }] },
+        { choices: [{ delta: { content: "!" }, finish_reason: "stop" }] },
+      ];
+
+      mockOpenAIClient.chat.completions.create = async (args: Record<string, unknown>) => {
+        lastChatArgs = args;
+        chatCallCount++;
+        // Return an async iterable (simulates SDK stream)
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            for (const chunk of chunks) {
+              yield chunk;
+            }
+          },
+        };
+      };
+
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "streaming.prompty"),
+        { topic: "streaming" },
+      );
+
+      // Result should be an async generator
+      expect(result).toBeDefined();
+      expect(typeof (result as AsyncIterable<unknown>)[Symbol.asyncIterator]).toBe("function");
+
+      // Collect all chunks
+      const collected: string[] = [];
+      for await (const chunk of result as AsyncIterable<string>) {
+        collected.push(chunk);
+      }
+      expect(collected).toEqual(["Hello", " world", "!"]);
+
+      // Verify stream: true was sent to SDK
+      expect(lastChatArgs!.stream).toBe(true);
+    });
+
+    it("yields tool calls from streaming response", async () => {
+      const chunks = [
+        {
+          choices: [{
+            delta: {
+              tool_calls: [{
+                index: 0,
+                id: "call_abc",
+                function: { name: "get_weather", arguments: '{"ci' },
+              }],
+            },
+            finish_reason: null,
+          }],
+        },
+        {
+          choices: [{
+            delta: {
+              tool_calls: [{
+                index: 0,
+                function: { arguments: 'ty":"NYC"}' },
+              }],
+            },
+            finish_reason: null,
+          }],
+        },
+        { choices: [{ delta: {}, finish_reason: "tool_calls" }] },
+      ];
+
+      mockOpenAIClient.chat.completions.create = async (args: Record<string, unknown>) => {
+        lastChatArgs = args;
+        chatCallCount++;
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            for (const chunk of chunks) yield chunk;
+          },
+        };
+      };
+
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "streaming.prompty"),
+        { topic: "tools" },
+      );
+
+      const collected: unknown[] = [];
+      for await (const chunk of result as AsyncIterable<unknown>) {
+        collected.push(chunk);
+      }
+
+      // Should yield a ToolCall at the end
+      expect(collected.length).toBe(1);
+      const tc = collected[0] as { id: string; name: string; arguments: string };
+      expect(tc.id).toBe("call_abc");
+      expect(tc.name).toBe("get_weather");
+      expect(tc.arguments).toBe('{"city":"NYC"}');
+    });
+
+    it("produces trace with PromptyStream span after consumption", async () => {
+      const chunks = [
+        { choices: [{ delta: { content: "Hi" }, finish_reason: null }] },
+        { choices: [{ delta: { content: "!" }, finish_reason: "stop" }] },
+      ];
+
+      mockOpenAIClient.chat.completions.create = async (args: Record<string, unknown>) => {
+        lastChatArgs = args;
+        chatCallCount++;
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            for (const chunk of chunks) yield chunk;
+          },
+        };
+      };
+
+      const pt = new PromptyTracer({ outputDir: tempDir });
+      Tracer.add("test", pt.factory);
+
+      const result = await execute(
+        path.resolve(FIXTURES, "streaming.prompty"),
+        { topic: "trace" },
+      );
+
+      // Consume the stream to trigger tracing
+      for await (const _ of result as AsyncIterable<unknown>) { /* drain */ }
+
+      const { trace } = readTrace();
+      expect(trace.name).toBe("execute");
+
+      // Find the PromptyStream trace frame somewhere in the tree
+      function findFrame(frame: TraceFrame, name: string): TraceFrame | null {
+        if (frame.name === name) return frame;
+        for (const child of frame.__frames ?? []) {
+          const found = findFrame(child, name);
+          if (found) return found;
+        }
+        return null;
+      }
+
+      const streamFrame = findFrame(trace, "PromptyStream");
+      expect(streamFrame).toBeDefined();
     });
   });
 });

@@ -8,7 +8,7 @@
 
 import OpenAI from "openai";
 import type { Prompty } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import type { Message } from "@prompty/core";
 import { getConnection } from "@prompty/core";
@@ -55,12 +55,18 @@ export class OpenAIExecutor implements Executor {
       case "chat":
       case "agent": {
         const args = buildChatArgs(agent, messages);
+        const isStreaming = !!args.stream;
         return traceSpan("create", async (callEmit) => {
           callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
             args as unknown as Parameters<typeof client.chat.completions.create>[0],
           );
+          if (isStreaming) {
+            // Wrap streaming response for tracing — don't emit result yet,
+            // PromptyStream will trace on exhaustion
+            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+          }
           callEmit("result", result);
           return result;
         });

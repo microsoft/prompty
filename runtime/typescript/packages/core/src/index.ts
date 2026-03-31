@@ -24,6 +24,7 @@ export {
   type ToolCall,
   Message,
   ThreadMarker,
+  PromptyStream,
   RICH_KINDS,
   ROLES,
   text,

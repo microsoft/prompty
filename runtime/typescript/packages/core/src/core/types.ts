@@ -163,6 +163,50 @@ export const RICH_KINDS = new Set(["thread", "image", "file", "audio"]);
 export const ROLES = new Set<Role>(["system", "user", "assistant", "developer", "tool"]);
 
 // ---------------------------------------------------------------------------
+// Streaming
+// ---------------------------------------------------------------------------
+
+/**
+ * Tracing-aware wrapper for asynchronous LLM streaming responses.
+ *
+ * Accumulates all chunks as they are yielded. When the async iterator
+ * is exhausted, the accumulated items are flushed to the tracer.
+ *
+ * Matches the Python PromptyStream / AsyncPromptyStream pattern.
+ */
+export class PromptyStream implements AsyncIterable<unknown> {
+  readonly name: string;
+  private readonly inner: AsyncIterable<unknown>;
+  readonly items: unknown[] = [];
+
+  constructor(name: string, inner: AsyncIterable<unknown>) {
+    this.name = name;
+    this.inner = inner;
+  }
+
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<unknown> {
+    // Lazy import to avoid circular deps
+    const { Tracer } = await import("../tracing/tracer.js");
+
+    try {
+      for await (const chunk of this.inner) {
+        this.items.push(chunk);
+        yield chunk;
+      }
+    } finally {
+      // Flush accumulated items to tracer when stream is exhausted
+      if (this.items.length > 0) {
+        const span = Tracer.start("PromptyStream");
+        span("signature", `${this.name}.PromptyStream`);
+        span("inputs", "None");
+        span("result", this.items);
+        span.end();
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
