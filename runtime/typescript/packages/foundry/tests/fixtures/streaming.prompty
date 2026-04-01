@@ -1,0 +1,29 @@
+---
+name: foundry-streaming
+description: E2E test for Foundry streaming chat completion
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-foundry
+  options:
+    temperature: 0.7
+    additionalProperties:
+      stream: true
+inputs:
+  - name: topic
+    kind: string
+    default: TypeScript
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Tell me about {{topic}}.

@@ -1,0 +1,21 @@
+---
+name: foundry-embedding
+description: E2E test for Foundry embedding
+model:
+  id: text-embedding-3-small
+  provider: foundry
+  apiType: embedding
+  connection:
+    kind: reference
+    name: mock-foundry
+inputs:
+  - name: text
+    kind: string
+    default: Hello world
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+{{text}}

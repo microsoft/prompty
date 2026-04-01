@@ -1,0 +1,28 @@
+---
+name: azure-chat
+description: E2E test for Azure backward-compat chat completion
+model:
+  id: gpt-4o
+  provider: azure
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-azure
+  options:
+    temperature: 0.5
+    maxOutputTokens: 256
+inputs:
+  - name: name
+    kind: string
+    default: World
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Hello, {{name}}!

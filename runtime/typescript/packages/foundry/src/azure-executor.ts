@@ -6,10 +6,10 @@
 
 import OpenAI, { AzureOpenAI } from "openai";
 import type { Prompty, Message } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs } from "@prompty/openai";
+import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "@prompty/openai";
 
 export class AzureExecutor extends OpenAIExecutor {
   override async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
@@ -50,12 +50,16 @@ export class AzureExecutor extends OpenAIExecutor {
       case "chat":
       case "agent": {
         const args = buildChatArgs(agent, messages);
+        const isStreaming = !!args.stream;
         return traceSpan("create", async (callEmit) => {
           callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
             args as unknown as Parameters<typeof client.chat.completions.create>[0],
           );
+          if (isStreaming) {
+            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+          }
           callEmit("result", result);
           return result;
         });
@@ -80,6 +84,22 @@ export class AzureExecutor extends OpenAIExecutor {
           const result = await client.images.generate(
             args as unknown as Parameters<typeof client.images.generate>[0],
           );
+          callEmit("result", result);
+          return result;
+        });
+      }
+      case "responses": {
+        const args = buildResponsesArgs(agent, messages);
+        const isStreaming = !!args.stream;
+        return traceSpan("create", async (callEmit) => {
+          callEmit("signature", `${clientName}.responses.create`);
+          callEmit("inputs", sanitizeValue("create", args));
+          const result = await client.responses.create(
+            args as unknown as Parameters<typeof client.responses.create>[0],
+          );
+          if (isStreaming) {
+            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+          }
           callEmit("result", result);
           return result;
         });

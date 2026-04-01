@@ -1,0 +1,24 @@
+---
+name: foundry-image
+description: E2E test for Foundry image generation
+model:
+  id: dall-e-3
+  provider: foundry
+  apiType: image
+  connection:
+    kind: reference
+    name: mock-foundry
+  options:
+    additionalProperties:
+      size: "1024x1024"
+inputs:
+  - name: description
+    kind: string
+    default: A cute cat
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+{{description}}

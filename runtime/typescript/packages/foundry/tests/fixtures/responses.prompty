@@ -1,0 +1,28 @@
+---
+name: foundry-responses
+description: E2E test for Foundry Responses API
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: responses
+  connection:
+    kind: reference
+    name: mock-foundry
+  options:
+    temperature: 0.7
+    maxOutputTokens: 500
+inputs:
+  - name: name
+    kind: string
+    default: Seth
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Hello, my name is {{name}}.

@@ -1,0 +1,29 @@
+---
+name: azure-streaming
+description: E2E test for Azure backward-compat streaming
+model:
+  id: gpt-4o
+  provider: azure
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-azure
+  options:
+    temperature: 0.7
+    additionalProperties:
+      stream: true
+inputs:
+  - name: topic
+    kind: string
+    default: TypeScript
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Tell me about {{topic}}.

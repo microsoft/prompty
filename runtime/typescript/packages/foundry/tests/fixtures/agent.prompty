@@ -1,0 +1,34 @@
+---
+name: foundry-agent
+description: E2E test for Foundry agent loop with tool calls
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: agent
+  connection:
+    kind: reference
+    name: mock-foundry
+inputs:
+  - name: question
+    kind: string
+    default: What is the weather?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get current weather
+    parameters:
+      - name: city
+        kind: string
+        description: City name
+        required: true
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Use tools to answer questions.
+
+user:
+{{question}}

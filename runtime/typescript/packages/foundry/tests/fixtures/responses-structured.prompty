@@ -1,0 +1,30 @@
+---
+name: foundry-responses-structured
+description: Foundry Responses API with structured output
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: responses
+  connection:
+    kind: reference
+    name: mock-foundry
+  options:
+    temperature: 0
+outputs:
+  - name: summary
+    kind: string
+    description: A brief summary
+  - name: score
+    kind: integer
+    description: Confidence score
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You produce structured output.
+
+user:
+Summarize quantum computing.

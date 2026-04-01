@@ -1,0 +1,28 @@
+---
+name: foundry-chat
+description: E2E test for Foundry chat completion
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-foundry
+  options:
+    temperature: 0.7
+    maxOutputTokens: 500
+inputs:
+  - name: name
+    kind: string
+    default: World
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Hello, {{name}}!
