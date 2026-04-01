@@ -36,25 +36,25 @@ const ProviderBadge = ({ provider, size }: { provider: string; size: number }) =
   switch (provider) {
     case "openai":
       return (
-        <BadgeWrapper $size={size} $bg="#ce917820" $color="#ce9178">
+        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
           <OpenAIIcon size={iconSize} />
         </BadgeWrapper>
       );
     case "foundry":
       return (
-        <BadgeWrapper $size={size} $bg="#569cd620" $color="#569cd6">
+        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent)" $color="var(--vscode-textLink-foreground)">
           <FoundryIcon size={iconSize} />
         </BadgeWrapper>
       );
     case "anthropic":
       return (
-        <BadgeWrapper $size={size} $bg="#ce917820" $color="#ce9178">
+        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
           <AnthropicIcon size={iconSize} />
         </BadgeWrapper>
       );
     default:
       return (
-        <BadgeWrapper $size={size} $bg="#ce917820" $color="#ce9178">
+        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
           ⚡
         </BadgeWrapper>
       );
@@ -67,7 +67,7 @@ const NodeIcon = ({ trace, size }: Props) => {
     const provider = detectProvider(trace.signature);
     if (provider) return <ProviderBadge provider={provider} size={size} />;
     return (
-      <BadgeWrapper $size={size} $bg="#ce917820" $color="#ce9178">
+      <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
         ⚡
       </BadgeWrapper>
     );
@@ -85,7 +85,7 @@ const NodeIcon = ({ trace, size }: Props) => {
     trace.name.includes("PromptyStream")
   ) {
     return (
-      <BadgeWrapper $size={size} $bg="#569cd620" $color="#569cd6">
+      <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent)" $color="var(--vscode-textLink-foreground)">
         <PromptyIcon size={Math.round(size * 0.75)} />
       </BadgeWrapper>
     );
@@ -93,7 +93,7 @@ const NodeIcon = ({ trace, size }: Props) => {
 
   // Default: function
   return (
-    <BadgeWrapper $size={size} $bg="#4ec9b020" $color="#4ec9b0">
+    <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-green) 12%, transparent)" $color="var(--vscode-charts-green)">
       ƒ
     </BadgeWrapper>
   );

@@ -5,9 +5,9 @@ import { formatDuration, formatTokens } from "../utilities/format";
 const Frame = styled.div`
   display: flex;
   flex-wrap: wrap;
-  border: 1px solid #2d2d2d;
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 6px;
-  background: #252526;
+  background: var(--vscode-editor-background);
   overflow: hidden;
   flex-shrink: 0;
 `;
@@ -15,7 +15,7 @@ const Frame = styled.div`
 const DetailItem = styled.div`
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #2d2d2d;
+  border-right: 1px solid var(--vscode-panel-border);
   padding: 8px 12px;
   flex: 1 1 0;
   min-width: 100px;

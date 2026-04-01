@@ -26,11 +26,11 @@ const TreeRow = styled.div<{ $selected?: boolean; $level: number }>`
   gap: 4px;
   cursor: pointer;
   user-select: none;
-  border-left: 3px solid ${(props) => (props.$selected ? "#569cd6" : "transparent")};
-  background: ${(props) => (props.$selected ? "#252526" : "transparent")};
+  border-left: 3px solid ${(props) => (props.$selected ? "var(--vscode-textLink-foreground)" : "transparent")};
+  background: ${(props) => (props.$selected ? "var(--vscode-editor-background)" : "transparent")};
 
   &:hover {
-    background: ${(props) => (props.$selected ? "#252526" : "#2a2d2e")};
+    background: ${(props) => (props.$selected ? "var(--vscode-editor-background)" : "var(--vscode-list-hoverBackground)")};
   }
 `;
 
@@ -70,8 +70,8 @@ const TokenPill = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #4ec9b015;
-  color: #4ec9b0;
+  background: color-mix(in srgb, var(--vscode-charts-green) 8%, transparent);
+  color: var(--vscode-charts-green);
   font-size: 10px;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   padding: 1px 5px;
@@ -84,7 +84,7 @@ const DurationPill = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #88888815;
+  background: color-mix(in srgb, var(--vscode-descriptionForeground) 8%, transparent);
   color: var(--vscode-descriptionForeground);
   font-size: 10px;
   font-family: 'Cascadia Code', 'Fira Code', monospace;

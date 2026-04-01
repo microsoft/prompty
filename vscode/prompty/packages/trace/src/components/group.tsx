@@ -7,9 +7,9 @@ import Inspector from "./inspector";
 const Frame = styled.div<{ $fill?: boolean }>`
   display: flex;
   flex-direction: column;
-  border: 1px solid #2d2d2d;
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 6px;
-  background: #252526;
+  background: var(--vscode-editor-background);
   padding: 8px 10px;
   overflow: hidden;
   ${(props) => props.$fill ? "flex: 1; min-height: 0;" : ""}
@@ -44,7 +44,7 @@ const Expand = styled.div`
   align-items: center;
   color: var(--vscode-descriptionForeground);
   &:hover {
-    color: #569cd6;
+    color: var(--vscode-textLink-foreground);
   }
 `;
 

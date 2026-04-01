@@ -9,7 +9,7 @@ export const EndChildIcon = () => {
     >
       <path
         d="M0.500001 0.500001L0.500001 8.5C0.500001 14.0228 4.97715 18.5 10.5 18.5L22 18.5"
-        stroke="#525252"
+        stroke="var(--vscode-descriptionForeground)"
       />
     </svg>
   );
@@ -24,10 +24,10 @@ export const ChildIcon = () => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <line x1="0.5" y1="0.5" x2="0.500002" y2="36.5" stroke="#525252" />
+      <line x1="0.5" y1="0.5" x2="0.500002" y2="36.5" stroke="var(--vscode-descriptionForeground)" />
       <path
         d="M0.500001 0.500001L0.500001 8.5C0.500001 14.0228 4.97715 18.5 10.5 18.5L22 18.5"
-        stroke="#525252"
+        stroke="var(--vscode-descriptionForeground)"
       />
     </svg>
   );
@@ -42,7 +42,7 @@ export const BarIcon = () => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <line x1="0.5" y1="0.5" x2="0.500002" y2="36.5" stroke="#525252" />
+      <line x1="0.5" y1="0.5" x2="0.500002" y2="36.5" stroke="var(--vscode-descriptionForeground)" />
     </svg>
   );
 };

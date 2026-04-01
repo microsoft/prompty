@@ -20,15 +20,15 @@ const HeaderSection = styled.div`
 const TabBar = styled.div`
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #2d2d2d;
+  border-bottom: 1px solid var(--vscode-panel-border);
   padding: 0 14px;
 `;
 
 const Tab = styled.button<{ $active?: boolean }>`
   background: none;
   border: none;
-  border-bottom: 2px solid ${(props) => (props.$active ? "#569cd6" : "transparent")};
-  color: ${(props) => (props.$active ? "#569cd6" : "var(--vscode-descriptionForeground)")};
+  border-bottom: 2px solid ${(props) => (props.$active ? "var(--vscode-textLink-foreground)" : "transparent")};
+  color: ${(props) => (props.$active ? "var(--vscode-textLink-foreground)" : "var(--vscode-descriptionForeground)")};
   font-size: 12px;
   font-family: inherit;
   padding: 6px 12px;
@@ -37,7 +37,7 @@ const Tab = styled.button<{ $active?: boolean }>`
   font-weight: ${(props) => (props.$active ? "600" : "400")};
 
   &:hover {
-    color: ${(props) => (props.$active ? "#569cd6" : "var(--vscode-foreground)")};
+    color: ${(props) => (props.$active ? "var(--vscode-textLink-foreground)" : "var(--vscode-foreground)")};
   }
 `;
 
@@ -52,14 +52,14 @@ const TabContent = styled.div`
 `;
 
 const RawPre = styled.pre`
-  background: #252526;
-  border: 1px solid #2d2d2d;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 6px;
   padding: 16px;
   margin: 0;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 12px;
-  color: #d4d4d4;
+  color: var(--vscode-foreground);
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-all;

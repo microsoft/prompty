@@ -28,7 +28,7 @@ const Sidebar = styled.div.attrs<ResizerProps>((props) => ({
   style: { width: props.size ? `${props.size}px` : "500px" },
 }))`
   overflow: auto;
-  border-right: 1px solid #2d2d2d;
+  border-right: 1px solid var(--vscode-panel-border);
   position: relative;
 `;
 
@@ -36,7 +36,7 @@ const SideBarResizer = styled.div.attrs<ResizerProps>((props) => ({
   style: { width: props.size ? `${props.size}px` : "4px" },
 }))`
   cursor: ew-resize;
-  background-color: #2d2d2d;
+  background-color: var(--vscode-panel-border);
   height: 100%;
 
   &:hover {
@@ -74,7 +74,7 @@ const CollapserDiv = styled.div`
   color: var(--vscode-descriptionForeground);
   &:hover {
     color: var(--vscode-foreground);
-    background: #2a2d2e;
+    background: var(--vscode-list-hoverBackground);
   }
 `;
 

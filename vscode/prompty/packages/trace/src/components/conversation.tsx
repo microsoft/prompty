@@ -33,20 +33,20 @@ const Bubble = styled.div<{ $role: string }>`
   word-break: break-word;
   background: ${(p) =>
     p.$role === "system"
-      ? "#2d2d30"
+      ? "var(--vscode-editor-background)"
       : p.$role === "assistant"
-        ? "#252526"
+        ? "var(--vscode-editor-background)"
         : p.$role === "tool"
-          ? "#1e2a1e"
-          : "#1e2633"};
+          ? "color-mix(in srgb, var(--vscode-charts-green) 8%, var(--vscode-editor-background))"
+          : "color-mix(in srgb, var(--vscode-textLink-foreground) 8%, var(--vscode-editor-background))"};
   border: 1px solid ${(p) =>
     p.$role === "system"
-      ? "#3e3e42"
+      ? "var(--vscode-panel-border)"
       : p.$role === "assistant"
-        ? "#2d2d2d"
+        ? "var(--vscode-panel-border)"
         : p.$role === "tool"
-          ? "#2d4a2d"
-          : "#264f78"};
+          ? "color-mix(in srgb, var(--vscode-charts-green) 20%, var(--vscode-panel-border))"
+          : "color-mix(in srgb, var(--vscode-textLink-foreground) 20%, var(--vscode-panel-border))"};
 `;
 
 const RoleTag = styled.span<{ $role: string }>`
@@ -58,31 +58,31 @@ const RoleTag = styled.span<{ $role: string }>`
   display: inline-block;
   color: ${(p) =>
     p.$role === "system"
-      ? "#808080"
+      ? "var(--vscode-descriptionForeground)"
       : p.$role === "assistant"
-        ? "#569cd6"
+        ? "var(--vscode-textLink-foreground)"
         : p.$role === "tool"
-          ? "#4ec9b0"
-          : "#dcdcaa"};
+          ? "var(--vscode-charts-green)"
+          : "var(--vscode-charts-yellow)"};
 `;
 
 const ToolCallBox = styled.div`
   margin-top: 4px;
   padding: 6px 8px;
-  background: #1a1a2e;
-  border: 1px solid #2d2d4d;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 4px;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 11px;
 `;
 
 const ToolName = styled.span`
-  color: #4ec9b0;
+  color: var(--vscode-charts-green);
   font-weight: 600;
 `;
 
 const ToolArgs = styled.div`
-  color: #ce9178;
+  color: var(--vscode-charts-orange);
   margin-top: 2px;
   white-space: pre-wrap;
 `;
@@ -102,7 +102,7 @@ const IterationDivider = styled.div`
     content: "";
     flex: 1;
     height: 1px;
-    background: #2d2d2d;
+    background: var(--vscode-panel-border);
   }
 `;
 
