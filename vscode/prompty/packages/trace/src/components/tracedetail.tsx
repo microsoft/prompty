@@ -81,10 +81,13 @@ const ALL_TABS: { id: TabId; label: string }[] = [
 
 const TraceDetail = ({ trace, runtime, version }: Props) => {
   const tabStore = usePersistStore(useTabStore, (state) => state);
-  const activeTab = tabStore?.activeTab ?? "overview";
+  const storedTab = tabStore?.activeTab ?? "overview";
   const setActiveTab = tabStore?.setActiveTab;
   const isAgent = isAgentTrace(trace);
   const tabs = isAgent ? ALL_TABS : ALL_TABS.filter((t) => t.id !== "conversation");
+
+  // Fall back to overview if the stored tab isn't available for this node
+  const activeTab = tabs.some((t) => t.id === storedTab) ? storedTab : "overview";
 
   return (
     <Container>
