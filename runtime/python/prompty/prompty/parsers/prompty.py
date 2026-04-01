@@ -137,6 +137,7 @@ class PromptyChatParser:
         content_buffer: list[str] = []
         role = "system"  # default role if none specified
         attrs: dict[str, Any] = {}
+        has_boundary = False  # tracks if current segment started with a role marker
 
         for line in text.splitlines():
             stripped = line.strip()
@@ -145,19 +146,20 @@ class PromptyChatParser:
             m = _BOUNDARY_RE.match(stripped)
             if m:
                 if content_buffer:
-                    yield self._build_message(role, content_buffer, attrs, nonce, base_path)
+                    yield self._build_message(role, content_buffer, attrs, nonce if has_boundary else None, base_path)
                     content_buffer = []
 
                 role = m.group(1).strip().lower()
                 raw_attrs = m.group(2)  # e.g. [name="Alice",nonce="abc"]
                 attrs = self._parse_attrs(raw_attrs) if raw_attrs else {}
+                has_boundary = True
                 continue
 
             content_buffer.append(line)
 
         # Flush remaining content
         if content_buffer:
-            yield self._build_message(role, content_buffer, attrs, nonce, base_path)
+            yield self._build_message(role, content_buffer, attrs, nonce if has_boundary else None, base_path)
 
     def _build_message(
         self,

@@ -41,22 +41,16 @@ from typing import Any
 from .._version import VERSION
 
 # Sensitive key patterns for sanitization
-_SENSITIVE_PATTERNS = frozenset(
-    [
-        "key",
-        "secret",
-        "password",
-        "credential",
-        "token",
-        "auth",
-        "bearer",
-        "session",
-        "cookie",
-        "connection",
-        "passphrase",
-        "cert",
-        "private",
-    ]
+import re
+
+# Matches genuinely sensitive key names while avoiding false positives:
+#   - api_?key matches apiKey, api_key but NOT primary_key, sort_key
+#   - token(?!s) matches auth_token but NOT prompt_tokens, total_tokens
+#   - auth(?!ors?\b) matches authorization but NOT author, authors
+#   - secret|password|credential|passphrase|bearer|cookie are always sensitive
+_SENSITIVE_RE = re.compile(
+    r"secret|password|credential|passphrase|bearer|cookie|api[_.]?key|token(?!s)|auth(?!ors?\b)",
+    re.IGNORECASE,
 )
 
 
@@ -73,7 +67,7 @@ def sanitize(key: str, value: Any) -> Any:
     Returns:
         The original value, or a redacted placeholder string.
     """
-    if isinstance(value, str) and any(s in key.lower() for s in _SENSITIVE_PATTERNS):
+    if isinstance(value, str) and _SENSITIVE_RE.search(key):
         return 10 * "*"
     elif isinstance(value, dict):
         return {k: sanitize(k, v) for k, v in value.items()}

@@ -165,8 +165,30 @@ describe("traceMethod() decorator", () => {
 describe("sanitizeValue()", () => {
   it("redacts sensitive keys", () => {
     expect(sanitizeValue("apiKey", "sk-secret")).toBe("***REDACTED***");
+    expect(sanitizeValue("api_key", "sk-secret")).toBe("***REDACTED***");
     expect(sanitizeValue("password", "p@ss")).toBe("***REDACTED***");
     expect(sanitizeValue("api_token", "tok")).toBe("***REDACTED***");
+    expect(sanitizeValue("secret", "shhh")).toBe("***REDACTED***");
+    expect(sanitizeValue("my_secret", "hunter2")).toBe("***REDACTED***");
+    expect(sanitizeValue("credential", "cred")).toBe("***REDACTED***");
+    expect(sanitizeValue("passphrase", "shhh")).toBe("***REDACTED***");
+    expect(sanitizeValue("bearer", "xyz")).toBe("***REDACTED***");
+    expect(sanitizeValue("authorization", "Bearer xyz")).toBe("***REDACTED***");
+    expect(sanitizeValue("client_secret", "cs")).toBe("***REDACTED***");
+  });
+
+  it("does not redact non-sensitive keys that contain similar substrings", () => {
+    // "token" should not match plural "tokens" (usage metrics)
+    expect(sanitizeValue("prompt_tokens", 100)).toBe(100);
+    expect(sanitizeValue("completion_tokens", 50)).toBe(50);
+    expect(sanitizeValue("total_tokens", 150)).toBe(150);
+    expect(sanitizeValue("maxOutputTokens", 1000)).toBe(1000);
+    // "auth" should not match "author"/"authors"
+    expect(sanitizeValue("authors", "Alice")).toBe("Alice");
+    expect(sanitizeValue("author", "Bob")).toBe("Bob");
+    // generic "key" should not match
+    expect(sanitizeValue("primary_key", "pk-123")).toBe("pk-123");
+    expect(sanitizeValue("sort_key", "sk-123")).toBe("sk-123");
   });
 
   it("passes through non-sensitive keys", () => {

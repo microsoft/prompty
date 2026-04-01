@@ -38,7 +38,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/prompty",
+    "url": "git+https://github.com/microsoft/prompty.git",
     "directory": "runtime/typescript/packages/foundry"
   },
   "engines": {

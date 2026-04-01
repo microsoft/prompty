@@ -85,6 +85,7 @@ export class PromptyChatParser implements Parser {
     let contentBuffer: string[] = [];
     let role = "system"; // default role if none specified
     let attrs: Record<string, unknown> = {};
+    let hasBoundary = false; // tracks if current segment started with a role marker
 
     for (const line of text.split("\n")) {
       const stripped = line.trim();
@@ -92,13 +93,14 @@ export class PromptyChatParser implements Parser {
 
       if (m) {
         if (contentBuffer.length > 0) {
-          messages.push(this.buildMessage(role, contentBuffer, attrs, nonce, basePath));
+          messages.push(this.buildMessage(role, contentBuffer, attrs, hasBoundary ? nonce : undefined, basePath));
           contentBuffer = [];
         }
 
         role = m[1].trim().toLowerCase();
         const rawAttrs = m[2]; // e.g. [name="Alice",nonce="abc"]
         attrs = rawAttrs ? this.parseAttrs(rawAttrs) : {};
+        hasBoundary = true;
         continue;
       }
 
@@ -107,7 +109,7 @@ export class PromptyChatParser implements Parser {
 
     // Flush remaining content
     if (contentBuffer.length > 0) {
-      messages.push(this.buildMessage(role, contentBuffer, attrs, nonce, basePath));
+      messages.push(this.buildMessage(role, contentBuffer, attrs, hasBoundary ? nonce : undefined, basePath));
     }
 
     return messages;

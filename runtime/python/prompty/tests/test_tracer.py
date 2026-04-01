@@ -49,23 +49,38 @@ class TestSanitize:
     def test_redacts_bearer(self):
         assert sanitize("bearer_value", "xyz") == "**********"
 
-    def test_redacts_session(self):
-        assert sanitize("session_id", "abc") == "**********"
-
     def test_redacts_cookie(self):
         assert sanitize("cookie_val", "c=1") == "**********"
-
-    def test_redacts_connection(self):
-        assert sanitize("connection_string", "Server=...") == "**********"
 
     def test_redacts_passphrase(self):
         assert sanitize("passphrase", "shhh") == "**********"
 
-    def test_redacts_cert(self):
-        assert sanitize("client_cert", "MIIB...") == "**********"
+    def test_redacts_authorization(self):
+        assert sanitize("authorization", "Bearer xyz") == "**********"
 
-    def test_redacts_private(self):
-        assert sanitize("private_key", "-----BEGIN") == "**********"
+    def test_redacts_client_secret(self):
+        assert sanitize("client_secret", "cs-123") == "**********"
+
+    def test_does_not_redact_token_counts(self):
+        """token pattern must not match plural 'tokens' (usage metrics)."""
+        assert sanitize("prompt_tokens", "100") == "100"
+        assert sanitize("completion_tokens", "50") == "50"
+        assert sanitize("total_tokens", "150") == "150"
+        assert sanitize("maxOutputTokens", "1000") == "1000"
+
+    def test_does_not_redact_authors(self):
+        """auth pattern must not match 'author' or 'authors'."""
+        assert sanitize("authors", "Alice") == "Alice"
+        assert sanitize("author", "Bob") == "Bob"
+
+    def test_does_not_redact_connection_object(self):
+        """connection is no longer a sensitive pattern — inner keys like apiKey are caught recursively."""
+        assert sanitize("connection", "endpoint-value") == "endpoint-value"
+
+    def test_does_not_redact_generic_key(self):
+        """Only api_key/apiKey variants are sensitive, not all keys."""
+        assert sanitize("primary_key", "pk-123") == "pk-123"
+        assert sanitize("sort_key", "sk-123") == "sk-123"
 
     def test_preserves_non_sensitive(self):
         assert sanitize("username", "admin") == "admin"

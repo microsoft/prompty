@@ -214,7 +214,13 @@ export function traceMethod(attributes?: Record<string, unknown>) {
 // Sanitization
 // ---------------------------------------------------------------------------
 
-const SENSITIVE_PATTERN = /key|secret|password|credential|token|auth|bearer|apikey/i;
+// Matches genuinely sensitive key names while avoiding false positives:
+//   - `api_?key` matches apiKey, api_key but NOT primary_key, sort_key
+//   - `token(?!s)` matches auth_token but NOT prompt_tokens, total_tokens
+//   - `auth(?!ors?\b)` matches authorization but NOT author, authors
+//   - `secret|password|credential|passphrase|bearer` are always sensitive
+const SENSITIVE_PATTERN =
+  /secret|password|credential|passphrase|bearer|api[_.]?key|token(?!s)|auth(?!ors?\b)/i;
 
 /** Redact sensitive values from trace output. */
 export function sanitizeValue(key: string, value: unknown): unknown {

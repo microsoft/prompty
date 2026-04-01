@@ -35,13 +35,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22  # Must be >=22.14.0 for npm trusted publishing
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
       - run: npm run test
       # Publish in dependency order — OIDC trusted publisher auth
-      - run: npm publish --workspace=packages/core --access public
-      - run: npm publish --workspace=packages/openai --access public
-      - run: npm publish --workspace=packages/foundry --access public
-      - run: npm publish --workspace=packages/anthropic --access public
+      # Use --tag alpha for prerelease versions to avoid overwriting 'latest'
+      - run: npm publish --workspace=packages/core --access public --tag alpha
+      - run: npm publish --workspace=packages/openai --access public --tag alpha
+      - run: npm publish --workspace=packages/foundry --access public --tag alpha

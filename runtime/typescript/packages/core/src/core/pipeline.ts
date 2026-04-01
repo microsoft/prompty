@@ -50,7 +50,7 @@ function sanitizeNonces(value: unknown): unknown {
   // Build nonce → display name map
   const replacements = new Map<string, string>();
   for (const [name, nonce] of nonces) {
-    replacements.set(nonce, `{{${name}}}`);
+    replacements.set(nonce, `[thread: ${name}]`);
   }
 
   if (typeof value === "string") {
@@ -125,7 +125,10 @@ function resolveProvider(agent: Prompty): string {
 }
 
 function isStrictMode(agent: Prompty): boolean {
-  return agent.template?.format?.strict === true;
+  // Default to strict=true to prevent prompt injection via role markers.
+  // When strict, preRender wraps real role markers with nonces so the parser
+  // rejects any role marker injected through user inputs.
+  return agent.template?.format?.strict !== false;
 }
 
 /** Serialize agent for trace output, matching Python's load result shape. */
