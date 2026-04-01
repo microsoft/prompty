@@ -42,6 +42,40 @@ const DEFAULT_PARSER = "prompty";
 const DEFAULT_PROVIDER = "openai";
 const DEFAULT_MAX_ITERATIONS = 10;
 
+/** Replace raw nonce strings with readable `{{thread:name}}` in trace output. */
+function sanitizeNonces(value: unknown): unknown {
+  const nonces = getLastNonces();
+  if (nonces.size === 0) return value;
+
+  // Build nonce → display name map
+  const replacements = new Map<string, string>();
+  for (const [name, nonce] of nonces) {
+    replacements.set(nonce, `{{${name}}}`);
+  }
+
+  if (typeof value === "string") {
+    let result = value;
+    for (const [nonce, display] of replacements) {
+      result = result.replaceAll(nonce, display);
+    }
+    return result;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(v => sanitizeNonces(v));
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      result[k] = sanitizeNonces(v);
+    }
+    return result;
+  }
+
+  return value;
+}
+
 // ---------------------------------------------------------------------------
 // Input validation
 // ---------------------------------------------------------------------------
@@ -162,7 +196,7 @@ export async function render(
     emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
     emit("inputs", { data: inputs });
     const result = await renderer.render(agent, template, inputs);
-    emit("result", result);
+    emit("result", sanitizeNonces(result));
     return result;
   });
 }
@@ -182,9 +216,9 @@ export async function parse(
 
   return traceSpan(parser.constructor?.name ?? "Parser", async (emit) => {
     emit("signature", `prompty.parsers.${parser.constructor?.name ?? "Parser"}.parse`);
-    emit("inputs", rendered);
+    emit("inputs", sanitizeNonces(rendered));
     const messages = await parser.parse(agent, rendered, context);
-    emit("result", serializeMessages(messages));
+    emit("result", sanitizeNonces(serializeMessages(messages)));
     return messages;
   });
 }
@@ -382,7 +416,14 @@ export async function executeAgent(
         );
       }
 
-      const toolMessages = buildToolResultMessages(response, tools);
+      const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+        toolEmit("signature", "prompty.executeAgent.toolCalls");
+        toolEmit("description", `Tool call round ${iteration}`);
+        const result = await buildToolResultMessages(response, tools, toolEmit);
+        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+        return result;
+      });
+
       messages.push(...toolMessages);
       response = await executor.execute(agent, messages);
     }
@@ -507,10 +548,11 @@ function hasToolCalls(response: unknown): boolean {
   return Array.isArray(toolCalls) && toolCalls.length > 0;
 }
 
-function buildToolResultMessages(
+async function buildToolResultMessages(
   response: unknown,
   tools: Record<string, (...args: unknown[]) => unknown>,
-): Message[] {
+  parentEmit?: (key: string, value: unknown) => void,
+): Promise<Message[]> {
   const r = response as Record<string, unknown>;
   const choices = r.choices as unknown[];
   const choice = choices[0] as Record<string, unknown>;
@@ -527,6 +569,8 @@ function buildToolResultMessages(
     }),
   );
 
+  const toolInputs: Record<string, unknown>[] = [];
+
   // Then, execute each tool and build tool result messages
   for (const tc of toolCalls) {
     const fn = tc.function as Record<string, unknown>;
@@ -534,18 +578,29 @@ function buildToolResultMessages(
     const toolCallId = tc.id as string;
 
     let result: string;
+    let parsedArgs: unknown;
     try {
-      const args = JSON.parse(fn.arguments as string);
+      parsedArgs = JSON.parse(fn.arguments as string);
       const toolFn = tools[toolName];
       if (!toolFn) {
         result = `Error: tool "${toolName}" not found`;
       } else {
-        const toolResult = toolFn(...(Array.isArray(args) ? args : [args]));
-        result = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
+        const toolResult = await traceSpan(toolName, async (toolEmit) => {
+          toolEmit("signature", `prompty.tool.${toolName}`);
+          toolEmit("description", `Execute tool: ${toolName}`);
+          toolEmit("inputs", { arguments: parsedArgs, tool_call_id: toolCallId });
+          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
+          const str = typeof r === "string" ? r : JSON.stringify(r);
+          toolEmit("result", str);
+          return str;
+        });
+        result = toolResult as string;
       }
     } catch (err) {
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
+
+    toolInputs.push({ name: toolName, arguments: parsedArgs, tool_call_id: toolCallId, result });
 
     messages.push(
       new Message("tool", [text(result)], {
@@ -553,6 +608,10 @@ function buildToolResultMessages(
         name: toolName,
       }),
     );
+  }
+
+  if (parentEmit) {
+    parentEmit("inputs", { tool_calls: toolInputs });
   }
 
   return messages;

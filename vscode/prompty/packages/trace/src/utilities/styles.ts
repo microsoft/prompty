@@ -2,6 +2,10 @@ import { createGlobalStyle } from "styled-components";
 
 
 export const GlobalStyle = createGlobalStyle`
+  :root {
+    --code-font: 'Cascadia Code', 'Fira Code', monospace;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

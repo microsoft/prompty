@@ -17,8 +17,8 @@ const PromptyIcon = ({ size, className }: Props) => {
   return (
     <Icon $size={size}>
       <svg
-        width="201"
-        height="201"
+        width="100%"
+        height="100%"
         viewBox="-14 0 201 201"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

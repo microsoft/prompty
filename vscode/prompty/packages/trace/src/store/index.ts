@@ -77,3 +77,35 @@ export const useModalStore = create<ModalCollectionState>()((set) => ({
 	})),
 	closeAll: () => set({ modals: [], isEmpty: true }),
 }));
+
+export type TabId = 'overview' | 'conversation' | 'input' | 'output' | 'raw';
+
+export interface TabState {
+	activeTab: TabId;
+	setActiveTab: (tab: TabId) => void;
+}
+
+export const useTabStore = create<TabState>()((set) => ({
+	activeTab: 'overview',
+	setActiveTab: (tab: TabId) => set({ activeTab: tab }),
+}));
+
+export interface CollapseState {
+	collapsed: Set<string>;
+	toggle: (id: string) => void;
+	isCollapsed: (id: string) => boolean;
+}
+
+export const useCollapseStore = create<CollapseState>()((set, get) => ({
+	collapsed: new Set<string>(),
+	toggle: (id: string) => set((state) => {
+		const next = new Set(state.collapsed);
+		if (next.has(id)) {
+			next.delete(id);
+		} else {
+			next.add(id);
+		}
+		return { collapsed: next };
+	}),
+	isCollapsed: (id: string) => get().collapsed.has(id),
+}));

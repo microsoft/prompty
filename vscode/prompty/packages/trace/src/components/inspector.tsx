@@ -6,21 +6,21 @@ import { MouseEventHandler, useState } from "react";
 import { useModalStore } from "../store";
 import { isExpandable } from "../utilities/format";
 import Expander from "./expander";
-const marginMultiple = 20;
+const marginMultiple = 14;
 
 const ItemValue = styled.div<{
   $level?: number;
   $hidden?: boolean;
 }>`
   margin-left: ${(props) => (props.$level ?? 0) + 1 * marginMultiple}px;
-  font-size: 14px;
+  font-size: 12px;
   display: ${(props) => (props.$hidden ? "none" : "block")};
 `;
 
 const ItemKey = styled.div<{
   $hidden?: boolean;
 }>`
-  font-size: 16px;
+  font-size: 12px;
   display: ${(props) => (props.$hidden ? "none" : "block")};
   display: flex;
   flex-direction: row;
@@ -29,7 +29,7 @@ const ItemKey = styled.div<{
 const ItemTitle = styled.div<{
   $hidden?: boolean;
 }>`
-  font-size: 16px;
+  font-size: 12px;
   color: var(--vscode-editorInfo-foreground);
   display: ${(props) => (props.$hidden ? "none" : "block")};
   user-select: none;
@@ -40,22 +40,22 @@ const ItemTitle = styled.div<{
 const ItemColon = styled.div<{
   $hidden?: boolean;
 }>`
-  font-size: 16px;
+  font-size: 12px;
   display: ${(props) => (props.$hidden ? "none" : "block")};
   color: var(--vscode-descriptionForeground);
 `;
 
 const ItemDescription = styled.div`
-  font-size: 16px;
+  font-size: 12px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
+  gap: 3px;
+  padding: 1px 2px;
 `;
 
 const ItemString = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   overflow: hidden;
   white-space: nowrap;
   color: var(--vscode-descriptionForeground);
@@ -65,10 +65,10 @@ const ItemString = styled.div`
 const ItemIcon = styled.div<{
   $hidden?: boolean;
 }>`
-  font-size: 16px;
+  font-size: 12px;
   align-items: center;
   justify-content: center;
-  margin-top: 4px;
+  margin-top: 2px;
   user-select: none;
   cursor: pointer;
   display: ${(props) => (props.$hidden ? "none" : "block")};
@@ -161,7 +161,7 @@ const Inspector = ({
               $hidden={level === 0 || !isExpandableValue}
               onClick={handleExpand}
             >
-              <VscSearch size={16} />
+              <VscSearch size={12} />
             </ItemIcon>
             <Gap />
           </ItemDescription>

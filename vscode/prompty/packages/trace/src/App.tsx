@@ -6,7 +6,6 @@ import {
 } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
-import Header from "./components/header";
 import TraceTree from "./components/tracetree";
 import TraceDetail from "./components/tracedetail";
 import ModalCollection from "./components/modal";
@@ -29,14 +28,15 @@ const Sidebar = styled.div.attrs<ResizerProps>((props) => ({
   style: { width: props.size ? `${props.size}px` : "500px" },
 }))`
   overflow: auto;
-  border-right: 1px solid var(--vscode-textBlockQuote-border);
+  border-right: 1px solid #2d2d2d;
+  position: relative;
 `;
 
 const SideBarResizer = styled.div.attrs<ResizerProps>((props) => ({
   style: { width: props.size ? `${props.size}px` : "4px" },
 }))`
   cursor: ew-resize;
-  background-color: var(--vscode-textBlockQuote-border);
+  background-color: #2d2d2d;
   height: 100%;
 
   &:hover {
@@ -60,47 +60,39 @@ const Content = styled.div.attrs<ResizerProps>((props) => ({
   user-select: none;
 `;
 
-const HeaderFrame = styled.div`
-  border-bottom: 1px solid var(--vscode-textBlockQuote-border);
-`;
-
 const CollapserDiv = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  &:hover {
-    color: var(--vscode-focusBorder);
-    border: solid 1px var(--vscode-focusBorder);
-  }
-  bottom: 8px;
-  left: 8px;
   position: absolute;
-  border-radius: 9999px;
-  border: solid 1px var(--vscode-foreground);
-  height: 32px;
-  width: 32px;
+  bottom: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--vscode-descriptionForeground);
+  &:hover {
+    color: var(--vscode-foreground);
+    background: #2a2d2e;
+  }
 `;
 
 const BodyFrame = styled.div`
-  flex: flex-grow;
-  height: calc(100vh - 80px);
-`;
-
-const Container = styled.div`
-  padding: 18px;
+  flex: 1;
+  height: calc(100vh);
+  overflow: hidden;
 `;
 
 const Tree = styled.div.attrs<ResizerProps>((props) => ({
   style: {
-    width: props.size ? `${props.size}px` : "calc(100% - 18px)",
+    width: props.size ? `${props.size}px` : "calc(100% - 8px)",
   },
 }))`
-  padding-top: 18px;
-  padding-bottom: 18px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-top: 4px;
+  padding-bottom: 28px;
+  padding-left: 0;
+  padding-right: 0;
 `;
 
 const ensureIds = (trace: TraceItem) => {
@@ -266,20 +258,13 @@ function App() {
           <SideBarResizer size={4} onMouseDown={handleMouseDown} />
         )}
         <Content size={width}>
-          <HeaderFrame>
-            <Container>
-              {traceStore?.trace && traceItemStore?.traceItem && (
-                <Header
-                  trace={traceItemStore?.traceItem}
-                  runtime={traceStore?.trace.runtime}
-                  version={traceStore?.trace.version}
-                />
-              )}
-            </Container>
-          </HeaderFrame>
           <BodyFrame>
-            {traceItemStore?.traceItem && (
-              <TraceDetail trace={traceItemStore?.traceItem} />
+            {traceStore?.trace && traceItemStore?.traceItem && (
+              <TraceDetail
+                trace={traceItemStore.traceItem}
+                runtime={traceStore.trace.runtime}
+                version={traceStore.trace.version}
+              />
             )}
           </BodyFrame>
         </Content>

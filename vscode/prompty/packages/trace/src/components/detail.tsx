@@ -4,43 +4,49 @@ import { formatDuration, formatTokens } from "../utilities/format";
 
 const Frame = styled.div`
   display: flex;
-  flex-direction: row;
-  border: 1px solid var(--vscode-textBlockQuote-border);
-  border-radius: 8px;
   flex-wrap: wrap;
-  margin: 18px;
-	overflow: hidden;
+  border: 1px solid #2d2d2d;
+  border-radius: 6px;
+  background: #252526;
+  overflow: hidden;
+  flex-shrink: 0;
 `;
 
 const DetailItem = styled.div`
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--vscode-textBlockQuote-border);
-  padding: 12px;
-  flex-grow: 1;
+  border-right: 1px solid #2d2d2d;
+  padding: 8px 12px;
+  flex: 1 1 0;
+  min-width: 100px;
   &:last-child {
     border-right: none;
   }
 `;
 
 const DetailLabel = styled.div`
-  font-size: smaller;
+  font-size: 10px;
   color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+  white-space: nowrap;
 `;
 
 const DetailValue = styled.div`
   font-weight: 600;
-  font-size: larger;
-  
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  white-space: nowrap;
 `;
 
 const Measure = styled.span`
-  font-size: larger;
+  font-size: 15px;
 `;
 
 const Unit = styled.span`
-  font-size: medium;
+  font-size: 11px;
   color: var(--vscode-descriptionForeground);
+  margin-left: 2px;
 `;
 
 interface Props {

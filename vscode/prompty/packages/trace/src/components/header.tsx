@@ -5,35 +5,43 @@ import NodeIcon from "./nodeIcon";
 const Context = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 `;
 
-const IconDiv = styled.div`
-  width: 32px;
-  height: 32px;
-  padding: 8px;
-  border: 1px solid var(--vscode-badge-background);
-  border-radius: 50%;
-  border-style: solid;
-  color: var(--vscode-icon-foreground);
+const TitleBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 `;
 
 const Title = styled.div`
-  font-size: larger;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--vscode-foreground);
 `;
 
 const SubTitle = styled.div`
-  font-size: smaller;
+  font-size: 12px;
   color: var(--vscode-descriptionForeground);
-`;
-
-const Righty = styled.div`
-  text-align: right;
 `;
 
 const Grow = styled.div`
   flex-grow: 1;
+`;
+
+const RuntimePill = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #252526;
+  border: 1px solid #2d2d2d;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;
 
 interface Props {
@@ -45,18 +53,15 @@ interface Props {
 const Header = ({ trace, runtime, version }: Props) => {
   return (
     <Context>
-      <IconDiv>
-        <NodeIcon trace={trace} size={32} />
-      </IconDiv>
-      <div>
+      <NodeIcon trace={trace} size={26} />
+      <TitleBlock>
         <Title>{trace.name}</Title>
-        <SubTitle>{trace.signature}</SubTitle>
-      </div>
+        {trace.signature && <SubTitle>{trace.signature}</SubTitle>}
+      </TitleBlock>
       <Grow />
-      <Righty>
-        <Title>{runtime}</Title>
-        <SubTitle>{version}</SubTitle>
-      </Righty>
+      <RuntimePill>
+        {runtime} {version}
+      </RuntimePill>
     </Context>
   );
 };
