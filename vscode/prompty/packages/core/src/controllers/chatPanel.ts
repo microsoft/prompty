@@ -9,6 +9,7 @@ import {
 import type { PromptAgent } from '@prompty/core';
 import '@prompty/openai';
 import '@prompty/foundry';
+import '@prompty/anthropic';
 import * as path from 'path';
 import { getNonce } from '../utils/nonce';
 import { ConnectionStore } from '../connections/store';

@@ -4,6 +4,7 @@ import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
 import '@prompty/foundry';
+import '@prompty/anthropic';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConnectionStore } from '../connections/store';

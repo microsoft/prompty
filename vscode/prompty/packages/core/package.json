@@ -13,11 +13,13 @@
 		"vscode": "^1.98.0"
 	},
 	"dependencies": {
+		"@anthropic-ai/sdk": "^0.39.0",
 		"@azure/ai-projects": "^2.0.1",
 		"@azure/identity": "^4.6.0",
-		"@prompty/core": "file:../../../../runtime/typescript/packages/core",
-		"@prompty/openai": "file:../../../../runtime/typescript/packages/openai",
-		"@prompty/foundry": "file:../../../../runtime/typescript/packages/foundry",
+		"@prompty/anthropic": "^2.0.0-alpha.1",
+		"@prompty/core": "^2.0.0-alpha.1",
+		"@prompty/foundry": "^2.0.0-alpha.1",
+		"@prompty/openai": "^2.0.0-alpha.1",
 		"glob": "^11.1.0",
 		"openai": "^4.80.0",
 		"vscode-languageclient": "^9.0.1"
