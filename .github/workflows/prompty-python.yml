@@ -6,56 +6,14 @@ on:
       - 'python/2.*'
   workflow_dispatch:
 
-env:
-  AZURE_OPENAI_ENDPOINT: https://fake
-  AZURE_OPENAI_KEY: 12342323433
-
 jobs:
-  prompty-v2-tests:
-    name: test python v2 on ${{ matrix.os }} / py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12', '3.13']
-        os: [ubuntu-latest]
-        include:
-          - python-version: '3.11'
-            os: windows-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Install dependencies
-        working-directory: ./runtime/python/prompty
-        run: uv pip install --system -e '.[dev,all]'
-
-      - name: Lint with ruff
-        working-directory: ./runtime/python/prompty
-        run: ruff check .
-
-      - name: Check formatting with ruff
-        working-directory: ./runtime/python/prompty
-        run: ruff format --check .
-
-      - name: Run tests
-        working-directory: ./runtime/python/prompty
-        run: python -m pytest tests/ -q --tb=short --cov=prompty --cov-report=term --cov-report=json
+  test:
+    uses: ./.github/workflows/prompty-python-check.yml
 
   pypi-publish:
     name: upload release to PyPI
     runs-on: ubuntu-latest
-    needs: prompty-v2-tests
+    needs: test
     if: startsWith(github.ref, 'refs/tags/python/2.')
 
     permissions:
@@ -88,10 +46,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./runtime/python/prompty
         run: uv pip install --system -e '.[dev,all]'
-
-      - name: Run tests
-        working-directory: ./runtime/python/prompty
-        run: python -m pytest tests/ -q --tb=short --cov=prompty --cov-report=term
 
       - name: Build package
         working-directory: ./runtime/python/prompty
