@@ -230,7 +230,7 @@ class TestOutputSchemaToWire:
         result = _output_schema_to_wire(agent)
         assert result is not None
         assert result["format"]["type"] == "json_schema"
-        schema = result["format"]["json_schema"]["schema"]
+        schema = result["format"]["schema"]
         assert "city" in schema["properties"]
         assert "temp" in schema["properties"]
 

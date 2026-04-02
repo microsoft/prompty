@@ -222,18 +222,14 @@ describe("wire format", () => {
     expect(config).toEqual({
       format: {
         type: "json_schema",
-        json_schema: {
-          name: "test_agent",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              title: { type: "string", description: "Title" },
-              score: { type: "number", description: "Score" },
-            },
-            required: ["title", "score"],
-            additionalProperties: false,
+        schema: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Title" },
+            score: { type: "number", description: "Score" },
           },
+          required: ["title", "score"],
+          additionalProperties: false,
         },
       },
     });

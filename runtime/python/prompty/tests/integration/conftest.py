@@ -52,10 +52,12 @@ _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
 _AZURE_CHAT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "")
 _AZURE_EMBEDDING_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "")
 _AZURE_IMAGE_DEPLOYMENT = os.environ.get("AZURE_OPENAI_IMAGE_DEPLOYMENT", "")
+_ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 has_openai = bool(_OPENAI_KEY)
 has_azure = bool(_AZURE_KEY and _AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)
 has_foundry = has_azure  # Foundry uses Azure OpenAI credentials
+has_anthropic = bool(_ANTHROPIC_KEY)
 
 skip_openai = pytest.mark.skipif(not has_openai, reason="OPENAI_API_KEY not set")
 skip_openai_image = pytest.mark.skipif(
@@ -74,6 +76,7 @@ skip_foundry_image = pytest.mark.skipif(
     reason="AZURE_OPENAI_IMAGE_DEPLOYMENT not set",
 )
 skip_azure_image = skip_foundry_image  # backward-compat alias
+skip_anthropic = pytest.mark.skipif(not has_anthropic, reason="ANTHROPIC_API_KEY not set")
 
 
 # ---------------------------------------------------------------------------
@@ -173,3 +176,40 @@ def make_foundry_agent(
 
 # Backward-compat alias
 make_azure_agent = make_foundry_agent
+
+
+def make_anthropic_agent(
+    *,
+    api_type: str = "chat",
+    model: str = "claude-sonnet-4-5-20250929",
+    options: dict[str, Any] | None = None,
+    tools: list[dict[str, Any]] | None = None,
+    output_schema: dict[str, Any] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> Any:
+    """Build a Prompty for Anthropic Messages API."""
+    from prompty.model import Prompty
+
+    data: dict[str, Any] = {
+        "name": "integration-test-anthropic",
+        "model": {
+            "id": model,
+            "provider": "anthropic",
+            "apiType": api_type,
+            "connection": {
+                "kind": "key",
+                "apiKey": _ANTHROPIC_KEY,
+            },
+        },
+    }
+    if options:
+        data["model"]["options"] = options
+    if tools:
+        data["tools"] = tools
+    if output_schema:
+        data["outputs"] = (
+            output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
+        )
+    if metadata is not None:
+        data["metadata"] = metadata
+    return Prompty.load(data)

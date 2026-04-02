@@ -279,7 +279,7 @@ export function toolsToWire(agent: Prompty): Record<string, unknown>[] {
 /**
  * Convert outputSchema to Anthropic structured output config.
  *
- * Anthropic uses: output_config: { format: { type: "json_schema", json_schema: { name, schema } } }
+ * Anthropic uses: output_config: { format: { type: "json_schema", schema: {...} } }
  */
 export function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
   const outputs = agent.outputs;
@@ -296,20 +296,14 @@ export function outputSchemaToWire(agent: Prompty): Record<string, unknown> | nu
     required.push(prop.name);
   }
 
-  const name = (agent.name || "response").toLowerCase().replace(/[\s-]/g, "_");
-
   return {
     format: {
       type: "json_schema",
-      json_schema: {
-        name,
-        strict: true,
-        schema: {
-          type: "object",
-          properties,
-          required,
-          additionalProperties: false,
-        },
+      schema: {
+        type: "object",
+        properties,
+        required,
+        additionalProperties: false,
       },
     },
   };

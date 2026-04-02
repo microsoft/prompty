@@ -217,7 +217,10 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]]:
 
 
 def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
-    """Convert outputSchema to Anthropic output_config.format."""
+    """Convert outputSchema to Anthropic output_config.format.
+
+    Anthropic format: ``output_config: { format: { type: "json_schema", schema: {...} } }``
+    """
     outputs = agent.outputs
     if not outputs:
         return None
@@ -235,20 +238,14 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
     if not properties:
         return None
 
-    schema_name = (agent.name or "response").lower().replace(" ", "_").replace("-", "_")
-
     return {
         "format": {
             "type": "json_schema",
-            "json_schema": {
-                "name": schema_name,
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": properties,
-                    "required": required,
-                    "additionalProperties": False,
-                },
+            "schema": {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "additionalProperties": False,
             },
         },
     }
