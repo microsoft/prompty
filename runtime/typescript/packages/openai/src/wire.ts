@@ -403,6 +403,11 @@ export function buildResponsesArgs(
 function messageToResponsesInput(msg: Message): Record<string, unknown> {
   const content = msg.toTextContent();
 
+  // Pass-through original function_call items from the agent loop
+  if (msg.metadata.responses_function_call) {
+    return msg.metadata.responses_function_call as Record<string, unknown>;
+  }
+
   // Tool result messages → function_call_output
   if (msg.metadata.tool_call_id) {
     return {

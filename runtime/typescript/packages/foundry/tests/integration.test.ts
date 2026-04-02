@@ -40,8 +40,11 @@ const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
 const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY;
 const AZURE_CHAT_DEPLOYMENT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT;
 const AZURE_EMBEDDING_DEPLOYMENT = process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT;
+const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION;
 const hasFoundry = !!(AZURE_ENDPOINT && AZURE_API_KEY && AZURE_CHAT_DEPLOYMENT);
 const hasEmbedding = !!(hasFoundry && AZURE_EMBEDDING_DEPLOYMENT);
+// Responses API requires api-version 2025-03-01-preview or later
+const hasResponses = !!(hasFoundry && AZURE_API_VERSION && AZURE_API_VERSION >= "2025-03-01");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -164,6 +167,74 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
   // --- Agent loop ---
   it("agent loop with tool calling", { timeout: 60_000 }, async () => {
     const agent = makeAgent({
+      instructions:
+        "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
+      tools: [
+        {
+          name: "get_weather",
+          kind: "function",
+          description: "Get the current weather for a city",
+          parameters: [
+            { name: "city", kind: "string", description: "City name", required: true },
+          ],
+        },
+      ],
+    });
+    const result = await executeAgent(
+      agent,
+      { question: "What is the weather in Seattle?" },
+      {
+        tools: {
+          get_weather: (city: string) => `72°F and sunny in ${city}`,
+        } as Record<string, (...args: unknown[]) => unknown>,
+      },
+    );
+    expect(typeof result).toBe("string");
+    expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
+  });
+
+  // --- Streaming + Tools ---
+  it("streaming agent loop with tool calling", { timeout: 60_000 }, async () => {
+    const agent = makeAgent({
+      instructions:
+        "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
+      options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
+      tools: [
+        {
+          name: "get_weather",
+          kind: "function",
+          description: "Get the current weather for a city",
+          parameters: [
+            { name: "city", kind: "string", description: "City name", required: true },
+          ],
+        },
+      ],
+    });
+    const result = await executeAgent(
+      agent,
+      { question: "What is the weather in Seattle?" },
+      {
+        tools: {
+          get_weather: (city: string) => `72°F and sunny in ${city}`,
+        } as Record<string, (...args: unknown[]) => unknown>,
+      },
+    );
+    expect(typeof result).toBe("string");
+    expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
+  });
+
+  // --- Responses API (requires api-version 2025-03-01-preview or later) ---
+  it.skipIf(!hasResponses)("responses API chat", { timeout: 30_000 }, async () => {
+    const agent = makeAgent({ apiType: "responses" });
+    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    expect(typeof result).toBe("string");
+    expect((result as string).length).toBeGreaterThan(0);
+  });
+
+  // --- Responses API + tools ---
+  it.skipIf(!hasResponses)("responses API agent loop with tool calling", { timeout: 60_000 }, async () => {
+    const agent = makeAgent({
+      apiType: "responses",
       instructions:
         "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
       tools: [

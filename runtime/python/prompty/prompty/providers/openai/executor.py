@@ -361,9 +361,14 @@ def _message_to_responses_input(msg: Message) -> dict[str, Any]:
     """Convert a Message to Responses API input format.
 
     Tool result messages are converted to ``function_call_output`` items.
+    Pass-through ``responses_function_call`` metadata for the agent loop.
     Other messages become ``EasyInputMessage`` dicts.
     """
     content = msg.to_text_content()
+
+    # Pass-through original function_call items from the agent loop
+    if msg.metadata.get("responses_function_call"):
+        return msg.metadata["responses_function_call"]
 
     # Tool result messages → function_call_output
     if msg.metadata.get("tool_call_id"):

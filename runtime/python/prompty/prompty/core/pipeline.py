@@ -760,7 +760,7 @@ async def _execute_tool_async(
 
 
 def _has_tool_calls(response: Any) -> bool:
-    """Check if an LLM response contains tool calls (OpenAI or Anthropic)."""
+    """Check if an LLM response contains tool calls (OpenAI, Anthropic, or Responses API)."""
     # OpenAI format: response.choices[0].finish_reason == "tool_calls"
     if (
         hasattr(response, "choices")
@@ -779,12 +779,25 @@ def _has_tool_calls(response: Any) -> bool:
     ):
         return True
 
+    # OpenAI Responses API: output[].type == "function_call"
+    if (
+        hasattr(response, "output")
+        and getattr(response, "object", None) == "response"
+        and any(getattr(item, "type", None) == "function_call" for item in response.output)
+    ):
+        return True
+
     return False
 
 
 def _is_anthropic_response(response: Any) -> bool:
     """Check if a response is from Anthropic (has stop_reason, not choices)."""
     return hasattr(response, "stop_reason") and not hasattr(response, "choices")
+
+
+def _is_responses_api(response: Any) -> bool:
+    """Check if a response is from the OpenAI Responses API."""
+    return getattr(response, "object", None) == "response" and hasattr(response, "output")
 
 
 def _build_tool_result_messages(
@@ -796,10 +809,12 @@ def _build_tool_result_messages(
     Returns (messages_to_append, had_missing_tool). The messages include
     the assistant's tool-call message and each tool result.
 
-    Dispatches between OpenAI and Anthropic response formats.
+    Dispatches between OpenAI, Anthropic, and Responses API formats.
     """
     if _is_anthropic_response(response):
         return _build_anthropic_tool_result_messages(response, tools), False
+    if _is_responses_api(response):
+        return _build_responses_tool_result_messages(response, tools), False
     return _build_openai_tool_result_messages(response, tools)
 
 
@@ -930,6 +945,8 @@ async def _build_tool_result_messages_async(
     """Async variant of :func:`_build_tool_result_messages`."""
     if _is_anthropic_response(response):
         return await _build_anthropic_tool_result_messages_async(response, tools)
+    if _is_responses_api(response):
+        return await _build_responses_tool_result_messages_async(response, tools)
     return await _build_openai_tool_result_messages_async(response, tools)
 
 
@@ -1038,6 +1055,142 @@ async def _build_anthropic_tool_result_messages_async(
     return result_messages
 
 
+def _build_responses_tool_result_messages(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> tuple[list[Message], bool]:
+    """Handle OpenAI Responses API tool calls: output[].type == 'function_call'.
+
+    Returns (messages_to_append, had_missing_tool).
+    """
+    from .types import TextPart
+
+    output = response.output
+    func_calls = [item for item in output if getattr(item, "type", None) == "function_call"]
+
+    result_messages: list[Message] = []
+    had_missing = False
+
+    for fc in func_calls:
+        fn_name = getattr(fc, "name", "")
+        call_id = getattr(fc, "call_id", None) or getattr(fc, "id", None) or ""
+        arguments = getattr(fc, "arguments", None) or "{}"
+
+        # Include original function_call item so the Responses API can match
+        # function_call_output items to their origin
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[],
+                metadata={
+                    "responses_function_call": {
+                        "type": "function_call",
+                        "call_id": call_id,
+                        "name": fn_name,
+                        "arguments": arguments,
+                    }
+                },
+            )
+        )
+
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. "
+                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+            had_missing = True
+        elif inspect.iscoroutinefunction(fn):
+            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
+        else:
+            tool_result = _execute_tool(fn, fn_name, arguments)
+
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=tool_result)],
+                metadata={"tool_call_id": call_id, "name": fn_name},
+            )
+        )
+
+    return result_messages, had_missing
+
+
+async def _build_responses_tool_result_messages_async(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> list[Message]:
+    """Async: handle OpenAI Responses API tool calls."""
+    from .types import TextPart
+
+    output = response.output
+    func_calls = [item for item in output if getattr(item, "type", None) == "function_call"]
+
+    result_messages: list[Message] = []
+
+    for fc in func_calls:
+        fn_name = getattr(fc, "name", "")
+        call_id = getattr(fc, "call_id", None) or getattr(fc, "id", None) or ""
+        arguments = getattr(fc, "arguments", None) or "{}"
+
+        # Include original function_call item
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[],
+                metadata={
+                    "responses_function_call": {
+                        "type": "function_call",
+                        "call_id": call_id,
+                        "name": fn_name,
+                        "arguments": arguments,
+                    }
+                },
+            )
+        )
+
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. "
+                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        else:
+            tool_result = await _execute_tool_async(fn, fn_name, arguments)
+
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=tool_result)],
+                metadata={"tool_call_id": call_id, "name": fn_name},
+            )
+        )
+
+    return result_messages
+
+
+def _disable_streaming(agent: Prompty) -> Prompty:
+    """Return a copy of the agent with streaming disabled.
+
+    The agent loop requires complete responses for tool call detection.
+    """
+    import copy
+
+    opts = agent.model.options if agent.model else None
+    additional = getattr(opts, "additionalProperties", None) if opts else None
+    if not additional or not additional.get("stream"):
+        return agent
+
+    agent = copy.copy(agent)
+    model = copy.copy(agent.model)
+    options = copy.copy(model.options)
+    new_additional = {k: v for k, v in additional.items() if k != "stream"}
+    options.additionalProperties = new_additional if new_additional else None  # type: ignore[assignment]
+    model.options = options
+    agent.model = model
+    return agent
+
+
 @trace
 def execute_agent(
     prompt: str | Prompty,
@@ -1085,11 +1238,15 @@ def execute_agent(
     tools = tools or {}
     messages = prepare(agent, inputs)
 
+    # Disable streaming for the agent loop — tool call detection requires
+    # complete responses. executeAgent returns a single value, not a stream.
+    loop_agent = _disable_streaming(agent)
+
     with Tracer.start("AgentLoop") as t:
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = _invoke_executor(agent, messages)
+        response = _invoke_executor(loop_agent, messages)
         iteration = 0
 
         while _has_tool_calls(response):
@@ -1102,7 +1259,7 @@ def execute_agent(
 
             tool_messages, _ = _build_tool_result_messages(response, tools)
             messages.extend(tool_messages)
-            response = _invoke_executor(agent, messages)
+            response = _invoke_executor(loop_agent, messages)
 
         t("iterations", iteration)
         t("result", response)
@@ -1132,11 +1289,14 @@ async def execute_agent_async(
     tools = tools or {}
     messages = await prepare_async(agent, inputs)
 
+    # Disable streaming for the agent loop
+    loop_agent = _disable_streaming(agent)
+
     with Tracer.start("AgentLoopAsync") as t:
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = await _invoke_executor_async(agent, messages)
+        response = await _invoke_executor_async(loop_agent, messages)
         iteration = 0
 
         while _has_tool_calls(response):
@@ -1149,7 +1309,7 @@ async def execute_agent_async(
 
             tool_messages = await _build_tool_result_messages_async(response, tools)
             messages.extend(tool_messages)
-            response = await _invoke_executor_async(agent, messages)
+            response = await _invoke_executor_async(loop_agent, messages)
 
         t("iterations", iteration)
         t("result", response)

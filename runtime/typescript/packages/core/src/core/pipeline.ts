@@ -17,7 +17,9 @@
  * @module
  */
 
-import type { Prompty } from "../model/prompty.js";
+import { Prompty } from "../model/prompty.js";
+import { Model } from "../model/model.js";
+import { ModelOptions } from "../model/model-options.js";
 import {
   type ContentPart,
   type ToolCall,
@@ -407,7 +409,11 @@ export async function executeAgent(
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
 
-    let response = await executor.execute(agent, messages);
+    // Disable streaming for the agent loop — tool call detection requires
+    // complete responses.  executeAgent() returns a single value, not a stream.
+    const loopAgent = disableStreaming(agent);
+
+    let response = await executor.execute(loopAgent, messages);
     let iteration = 0;
 
     while (hasToolCalls(response)) {
@@ -428,7 +434,7 @@ export async function executeAgent(
       });
 
       messages.push(...toolMessages);
-      response = await executor.execute(agent, messages);
+      response = await executor.execute(loopAgent, messages);
     }
 
     emit("iterations", iteration);
@@ -557,6 +563,13 @@ function hasToolCalls(response: unknown): boolean {
     );
   }
 
+  // OpenAI Responses API shape: output[].type === "function_call"
+  if (r.object === "response" && Array.isArray(r.output)) {
+    return (r.output as Record<string, unknown>[]).some(
+      (item) => item.type === "function_call",
+    );
+  }
+
   return false;
 }
 
@@ -570,6 +583,11 @@ async function buildToolResultMessages(
   // Detect response format and dispatch
   if (Array.isArray(r.content) && r.stop_reason === "tool_use") {
     return buildAnthropicToolResultMessages(r, tools, parentEmit);
+  }
+
+  // OpenAI Responses API: output[].type === "function_call"
+  if (r.object === "response" && Array.isArray(r.output)) {
+    return buildResponsesToolResultMessages(r, tools, parentEmit);
   }
 
   return buildOpenAIToolResultMessages(r, tools, parentEmit);
@@ -715,6 +733,103 @@ async function buildAnthropicToolResultMessages(
   );
 
   return messages;
+}
+
+/** Handle OpenAI Responses API tool calls: output[].type === "function_call" */
+async function buildResponsesToolResultMessages(
+  r: Record<string, unknown>,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  parentEmit?: (key: string, value: unknown) => void,
+): Promise<Message[]> {
+  const output = r.output as Record<string, unknown>[];
+  const funcCalls = output.filter((item) => item.type === "function_call");
+
+  const messages: Message[] = [];
+  const toolInputs: Record<string, unknown>[] = [];
+
+  for (const fc of funcCalls) {
+    const toolName = fc.name as string;
+    const callId = (fc.call_id ?? fc.id ?? "") as string;
+    const argsStr = (fc.arguments as string) ?? "{}";
+
+    // Include the original function_call item so the Responses API can match
+    // function_call_output items to their origin function_call
+    messages.push(
+      new Message("assistant", [], {
+        responses_function_call: {
+          type: "function_call",
+          call_id: callId,
+          name: toolName,
+          arguments: argsStr,
+        },
+      }),
+    );
+
+    let result: string;
+    let parsedArgs: unknown;
+    try {
+      parsedArgs = JSON.parse(argsStr);
+      const toolFn = tools[toolName];
+      if (!toolFn) {
+        result = `Error: tool "${toolName}" not found`;
+      } else {
+        const toolResult = await traceSpan(toolName, async (toolEmit) => {
+          toolEmit("signature", `prompty.tool.${toolName}`);
+          toolEmit("description", `Execute tool: ${toolName}`);
+          toolEmit("inputs", { arguments: parsedArgs, call_id: callId });
+          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
+          const str = typeof r === "string" ? r : JSON.stringify(r);
+          toolEmit("result", str);
+          return str;
+        });
+        result = toolResult as string;
+      }
+    } catch (err) {
+      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    toolInputs.push({ name: toolName, arguments: parsedArgs, call_id: callId, result });
+
+    // Responses API tool results use tool_call_id metadata so the wire format
+    // (messageToResponsesInput) maps them to { type: "function_call_output", call_id, output }
+    messages.push(
+      new Message("tool", [text(result)], {
+        tool_call_id: callId,
+        name: toolName,
+      }),
+    );
+  }
+
+  if (parentEmit) {
+    parentEmit("inputs", { tool_calls: toolInputs });
+  }
+
+  return messages;
+}
+
+/**
+ * Return a copy of the agent with streaming disabled.
+ * The agent loop requires complete responses for tool call detection.
+ */
+function disableStreaming(agent: Prompty): Prompty {
+  const additional = agent.model?.options?.additionalProperties as
+    | Record<string, unknown>
+    | undefined;
+  if (!additional?.stream) return agent;
+
+  const { stream: _, ...rest } = additional;
+  const newOptions = new ModelOptions({
+    ...agent.model.options,
+    additionalProperties: Object.keys(rest).length > 0 ? rest : undefined,
+  });
+  const newModel = new Model({
+    ...agent.model,
+    options: newOptions,
+  });
+  return new Prompty({
+    ...agent,
+    model: newModel,
+  });
 }
 
 // Backward-compatibility alias
