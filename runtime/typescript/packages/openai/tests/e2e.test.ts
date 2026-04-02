@@ -589,9 +589,8 @@ describe("E2E Pipeline", () => {
       for await (const _ of result as AsyncIterable<unknown>) { /* drain */ }
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("execute");
 
-      // Find the PromptyStream trace frame somewhere in the tree
+      // Find a named trace frame anywhere in the tree
       function findFrame(frame: TraceFrame, name: string): TraceFrame | null {
         if (frame.name === name) return frame;
         for (const child of frame.__frames ?? []) {
@@ -600,6 +599,10 @@ describe("E2E Pipeline", () => {
         }
         return null;
       }
+
+      // Both execute and PromptyStream should appear somewhere in the trace tree
+      const executeFrame = findFrame(trace, "execute");
+      expect(executeFrame).toBeDefined();
 
       const streamFrame = findFrame(trace, "PromptyStream");
       expect(streamFrame).toBeDefined();

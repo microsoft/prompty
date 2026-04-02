@@ -334,8 +334,7 @@ class AnthropicExecutor:
             return self._execute_chat(client, agent, data)
         else:
             raise ValueError(
-                f"Unsupported apiType '{api_type}' for Anthropic. "
-                f"Anthropic only supports 'chat' (Messages API)."
+                f"Unsupported apiType '{api_type}' for Anthropic. Anthropic only supports 'chat' (Messages API)."
             )
 
     @trace
@@ -347,8 +346,7 @@ class AnthropicExecutor:
             return await self._execute_chat_async(client, agent, data)
         else:
             raise ValueError(
-                f"Unsupported apiType '{api_type}' for Anthropic. "
-                f"Anthropic only supports 'chat' (Messages API)."
+                f"Unsupported apiType '{api_type}' for Anthropic. Anthropic only supports 'chat' (Messages API)."
             )
 
     def _execute_chat(self, client: Any, agent: Prompty, data: Any) -> Any:

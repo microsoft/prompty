@@ -130,10 +130,13 @@ class TestMessageToWire:
         assert wire["content"] == "Be helpful"
 
     def test_multi_part_message(self):
-        msg = Message("user", [
-            TextPart(value="Look at this:"),
-            ImagePart(source="https://example.com/img.png"),
-        ])
+        msg = Message(
+            "user",
+            [
+                TextPart(value="Look at this:"),
+                ImagePart(source="https://example.com/img.png"),
+            ],
+        )
         wire = _message_to_wire(msg)
         assert wire["role"] == "user"
         assert isinstance(wire["content"], list)
@@ -171,13 +174,15 @@ class TestPartToWire:
 
 class TestBuildOptions:
     def test_all_options(self):
-        agent = _make_agent(options={
-            "temperature": 0.5,
-            "topP": 0.9,
-            "topK": 40,
-            "stopSequences": ["END"],
-            "maxOutputTokens": 2048,
-        })
+        agent = _make_agent(
+            options={
+                "temperature": 0.5,
+                "topP": 0.9,
+                "topK": 40,
+                "stopSequences": ["END"],
+                "maxOutputTokens": 2048,
+            }
+        )
         opts = _build_options(agent)
         assert opts["temperature"] == 0.5
         assert opts["top_p"] == 0.9
@@ -193,14 +198,18 @@ class TestBuildOptions:
 
 class TestToolsToWire:
     def test_function_tool(self):
-        agent = _make_agent(tools=[{
-            "name": "get_weather",
-            "kind": "function",
-            "description": "Get weather",
-            "parameters": [
-                {"name": "location", "kind": "string", "description": "City", "required": True},
-            ],
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "get_weather",
+                    "kind": "function",
+                    "description": "Get weather",
+                    "parameters": [
+                        {"name": "location", "kind": "string", "description": "City", "required": True},
+                    ],
+                }
+            ]
+        )
         tools = _tools_to_wire(agent)
         assert len(tools) == 1
         assert tools[0]["name"] == "get_weather"
@@ -213,20 +222,26 @@ class TestToolsToWire:
         assert _tools_to_wire(agent) == []
 
     def test_non_function_tools_excluded(self):
-        agent = _make_agent(tools=[{
-            "name": "mcp_tool",
-            "kind": "mcp",
-            "connection": {"kind": "reference", "name": "test"},
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "mcp_tool",
+                    "kind": "mcp",
+                    "connection": {"kind": "reference", "name": "test"},
+                }
+            ]
+        )
         assert _tools_to_wire(agent) == []
 
 
 class TestOutputSchemaToWire:
     def test_with_outputs(self):
-        agent = _make_agent(outputs=[
-            {"name": "city", "kind": "string", "description": "City name"},
-            {"name": "temp", "kind": "float", "description": "Temperature"},
-        ])
+        agent = _make_agent(
+            outputs=[
+                {"name": "city", "kind": "string", "description": "City name"},
+                {"name": "temp", "kind": "float", "description": "Temperature"},
+            ]
+        )
         result = _output_schema_to_wire(agent)
         assert result is not None
         assert result["format"]["type"] == "json_schema"
@@ -260,12 +275,16 @@ class TestBuildChatArgs:
         assert args["max_tokens"] == 1024  # DEFAULT_MAX_TOKENS
 
     def test_tools_included(self):
-        agent = _make_agent(tools=[{
-            "name": "search",
-            "kind": "function",
-            "description": "Search",
-            "parameters": [{"name": "q", "kind": "string"}],
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "search",
+                    "kind": "function",
+                    "description": "Search",
+                    "parameters": [{"name": "q", "kind": "string"}],
+                }
+            ]
+        )
         args = _build_chat_args(agent, _make_messages())
         assert "tools" in args
         assert args["tools"][0]["name"] == "search"
@@ -337,11 +356,13 @@ class TestExecutor:
         MockAnthropic.return_value = mock_client
         mock_client.messages.create.return_value = _mock_anthropic_response()
 
-        agent = _make_agent(connection={
-            "kind": "key",
-            "apiKey": "sk-ant-test123",
-            "endpoint": "https://custom.anthropic.com",
-        })
+        agent = _make_agent(
+            connection={
+                "kind": "key",
+                "apiKey": "sk-ant-test123",
+                "endpoint": "https://custom.anthropic.com",
+            }
+        )
         executor = AnthropicExecutor()
         executor.execute(agent, _make_messages())
 
@@ -441,10 +462,12 @@ class TestProcessor:
         text_block = MagicMock(type="text", text=json_text, id=None, name=None, input=None)
         response = _mock_anthropic_response(content=[text_block])
 
-        agent = _make_agent(outputs=[
-            {"name": "city", "kind": "string"},
-            {"name": "temperature", "kind": "float"},
-        ])
+        agent = _make_agent(
+            outputs=[
+                {"name": "city", "kind": "string"},
+                {"name": "temperature", "kind": "float"},
+            ]
+        )
         result = AnthropicProcessor().process(agent, response)
         assert isinstance(result, dict)
         assert result["city"] == "Seattle"

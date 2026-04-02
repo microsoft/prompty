@@ -43,7 +43,9 @@ class TestDirectOpenAIChat:
         agent = make_direct_openai_agent(
             options={"temperature": 0, "maxOutputTokens": 200},
         )
-        agent.instructions = "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        agent.instructions = (
+            "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        )
         result = execute(agent)
         assert isinstance(result, str)
         assert len(result) > 0
@@ -52,7 +54,9 @@ class TestDirectOpenAIChat:
         agent = make_direct_openai_agent(
             options={"temperature": 0.9, "maxOutputTokens": 200},
         )
-        agent.instructions = "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        agent.instructions = (
+            "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        )
         result = execute(agent)
         assert isinstance(result, str)
         assert len(result) > 0
@@ -64,7 +68,9 @@ class TestDirectOpenAIChat:
         agent = make_direct_openai_agent(
             options={"temperature": 0, "maxOutputTokens": 200},
         )
-        agent.instructions = "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        agent.instructions = (
+            "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        )
         result = await execute_async(agent)
         assert isinstance(result, str)
         assert len(result) > 0
@@ -180,7 +186,9 @@ class TestDirectOpenAIResponses:
             api_type="responses",
             options={"temperature": 0, "maxOutputTokens": 200},
         )
-        agent.instructions = "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        agent.instructions = (
+            "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
+        )
         result = execute(agent)
         assert isinstance(result, str)
         assert len(result) > 0

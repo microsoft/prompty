@@ -91,14 +91,16 @@ class TestAnthropicAgent:
 
         agent = make_anthropic_agent(
             options={"maxOutputTokens": 256},
-            tools=[{
-                "name": "get_weather",
-                "kind": "function",
-                "description": "Get the current weather for a city",
-                "parameters": [
-                    {"name": "location", "kind": "string", "description": "City name", "required": True},
-                ],
-            }],
+            tools=[
+                {
+                    "name": "get_weather",
+                    "kind": "function",
+                    "description": "Get the current weather for a city",
+                    "parameters": [
+                        {"name": "location", "kind": "string", "description": "City name", "required": True},
+                    ],
+                }
+            ],
             metadata={"tool_functions": {"get_weather": get_weather}},
         )
         messages = [

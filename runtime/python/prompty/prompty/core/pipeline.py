@@ -920,11 +920,13 @@ def _build_anthropic_tool_result_messages(
         else:
             tool_result = _execute_tool(fn, fn_name, arguments)
 
-        tool_results.append({
-            "tool_use_id": block.id,
-            "name": fn_name,
-            "result": tool_result,
-        })
+        tool_results.append(
+            {
+                "tool_use_id": block.id,
+                "name": fn_name,
+                "result": tool_result,
+            }
+        )
 
     # Single tool message with all results
     result_messages.append(
@@ -1038,11 +1040,13 @@ async def _build_anthropic_tool_result_messages_async(
         else:
             tool_result = await _execute_tool_async(fn, fn_name, arguments)
 
-        tool_results.append({
-            "tool_use_id": block.id,
-            "name": fn_name,
-            "result": tool_result,
-        })
+        tool_results.append(
+            {
+                "tool_use_id": block.id,
+                "name": fn_name,
+                "result": tool_result,
+            }
+        )
 
     result_messages.append(
         Message(
@@ -1096,8 +1100,7 @@ def _build_responses_tool_result_messages(
         fn = tools.get(fn_name)
         if fn is None:
             tool_result = (
-                f"Error: tool function '{fn_name}' not registered. "
-                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
             had_missing = True
         elif inspect.iscoroutinefunction(fn):
@@ -1152,8 +1155,7 @@ async def _build_responses_tool_result_messages_async(
         fn = tools.get(fn_name)
         if fn is None:
             tool_result = (
-                f"Error: tool function '{fn_name}' not registered. "
-                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
             tool_result = await _execute_tool_async(fn, fn_name, arguments)
@@ -1250,12 +1252,14 @@ def _build_tool_messages_from_calls(
         if text_content:
             raw_content.append({"type": "text", "text": text_content})
         for tc in tool_calls:
-            raw_content.append({
-                "type": "tool_use",
-                "id": tc.id,
-                "name": tc.name,
-                "input": json.loads(tc.arguments),
-            })
+            raw_content.append(
+                {
+                    "type": "tool_use",
+                    "id": tc.id,
+                    "name": tc.name,
+                    "input": json.loads(tc.arguments),
+                }
+            )
         result_messages.append(
             Message(
                 role="assistant",
@@ -1301,8 +1305,7 @@ def _build_tool_messages_from_calls(
         fn = tools.get(fn_name)
         if fn is None:
             tool_result = (
-                f"Error: tool function '{fn_name}' not registered. "
-                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         elif inspect.iscoroutinefunction(fn):
             tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
@@ -1310,11 +1313,13 @@ def _build_tool_messages_from_calls(
             tool_result = _execute_tool(fn, fn_name, tc.arguments)
 
         if provider == "anthropic":
-            tool_result_blocks.append({
-                "tool_use_id": tc.id,
-                "name": fn_name,
-                "result": tool_result,
-            })
+            tool_result_blocks.append(
+                {
+                    "tool_use_id": tc.id,
+                    "name": fn_name,
+                    "result": tool_result,
+                }
+            )
         else:
             result_messages.append(
                 Message(
@@ -1356,12 +1361,14 @@ async def _build_tool_messages_from_calls_async(
         if text_content:
             raw_content.append({"type": "text", "text": text_content})
         for tc in tool_calls:
-            raw_content.append({
-                "type": "tool_use",
-                "id": tc.id,
-                "name": tc.name,
-                "input": json.loads(tc.arguments),
-            })
+            raw_content.append(
+                {
+                    "type": "tool_use",
+                    "id": tc.id,
+                    "name": tc.name,
+                    "input": json.loads(tc.arguments),
+                }
+            )
         result_messages.append(
             Message(
                 role="assistant",
@@ -1406,18 +1413,19 @@ async def _build_tool_messages_from_calls_async(
         fn = tools.get(fn_name)
         if fn is None:
             tool_result = (
-                f"Error: tool function '{fn_name}' not registered. "
-                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
             tool_result = await _execute_tool_async(fn, fn_name, tc.arguments)
 
         if provider == "anthropic":
-            tool_result_blocks.append({
-                "tool_use_id": tc.id,
-                "name": fn_name,
-                "result": tool_result,
-            })
+            tool_result_blocks.append(
+                {
+                    "tool_use_id": tc.id,
+                    "name": fn_name,
+                    "result": tool_result,
+                }
+            )
         else:
             result_messages.append(
                 Message(
@@ -1516,7 +1524,10 @@ def execute_agent(
                     )
 
                 tool_messages = _build_tool_messages_from_calls(
-                    streamed_tool_calls, content, tools, agent,
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
                 )
                 messages.extend(tool_messages)
                 response = _invoke_executor(agent, messages)
@@ -1590,7 +1601,10 @@ async def execute_agent_async(
                     )
 
                 tool_messages = await _build_tool_messages_from_calls_async(
-                    streamed_tool_calls, content, tools, agent,
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
                 )
                 messages.extend(tool_messages)
                 response = await _invoke_executor_async(agent, messages)

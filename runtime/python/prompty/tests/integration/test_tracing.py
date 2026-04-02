@@ -260,7 +260,9 @@ class TestFoundryAgentTracing:
                     }
                 ],
             )
-            agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed.\nuser:\nWhat is the weather in Seattle?"
+            agent.instructions = (
+                "system:\nYou are a helpful assistant. Use tools when needed.\nuser:\nWhat is the weather in Seattle?"
+            )
             result = execute_agent(
                 agent,
                 tools={"get_weather": get_weather},
