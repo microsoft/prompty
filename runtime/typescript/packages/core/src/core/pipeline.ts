@@ -375,6 +375,160 @@ export async function execute(
 // Agent loop: executeAgent()
 // ---------------------------------------------------------------------------
 
+/** Check if a value is an async iterable (i.e. a stream). */
+function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+  return value != null && typeof value === "object" && Symbol.asyncIterator in value;
+}
+
+/** Check if an item looks like a ToolCall from the processor. */
+function isToolCallLike(item: unknown): item is ToolCall {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    "id" in item &&
+    "name" in item &&
+    "arguments" in item
+  );
+}
+
+/**
+ * Consume a streaming response through the processor.
+ * Returns accumulated text content and any ToolCall objects.
+ */
+async function consumeStream(
+  agent: Prompty,
+  response: unknown,
+): Promise<{ toolCalls: ToolCall[]; content: string }> {
+  const processed = await process(agent, response);
+
+  const toolCalls: ToolCall[] = [];
+  const textParts: string[] = [];
+
+  if (isAsyncIterable(processed)) {
+    for await (const item of processed) {
+      if (isToolCallLike(item)) {
+        toolCalls.push(item);
+      } else if (typeof item === "string") {
+        textParts.push(item);
+      }
+    }
+  } else if (typeof processed === "string") {
+    textParts.push(processed);
+  }
+
+  return { toolCalls, content: textParts.join("") };
+}
+
+/**
+ * Build tool result messages from processed ToolCall objects (streaming path).
+ * Dispatches to the correct wire format based on provider and apiType.
+ */
+async function buildToolMessagesFromCalls(
+  toolCalls: ToolCall[],
+  textContent: string,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  agent: Prompty,
+  parentEmit?: (key: string, value: unknown) => void,
+): Promise<Message[]> {
+  const provider = resolveProvider(agent);
+  const apiType = agent.model?.apiType || "chat";
+  const messages: Message[] = [];
+  const toolInputs: Record<string, unknown>[] = [];
+
+  // --- Assistant message with provider-appropriate metadata ---
+  if (provider === "anthropic") {
+    // Anthropic: raw content blocks (text + tool_use)
+    const rawContent: Record<string, unknown>[] = [];
+    if (textContent) rawContent.push({ type: "text", text: textContent });
+    for (const tc of toolCalls) {
+      rawContent.push({
+        type: "tool_use",
+        id: tc.id,
+        name: tc.name,
+        input: JSON.parse(tc.arguments),
+      });
+    }
+    messages.push(
+      new Message("assistant", textContent ? [text(textContent)] : [], { content: rawContent }),
+    );
+  } else if (apiType === "responses") {
+    // Responses API: individual function_call items
+    for (const tc of toolCalls) {
+      messages.push(
+        new Message("assistant", [], {
+          responses_function_call: {
+            type: "function_call",
+            call_id: tc.id,
+            name: tc.name,
+            arguments: tc.arguments,
+          },
+        }),
+      );
+    }
+  } else {
+    // OpenAI Chat: tool_calls metadata
+    const rawToolCalls = toolCalls.map((tc) => ({
+      id: tc.id,
+      type: "function",
+      function: { name: tc.name, arguments: tc.arguments },
+    }));
+    messages.push(
+      new Message("assistant", textContent ? [text(textContent)] : [], {
+        tool_calls: rawToolCalls,
+      }),
+    );
+  }
+
+  // --- Execute tools and build result messages ---
+  const toolResultBlocks: Record<string, unknown>[] = [];
+
+  for (const tc of toolCalls) {
+    let result: string;
+    let parsedArgs: unknown;
+    try {
+      parsedArgs = JSON.parse(tc.arguments);
+      const toolFn = tools[tc.name];
+      if (!toolFn) {
+        result = `Error: tool "${tc.name}" not found`;
+      } else {
+        const toolResult = await traceSpan(tc.name, async (toolEmit) => {
+          toolEmit("signature", `prompty.tool.${tc.name}`);
+          toolEmit("description", `Execute tool: ${tc.name}`);
+          toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
+          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
+          const str = typeof r === "string" ? r : JSON.stringify(r);
+          toolEmit("result", str);
+          return str;
+        });
+        result = toolResult as string;
+      }
+    } catch (err) {
+      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    toolInputs.push({ name: tc.name, arguments: parsedArgs, id: tc.id, result });
+
+    if (provider === "anthropic") {
+      toolResultBlocks.push({ type: "tool_result", tool_use_id: tc.id, content: result });
+    } else {
+      messages.push(
+        new Message("tool", [text(result)], { tool_call_id: tc.id, name: tc.name }),
+      );
+    }
+  }
+
+  // Anthropic: batch all tool results in single user message
+  if (provider === "anthropic" && toolResultBlocks.length > 0) {
+    messages.push(new Message("user", [], { tool_results: toolResultBlocks }));
+  }
+
+  if (parentEmit) {
+    parentEmit("inputs", { tool_calls: toolInputs });
+  }
+
+  return messages;
+}
+
 /**
  * Run a prompt with automatic tool-call execution loop.
  */
@@ -409,14 +563,45 @@ export async function executeAgent(
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
 
-    // Disable streaming for the agent loop — tool call detection requires
-    // complete responses.  executeAgent() returns a single value, not a stream.
-    const loopAgent = disableStreaming(agent);
-
-    let response = await executor.execute(loopAgent, messages);
+    let response = await executor.execute(agent, messages);
     let iteration = 0;
 
-    while (hasToolCalls(response)) {
+    while (true) {
+      // Streaming: consume the stream, extract tool calls from buffered chunks
+      if (isAsyncIterable(response)) {
+        const { toolCalls, content } = await consumeStream(agent, response);
+
+        if (toolCalls.length === 0) {
+          // Final answer — return collected content
+          emit("iterations", iteration);
+          emit("result", content);
+          return content;
+        }
+
+        iteration++;
+        if (iteration > maxIterations) {
+          throw new Error(
+            `Agent loop exceeded maxIterations (${maxIterations}). ` +
+            `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+          );
+        }
+
+        const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+          toolEmit("signature", "prompty.executeAgent.toolCalls");
+          toolEmit("description", `Tool call round ${iteration}`);
+          const result = await buildToolMessagesFromCalls(toolCalls, content, tools, agent, toolEmit);
+          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+          return result;
+        });
+
+        messages.push(...toolMessages);
+        response = await executor.execute(agent, messages);
+        continue;
+      }
+
+      // Non-streaming: check raw response for tool calls
+      if (!hasToolCalls(response)) break;
+
       iteration++;
       if (iteration > maxIterations) {
         throw new Error(
@@ -434,7 +619,7 @@ export async function executeAgent(
       });
 
       messages.push(...toolMessages);
-      response = await executor.execute(loopAgent, messages);
+      response = await executor.execute(agent, messages);
     }
 
     emit("iterations", iteration);
@@ -805,31 +990,6 @@ async function buildResponsesToolResultMessages(
   }
 
   return messages;
-}
-
-/**
- * Return a copy of the agent with streaming disabled.
- * The agent loop requires complete responses for tool call detection.
- */
-function disableStreaming(agent: Prompty): Prompty {
-  const additional = agent.model?.options?.additionalProperties as
-    | Record<string, unknown>
-    | undefined;
-  if (!additional?.stream) return agent;
-
-  const { stream: _, ...rest } = additional;
-  const newOptions = new ModelOptions({
-    ...agent.model.options,
-    additionalProperties: Object.keys(rest).length > 0 ? rest : undefined,
-  });
-  const newModel = new Model({
-    ...agent.model,
-    options: newOptions,
-  });
-  return new Prompty({
-    ...agent,
-    model: newModel,
-  });
 }
 
 // Backward-compatibility alias

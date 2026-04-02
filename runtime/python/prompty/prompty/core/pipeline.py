@@ -1169,26 +1169,274 @@ async def _build_responses_tool_result_messages_async(
     return result_messages
 
 
-def _disable_streaming(agent: Prompty) -> Prompty:
-    """Return a copy of the agent with streaming disabled.
+def _is_stream(response: Any) -> bool:
+    """Check if a response is a stream (sync or async iterable wrapper)."""
+    from .types import AsyncPromptyStream, PromptyStream
 
-    The agent loop requires complete responses for tool call detection.
+    return isinstance(response, (PromptyStream, AsyncPromptyStream))
+
+
+def _consume_stream(agent: Prompty, response: Any) -> tuple[list[Any], str]:
+    """Consume a streaming response through the processor.
+
+    Returns (tool_calls, content) where tool_calls is a list of ToolCall
+    objects and content is the accumulated text.
     """
-    import copy
+    from ..providers.openai.processor import ToolCall
 
-    opts = agent.model.options if agent.model else None
-    additional = getattr(opts, "additionalProperties", None) if opts else None
-    if not additional or not additional.get("stream"):
-        return agent
+    processed = process(agent, response)
 
-    agent = copy.copy(agent)
-    model = copy.copy(agent.model)
-    options = copy.copy(model.options)
-    new_additional = {k: v for k, v in additional.items() if k != "stream"}
-    options.additionalProperties = new_additional if new_additional else None  # type: ignore[assignment]
-    model.options = options
-    agent.model = model
-    return agent
+    tool_calls: list[Any] = []
+    text_parts: list[str] = []
+
+    if hasattr(processed, "__iter__") and not isinstance(processed, (str, bytes)):
+        for item in processed:
+            if isinstance(item, ToolCall):
+                tool_calls.append(item)
+            elif isinstance(item, str):
+                text_parts.append(item)
+    elif isinstance(processed, str):
+        text_parts.append(processed)
+
+    return tool_calls, "".join(text_parts)
+
+
+async def _consume_stream_async(agent: Prompty, response: Any) -> tuple[list[Any], str]:
+    """Async: consume a streaming response through the processor."""
+    from ..providers.openai.processor import ToolCall
+
+    processed = await process_async(agent, response)
+
+    tool_calls: list[Any] = []
+    text_parts: list[str] = []
+
+    if hasattr(processed, "__aiter__"):
+        async for item in processed:
+            if isinstance(item, ToolCall):
+                tool_calls.append(item)
+            elif isinstance(item, str):
+                text_parts.append(item)
+    elif hasattr(processed, "__iter__") and not isinstance(processed, (str, bytes)):
+        for item in processed:
+            if isinstance(item, ToolCall):
+                tool_calls.append(item)
+            elif isinstance(item, str):
+                text_parts.append(item)
+    elif isinstance(processed, str):
+        text_parts.append(processed)
+
+    return tool_calls, "".join(text_parts)
+
+
+def _build_tool_messages_from_calls(
+    tool_calls: list[Any],
+    text_content: str,
+    tools: dict[str, Callable[..., Any]],
+    agent: Prompty,
+) -> list[Message]:
+    """Build tool result messages from processed ToolCall objects (streaming path).
+
+    Dispatches to the correct wire format based on provider and apiType.
+    """
+    from .types import TextPart
+
+    provider = agent.model.provider or ""
+    api_type = agent.model.apiType or "chat"
+    result_messages: list[Message] = []
+
+    # --- Assistant message with provider-appropriate metadata ---
+    if provider == "anthropic":
+        raw_content: list[dict[str, Any]] = []
+        if text_content:
+            raw_content.append({"type": "text", "text": text_content})
+        for tc in tool_calls:
+            raw_content.append({
+                "type": "tool_use",
+                "id": tc.id,
+                "name": tc.name,
+                "input": json.loads(tc.arguments),
+            })
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[TextPart(value=text_content)] if text_content else [],
+                metadata={"raw_content": raw_content},
+            )
+        )
+    elif api_type == "responses":
+        for tc in tool_calls:
+            result_messages.append(
+                Message(
+                    role="assistant",
+                    parts=[],
+                    metadata={
+                        "responses_function_call": {
+                            "type": "function_call",
+                            "call_id": tc.id,
+                            "name": tc.name,
+                            "arguments": tc.arguments,
+                        }
+                    },
+                )
+            )
+    else:
+        # OpenAI Chat format
+        raw_tool_calls = [
+            {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
+            for tc in tool_calls
+        ]
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[TextPart(value=text_content)] if text_content else [],
+                metadata={"tool_calls": raw_tool_calls},
+            )
+        )
+
+    # --- Execute tools and build result messages ---
+    tool_result_blocks: list[dict[str, Any]] = []
+
+    for tc in tool_calls:
+        fn_name = tc.name
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. "
+                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        elif inspect.iscoroutinefunction(fn):
+            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
+        else:
+            tool_result = _execute_tool(fn, fn_name, tc.arguments)
+
+        if provider == "anthropic":
+            tool_result_blocks.append({
+                "tool_use_id": tc.id,
+                "name": fn_name,
+                "result": tool_result,
+            })
+        else:
+            result_messages.append(
+                Message(
+                    role="tool",
+                    parts=[TextPart(value=tool_result)],
+                    metadata={"tool_call_id": tc.id, "name": fn_name},
+                )
+            )
+
+    # Anthropic: batch all tool results in single user message
+    if provider == "anthropic" and tool_result_blocks:
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=r["result"]) for r in tool_result_blocks],
+                metadata={"tool_results": tool_result_blocks},
+            )
+        )
+
+    return result_messages
+
+
+async def _build_tool_messages_from_calls_async(
+    tool_calls: list[Any],
+    text_content: str,
+    tools: dict[str, Callable[..., Any]],
+    agent: Prompty,
+) -> list[Message]:
+    """Async: build tool result messages from processed ToolCall objects."""
+    from .types import TextPart
+
+    provider = agent.model.provider or ""
+    api_type = agent.model.apiType or "chat"
+    result_messages: list[Message] = []
+
+    # --- Assistant message (same as sync) ---
+    if provider == "anthropic":
+        raw_content: list[dict[str, Any]] = []
+        if text_content:
+            raw_content.append({"type": "text", "text": text_content})
+        for tc in tool_calls:
+            raw_content.append({
+                "type": "tool_use",
+                "id": tc.id,
+                "name": tc.name,
+                "input": json.loads(tc.arguments),
+            })
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[TextPart(value=text_content)] if text_content else [],
+                metadata={"raw_content": raw_content},
+            )
+        )
+    elif api_type == "responses":
+        for tc in tool_calls:
+            result_messages.append(
+                Message(
+                    role="assistant",
+                    parts=[],
+                    metadata={
+                        "responses_function_call": {
+                            "type": "function_call",
+                            "call_id": tc.id,
+                            "name": tc.name,
+                            "arguments": tc.arguments,
+                        }
+                    },
+                )
+            )
+    else:
+        raw_tool_calls = [
+            {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
+            for tc in tool_calls
+        ]
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[TextPart(value=text_content)] if text_content else [],
+                metadata={"tool_calls": raw_tool_calls},
+            )
+        )
+
+    # --- Execute tools ---
+    tool_result_blocks: list[dict[str, Any]] = []
+
+    for tc in tool_calls:
+        fn_name = tc.name
+        fn = tools.get(fn_name)
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. "
+                f"Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        else:
+            tool_result = await _execute_tool_async(fn, fn_name, tc.arguments)
+
+        if provider == "anthropic":
+            tool_result_blocks.append({
+                "tool_use_id": tc.id,
+                "name": fn_name,
+                "result": tool_result,
+            })
+        else:
+            result_messages.append(
+                Message(
+                    role="tool",
+                    parts=[TextPart(value=tool_result)],
+                    metadata={"tool_call_id": tc.id, "name": fn_name},
+                )
+            )
+
+    if provider == "anthropic" and tool_result_blocks:
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=r["result"]) for r in tool_result_blocks],
+                metadata={"tool_results": tool_result_blocks},
+            )
+        )
+
+    return result_messages
 
 
 @trace
@@ -1206,6 +1454,10 @@ def execute_agent(
     specified tool functions are executed and their results are sent back
     to the model. This repeats until the model returns a normal response
     or *max_iterations* is reached.
+
+    If the agent has streaming enabled, each response is consumed through
+    the processor to extract tool calls from the buffered chunks. This
+    preserves streaming tracing while still enabling tool-call detection.
 
     Parameters
     ----------
@@ -1238,18 +1490,42 @@ def execute_agent(
     tools = tools or {}
     messages = prepare(agent, inputs)
 
-    # Disable streaming for the agent loop — tool call detection requires
-    # complete responses. executeAgent returns a single value, not a stream.
-    loop_agent = _disable_streaming(agent)
-
     with Tracer.start("AgentLoop") as t:
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = _invoke_executor(loop_agent, messages)
+        response = _invoke_executor(agent, messages)
         iteration = 0
 
-        while _has_tool_calls(response):
+        while True:
+            # Streaming: consume through processor, extract tool calls
+            if _is_stream(response):
+                streamed_tool_calls, content = _consume_stream(agent, response)
+
+                if not streamed_tool_calls:
+                    # Final answer — return collected content
+                    t("iterations", iteration)
+                    t("result", content)
+                    return content
+
+                iteration += 1
+                if iteration > max_iterations:
+                    raise ValueError(
+                        f"Agent loop exceeded max_iterations ({max_iterations}). "
+                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                    )
+
+                tool_messages = _build_tool_messages_from_calls(
+                    streamed_tool_calls, content, tools, agent,
+                )
+                messages.extend(tool_messages)
+                response = _invoke_executor(agent, messages)
+                continue
+
+            # Non-streaming: check raw response for tool calls
+            if not _has_tool_calls(response):
+                break
+
             iteration += 1
             if iteration > max_iterations:
                 raise ValueError(
@@ -1259,7 +1535,7 @@ def execute_agent(
 
             tool_messages, _ = _build_tool_result_messages(response, tools)
             messages.extend(tool_messages)
-            response = _invoke_executor(loop_agent, messages)
+            response = _invoke_executor(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
@@ -1289,17 +1565,41 @@ async def execute_agent_async(
     tools = tools or {}
     messages = await prepare_async(agent, inputs)
 
-    # Disable streaming for the agent loop
-    loop_agent = _disable_streaming(agent)
-
     with Tracer.start("AgentLoopAsync") as t:
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = await _invoke_executor_async(loop_agent, messages)
+        response = await _invoke_executor_async(agent, messages)
         iteration = 0
 
-        while _has_tool_calls(response):
+        while True:
+            # Streaming: consume through processor, extract tool calls
+            if _is_stream(response):
+                streamed_tool_calls, content = await _consume_stream_async(agent, response)
+
+                if not streamed_tool_calls:
+                    t("iterations", iteration)
+                    t("result", content)
+                    return content
+
+                iteration += 1
+                if iteration > max_iterations:
+                    raise ValueError(
+                        f"Agent loop exceeded max_iterations ({max_iterations}). "
+                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                    )
+
+                tool_messages = await _build_tool_messages_from_calls_async(
+                    streamed_tool_calls, content, tools, agent,
+                )
+                messages.extend(tool_messages)
+                response = await _invoke_executor_async(agent, messages)
+                continue
+
+            # Non-streaming: check raw response
+            if not _has_tool_calls(response):
+                break
+
             iteration += 1
             if iteration > max_iterations:
                 raise ValueError(
@@ -1309,7 +1609,7 @@ async def execute_agent_async(
 
             tool_messages = await _build_tool_result_messages_async(response, tools)
             messages.extend(tool_messages)
-            response = await _invoke_executor_async(loop_agent, messages)
+            response = await _invoke_executor_async(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
