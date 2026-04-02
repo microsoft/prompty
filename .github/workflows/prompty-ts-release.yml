@@ -4,13 +4,16 @@ on:
     tags:
       - 'typescript/*'
 
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
+  test:
+    uses: ./.github/workflows/prompty-ts-check.yml
+
   publish:
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: runtime/typescript
@@ -22,7 +25,6 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
-      - run: npm run test
 
       # Determine npm dist-tag from version
       - name: Determine dist-tag
@@ -37,7 +39,7 @@ jobs:
           fi
 
       # Publish in dependency order — OIDC trusted publisher auth
-      - run: npm publish --workspace=packages/core --access public --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/openai --access public --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/foundry --access public --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/anthropic --access public --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/core --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/openai --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/foundry --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/anthropic --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}

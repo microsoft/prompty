@@ -5,6 +5,7 @@ on:
     paths: ['runtime/typescript/**']
   pull_request:
     paths: ['runtime/typescript/**']
+  workflow_call:
   workflow_dispatch:
 
 jobs:
