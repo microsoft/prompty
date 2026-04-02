@@ -48,7 +48,7 @@
     "@typespec/compiler": "latest",
     "@typespec/json-schema": "^1.8.0",
     "eslint": "^9.15.0",
-    "markdownlint-cli": "^0.46.0",
+    "markdownlint-cli": "^0.48.0",
     "prettier": "^3.3.3",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.54.0"
