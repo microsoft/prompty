@@ -21,19 +21,16 @@ pip install prompty[jinja2,foundry]
 pip install prompty[all]
 ```
 
-### Dependencies
+### Extras
 
-| Package | Required | Purpose |
-|---------|----------|---------|
-| `prompty.model` | ✅ | Type system (Prompty, etc.) |
-| `pyyaml` | ✅ | YAML frontmatter parsing |
-| `python-dotenv` | ✅ | `.env` file loading |
-| `aiofiles` | ✅ | Async file I/O |
-| `jinja2` | Optional | Jinja2 template rendering |
-| `chevron` | Optional | Mustache template rendering |
-| `openai` | Optional | OpenAI / Azure OpenAI |
-| `azure-identity` | Optional | Azure AAD authentication |
-| `opentelemetry-api` | Optional | OpenTelemetry tracing |
+| Extra | Packages | What it enables |
+|-------|----------|-----------------|
+| `[openai]` | `openai` | OpenAI provider |
+| `[foundry]` | `openai`, `azure-identity` | Microsoft Foundry provider |
+| `[jinja2]` | `jinja2` | Jinja2 template rendering |
+| `[mustache]` | `chevron` | Mustache template rendering |
+| `[otel]` | `opentelemetry-api` | OpenTelemetry tracing |
+| `[all]` | All of the above | Everything |
 
 ## Quick Start
 
@@ -142,7 +139,7 @@ Error handling:
 
 ### Connection Registry
 
-For AAD or pre-configured SDK clients:
+For pre-configured SDK clients or token-based auth:
 
 ```yaml
 # .prompty file — reference a named connection
@@ -254,7 +251,7 @@ Tracer.add("otel", otel_tracer())
 
 ```text
 ---
-# YAML frontmatter (AgentSchema properties)
+# YAML frontmatter (Prompty schema)
 ---
 # Markdown body (becomes `instructions`)
 # Uses role markers and template syntax
