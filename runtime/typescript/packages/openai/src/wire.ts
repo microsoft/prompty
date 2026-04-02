@@ -96,10 +96,27 @@ export function buildEmbeddingArgs(
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id || "text-embedding-ada-002";
-  const args: Record<string, unknown> = {
-    input: Array.isArray(data) ? data : [data],
-    model,
-  };
+
+  // Extract text content from Message objects if needed
+  let input: unknown;
+  if (Array.isArray(data)) {
+    const texts = data.map((item: unknown) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object" && "text" in item) return (item as { text: string }).text;
+      if (item && typeof item === "object" && "toTextContent" in item) {
+        const content = (item as { toTextContent: () => unknown }).toTextContent();
+        return typeof content === "string" ? content : String(content);
+      }
+      return String(item);
+    });
+    input = texts;
+  } else if (typeof data === "string") {
+    input = [data];
+  } else {
+    input = [String(data)];
+  }
+
+  const args: Record<string, unknown> = { input, model };
   const extra = agent.model?.options?.additionalProperties;
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {
@@ -178,7 +195,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   if (opts.topP !== undefined) result.top_p = opts.topP;
   if (opts.frequencyPenalty !== undefined) result.frequency_penalty = opts.frequencyPenalty;
   if (opts.presencePenalty !== undefined) result.presence_penalty = opts.presencePenalty;
-  if (opts.stopSequences !== undefined) result.stop = opts.stopSequences;
+  if (opts.stopSequences !== undefined && opts.stopSequences.length > 0) result.stop = opts.stopSequences;
   if (opts.seed !== undefined) result.seed = opts.seed;
 
   // Pass through additionalProperties — but don't overwrite mapped keys

@@ -655,7 +655,9 @@ async function buildAnthropicToolResultMessages(
 
   const messages: Message[] = [];
 
-  // Add assistant message with the full content (Anthropic includes tool_use in content)
+  // Add assistant message with the FULL content blocks (including tool_use).
+  // Anthropic requires the assistant message to contain the original tool_use
+  // blocks so the API can match tool_result blocks to their tool_use origins.
   const textParts = content
     .filter((block) => block.type === "text")
     .map((block) => text(block.text as string));
@@ -664,6 +666,7 @@ async function buildAnthropicToolResultMessages(
   );
 
   const toolInputs: Record<string, unknown>[] = [];
+  const toolResultBlocks: Record<string, unknown>[] = [];
 
   for (const block of toolUseBlocks) {
     const toolName = block.name as string;
@@ -693,18 +696,23 @@ async function buildAnthropicToolResultMessages(
 
     toolInputs.push({ name: toolName, arguments: toolArgs, tool_use_id: toolCallId, result });
 
-    // Anthropic tool results use tool_use_id (not tool_call_id)
-    messages.push(
-      new Message("tool", [text(result)], {
-        tool_use_id: toolCallId,
-        name: toolName,
-      }),
-    );
+    // Collect tool_result blocks for batching into a single user message
+    toolResultBlocks.push({
+      type: "tool_result",
+      tool_use_id: toolCallId,
+      content: result,
+    });
   }
 
   if (parentEmit) {
     parentEmit("inputs", { tool_calls: toolInputs });
   }
+
+  // Anthropic requires ALL tool results in a SINGLE user message
+  // with the tool_result content blocks batched together.
+  messages.push(
+    new Message("user", [], { tool_results: toolResultBlocks }),
+  );
 
   return messages;
 }

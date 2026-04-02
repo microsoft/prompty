@@ -24,7 +24,14 @@ import type { ContentPart, Message } from "@prompty/core";
 export function messageToWire(msg: Message): Record<string, unknown> {
   const wire: Record<string, unknown> = { role: msg.role };
 
-  // Tool result messages → special content block format
+  // Batched tool results → single user message with all tool_result blocks
+  if (msg.metadata.tool_results && Array.isArray(msg.metadata.tool_results)) {
+    wire.role = "user";
+    wire.content = msg.metadata.tool_results;
+    return wire;
+  }
+
+  // Legacy single tool result messages (backward compat)
   if (msg.metadata.tool_use_id || msg.metadata.tool_call_id) {
     const toolUseId = (msg.metadata.tool_use_id ?? msg.metadata.tool_call_id) as string;
     wire.role = "user";
@@ -35,6 +42,12 @@ export function messageToWire(msg: Message): Record<string, unknown> {
         content: msg.toTextContent(),
       },
     ];
+    return wire;
+  }
+
+  // Assistant messages with raw content blocks (tool_use) — preserve them
+  if (msg.role === "assistant" && msg.metadata.content && Array.isArray(msg.metadata.content)) {
+    wire.content = msg.metadata.content;
     return wire;
   }
 
