@@ -1,34 +1,16 @@
 name: TypeScript Release
 on:
   push:
-    branches: [main]
-    paths: ['runtime/typescript/**']
-  workflow_dispatch:
+    tags:
+      - 'prompty-ts-v*'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
   id-token: write
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      releases_created: ${{ steps.release.outputs.releases_created }}
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          config-file: runtime/typescript/.release-please-config.json
-          manifest-file: runtime/typescript/.release-please-manifest.json
-
   publish:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     defaults:
       run:
         working-directory: runtime/typescript
@@ -41,8 +23,20 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test
+
+      # Determine npm dist-tag from version
+      - name: Determine dist-tag
+        id: dist-tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#prompty-ts-v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "tag=alpha" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       # Publish in dependency order — OIDC trusted publisher auth
-      # Use --tag alpha for prerelease versions to avoid overwriting 'latest'
-      - run: npm publish --workspace=packages/core --access public --tag alpha
-      - run: npm publish --workspace=packages/openai --access public --tag alpha
-      - run: npm publish --workspace=packages/foundry --access public --tag alpha
+      - run: npm publish --workspace=packages/core --access public --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/openai --access public --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/foundry --access public --tag ${{ steps.dist-tag.outputs.tag }}

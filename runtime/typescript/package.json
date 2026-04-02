@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
-    "clean": "npm run clean --workspaces"
+    "clean": "npm run clean --workspaces",
+    "release": "node scripts/release.mjs"
   },
   "engines": {
     "node": ">=18.0.0"

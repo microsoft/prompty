@@ -1,6 +1,0 @@
-{
-  "runtime/typescript/packages/core": "2.0.0-alpha.1",
-  "runtime/typescript/packages/openai": "2.0.0-alpha.1",
-  "runtime/typescript/packages/foundry": "2.0.0-alpha.1",
-  "runtime/typescript/packages/anthropic": "2.0.0-alpha.1"
-}
