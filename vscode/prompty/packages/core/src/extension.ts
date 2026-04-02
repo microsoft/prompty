@@ -11,6 +11,7 @@ import {
 import { registerExecutor, registerProcessor } from '@prompty/core';
 import { PromptyTraceProvider } from './providers/promptyTraceProvider';
 import { PromptyController } from './controllers/promptyController';
+import { PreviewPanel } from './controllers/previewPanel';
 import { TraceFileProvider, TraceItem } from './providers/traceFileProvider';
 import { PromptySymbolProvider } from './providers/promptySymbolProvider';
 import { ConnectionProviderRegistry } from './connections/registry';
@@ -78,6 +79,38 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 	TraceFileProvider.createTreeView(context, traceFileProvider, "view-traces", "prompty.refreshTraces");
 
 	context.subscriptions.push(
+		// New Prompty
+		commands.registerCommand("prompty.newPrompt", async (uri?: Uri) => {
+			const folder = uri
+				? (await workspace.fs.stat(uri)).type & vscode.FileType.Directory ? uri : Uri.file(path.dirname(uri.fsPath))
+				: workspace.workspaceFolders?.[0]?.uri;
+			if (!folder) {
+				window.showErrorMessage("Open a folder first to create a Prompty file.");
+				return;
+			}
+			const name = await window.showInputBox({
+				prompt: "Prompty file name",
+				value: "prompt.prompty",
+				validateInput: (v) => v.endsWith(".prompty") ? null : "File must end with .prompty",
+			});
+			if (!name) { return; }
+			const fileUri = Uri.joinPath(folder, name);
+			const scaffold = [
+				"---",
+				`name: ${name.replace(/\.prompty$/, "")}`,
+				"model: gpt-4o-mini",
+				"---",
+				"system:",
+				"You are a helpful assistant.",
+				"",
+				"user:",
+				"{{question}}",
+				"",
+			].join("\n");
+			await workspace.fs.writeFile(fileUri, Buffer.from(scaffold, "utf-8"));
+			const doc = await workspace.openTextDocument(fileUri);
+			await window.showTextDocument(doc);
+		}),
 		// Connections
 		connectionRegistry,
 		connectionStore,
@@ -88,6 +121,12 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 		// Existing
 		promptyController,
 		commands.registerCommand("prompty.runPrompt", (uri: Uri) => promptyController.run(uri)),
+		commands.registerCommand("prompty.previewPrompt", () => {
+			const editor = window.activeTextEditor;
+			if (editor && editor.document.uri.fsPath.endsWith('.prompty')) {
+				PreviewPanel.toggle(context, editor);
+			}
+		}),
 		commands.registerCommand("prompty.viewTrace", async (traceItem: TraceItem) => {
 			if (!traceItem.trace.uri) {
 				return;

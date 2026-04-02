@@ -70,37 +70,37 @@ console.log(result);
 
 ## VS Code Extension
 
-Install from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+> **v2 extension coming soon** — the next release brings a new connections sidebar, live preview, chat mode, and redesigned trace viewer. Stay tuned on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
 
 ### Create
 
 Right-click in the explorer → **New Prompty** to scaffold a new prompt file.
 
-<!-- TODO: screenshot of new prompty command -->
+![Create a new prompty file](img/vscode/v2-create.png)
 
 ### Preview
 
-See the rendered prompt with live template interpolation as you type.
+See the rendered prompt with live markdown rendering and template interpolation as you type.
 
-<!-- TODO: screenshot of preview pane -->
+![Live preview](img/vscode/v2-preview.png)
 
-### Run
+### Connections
 
-Press **F5** to execute against your configured model. Results appear in the Prompty output panel.
+Manage model connections from the sidebar — add OpenAI, Microsoft Foundry, or Anthropic endpoints, set a default, and browse available models.
 
-<!-- TODO: screenshot of run output -->
+![Connections sidebar](img/vscode/v2-connections.png)
 
 ### Chat Mode
 
-Thread-enabled prompts automatically open an interactive chat panel.
+Thread-enabled prompts automatically open an interactive chat panel with tool calling support.
 
-<!-- TODO: screenshot of chat panel -->
+![Chat panel with tool calling](img/vscode/v2-chat.png)
 
 ### Tracing
 
 Every execution generates a `.tracy` trace file. Click to inspect the full pipeline — render, parse, execute, process — with timing and payloads.
 
-<!-- TODO: screenshot of trace viewer -->
+![Trace viewer](img/vscode/v2-tracing.png)
 
 ## Runtimes
 

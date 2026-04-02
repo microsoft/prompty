@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ConnectionStore } from '../connections/store';
 import { ConnectionProviderRegistry } from '../connections/registry';
+import { ChatPanel } from './chatPanel';
 
 export class PromptyController implements Disposable {
 	private outputChannel = window.createOutputChannel('Prompty · Run');
@@ -58,6 +59,23 @@ export class PromptyController implements Disposable {
 						sampleInputs[prop.name] = prop.default;
 					}
 				}
+			}
+
+			// Check for thread inputs — if found, open chat mode instead
+			const threadInput = agent.inputs?.find(p => p.kind === 'thread');
+			if (threadInput?.name) {
+				Tracer.remove('prompty-file');
+				await ChatPanel.open(
+					this.context,
+					filePath,
+					agent,
+					sampleInputs,
+					threadInput.name,
+					this.connectionStore,
+					this.connectionRegistry,
+					() => this.bridgeConnections(),
+				);
+				return;
 			}
 
 			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)

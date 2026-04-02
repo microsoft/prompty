@@ -100,6 +100,18 @@
     ],
     "commands": [
       {
+        "command": "prompty.newPrompt",
+        "category": "Prompty",
+        "title": "New Prompty",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "prompty.previewPrompt",
+        "category": "Prompty",
+        "title": "Preview",
+        "icon": "$(open-preview)"
+      },
+      {
         "command": "prompty.runPrompt",
         "category": "Prompty",
         "title": "Run",
@@ -200,7 +212,18 @@
       "onLanguage:prompty"
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "command": "prompty.newPrompt",
+          "group": "prompty@1"
+        }
+      ],
       "editor/title": [
+        {
+          "command": "prompty.previewPrompt",
+          "when": "resourceExtname == .prompty",
+          "group": "navigation@0"
+        },
         {
           "command": "prompty.runPrompt",
           "when": "resourceExtname == .prompty",
@@ -330,5 +353,8 @@
     "mocha": {
       "serialize-javascript": "7.0.5"
     }
+  },
+  "dependencies": {
+    "marked": "^17.0.5"
   }
 }
