@@ -40,3 +40,4 @@ jobs:
       - run: npm publish --workspace=packages/core --access public --tag ${{ steps.dist-tag.outputs.tag }}
       - run: npm publish --workspace=packages/openai --access public --tag ${{ steps.dist-tag.outputs.tag }}
       - run: npm publish --workspace=packages/foundry --access public --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --workspace=packages/anthropic --access public --tag ${{ steps.dist-tag.outputs.tag }}
