@@ -146,12 +146,16 @@ class TestResponsesToolsToWire:
         assert _responses_tools_to_wire(agent) is None
 
     def test_function_tool_flat_format(self) -> None:
-        agent = _make_agent(tools=[{
-            "name": "get_weather",
-            "kind": "function",
-            "description": "Get the weather",
-            "parameters": [{"name": "city", "kind": "string"}],
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "get_weather",
+                    "kind": "function",
+                    "description": "Get the weather",
+                    "parameters": [{"name": "city", "kind": "string"}],
+                }
+            ]
+        )
         tools = _responses_tools_to_wire(agent)
         assert tools is not None
         assert len(tools) == 1
@@ -165,12 +169,16 @@ class TestResponsesToolsToWire:
         assert "parameters" in tool
 
     def test_strict_tool(self) -> None:
-        agent = _make_agent(tools=[{
-            "name": "calc",
-            "kind": "function",
-            "strict": True,
-            "parameters": [{"name": "expr", "kind": "string"}],
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "calc",
+                    "kind": "function",
+                    "strict": True,
+                    "parameters": [{"name": "expr", "kind": "string"}],
+                }
+            ]
+        )
         tools = _responses_tools_to_wire(agent)
         assert tools is not None
         tool = tools[0]
@@ -179,12 +187,16 @@ class TestResponsesToolsToWire:
 
     def test_non_function_tools_skipped(self) -> None:
         """MCP, OpenAPI, etc. tools are not sent in the Responses API."""
-        agent = _make_agent(tools=[{
-            "name": "my_mcp",
-            "kind": "mcp",
-            "connection": {"kind": "reference"},
-            "serverName": "my-server",
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "my_mcp",
+                    "kind": "mcp",
+                    "connection": {"kind": "reference"},
+                    "serverName": "my-server",
+                }
+            ]
+        )
         result = _responses_tools_to_wire(agent)
         assert result is None
 
@@ -296,12 +308,16 @@ class TestBuildResponsesArgs:
         assert args["instructions"] == "Rule 1\n\nRule 2"
 
     def test_with_tools(self) -> None:
-        agent = _make_agent(tools=[{
-            "name": "get_weather",
-            "kind": "function",
-            "description": "Weather lookup",
-            "parameters": [{"name": "city", "kind": "string"}],
-        }])
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "get_weather",
+                    "kind": "function",
+                    "description": "Weather lookup",
+                    "parameters": [{"name": "city", "kind": "string"}],
+                }
+            ]
+        )
         messages = [Message(role="user", parts=[TextPart(value="Weather?")])]
         args = self._build(agent, messages)
         assert "tools" in args
@@ -309,9 +325,11 @@ class TestBuildResponsesArgs:
         assert args["tools"][0]["name"] == "get_weather"
 
     def test_with_output_schema(self) -> None:
-        agent = _make_agent(outputs=[
-            {"name": "answer", "kind": "string"},
-        ])
+        agent = _make_agent(
+            outputs=[
+                {"name": "answer", "kind": "string"},
+            ]
+        )
         messages = [Message(role="user", parts=[TextPart(value="Structured?")])]
         args = self._build(agent, messages)
         assert "text" in args
@@ -375,10 +393,12 @@ class TestProcessResponsesApi:
         assert result[1].name == "get_time"
 
     def test_structured_output_json_parsed(self) -> None:
-        agent = _make_agent(outputs=[
-            {"name": "temperature", "kind": "integer"},
-            {"name": "condition", "kind": "string"},
-        ])
+        agent = _make_agent(
+            outputs=[
+                {"name": "temperature", "kind": "integer"},
+                {"name": "condition", "kind": "string"},
+            ]
+        )
         json_str = json.dumps({"temperature": 72, "condition": "sunny"})
         resp = _make_response(output_text=json_str)
         result = _process_responses_api(resp, agent)
@@ -464,9 +484,7 @@ class TestExecutorResponsesDispatch:
         executor = _BaseExecutor.__new__(_BaseExecutor)
         executor._trace_prefix = "OpenAI"
 
-        executor._execute_responses(client, agent, [
-            Message(role="user", parts=[TextPart(value="Hi")])
-        ])
+        executor._execute_responses(client, agent, [Message(role="user", parts=[TextPart(value="Hi")])])
 
         client.responses.create.assert_called_once()
         call_kwargs = client.responses.create.call_args[1]
@@ -475,20 +493,20 @@ class TestExecutorResponsesDispatch:
     def test_responses_with_tools_in_args(self) -> None:
         agent = _make_agent(
             api_type="responses",
-            tools=[{
-                "name": "get_weather",
-                "kind": "function",
-                "description": "Weather",
-                "parameters": [{"name": "city", "kind": "string"}],
-            }],
+            tools=[
+                {
+                    "name": "get_weather",
+                    "kind": "function",
+                    "description": "Weather",
+                    "parameters": [{"name": "city", "kind": "string"}],
+                }
+            ],
         )
         client = self._make_mock_client()
         executor = _BaseExecutor.__new__(_BaseExecutor)
         executor._trace_prefix = "OpenAI"
 
-        executor._execute_responses(client, agent, [
-            Message(role="user", parts=[TextPart(value="Weather?")])
-        ])
+        executor._execute_responses(client, agent, [Message(role="user", parts=[TextPart(value="Weather?")])])
 
         call_kwargs = client.responses.create.call_args[1]
         assert "tools" in call_kwargs
@@ -503,9 +521,13 @@ class TestExecutorResponsesDispatch:
         executor = _BaseExecutor.__new__(_BaseExecutor)
         executor._trace_prefix = "OpenAI"
 
-        executor._execute_responses(client, agent, [
-            Message(role="user", parts=[TextPart(value="Answer?")]),
-        ])
+        executor._execute_responses(
+            client,
+            agent,
+            [
+                Message(role="user", parts=[TextPart(value="Answer?")]),
+            ],
+        )
 
         call_kwargs = client.responses.create.call_args[1]
         assert "text" in call_kwargs
@@ -529,9 +551,7 @@ class TestExecutorResponsesAsync:
         executor = _BaseExecutor.__new__(_BaseExecutor)
         executor._trace_prefix = "OpenAI"
 
-        await executor._execute_responses_async(client, agent, [
-            Message(role="user", parts=[TextPart(value="Hi")])
-        ])
+        await executor._execute_responses_async(client, agent, [Message(role="user", parts=[TextPart(value="Hi")])])
 
         client.responses.create.assert_called_once()
 
@@ -572,9 +592,7 @@ class TestResponsesErrorCases:
         executor._trace_prefix = "OpenAI"
 
         with pytest.raises(RuntimeError, match="Connection failed"):
-            executor._execute_responses(client, agent, [
-                Message(role="user", parts=[TextPart(value="Hi")])
-            ])
+            executor._execute_responses(client, agent, [Message(role="user", parts=[TextPart(value="Hi")])])
 
     def test_malformed_tool_call_missing_fields(self) -> None:
         """Tool call items with missing fields should still produce ToolCall."""

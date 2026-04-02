@@ -106,12 +106,10 @@ class Property:
                 return ObjectProperty.load(data, context)
 
             else:
-
                 # create new instance (stop recursion)
                 return Property()
 
         else:
-
             # create new instance
             return Property()
 
@@ -309,17 +307,13 @@ class ObjectProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "properties" in data:
-            instance.properties = ObjectProperty.load_properties(
-                data["properties"], context
-            )
+            instance.properties = ObjectProperty.load_properties(data["properties"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
-    def load_properties(
-        data: dict | list, context: LoadContext | None
-    ) -> list[Property]:
+    def load_properties(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
             result: list[Property] = []
             for k, v in data.items():
@@ -334,9 +328,7 @@ class ObjectProperty(Property):
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_properties(
-        items: list[Property], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_properties(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -352,11 +344,7 @@ class ObjectProperty(Property):
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if (
-                        shorthand_prop
-                        and len(item_data) == 1
-                        and shorthand_prop in item_data
-                    ):
+                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -385,9 +373,7 @@ class ObjectProperty(Property):
         if obj.kind is not None:
             result["kind"] = obj.kind
         if obj.properties is not None:
-            result["properties"] = ObjectProperty.save_properties(
-                obj.properties, context
-            )
+            result["properties"] = ObjectProperty.save_properties(obj.properties, context)
 
         return result
 

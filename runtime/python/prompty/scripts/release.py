@@ -46,7 +46,7 @@ def bump_version(current: str, bump: str) -> str:
     dev_match = re.match(r"^(\d+)\.(\d+)\.(\d+)\.dev(\d+)$", current)
 
     if dev_match:
-        major, minor, patch, dev_num = int(dev_match[1]), int(dev_match[2]), int(dev_match[3]), int(dev_match[4])
+        major, minor, patch, _dev_num = int(dev_match[1]), int(dev_match[2]), int(dev_match[3]), int(dev_match[4])
         # dev → alpha
         if bump == "patch":
             return f"{major}.{minor}.{patch}a1"
@@ -98,7 +98,7 @@ def main() -> None:
     is_prerelease = re.search(r"(a|b|rc|dev)", new_version) is not None
     tag = f"{TAG_PREFIX}{new_version}"
 
-    print(f"\n📦 Prompty Python Release")
+    print("\n📦 Prompty Python Release")
     print(f"   {current} → {new_version}")
     print(f"   Tag: {tag}")
     print(f"   PyPI: {'prerelease' if is_prerelease else 'stable'}\n")
@@ -106,7 +106,7 @@ def main() -> None:
     if args.dry_run:
         print("🏜️  Dry run — no changes made.\n")
         print("Files that would be updated:")
-        print(f"  - prompty/_version.py")
+        print("  - prompty/_version.py")
         print()
         return
 
@@ -115,16 +115,16 @@ def main() -> None:
     print(f"✅ prompty/_version.py → {new_version}")
 
     # Git commit, tag, push
-    print(f"\n🔖 Creating commit and tag...\n")
-    run(f"git add runtime/python/prompty/prompty/_version.py")
+    print("\n🔖 Creating commit and tag...\n")
+    run("git add runtime/python/prompty/prompty/_version.py")
     run(f'git commit -m "chore(python): release v{new_version}"')
     run(f"git tag {tag}")
 
-    print(f"\n🚀 Pushing to origin...\n")
+    print("\n🚀 Pushing to origin...\n")
     run("git push origin main --follow-tags")
 
     print(f"\n✅ Done! Tag {tag} pushed.")
-    print(f"   CI will build, test, and publish to PyPI.\n")
+    print("   CI will build, test, and publish to PyPI.\n")
 
 
 if __name__ == "__main__":
