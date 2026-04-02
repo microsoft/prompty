@@ -746,8 +746,8 @@ class TestHeadless:
     def test_custom_provider(self):
         from prompty.core.pipeline import headless
 
-        agent = headless(provider="azure", model="gpt-4")
-        assert agent.model.provider == "azure"
+        agent = headless(provider="foundry", model="gpt-4")
+        assert agent.model.provider == "foundry"
 
     def test_connection_config(self):
         from prompty.core.pipeline import headless

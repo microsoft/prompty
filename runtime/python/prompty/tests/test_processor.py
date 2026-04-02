@@ -1,4 +1,4 @@
-"""Tests for OpenAIProcessor and AzureProcessor."""
+"""Tests for OpenAIProcessor and FoundryProcessor."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from prompty.model import Prompty
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.processor import (
     OpenAIProcessor,
     ToolCall,
@@ -140,19 +140,19 @@ class TestOpenAIProcessor:
 
 
 # ---------------------------------------------------------------------------
-# AzureProcessor
+# FoundryProcessor
 # ---------------------------------------------------------------------------
 
 
-class TestAzureProcessor:
+class TestFoundryProcessor:
     def setup_method(self):
-        self.processor = AzureProcessor()
+        self.processor = FoundryProcessor()
         self.agent = _make_agent()
 
     def test_chat_completion(self):
-        response = _mock_chat_completion("Azure response")
+        response = _mock_chat_completion("Foundry response")
         result = self.processor.process(self.agent, response)
-        assert result == "Azure response"
+        assert result == "Foundry response"
 
     def test_tool_calls(self):
         tc = _mock_tool_call("call_1", "search", '{"q": "test"}')
@@ -160,6 +160,12 @@ class TestAzureProcessor:
         result = self.processor.process(self.agent, response)
         assert isinstance(result, list)
         assert result[0].name == "search"
+
+    def test_azure_processor_backward_compat(self):
+        """AzureProcessor import still works and is the same class as FoundryProcessor."""
+        from prompty.providers.azure.processor import AzureProcessor
+
+        assert AzureProcessor is FoundryProcessor
 
 
 # ---------------------------------------------------------------------------
@@ -262,9 +268,9 @@ class TestStructuredOutput:
         assert isinstance(result, dict)
         assert result["value"] == 42
 
-    def test_azure_processor_json_parsed(self):
+    def test_foundry_processor_json_parsed(self):
         agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
-        processor = AzureProcessor()
+        processor = FoundryProcessor()
         response = _mock_chat_completion('{"answer": "hello"}')
         result = processor.process(agent, response)
         assert isinstance(result, dict)
@@ -329,12 +335,12 @@ class TestImageProcessing:
         with pytest.raises(ValueError, match="Empty image response"):
             self.processor.process(_make_agent(), response)
 
-    def test_azure_image_processing(self):
-        img = _mock_image_data(url="https://example.com/azure.png")
+    def test_foundry_image_processing(self):
+        img = _mock_image_data(url="https://example.com/foundry.png")
         response = _mock_images_response([img])
-        processor = AzureProcessor()
+        processor = FoundryProcessor()
         result = processor.process(_make_agent(), response)
-        assert result == "https://example.com/azure.png"
+        assert result == "https://example.com/foundry.png"
 
 
 # ---------------------------------------------------------------------------

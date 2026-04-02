@@ -5,12 +5,12 @@ from __future__ import annotations
 import pytest
 
 from prompty.core.types import Message, TextPart
-from prompty.providers.azure.executor import AzureExecutor
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.executor import FoundryExecutor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
-from .conftest import make_azure_agent, make_openai_agent, skip_azure, skip_openai
+from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
 
 _OUTPUT_SCHEMA = {
     "properties": [
@@ -78,17 +78,17 @@ class TestOpenAIStructuredOutput:
 
 
 # ---------------------------------------------------------------------------
-# Azure OpenAI
+# Azure OpenAI (Foundry)
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureStructuredOutput:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryStructuredOutput:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_structured_output(self):
-        agent = make_azure_agent(
+        agent = make_foundry_agent(
             options={"temperature": 0, "maxOutputTokens": 200},
             output_schema=_OUTPUT_SCHEMA,
         )
@@ -102,7 +102,7 @@ class TestAzureStructuredOutput:
 
     @pytest.mark.asyncio
     async def test_async_structured_output(self):
-        agent = make_azure_agent(
+        agent = make_foundry_agent(
             options={"temperature": 0, "maxOutputTokens": 200},
             output_schema=_OUTPUT_SCHEMA,
         )

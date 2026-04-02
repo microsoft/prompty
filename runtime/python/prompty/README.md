@@ -14,8 +14,8 @@ executes these files. Every `.prompty` file becomes a typed
 # Core + Jinja2 renderer + OpenAI provider
 pip install prompty[jinja2,openai]
 
-# Core + Azure OpenAI provider
-pip install prompty[jinja2,azure]
+# Core + Microsoft Foundry provider
+pip install prompty[jinja2,foundry]
 
 # Everything (all renderers, providers, OpenTelemetry)
 pip install prompty[all]
@@ -142,16 +142,16 @@ Error handling:
 
 ### Connection Registry
 
-For Azure AAD or pre-configured SDK clients:
+For AAD or pre-configured SDK clients:
 
 ```yaml
 # .prompty file — reference a named connection
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:
     kind: reference
-    name: my-azure
+    name: my-foundry
 ```
 
 ```python
@@ -168,7 +168,7 @@ client = AzureOpenAI(
         "https://cognitiveservices.azure.com/.default",
     ),
 )
-prompty.register_connection("my-azure", client=client)
+prompty.register_connection("my-foundry", client=client)
 
 # Now run — executor resolves the client by name
 result = prompty.execute(

@@ -117,7 +117,7 @@ class TestModel:
         try:
             agent = load(PROMPTS / "basic.prompty")
             assert agent.model.id == "gpt-4"
-            assert agent.model.provider == "azure"
+            assert agent.model.provider == "foundry"
             assert agent.model.apiType == "chat"
         finally:
             del os.environ["AZURE_OPENAI_ENDPOINT"]
@@ -409,9 +409,9 @@ class TestLegacyMigration:
         assert agent.model.id == "gpt-35-turbo"
 
     def test_load_legacy_provider(self):
-        """type: azure_openai → provider: azure."""
+        """type: azure_openai → provider: foundry."""
         agent, _ = self._load_legacy()
-        assert agent.model.provider == "azure"
+        assert agent.model.provider == "foundry"
 
     def test_load_legacy_parameters_to_options(self):
         """model.parameters → model.options with camelCase renames."""

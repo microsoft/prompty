@@ -86,8 +86,8 @@ from .model import (
 from .parsers import PromptyChatParser
 
 # Provider implementations
-from .providers.azure.executor import AzureExecutor
-from .providers.azure.processor import AzureProcessor
+from .providers.foundry.executor import FoundryExecutor
+from .providers.foundry.processor import FoundryProcessor
 from .providers.openai.executor import OpenAIExecutor
 from .providers.openai.processor import OpenAIProcessor, ToolCall
 from .renderers import Jinja2Renderer, MustacheRenderer
@@ -105,5 +105,7 @@ from .tracing.tracer import (
 )
 
 # Backward-compat aliases (will be removed in a future version)
+AzureExecutor = FoundryExecutor
+AzureProcessor = FoundryProcessor
 PromptAgent = Prompty
 AgentDefinition = Prompty

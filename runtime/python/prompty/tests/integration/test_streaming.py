@@ -7,12 +7,12 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 
 from prompty.core.types import AsyncPromptyStream, Message, PromptyStream, TextPart
-from prompty.providers.azure.executor import AzureExecutor
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.executor import FoundryExecutor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
-from .conftest import make_azure_agent, make_openai_agent, skip_azure, skip_openai
+from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
 
 
 def _chat_messages() -> list[Message]:
@@ -81,17 +81,17 @@ class TestOpenAIStreaming:
 
 
 # ---------------------------------------------------------------------------
-# Azure OpenAI
+# Azure OpenAI (Foundry)
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureStreaming:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryStreaming:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_streaming_chat(self):
-        agent = make_azure_agent(
+        agent = make_foundry_agent(
             options={"temperature": 0, "maxOutputTokens": 50},
         )
         assert agent.model is not None

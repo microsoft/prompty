@@ -29,6 +29,9 @@ import contextlib
 import inspect
 import json
 import os
+
+# Sensitive key patterns for sanitization
+import re
 import traceback
 from collections.abc import Callable, Iterator
 from dataclasses import asdict, is_dataclass
@@ -39,9 +42,6 @@ from pathlib import Path
 from typing import Any
 
 from .._version import VERSION
-
-# Sensitive key patterns for sanitization
-import re
 
 # Matches genuinely sensitive key names while avoiding false positives:
 #   - api_?key matches apiKey, api_key but NOT primary_key, sort_key

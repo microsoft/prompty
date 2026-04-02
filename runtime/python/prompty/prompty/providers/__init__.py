@@ -1,6 +1,6 @@
 """Provider implementations for LLM APIs.
 
-Each provider lives in its own subpackage (e.g. ``openai/``, ``azure/``)
+Each provider lives in its own subpackage (e.g. ``openai/``, ``foundry/``)
 and exposes an executor and processor class registered via entry points.
 
 To add a new provider, create a new subpackage here with:

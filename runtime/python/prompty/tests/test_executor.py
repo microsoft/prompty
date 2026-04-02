@@ -1,4 +1,4 @@
-"""Tests for OpenAIExecutor and AzureExecutor.
+"""Tests for OpenAIExecutor and FoundryExecutor.
 
 All tests mock the OpenAI API — no real API calls are made.
 """
@@ -11,7 +11,7 @@ import pytest
 
 from prompty.core.types import AudioPart, FilePart, ImagePart, Message, TextPart
 from prompty.model import Prompty
-from prompty.providers.azure.executor import AzureExecutor
+from prompty.providers.foundry.executor import FoundryExecutor
 from prompty.providers.openai.executor import (
     OpenAIExecutor,
     _build_options,
@@ -43,12 +43,12 @@ def _make_agent(**kwargs) -> Prompty:
     return Prompty.load(data)
 
 
-def _make_azure_agent(**kwargs) -> Prompty:
+def _make_foundry_agent(**kwargs) -> Prompty:
     data = {
-        "name": "test-azure",
+        "name": "test-foundry",
         "model": {
             "id": "gpt-4",
-            "provider": "azure",
+            "provider": "foundry",
             "apiType": "chat",
             "connection": {
                 "kind": "key",
@@ -277,15 +277,15 @@ class TestOpenAIExecutor:
 
 
 # ---------------------------------------------------------------------------
-# AzureExecutor
+# FoundryExecutor
 # ---------------------------------------------------------------------------
 
 
-class TestAzureExecutor:
+class TestFoundryExecutor:
     def test_execute_calls_azure_api(self):
-        agent = _make_azure_agent()
+        agent = _make_foundry_agent()
         messages = _make_messages()
-        executor = AzureExecutor()
+        executor = FoundryExecutor()
 
         mock_response = MagicMock()
 
@@ -302,8 +302,8 @@ class TestAzureExecutor:
         assert "azure_endpoint" in ctor_kwargs or "api_key" in ctor_kwargs
 
     def test_resolve_client_with_api_key(self):
-        executor = AzureExecutor()
-        agent = _make_azure_agent()
+        executor = FoundryExecutor()
+        agent = _make_foundry_agent()
         with patch("openai.AzureOpenAI") as MockClient:
             executor._resolve_client(agent)
         MockClient.assert_called_once()
@@ -313,11 +313,11 @@ class TestAzureExecutor:
         assert "api_version" in kwargs
 
     def test_resolve_client_no_api_key_raises(self):
-        executor = AzureExecutor()
-        agent = _make_azure_agent(
+        executor = FoundryExecutor()
+        agent = _make_foundry_agent(
             model={
                 "id": "gpt-4",
-                "provider": "azure",
+                "provider": "foundry",
                 "apiType": "chat",
                 "connection": {
                     "kind": "key",
@@ -332,24 +332,30 @@ class TestAzureExecutor:
     def test_resolve_client_reference_connection(self):
         from prompty.core.connections import clear_connections, register_connection
 
-        executor = AzureExecutor()
+        executor = FoundryExecutor()
         agent = Prompty.load(
             {
                 "name": "test-ref",
                 "model": {
                     "id": "gpt-4",
-                    "provider": "azure",
-                    "connection": {"kind": "reference", "name": "my-azure"},
+                    "provider": "foundry",
+                    "connection": {"kind": "reference", "name": "my-foundry"},
                 },
             }
         )
         mock_client = MagicMock()
-        register_connection("my-azure", client=mock_client)
+        register_connection("my-foundry", client=mock_client)
         try:
             client = executor._resolve_client(agent)
             assert client is mock_client
         finally:
             clear_connections()
+
+    def test_azure_executor_backward_compat(self):
+        """AzureExecutor import still works and is the same class as FoundryExecutor."""
+        from prompty.providers.azure.executor import AzureExecutor
+
+        assert AzureExecutor is FoundryExecutor
 
 
 # ---------------------------------------------------------------------------
@@ -519,13 +525,13 @@ class TestBuildArgsResponseFormat:
         args = executor._build_chat_args(agent, _make_messages())
         assert "response_format" not in args
 
-    def test_azure_response_format_included(self):
-        agent = _make_azure_agent(
+    def test_foundry_response_format_included(self):
+        agent = _make_foundry_agent(
             outputs=[
                 {"name": "result", "kind": "string"},
             ]
         )
-        executor = AzureExecutor()
+        executor = FoundryExecutor()
         args = executor._build_chat_args(agent, _make_messages())
         assert "response_format" in args
 
@@ -597,11 +603,11 @@ class TestEmbeddingDispatch:
         call_args = mock_client.embeddings.create.call_args
         assert call_args.kwargs["input"] == ["hello", "world"]
 
-    def test_azure_embedding(self):
+    def test_foundry_embedding(self):
         agent = _make_embedding_agent(
             model={
                 "id": "text-embedding-ada-002",
-                "provider": "azure",
+                "provider": "foundry",
                 "apiType": "embedding",
                 "connection": {
                     "kind": "key",
@@ -610,7 +616,7 @@ class TestEmbeddingDispatch:
                 },
             }
         )
-        executor = AzureExecutor()
+        executor = FoundryExecutor()
 
         with patch("openai.AzureOpenAI") as MockClient:
             mock_client = MagicMock()
@@ -642,11 +648,11 @@ class TestImageDispatch:
         assert call_args.kwargs["prompt"] == "a cat sitting on a mat"
         assert call_args.kwargs["model"] == "dall-e-3"
 
-    def test_azure_image(self):
+    def test_foundry_image(self):
         agent = _make_image_agent(
             model={
                 "id": "dall-e-3",
-                "provider": "azure",
+                "provider": "foundry",
                 "apiType": "image",
                 "connection": {
                     "kind": "key",
@@ -655,7 +661,7 @@ class TestImageDispatch:
                 },
             }
         )
-        executor = AzureExecutor()
+        executor = FoundryExecutor()
 
         with patch("openai.AzureOpenAI") as MockClient:
             mock_client = MagicMock()

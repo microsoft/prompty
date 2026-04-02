@@ -6,7 +6,7 @@ metadata:
     - testauthor
 model:
   id: gpt-4
-  provider: azure
+  provider: foundry
   apiType: chat
   connection:
     kind: key

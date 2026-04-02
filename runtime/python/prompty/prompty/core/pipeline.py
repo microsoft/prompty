@@ -1009,7 +1009,7 @@ def headless(
     model:
         Model identifier (e.g. ``"gpt-4"``, ``"text-embedding-ada-002"``).
     provider:
-        Provider name (``"openai"`` or ``"azure"``).
+        Provider name (``"openai"`` or ``"foundry"``).
     connection:
         Connection config dict (``kind``, ``apiKey``, ``endpoint``, etc.).
     options:
@@ -1026,7 +1026,7 @@ def headless(
     >>> agent = headless(
     ...     api="embedding",
     ...     model="text-embedding-ada-002",
-    ...     provider="azure",
+    ...     provider="foundry",
     ...     connection={
     ...         "kind": "key",
     ...         "endpoint": "https://my.openai.azure.com",

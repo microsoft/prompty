@@ -14,15 +14,15 @@ from typing import Any
 import pytest
 
 from prompty.core.types import Message, PromptyStream, TextPart
-from prompty.providers.azure.executor import AzureExecutor
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.executor import FoundryExecutor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.tracing.tracer import PromptyTracer, Tracer
 
 from .conftest import (
     _AZURE_EMBEDDING_DEPLOYMENT,
-    make_azure_agent,
-    skip_azure,
-    skip_azure_embedding,
+    make_foundry_agent,
+    skip_foundry,
+    skip_foundry_embedding,
 )
 
 # ---------------------------------------------------------------------------
@@ -88,16 +88,16 @@ def _find_frame(frames: list[dict[str, Any]], name_contains: str) -> dict[str, A
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureChatTracing:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryChatTracing:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_chat_trace_structure(self, tmp_path):
         """A basic chat call produces a .tracy with nested executor frames."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(options={"maxOutputTokens": 50, "temperature": 0})
+            agent = make_foundry_agent(options={"maxOutputTokens": 50, "temperature": 0})
             messages = _chat_messages()
             response = self.executor.execute(agent, messages)
             result = self.processor.process(agent, response)
@@ -112,7 +112,7 @@ class TestAzureChatTracing:
         # Root should be the executor's execute call
         assert root["name"] == "execute"
         assert "signature" in root
-        assert "AzureExecutor" in root["signature"] or "execute" in root["signature"]
+        assert "FoundryExecutor" in root["signature"] or "execute" in root["signature"]
 
         # Should have inputs recorded
         assert "inputs" in root
@@ -140,7 +140,7 @@ class TestAzureChatTracing:
         """Usage metrics (prompt_tokens, completion_tokens) are hoisted."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(options={"maxOutputTokens": 50, "temperature": 0})
+            agent = make_foundry_agent(options={"maxOutputTokens": 50, "temperature": 0})
             messages = _chat_messages()
             response = self.executor.execute(agent, messages)
             _ = self.processor.process(agent, response)
@@ -173,7 +173,7 @@ class TestAzureChatTracing:
         """Async calls also produce valid trace output."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(options={"maxOutputTokens": 50, "temperature": 0})
+            agent = make_foundry_agent(options={"maxOutputTokens": 50, "temperature": 0})
             messages = _chat_messages()
             response = await self.executor.execute_async(agent, messages)
             result = await self.processor.process_async(agent, response)
@@ -194,16 +194,16 @@ class TestAzureChatTracing:
 # ---------------------------------------------------------------------------
 
 
-@skip_azure_embedding
-class TestAzureEmbeddingTracing:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry_embedding
+class TestFoundryEmbeddingTracing:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_embedding_trace_structure(self, tmp_path):
         """Embedding call produces correct trace frames."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
+            agent = make_foundry_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
             response = self.executor.execute(agent, "Hello world")
             result = self.processor.process(agent, response)
             assert isinstance(result, list)
@@ -230,10 +230,10 @@ class TestAzureEmbeddingTracing:
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureAgentTracing:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryAgentTracing:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_agent_loop_trace(self, tmp_path):
         """Agent loop with tool calls produces a trace with the AgentLoop frame."""
@@ -243,7 +243,7 @@ class TestAzureAgentTracing:
 
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(
+            agent = make_foundry_agent(
                 api_type="agent",
                 options={"temperature": 0, "maxOutputTokens": 200},
                 tools=[
@@ -300,16 +300,16 @@ class TestAzureAgentTracing:
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureStreamingTracing:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryStreamingTracing:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_streaming_trace(self, tmp_path):
         """Streaming call produces trace with the stream wrapper noted."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(options={"temperature": 0, "maxOutputTokens": 50})
+            agent = make_foundry_agent(options={"temperature": 0, "maxOutputTokens": 50})
             assert agent.model is not None
             assert agent.model.options is not None
             if agent.model.options.additionalProperties is None:
@@ -344,16 +344,16 @@ class TestAzureStreamingTracing:
 # ---------------------------------------------------------------------------
 
 
-@skip_azure
-class TestAzureStructuredTracing:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry
+class TestFoundryStructuredTracing:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_structured_output_trace(self, tmp_path):
         """Structured output call produces trace with response_format in inputs."""
         _setup_tracer(tmp_path)
         try:
-            agent = make_azure_agent(
+            agent = make_foundry_agent(
                 options={"temperature": 0, "maxOutputTokens": 200},
                 output_schema={
                     "properties": [

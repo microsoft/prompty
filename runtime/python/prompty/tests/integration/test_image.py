@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import base64
 
-from prompty.providers.azure.executor import AzureExecutor
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.executor import FoundryExecutor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
 from .conftest import (
     _AZURE_IMAGE_DEPLOYMENT,
     _OPENAI_IMAGE_MODEL,
-    make_azure_agent,
+    make_foundry_agent,
     make_openai_agent,
-    skip_azure_image,
+    skip_foundry_image,
     skip_openai_image,
 )
 
@@ -37,14 +37,14 @@ class TestOpenAIImage:
         assert result.startswith("http") or len(base64.b64decode(result)) > 1000
 
 
-@skip_azure_image
-class TestAzureImage:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry_image
+class TestFoundryImage:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_image_generation(self):
         """gpt-image-1 returns base64 by default."""
-        agent = make_azure_agent(
+        agent = make_foundry_agent(
             api_type="image",
             deployment=_AZURE_IMAGE_DEPLOYMENT,
             options={"n": 1, "size": "1024x1024"},

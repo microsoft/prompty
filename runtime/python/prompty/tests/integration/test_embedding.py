@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.providers.azure.executor import AzureExecutor
-from prompty.providers.azure.processor import AzureProcessor
+from prompty.providers.foundry.executor import FoundryExecutor
+from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
 from .conftest import (
     _AZURE_EMBEDDING_DEPLOYMENT,
     _OPENAI_EMBEDDING_MODEL,
-    make_azure_agent,
+    make_foundry_agent,
     make_openai_agent,
-    skip_azure_embedding,
+    skip_foundry_embedding,
     skip_openai,
 )
 
@@ -54,17 +54,17 @@ class TestOpenAIEmbedding:
 
 
 # ---------------------------------------------------------------------------
-# Azure OpenAI
+# Azure OpenAI (Foundry)
 # ---------------------------------------------------------------------------
 
 
-@skip_azure_embedding
-class TestAzureEmbedding:
-    executor = AzureExecutor()
-    processor = AzureProcessor()
+@skip_foundry_embedding
+class TestFoundryEmbedding:
+    executor = FoundryExecutor()
+    processor = FoundryProcessor()
 
     def test_single_embedding(self):
-        agent = make_azure_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
+        agent = make_foundry_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
         response = self.executor.execute(agent, "Hello world")
         result = self.processor.process(agent, response)
         assert isinstance(result, list)
@@ -73,7 +73,7 @@ class TestAzureEmbedding:
 
     @pytest.mark.asyncio
     async def test_async_embedding(self):
-        agent = make_azure_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
+        agent = make_foundry_agent(api_type="embedding", deployment=_AZURE_EMBEDDING_DEPLOYMENT)
         response = await self.executor.execute_async(agent, "Hello world")
         result = await self.processor.process_async(agent, response)
         assert isinstance(result, list)

@@ -55,21 +55,25 @@ _AZURE_IMAGE_DEPLOYMENT = os.environ.get("AZURE_OPENAI_IMAGE_DEPLOYMENT", "")
 
 has_openai = bool(_OPENAI_KEY)
 has_azure = bool(_AZURE_KEY and _AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)
+has_foundry = has_azure  # Foundry uses Azure OpenAI credentials
 
 skip_openai = pytest.mark.skipif(not has_openai, reason="OPENAI_API_KEY not set")
 skip_openai_image = pytest.mark.skipif(
     not has_openai,
     reason="OPENAI_API_KEY not set",
 )
-skip_azure = pytest.mark.skipif(not has_azure, reason="Azure OpenAI env vars not set")
-skip_azure_embedding = pytest.mark.skipif(
-    not (has_azure and _AZURE_EMBEDDING_DEPLOYMENT),
+skip_foundry = pytest.mark.skipif(not has_foundry, reason="Azure OpenAI env vars not set")
+skip_azure = skip_foundry  # backward-compat alias
+skip_foundry_embedding = pytest.mark.skipif(
+    not (has_foundry and _AZURE_EMBEDDING_DEPLOYMENT),
     reason="AZURE_OPENAI_EMBEDDING_DEPLOYMENT not set",
 )
-skip_azure_image = pytest.mark.skipif(
-    not (has_azure and _AZURE_IMAGE_DEPLOYMENT),
+skip_azure_embedding = skip_foundry_embedding  # backward-compat alias
+skip_foundry_image = pytest.mark.skipif(
+    not (has_foundry and _AZURE_IMAGE_DEPLOYMENT),
     reason="AZURE_OPENAI_IMAGE_DEPLOYMENT not set",
 )
+skip_azure_image = skip_foundry_image  # backward-compat alias
 
 
 # ---------------------------------------------------------------------------
@@ -118,13 +122,15 @@ def make_openai_agent(
     if tools:
         data["tools"] = tools
     if output_schema:
-        data["outputs"] = output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
+        data["outputs"] = (
+            output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
+        )
     if metadata is not None:
         data["metadata"] = metadata
     return Prompty.load(data)
 
 
-def make_azure_agent(
+def make_foundry_agent(
     *,
     api_type: str = "chat",
     deployment: str | None = None,
@@ -133,17 +139,17 @@ def make_azure_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for Azure OpenAI."""
+    """Build a Prompty for Azure OpenAI via the Foundry provider."""
     from prompty.model import Prompty
 
     if deployment is None:
         deployment = _AZURE_CHAT_DEPLOYMENT
 
     data: dict[str, Any] = {
-        "name": "integration-test-azure",
+        "name": "integration-test-foundry",
         "model": {
             "id": deployment,
-            "provider": "azure",
+            "provider": "foundry",
             "apiType": api_type,
             "connection": {
                 "kind": "key",
@@ -157,7 +163,13 @@ def make_azure_agent(
     if tools:
         data["tools"] = tools
     if output_schema:
-        data["outputs"] = output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
+        data["outputs"] = (
+            output_schema.get("properties", output_schema) if isinstance(output_schema, dict) else output_schema
+        )
     if metadata is not None:
         data["metadata"] = metadata
     return Prompty.load(data)
+
+
+# Backward-compat alias
+make_azure_agent = make_foundry_agent

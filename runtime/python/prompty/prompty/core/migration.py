@@ -41,8 +41,8 @@ def migrate(data: dict[str, Any]) -> dict[str, Any]:
         if isinstance(config, dict):
             conn_type = config.pop("type", None)
             if conn_type == "azure_openai":
-                _deprecation("model.configuration.type: azure_openai", "model.provider: azure")
-                model["provider"] = "azure"
+                _deprecation("model.configuration.type: azure_openai", "model.provider: foundry")
+                model["provider"] = "foundry"
                 if "kind" not in config:
                     config["kind"] = "key"
 

@@ -1,41 +1,7 @@
-"""Azure OpenAI response processor.
-
-Identical logic to OpenAIProcessor — Azure uses the same response types
-via the OpenAI SDK.
-
-Registered as ``azure`` in ``prompty.processors``.
-"""
+"""Backward-compatibility alias — use ``prompty.providers.foundry.processor`` instead."""
 
 from __future__ import annotations
 
-from typing import Any
-
-from ...model import Prompty
-from ...tracing.tracer import trace
-from ..openai.processor import _process_response
+from ..foundry.processor import FoundryProcessor as AzureProcessor
 
 __all__ = ["AzureProcessor"]
-
-
-class AzureProcessor:
-    """Processor for Azure OpenAI responses.
-
-    Identical logic to OpenAIProcessor — Azure uses the same response types.
-    Registered as ``azure`` in ``prompty.processors``.
-    """
-
-    @trace
-    def process(
-        self,
-        agent: Prompty,
-        response: Any,
-    ) -> Any:
-        return _process_response(response, agent)
-
-    @trace
-    async def process_async(
-        self,
-        agent: Prompty,
-        response: Any,
-    ) -> Any:
-        return _process_response(response, agent)
