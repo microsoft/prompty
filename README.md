@@ -1,72 +1,224 @@
 # Prompty
 
-Prompty is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop.
+[![Python](https://img.shields.io/pypi/v/prompty?label=python)](https://pypi.org/project/prompty/)
+[![npm](https://img.shields.io/npm/v/@prompty/core?label=typescript)](https://www.npmjs.com/package/@prompty/core)
+[![VS Code](https://img.shields.io/visual-studio-marketplace/v/ms-toolsai.prompty?label=vs%20code)](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty)
 
-This repo contains the following:
+Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code, Python, or TypeScript.
 
-- [Prompty Language Specification](Prompty.yaml)
-- [Documentation](https://github.com/microsoft/prompty/tree/main/web) site (visit [prompty.ai](https://prompty.ai) for the live site)
-- (More on the way)
+```
+┌─────────────┐     ┌──────────┐     ┌──────────────┐
+│  .prompty    │ ──▶ │ Runtime  │ ──▶ │ LLM Provider │
+│  file        │     │ (render, │     │ (OpenAI,     │
+│              │     │  parse,  │     │  Foundry)    │
+│              │     │  execute)│     │              │
+└─────────────┘     └──────────┘     └──────────────┘
+```
 
-This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Prompty extension in the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+## Quick Start
 
-## What is Prompty?
-### Specification
-Prompty standardizes prompts and their execution into a single asset.
+### 1. Write a `.prompty` file
 
-![Language Spec](img/vscode/readme_lang_spec.png)
+```prompty
+---
+name: greeting
+model:
+  id: gpt-4o-mini
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a friendly assistant.
 
-## VSCode Extension Features
-### Quickly Create
-Quickly create a basic prompty by right-clicking in the VS Code explorer and selecting "New Prompty."
+user:
+Say hello to {{name}}.
+```
 
-![Quick Create](img/vscode/image-2.png)
+### 2. Run it
+
+**Python**
+```bash
+pip install "prompty[jinja2,openai]"
+```
+```python
+import prompty
+
+result = prompty.execute("greeting.prompty", inputs={"name": "Jane"})
+print(result)
+```
+
+**TypeScript**
+```bash
+npm install @prompty/core @prompty/openai
+```
+```typescript
+import { execute } from "@prompty/core";
+import "@prompty/openai";
+
+const result = await execute("greeting.prompty", { name: "Jane" });
+console.log(result);
+```
+
+**VS Code** — open the `.prompty` file and press **F5**.
+
+## VS Code Extension
+
+Install from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+
+### Create
+
+Right-click in the explorer → **New Prompty** to scaffold a new prompt file.
+
+<!-- TODO: screenshot of new prompty command -->
 
 ### Preview
-Preview prompty similar to markdown with dynamic template rendering while typing, allowing you to see the prompt that will be sent to the model.
 
-![Preview](img/vscode/readme_preview.png)
+See the rendered prompt with live template interpolation as you type.
 
-### Define and Switch Model Configurations
-* Define your model configurations directly in VS Code.
-* Quickly switch between different model configurations.
+<!-- TODO: screenshot of preview pane -->
 
-  ![Define Configuration](img/vscode/image-5.png)
+### Run
 
-  ![Switch Model Configuration](img/vscode/switchModelConfiguration.png)
-* Use VS Code settings to define model configuration at:
-  * User level for use across different prompty files.
-  * Workspace level to share with team members via Git.
+Press **F5** to execute against your configured model. Results appear in the Prompty output panel.
 
-    ![ModelConfigurationSettings](img/vscode/modelConfigurationSettings.png)
+<!-- TODO: screenshot of run output -->
 
-* We strongly encourage using Azure Active Directory authentication for enhanced security. Leave the `api_key` empty to trigger AAD auth.
-* OpenAI is also supported. You can store the key in VSCode settings or use `${env:xxx}` to read the API key from an environment variable.
-  * You can put environment variables in `.env` file, in the same folder of the prompty file, or in the workspace root folder.
-  * Alternatively, you can also specify it in system variables, follow [OpenAI's Guide](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) for key safety, setting it through Control Panel/zsh/bash, and then restart VS Code to load new values.
+### Chat Mode
 
-### Quick Run
-Hit **F5** or click the **Run** button at the top. There are two output windows:
-* **Prompty Output** shows a concise view.
+Thread-enabled prompts automatically open an interactive chat panel.
 
-  ![Prompty Output](img/vscode/image-3.png)
+<!-- TODO: screenshot of chat panel -->
 
-* **Prompty Output (Verbose)** shows detailed requests sent and received.
+### Tracing
 
-  ![Prompty Output (Verbose)](img/vscode/image-8.png)
+Every execution generates a `.tracy` trace file. Click to inspect the full pipeline — render, parse, execute, process — with timing and payloads.
 
-### Orchestrator Integration
-Prompty is supported by popular orchestration frameworks:
-* [Prompt flow](https://microsoft.github.io/promptflow/tutorials/prompty-quickstart.html)
-* [Langchain](https://github.com/langchain-ai/langchain/tree/master/libs/partners/prompty)
-* [Semantic Kernel](https://github.com/microsoft/semantic-kernel/blob/main/dotnet/samples/Concepts/PromptTemplates/PromptyFunction.cs)
+<!-- TODO: screenshot of trace viewer -->
 
-Right-click on a `.prompty` file to quickly generate integration snippets.
+## Runtimes
 
-![Orchestrator Integration](img/vscode/image-9.png)
+### Python
 
-## Feedback
-Submit your feedback about Prompty or the VS Code extension to the [Microsoft/prompty](https://github.com/microsoft/prompty/issues) GitHub repository.
+```bash
+pip install "prompty[all]"          # everything
+pip install "prompty[jinja2,openai]" # just OpenAI
+pip install "prompty[jinja2,foundry]" # Microsoft Foundry
+```
 
-## Documentation
-* https://prompty.ai
+```python
+import prompty
+
+# Full pipeline: load → render → parse → execute → process
+result = prompty.execute("my-prompt.prompty", inputs={...})
+
+# Step-by-step
+agent = prompty.load("my-prompt.prompty")
+messages = prompty.prepare(agent, inputs={...})
+result = prompty.run(agent, messages)
+
+# Async
+result = await prompty.execute_async("my-prompt.prompty", inputs={...})
+```
+
+See [runtime/python/prompty/README.md](runtime/python/prompty/README.md) for full API docs.
+
+### TypeScript
+
+```bash
+npm install @prompty/core @prompty/openai   # OpenAI
+npm install @prompty/core @prompty/foundry  # Microsoft Foundry
+```
+
+```typescript
+import { load, prepare, run, execute } from "@prompty/core";
+import "@prompty/openai"; // registers the provider
+
+// Full pipeline
+const result = await execute("my-prompt.prompty", { name: "Jane" });
+
+// Step-by-step
+const agent = await load("my-prompt.prompty");
+const messages = await prepare(agent, { name: "Jane" });
+const result = await run(agent, messages);
+```
+
+See [runtime/typescript/packages/core/README.md](runtime/typescript/packages/core/README.md) for full API docs.
+
+## `.prompty` File Format
+
+A `.prompty` file has two parts: **YAML frontmatter** (model config, inputs, tools) and a **markdown body** (the prompt with role markers and template syntax).
+
+```prompty
+---
+name: my-prompt
+model:
+  id: gpt-4o
+  provider: foundry
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+inputSchema:
+  properties:
+    question:
+      kind: string
+      default: What is the meaning of life?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather
+    parameters:
+      properties:
+        location:
+          kind: string
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}
+```
+
+### Role markers
+
+Lines starting with `system:`, `user:`, or `assistant:` define message boundaries.
+
+### Template syntax
+
+Jinja2 (`{{variable}}`, `{% if %}`, `{% for %}`) or Mustache (`{{variable}}`, `{{#section}}`).
+
+### Variable references
+
+| Syntax | Purpose |
+|--------|---------|
+| `${env:VAR}` | Environment variable (required) |
+| `${env:VAR:default}` | With fallback value |
+| `${file:path.json}` | Load file content |
+
+### Legacy format
+
+Prompty v1 files are automatically migrated with deprecation warnings. See the [Python README](runtime/python/prompty/README.md#legacy-format-support) for details.
+
+## Contributing
+
+See [SUPPORT.md](SUPPORT.md) for help and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community guidelines.
+
+To release a new version, see [RELEASING.md](RELEASING.md).
+
+## License
+
+[MIT](LICENSE)
