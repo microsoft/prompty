@@ -124,6 +124,18 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "prompty.sortTracesDate",
+        "category": "Prompty",
+        "title": "Sort by Date (Newest First)",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "prompty.sortTracesName",
+        "category": "Prompty",
+        "title": "Sort by Name",
+        "icon": "$(case-sensitive)"
+      },
+      {
         "command": "prompty.viewTrace",
         "category": "Prompty",
         "title": "View Trace",
@@ -235,6 +247,16 @@
           "command": "prompty.refreshTraces",
           "when": "view == view-traces",
           "group": "navigation@1"
+        },
+        {
+          "command": "prompty.sortTracesDate",
+          "when": "view == view-traces",
+          "group": "navigation@2"
+        },
+        {
+          "command": "prompty.sortTracesName",
+          "when": "view == view-traces",
+          "group": "navigation@3"
         },
         {
           "command": "prompty.addConnection",

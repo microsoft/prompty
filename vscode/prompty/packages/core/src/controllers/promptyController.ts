@@ -229,6 +229,7 @@ export class PromptyController implements Disposable {
 		try {
 			clearConnections();
 			const profiles = await this.connectionStore.getProfiles();
+			let loaded = 0;
 
 			for (const profile of profiles) {
 				try {
@@ -246,11 +247,15 @@ export class PromptyController implements Disposable {
 						registerConnection(profile.providerType, client);
 					}
 
-					this.outputChannel.appendLine(`  ✓ Connection: ${profile.name}`);
+					loaded++;
 				} catch (err: unknown) {
 					const msg = err instanceof Error ? err.message : String(err);
 					this.outputChannel.appendLine(`  ⚠ Connection "${profile.name}": ${msg}`);
 				}
+			}
+
+			if (loaded > 0) {
+				this.outputChannel.appendLine(`  ${loaded} connection${loaded > 1 ? 's' : ''} loaded`);
 			}
 
 			// Also inject API keys into env vars for ${env:VAR} resolution

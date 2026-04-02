@@ -110,13 +110,11 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 		}
 
 		const p = profile as AnthropicConnectionProfile;
-
-		return {
-			type: "anthropic",
+		const AnthropicSDK = (await import("@anthropic-ai/sdk")).default;
+		return new AnthropicSDK({
 			apiKey: secret,
-			endpoint: p.endpoint ?? "https://api.anthropic.com",
-			model: p.model,
-		};
+			baseURL: p.endpoint ?? "https://api.anthropic.com",
+		});
 	}
 
 	async listModels(

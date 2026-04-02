@@ -152,7 +152,7 @@ export function activate(context: ExtensionContext): PromptyExtensionAPI {
 		}
 	});
 
-	startLanguageServer(context);
+	startLanguageServer(context, connectionStore, connectionRegistry);
 
 	// ── Export public API for external extensions ─────────────────
 	const api: PromptyExtensionAPI = {
@@ -182,7 +182,11 @@ export function deactivate(): Thenable<void> | undefined {
 	return client.stop();
 }
 
-function startLanguageServer(context: ExtensionContext) {
+function startLanguageServer(
+	context: ExtensionContext,
+	connectionStore: ConnectionStore,
+	connectionRegistry: ConnectionProviderRegistry,
+) {
 	const serverModule = context.asAbsolutePath(path.join("packages", "server", "out", "server.js"));
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
@@ -206,5 +210,68 @@ function startLanguageServer(context: ExtensionContext) {
 	};
 
 	client = new LanguageClient("promptyLanguageServer", "Prompty · Language Server", serverOptions, clientOptions);
-	client.start();
+	client.start().then(() => {
+		// Send initial models and connections to the language server
+		sendModelsToServer(connectionStore, connectionRegistry);
+		sendConnectionsToServer(connectionStore);
+
+		// Re-send whenever connections change
+		connectionStore.onDidChange(() => {
+			sendModelsToServer(connectionStore, connectionRegistry);
+			sendConnectionsToServer(connectionStore);
+		});
+	});
+}
+
+async function sendModelsToServer(
+	store: ConnectionStore,
+	registry: ConnectionProviderRegistry,
+) {
+	if (!client) return;
+
+	const profiles = await store.getProfiles();
+	const allModels: Array<{ id: string; displayName?: string; provider: string }> = [];
+
+	// Use the default connection per provider, or the first one found
+	const seenProviders = new Set<string>();
+	for (const profile of profiles) {
+		const providerType = profile.providerType;
+		if (seenProviders.has(providerType)) continue;
+
+		const provider = registry.getProviderForType(providerType);
+		if (!provider?.listModels) continue;
+
+		try {
+			const secret = await store.getSecret(profile.id);
+			const models = await provider.listModels(profile, secret);
+			if (models) {
+				for (const m of models) {
+					allModels.push({
+						id: m.id,
+						displayName: m.modelName ?? m.ownedBy,
+						provider: providerType,
+					});
+				}
+				seenProviders.add(providerType);
+			}
+		} catch {
+			// Skip provider on error
+		}
+	}
+
+	client.sendNotification("prompty/modelsChanged", { models: allModels });
+}
+
+async function sendConnectionsToServer(store: ConnectionStore) {
+	if (!client) return;
+
+	const profiles = await store.getProfiles();
+	const connections = profiles.map(p => ({
+		name: p.name,
+		id: p.id,
+		providerType: p.providerType,
+		isDefault: p.isDefault ?? false,
+	}));
+
+	client.sendNotification("prompty/connectionsChanged", { connections });
 }

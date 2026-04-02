@@ -40,6 +40,24 @@ const options = {
 	yamlSchemaPath: "",
 };
 
+// Model completions cache — populated by client via prompty/modelsChanged notification
+interface ModelEntry {
+	id: string;
+	displayName?: string;
+	provider: string;
+}
+let availableModels: ModelEntry[] = [];
+
+// Connection data cache — populated by client via prompty/connectionsChanged notification
+interface ConnectionEntry {
+	name: string;
+	id: string;
+	providerType: string;
+	isDefault?: boolean;
+}
+let availableConnections: ConnectionEntry[] = [];
+const KNOWN_PROVIDERS = new Set(["openai", "anthropic", "foundry", "azure"]);
+
 // logger
 const logger = new Logger(connection.console);
 const schemaRequestService = async (uri: string): Promise<string> => {
@@ -120,10 +138,124 @@ async function validateTextDocument(textDocument: TextDocument) {
 			});
 		}
 
+		// Connection / provider validation (only when we have connection data)
+		if (availableConnections.length > 0 || KNOWN_PROVIDERS.size > 0) {
+			const connectionDiags = validateConnections(textDocument, metadata);
+			allDiagnostics.push(...connectionDiags);
+		}
+
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: allDiagnostics });
 	} catch (error) {
 		logger.error(`Error validating document: ${error}`);
 	}
+}
+
+/**
+ * Validates provider and connection references in the frontmatter.
+ * Emits warnings for missing connections and errors for unknown providers.
+ */
+function validateConnections(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+): Diagnostic[] {
+	const diagnostics: Diagnostic[] = [];
+	const start = metadata.frontMatterStart ?? 0;
+	const end = metadata.frontMatterEnd ?? 0;
+
+	let providerLine: number | undefined;
+	let providerValue: string | undefined;
+	let providerValueStart = 0;
+	let providerValueEnd = 0;
+
+	let connectionKind: string | undefined;
+	let refNameLine: number | undefined;
+	let refNameValue: string | undefined;
+	let refNameValueStart = 0;
+	let refNameValueEnd = 0;
+
+	// Scan frontmatter for provider: and connection fields
+	for (let l = start + 1; l < end; l++) {
+		const lineText = document.getText({
+			start: { line: l, character: 0 },
+			end: { line: l + 1, character: 0 },
+		}).trimEnd();
+
+		const providerMatch = lineText.match(/^(\s+)provider:\s*(\S+)/);
+		if (providerMatch) {
+			providerLine = l;
+			providerValue = providerMatch[2];
+			providerValueStart = lineText.indexOf(providerValue, providerMatch[1].length + 9);
+			providerValueEnd = providerValueStart + providerValue.length;
+		}
+
+		const kindMatch = lineText.match(/^\s+kind:\s*(\S+)/);
+		if (kindMatch && (kindMatch[1] === 'reference' || kindMatch[1] === 'key' || kindMatch[1] === 'anonymous')) {
+			connectionKind = kindMatch[1];
+		}
+
+		const nameMatch = lineText.match(/^(\s+)name:\s*(\S+)/);
+		if (nameMatch && connectionKind === 'reference') {
+			refNameLine = l;
+			refNameValue = nameMatch[2];
+			refNameValueStart = lineText.indexOf(refNameValue, nameMatch[1].length + 5);
+			refNameValueEnd = refNameValueStart + refNameValue.length;
+		}
+	}
+
+	// Case 1: Unknown provider
+	if (providerValue && providerLine !== undefined && !KNOWN_PROVIDERS.has(providerValue)) {
+		diagnostics.push({
+			severity: DiagnosticSeverity.Error,
+			range: {
+				start: { line: providerLine, character: providerValueStart },
+				end: { line: providerLine, character: providerValueEnd },
+			},
+			message: `Unknown provider '${providerValue}'. Expected: openai, anthropic, foundry, or azure.`,
+			source: 'prompty',
+		});
+	}
+
+	// Case 2: Valid provider but no matching connections configured
+	if (providerValue && providerLine !== undefined && KNOWN_PROVIDERS.has(providerValue)) {
+		// Only warn if we have connection data (extension has sent it) and there are no matches
+		// Treat 'azure' as alias for 'foundry'
+		const normalizedProvider = providerValue === 'azure' ? 'foundry' : providerValue;
+		const hasConnection = availableConnections.some(
+			c => c.providerType === providerValue || c.providerType === normalizedProvider
+		);
+		// Skip warning if using an explicit key connection (self-contained, no sidebar connection needed)
+		if (!hasConnection && connectionKind !== 'key' && availableConnections.length > 0) {
+			diagnostics.push({
+				severity: DiagnosticSeverity.Warning,
+				range: {
+					start: { line: providerLine, character: providerValueStart },
+					end: { line: providerLine, character: providerValueEnd },
+				},
+				message: `No ${providerValue} connection configured. Add one in the Connections sidebar.`,
+				source: 'prompty',
+			});
+		}
+	}
+
+	// Case 3: Reference connection name doesn't match any registered connection
+	if (connectionKind === 'reference' && refNameValue && refNameLine !== undefined) {
+		const hasNamedConnection = availableConnections.some(
+			c => c.name === refNameValue || c.id === refNameValue
+		);
+		if (!hasNamedConnection && availableConnections.length > 0) {
+			diagnostics.push({
+				severity: DiagnosticSeverity.Warning,
+				range: {
+					start: { line: refNameLine, character: refNameValueStart },
+					end: { line: refNameLine, character: refNameValueEnd },
+				},
+				message: `Connection '${refNameValue}' not found. Available: ${availableConnections.map(c => c.name).join(', ') || 'none'}`,
+				source: 'prompty',
+			});
+		}
+	}
+
+	return diagnostics;
 }
 
 connection.onInitialize((params: InitializeParams) => {
@@ -229,6 +361,22 @@ connection.onInitialize((params: InitializeParams) => {
 	return result;
 });
 
+// Receive model data from the extension client
+connection.onNotification("prompty/modelsChanged", (params: { models: ModelEntry[] }) => {
+	availableModels = params.models;
+	logger.info(`Received ${availableModels.length} models for completion`);
+});
+
+// Receive connection data from the extension client
+connection.onNotification("prompty/connectionsChanged", (params: { connections: ConnectionEntry[] }) => {
+	availableConnections = params.connections;
+	logger.info(`Received ${availableConnections.length} connections for validation`);
+	// Re-validate all open documents when connections change
+	for (const doc of documents.all()) {
+		validateTextDocument(doc);
+	}
+});
+
 connection.onCompletion(async (textDocumentPosition) => {
 	try {
 		const document = documents.get(textDocumentPosition.textDocument.uri);
@@ -312,6 +460,62 @@ connection.onCompletion(async (textDocumentPosition) => {
 						start: virtualDocument.toRealPosition(item.textEdit.range.start),
 						end: virtualDocument.toRealPosition(item.textEdit.range.end),
 					};
+				}
+			}
+		}
+
+		// Inject model ID completions when cursor is at model.id value
+		if (availableModels.length > 0) {
+			const modelIdContext = getModelIdContext(document, metadata, line, character);
+			if (modelIdContext) {
+				const { provider, replaceRange } = modelIdContext;
+				const modelItems: CompletionItem[] = availableModels
+					.filter(m => !provider || m.provider === provider)
+					.map((m, i) => ({
+						label: m.id,
+						kind: CompletionItemKind.Value,
+						detail: m.displayName ?? m.provider,
+						documentation: `Model from ${m.provider} connection`,
+						textEdit: {
+							range: replaceRange,
+							newText: ` ${m.id}`,
+						},
+						sortText: `0_${String(i).padStart(3, '0')}`,
+					}));
+				if (completion && completion.items) {
+					completion.items.push(...modelItems);
+				} else {
+					return { isIncomplete: false, items: modelItems };
+				}
+			}
+		}
+
+		// Inject provider completions when cursor is at provider: value
+		{
+			const providerCtx = getProviderContext(document, metadata, line);
+			if (providerCtx) {
+				const providers = [...KNOWN_PROVIDERS];
+				// Sort providers that have connections first
+				const withConn = new Set(availableConnections.map(c => c.providerType));
+				providers.sort((a, b) => {
+					const aHas = withConn.has(a) ? 0 : 1;
+					const bHas = withConn.has(b) ? 0 : 1;
+					return aHas - bHas || a.localeCompare(b);
+				});
+				const providerItems: CompletionItem[] = providers.map((p, i) => ({
+					label: p,
+					kind: CompletionItemKind.EnumMember,
+					detail: withConn.has(p) ? '● connected' : undefined,
+					textEdit: {
+						range: providerCtx.replaceRange,
+						newText: ` ${p}`,
+					},
+					sortText: `0_${String(i).padStart(3, '0')}`,
+				}));
+				if (completion && completion.items) {
+					completion.items.push(...providerItems);
+				} else {
+					return { isIncomplete: false, items: providerItems };
 				}
 			}
 		}
@@ -561,6 +765,108 @@ function getPromptySnippets(): CompletionItem[] {
 			sortText: '0_instructions',
 		},
 	];
+}
+
+/**
+ * Computes a replace range for a YAML value, ensuring exactly one space after the colon.
+ * The range starts right after the colon, covering any existing whitespace + value.
+ * newText should always be " value" (with leading space) to guarantee `key: value` formatting.
+ */
+function yamlValueRange(
+	lineText: string,
+	line: number,
+	colonPos: number,
+): { start: { line: number; character: number }; end: { line: number; character: number } } {
+	// Replace everything after the colon (space + value) so we always get exactly ": value"
+	const afterColon = colonPos + 1;
+	const lineEnd = lineText.trimEnd().length;
+	return {
+		start: { line, character: afterColon },
+		end: { line, character: Math.max(afterColon, lineEnd) },
+	};
+}
+
+/**
+ * Detects if the cursor is on a `model.id` value line in frontmatter.
+ * Returns the current provider (if found) and a text edit range for the value.
+ */
+function getModelIdContext(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+	character: number,
+): { provider: string | undefined; replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
+	const lineText = document.getText({
+		start: { line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	}).trimEnd();
+
+	// Match "  id: <value>" (indented under model:) or shorthand "model: <value>"
+	const idMatch = lineText.match(/^(\s+)id:/);
+	const shorthandMatch = !idMatch ? lineText.match(/^model:/) : null;
+
+	if (!idMatch && !shorthandMatch) return null;
+
+	const colonPos = shorthandMatch
+		? lineText.indexOf(':')
+		: lineText.indexOf(':', idMatch![1].length);
+
+	const replaceRange = yamlValueRange(lineText, line, colonPos);
+
+	if (shorthandMatch) {
+		return { provider: undefined, replaceRange };
+	}
+
+	// Walk upward/downward to find provider: at the same indent level
+	const indent = idMatch![1];
+	let provider: string | undefined;
+	const scanRange = [
+		{ from: line - 1, to: metadata.frontMatterStart ?? 0, step: -1 },
+		{ from: line + 1, to: metadata.frontMatterEnd ?? line, step: 1 },
+	];
+	for (const { from, to, step } of scanRange) {
+		if (provider) break;
+		for (let l = from; step < 0 ? l > to : l < to; l += step) {
+			const prevLine = document.getText({
+				start: { line: l, character: 0 },
+				end: { line: l + 1, character: 0 },
+			}).trimEnd();
+			const providerMatch = prevLine.match(new RegExp(`^${indent}provider:\\s*(\\S+)`));
+			if (providerMatch) {
+				provider = providerMatch[1];
+				break;
+			}
+			if (prevLine.trim() && !prevLine.startsWith(indent)) break;
+		}
+	}
+
+	return { provider, replaceRange };
+}
+
+/**
+ * Detects if the cursor is on a `provider:` value line in frontmatter.
+ * Returns a replace range for the value.
+ */
+function getProviderContext(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+): { replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
+	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) return null;
+	if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) return null;
+
+	const lineText = document.getText({
+		start: { line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	}).trimEnd();
+
+	const match = lineText.match(/^(\s+)provider:/);
+	if (!match) return null;
+
+	const colonPos = lineText.indexOf(':', match[1].length);
+	return {
+		replaceRange: yamlValueRange(lineText, line, colonPos),
+	};
 }
 
 connection.onCompletionResolve((item) => {

@@ -67,7 +67,13 @@ export class TraceItem extends vscode.TreeItem {
 						: vscode.TreeItemCollapsibleState.Collapsed
 				);
 			}).sort((a, b) => {
-				return a.trace.name.localeCompare(b.trace.name);
+				const mode = TraceFileProvider.sortMode;
+				if (mode.startsWith("date") && a.trace.date && b.trace.date) {
+					const cmp = a.trace.date.getTime() - b.trace.date.getTime();
+					return mode === "date-desc" ? -cmp : cmp;
+				}
+				const cmp = a.trace.name.localeCompare(b.trace.name);
+				return mode === "name-desc" ? -cmp : cmp;
 			});
 		} else {
 			return [];
@@ -75,25 +81,40 @@ export class TraceItem extends vscode.TreeItem {
 	}
 }
 
+export type TraceSortMode = "date-desc" | "date-asc" | "name-asc" | "name-desc";
+
 export class TraceFileProvider implements vscode.TreeDataProvider<TraceItem> {
+	static sortMode: TraceSortMode = "date-desc";
+
 	public static createTreeView(
 		context: vscode.ExtensionContext,
 		provider: TraceFileProvider,
 		viewId: string,
 		refreshCommand: string
 	): vscode.TreeView<TraceItem> {
-		//const traceFileProvider = new TraceFileProvider();
 		const treeView = vscode.window.createTreeView(viewId, {
 			treeDataProvider: provider,
 			canSelectMany: true,
 			showCollapseAll: true,
 		});
 		vscode.commands.registerCommand(refreshCommand, () => provider.refresh());
-		// Register file creation event listener
+		vscode.commands.registerCommand("prompty.sortTracesDate", () => {
+			// Toggle between date-desc and date-asc
+			provider.setSortMode(TraceFileProvider.sortMode === "date-desc" ? "date-asc" : "date-desc");
+		});
+		vscode.commands.registerCommand("prompty.sortTracesName", () => {
+			// Toggle between name-asc and name-desc
+			provider.setSortMode(TraceFileProvider.sortMode === "name-asc" ? "name-desc" : "name-asc");
+		});
 		context.subscriptions.push(treeView);
 		provider.refresh();
 
 		return treeView;
+	}
+
+	public setSortMode(mode: TraceSortMode) {
+		TraceFileProvider.sortMode = mode;
+		this.refresh();
 	}
 
 	fetchTraces = async (): Promise<TraceItem[]> => {
@@ -165,7 +186,7 @@ export class TraceFileProvider implements vscode.TreeDataProvider<TraceItem> {
 				name: key,
 				type: "function",
 				children: functions[key].sort((a, b) => {
-					return a.date!.getTime() - b.date!.getTime();
+					return b.date!.getTime() - a.date!.getTime();
 				}),
 			});
 		}

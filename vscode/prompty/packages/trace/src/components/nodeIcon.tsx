@@ -33,28 +33,30 @@ interface Props {
 
 const ProviderBadge = ({ provider, size }: { provider: string; size: number }) => {
   const iconSize = Math.round(size * 0.7);
+  const color = "var(--vscode-foreground)";
+  const bg = "color-mix(in srgb, var(--vscode-foreground) 12%, transparent)";
   switch (provider) {
     case "openai":
       return (
-        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
+        <BadgeWrapper $size={size} $bg={bg} $color={color}>
           <OpenAIIcon size={iconSize} />
         </BadgeWrapper>
       );
     case "foundry":
       return (
-        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent)" $color="var(--vscode-textLink-foreground)">
+        <BadgeWrapper $size={size} $bg={bg} $color={color}>
           <FoundryIcon size={iconSize} />
         </BadgeWrapper>
       );
     case "anthropic":
       return (
-        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
+        <BadgeWrapper $size={size} $bg={bg} $color={color}>
           <AnthropicIcon size={iconSize} />
         </BadgeWrapper>
       );
     default:
       return (
-        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
+        <BadgeWrapper $size={size} $bg={bg} $color={color}>
           ⚡
         </BadgeWrapper>
       );
@@ -67,7 +69,7 @@ const NodeIcon = ({ trace, size }: Props) => {
     const provider = detectProvider(trace.signature);
     if (provider) return <ProviderBadge provider={provider} size={size} />;
     return (
-      <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-orange) 12%, transparent)" $color="var(--vscode-charts-orange)">
+      <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-foreground) 12%, transparent)" $color="var(--vscode-foreground)">
         ⚡
       </BadgeWrapper>
     );
