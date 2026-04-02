@@ -4,6 +4,8 @@
 [![npm](https://img.shields.io/npm/v/@prompty/core?label=typescript)](https://www.npmjs.com/package/@prompty/core)
 [![VS Code](https://img.shields.io/visual-studio-marketplace/v/ms-toolsai.prompty?label=vs%20code)](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty)
 
+> **⚠️ v2 Alpha** — This is the v2 branch of Prompty, currently in alpha. The API, file format, and tooling are under active development and may change. Feedback welcome via [Issues](https://github.com/microsoft/prompty/issues).
+
 Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code, Python, or TypeScript.
 
 <p align="center">
