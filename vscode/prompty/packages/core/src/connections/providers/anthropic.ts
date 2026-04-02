@@ -5,6 +5,7 @@ import {
 	AnthropicConnectionProfile,
 	ConnectionField,
 	ConnectionTestResult,
+	ModelInfo,
 } from "../types";
 
 /**
@@ -43,9 +44,9 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 			{
 				key: "model",
 				label: "Default Model",
-				placeholder: "claude-sonnet-4-20250514",
+				placeholder: "claude-sonnet-4-6",
 				required: false,
-				defaultValue: "claude-sonnet-4-20250514",
+				defaultValue: "claude-sonnet-4-6",
 			},
 		];
 	}
@@ -72,7 +73,7 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 					"content-type": "application/json",
 				},
 				body: JSON.stringify({
-					model: p.model ?? "claude-sonnet-4-20250514",
+					model: p.model ?? "claude-sonnet-4-6",
 					max_tokens: 1,
 					messages: [{ role: "user", content: "hi" }],
 				}),
@@ -116,5 +117,41 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 			endpoint: p.endpoint ?? "https://api.anthropic.com",
 			model: p.model,
 		};
+	}
+
+	async listModels(
+		profile: ConnectionProfile,
+		secret?: string
+	): Promise<ModelInfo[] | undefined> {
+		if (!secret) return undefined;
+
+		const p = profile as AnthropicConnectionProfile;
+		const endpoint = p.endpoint ?? "https://api.anthropic.com";
+
+		try {
+			const response = await fetch(`${endpoint}/v1/models?limit=100`, {
+				headers: {
+					"x-api-key": secret,
+					"anthropic-version": "2023-06-01",
+				},
+			});
+
+			if (!response.ok) return undefined;
+
+			const body = await response.json() as {
+				data?: Array<{ id: string; display_name?: string }>;
+			};
+
+			if (!body.data) return undefined;
+
+			return body.data
+				.map((m) => ({
+					id: m.id,
+					ownedBy: m.display_name ?? "anthropic",
+				}))
+				.sort((a, b) => a.id.localeCompare(b.id));
+		} catch {
+			return undefined;
+		}
 	}
 }
