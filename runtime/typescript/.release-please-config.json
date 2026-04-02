@@ -3,19 +3,19 @@
   "last-release-sha": "a415c53f0c6f6b1badf3bf7fa002a1396469eeea",
   "prerelease": true,
   "packages": {
-    "packages/core": {
+    "runtime/typescript/packages/core": {
       "release-type": "node",
       "component": "@prompty/core"
     },
-    "packages/openai": {
+    "runtime/typescript/packages/openai": {
       "release-type": "node",
       "component": "@prompty/openai"
     },
-    "packages/foundry": {
+    "runtime/typescript/packages/foundry": {
       "release-type": "node",
       "component": "@prompty/foundry"
     },
-    "packages/anthropic": {
+    "runtime/typescript/packages/anthropic": {
       "release-type": "node",
       "component": "@prompty/anthropic"
     }
