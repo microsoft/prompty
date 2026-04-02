@@ -814,7 +814,7 @@ def _build_tool_result_messages(
     if _is_anthropic_response(response):
         return _build_anthropic_tool_result_messages(response, tools), False
     if _is_responses_api(response):
-        return _build_responses_tool_result_messages(response, tools), False
+        return _build_responses_tool_result_messages(response, tools)
     return _build_openai_tool_result_messages(response, tools)
 
 
