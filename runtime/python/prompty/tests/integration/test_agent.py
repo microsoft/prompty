@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.types import Message, TextPart
-from prompty.providers.foundry.executor import FoundryExecutor
-from prompty.providers.foundry.processor import FoundryProcessor
-from prompty.providers.openai.executor import OpenAIExecutor
-from prompty.providers.openai.processor import OpenAIProcessor
+from prompty.core.pipeline import execute_agent, execute_agent_async
 
 from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
 
@@ -33,19 +29,6 @@ def _weather_fn(city: str) -> str:
     return f"72°F and sunny in {city}"
 
 
-def _agent_messages() -> list[Message]:
-    return [
-        Message(
-            role="system",
-            parts=[TextPart(value="You are a helpful assistant. Use tools when needed. Be brief.")],
-        ),
-        Message(
-            role="user",
-            parts=[TextPart(value="What is the weather in Seattle?")],
-        ),
-    ]
-
-
 # ---------------------------------------------------------------------------
 # OpenAI
 # ---------------------------------------------------------------------------
@@ -53,22 +36,19 @@ def _agent_messages() -> list[Message]:
 
 @skip_openai
 class TestOpenAIAgent:
-    executor = OpenAIExecutor()
-    processor = OpenAIProcessor()
-
     def test_tool_call_loop(self):
         agent = make_openai_agent(
             api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
-            metadata={"tool_functions": {"get_weather": _weather_fn}},
         )
-        messages = _agent_messages()
-        response = self.executor.execute(agent, messages)
-        result = self.processor.process(agent, response)
+        agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
+        result = execute_agent(
+            agent,
+            tools={"get_weather": _weather_fn},
+        )
         assert isinstance(result, str)
-        # The model should have called get_weather and incorporated the result
-        assert "72" in result or "sunny" in result or "Seattle" in result.lower()
+        assert "72" in result or "sunny" in result or "seattle" in result.lower()
 
     @pytest.mark.asyncio
     async def test_async_tool_call_loop(self):
@@ -76,11 +56,12 @@ class TestOpenAIAgent:
             api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
-            metadata={"tool_functions": {"get_weather": _weather_fn}},
         )
-        messages = _agent_messages()
-        response = await self.executor.execute_async(agent, messages)
-        result = await self.processor.process_async(agent, response)
+        agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
+        result = await execute_agent_async(
+            agent,
+            tools={"get_weather": _weather_fn},
+        )
         assert isinstance(result, str)
 
 
@@ -91,18 +72,16 @@ class TestOpenAIAgent:
 
 @skip_foundry
 class TestFoundryAgent:
-    executor = FoundryExecutor()
-    processor = FoundryProcessor()
-
     def test_tool_call_loop(self):
         agent = make_foundry_agent(
             api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
-            metadata={"tool_functions": {"get_weather": _weather_fn}},
         )
-        messages = _agent_messages()
-        response = self.executor.execute(agent, messages)
-        result = self.processor.process(agent, response)
+        agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
+        result = execute_agent(
+            agent,
+            tools={"get_weather": _weather_fn},
+        )
         assert isinstance(result, str)
-        assert "72" in result or "sunny" in result or "Seattle" in result.lower()
+        assert "72" in result or "sunny" in result or "seattle" in result.lower()

@@ -232,11 +232,9 @@ class TestFoundryEmbeddingTracing:
 
 @skip_foundry
 class TestFoundryAgentTracing:
-    executor = FoundryExecutor()
-    processor = FoundryProcessor()
-
     def test_agent_loop_trace(self, tmp_path):
         """Agent loop with tool calls produces a trace with the AgentLoop frame."""
+        from prompty.core.pipeline import execute_agent
 
         def get_weather(city: str) -> str:
             return f"72°F and sunny in {city}"
@@ -261,20 +259,12 @@ class TestFoundryAgentTracing:
                         ],
                     }
                 ],
-                metadata={"tool_functions": {"get_weather": get_weather}},
             )
-            messages = [
-                Message(
-                    role="system",
-                    parts=[TextPart(value="You are a helpful assistant. Use tools when needed.")],
-                ),
-                Message(
-                    role="user",
-                    parts=[TextPart(value="What is the weather in Seattle?")],
-                ),
-            ]
-            response = self.executor.execute(agent, messages)
-            result = self.processor.process(agent, response)
+            agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed.\nuser:\nWhat is the weather in Seattle?"
+            result = execute_agent(
+                agent,
+                tools={"get_weather": get_weather},
+            )
             assert isinstance(result, str)
         finally:
             Tracer.clear()
@@ -290,9 +280,9 @@ class TestFoundryAgentTracing:
         assert agent_frame is not None, f"No AgentLoop frame found in {[f['name'] for f in frames]}"
         _assert_timing(agent_frame)
 
-        # Agent loop should have inputs and a final result
-        assert "inputs" in agent_frame
-        assert "result" in agent_frame
+        # Agent loop should have sub-frames (the executor calls) and iteration tracking
+        assert "__frames" in agent_frame, f"AgentLoop frame missing __frames: {list(agent_frame.keys())}"
+        assert "iterations" in agent_frame, f"AgentLoop frame missing iterations: {list(agent_frame.keys())}"
 
 
 # ---------------------------------------------------------------------------
