@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: 22  # Must be >=22.14.0 for npm trusted publishing
           registry-url: https://registry.npmjs.org
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
       - run: npm ci
       - run: npm run build
 
