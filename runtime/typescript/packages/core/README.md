@@ -16,6 +16,9 @@ npm install @prompty/openai
 
 # Azure AI Foundry
 npm install @prompty/foundry
+
+# Anthropic
+npm install @prompty/anthropic
 ```
 
 ## Quick Start

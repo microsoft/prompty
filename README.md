@@ -104,9 +104,10 @@ Every execution generates a `.tracy` trace file. Click to inspect the full pipel
 ### Python
 
 ```bash
-pip install "prompty[all]"          # everything
-pip install "prompty[jinja2,openai]" # just OpenAI
-pip install "prompty[jinja2,foundry]" # Microsoft Foundry
+pip install "prompty[all]"              # everything
+pip install "prompty[jinja2,openai]"    # just OpenAI
+pip install "prompty[jinja2,foundry]"   # Microsoft Foundry
+pip install "prompty[jinja2,anthropic]" # Anthropic
 ```
 
 ```python
@@ -131,6 +132,7 @@ See [runtime/python/prompty/README.md](runtime/python/prompty/README.md) for ful
 ```bash
 npm install @prompty/core @prompty/openai   # OpenAI
 npm install @prompty/core @prompty/foundry  # Microsoft Foundry
+npm install @prompty/core @prompty/anthropic # Anthropic
 ```
 
 ```typescript
@@ -164,19 +166,17 @@ model:
     apiKey: ${env:AZURE_OPENAI_API_KEY}
   options:
     temperature: 0.7
-inputSchema:
-  properties:
-    question:
-      kind: string
-      default: What is the meaning of life?
+inputs:
+  - name: question
+    kind: string
+    default: What is the meaning of life?
 tools:
   - name: get_weather
     kind: function
     description: Get the current weather
     parameters:
-      properties:
-        location:
-          kind: string
+      - name: location
+        kind: string
 template:
   format:
     kind: jinja2

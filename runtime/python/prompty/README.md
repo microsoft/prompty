@@ -17,6 +17,9 @@ pip install prompty[jinja2,openai]
 # Core + Microsoft Foundry provider
 pip install prompty[jinja2,foundry]
 
+# Core + Anthropic provider
+pip install prompty[jinja2,anthropic]
+
 # Everything (all renderers, providers, OpenTelemetry)
 pip install prompty[all]
 ```
@@ -27,6 +30,7 @@ pip install prompty[all]
 |-------|----------|-----------------|
 | `[openai]` | `openai` | OpenAI provider |
 | `[foundry]` | `openai`, `azure-identity` | Microsoft Foundry provider |
+| `[anthropic]` | `anthropic` | Anthropic provider |
 | `[jinja2]` | `jinja2` | Jinja2 template rendering |
 | `[mustache]` | `chevron` | Mustache template rendering |
 | `[otel]` | `opentelemetry-api` | OpenTelemetry tracing |
@@ -45,11 +49,10 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-inputSchema:
-  properties:
-    name:
-      kind: string
-      default: World
+inputs:
+  - name: name
+    kind: string
+    default: World
 template:
   format:
     kind: jinja2
@@ -175,18 +178,17 @@ result = prompty.execute(
 
 ### Structured Output
 
-Define `outputSchema` in frontmatter to get
+Define `outputs` in frontmatter to get
 JSON-parsed results:
 
 ```yaml
-outputSchema:
-  properties:
-    - name: city
-      kind: string
-      description: The city name
-    - name: temperature
-      kind: integer
-      description: Temperature in Fahrenheit
+outputs:
+  - name: city
+    kind: string
+    description: The city name
+  - name: temperature
+    kind: integer
+    description: Temperature in Fahrenheit
 ```
 
 The executor sends this as OpenAI's `response_format`
@@ -276,10 +278,9 @@ Conversation history is passed via a `kind: thread`
 input property:
 
 ```yaml
-inputSchema:
-  properties:
-    - name: conversation
-      kind: thread
+inputs:
+  - name: conversation
+    kind: thread
 ```
 
 Place `{{conversation}}` in the template where
@@ -319,7 +320,9 @@ migrated with deprecation warnings. Key changes:
 
 - `model.configuration` → `model.connection`
 - `model.parameters` → `model.options`
-- `inputs` → `inputSchema.properties`
+- `inputs` (dict format) → `inputs` (list of Property)
+- `inputSchema` → `inputs`
+- `outputSchema` → `outputs`
 - `template: jinja2` → structured `template`
   with `format` and `parser`
 
