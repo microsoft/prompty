@@ -4,7 +4,7 @@ description: An agent that uses tools in a loop
 model:
   id: gpt-4o
   provider: openai
-  apiType: agent
+  apiType: chat
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY:test-key}

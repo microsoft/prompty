@@ -1,0 +1,36 @@
+---
+name: anthropic-tools
+description: Anthropic tool calling test
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-anthropic
+  options:
+    maxOutputTokens: 1024
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a location
+    parameters:
+      - name: location
+        kind: string
+        description: City and state
+        required: true
+inputs:
+  question:
+    kind: string
+    default: What is the weather in Seattle?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}

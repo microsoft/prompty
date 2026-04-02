@@ -4,7 +4,7 @@ description: E2E test for Foundry agent loop with tool calls
 model:
   id: gpt-4o
   provider: foundry
-  apiType: agent
+  apiType: chat
   connection:
     kind: reference
     name: mock-foundry

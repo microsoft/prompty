@@ -3,15 +3,12 @@
  *
  * Importing this package auto-registers the "anthropic" executor and processor.
  *
- * NOTE: This is currently a scaffolding package. The executor and processor
- * throw "not yet implemented" errors. A future version will add full
- * Anthropic API support.
- *
  * @module @prompty/anthropic
  */
 
 export { AnthropicExecutor } from "./executor.js";
-export { AnthropicProcessor } from "./processor.js";
+export { AnthropicProcessor, processResponse } from "./processor.js";
+export { buildChatArgs, messageToWire, toolsToWire, outputSchemaToWire } from "./wire.js";
 
 // Auto-register on import
 import { registerExecutor, registerProcessor } from "@prompty/core";

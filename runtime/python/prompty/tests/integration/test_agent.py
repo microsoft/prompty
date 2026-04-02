@@ -58,7 +58,7 @@ class TestOpenAIAgent:
 
     def test_tool_call_loop(self):
         agent = make_openai_agent(
-            api_type="agent",
+            api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
             metadata={"tool_functions": {"get_weather": _weather_fn}},
@@ -73,7 +73,7 @@ class TestOpenAIAgent:
     @pytest.mark.asyncio
     async def test_async_tool_call_loop(self):
         agent = make_openai_agent(
-            api_type="agent",
+            api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
             metadata={"tool_functions": {"get_weather": _weather_fn}},
@@ -96,7 +96,7 @@ class TestFoundryAgent:
 
     def test_tool_call_loop(self):
         agent = make_foundry_agent(
-            api_type="agent",
+            api_type="chat",
             options={"temperature": 0, "maxOutputTokens": 200},
             tools=_TOOLS,
             metadata={"tool_functions": {"get_weather": _weather_fn}},

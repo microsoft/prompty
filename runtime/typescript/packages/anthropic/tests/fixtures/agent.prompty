@@ -1,13 +1,13 @@
 ---
-name: e2e-agent
-description: E2E test for agent loop with tool calls
+name: anthropic-agent
+description: E2E test for Anthropic agent loop with tool calls
 model:
-  id: gpt-4o
-  provider: openai
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
   apiType: chat
   connection:
     kind: reference
-    name: mock-openai
+    name: mock-anthropic
 inputs:
   - name: question
     kind: string

@@ -52,8 +52,7 @@ export class OpenAIExecutor implements Executor {
     apiType: string,
   ): Promise<unknown> {
     switch (apiType) {
-      case "chat":
-      case "agent": {
+      case "chat": {
         const args = buildChatArgs(agent, messages);
         const isStreaming = !!args.stream;
         return traceSpan("create", async (callEmit) => {

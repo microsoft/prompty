@@ -244,7 +244,7 @@ class TestFoundryAgentTracing:
         _setup_tracer(tmp_path)
         try:
             agent = make_foundry_agent(
-                api_type="agent",
+                api_type="chat",
                 options={"temperature": 0, "maxOutputTokens": 200},
                 tools=[
                     {

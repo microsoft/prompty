@@ -111,10 +111,10 @@ describe("Loader", () => {
   // -------------------------------------------------------------------------
 
   describe("agent mode", () => {
-    it("loads apiType as agent", () => {
+    it("loads apiType as chat for agent prompts", () => {
       const agent = load(resolve(FIXTURES, "agent.prompty"));
       expect(agent.name).toBe("agent-loop");
-      expect(agent.model.apiType).toBe("agent");
+      expect(agent.model.apiType).toBe("chat");
     });
 
     it("has tools defined for agent", () => {

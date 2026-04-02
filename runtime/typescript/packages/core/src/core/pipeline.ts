@@ -539,16 +539,25 @@ function hasToolCalls(response: unknown): boolean {
   if (typeof response !== "object" || response === null) return false;
   const r = response as Record<string, unknown>;
 
-  // OpenAI ChatCompletion shape
+  // OpenAI ChatCompletion shape: choices[0].message.tool_calls
   const choices = r.choices as unknown[] | undefined;
-  if (!Array.isArray(choices) || choices.length === 0) return false;
+  if (Array.isArray(choices) && choices.length > 0) {
+    const choice = choices[0] as Record<string, unknown>;
+    const message = choice.message as Record<string, unknown> | undefined;
+    if (message) {
+      const toolCalls = message.tool_calls as unknown[] | undefined;
+      if (Array.isArray(toolCalls) && toolCalls.length > 0) return true;
+    }
+  }
 
-  const choice = choices[0] as Record<string, unknown>;
-  const message = choice.message as Record<string, unknown> | undefined;
-  if (!message) return false;
+  // Anthropic Messages shape: content[].type === "tool_use"
+  if (r.stop_reason === "tool_use" && Array.isArray(r.content)) {
+    return (r.content as Record<string, unknown>[]).some(
+      (block) => block.type === "tool_use",
+    );
+  }
 
-  const toolCalls = message.tool_calls as unknown[] | undefined;
-  return Array.isArray(toolCalls) && toolCalls.length > 0;
+  return false;
 }
 
 async function buildToolResultMessages(
@@ -557,6 +566,21 @@ async function buildToolResultMessages(
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const r = response as Record<string, unknown>;
+
+  // Detect response format and dispatch
+  if (Array.isArray(r.content) && r.stop_reason === "tool_use") {
+    return buildAnthropicToolResultMessages(r, tools, parentEmit);
+  }
+
+  return buildOpenAIToolResultMessages(r, tools, parentEmit);
+}
+
+/** Handle OpenAI ChatCompletion tool calls: choices[0].message.tool_calls */
+async function buildOpenAIToolResultMessages(
+  r: Record<string, unknown>,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  parentEmit?: (key: string, value: unknown) => void,
+): Promise<Message[]> {
   const choices = r.choices as unknown[];
   const choice = choices[0] as Record<string, unknown>;
   const message = choice.message as Record<string, unknown>;
@@ -608,6 +632,71 @@ async function buildToolResultMessages(
     messages.push(
       new Message("tool", [text(result)], {
         tool_call_id: toolCallId,
+        name: toolName,
+      }),
+    );
+  }
+
+  if (parentEmit) {
+    parentEmit("inputs", { tool_calls: toolInputs });
+  }
+
+  return messages;
+}
+
+/** Handle Anthropic Messages tool calls: content[].type === "tool_use" */
+async function buildAnthropicToolResultMessages(
+  r: Record<string, unknown>,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  parentEmit?: (key: string, value: unknown) => void,
+): Promise<Message[]> {
+  const content = r.content as Record<string, unknown>[];
+  const toolUseBlocks = content.filter((block) => block.type === "tool_use");
+
+  const messages: Message[] = [];
+
+  // Add assistant message with the full content (Anthropic includes tool_use in content)
+  const textParts = content
+    .filter((block) => block.type === "text")
+    .map((block) => text(block.text as string));
+  messages.push(
+    new Message("assistant", textParts, { content }),
+  );
+
+  const toolInputs: Record<string, unknown>[] = [];
+
+  for (const block of toolUseBlocks) {
+    const toolName = block.name as string;
+    const toolCallId = block.id as string;
+    const toolArgs = block.input as Record<string, unknown>;
+
+    let result: string;
+    try {
+      const toolFn = tools[toolName];
+      if (!toolFn) {
+        result = `Error: tool "${toolName}" not found`;
+      } else {
+        const toolResult = await traceSpan(toolName, async (toolEmit) => {
+          toolEmit("signature", `prompty.tool.${toolName}`);
+          toolEmit("description", `Execute tool: ${toolName}`);
+          toolEmit("inputs", { arguments: toolArgs, tool_use_id: toolCallId });
+          const r = await toolFn(...(Array.isArray(toolArgs) ? toolArgs : [toolArgs]));
+          const str = typeof r === "string" ? r : JSON.stringify(r);
+          toolEmit("result", str);
+          return str;
+        });
+        result = toolResult as string;
+      }
+    } catch (err) {
+      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    toolInputs.push({ name: toolName, arguments: toolArgs, tool_use_id: toolCallId, result });
+
+    // Anthropic tool results use tool_use_id (not tool_call_id)
+    messages.push(
+      new Message("tool", [text(result)], {
+        tool_use_id: toolCallId,
         name: toolName,
       }),
     );

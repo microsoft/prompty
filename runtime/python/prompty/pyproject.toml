@@ -37,12 +37,14 @@ mustache = ["chevron"]
 openai = ["openai"]
 foundry = ["openai", "azure-identity"]
 azure = ["openai", "azure-identity"]
+anthropic = ["anthropic"]
 otel = ["opentelemetry-api>=1.20"]
 all = [
   "jinja2",
   "chevron",
   "openai",
   "azure-identity",
+  "anthropic",
   "opentelemetry-api>=1.20",
 ]
 dev = [
@@ -73,11 +75,13 @@ prompty = "prompty.parsers.prompty:PromptyChatParser"
 openai = "prompty.providers.openai.executor:OpenAIExecutor"
 foundry = "prompty.providers.foundry.executor:FoundryExecutor"
 azure = "prompty.providers.foundry.executor:FoundryExecutor"
+anthropic = "prompty.providers.anthropic.executor:AnthropicExecutor"
 
 [project.entry-points."prompty.processors"]
 openai = "prompty.providers.openai.processor:OpenAIProcessor"
 foundry = "prompty.providers.foundry.processor:FoundryProcessor"
 azure = "prompty.providers.foundry.processor:FoundryProcessor"
+anthropic = "prompty.providers.anthropic.processor:AnthropicProcessor"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

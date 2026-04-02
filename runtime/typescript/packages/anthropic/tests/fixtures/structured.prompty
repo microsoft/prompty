@@ -1,0 +1,35 @@
+---
+name: anthropic-structured
+description: E2E test for Anthropic structured output
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-anthropic
+inputs:
+  - name: topic
+    kind: string
+    default: quantum computing
+outputs:
+  - name: title
+    kind: string
+    description: The title of the summary
+  - name: summary
+    kind: string
+    description: A brief summary
+  - name: confidence
+    kind: float
+    description: Confidence score between 0 and 1
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a research assistant. Provide structured summaries.
+
+user:
+Summarize: {{topic}}

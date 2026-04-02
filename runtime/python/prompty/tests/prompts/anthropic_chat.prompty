@@ -1,0 +1,28 @@
+---
+name: anthropic-chat
+description: Basic Anthropic chat test
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-anthropic
+  options:
+    temperature: 0.7
+    maxOutputTokens: 512
+inputs:
+  question:
+    kind: string
+    default: What is the meaning of life?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful AI assistant.
+
+user:
+{{question}}

@@ -48,7 +48,7 @@ class FoundryExecutor(_BaseExecutor):
         client = self._resolve_client(agent)
         api_type = agent.model.apiType or "chat"
 
-        if api_type in ("chat", "agent"):
+        if api_type == "chat":
             return self._execute_chat(client, agent, data)
         elif api_type == "embedding":
             return self._execute_embedding(client, agent, data)
@@ -64,7 +64,7 @@ class FoundryExecutor(_BaseExecutor):
         client = self._resolve_client_async(agent)
         api_type = agent.model.apiType or "chat"
 
-        if api_type in ("chat", "agent"):
+        if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
         elif api_type == "embedding":
             return await self._execute_embedding_async(client, agent, data)

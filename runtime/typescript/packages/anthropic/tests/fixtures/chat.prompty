@@ -1,0 +1,25 @@
+---
+name: anthropic-chat
+description: E2E test for Anthropic chat
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-anthropic
+inputs:
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+template:
+  format:
+    kind: nunjucks
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful AI assistant.
+
+user:
+{{question}}

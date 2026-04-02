@@ -1,0 +1,34 @@
+---
+name: anthropic-structured
+description: Anthropic structured output test
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-anthropic
+  options:
+    maxOutputTokens: 512
+outputs:
+  - name: city
+    kind: string
+    description: The city name
+  - name: temperature
+    kind: float
+    description: The temperature in Fahrenheit
+inputs:
+  question:
+    kind: string
+    default: What is the weather in Seattle?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Always respond with structured JSON.
+
+user:
+{{question}}
