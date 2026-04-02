@@ -6,14 +6,9 @@
 
 Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code, Python, or TypeScript.
 
-```
-┌─────────────┐     ┌──────────┐     ┌──────────────┐
-│  .prompty    │ ──▶ │ Runtime  │ ──▶ │ LLM Provider │
-│  file        │     │ (render, │     │ (OpenAI,     │
-│              │     │  parse,  │     │  Foundry)    │
-│              │     │  execute)│     │              │
-└─────────────┘     └──────────┘     └──────────────┘
-```
+<p align="center">
+  <img src="img/prompty-flow.svg" alt="Prompty flow: .prompty file → Runtime → LLM Provider" width="700">
+</p>
 
 ## Quick Start
 
