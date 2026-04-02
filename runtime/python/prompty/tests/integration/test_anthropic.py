@@ -14,7 +14,8 @@ import json
 
 import pytest
 
-from prompty.core.types import Message, TextPart
+from prompty.core.pipeline import execute_agent
+from prompty.core.types import Message, PromptyStream, TextPart
 from prompty.providers.anthropic.executor import AnthropicExecutor
 from prompty.providers.anthropic.processor import AnthropicProcessor
 
@@ -115,3 +116,55 @@ class TestAnthropicAgent:
         assert result[0].name == "get_weather"
         args = json.loads(result[0].arguments)
         assert "location" in args
+
+    def test_full_agent_loop(self):
+        """Test the full execute_agent pipeline: call → tool → call → final answer."""
+        from pathlib import Path
+
+        prompty_path = Path(__file__).parent.parent / "prompts" / "anthropic_agent.prompty"
+        result = execute_agent(
+            str(prompty_path),
+            inputs={"question": "What is the weather in Seattle?"},
+            tools={"get_weather": lambda location: f"72°F and sunny in {location}"},
+        )
+
+        # Should get a final text response mentioning the weather
+        assert isinstance(result, str), f"Expected string result, got {type(result)}: {result}"
+        assert len(result) > 0
+
+
+@skip_anthropic
+class TestAnthropicStreaming:
+    def test_streaming_chat(self):
+        agent = make_anthropic_agent(
+            options={"maxOutputTokens": 64, "additionalProperties": {"stream": True}},
+        )
+        messages = [
+            Message("system", [TextPart(value="You are a helpful assistant. Be concise.")]),
+            Message("user", [TextPart(value="Say hello in exactly 3 words.")]),
+        ]
+        response = executor.execute(agent, messages)
+
+        assert isinstance(response, PromptyStream)
+
+        # Consume the stream — collect all events
+        events = list(response)
+        assert len(events) > 0
+
+
+@skip_anthropic
+class TestAnthropicMultiTurn:
+    def test_multi_turn_conversation(self):
+        """Test sending prior assistant/user turns — Anthropic is strict about role alternation."""
+        agent = make_anthropic_agent(options={"maxOutputTokens": 64})
+        messages = [
+            Message("system", [TextPart(value="You are a helpful assistant. Be concise.")]),
+            Message("user", [TextPart(value="My name is Alice.")]),
+            Message("assistant", [TextPart(value="Nice to meet you, Alice!")]),
+            Message("user", [TextPart(value="What is my name?")]),
+        ]
+        response = executor.execute(agent, messages)
+        result = processor.process(agent, response)
+
+        assert isinstance(result, str)
+        assert "alice" in result.lower()

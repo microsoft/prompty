@@ -44,7 +44,27 @@ def _message_to_wire(msg: Message) -> dict[str, Any]:
     """Convert an abstract Message to Anthropic wire format."""
     wire: dict[str, Any] = {"role": msg.role}
 
-    # Tool result messages → special content block format
+    # Assistant message with raw_content from tool-call pipeline
+    raw_content = msg.metadata.get("raw_content")
+    if raw_content and msg.role == "assistant":
+        wire["content"] = raw_content
+        return wire
+
+    # Tool result messages with batched results from pipeline
+    tool_results = msg.metadata.get("tool_results")
+    if tool_results:
+        wire["role"] = "user"
+        wire["content"] = [
+            {
+                "type": "tool_result",
+                "tool_use_id": r["tool_use_id"],
+                "content": r["result"],
+            }
+            for r in tool_results
+        ]
+        return wire
+
+    # Single tool result message (legacy / direct usage)
     tool_use_id = msg.metadata.get("tool_use_id") or msg.metadata.get("tool_call_id")
     if tool_use_id:
         wire["role"] = "user"

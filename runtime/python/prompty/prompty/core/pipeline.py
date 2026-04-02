@@ -760,13 +760,31 @@ async def _execute_tool_async(
 
 
 def _has_tool_calls(response: Any) -> bool:
-    """Check if an LLM response contains tool calls."""
-    return (
+    """Check if an LLM response contains tool calls (OpenAI or Anthropic)."""
+    # OpenAI format: response.choices[0].finish_reason == "tool_calls"
+    if (
         hasattr(response, "choices")
         and response.choices
         and response.choices[0].finish_reason == "tool_calls"
         and response.choices[0].message.tool_calls
-    )
+    ):
+        return True
+
+    # Anthropic format: response.stop_reason == "tool_use" with tool_use content blocks
+    if (
+        hasattr(response, "stop_reason")
+        and response.stop_reason == "tool_use"
+        and hasattr(response, "content")
+        and any(getattr(block, "type", None) == "tool_use" for block in response.content)
+    ):
+        return True
+
+    return False
+
+
+def _is_anthropic_response(response: Any) -> bool:
+    """Check if a response is from Anthropic (has stop_reason, not choices)."""
+    return hasattr(response, "stop_reason") and not hasattr(response, "choices")
 
 
 def _build_tool_result_messages(
@@ -777,7 +795,19 @@ def _build_tool_result_messages(
 
     Returns (messages_to_append, had_missing_tool). The messages include
     the assistant's tool-call message and each tool result.
+
+    Dispatches between OpenAI and Anthropic response formats.
     """
+    if _is_anthropic_response(response):
+        return _build_anthropic_tool_result_messages(response, tools), False
+    return _build_openai_tool_result_messages(response, tools)
+
+
+def _build_openai_tool_result_messages(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> tuple[list[Message], bool]:
+    """Handle OpenAI tool call responses."""
     from .types import TextPart
 
     tool_calls = response.choices[0].message.tool_calls
@@ -815,11 +845,99 @@ def _build_tool_result_messages(
     return result_messages, False
 
 
+def _build_anthropic_tool_result_messages(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> list[Message]:
+    """Handle Anthropic tool_use content blocks.
+
+    Returns two messages:
+    1. Assistant message with the full raw content (including tool_use blocks)
+    2. A single tool message with all tool_result blocks (Anthropic requires
+       tool_results in a single user message following the assistant)
+    """
+    import json as _json
+
+    from .types import TextPart
+
+    content = response.content
+    tool_use_blocks = [b for b in content if getattr(b, "type", None) == "tool_use"]
+    text_blocks = [b for b in content if getattr(b, "type", None) == "text"]
+
+    result_messages: list[Message] = []
+
+    # Assistant message must preserve the raw content blocks for wire format
+    # so Anthropic sees the tool_use blocks it generated
+    text_parts = [TextPart(value=b.text) for b in text_blocks]
+    raw_content = []
+    for b in content:
+        block_dict: dict[str, Any] = {"type": getattr(b, "type", "")}
+        if getattr(b, "type", None) == "text":
+            block_dict["text"] = b.text
+        elif getattr(b, "type", None) == "tool_use":
+            block_dict["id"] = b.id
+            block_dict["name"] = b.name
+            block_dict["input"] = b.input
+        raw_content.append(block_dict)
+
+    result_messages.append(
+        Message(
+            role="assistant",
+            parts=text_parts,
+            metadata={"raw_content": raw_content},
+        )
+    )
+
+    # All tool results go in a single message
+    tool_results: list[dict[str, Any]] = []
+    for block in tool_use_blocks:
+        fn_name = block.name
+        fn = tools.get(fn_name)
+        tool_input = block.input
+        arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
+
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        elif inspect.iscoroutinefunction(fn):
+            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
+        else:
+            tool_result = _execute_tool(fn, fn_name, arguments)
+
+        tool_results.append({
+            "tool_use_id": block.id,
+            "name": fn_name,
+            "result": tool_result,
+        })
+
+    # Single tool message with all results
+    result_messages.append(
+        Message(
+            role="tool",
+            parts=[TextPart(value=r["result"]) for r in tool_results],
+            metadata={"tool_results": tool_results},
+        )
+    )
+
+    return result_messages
+
+
 async def _build_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
 ) -> list[Message]:
     """Async variant of :func:`_build_tool_result_messages`."""
+    if _is_anthropic_response(response):
+        return await _build_anthropic_tool_result_messages_async(response, tools)
+    return await _build_openai_tool_result_messages_async(response, tools)
+
+
+async def _build_openai_tool_result_messages_async(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> list[Message]:
+    """Async: handle OpenAI tool call responses."""
     from .types import TextPart
 
     tool_calls = response.choices[0].message.tool_calls
@@ -850,6 +968,72 @@ async def _build_tool_result_messages_async(
                 metadata={"tool_call_id": tc.id, "name": fn_name},
             )
         )
+
+    return result_messages
+
+
+async def _build_anthropic_tool_result_messages_async(
+    response: Any,
+    tools: dict[str, Callable[..., Any]],
+) -> list[Message]:
+    """Async: handle Anthropic tool_use content blocks."""
+    import json as _json
+
+    from .types import TextPart
+
+    content = response.content
+    tool_use_blocks = [b for b in content if getattr(b, "type", None) == "tool_use"]
+    text_blocks = [b for b in content if getattr(b, "type", None) == "text"]
+
+    result_messages: list[Message] = []
+
+    text_parts = [TextPart(value=b.text) for b in text_blocks]
+    raw_content = []
+    for b in content:
+        block_dict: dict[str, Any] = {"type": getattr(b, "type", "")}
+        if getattr(b, "type", None) == "text":
+            block_dict["text"] = b.text
+        elif getattr(b, "type", None) == "tool_use":
+            block_dict["id"] = b.id
+            block_dict["name"] = b.name
+            block_dict["input"] = b.input
+        raw_content.append(block_dict)
+
+    result_messages.append(
+        Message(
+            role="assistant",
+            parts=text_parts,
+            metadata={"raw_content": raw_content},
+        )
+    )
+
+    tool_results: list[dict[str, Any]] = []
+    for block in tool_use_blocks:
+        fn_name = block.name
+        fn = tools.get(fn_name)
+        tool_input = block.input
+        arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
+
+        if fn is None:
+            tool_result = (
+                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
+            )
+        else:
+            tool_result = await _execute_tool_async(fn, fn_name, arguments)
+
+        tool_results.append({
+            "tool_use_id": block.id,
+            "name": fn_name,
+            "result": tool_result,
+        })
+
+    result_messages.append(
+        Message(
+            role="tool",
+            parts=[TextPart(value=r["result"]) for r in tool_results],
+            metadata={"tool_results": tool_results},
+        )
+    )
 
     return result_messages
 

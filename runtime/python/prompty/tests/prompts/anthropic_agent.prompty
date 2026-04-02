@@ -1,0 +1,36 @@
+---
+name: anthropic-agent-test
+description: Anthropic agent loop integration test
+model:
+  id: claude-sonnet-4-5-20250929
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:ANTHROPIC_API_KEY}
+  options:
+    maxOutputTokens: 256
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      - name: location
+        kind: string
+        description: City name
+        required: true
+inputs:
+  question:
+    kind: string
+    default: What is the weather in Seattle?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Use tools when needed. After getting tool results, summarize the answer.
+
+user:
+{{question}}
