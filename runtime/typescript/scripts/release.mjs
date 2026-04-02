@@ -26,7 +26,7 @@ const root = resolve(__dirname, "..");
 const repoRoot = resolve(root, "../..");
 
 const PACKAGES = ["core", "openai", "foundry", "anthropic"];
-const TAG_PREFIX = "prompty-ts-v";
+const TAG_PREFIX = "typescript/";
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf-8"));

@@ -2,7 +2,7 @@ name: TypeScript Release
 on:
   push:
     tags:
-      - 'prompty-ts-v*'
+      - 'typescript/*'
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
       - name: Determine dist-tag
         id: dist-tag
         run: |
-          VERSION="${GITHUB_REF_NAME#prompty-ts-v}"
+          VERSION="${GITHUB_REF_NAME#typescript/}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if [[ "$VERSION" == *-* ]]; then
             echo "tag=alpha" >> "$GITHUB_OUTPUT"
