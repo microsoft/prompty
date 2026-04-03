@@ -1,9 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" fill="none">
+  <style>
+    :root { color-scheme: light dark; }
+    .bg { fill: #0f172a; }
+    .hub-outer { fill: #6366f1; opacity: 0.15; }
+    .hub-inner { fill: url(#c1); }
+    .hub-text { fill: #fff; }
+    .hub-sub { fill: rgba(255,255,255,0.7); }
+    .node-text { fill: #fff; }
+    .node-sub { fill: rgba(255,255,255,0.7); }
+    .badge { fill: #1e293b; }
+    .badge-openai { stroke: #6366f1; }
+    .badge-foundry { stroke: #3b82f6; }
+    .badge-anthropic { stroke: #10b981; }
+    .badge-ext { stroke: #f59e0b; }
+    .text-openai { fill: #a5b4fc; }
+    .text-foundry { fill: #93c5fd; }
+    .text-anthropic { fill: #6ee7b7; }
+    .text-ext { fill: #fde68a; }
+    .line-dim { opacity: 0.25; }
+    .line-node { opacity: 0.5; }
+    .mit-bg { fill: #10b981; opacity: 0.2; }
+    .mit-text { fill: #6ee7b7; }
+
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #f8fafc; }
+      .hub-outer { fill: #6366f1; opacity: 0.08; }
+      .badge { fill: #f1f5f9; }
+      .hub-text { fill: #fff; }
+      .node-text { fill: #fff; }
+      .node-sub { fill: rgba(255,255,255,0.8); }
+      .text-openai { fill: #4338ca; }
+      .text-foundry { fill: #1d4ed8; }
+      .text-anthropic { fill: #047857; }
+      .text-ext { fill: #b45309; }
+      .badge-openai { stroke: #818cf8; }
+      .badge-foundry { stroke: #60a5fa; }
+      .badge-anthropic { stroke: #34d399; }
+      .badge-ext { stroke: #fbbf24; }
+      .line-dim { opacity: 0.15; }
+      .line-node { opacity: 0.35; }
+      .mit-bg { fill: #10b981; opacity: 0.12; }
+      .mit-text { fill: #047857; }
+    }
+  </style>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#1e293b"/>
-    </linearGradient>
     <linearGradient id="c1" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#6366f1"/>
       <stop offset="100%" stop-color="#8b5cf6"/>
@@ -27,73 +67,73 @@
   </defs>
 
   <!-- Background -->
-  <rect width="600" height="400" rx="20" fill="url(#bg)"/>
+  <rect class="bg" width="600" height="400" rx="20"/>
 
   <!-- Center: .prompty hub -->
-  <circle cx="300" cy="185" r="52" fill="url(#c1)" opacity="0.15"/>
+  <circle class="hub-outer" cx="300" cy="185" r="52"/>
   <circle cx="300" cy="185" r="40" fill="url(#c1)" filter="url(#glow)"/>
-  <text x="300" y="181" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">.prompty</text>
-  <text x="300" y="198" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="10">open format</text>
+  <text class="hub-text" x="300" y="181" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700">.prompty</text>
+  <text class="hub-sub" x="300" y="198" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">open format</text>
 
   <!-- TypeSpec node (top) -->
-  <line x1="300" y1="143" x2="300" y2="82" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+  <line class="line-node" x1="300" y1="143" x2="300" y2="82" stroke="#6366f1" stroke-width="1.5"/>
   <circle cx="300" cy="68" r="28" fill="url(#c1)" opacity="0.9"/>
-  <text x="300" y="64" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeSpec</text>
-  <text x="300" y="78" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">schema</text>
+  <text class="node-text" x="300" y="64" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeSpec</text>
+  <text class="node-sub" x="300" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9">schema</text>
 
   <!-- Python node (left) -->
-  <line x1="262" y1="200" x2="175" y2="235" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+  <line class="line-node" x1="262" y1="200" x2="175" y2="235" stroke="#3b82f6" stroke-width="1.5"/>
   <circle cx="158" cy="245" r="30" fill="url(#c2)" opacity="0.9"/>
-  <text x="158" y="241" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Python</text>
-  <text x="158" y="256" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">runtime</text>
+  <text class="node-text" x="158" y="241" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Python</text>
+  <text class="node-sub" x="158" y="256" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9">runtime</text>
 
   <!-- TypeScript node (right) -->
-  <line x1="338" y1="200" x2="425" y2="235" stroke="#06b6d4" stroke-width="1.5" opacity="0.5"/>
+  <line class="line-node" x1="338" y1="200" x2="425" y2="235" stroke="#06b6d4" stroke-width="1.5"/>
   <circle cx="442" cy="245" r="30" fill="url(#c2)" opacity="0.9"/>
-  <text x="442" y="241" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeScript</text>
-  <text x="442" y="256" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">runtime</text>
+  <text class="node-text" x="442" y="241" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeScript</text>
+  <text class="node-sub" x="442" y="256" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9">runtime</text>
 
   <!-- VS Code node (bottom-left) -->
-  <line x1="275" y1="220" x2="218" y2="315" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+  <line class="line-node" x1="275" y1="220" x2="218" y2="315" stroke="#10b981" stroke-width="1.5"/>
   <circle cx="210" cy="330" r="28" fill="url(#c3)" opacity="0.9"/>
-  <text x="210" y="327" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">VS Code</text>
-  <text x="210" y="341" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">extension</text>
+  <text class="node-text" x="210" y="327" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600">VS Code</text>
+  <text class="node-sub" x="210" y="341" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9">extension</text>
 
   <!-- Plugins node (bottom-right) -->
-  <line x1="325" y1="220" x2="382" y2="315" stroke="#f59e0b" stroke-width="1.5" opacity="0.5"/>
+  <line class="line-node" x1="325" y1="220" x2="382" y2="315" stroke="#f59e0b" stroke-width="1.5"/>
   <circle cx="390" cy="330" r="28" fill="url(#c4)" opacity="0.9"/>
-  <text x="390" y="327" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Plugins</text>
-  <text x="390" y="341" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">entry points</text>
+  <text class="node-text" x="390" y="327" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Plugins</text>
+  <text class="node-sub" x="390" y="341" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9">entry points</text>
 
-  <!-- Provider badges along left -->
-  <rect x="48" y="105" width="70" height="22" rx="11" fill="#1e293b" stroke="#6366f1" stroke-width="1"/>
-  <text x="83" y="120" text-anchor="middle" fill="#a5b4fc" font-family="system-ui, sans-serif" font-size="10">OpenAI</text>
+  <!-- Provider badges (left) -->
+  <rect class="badge badge-openai" x="48" y="105" width="70" height="22" rx="11" stroke-width="1"/>
+  <text class="text-openai" x="83" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">OpenAI</text>
 
-  <rect x="38" y="140" width="80" height="22" rx="11" fill="#1e293b" stroke="#3b82f6" stroke-width="1"/>
-  <text x="78" y="155" text-anchor="middle" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="10">Foundry</text>
+  <rect class="badge badge-foundry" x="38" y="140" width="80" height="22" rx="11" stroke-width="1"/>
+  <text class="text-foundry" x="78" y="155" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">Foundry</text>
 
-  <rect x="42" y="175" width="76" height="22" rx="11" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
-  <text x="80" y="190" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="10">Anthropic</text>
+  <rect class="badge badge-anthropic" x="42" y="175" width="76" height="22" rx="11" stroke-width="1"/>
+  <text class="text-anthropic" x="80" y="190" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">Anthropic</text>
 
-  <!-- Provider badges along right -->
-  <rect x="482" y="105" width="70" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
-  <text x="517" y="120" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">Jinja2</text>
+  <!-- Extension badges (right) -->
+  <rect class="badge badge-ext" x="482" y="105" width="70" height="22" rx="11" stroke-width="1"/>
+  <text class="text-ext" x="517" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">Jinja2</text>
 
-  <rect x="478" y="140" width="78" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
-  <text x="517" y="155" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">Mustache</text>
+  <rect class="badge badge-ext" x="478" y="140" width="78" height="22" rx="11" stroke-width="1"/>
+  <text class="text-ext" x="517" y="155" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">Mustache</text>
 
-  <rect x="485" y="175" width="64" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
-  <text x="517" y="190" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">OTel</text>
+  <rect class="badge badge-ext" x="485" y="175" width="64" height="22" rx="11" stroke-width="1"/>
+  <text class="text-ext" x="517" y="190" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10">OTel</text>
 
   <!-- Connecting lines from badges to center -->
-  <line x1="118" y1="116" x2="262" y2="175" stroke="#6366f1" stroke-width="0.8" opacity="0.25"/>
-  <line x1="118" y1="151" x2="262" y2="180" stroke="#3b82f6" stroke-width="0.8" opacity="0.25"/>
-  <line x1="118" y1="186" x2="262" y2="190" stroke="#10b981" stroke-width="0.8" opacity="0.25"/>
-  <line x1="482" y1="116" x2="338" y2="175" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
-  <line x1="478" y1="151" x2="338" y2="180" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
-  <line x1="485" y1="186" x2="338" y2="190" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
+  <line class="line-dim" x1="118" y1="116" x2="262" y2="175" stroke="#6366f1" stroke-width="0.8"/>
+  <line class="line-dim" x1="118" y1="151" x2="262" y2="180" stroke="#3b82f6" stroke-width="0.8"/>
+  <line class="line-dim" x1="118" y1="186" x2="262" y2="190" stroke="#10b981" stroke-width="0.8"/>
+  <line class="line-dim" x1="482" y1="116" x2="338" y2="175" stroke="#f59e0b" stroke-width="0.8"/>
+  <line class="line-dim" x1="478" y1="151" x2="338" y2="180" stroke="#f59e0b" stroke-width="0.8"/>
+  <line class="line-dim" x1="485" y1="186" x2="338" y2="190" stroke="#f59e0b" stroke-width="0.8"/>
 
-  <!-- MIT badge at bottom center -->
-  <rect x="260" y="370" width="80" height="22" rx="11" fill="#10b981" opacity="0.2"/>
-  <text x="300" y="385" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">MIT License</text>
+  <!-- MIT badge -->
+  <rect class="mit-bg" x="260" y="370" width="80" height="22" rx="11"/>
+  <text class="mit-text" x="300" y="385" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600">MIT License</text>
 </svg>
