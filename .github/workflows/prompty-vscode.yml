@@ -10,11 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
-    uses: ./.github/workflows/prompty-vscode-check.yml
-
-  upload-vsix:
-    needs: check
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
