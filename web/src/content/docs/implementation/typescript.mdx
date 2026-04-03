@@ -16,7 +16,7 @@ The TypeScript runtime is split into focused packages:
 |---------|-------------|-----|
 | `@prompty/core` | Core runtime: loader, pipeline, types | [![npm](https://img.shields.io/npm/v/@prompty/core)](https://www.npmjs.com/package/@prompty/core) |
 | `@prompty/openai` | OpenAI provider (chat, embedding, image, agent) | [![npm](https://img.shields.io/npm/v/@prompty/openai)](https://www.npmjs.com/package/@prompty/openai) |
-| `@prompty/foundry` | Azure AI Foundry provider | [![npm](https://img.shields.io/npm/v/@prompty/foundry)](https://www.npmjs.com/package/@prompty/foundry) |
+| `@prompty/foundry` | Microsoft Foundry provider | [![npm](https://img.shields.io/npm/v/@prompty/foundry)](https://www.npmjs.com/package/@prompty/foundry) |
 | `@prompty/anthropic` | Anthropic provider | [![npm](https://img.shields.io/npm/v/@prompty/anthropic)](https://www.npmjs.com/package/@prompty/anthropic) |
 
 ## Installation
@@ -25,7 +25,7 @@ The TypeScript runtime is split into focused packages:
 # Core + OpenAI
 npm install @prompty/core @prompty/openai
 
-# Core + Azure AI Foundry
+# Core + Microsoft Foundry
 npm install @prompty/core @prompty/foundry
 
 # Core + Anthropic
@@ -118,7 +118,7 @@ Each provider package registers executors and processors via side-effect imports
 | Package | Provider Key | SDK |
 |---------|-------------|-----|
 | `@prompty/openai` | `openai` | OpenAI Node SDK |
-| `@prompty/foundry` | `foundry` | Azure AI Foundry SDK |
+| `@prompty/foundry` | `foundry` | Microsoft Foundry SDK |
 | `@prompty/anthropic` | `anthropic` | Anthropic SDK |
 
 ## Environment Variables

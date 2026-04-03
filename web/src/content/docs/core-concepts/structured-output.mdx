@@ -17,66 +17,21 @@ in your `.prompty` frontmatter, the runtime converts it to the provider's
 matching your schema. The processor then automatically parses the JSON string into
 a Python `dict` or JavaScript object — no manual `JSON.parse()` needed.
 
-<svg viewBox="0 0 620 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Structured output transformation flow: outputSchema to typed result" style="width:100%;max-width:620px;margin:1.5rem auto;display:block;">
-  <defs>
-    <marker id="so-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
-    </marker>
-    <marker id="so-arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#10b981"/>
-    </marker>
-  </defs>
+```mermaid
+flowchart LR
+    A["**outputSchema**\n(YAML)"] --> B["_output_schema\n_to_wire()\nconversion"]
+    B --> C["**response_format**\njson_schema\n→ sent to LLM"]
+    C --> D["LLM response\nvalid JSON"]
+    D --> E["**Processor**\nJSON.parse"]
+    E --> F["**typed**\ndict / obj"]
 
-  {/* Step 1: outputSchema (YAML) */}
-  <rect x="2" y="28" width="82" height="44" rx="7" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="43" y="47" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">outputSchema</text>
-  <text x="43" y="61" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">(YAML)</text>
-
-  {/* Arrow 1 */}
-  <line x1="88" y1="50" x2="108" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
-
-  {/* Step 2: _output_schema_to_wire */}
-  <rect x="112" y="24" width="98" height="52" rx="7" fill="#bfdbfe" stroke="#1d4ed8" strokeWidth="1.5"/>
-  <text x="161" y="44" textAnchor="middle" fontSize="7" fontFamily="ui-monospace,monospace" fill="#1e3a8a" fontWeight="700">_output_schema</text>
-  <text x="161" y="56" textAnchor="middle" fontSize="7" fontFamily="ui-monospace,monospace" fill="#1e3a8a" fontWeight="700">_to_wire()</text>
-  <text x="161" y="68" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#1d4ed8">conversion</text>
-
-  {/* Arrow 2 */}
-  <line x1="214" y1="50" x2="234" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
-
-  {/* Step 3: JSON Schema / response_format */}
-  <rect x="238" y="24" width="94" height="52" rx="7" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5"/>
-  <text x="285" y="42" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#92400e" fontWeight="700">response_format</text>
-  <text x="285" y="54" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#b45309">json_schema</text>
-  <text x="285" y="66" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#f59e0b">→ sent to LLM</text>
-
-  {/* Arrow 3 */}
-  <line x1="336" y1="50" x2="356" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
-
-  {/* Step 4: LLM returns JSON */}
-  <rect x="360" y="28" width="84" height="44" rx="7" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1.2"/>
-  <text x="402" y="46" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#374151" fontWeight="700">LLM response</text>
-  <text x="402" y="59" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">valid JSON</text>
-
-  {/* Arrow 4 */}
-  <line x1="448" y1="50" x2="468" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
-
-  {/* Step 5: Processor parses */}
-  <rect x="472" y="24" width="66" height="52" rx="7" fill="#a7f3d0" stroke="#10b981" strokeWidth="1.5"/>
-  <text x="505" y="44" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">Processor</text>
-  <text x="505" y="57" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#10b981">JSON.parse</text>
-
-  {/* Arrow 5 (green) */}
-  <line x1="542" y1="50" x2="562" y2="50" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#so-arrow-green)"/>
-
-  {/* Step 6: Result */}
-  <rect x="566" y="30" width="50" height="40" rx="7" fill="#d1fae5" stroke="#10b981" strokeWidth="1.5"/>
-  <text x="591" y="47" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">typed</text>
-  <text x="591" y="59" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#10b981">dict / obj</text>
-
-  {/* Bottom legend */}
-  <text x="310" y="96" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#9ca3af" fontStyle="italic">Your YAML schema → OpenAI response_format → typed result, fully automatic</text>
-</svg>
+    style A fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    style B fill:#bfdbfe,stroke:#1d4ed8,color:#1e3a8a
+    style C fill:#fef3c7,stroke:#f59e0b,color:#92400e
+    style D fill:#e5e7eb,stroke:#6b7280,color:#374151
+    style E fill:#a7f3d0,stroke:#10b981,color:#065f46
+    style F fill:#d1fae5,stroke:#10b981,color:#065f46
+```
 
 ---
 

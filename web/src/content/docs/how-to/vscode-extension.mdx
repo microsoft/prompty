@@ -1,8 +1,8 @@
 ---
 title: VS Code Extension
 description: >
-  Install and use the Prompty VS Code extension for syntax highlighting,
-  frontmatter autocomplete, prompt validation, run/debug, and trace viewing.
+  The complete guide to the Prompty VS Code extension — connection management,
+  prompt editing, execution, live preview, chat mode, and the trace viewer.
 sidebar:
   order: 10
 ---
@@ -11,9 +11,36 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Overview
 
-The **Prompty VS Code extension** makes working with `.prompty` files a
-first-class experience — syntax highlighting, schema-aware autocomplete,
-one-click execution, and an integrated trace viewer.
+The **Prompty VS Code extension** is the primary tool for authoring, running,
+and debugging `.prompty` files. It includes a built-in TypeScript runtime — no
+Python installation is required.
+
+The core workflow is **edit → run → trace → iterate**:
+
+```mermaid
+graph LR
+    A["✏️ Edit .prompty"] --> B["▶ Run (F5)"]
+    B --> C["📊 Trace Viewer"]
+    C --> A
+    style A fill:#4a9eff,color:#fff
+    style B fill:#2ea043,color:#fff
+    style C fill:#8b5cf6,color:#fff
+```
+
+1. **Edit** your prompt with syntax highlighting, autocomplete, and validation
+2. **Run** it against a configured model connection with one keystroke
+3. **Inspect** the execution trace — messages, tokens, timing, raw API response
+4. **Iterate** — adjust the prompt and run again
+
+### What's in the Extension
+
+| Area | Capabilities |
+|---|---|
+| **Language support** | TextMate grammar, language server (validation, completion, hover, semantic tokens, document symbols) |
+| **Connections** | Manage OpenAI, Anthropic, and Microsoft Foundry connections with secure secret storage |
+| **Execution** | Run prompts, preview rendered output, interactive chat mode for thread-based prompts |
+| **Traces** | `.tracy` file format with a full React-based trace viewer |
+| **Extensibility** | API for other extensions to register providers, executors, and processors |
 
 ---
 
@@ -37,106 +64,314 @@ code --install-extension ms-toolsai.prompty
   [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
 </Aside>
 
----
-
-## Features
-
-### Syntax Highlighting
-
-The extension provides full syntax highlighting for `.prompty` files:
-
-- **Frontmatter** — YAML block between `---` delimiters is highlighted with
-  property-aware coloring for `model`, `inputSchema`, `outputSchema`, `tools`, etc.
-- **Markdown body** — role markers (`system:`, `user:`, `assistant:`) are
-  highlighted distinctly so you can see conversation boundaries at a glance.
-- **Template syntax** — Jinja2 (`{{ }}`, `{% %}`) and Mustache (`{{ }}`)
-  expressions are highlighted within the body.
-
-### Frontmatter Autocomplete
-
-Get IntelliSense suggestions as you type frontmatter properties:
-
-- Top-level keys: `name`, `description`, `model`, `inputSchema`, `outputSchema`,
-  `tools`, `template`, `metadata`
-- Nested keys: `model.id`, `model.provider`, `model.apiType`,
-  `model.connection.kind`, `model.options.temperature`, etc.
-- Enum values: `provider` suggests `openai`, `azure`; `apiType` suggests
-  `chat`, `embedding`, `image`, `agent`; `connection.kind` suggests `key`,
-  `reference`, `remote`, `anonymous`
-
-### Validation
-
-The extension validates your `.prompty` file as you type:
-
-- **Missing required fields** — warns if `model` is missing
-- **Invalid values** — flags unknown `apiType` or `connection.kind` values
-- **Schema errors** — catches malformed `inputSchema` or `outputSchema`
-- **Reference errors** — flags `${env:VAR}` when the variable isn't set
-
-### Run and Debug Prompts
-
-Execute `.prompty` files directly from the editor:
-
-- **Run button** — click the play icon in the editor title bar or right-click
-  the file and select **Run Prompty**
-- **Debug mode** — step through the pipeline stages (render → parse → execute → process)
-  to inspect intermediate values
-- **Input overrides** — when running, the extension uses `default` values from
-  `inputSchema` properties, or prompts you for inputs
-
-### Trace Viewer
-
-After running a prompt, the extension opens an integrated **trace viewer**
-showing the full execution pipeline:
-
-- Template rendering input/output
-- Parsed message list
-- API request parameters
-- Raw API response
-- Processed result
-- Timing for each stage
+After installation, the **Prompty icon** appears in the Activity Bar (left
+sidebar). Click it to open the Prompty Explorer, which contains the
+**Connections** and **Traces** panels. The **status bar** (bottom right) shows
+your current default connection.
 
 ---
 
-## Creating a New `.prompty` File
+## Connection Setup
 
-Use the Command Palette to scaffold a new prompt:
+Connections define how the extension reaches an LLM provider. The extension
+ships with built-in support for three providers:
 
-1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
-2. Type **Prompty: Create**
-3. Select **Prompty: Create New Prompty File**
-4. Choose a template (basic chat, embedding, or blank)
-5. The extension creates the file with the appropriate frontmatter structure
+| Provider | Auth Method | Model Discovery |
+|---|---|---|
+| **OpenAI** | API key | ✅ `models.list()` |
+| **Anthropic** | API key | ✅ `GET /v1/models` |
+| **Microsoft Foundry** | Azure AD (DefaultAzureCredential) | ✅ `GET /deployments` |
 
-Or simply create a file with the `.prompty` extension — the extension
-activates automatically.
+### How Connections are Stored
+
+- **Profiles** are saved in your workspace at `.prompty/connections.json`
+- **Secrets** (API keys) are stored in VS Code's built-in `SecretStorage` — they
+  never appear in the JSON file
+
+```json title=".prompty/connections.json"
+{
+  "version": 1,
+  "connections": [
+    {
+      "id": "openai-a1b2c3",
+      "name": "My OpenAI",
+      "providerType": "openai",
+      "authType": "key",
+      "endpoint": "https://api.openai.com/v1",
+      "model": "gpt-4o",
+      "isDefault": true
+    }
+  ]
+}
+```
+
+<Aside type="caution">
+  Add `.prompty/` to your `.gitignore` if your `connections.json` contains
+  endpoints or other values you don't want in source control. API keys are
+  always safe — they're stored in VS Code's SecretStorage, not the JSON file.
+</Aside>
+
+### Adding a Connection
+
+1. In the Prompty Explorer sidebar, click the **+** button on the **Connections** panel
+   — or run **Prompty: Add Connection** from the Command Palette
+2. Pick a provider from the QuickPick menu: **OpenAI**, **Anthropic**, or **Microsoft Foundry**
+3. Fill in the fields (varies by provider — see below)
+4. The connection is saved and you're offered to **test it immediately**
+
+### Setting Up OpenAI
+
+<Tabs>
+<TabItem label="Wizard Steps">
+| Step | Field | Required | Default |
+|---|---|---|---|
+| 1 | **Connection name** | ✅ | — |
+| 2 | **API key** | ✅ | — |
+| 3 | **Endpoint** | ❌ | `https://api.openai.com/v1` |
+| 4 | **Model** | ❌ | `gpt-4o` |
+</TabItem>
+<TabItem label="Example">
+```
+Connection name: my-openai
+API key: sk-...
+Endpoint: (leave default)
+Model: gpt-4o-mini
+```
+</TabItem>
+</Tabs>
+
+<Aside type="tip">
+  After adding the connection, expand it in the sidebar to see the **Models**
+  section. The extension calls `models.list()` to discover all available models
+  on your account.
+</Aside>
+
+### Setting Up Anthropic
+
+<Tabs>
+<TabItem label="Wizard Steps">
+| Step | Field | Required | Default |
+|---|---|---|---|
+| 1 | **Connection name** | ✅ | — |
+| 2 | **API key** | ✅ | — |
+| 3 | **Endpoint** | ❌ | `https://api.anthropic.com` |
+| 4 | **Model** | ❌ | `claude-sonnet-4-6` |
+</TabItem>
+<TabItem label="Example">
+```
+Connection name: my-anthropic
+API key: sk-ant-...
+Endpoint: (leave default)
+Model: claude-sonnet-4-6
+```
+</TabItem>
+</Tabs>
+
+### Setting Up Microsoft Foundry
+
+Microsoft Foundry connections use **Azure AD authentication** instead of API
+keys. The extension obtains a bearer token via
+`DefaultAzureCredential`, so you must be logged in to Azure (e.g., via the
+Azure CLI or the VS Code Azure Account extension).
+
+<Tabs>
+<TabItem label="Wizard Steps">
+| Step | Field | Required | Default |
+|---|---|---|---|
+| 1 | **Connection name** | ✅ | — |
+| 2 | **Project endpoint** | ✅ | — |
+| 3 | **Foundry connection name** | ❌ | — |
+| 4 | **Tenant ID** | ❌ | — |
+</TabItem>
+<TabItem label="Example">
+```
+Connection name: my-foundry
+Project endpoint: https://my-project.services.ai.azure.com
+Foundry connection name: (leave blank for default)
+Tenant ID: (leave blank for default)
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  The project endpoint must start with `https://`. Model discovery calls
+  `GET {endpoint}/deployments?api-version=v1` to list deployed models.
+</Aside>
+
+### Testing a Connection
+
+Right-click any connection in the sidebar and select **Test Connection**, or
+click the **plug icon** that appears inline. The extension runs a lightweight
+check for each provider:
+
+| Provider | What the test does | On success |
+|---|---|---|
+| **OpenAI** | Calls `models.list()` | Reports latency |
+| **Anthropic** | Sends a minimal `messages` request | Reports HTTP 200 |
+| **Foundry** | Authenticates with Azure AD, calls deployments endpoint | Reports deployment count and credential source |
+
+### Setting a Default Connection
+
+Right-click a connection and select **Set as Default**, or click the star icon.
+The default connection is set **per provider type** — you can have one default
+OpenAI connection and one default Anthropic connection simultaneously.
+
+When you run a prompt:
+1. If the `.prompty` frontmatter specifies a `model.connection`, that's used
+2. Otherwise, the default connection for the matching provider type is used
+3. If no provider-specific default exists, any available default is used
+
+The status bar at the bottom right shows your current default:
+`$(plug) My OpenAI` — click it to change the default.
+
+### Model Discovery
+
+For providers that support it, expand a connection in the sidebar to see a
+**Models** section listing all available models. Click the **refresh** button to
+re-fetch. The discovered model IDs can be used in your `.prompty` file's
+`model.id` field, and the language server offers them as completions.
 
 ---
 
-## Running Prompts from the Editor
+## Writing Prompts
 
-### Quick Run
+### Language Support
 
-1. Open a `.prompty` file
-2. Click the **▶ Run** button in the editor toolbar (top right)
-3. The extension renders the template, calls the LLM, and shows the result
-   in an output panel
+The extension registers `.prompty` as a first-class language with rich editor
+features:
 
-### With Custom Inputs
+**Syntax highlighting** via a TextMate grammar with embedded language support:
+- **YAML frontmatter** between `---` delimiters
+- **Jinja2 template syntax** — `{{ variables }}`, `{% blocks %}`, `{# comments #}`
+- **Role markers** — `system:`, `user:`, `assistant:`, `developer:`, `tool:`, `function:`
+  are highlighted distinctly so conversation structure is visible at a glance
 
-1. Right-click in the editor → **Run Prompty with Inputs**
-2. A dialog appears for each input defined in `inputSchema`
-3. Enter your values and click **Run**
+**Language server** providing real-time feedback:
+- **Validation** — YAML syntax errors, frontmatter schema violations, and
+  connection/provider validation are reported as diagnostics
+- **Completions** — IntelliSense for frontmatter properties, enum values
+  (`provider`, `apiType`, `connection.kind`, `format.kind`, `parser.kind`),
+  model IDs from discovered models, and `{{ input }}` variable references in the body
+- **Hover** — hover over `{{ variable }}` in the body to see its type, description,
+  default, and example values from `inputSchema`; hover over enum values in
+  frontmatter for quick documentation
+- **Semantic tokens** — frontmatter delimiters, role names, template variables,
+  `${env:...}` references, thread markers, and key-value pairs get semantic
+  coloring beyond what the TextMate grammar provides
+- **Document symbols** — the Outline panel shows frontmatter sections and role
+  blocks for quick navigation
+
+### Creating a New File
+
+Use the Command Palette (`Ctrl+Shift+P`) and run **Prompty: New Prompty** to
+scaffold a new `.prompty` file. You can also right-click in the Explorer sidebar
+and select **New Prompty**.
+
+Or create any file with a `.prompty` extension — the extension activates
+automatically when it detects `.prompty` files in the workspace.
+
+### File Structure
+
+A `.prompty` file has two parts:
+
+```prompty
+---
+# YAML frontmatter — model, inputs, tools, template config
+name: my-prompt
+model:
+  id: gpt-4o
+inputSchema:
+  properties:
+    name:
+      kind: string
+      default: World
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+Hello, {{ name }}!
+```
+
+See the [file format reference](/core-concepts/file-format/) for the full
+specification of frontmatter properties.
+
+---
+
+## Running and Previewing
+
+### Running a Prompt
+
+Press **F5** with a `.prompty` file open — or click the **▶ play button** in the
+editor title bar. The extension:
+
+```mermaid
+sequenceDiagram
+    participant Editor
+    participant Runtime
+    participant Provider
+    participant Trace
+
+    Editor->>Runtime: Load .prompty + .env
+    Runtime->>Runtime: Bridge connections
+    Runtime->>Runtime: Render template with sample inputs
+    Runtime->>Runtime: Parse role markers → messages
+    Runtime->>Provider: Send to LLM
+    Provider-->>Runtime: Response
+    Runtime->>Trace: Write .tracy to .runs/
+    Trace-->>Editor: Open trace viewer
+```
+
+1. Loads `.env` files automatically (searching from the file's directory up to
+   the workspace root)
+2. Bridges sidebar connections into the built-in TypeScript runtime — injecting
+   API keys, endpoints, and credentials as needed
+3. Renders the template using `default` and `example` values from `inputSchema`
+4. Parses role markers into a message list
+5. Sends the messages to the LLM via the configured connection
+6. Writes a `.tracy` trace file to the `.runs/` folder in your workspace
+7. Opens the trace viewer so you can inspect the result
+
+<Aside type="tip">
+  If the prompt has an input with `kind: thread`, running it opens
+  **chat mode** instead of a single execution. See the
+  [Chat Mode](#chat-mode) section below.
+</Aside>
+
+### Live Preview
+
+Click the **preview icon** (split-pane icon) in the editor title bar — or run
+**Prompty: Preview** from the Command Palette — to open a live preview panel
+beside your editor.
+
+The preview panel shows:
+- **Model info** — which model and provider the prompt targets
+- **Input summary** — tags showing the sample values that will be used
+- **Rendered messages** — the fully rendered conversation with role-colored
+  blocks and Markdown formatting
+
+The preview **updates live** as you type. It runs `load()` + `prepare()` only —
+no LLM call is made, so it's free and instant. Inputs with `kind: thread` are
+skipped in preview mode.
+
+If rendering fails (e.g., a Jinja2 syntax error), the preview falls back to
+showing the raw instructions.
 
 ### Environment Variables
 
-The extension loads `.env` files from your workspace root automatically,
-just like the Python runtime. Make sure your API keys are configured:
+The extension loads `.env` files automatically when running or previewing
+prompts. You can use `${env:VAR_NAME}` references in your frontmatter, and
+they'll be resolved at load time.
 
 ```bash title=".env"
 OPENAI_API_KEY=sk-your-key-here
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-azure-key
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+AZURE_AI_PROJECT_ENDPOINT=https://my-project.services.ai.azure.com
 ```
 
 <Aside type="caution">
@@ -144,56 +379,135 @@ AZURE_OPENAI_API_KEY=your-azure-key
   `.gitignore` file.
 </Aside>
 
+You can also set a custom `.env` file path via the `prompty.envFilePath`
+setting if your env file isn't in the default location.
+
 ---
 
-## Viewing Traces
+## Chat Mode
 
-After running a prompt, traces are available in two places:
+When a `.prompty` file declares an input with `kind: thread`, pressing **F5**
+opens an **interactive chat webview** instead of running a single execution.
 
-### Inline Trace Panel
-
-The extension shows a collapsible trace panel below the editor with:
-
-- **Render** — the rendered template string
-- **Parse** — the parsed `Message[]` array
-- **Execute** — the API request and response
-- **Process** — the final extracted result
-
-### Trace Files
-
-If you have `PromptyTracer` configured, traces are also saved as JSON files.
-Click **Open Trace File** in the output panel to view the full trace data.
-
-```python
-# Enable file-based tracing in your code
-from prompty import Tracer
-from prompty.tracing.tracer import PromptyTracer
-
-Tracer.add("prompty", PromptyTracer("traces/"))
+```yaml title="Frontmatter with thread input"
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: Hello
+    - name: conversation
+      kind: thread
 ```
 
+The chat interface provides:
+- **Message list** — shows the full conversation history with role-colored bubbles
+- **Text input** — type your message and click **Send** (or press Enter)
+- **Loading indicator** — shows while waiting for the LLM response
+- **Tool call cards** — when the model invokes tools, each call is shown as an
+  expandable card with an inline response
+- **End chat button** — stops the session and saves the complete trace
+
+Each user turn re-runs the prompt with the accumulated conversation history
+passed into the `thread` input. The final `.tracy` file captures the entire
+multi-turn session.
+
+<Aside type="note">
+  Chat mode is activated by declaring a `kind: thread` input in your prompt —
+  it is not controlled by `apiType`. The `apiType` field determines the
+  LLM API to call (`chat`, `embedding`, `image`), while chat mode is a UI
+  feature of the extension.
+</Aside>
+
 ---
 
-## Configuration Settings
+## Trace Viewer
+
+Every prompt execution produces a `.tracy` file in the `.runs/` directory. The
+extension includes a **custom editor** that opens these files in a rich,
+interactive trace viewer built with React.
+
+### Navigating Traces
+
+The **Traces** panel in the Prompty Explorer sidebar lists all `.tracy` files
+in your workspace. You can:
+
+- **Sort by date** (newest first) or **sort by name** using the toolbar buttons
+- **Refresh** the list after new runs
+- **Click** any trace to open it in the trace viewer
+
+### Trace Viewer Layout
+
+The viewer has two main areas:
+
+**Sidebar tree** — a collapsible tree of trace frames showing:
+- Frame names (e.g., `load`, `render`, `execute`, `process`)
+- Duration badges
+- Token usage counts
+- Provider icons (OpenAI, Foundry, Anthropic)
+- Nested child frames for complex operations
+
+**Detail panel** — shows information about the selected frame across five tabs:
+
+| Tab | Contents |
+|---|---|
+| **Overview** | Total execution time, token counts (prompt + completion), and expandable input/output inspectors |
+| **Conversation** | Reconstructed message flow for agent loops and chat sessions — shows each turn with role labels |
+| **Input** | The data passed into this pipeline stage |
+| **Output** | The data returned from this pipeline stage |
+| **Raw** | The complete, unprocessed trace data as JSON |
+
+<Aside type="tip">
+  The **Conversation** tab is especially useful for agent loops with tool
+  calling — it shows the full back-and-forth between the model and your tool
+  functions, including each tool call's arguments and return value.
+</Aside>
+
+---
+
+## Extension API
+
+The Prompty extension exposes an API that other VS Code extensions can use
+to integrate with the Prompty ecosystem. Access it from the extension's
+`activate()` return value:
+
+```typescript
+const promptyExt = vscode.extensions.getExtension('ms-toolsai.prompty');
+const api = await promptyExt?.activate();
+```
+
+### Available Methods
+
+| Method | Description |
+|---|---|
+| `registerConnectionProvider(provider)` | Register a custom connection provider (new provider type beyond OpenAI/Anthropic/Foundry) |
+| `registerExecutor(key, executor)` | Register a custom executor for a provider key |
+| `registerProcessor(key, processor)` | Register a custom processor for a provider key |
+| `getConnections()` | Query all configured connections |
+| `onConnectionsChanged(listener)` | Listen for connection add/edit/delete/default changes |
+
+This allows extension authors to add support for additional LLM providers
+without modifying the Prompty extension itself.
+
+---
+
+## Settings Reference
 
 Open VS Code settings (`Ctrl+,`) and search for **Prompty** to configure:
 
-| Setting | Description | Default |
-|---|---|---|
-| `prompty.defaultProvider` | Default model provider for new files | `openai` |
-| `prompty.defaultModel` | Default model ID for new files | `gpt-4o-mini` |
-| `prompty.traceOutput` | Where to show traces | `panel` |
-| `prompty.envFile` | Path to `.env` file | `.env` |
-| `prompty.templateEngine` | Default template engine | `jinja2` |
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `prompty.currentModelConfiguration` | `string` | `"default"` | The active model configuration name |
+| `prompty.showV1DeprecationWarnings` | `boolean` | `true` | Show deprecation warnings when loading `.prompty` files that use the legacy v1 format |
+| `prompty.envFilePath` | `string` | `""` | Custom path to a `.env` file. If empty, the extension searches the workspace hierarchy |
+| `promptyLanguageServer.trace.server` | `string` | `"off"` | Trace level for communication between VS Code and the Prompty language server. Values: `off`, `messages`, `verbose` |
 
 Example `settings.json`:
 
 ```json
 {
-  "prompty.defaultProvider": "azure",
-  "prompty.defaultModel": "gpt-4o",
-  "prompty.traceOutput": "panel",
-  "prompty.envFile": ".env"
+  "prompty.showV1DeprecationWarnings": false,
+  "prompty.envFilePath": ".env.local",
+  "promptyLanguageServer.trace.server": "messages"
 }
 ```
 
@@ -201,42 +515,62 @@ Example `settings.json`:
 
 ## Keyboard Shortcuts
 
-| Action | Shortcut |
-|---|---|
-| Run Prompty | `Ctrl+Shift+Enter` |
-| Create New Prompty | `Ctrl+Shift+P` → "Prompty: Create" |
-| Toggle Trace Panel | `Ctrl+Shift+T` |
+| Action | Shortcut | Context |
+|---|---|---|
+| **Run Prompt** | `F5` | When a `.prompty` file is active |
+| **New Prompty** | `Ctrl+Shift+P` → "Prompty: New Prompty" | Any time |
+| **Preview** | `Ctrl+Shift+P` → "Prompty: Preview" | When a `.prompty` file is active |
+| **Add Connection** | `Ctrl+Shift+P` → "Prompty: Add Connection" | Any time |
+
+All commands are available in the Command Palette under the **Prompty** category.
 
 ---
 
 ## Troubleshooting
 
-### "Module not found" when running
+### Connection test fails
 
-Make sure the Prompty Python package is installed in the active Python
-environment. The extension uses the Python interpreter selected in VS Code:
-
-```bash
-pip install prompty[jinja2,openai]
-```
-
-Check your selected interpreter: `Ctrl+Shift+P` → **Python: Select Interpreter**.
+- **OpenAI / Anthropic** — verify your API key is correct and hasn't expired.
+  Re-enter it with **Edit Connection**. Secrets are stored in VS Code's
+  SecretStorage and may need to be refreshed after credential rotation.
+- **Microsoft Foundry** — ensure you're signed in to Azure. Run `az login` in
+  your terminal or sign in via the Azure Account extension. Check that your
+  endpoint is correct and starts with `https://`.
 
 ### No autocomplete in frontmatter
 
-Reload the window: `Ctrl+Shift+P` → **Developer: Reload Window**. The
-extension registers the YAML schema on activation.
+Reload the window: `Ctrl+Shift+P` → **Developer: Reload Window**. The language
+server registers on activation and may need a restart after updates.
 
 ### Traces not appearing
 
-Ensure the run completed without errors — check the **Output** panel
-(select **Prompty** from the dropdown) for error messages.
+- Check that the run completed without errors — look in the **Output** panel
+  (select **Prompty** from the channel dropdown) for error messages
+- Traces are saved to `.runs/` in your workspace — verify this directory exists
+  and isn't excluded by your file watcher settings
+- Click **Refresh** in the Traces panel to reload the list
+
+### V1 deprecation warnings
+
+If you see warnings about legacy property names (`model.configuration`,
+`model.parameters`, `inputs`, etc.), your `.prompty` file uses the v1 format.
+See the [migration guide](/core-concepts/file-format/) for how to update to v2.
+You can suppress these warnings with `prompty.showV1DeprecationWarnings: false`.
+
+### Language server not starting
+
+Set `promptyLanguageServer.trace.server` to `"verbose"` and check the
+**Output** panel (channel: **Prompty Language Server**) for startup errors.
+Ensure the extension is fully installed — try uninstalling and reinstalling if
+the issue persists.
 
 ---
 
 ## Further Reading
 
-- [Legacy extension docs](/legacy/guides/extension/) — feature documentation
-  for older versions of the extension
+- [File format reference](/core-concepts/file-format/) — full specification of
+  `.prompty` frontmatter properties
 - [Tracing](/core-concepts/tracing/) — configuring trace backends
 - [Getting started](/getting-started/) — full setup guide
+- [Legacy extension docs](/legacy/guides/extension/) — documentation for the v1
+  extension

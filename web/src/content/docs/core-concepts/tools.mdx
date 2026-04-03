@@ -36,74 +36,23 @@ four tool kinds — backed by AgentSchema types — plus a wildcard catch-all.
 
 ## Tool Types at a Glance
 
-<svg viewBox="0 0 650 340" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '650px', margin: '1.5rem auto', display: 'block' }}>
-  {/* Background */}
-  <rect width="650" height="340" rx="12" fill="#f8fafc" stroke="#e5e7eb" strokeWidth="1.5"/>
+```mermaid
+flowchart TD
+    Tool["**Tool** (base)\nname · kind · description · bindings"]
+    Tool --> FunctionTool["**FunctionTool**\nkind: function\nparameters · strict\n→ local function call"]
+    Tool --> McpTool["**McpTool**\nkind: mcp\nserverName · connection\napprovalMode · allowedTools"]
+    Tool --> OpenApiTool["**OpenApiTool**\nkind: openapi\nconnection · specification\n→ REST API call"]
+    Tool --> CustomTool["**CustomTool**\nkind: * (wildcard)\nconnection · options\n→ provider-specific"]
 
-  {/* Title */}
-  <text x="325" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1e293b">Tool Type Taxonomy</text>
+    Dispatch["Tool.load_kind(data) resolves kind → concrete class\nUnknown kinds automatically become CustomTool"]
 
-  {/* Base — Tool */}
-  <rect x="245" y="48" width="160" height="52" rx="8" fill="#1d4ed8" stroke="#1e40af" strokeWidth="1.5"/>
-  <text x="325" y="70" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="13" fontWeight="600" fill="#fff">Tool (base)</text>
-  <text x="325" y="88" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#93c5fd">name · kind · description · bindings</text>
-
-  {/* Arrow marker definitions */}
-  <defs>
-    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
-    </marker>
-  </defs>
-
-  {/* Arrows from base to each subtype */}
-  <line x1="270" y1="100" x2="85" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
-  <line x1="305" y1="100" x2="245" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
-  <line x1="345" y1="100" x2="405" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
-  <line x1="380" y1="100" x2="565" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
-
-  {/* FunctionTool */}
-  <rect x="10" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="85" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">FunctionTool</text>
-  <text x="85" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: function</text>
-  <text x="85" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">parameters · strict</text>
-  <text x="85" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ local function call</text>
-
-  {/* McpTool */}
-  <rect x="170" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="245" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">McpTool</text>
-  <text x="245" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: mcp</text>
-  <text x="245" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">serverName · connection</text>
-  <text x="245" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">approvalMode · allowedTools</text>
-
-  {/* OpenApiTool */}
-  <rect x="330" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="405" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">OpenApiTool</text>
-  <text x="405" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: openapi</text>
-  <text x="405" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">connection · specification</text>
-  <text x="405" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ REST API call</text>
-
-  {/* CustomTool */}
-  <rect x="490" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="565" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">CustomTool</text>
-  <text x="565" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: * (wildcard)</text>
-  <text x="565" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">connection · options</text>
-  <text x="565" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ provider-specific</text>
-
-  {/* Dispatch note */}
-  <rect x="130" y="255" width="390" height="42" rx="8" fill="#fefce8" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 2"/>
-  <text x="325" y="274" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="500" fill="#92400e">Dispatch: Tool.load_kind(data) resolves kind → concrete class</text>
-  <text x="325" y="288" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#92400e">Unknown kinds automatically become CustomTool</text>
-
-  {/* Legend */}
-  <rect x="175" y="314" width="10" height="10" rx="2" fill="#1d4ed8"/>
-  <text x="191" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Base class</text>
-  <rect x="250" y="314" width="10" height="10" rx="2" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1"/>
-  <text x="266" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Subtypes</text>
-  <rect x="312" y="314" width="10" height="10" rx="2" fill="#f59e0b"/>
-  <text x="328" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Kind label</text>
-  <rect x="380" y="314" width="10" height="10" rx="2" fill="#10b981"/>
-  <text x="396" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Execution target</text>
-</svg>
+    style Tool fill:#1d4ed8,stroke:#1e40af,color:#fff
+    style FunctionTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style McpTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style OpenApiTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style CustomTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style Dispatch fill:#fefce8,stroke:#f59e0b,color:#92400e
+```
 
 ---
 

@@ -18,63 +18,14 @@ Python entry points (or TypeScript imports). This design means you can swap any
 stage without touching the others: use a different template engine, a custom
 parser, or your own LLM provider.
 
-<svg viewBox="0 0 650 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The four pipeline stages: Renderer, Parser, Executor, Processor" style="width:100%;max-width:650px;margin:1.5rem auto;display:block;">
-  <defs>
-    <marker id="arrow1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
-    </marker>
-  </defs>
-
-  {/* Source node */}
-  <rect x="2" y="38" width="68" height="36" rx="6" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1.2"/>
-  <text x="36" y="61" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#374151" fontWeight="600">.prompty</text>
-
-  {/* Arrow 1 */}
-  <line x1="74" y1="56" x2="98" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
-
-  {/* Stage 1 — Renderer */}
-  <rect x="102" y="32" width="96" height="48" rx="8" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="150" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">RENDERER</text>
-  <text x="150" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">Stage 1</text>
-
-  {/* Arrow 2 + label */}
-  <line x1="202" y1="56" x2="238" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
-  <text x="220" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">rendered</text>
-  <text x="220" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">string</text>
-
-  {/* Stage 2 — Parser */}
-  <rect x="242" y="32" width="86" height="48" rx="8" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="285" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">PARSER</text>
-  <text x="285" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">Stage 2</text>
-
-  {/* Arrow 3 + label */}
-  <line x1="332" y1="56" x2="370" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
-  <text x="351" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">list</text>
-  <text x="351" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">[Message]</text>
-
-  {/* Stage 3 — Executor */}
-  <rect x="374" y="32" width="96" height="48" rx="8" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1.5"/>
-  <text x="422" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="700">EXECUTOR</text>
-  <text x="422" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1d4ed8">Stage 3</text>
-
-  {/* Arrow 4 + label */}
-  <line x1="474" y1="56" x2="512" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
-  <text x="493" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">raw</text>
-  <text x="493" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">response</text>
-
-  {/* Stage 4 — Processor */}
-  <rect x="516" y="32" width="96" height="48" rx="8" fill="#a7f3d0" stroke="#10b981" strokeWidth="1.5"/>
-  <text x="564" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">PROCESSOR</text>
-  <text x="564" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#10b981">Stage 4</text>
-
-  {/* Output label */}
-  <line x1="616" y1="56" x2="644" y2="56" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arrow1)"/>
-  <text x="648" y="50" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">clean</text>
-  <text x="648" y="62" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">result</text>
-
-  {/* Bottom legend */}
-  <text x="325" y="108" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#9ca3af" fontStyle="italic">Each stage is a protocol — swap any implementation without touching the others</text>
-</svg>
+```mermaid
+graph LR
+  A[".prompty File"] -->|"rendered\nstring"| B["🔹 Renderer\n(Stage 1)"]
+  B -->|"rendered\nstring"| C["🔹 Parser\n(Stage 2)"]
+  C -->|"list\n[Message]"| D["🔷 Executor\n(Stage 3)"]
+  D -->|"raw\nresponse"| E["🟢 Processor\n(Stage 4)"]
+  E --> F["✅ Result"]
+```
 
 ---
 
@@ -205,75 +156,28 @@ What "clean" means depends on the response type.
 You don't always need the full pipeline. Prompty provides convenience functions
 that map to specific stage groupings:
 
-<svg viewBox="0 0 650 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How convenience functions map to pipeline stages" style="width:100%;max-width:650px;margin:1.5rem auto;display:block;">
-  <defs>
-    <marker id="arrow2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
-    </marker>
-  </defs>
+```mermaid
+graph LR
+  subgraph render ["render()"]
+    R["Renderer"]
+  end
 
-  {/* Column headers */}
-  <text x="195" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">RENDERER</text>
-  <text x="305" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">PARSER</text>
-  <text x="425" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">EXECUTOR</text>
-  <text x="555" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">PROCESSOR</text>
+  subgraph parse ["parse()"]
+    P["Parser"]
+  end
 
-  {/* Column lines */}
-  <line x1="145" y1="26" x2="145" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
-  <line x1="250" y1="26" x2="250" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
-  <line x1="365" y1="26" x2="365" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
-  <line x1="490" y1="26" x2="490" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
-  <line x1="615" y1="26" x2="615" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+  subgraph prepare ["prepare() — render + parse + thread expansion"]
+    R2["Renderer"] --> P2["Parser"]
+  end
 
-  {/* Row 1: render() */}
-  <text x="12" y="55" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">render()</text>
-  <rect x="150" y="38" width="95" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="197" y="56" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
+  subgraph run ["run() — execute + process"]
+    EX["Executor"] --> PR["Processor"]
+  end
 
-  {/* Row 2: parse() */}
-  <text x="12" y="100" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">parse()</text>
-  <rect x="255" y="83" width="105" height="28" rx="6" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.5"/>
-  <text x="307" y="101" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
-
-  {/* Row 3: prepare() — spans Renderer + Parser */}
-  <text x="12" y="148" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">prepare()</text>
-  <rect x="150" y="128" width="210" height="32" rx="6" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="5,3"/>
-  <rect x="155" y="133" width="90" height="22" rx="5" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1"/>
-  <text x="200" y="148" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
-  <text x="253" y="148" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
-  <rect x="260" y="133" width="90" height="22" rx="5" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1"/>
-  <text x="305" y="148" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
-  <text x="370" y="148" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#f59e0b" fontWeight="600">+ thread expansion</text>
-
-  {/* Row 4: run() — spans Executor + Processor */}
-  <text x="12" y="198" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">run()</text>
-  <rect x="370" y="178" width="240" height="32" rx="6" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="5,3"/>
-  <rect x="375" y="183" width="100" height="22" rx="5" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1"/>
-  <text x="425" y="198" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="600">Executor</text>
-  <text x="483" y="198" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
-  <rect x="492" y="183" width="108" height="22" rx="5" fill="#a7f3d0" stroke="#10b981" strokeWidth="1"/>
-  <text x="546" y="198" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="600">Processor</text>
-
-  {/* Row 5: execute() — full pipeline */}
-  <text x="12" y="252" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">execute()</text>
-  <rect x="100" y="232" width="515" height="36" rx="8" fill="none" stroke="#10b981" strokeWidth="2.5"/>
-  <text x="108" y="254" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">load +</text>
-  <rect x="148" y="237" width="80" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1"/>
-  <text x="188" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
-  <text x="236" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
-  <rect x="244" y="237" width="80" height="26" rx="5" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1"/>
-  <text x="284" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
-  <text x="332" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
-  <rect x="340" y="237" width="80" height="26" rx="5" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1"/>
-  <text x="380" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="600">Executor</text>
-  <text x="428" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
-  <rect x="436" y="237" width="84" height="26" rx="5" fill="#a7f3d0" stroke="#10b981" strokeWidth="1"/>
-  <text x="478" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="600">Processor</text>
-  <text x="530" y="254" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">→ result</text>
-
-  {/* Full pipeline label */}
-  <text x="357" y="290" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#10b981" fontStyle="italic">Full pipeline: load → render → parse → execute → process</text>
-</svg>
+  subgraph execute ["execute() — full pipeline: load → render → parse → execute → process → result"]
+    L["Load"] --> R3["Renderer"] --> P3["Parser"] --> EX2["Executor"] --> PR2["Processor"] --> RES["Result"]
+  end
+```
 
 ### Using the convenience functions
 

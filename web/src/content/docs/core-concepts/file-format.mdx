@@ -30,103 +30,46 @@ The loader splits the file at the `---` delimiters, parses the YAML into
 typed AgentSchema objects, and assigns the markdown body to
 `agent.instructions`.
 
-{/* ── Inline SVG Diagram ─────────────────────────────────────── */}
+```mermaid
+flowchart TD
+    subgraph FM["**FRONTMATTER** (YAML between --- delimiters)"]
+        direction LR
+        Identity["**name, description**\nmetadata: authors, tags …"]
+        ModelCfg["**model:**\nid: gpt-4o\nprovider: azure\nconnection + options"]
+        Inputs["**inputSchema:**\nproperties: [...]"]
+        Tools["**tools:** [...]"]
+        Template["**template:**\nformat + parser"]
+    end
 
-<svg
-  viewBox="0 0 620 520"
-  xmlns="http://www.w3.org/2000/svg"
-  role="img"
-  aria-label="Anatomy of a .prompty file: frontmatter on top, markdown body on bottom"
-  style={{ width: '100%', maxWidth: '620px', margin: '2rem auto', display: 'block' }}
->
-  {/* Background */}
-  <rect x="0" y="0" width="620" height="520" rx="12" fill="#f9fafb" stroke="#e5e7eb" strokeWidth="1.5" />
+    subgraph Body["**BODY → instructions** (Markdown below closing ---)"]
+        direction TB
+        System["**system:**\nYou are a helpful assistant."]
+        User["**user:**\n｛｛question｝｝ — template variable"]
+        Assistant["**assistant:**\nLet me help with that."]
+        System --> User --> Assistant
+    end
 
-  {/* Title */}
-  <text x="310" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1d4ed8">
-    Anatomy of a .prompty File
-  </text>
+    FM -- "--- delimiter ---" --> Body
 
-  {/* ── Frontmatter Section ──────────────────────────────────── */}
-  <rect x="30" y="48" width="560" height="218" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5" />
+    Identity -- maps to --> PA1["PromptAgent.name\n.description\n.metadata"]
+    ModelCfg -- maps to --> PA2["PromptAgent.model"]
+    Inputs -- maps to --> PA3["PromptAgent.inputSchema"]
+    Tools -- maps to --> PA4["PromptAgent.tools"]
+    Template -- maps to --> PA5["PromptAgent.template"]
+    Body -- maps to --> PA6["PromptAgent.instructions"]
 
-  {/* Frontmatter label */}
-  <rect x="42" y="56" width="120" height="24" rx="4" fill="#3b82f6" />
-  <text x="102" y="73" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#fff">
-    FRONTMATTER
-  </text>
-
-  {/* --- delimiter top */}
-  <text x="50" y="100" fontFamily="monospace" fontSize="13" fill="#6b7280">---</text>
-
-  {/* model block */}
-  <rect x="50" y="108" width="240" height="64" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />
-  <text x="60" y="126" fontFamily="monospace" fontSize="11" fill="#1d4ed8">model:</text>
-  <text x="72" y="142" fontFamily="monospace" fontSize="11" fill="#6b7280">id: gpt-4o</text>
-  <text x="72" y="158" fontFamily="monospace" fontSize="11" fill="#6b7280">provider: azure</text>
-  <rect x="300" y="116" width="62" height="20" rx="4" fill="#f59e0b" />
-  <text x="331" y="130" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">model</text>
-
-  {/* inputs block */}
-  <rect x="50" y="180" width="240" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />
-  <text x="60" y="198" fontFamily="monospace" fontSize="11" fill="#1d4ed8">inputSchema:</text>
-  <text x="72" y="212" fontFamily="monospace" fontSize="11" fill="#6b7280">properties: [...]</text>
-  <rect x="300" y="188" width="62" height="20" rx="4" fill="#f59e0b" />
-  <text x="331" y="202" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">inputs</text>
-
-  {/* tools + template labels on right */}
-  <rect x="380" y="116" width="56" height="20" rx="4" fill="#f59e0b" />
-  <text x="408" y="130" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">tools</text>
-
-  <rect x="380" y="148" width="76" height="20" rx="4" fill="#f59e0b" />
-  <text x="418" y="162" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">template</text>
-
-  {/* tools / template summary text */}
-  <text x="446" y="130" fontFamily="monospace" fontSize="10" fill="#6b7280">tools: [...]</text>
-  <text x="466" y="162" fontFamily="monospace" fontSize="10" fill="#6b7280">format + parser</text>
-
-  {/* metadata / identity labels */}
-  <rect x="380" y="188" width="80" height="20" rx="4" fill="#f59e0b" />
-  <text x="420" y="202" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">metadata</text>
-  <text x="470" y="202" fontFamily="monospace" fontSize="10" fill="#6b7280">name, desc …</text>
-
-  {/* --- delimiter bottom */}
-  <text x="50" y="254" fontFamily="monospace" fontSize="13" fill="#6b7280">---</text>
-
-  {/* ── Body Section ─────────────────────────────────────────── */}
-  <rect x="30" y="272" width="560" height="230" rx="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
-
-  {/* Body label */}
-  <rect x="42" y="280" width="160" height="24" rx="4" fill="#10b981" />
-  <text x="122" y="297" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#fff">
-    BODY → instructions
-  </text>
-
-  {/* Role marker: system */}
-  <rect x="50" y="314" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
-  <text x="60" y="332" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">system:</text>
-  <text x="60" y="352" fontFamily="monospace" fontSize="11" fill="#6b7280">You are a helpful assistant.</text>
-  <rect x="480" y="318" width="80" height="18" rx="4" fill="#f59e0b" />
-  <text x="520" y="331" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">role marker</text>
-
-  {/* Role marker: user */}
-  <rect x="50" y="372" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
-  <text x="60" y="390" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">user:</text>
-  <text x="60" y="410" fontFamily="monospace" fontSize="11" fill="#6b7280">{"{{question}}"}</text>
-  <rect x="440" y="394" width="120" height="18" rx="4" fill="#f59e0b" />
-  <text x="500" y="407" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">template variable</text>
-
-  {/* Role marker: assistant */}
-  <rect x="50" y="430" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
-  <text x="60" y="448" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">assistant:</text>
-  <text x="60" y="468" fontFamily="monospace" fontSize="11" fill="#6b7280">Let me help with that.</text>
-  <rect x="480" y="434" width="80" height="18" rx="4" fill="#f59e0b" />
-  <text x="520" y="447" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">role marker</text>
-
-  {/* Connecting arrow between sections */}
-  <line x1="310" y1="266" x2="310" y2="272" stroke="#6b7280" strokeWidth="1.5" />
-  <polygon points="305,272 310,280 315,272" fill="#6b7280" />
-</svg>
+    style FM fill:#eff6ff,stroke:#3b82f6,color:#1e293b
+    style Body fill:#ecfdf5,stroke:#10b981,color:#1e293b
+    style System fill:#d1fae5,stroke:#10b981,color:#1d4ed8
+    style User fill:#d1fae5,stroke:#10b981,color:#1d4ed8
+    style Assistant fill:#d1fae5,stroke:#10b981,color:#1d4ed8
+    style PA1 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style PA2 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style PA3 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style PA4 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style PA5 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style PA6 fill:#fefce8,stroke:#f59e0b,color:#92400e
+```
 
 ## Frontmatter Properties
 

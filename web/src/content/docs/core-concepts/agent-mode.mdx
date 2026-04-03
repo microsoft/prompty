@@ -22,102 +22,34 @@ This lets you build agents that can query databases, call APIs, search files, or
 perform any action you expose as a Python function — all driven by the LLM's
 reasoning.
 
-<svg viewBox="0 0 650 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agent loop state machine: Send messages to LLM, receive response, check for tool calls, execute tools or return final response, with error paths" style="width:100%;max-width:650px;margin:2rem auto;display:block;">
-  <defs>
-    <marker id="agentArrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
-    </marker>
-    <marker id="agentArrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#3b82f6"/>
-    </marker>
-    <marker id="agentArrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#10b981"/>
-    </marker>
-    <marker id="agentArrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#ef4444"/>
-    </marker>
-  </defs>
+```mermaid
+flowchart TD
+    A["Send Messages to LLM"] --> B["Receive Response"]
+    B --> C{"has tool_calls?\n(finish_reason)"}
+    C -- Yes --> D["Execute Tool Functions"]
+    D --> E["Append Tool Results"]
+    E -.-> A
+    C -- No --> F["Return Final Response"]
 
-  {/* ── Main flow ── */}
+    G["**Error Paths**"] ~~~ H
+    H["Bad JSON in tool args"] --> I["Send error string to LLM"]
+    J["Tool function throws"] --> K["Send error string to LLM"]
+    L["Max iterations exceeded"] --> M["Raise ValueError"]
 
-  {/* 1. Send Messages to LLM */}
-  <rect x="200" y="20" width="220" height="44" rx="10" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.5"/>
-  <text x="310" y="47" textAnchor="middle" fontSize="13" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Send Messages to LLM</text>
-
-  {/* Arrow down */}
-  <line x1="310" y1="64" x2="310" y2="100" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#agentArrow)"/>
-
-  {/* 2. Receive Response */}
-  <rect x="210" y="100" width="200" height="44" rx="10" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1.5"/>
-  <text x="310" y="127" textAnchor="middle" fontSize="13" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Receive Response</text>
-
-  {/* Arrow down to diamond */}
-  <line x1="310" y1="144" x2="310" y2="182" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#agentArrow)"/>
-
-  {/* 3. Decision diamond — has tool_calls? */}
-  <polygon points="310,182 410,222 310,262 210,222" fill="#f59e0b" stroke="#d97706" strokeWidth="1.5"/>
-  <text x="310" y="219" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="700">has tool_calls?</text>
-  <text x="310" y="232" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="400">(finish_reason)</text>
-
-  {/* ── YES path (left side, loops back up) ── */}
-  <text x="198" y="216" textAnchor="end" fontSize="11" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">Yes</text>
-
-  {/* Arrow left from diamond */}
-  <line x1="210" y1="222" x2="160" y2="222" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#agentArrowGreen)"/>
-
-  {/* 4. Execute Tool Functions */}
-  <rect x="30" y="200" width="130" height="44" rx="10" fill="#10b981" stroke="#059669" strokeWidth="1.5"/>
-  <text x="95" y="220" textAnchor="middle" fontSize="11.5" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Execute Tool</text>
-  <text x="95" y="234" textAnchor="middle" fontSize="11.5" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Functions</text>
-
-  {/* Arrow down from Execute */}
-  <line x1="95" y1="244" x2="95" y2="280" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#agentArrowGreen)"/>
-
-  {/* 5. Append Tool Results */}
-  <rect x="30" y="280" width="130" height="44" rx="10" fill="#10b981" stroke="#059669" strokeWidth="1.5"/>
-  <text x="95" y="300" textAnchor="middle" fontSize="11.5" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Append Tool</text>
-  <text x="95" y="314" textAnchor="middle" fontSize="11.5" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Results</text>
-
-  {/* Loop-back arrow: up from Append, then right to Send Messages */}
-  <path d="M95,280 L95,270 Q95,260 85,260 L30,260 Q15,260 15,245 L15,42 Q15,30 30,30 L200,30" fill="none" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#agentArrowGreen)" strokeDasharray="5,3"/>
-
-  {/* ── NO path (right, final response) ── */}
-  <text x="422" y="216" textAnchor="start" fontSize="11" fontFamily="system-ui,sans-serif" fill="#3b82f6" fontWeight="600">No</text>
-
-  {/* Arrow right from diamond */}
-  <line x1="410" y1="222" x2="460" y2="222" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#agentArrowBlue)"/>
-
-  {/* 6. Return Final Response */}
-  <rect x="460" y="200" width="160" height="44" rx="10" fill="#1d4ed8" stroke="#1e3a8a" strokeWidth="1.5"/>
-  <text x="540" y="227" textAnchor="middle" fontSize="13" fontFamily="system-ui,sans-serif" fill="#fff" fontWeight="600">Return Final Response</text>
-
-  {/* ── Error paths ── */}
-
-  {/* Separator label */}
-  <text x="325" y="370" textAnchor="middle" fontSize="12" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600" fontStyle="italic">Error Paths</text>
-  <line x1="80" y1="378" x2="570" y2="378" stroke="#e5e7eb" strokeWidth="1"/>
-
-  {/* Bad JSON → send error to LLM */}
-  <rect x="30" y="400" width="155" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="107" y="424" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Bad JSON in tool args</text>
-  <line x1="185" y1="420" x2="240" y2="420" stroke="#ef4444" strokeWidth="1.2" markerEnd="url(#agentArrowRed)"/>
-  <rect x="240" y="400" width="170" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="325" y="424" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Send error string to LLM</text>
-
-  {/* Tool exception → send error to LLM */}
-  <rect x="30" y="452" width="155" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="107" y="476" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Tool function throws</text>
-  <line x1="185" y1="472" x2="240" y2="472" stroke="#ef4444" strokeWidth="1.2" markerEnd="url(#agentArrowRed)"/>
-  <rect x="240" y="452" width="170" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="325" y="476" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Send error string to LLM</text>
-
-  {/* Max iterations → raise ValueError */}
-  <rect x="30" y="504" width="155" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="107" y="528" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Max iterations exceeded</text>
-  <line x1="185" y1="524" x2="240" y2="524" stroke="#ef4444" strokeWidth="1.2" markerEnd="url(#agentArrowRed)"/>
-  <rect x="240" y="504" width="170" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="1.2"/>
-  <text x="325" y="528" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#ef4444" fontWeight="600">Raise ValueError</text>
-</svg>
+    style A fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style B fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style C fill:#f59e0b,stroke:#d97706,color:#fff
+    style D fill:#10b981,stroke:#059669,color:#fff
+    style E fill:#10b981,stroke:#059669,color:#fff
+    style F fill:#1d4ed8,stroke:#1e3a8a,color:#fff
+    style G fill:none,stroke:none,color:#6b7280
+    style H fill:#fef2f2,stroke:#ef4444,color:#ef4444
+    style I fill:#fef2f2,stroke:#ef4444,color:#ef4444
+    style J fill:#fef2f2,stroke:#ef4444,color:#ef4444
+    style K fill:#fef2f2,stroke:#ef4444,color:#ef4444
+    style L fill:#fef2f2,stroke:#ef4444,color:#ef4444
+    style M fill:#fef2f2,stroke:#ef4444,color:#ef4444
+```
 
 ## Basic Usage
 
@@ -174,7 +106,7 @@ description: An agent that can check weather and time
 model:
   id: gpt-4o
   provider: openai
-  apiType: agent
+  apiType: chat
   connection:
     kind: key
     endpoint: ${env:OPENAI_API_ENDPOINT:https://api.openai.com/v1}
@@ -222,10 +154,12 @@ user:
 ```
 
 <Aside type="note">
-  Setting `apiType: agent` tells the executor to use the tool-calling loop
-  instead of a single chat completion. If you use `apiType: chat`, tools in the
-  frontmatter are sent to the LLM but Prompty will **not** automatically execute
-  them — you receive the raw `tool_calls` in the response.
+  The `.prompty` file uses `apiType: chat` — it's a normal chat prompt that
+  happens to declare tools. Agent behavior is activated by your calling code:
+  use `execute_agent()` (Python) or `executeAgent()` (TypeScript) to enable the
+  automatic tool-calling loop. If you use `execute()` instead, tools are sent to
+  the LLM but Prompty will **not** automatically execute them — you receive the
+  raw `tool_calls` in the response.
 </Aside>
 
 ## Async Agent Mode
