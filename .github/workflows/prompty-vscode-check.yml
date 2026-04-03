@@ -26,11 +26,6 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: Create tag
-        run: |
-          echo "TAG=1.$(TZ='America/Los_Angeles' date +%Y%m%d.9%H%M%S | sed 's/\.0/./g')" >> "$GITHUB_ENV"
-          echo "Using tag: $TAG"
-
       - name: Install dependencies
         working-directory: ./vscode/prompty
         run: npm install
@@ -46,12 +41,3 @@ jobs:
       - name: Build
         working-directory: ./vscode/prompty
         run: npm run build
-
-      - name: Build VSIX
-        working-directory: ./vscode/prompty
-        run: npm run package-pre -- $TAG
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: vscode-vsix
-          path: ./vscode/prompty/*.vsix
