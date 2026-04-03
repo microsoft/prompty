@@ -32,20 +32,20 @@ typed AgentSchema objects, and assigns the markdown body to
 
 ```mermaid
 flowchart TD
-    subgraph FM["**FRONTMATTER** (YAML between --- delimiters)"]
+    subgraph FM["FRONTMATTER (YAML between --- delimiters)"]
         direction LR
-        Identity["**name, description**\nmetadata: authors, tags …"]
-        ModelCfg["**model:**\nid: gpt-4o\nprovider: azure\nconnection + options"]
-        Inputs["**inputSchema:**\nproperties: [...]"]
-        Tools["**tools:** [...]"]
-        Template["**template:**\nformat + parser"]
+        Identity["name, description\nmetadata: authors, tags …"]
+        ModelCfg["model:\nid: gpt-4o\nprovider: azure\nconnection + options"]
+        Inputs["inputSchema:\nproperties: [...]"]
+        Tools["tools: [...]"]
+        Template["template:\nformat + parser"]
     end
 
-    subgraph Body["**BODY → instructions** (Markdown below closing ---)"]
+    subgraph Body["BODY → instructions (Markdown below closing ---)"]
         direction TB
-        System["**system:**\nYou are a helpful assistant."]
-        User["**user:**\n｛｛question｝｝ — template variable"]
-        Assistant["**assistant:**\nLet me help with that."]
+        System["system:\nYou are a helpful assistant."]
+        User["user:\n｛｛question｝｝ — template variable"]
+        Assistant["assistant:\nLet me help with that."]
         System --> User --> Assistant
     end
 
@@ -206,7 +206,21 @@ A list of tool definitions the model can call:
 
 ### Template
 
-Configures the rendering engine and the message parser:
+Configures the rendering engine and the message parser.
+
+**Shorthand (recommended)** — just name the template engine. The parser
+defaults to `prompty`:
+
+```yaml
+template: jinja2    # expands to {format: {kind: "jinja2"}, parser: {kind: "prompty"}}
+```
+
+```yaml
+template: mustache  # expands to {format: {kind: "mustache"}, parser: {kind: "prompty"}}
+```
+
+**Full form** — use when you need to set the format and parser
+independently:
 
 ```yaml
 template:
@@ -216,12 +230,15 @@ template:
     kind: prompty    # role-marker parser
 ```
 
-<Aside type="caution" title="No string shorthand for template">
-  In v1, `template: jinja2` was valid. In v2, you must use the
-  structured form shown above. The loader will migrate old v1 files
-  automatically (with a deprecation warning), but new files should
-  always use the full object syntax.
-</Aside>
+String shorthands also work inside the full form — `format: jinja2` is
+equivalent to `format: { kind: jinja2 }`, and `parser: prompty` is
+equivalent to `parser: { kind: prompty }`:
+
+```yaml
+template:
+  format: jinja2
+  parser: prompty
+```
 
 ## The Markdown Body
 

@@ -27,20 +27,20 @@ when you register one or more backends.
 ```mermaid
 flowchart TD
     subgraph Sources["Trace Sources"]
-        Pipeline["**Pipeline Stages**\nload → render → parse → run"]
-        Decorator["**@trace decorator**\nCaptures name, args, return,\nduration, errors"]
-        UserFns["**Your Functions**\n@trace-decorated code"]
+        Pipeline["Pipeline Stages\nload → render → parse → run"]
+        Decorator["@trace decorator\nCaptures name, args, return,\nduration, errors"]
+        UserFns["Your Functions\n@trace-decorated code"]
     end
 
     Pipeline --> Registry
     Decorator --> Registry
     UserFns --> Registry
 
-    Registry["**Tracer Registry**\nTracer.add(name, callback)\nDispatches to all registered backends"]
+    Registry["Tracer Registry\nTracer.add(name, callback)\nDispatches to all registered backends"]
 
-    Registry --> Console["**Console**\nconsole_tracer\nPrints to stdout"]
-    Registry --> JSON["**JSON File**\nPromptyTracer\n.tracy files to disk"]
-    Registry --> OTel["**OpenTelemetry**\notel_tracer()\nSpans → any OTel collector"]
+    Registry --> Console["Console\nconsole_tracer\nPrints to stdout"]
+    Registry --> JSON["JSON File\nPromptyTracer\n.tracy files to disk"]
+    Registry --> OTel["OpenTelemetry\notel_tracer()\nSpans → any OTel collector"]
 
     style Sources fill:none,stroke:#3b82f6,stroke-dasharray:5 5
     style Pipeline fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8

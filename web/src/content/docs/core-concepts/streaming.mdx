@@ -23,8 +23,8 @@ application.
 
 ```mermaid
 flowchart LR
-    A["SDK Stream"] --> B["**PromptyStream**\naccumulates chunks\ntraces on exhaust"]
-    B --> C["**Processor**\nextracts delta.content\nyields text chunks"]
+    A["SDK Stream"] --> B["PromptyStream\naccumulates chunks\ntraces on exhaust"]
+    B --> C["Processor\nextracts delta.content\nyields text chunks"]
     C --> D["Application"]
 
     style A fill:#e5e7eb,stroke:#6b7280,color:#374151

@@ -19,11 +19,11 @@ a Python `dict` or JavaScript object — no manual `JSON.parse()` needed.
 
 ```mermaid
 flowchart LR
-    A["**outputSchema**\n(YAML)"] --> B["_output_schema\n_to_wire()\nconversion"]
-    B --> C["**response_format**\njson_schema\n→ sent to LLM"]
+    A["outputSchema\n(YAML)"] --> B["_output_schema\n_to_wire()\nconversion"]
+    B --> C["response_format\njson_schema\n→ sent to LLM"]
     C --> D["LLM response\nvalid JSON"]
-    D --> E["**Processor**\nJSON.parse"]
-    E --> F["**typed**\ndict / obj"]
+    D --> E["Processor\nJSON.parse"]
+    E --> F["Typed\ndict / obj"]
 
     style A fill:#dbeafe,stroke:#3b82f6,color:#1e40af
     style B fill:#bfdbfe,stroke:#1d4ed8,color:#1e3a8a

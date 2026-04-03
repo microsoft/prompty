@@ -31,7 +31,7 @@ flowchart TD
     E -.-> A
     C -- No --> F["Return Final Response"]
 
-    G["**Error Paths**"] ~~~ H
+    G["Error Paths"] ~~~ H
     H["Bad JSON in tool args"] --> I["Send error string to LLM"]
     J["Tool function throws"] --> K["Send error string to LLM"]
     L["Max iterations exceeded"] --> M["Raise ValueError"]
@@ -276,8 +276,11 @@ console.log(result);
 
 Under the hood, the agent loop in the executor follows these steps:
 
-1. **Disable streaming** — agent mode always uses non-streaming requests so the
-   full response (including `tool_calls`) is available immediately.
+1. **Collect the full response** — the agent loop works with both streaming and
+   non-streaming requests. When streaming is enabled, the loop consumes the
+   stream and accumulates tool calls from the streamed chunks. When streaming is
+   off, it reads tool calls directly from the response. Either way, tool calls
+   are fully collected before any are executed.
 
 2. **Call the LLM** — send the current message list plus tool definitions via
    the chat completions API.

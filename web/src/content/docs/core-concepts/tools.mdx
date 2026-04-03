@@ -38,11 +38,11 @@ four tool kinds — backed by AgentSchema types — plus a wildcard catch-all.
 
 ```mermaid
 flowchart TD
-    Tool["**Tool** (base)\nname · kind · description · bindings"]
-    Tool --> FunctionTool["**FunctionTool**\nkind: function\nparameters · strict\n→ local function call"]
-    Tool --> McpTool["**McpTool**\nkind: mcp\nserverName · connection\napprovalMode · allowedTools"]
-    Tool --> OpenApiTool["**OpenApiTool**\nkind: openapi\nconnection · specification\n→ REST API call"]
-    Tool --> CustomTool["**CustomTool**\nkind: * (wildcard)\nconnection · options\n→ provider-specific"]
+    Tool["Tool (base)\nname · kind · description · bindings"]
+    Tool --> FunctionTool["FunctionTool\nkind: function\nparameters · strict\n→ local function call"]
+    Tool --> McpTool["McpTool\nkind: mcp\nserverName · connection\napprovalMode · allowedTools"]
+    Tool --> OpenApiTool["OpenApiTool\nkind: openapi\nconnection · specification\n→ REST API call"]
+    Tool --> CustomTool["CustomTool\nkind: * (wildcard)\nconnection · options\n→ provider-specific"]
 
     Dispatch["Tool.load_kind(data) resolves kind → concrete class\nUnknown kinds automatically become CustomTool"]
 
