@@ -65,16 +65,30 @@ user:
 {{question}}
 ```
 
-### At runtime (Python)
+### At runtime
 
-```python
-from prompty import load
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load
 
-agent = load("chat.prompty")
+    agent = load("chat.prompty")
 
-# Enable streaming by mutating options before execution
-agent.model.options.additionalProperties["stream"] = True
-```
+    # Enable streaming by mutating options before execution
+    agent.model.options.additionalProperties["stream"] = True
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load } from "@prompty/core";
+
+    const agent = load("chat.prompty");
+
+    // Enable streaming by mutating options before execution
+    agent.model.options!.additionalProperties!.stream = true;
+    ```
+  </TabItem>
+</Tabs>
 
 <Aside type="tip">
   The `additionalProperties` dict on `ModelOptions` passes through to the
@@ -86,14 +100,8 @@ agent.model.options.additionalProperties["stream"] = True
 
 ## Consuming Streams
 
-### Python
-
-Use `prompty.run` with **`raw=True`** to get the unprocessed executor
-response (a `PromptyStream`), then pass it to `prompty.process` which returns
-a generator yielding text chunks.
-
 <Tabs>
-  <TabItem label="Sync">
+  <TabItem label="Python">
     ```python
     from prompty import load, run, process
 
@@ -109,7 +117,7 @@ a generator yielding text chunks.
     print()  # newline after stream completes
     ```
   </TabItem>
-  <TabItem label="Async">
+  <TabItem label="Python (async)">
     ```python
     import asyncio
     from prompty import load_async, run_async, process_async
@@ -129,26 +137,24 @@ a generator yielding text chunks.
     asyncio.run(main())
     ```
   </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, run, process } from "@prompty/core";
+
+    const agent = load("chat.prompty");
+    agent.model.options!.additionalProperties!.stream = true;
+
+    // run with raw: true returns the PromptyStream
+    const stream = await run(agent, { question: "Tell me a joke" }, { raw: true });
+
+    // process yields text chunks
+    for await (const chunk of await process(agent, stream)) {
+      process.stdout.write(String(chunk));
+    }
+    console.log();
+    ```
+  </TabItem>
 </Tabs>
-
-Each `chunk` is a **string** — the processor extracts `delta.content` from the
-raw API response objects so you don't need to handle the wire format yourself.
-
-### TypeScript
-
-```typescript
-import { load, run, process } from "prompty";
-
-const agent = await load("chat.prompty");
-agent.model.options.additionalProperties.stream = true;
-
-const stream = await run(agent, { question: "Tell me a joke" }, { raw: true });
-
-for await (const chunk of process(agent, stream)) {
-  process.stdout.write(chunk);
-}
-console.log();
-```
 
 ---
 

@@ -118,47 +118,45 @@ Under the hood, the executor performs three steps when `outputSchema` is present
 
 ---
 
-## Python Example
+## Usage
 
-With structured output, `execute()` returns a parsed dictionary directly:
+With structured output, `execute()` returns a parsed dictionary/object directly:
 
-```python
-from prompty import execute
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
 
-result = execute("weather.prompty", inputs={"city": "Seattle"})
+    result = execute("weather.prompty", inputs={"city": "Seattle"})
 
-# result is already a dict — no JSON.parse needed
-print(result["city"])         # "Seattle"
-print(result["temperature"])  # 62
-print(result["conditions"])   # "Partly cloudy"
-print(type(result))           # <class 'dict'>
-```
+    # result is already a dict — no JSON.parse needed
+    print(result["city"])         # "Seattle"
+    print(result["temperature"])  # 62
+    print(result["conditions"])   # "Partly cloudy"
+    print(type(result))           # <class 'dict'>
+    ```
+  </TabItem>
+  <TabItem label="Python (async)">
+    ```python
+    from prompty import execute_async
 
-The async variant works identically:
+    result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
+    print(result["temperature"])  # 62
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
 
-```python
-from prompty import execute_async
+    const result = await execute("weather.prompty", { city: "Seattle" });
 
-result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
-print(result["temperature"])  # 62
-```
-
----
-
-## TypeScript Example
-
-The same `.prompty` file works with the TypeScript runtime:
-
-```typescript
-import { execute } from "prompty";
-
-const result = await execute("weather.prompty", { city: "Seattle" });
-
-// result is already a parsed object
-console.log(result.city);         // "Seattle"
-console.log(result.temperature);  // 62
-console.log(result.conditions);   // "Partly cloudy"
-```
+    // result is already a parsed object
+    console.log(result.city);         // "Seattle"
+    console.log(result.temperature);  // 62
+    console.log(result.conditions);   // "Partly cloudy"
+    ```
+  </TabItem>
+</Tabs>
 
 ---
 
