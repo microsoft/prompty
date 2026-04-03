@@ -1,12 +1,6 @@
 name: prompty VSCode Extension build and test
 
 on:
-  push:
-    paths:
-      - "vscode/prompty/**"
-    branches:
-      - "main"
-
   workflow_dispatch:
 
 jobs:
