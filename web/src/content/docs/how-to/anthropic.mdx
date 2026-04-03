@@ -1,0 +1,214 @@
+---
+title: Use with Anthropic
+description: >
+  Connect Prompty to the Anthropic API — complete .prompty file, Python and
+  TypeScript code, and tips for model selection.
+sidebar:
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Prerequisites
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    pip install prompty[jinja2,anthropic]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @prompty/core @prompty/anthropic
+    ```
+  </TabItem>
+</Tabs>
+
+You also need an [Anthropic API key](https://console.anthropic.com/settings/keys).
+
+---
+
+## 1. Write the `.prompty` File
+
+Create **`anthropic-chat.prompty`**:
+
+```yaml
+---
+name: anthropic-chat
+description: Chat completion with Anthropic Claude
+model:
+  id: claude-sonnet-4-6
+  provider: anthropic
+  connection:
+    kind: key
+    endpoint: ${env:ANTHROPIC_ENDPOINT:https://api.anthropic.com}
+    apiKey: ${env:ANTHROPIC_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputs:
+  - name: topic
+    kind: string
+    default: the history of computing
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a knowledgeable assistant who gives clear, concise explanations.
+
+user:
+Tell me about {{topic}}.
+```
+
+---
+
+## 2. Set Your API Key
+
+Create a **`.env`** file in the same directory:
+
+```bash title=".env"
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
+<Aside type="caution">
+  Never commit `.env` files to source control. Add `.env` to your `.gitignore`.
+</Aside>
+
+---
+
+## 3. Run It
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    result = prompty.execute(
+        "anthropic-chat.prompty",
+        inputs={"topic": "quantum computing"}
+    )
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+    import "@prompty/anthropic"; // registers the provider
+
+    const result = await execute(
+        "anthropic-chat.prompty",
+        { topic: "quantum computing" }
+    );
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Step-by-Step Execution
+
+If you need more control, use the individual pipeline stages:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    # Load the prompt
+    agent = prompty.load("anthropic-chat.prompty")
+
+    # Render + parse → message list (no LLM call)
+    messages = prompty.prepare(agent, inputs={"topic": "quantum computing"})
+    print(messages)  # inspect before sending
+
+    # Execute + process → final result
+    result = prompty.run(agent, messages)
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, prepare, run } from "@prompty/core";
+    import "@prompty/anthropic";
+
+    const agent = await load("anthropic-chat.prompty");
+    const messages = await prepare(agent, { topic: "quantum computing" });
+    console.log(messages); // inspect before sending
+
+    const result = await run(agent, messages);
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Available Models
+
+Anthropic's Claude model family includes:
+
+| Model | Best for |
+|---|---|
+| `claude-opus-4-0` | Complex reasoning, research, multi-step tasks |
+| `claude-sonnet-4-6` | Balanced performance and speed (recommended default) |
+| `claude-haiku-3-5` | Fast responses, simple tasks, lower cost |
+
+Change the model by updating `model.id` in your `.prompty` file:
+
+```yaml
+model:
+  id: claude-haiku-3-5
+```
+
+<Aside type="tip">
+  In the VS Code extension, add an Anthropic connection and the sidebar will
+  discover all available models on your account automatically.
+</Aside>
+
+---
+
+## Custom Endpoint
+
+If you're using an Anthropic-compatible proxy or a different base URL, set
+the endpoint explicitly:
+
+```yaml
+model:
+  connection:
+    kind: key
+    endpoint: https://my-proxy.example.com
+    apiKey: ${env:ANTHROPIC_API_KEY}
+```
+
+Or use an environment variable:
+
+```yaml
+model:
+  connection:
+    kind: key
+    endpoint: ${env:ANTHROPIC_ENDPOINT}
+    apiKey: ${env:ANTHROPIC_API_KEY}
+```
+
+---
+
+## Key Differences from OpenAI
+
+| Aspect | OpenAI | Anthropic |
+|---|---|---|
+| **Provider** | `provider: openai` | `provider: anthropic` |
+| **Default endpoint** | `https://api.openai.com/v1` | `https://api.anthropic.com` |
+| **Model names** | `gpt-4o`, `gpt-4o-mini` | `claude-sonnet-4-6`, `claude-haiku-3-5` |
+| **API key prefix** | `sk-` | `sk-ant-` |
+| **Responses API** | ✅ Supported | ❌ Not supported |
+| **Image generation** | ✅ DALL-E | ❌ Not available |
+
+<Aside type="note">
+  The Prompty runtime handles all API differences internally — your prompt
+  body and template syntax are identical across providers. Only the
+  `model` section in frontmatter changes.
+</Aside>

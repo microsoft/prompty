@@ -30,6 +30,7 @@ and **Anthropic** — and its plugin architecture makes it easy to add more.
 |---|---|
 | [Use with OpenAI](./openai) | Chat completion using the OpenAI API with API key auth |
 | [Use with Microsoft Foundry](./foundry) | Chat completion using Microsoft Foundry — API key and Azure AD options |
+| [Use with Anthropic](./anthropic) | Chat completion using Anthropic Claude with API key auth |
 | [Agent with Tool Calling](./agent-tool-calling) | An agent that calls your Python/TypeScript functions in a loop |
 | [Structured Output](../core-concepts/structured-output) | Get typed JSON responses matching a schema |
 | [Streaming Responses](../core-concepts/streaming) | Stream tokens as they arrive |
@@ -39,11 +40,10 @@ and **Anthropic** — and its plugin architecture makes it easy to add more.
 | [VS Code Extension](../getting-started/) | Author and test `.prompty` files in VS Code |
 
 <Aside type="note">
-  **Microsoft Foundry** and **Anthropic** providers follow the same patterns shown in the
-  OpenAI guide above. Install the corresponding extra
-  (`prompty[foundry]` or `prompty[anthropic]`), set `provider: foundry` or
-  `provider: anthropic` in your frontmatter, and configure the appropriate connection.
-  See the [Python implementation docs](../implementation/python) for provider details.
+  All three providers follow the same patterns — install the corresponding extra,
+  set the `provider` in your frontmatter, and configure the connection.
+  See the [Python implementation docs](../implementation/python) for details on
+  adding custom providers.
 </Aside>
 
 ---
