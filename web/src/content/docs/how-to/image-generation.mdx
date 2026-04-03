@@ -220,25 +220,25 @@ The result is a URL that expires after a period. To save the image locally:
 ## Provider Support
 
 <Aside type="note">
-  Image generation is currently supported with **OpenAI only**. Azure OpenAI
+  Image generation is currently supported with **OpenAI only**. Microsoft Foundry
   DALL-E support depends on deployment availability in your Azure region.
-  Check the [Azure OpenAI models page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
+  Check the [Azure AI models page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
   for current DALL-E deployment options.
 </Aside>
 
-### Azure OpenAI (if available)
+### Microsoft Foundry (if available)
 
-If your Azure resource has a DALL-E deployment, use the Azure provider:
+If your Foundry resource has a DALL-E deployment, use the Foundry provider:
 
 ```yaml
 model:
   id: ${env:AZURE_OPENAI_IMAGE_DEPLOYMENT}
-  provider: azure
+  provider: foundry
   apiType: image
   connection:
     kind: key
-    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    apiKey: ${env:AZURE_OPENAI_API_KEY}
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
 ```
 
 ---

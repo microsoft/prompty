@@ -19,11 +19,11 @@ how to authenticate.
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:          # ← this section
     kind: key
-    endpoint: https://my-resource.openai.azure.com/
-    apiKey: ${env:AZURE_OPENAI_API_KEY}
+    endpoint: https://my-resource.services.ai.azure.com/api/projects/my-project
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
 ```
 
 Prompty ships six connection types — each backed by a corresponding AgentSchema
@@ -98,12 +98,24 @@ model:
     apiKey: ${env:OPENAI_API_KEY}
 ```
 
-For **Azure OpenAI**, set the endpoint to your Azure resource:
+For **Microsoft Foundry**, set the endpoint to your Foundry project or classic Azure resource:
 
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
+```
+
+You can also use a classic Azure OpenAI endpoint with the Foundry provider:
+
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
   connection:
     kind: key
     endpoint: ${env:AZURE_OPENAI_ENDPOINT}
@@ -138,32 +150,48 @@ custom retry policies, and any authentication method the SDK supports.
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:
     kind: reference
-    name: my-azure-client
+    name: my-foundry-client
 ```
 
 Register the client at application startup:
 
-```python
-from openai import AzureOpenAI
-import prompty
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from openai import AzureOpenAI
+    import prompty
 
-prompty.register_connection("my-azure-client", client=AzureOpenAI(
-    azure_endpoint="https://my-resource.openai.azure.com/",
-    api_key="...",
-))
-```
+    prompty.register_connection("my-foundry-client", client=AzureOpenAI(
+        azure_endpoint="https://my-resource.services.ai.azure.com/api/projects/my-project",
+        api_key="...",
+    ))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { AzureOpenAI } from "openai";
+    import { registerConnection } from "@prompty/core";
+    import "@prompty/foundry";
+
+    registerConnection("my-azure-client", new AzureOpenAI({
+      endpoint: "https://my-resource.openai.azure.com/",
+      apiKey: "...",
+    }));
+    ```
+  </TabItem>
+</Tabs>
 
 The executor looks up `"my-azure-client"` in the connection registry and uses
 the pre-configured SDK client directly — no additional auth logic is needed in
 the `.prompty` file.
 
 <Aside type="note">
-  Because the client is constructed in Python, you have full control over
-  authentication, retries, timeouts, and custom headers — things that can't be
-  expressed in YAML alone.
+  Because the client is constructed in application code, you have full control
+  over authentication, retries, timeouts, and custom headers — things that can't
+  be expressed in YAML alone.
 </Aside>
 
 ---
@@ -214,7 +242,7 @@ serverless and managed-compute endpoints.
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:
     kind: foundry
     endpoint: ${env:FOUNDRY_ENDPOINT}
@@ -285,36 +313,61 @@ flowchart TD
 
 For production workloads you'll typically use `kind: reference` combined with a
 **connection registry** configured at application startup. This keeps secrets
-and complex auth logic in Python — not in YAML.
+and complex auth logic in application code — not in YAML.
 
-```python
-import os
-import prompty
-from openai import AzureOpenAI
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os
+    import prompty
+    from openai import AzureOpenAI
+    from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
-# Build a client with Azure AD token-based auth
-client = AzureOpenAI(
-    azure_endpoint=os.environ["AZURE_ENDPOINT"],
-    azure_ad_token_provider=get_bearer_token_provider(
-        DefaultAzureCredential(),
-        "https://cognitiveservices.azure.com/.default",
-    ),
-)
+    # Build a client with Azure AD token-based auth
+    client = AzureOpenAI(
+        azure_endpoint=os.environ["AZURE_ENDPOINT"],
+        azure_ad_token_provider=get_bearer_token_provider(
+            DefaultAzureCredential(),
+            "https://cognitiveservices.azure.com/.default",
+        ),
+    )
 
-# Register it by name — .prompty files reference this name
-prompty.register_connection("azure-prod", client=client)
-```
+    # Register it by name — .prompty files reference this name
+    prompty.register_connection("foundry-prod", client=client)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { AzureOpenAI } from "openai";
+    import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+    import { registerConnection } from "@prompty/core";
+    import "@prompty/foundry";
+
+    // Build a client with Azure AD token-based auth
+    const credential = new DefaultAzureCredential();
+    const scope = "https://cognitiveservices.azure.com/.default";
+    const azureADTokenProvider = getBearerTokenProvider(credential, scope);
+
+    const client = new AzureOpenAI({
+      endpoint: process.env.AZURE_ENDPOINT!,
+      azureADTokenProvider,
+    });
+
+    // Register it by name — .prompty files reference this name
+    registerConnection("foundry-prod", client);
+    ```
+  </TabItem>
+</Tabs>
 
 Then in your `.prompty` file:
 
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:
     kind: reference
-    name: azure-prod
+    name: foundry-prod
 ```
 
 <Aside type="tip">
@@ -371,7 +424,7 @@ exists alongside the `.prompty` file or in a parent directory.
     model:
       connection:
         kind: reference
-        name: azure-prod
+        name: foundry-prod
     ```
   </TabItem>
   <TabItem label="Microsoft Foundry">
@@ -422,7 +475,6 @@ exists alongside the `.prompty` file or in a parent directory.
 | Local dev with API key        | `key`           | Simplest setup, env-var-based secrets     |
 | Anthropic (Claude)            | `key`           | API key auth with `provider: anthropic`   |
 | Production with Azure AD      | `reference`     | Full SDK control, managed identity        |
-| Microsoft Foundry deployments  | `foundry`       | Native Foundry service integration        |
-| Self-hosted (Ollama, vLLM)    | `anonymous`     | No auth needed for local endpoints        |
+| Microsoft Foundry deployments  | `foundry`       | Native Foundry service integration        || Self-hosted (Ollama, vLLM)    | `anonymous`     | No auth needed for local endpoints        |
 | OAuth 2.0 services            | `oauth`         | Client credentials token flow             |
 | Remote gateway / proxy        | `remote`        | Named endpoint reference                  |

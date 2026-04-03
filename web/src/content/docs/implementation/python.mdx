@@ -28,7 +28,7 @@ uv pip install prompty[jinja2,openai]
 | `jinja2` | `jinja2` | Jinja2 template rendering |
 | `mustache` | `chevron` | Mustache template rendering |
 | `openai` | `openai` | OpenAI provider |
-| `azure` | `openai`, `azure-identity` | Azure OpenAI provider |
+| `azure` | `openai`, `azure-identity` | Azure OpenAI provider (deprecated alias for `foundry`) |
 | `anthropic` | `anthropic` | Anthropic provider |
 | `foundry` | `azure-ai-foundry`, `azure-identity` | Microsoft Foundry provider |
 | `otel` | `opentelemetry-api` | OpenTelemetry tracing |
@@ -158,7 +158,7 @@ def my_pipeline(query: str) -> str:
 | Provider | Registration Key | SDK | Extras |
 |----------|-----------------|-----|--------|
 | OpenAI | `openai` | `openai` | `prompty[openai]` |
-| Azure OpenAI | `azure` | `openai` + `azure-identity` | `prompty[azure]` |
+| Azure OpenAI (deprecated) | `azure` | `openai` + `azure-identity` | `prompty[azure]` |
 | Anthropic | `anthropic` | `anthropic` | `prompty[anthropic]` |
 | Microsoft Foundry | `foundry` | `azure-ai-foundry` + `azure-identity` | `prompty[foundry]` |
 

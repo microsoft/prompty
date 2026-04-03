@@ -161,21 +161,21 @@ template:
 
 ---
 
-## Azure OpenAI Embeddings
+## Microsoft Foundry Embeddings
 
-Switch to Azure by changing the provider and connection:
+Switch to Microsoft Foundry by changing the provider and connection:
 
-```yaml title="embed-azure.prompty"
+```yaml title="embed-foundry.prompty"
 ---
-name: azure-embedder
+name: foundry-embedder
 model:
   id: ${env:AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
-  provider: azure
+  provider: foundry
   apiType: embedding
   connection:
     kind: key
-    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    apiKey: ${env:AZURE_OPENAI_API_KEY}
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
 inputSchema:
   properties:
     - name: text
@@ -192,7 +192,7 @@ template:
 The code is identical — only the `.prompty` file changes:
 
 ```python
-vector = execute("embed-azure.prompty", inputs={"text": "Hello from Azure"})
+vector = execute("embed-foundry.prompty", inputs={"text": "Hello from Foundry"})
 ```
 
 ---
@@ -259,7 +259,7 @@ answer = execute("rag-chat.prompty", inputs={"question": query, "context": conte
 |---|---|---|
 | `text-embedding-3-small` | 1536 | OpenAI |
 | `text-embedding-3-large` | 3072 | OpenAI |
-| `text-embedding-ada-002` | 1536 | OpenAI / Azure |
+| `text-embedding-ada-002` | 1536 | OpenAI / Microsoft Foundry |
 
 Set the model in `model.id` in your `.prompty` file. For Azure, use your
 deployment name as the `model.id`.

@@ -44,7 +44,7 @@ you need:
 | `jinja2` | Jinja2 renderer |
 | `mustache` | Mustache renderer |
 | `openai` | OpenAI provider |
-| `azure` | Azure OpenAI + identity |
+| `azure` | Azure OpenAI + identity (deprecated alias for `foundry`) |
 | `otel` | OpenTelemetry tracing |
 | `all` | Everything above |
 
@@ -126,7 +126,7 @@ model:
 # v2
 model:
   apiType: chat
-  provider: azure
+  provider: foundry
   connection:
     kind: key
     endpoint: ${env:ENDPOINT}
@@ -176,7 +176,7 @@ template:
 |-------------|-------------|
 | `model.api` | `model.apiType` |
 | `model.configuration` | `model.connection` |
-| `model.configuration.type` | `model.provider` |
+| `model.configuration.type` | `model.provider` (`azure_openai` → `foundry`, `openai` → `openai`) |
 | `model.parameters` | `model.options` |
 | `model.parameters.max_tokens` | `model.options.maxOutputTokens` |
 | `model.parameters.top_p` | `model.options.topP` |

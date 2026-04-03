@@ -93,21 +93,48 @@ model:
 
 ---
 
-## Azure OpenAI
+## Microsoft Foundry
 
-Azure-hosted OpenAI models accessed through
-[Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/).
+Connect to models deployed through
+[Microsoft Foundry](https://ai.azure.com/) (Azure AI Services). This provider
+covers both **Foundry project endpoints** (the recommended approach) and
+**classic Azure OpenAI endpoints** (legacy).
 
-**Provider key:** `azure`
+**Provider key:** `foundry`
 
 **Supported API types:** `chat`, `responses`, `embedding`, `image`, `agent` (tool-calling loop)
 
 <Tabs>
-<TabItem label="API Key">
+<TabItem label="Project Endpoint (API Key)">
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
+  options:
+    temperature: 0.7
+```
+</TabItem>
+<TabItem label="Project Endpoint (Azure AD)">
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: foundry
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+```
+</TabItem>
+<TabItem label="Classic Endpoint (API Key)">
 ```yaml
 model:
   id: gpt-4o                # your deployment name
-  provider: azure
+  provider: foundry
   apiType: chat
   connection:
     kind: key
@@ -121,79 +148,42 @@ model:
 ```yaml
 model:
   id: text-embedding-3-small  # your deployment name
-  provider: azure
-  apiType: embedding
-  connection:
-    kind: key
-    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    apiKey: ${env:AZURE_OPENAI_API_KEY}
-```
-</TabItem>
-</Tabs>
-
-<Aside type="note">
-  The `model.id` field maps to your **Azure deployment name**, not the underlying
-  model name. For example, if you deployed `gpt-4o` as `my-gpt4o-deployment`,
-  use `id: my-gpt4o-deployment`.
-</Aside>
-
-### Notes
-
-- Uses the `openai` Python package with Azure-specific configuration
-- Requires the `azure-identity` package for Azure AD authentication
-- The executor automatically sets `azure_endpoint` and `api_version` on the
-  `AzureOpenAI` client
-- Supports the same features as the OpenAI provider (streaming, structured output,
-  agent mode)
-
----
-
-## Microsoft Foundry
-
-Connect to models deployed through
-[Microsoft Foundry](https://ai.azure.com/) (Azure AI Services).
-
-**Provider key:** `foundry`
-
-**Supported API types:** `chat`, `responses`, `embedding`
-
-<Tabs>
-<TabItem label="Connection">
-```yaml
-model:
-  id: gpt-4o
   provider: foundry
-  apiType: chat
+  apiType: embedding
   connection:
     kind: key
     endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
     apiKey: ${env:AZURE_AI_PROJECT_KEY}
 ```
 </TabItem>
-<TabItem label="Azure AD Auth">
-```yaml
-model:
-  id: gpt-4o
-  provider: foundry
-  apiType: chat
-  connection:
-    kind: reference
-    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
-```
-</TabItem>
 </Tabs>
 
-<Aside type="note">
-  When using `kind: reference`, the runtime authenticates via
-  `DefaultAzureCredential`. Make sure you are logged in to Azure (e.g.,
-  via `az login`).
+<Aside type="tip" title="Migrating from Azure OpenAI?">
+  If your `.prompty` files use `provider: azure`, they still work — it's a
+  deprecated alias for `provider: foundry`. Update when convenient.
 </Aside>
+
+<Aside type="note">
+  The `model.id` field maps to your **deployment name**, not the underlying
+  model name. For example, if you deployed `gpt-4o` as `my-gpt4o-deployment`,
+  use `id: my-gpt4o-deployment`.
+</Aside>
+
+### Endpoint Patterns
+
+| Endpoint Pattern | Example | Notes |
+|---|---|---|
+| **Foundry project** (recommended) | `https://<resource>.services.ai.azure.com/api/projects/<project>` | New-style Foundry project endpoint |
+| **Classic Azure OpenAI** (legacy) | `https://<resource>.openai.azure.com/` | Still supported via `provider: foundry` |
 
 ### Notes
 
-- Connects to Azure AI Foundry project endpoints
-- Supports both API key and Azure AD (managed identity) authentication
-- Model deployments are managed through the Azure AI Foundry portal
+- Uses the `openai` Python package with Azure-specific configuration
+- Requires the `azure-identity` package for Azure AD authentication
+- Supports both API key and Azure AD (managed identity / `DefaultAzureCredential`)
+- Supports the same features as the OpenAI provider (streaming, structured output,
+  agent mode)
+- Model deployments are managed through the [Azure AI Foundry portal](https://ai.azure.com/)
 
 ---
 
@@ -234,16 +224,16 @@ model:
 
 ## Provider Comparison
 
-| Feature | OpenAI | Azure OpenAI | Microsoft Foundry | Anthropic |
-|---|:---:|:---:|:---:|:---:|
-| `chat` | ✅ | ✅ | ✅ | ✅ |
-| `responses` | ✅ | ✅ | ✅ | ❌ |
-| `embedding` | ✅ | ✅ | ✅ | ❌ |
-| `image` | ✅ | ✅ | ❌ | ❌ |
-| `agent` (tool loop) | ✅ | ✅ | ❌ | ❌ |
-| Streaming | ✅ | ✅ | ✅ | ✅ |
-| Structured output | ✅ | ✅ | ✅ | ✅ |
-| Azure AD auth | ❌ | ✅ | ✅ | ❌ |
+| Feature | OpenAI | Microsoft Foundry | Anthropic |
+|---|:---:|:---:|:---:|
+| `chat` | ✅ | ✅ | ✅ |
+| `responses` | ✅ | ✅ | ❌ |
+| `embedding` | ✅ | ✅ | ❌ |
+| `image` | ✅ | ✅ | ❌ |
+| `agent` (tool loop) | ✅ | ✅ | ❌ |
+| Streaming | ✅ | ✅ | ✅ |
+| Structured output | ✅ | ✅ | ✅ |
+| Azure AD auth | ❌ | ✅ | ❌ |
 
 ---
 

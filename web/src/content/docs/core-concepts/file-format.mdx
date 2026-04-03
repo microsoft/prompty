@@ -35,7 +35,7 @@ flowchart TD
     subgraph FM["FRONTMATTER (YAML between --- delimiters)"]
         direction LR
         Identity["name, description\nmetadata: authors, tags …"]
-        ModelCfg["model:\nid: gpt-4o\nprovider: azure\nconnection + options"]
+        ModelCfg["model:\nid: gpt-4o\nprovider: foundry\nconnection + options"]
         Inputs["inputSchema:\nproperties: [...]"]
         Tools["tools: [...]"]
         Template["template:\nformat + parser"]
@@ -104,7 +104,7 @@ Configures the LLM to call. Full form:
 ```yaml
 model:
   id: gpt-4o
-  provider: azure          # or "openai"
+  provider: foundry          # or "openai"
   apiType: chat            # chat | embedding | image | agent
   connection:
     kind: key
@@ -407,7 +407,7 @@ metadata:
 
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   apiType: chat
   connection:
     kind: key
@@ -469,21 +469,43 @@ user:
 Hi, my name is {{customerName}}. {{question}}
 ```
 
-Run it with the Python runtime:
+Run it with the Prompty runtime:
 
-```python
-import prompty
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
 
-# Load + render + parse + execute + process in one call
-result = prompty.run(
-    "customer-support.prompty",
-    inputs={
-        "customerName": "Jane Doe",
-        "question": "Where is my order #12345?",
-        "orderHistory": [
-            {"id": "12345", "status": "shipped", "date": "2025-01-15"},
-            {"id": "12300", "status": "delivered", "date": "2025-01-02"},
+    # Load + render + parse + execute + process in one call
+    result = prompty.run(
+        "customer-support.prompty",
+        inputs={
+            "customerName": "Jane Doe",
+            "question": "Where is my order #12345?",
+            "orderHistory": [
+                {"id": "12345", "status": "shipped", "date": "2025-01-15"},
+                {"id": "12300", "status": "delivered", "date": "2025-01-02"},
+            ],
+        },
+    )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+    import "@prompty/foundry"; // registers "azure" provider
+
+    // Load + render + parse + execute + process in one call
+    const result = await execute("customer-support.prompty", {
+      inputs: {
+        customerName: "Jane Doe",
+        question: "Where is my order #12345?",
+        orderHistory: [
+          { id: "12345", status: "shipped", date: "2025-01-15" },
+          { id: "12300", status: "delivered", date: "2025-01-02" },
         ],
-    },
-)
-```
+      },
+    });
+    ```
+  </TabItem>
+</Tabs>

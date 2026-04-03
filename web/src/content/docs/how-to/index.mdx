@@ -15,7 +15,7 @@ These guides are **recipe-style** — each one shows a complete `.prompty` file 
 the code to run it. Copy, paste, fill in your API keys, and go.
 
 Prompty supports multiple LLM providers out of the box — **OpenAI**, **Microsoft Foundry**,
-**Azure OpenAI**, and **Anthropic** — and its plugin architecture makes it easy to add more.
+and **Anthropic** — and its plugin architecture makes it easy to add more.
 
 <Aside type="tip">
   New to Prompty? Start with the [Getting Started guide](/getting-started/)
@@ -29,7 +29,7 @@ Prompty supports multiple LLM providers out of the box — **OpenAI**, **Microso
 | Guide | What you'll build |
 |---|---|
 | [Use with OpenAI](./openai) | Chat completion using the OpenAI API with API key auth |
-| [Use with Azure OpenAI](./azure-openai) | Chat completion using Azure OpenAI — API key and Azure AD options |
+| [Use with Microsoft Foundry](./azure-openai) | Chat completion using Microsoft Foundry — API key and Azure AD options |
 | [Agent with Tool Calling](./agent-tool-calling) | An agent that calls your Python/TypeScript functions in a loop |
 | [Structured Output](../core-concepts/structured-output) | Get typed JSON responses matching a schema |
 | [Streaming Responses](../core-concepts/streaming) | Stream tokens as they arrive |
@@ -40,7 +40,7 @@ Prompty supports multiple LLM providers out of the box — **OpenAI**, **Microso
 
 <Aside type="note">
   **Microsoft Foundry** and **Anthropic** providers follow the same patterns shown in the
-  OpenAI and Azure OpenAI guides above. Install the corresponding extra
+  OpenAI guide above. Install the corresponding extra
   (`prompty[foundry]` or `prompty[anthropic]`), set `provider: foundry` or
   `provider: anthropic` in your frontmatter, and configure the appropriate connection.
   See the [Python implementation docs](../implementation/python) for provider details.

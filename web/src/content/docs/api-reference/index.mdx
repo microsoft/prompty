@@ -253,7 +253,7 @@ client = AzureOpenAI(
         "https://cognitiveservices.azure.com/.default",
     ),
 )
-prompty.register_connection("my-azure", client=client)
+prompty.register_connection("my-foundry", client=client)
 ```
 
 Then in your `.prompty` file:
@@ -261,10 +261,10 @@ Then in your `.prompty` file:
 ```yaml
 model:
   id: gpt-4o
-  provider: azure
+  provider: foundry
   connection:
     kind: reference
-    name: my-azure
+    name: my-foundry
 ```
 
 ### `get_connection(name) → client`
