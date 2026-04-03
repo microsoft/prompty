@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -59,7 +59,7 @@ jobs:
     needs: prompty-v2-tests
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Create timestamp tag
         run: |
@@ -90,7 +90,7 @@ jobs:
           flit build --format wheel
           flit build --format sdist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: prompty-v2-artifacts
           path: ./runtime/python/prompty/dist/*

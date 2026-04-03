@@ -15,7 +15,7 @@ jobs:
   build-and-deploy-web:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Create tag
       run: |
         echo "TAG=v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)" >> "$GITHUB_ENV"
