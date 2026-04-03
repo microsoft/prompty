@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 180" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- .prompty file -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="30" width="200" height="120" rx="12" fill="url(#g1)"/>
+    <text x="120" y="78" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">.prompty</text>
+    <text x="120" y="102" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">markdown + YAML</text>
+    <text x="120" y="122" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">frontmatter</text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <g>
+    <line x1="230" y1="90" x2="290" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <polygon points="290,84 304,90 290,96" fill="#94a3b8"/>
+  </g>
+
+  <!-- Runtime -->
+  <g filter="url(#shadow)">
+    <rect x="310" y="30" width="200" height="120" rx="12" fill="url(#g2)"/>
+    <text x="410" y="72" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">Runtime</text>
+    <text x="410" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">render → parse</text>
+    <text x="410" y="116" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">→ execute → process</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <g>
+    <line x1="520" y1="90" x2="580" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <polygon points="580,84 594,90 580,96" fill="#94a3b8"/>
+  </g>
+
+  <!-- LLM Provider -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="30" width="200" height="120" rx="12" fill="url(#g3)"/>
+    <text x="700" y="72" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">LLM Provider</text>
+    <text x="700" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">OpenAI · Foundry</text>
+    <text x="700" y="116" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">Anthropic</text>
+  </g>
+</svg>
