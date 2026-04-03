@@ -142,6 +142,18 @@ model:
     apiKey: ${env:AZURE_OPENAI_API_KEY}
 ```
 
+For **Anthropic**, use `provider: anthropic` with your Anthropic API key:
+
+```yaml
+model:
+  id: claude-sonnet-4-20250514
+  provider: anthropic
+  connection:
+    kind: key
+    endpoint: https://api.anthropic.com
+    apiKey: ${env:ANTHROPIC_API_KEY}
+```
+
 <Aside type="tip">
   Always use `${env:VAR}` references instead of hardcoding secrets. The runtime
   resolves them from your environment (or a `.env` file) at load time.
@@ -228,7 +240,7 @@ model:
 
 ## FoundryConnection — `kind: foundry`
 
-Integrates with **Azure AI Foundry** for managed model deployments, including
+Integrates with **Microsoft Foundry** for managed model deployments, including
 serverless and managed-compute endpoints.
 
 ```yaml
@@ -465,7 +477,7 @@ exists alongside the `.prompty` file or in a parent directory.
         name: azure-prod
     ```
   </TabItem>
-  <TabItem label="Azure AI Foundry">
+  <TabItem label="Microsoft Foundry">
     Use **`kind: foundry`** to connect directly to a Foundry-managed
     deployment — serverless or managed compute.
 
@@ -511,8 +523,9 @@ exists alongside the `.prompty` file or in a parent directory.
 | Scenario                      | Connection Kind | Why                                       |
 | ----------------------------- | --------------- | ----------------------------------------- |
 | Local dev with API key        | `key`           | Simplest setup, env-var-based secrets     |
+| Anthropic (Claude)            | `key`           | API key auth with `provider: anthropic`   |
 | Production with Azure AD      | `reference`     | Full SDK control, managed identity        |
-| Azure AI Foundry deployments  | `foundry`       | Native Foundry service integration        |
+| Microsoft Foundry deployments  | `foundry`       | Native Foundry service integration        |
 | Self-hosted (Ollama, vLLM)    | `anonymous`     | No auth needed for local endpoints        |
 | OAuth 2.0 services            | `oauth`         | Client credentials token flow             |
 | Remote gateway / proxy        | `remote`        | Named endpoint reference                  |

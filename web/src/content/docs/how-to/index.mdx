@@ -14,6 +14,9 @@ import { Aside } from '@astrojs/starlight/components';
 These guides are **recipe-style** — each one shows a complete `.prompty` file and
 the code to run it. Copy, paste, fill in your API keys, and go.
 
+Prompty supports multiple LLM providers out of the box — **OpenAI**, **Microsoft Foundry**,
+**Azure OpenAI**, and **Anthropic** — and its plugin architecture makes it easy to add more.
+
 <Aside type="tip">
   New to Prompty? Start with the [Getting Started guide](/getting-started/)
   first, then come back here for specific use cases.
@@ -34,6 +37,14 @@ the code to run it. Copy, paste, fill in your API keys, and go.
 | [Image Generation](../core-concepts/pipeline) | Generate images with DALL-E via `apiType: image` |
 | [Custom Providers](../implementation/python) | Write your own executor and processor |
 | [VS Code Extension](../getting-started/) | Author and test `.prompty` files in VS Code |
+
+<Aside type="note">
+  **Microsoft Foundry** and **Anthropic** providers follow the same patterns shown in the
+  OpenAI and Azure OpenAI guides above. Install the corresponding extra
+  (`prompty[foundry]` or `prompty[anthropic]`), set `provider: foundry` or
+  `provider: anthropic` in your frontmatter, and configure the appropriate connection.
+  See the [Python implementation docs](../implementation/python) for provider details.
+</Aside>
 
 ---
 

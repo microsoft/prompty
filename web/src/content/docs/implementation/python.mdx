@@ -29,6 +29,8 @@ uv pip install prompty[jinja2,openai]
 | `mustache` | `chevron` | Mustache template rendering |
 | `openai` | `openai` | OpenAI provider |
 | `azure` | `openai`, `azure-identity` | Azure OpenAI provider |
+| `anthropic` | `anthropic` | Anthropic provider |
+| `foundry` | `azure-ai-foundry`, `azure-identity` | Microsoft Foundry provider |
 | `otel` | `opentelemetry-api` | OpenTelemetry tracing |
 | `all` | All of the above | Everything |
 
@@ -157,9 +159,12 @@ def my_pipeline(query: str) -> str:
 |----------|-----------------|-----|--------|
 | OpenAI | `openai` | `openai` | `prompty[openai]` |
 | Azure OpenAI | `azure` | `openai` + `azure-identity` | `prompty[azure]` |
+| Anthropic | `anthropic` | `anthropic` | `prompty[anthropic]` |
+| Microsoft Foundry | `foundry` | `azure-ai-foundry` + `azure-identity` | `prompty[foundry]` |
 
-Providers are discovered via Python entry points. Third-party providers
-can register themselves in their `pyproject.toml`.
+Providers are discovered via Python entry points — the plugin architecture makes it
+easy to add new providers. Third-party providers can register themselves in their
+`pyproject.toml`.
 
 ## Environment Files
 
@@ -170,6 +175,8 @@ file in your project root:
 OPENAI_API_KEY=sk-your-key-here
 AZURE_OPENAI_ENDPOINT=https://myresource.openai.azure.com/
 AZURE_OPENAI_API_KEY=abc123
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+FOUNDRY_ENDPOINT=https://your-project.services.ai.azure.com
 ```
 
 ## Further Reading
