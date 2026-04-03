@@ -1,11 +1,6 @@
 name: prompty.ai web deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'web/**'
   workflow_dispatch:
   
 permissions:
