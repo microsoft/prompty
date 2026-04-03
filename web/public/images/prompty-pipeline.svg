@@ -1,55 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 180" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 440" fill="none">
   <defs>
-    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#6366f1"/>
       <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
-    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="p2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="p3" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#3b82f6"/>
       <stop offset="100%" stop-color="#06b6d4"/>
     </linearGradient>
-    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="p4" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#10b981"/>
       <stop offset="100%" stop-color="#34d399"/>
     </linearGradient>
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.10"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <!-- .prompty file -->
+  <!-- Step 1: Render (top-left) -->
   <g filter="url(#shadow)">
-    <rect x="20" y="30" width="200" height="120" rx="12" fill="url(#g1)"/>
-    <text x="120" y="78" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">.prompty</text>
-    <text x="120" y="102" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">markdown + YAML</text>
-    <text x="120" y="122" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">frontmatter</text>
+    <rect x="20" y="20" width="185" height="170" rx="16" fill="url(#p1)"/>
+    <text x="112" y="58" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.7">STEP 1</text>
+    <text x="112" y="90" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="26" font-weight="700">Render</text>
+    <text x="112" y="118" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">Expand template</text>
+    <text x="112" y="138" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">variables with</text>
+    <text x="112" y="158" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">Jinja2 or Mustache</text>
   </g>
 
-  <!-- Arrow 1 -->
-  <g>
-    <line x1="230" y1="90" x2="290" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
-    <polygon points="290,84 304,90 290,96" fill="#94a3b8"/>
-  </g>
+  <!-- Arrow 1 to 2 (right) -->
+  <line x1="210" y1="105" x2="228" y2="105" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+  <polygon points="228,99 240,105 228,111" fill="#94a3b8"/>
 
-  <!-- Runtime -->
+  <!-- Step 2: Parse (top-right) -->
   <g filter="url(#shadow)">
-    <rect x="310" y="30" width="200" height="120" rx="12" fill="url(#g2)"/>
-    <text x="410" y="72" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">Runtime</text>
-    <text x="410" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">render → parse</text>
-    <text x="410" y="116" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">→ execute → process</text>
+    <rect x="240" y="20" width="185" height="170" rx="16" fill="url(#p2)"/>
+    <text x="332" y="58" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.7">STEP 2</text>
+    <text x="332" y="90" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="26" font-weight="700">Parse</text>
+    <text x="332" y="118" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">Split role markers</text>
+    <text x="332" y="138" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">into a structured</text>
+    <text x="332" y="158" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">message list</text>
   </g>
 
-  <!-- Arrow 2 -->
-  <g>
-    <line x1="520" y1="90" x2="580" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
-    <polygon points="580,84 594,90 580,96" fill="#94a3b8"/>
-  </g>
+  <!-- Arrow 2 to 3 (down-left curve) -->
+  <path d="M 400 190 Q 420 220 400 245" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <polygon points="404,244 400,258 394,245" fill="#94a3b8"/>
 
-  <!-- LLM Provider -->
+  <!-- Step 3: Execute (bottom-right) -->
   <g filter="url(#shadow)">
-    <rect x="600" y="30" width="200" height="120" rx="12" fill="url(#g3)"/>
-    <text x="700" y="72" text-anchor="middle" fill="#fff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700">LLM Provider</text>
-    <text x="700" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">OpenAI · Foundry</text>
-    <text x="700" y="116" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="13">Anthropic</text>
+    <rect x="240" y="250" width="185" height="170" rx="16" fill="url(#p3)"/>
+    <text x="332" y="288" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.7">STEP 3</text>
+    <text x="332" y="320" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="26" font-weight="700">Execute</text>
+    <text x="332" y="348" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">Call LLM via</text>
+    <text x="332" y="368" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">OpenAI, Foundry,</text>
+    <text x="332" y="388" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">or Anthropic</text>
+  </g>
+
+  <!-- Arrow 3 to 4 (left) -->
+  <line x1="235" y1="335" x2="215" y2="335" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+  <polygon points="215,329 203,335 215,341" fill="#94a3b8"/>
+
+  <!-- Step 4: Process (bottom-left) -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="250" width="185" height="170" rx="16" fill="url(#p4)"/>
+    <text x="112" y="288" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.7">STEP 4</text>
+    <text x="112" y="320" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="26" font-weight="700">Process</text>
+    <text x="112" y="348" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">Extract content,</text>
+    <text x="112" y="368" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">parse JSON, or</text>
+    <text x="112" y="388" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="system-ui, sans-serif" font-size="13">stream chunks</text>
   </g>
 </svg>

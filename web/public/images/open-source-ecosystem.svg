@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="c1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="c2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="c3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="c4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="400" rx="20" fill="url(#bg)"/>
+
+  <!-- Center: .prompty hub -->
+  <circle cx="300" cy="185" r="52" fill="url(#c1)" opacity="0.15"/>
+  <circle cx="300" cy="185" r="40" fill="url(#c1)" filter="url(#glow)"/>
+  <text x="300" y="181" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">.prompty</text>
+  <text x="300" y="198" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="10">open format</text>
+
+  <!-- TypeSpec node (top) -->
+  <line x1="300" y1="143" x2="300" y2="82" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="300" cy="68" r="28" fill="url(#c1)" opacity="0.9"/>
+  <text x="300" y="64" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeSpec</text>
+  <text x="300" y="78" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">schema</text>
+
+  <!-- Python node (left) -->
+  <line x1="262" y1="200" x2="175" y2="235" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="158" cy="245" r="30" fill="url(#c2)" opacity="0.9"/>
+  <text x="158" y="241" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Python</text>
+  <text x="158" y="256" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">runtime</text>
+
+  <!-- TypeScript node (right) -->
+  <line x1="338" y1="200" x2="425" y2="235" stroke="#06b6d4" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="442" cy="245" r="30" fill="url(#c2)" opacity="0.9"/>
+  <text x="442" y="241" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">TypeScript</text>
+  <text x="442" y="256" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">runtime</text>
+
+  <!-- VS Code node (bottom-left) -->
+  <line x1="275" y1="220" x2="218" y2="315" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="210" cy="330" r="28" fill="url(#c3)" opacity="0.9"/>
+  <text x="210" y="327" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">VS Code</text>
+  <text x="210" y="341" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">extension</text>
+
+  <!-- Plugins node (bottom-right) -->
+  <line x1="325" y1="220" x2="382" y2="315" stroke="#f59e0b" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="390" cy="330" r="28" fill="url(#c4)" opacity="0.9"/>
+  <text x="390" y="327" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Plugins</text>
+  <text x="390" y="341" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui, sans-serif" font-size="9">entry points</text>
+
+  <!-- Provider badges along left -->
+  <rect x="48" y="105" width="70" height="22" rx="11" fill="#1e293b" stroke="#6366f1" stroke-width="1"/>
+  <text x="83" y="120" text-anchor="middle" fill="#a5b4fc" font-family="system-ui, sans-serif" font-size="10">OpenAI</text>
+
+  <rect x="38" y="140" width="80" height="22" rx="11" fill="#1e293b" stroke="#3b82f6" stroke-width="1"/>
+  <text x="78" y="155" text-anchor="middle" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="10">Foundry</text>
+
+  <rect x="42" y="175" width="76" height="22" rx="11" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+  <text x="80" y="190" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="10">Anthropic</text>
+
+  <!-- Provider badges along right -->
+  <rect x="482" y="105" width="70" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+  <text x="517" y="120" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">Jinja2</text>
+
+  <rect x="478" y="140" width="78" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+  <text x="517" y="155" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">Mustache</text>
+
+  <rect x="485" y="175" width="64" height="22" rx="11" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+  <text x="517" y="190" text-anchor="middle" fill="#fde68a" font-family="system-ui, sans-serif" font-size="10">OTel</text>
+
+  <!-- Connecting lines from badges to center -->
+  <line x1="118" y1="116" x2="262" y2="175" stroke="#6366f1" stroke-width="0.8" opacity="0.25"/>
+  <line x1="118" y1="151" x2="262" y2="180" stroke="#3b82f6" stroke-width="0.8" opacity="0.25"/>
+  <line x1="118" y1="186" x2="262" y2="190" stroke="#10b981" stroke-width="0.8" opacity="0.25"/>
+  <line x1="482" y1="116" x2="338" y2="175" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
+  <line x1="478" y1="151" x2="338" y2="180" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
+  <line x1="485" y1="186" x2="338" y2="190" stroke="#f59e0b" stroke-width="0.8" opacity="0.25"/>
+
+  <!-- MIT badge at bottom center -->
+  <rect x="260" y="370" width="80" height="22" rx="11" fill="#10b981" opacity="0.2"/>
+  <text x="300" y="385" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">MIT License</text>
+</svg>
