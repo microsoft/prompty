@@ -11,9 +11,252 @@ tags:
 index: 2
 ---
 
-## Code contribution guidelines
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-..to be updated
+These guidelines cover coding conventions for both the **Python** and **TypeScript** Prompty runtimes.
+Following them keeps the codebase consistent and makes PRs easier to review.
+
+## Repository Layout
+
+```
+runtime/
+├── python/prompty/       # Python runtime (pip: prompty)
+│   ├── prompty/          # Package source
+│   └── tests/            # Unit + integration tests
+└── typescript/           # TypeScript monorepo
+    └── packages/
+        ├── core/         # @prompty/core
+        ├── openai/       # @prompty/openai
+        ├── foundry/      # @prompty/foundry
+        └── anthropic/    # @prompty/anthropic
+```
 
 ---
+
+## Python Runtime
+
+### Environment Setup
+
+- **Python ≥ 3.11** — use modern syntax (`X | Y` unions, `match`/`case`, f-strings).
+- **Use `uv` exclusively** for environment and package management. Never use `pip` or `python -m venv` directly.
+
+```bash
+cd runtime/python/prompty
+uv venv
+uv pip install -e ".[dev,all]"
+```
+
+### Linting & Formatting
+
+We use **Ruff** for both linting and formatting. Configuration is in `pyproject.toml`:
+
+| Setting | Value |
+|---|---|
+| Line length | 120 |
+| Target | `py311` |
+| Rules | `E`, `F`, `I` (isort), `UP` (pyupgrade) |
+| Ignored | `E501` (line length — handled by formatter) |
+
+```bash
+# Check for lint issues
+uv run ruff check .
+
+# Auto-format
+uv run ruff format .
+```
+
+<Aside type="caution">
+  CI runs `ruff format --check` which **fails** on unformatted files. Always run both
+  `ruff check` and `ruff format` before pushing.
+</Aside>
+
+### Code Style
+
+- **`from __future__ import annotations`** at the top of every module.
+- **Type hints everywhere** — all function signatures, return types, and class attributes.
+- **Docstrings** — every module gets a module-level docstring. Public classes and functions get docstrings too.
+- **`__all__`** — define in modules that export public API.
+- **Private names** — prefix internal helpers with `_` (e.g., `_message_to_wire`).
+- **No bare `except:`** — always catch specific exceptions (`except Exception:` at minimum).
+- **Constants** — `UPPER_SNAKE_CASE` at module level.
+
+### Import Conventions
+
+```python
+# Internal code → relative imports
+from .types import Message
+from ..tracing.tracer import trace
+
+# Tests → absolute imports
+from prompty.core.types import Message
+from prompty.tracing.tracer import Tracer
+
+# Optional dependencies → lazy imports inside functions
+def execute(self, agent, messages):
+    from openai import OpenAI  # only imported when actually called
+```
+
+Import sort order is enforced by Ruff's `I` (isort) rule: **stdlib → third-party → local**, alphabetized within each group.
+
+### Async Conventions
+
+Every public pipeline function has a sync and async variant:
+
+```python
+# Sync
+messages = prepare("prompt.prompty", inputs={"name": "Jane"})
+
+# Async
+messages = await prepare_async("prompt.prompty", inputs={"name": "Jane"})
+```
+
+Protocol classes define both `render()` / `render_async()`, `parse()` / `parse_async()`, etc.
+
+### Testing
+
+- **Framework:** pytest + pytest-asyncio
+- **Run unit tests:** `uv run pytest tests/ -q`
+- **Run integration tests:** `pytest tests/integration/ -v -o "addopts="`
+- **Mock external services** — never make real API calls in unit tests.
+- **Async tests** use `@pytest.mark.asyncio` with `asyncio_mode = "strict"`.
+
+Integration tests require API keys in a `.env` file and are excluded by default via
+the `integration` marker.
+
+### Dependencies
+
+- **Required deps** go in `[project.dependencies]`.
+- **Optional deps** go in `[project.optional-dependencies]` — never add optional deps to the required list.
+- Entry points in `pyproject.toml` register invokers for the plugin discovery system.
+- After changing entry points or deps, reinstall: `uv pip install -e ".[dev,all]"`.
+
+### Error Handling
+
+| Error Type | When to Use |
+|---|---|
+| `InvokerError` | Missing invoker registrations |
+| `ValueError` | Invalid frontmatter, missing env vars without defaults |
+| `FileNotFoundError` | Missing `.prompty` files or `${file:...}` references |
+| `DeprecationWarning` | Legacy property migrations (via `warnings.warn`) |
+
+---
+
+## TypeScript Runtime
+
+### Environment Setup
+
+- **Node.js ≥ 18**
+- Standard npm workspace monorepo
+
+```bash
+cd runtime/typescript
+npm install
+npm run build
+```
+
+### Project Structure
+
+Each package follows an identical layout:
+
+```
+packages/<name>/
+├── src/           # Source code
+├── tests/         # Vitest test files
+├── dist/          # Build output (ESM + CJS)
+├── package.json
+├── tsconfig.json
+└── tsup.config.ts
+```
+
+### TypeScript Config
+
+Packages extend `tsconfig.base.json`:
+
+| Setting | Value |
+|---|---|
+| Target | `ES2022` |
+| Module | `ES2022` |
+| Module Resolution | `bundler` |
+| Strict | `true` |
+
+### Building & Linting
+
+```bash
+# Build all packages
+npm run build
+
+# Type-check (used as lint)
+tsc --noEmit
+
+# Run tests
+npm run test
+```
+
+The project uses `tsup` for bundling — dual ESM + CJS output with declaration files, targeting `node18`.
+
+### Code Style
+
+- **Named exports only** — no default exports.
+- **Barrel exports** — each directory has an `index.ts` that re-exports public API.
+- **Explicit `.js` extensions** in relative imports (required for ESM compatibility).
+- **Strong typing** — `strict: true` in tsconfig, avoid `any` where possible.
+
+```typescript
+// ✅ Named export with .js extension
+export { PromptyChatParser } from './parsers/prompty.js';
+
+// ❌ Don't use default exports
+export default class MyParser { ... }
+```
+
+### Testing
+
+- **Framework:** Vitest
+- **Test files:** `tests/**/*.test.ts`
+- **Run:** `npm run test` (across all workspaces)
+- Tests use Vitest's built-in mocking (`vi.fn()`, `vi.mock()`).
+- Coverage is collected via the `v8` provider.
+
+### Adding a New Provider Package
+
+1. Create `packages/<provider>/` following the existing package structure.
+2. Add `src/index.ts` with named exports for your executor and processor.
+3. Add a `tsup.config.ts` and `vitest.config.ts` matching the existing packages.
+4. Register the package in the root `package.json` workspaces array.
+
+---
+
+## General Guidelines
+
+### Commit Messages
+
+- Use clear, descriptive commit messages.
+- Include a `Co-authored-by` trailer when pair-programming or using AI assistance.
+
+### Pull Requests
+
+- Run **all linters and tests** locally before opening a PR.
+- Keep PRs focused — one feature or fix per PR.
+- Update documentation if your change affects user-facing behavior.
+- Add tests for new functionality.
+
+### Adding a New Provider (Python)
+
+1. Create `prompty/providers/<name>/` with `__init__.py`, `executor.py`, `processor.py`.
+2. Implement the `ExecutorProtocol` and `ProcessorProtocol` interfaces.
+3. Register entry points in `pyproject.toml`:
+
+```toml
+[project.entry-points."prompty.executors"]
+my_provider = "prompty.providers.my_provider.executor:MyExecutor"
+
+[project.entry-points."prompty.processors"]
+my_provider = "prompty.providers.my_provider.processor:MyProcessor"
+```
+
+4. Add optional dependency: `my_provider = ["my-provider-sdk"]`
+5. Reinstall: `uv pip install -e ".[dev,all]"`
+
+---
+
 [Want to Contribute To the Project?](/contributing/)
