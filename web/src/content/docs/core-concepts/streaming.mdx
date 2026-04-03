@@ -212,7 +212,7 @@ The same applies to `AsyncPromptyStream` for async iteration.
 
 ## Streaming + Agent Mode
 
-When `apiType` is set to `agent`, the executor runs a tool-calling loop:
+When using `execute_agent()`, the runtime runs a tool-calling loop:
 call the LLM, execute any requested tools, append results, repeat.
 
 Streaming still works inside the agent loop. The executor does **not** disable

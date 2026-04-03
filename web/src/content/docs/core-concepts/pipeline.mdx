@@ -117,7 +117,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 | `"chat"` (default) | `chat.completions.create()` | Conversational prompts |
 | `"embedding"` | `embeddings.create()` | Text → vector embeddings |
 | `"image"` | `images.generate()` | DALL-E image generation |
-| `"agent"` | Chat completions + tool-call loop | Autonomous tool use |
+| `"responses"` | `responses.create()` | OpenAI Responses API (latest features) |
 
 <Aside type="note">
 The executor also wires up **structured output** when `agent.outputSchema` is defined —

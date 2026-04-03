@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="logo-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0090ff"/>
+      <stop offset="70%" stop-color="#8dc8e8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-grad)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.05" stroke="#8dc8e8" stroke-width="1">
+    <line x1="0" y1="0" x2="1200" y2="630"/>
+    <line x1="400" y1="0" x2="1200" y2="420"/>
+    <line x1="800" y1="0" x2="1200" y2="210"/>
+    <line x1="0" y1="210" x2="800" y2="630"/>
+    <line x1="0" y1="420" x2="400" y2="630"/>
+  </g>
+
+  <!-- Prompty logo (simplified P mark) -->
+  <g transform="translate(150, 115) scale(0.53)">
+    <path d="M.85,160.43C-6.96,94.47,40.17,34.67,106.13,26.86L315.77,2.04c158.88-18.81,302.92,94.73,321.73,253.61,18.68,157.79-93.18,300.95-250.35,321.33l3.09,26.14c7.81,65.96-39.33,125.76-105.28,133.57l-93.47,11.07c-65.96,7.81-125.76-39.33-133.57-105.28L.85,160.43ZM302.86,613.45c2.1,17.7-10.55,33.74-28.25,35.84l-93.47,11.07c-17.7,2.1-33.74-10.55-35.84-28.25l-57.08-482.03c-2.1-17.7,10.55-33.75,28.25-35.84l209.64-24.82c110.62-13.1,210.91,65.96,224.01,176.57,13.1,110.62-65.96,210.91-176.57,224.01l-84.12,9.96,13.44,113.5Z" fill="url(#logo-grad)" fill-rule="evenodd"/>
+    <path d="M44.54,155.26c-4.95-41.83,24.94-79.75,66.77-84.7l209.64-24.82c134.75-15.96,256.91,80.34,272.87,215.09,15.96,134.75-80.34,256.91-215.09,272.87l-40.43,4.79,8.27,69.81c4.95,41.83-24.94,79.75-66.77,84.7l-93.47,11.07c-41.83,4.95-79.75-24.94-84.7-66.77L44.54,155.26ZM302.87,613.45c2.1,17.7-10.55,33.74-28.25,35.84l-93.47,11.07c-17.7,2.1-33.74-10.55-35.84-28.25l-57.08-482.03c-2.1-17.7,10.55-33.74,28.25-35.84l209.64-24.82c110.62-13.1,210.91,65.96,224.01,176.57,13.1,110.62-65.96,210.91-176.57,224.01l-84.12,9.96,13.44,113.5Z" fill="#1e293b" fill-rule="evenodd"/>
+    <path d="M116.45,114.24c-17.7,2.1-30.35,18.14-28.25,35.84l57.08,482.03c2.1,17.7,18.14,30.35,35.84,28.25l93.47-11.07c17.7-2.1,30.35-18.14,28.25-35.84l-13.44-113.5,84.12-9.96c110.62-13.1,189.67-113.39,176.57-224.01-13.1-110.62-113.39-189.67-224.01-176.57l-84.12,9.96-60.4,7.15-65.11,7.71Z" fill="#fff" fill-rule="evenodd"/>
+    <path d="M224.61,199.86l-10.26,1.19c-25.08,2.92-43.05,25.61-40.14,50.7l8.73,75.12c2.92,25.08,25.61,43.05,50.7,40.14l10.26-1.19c45.83-5.33,78.66-46.8,73.33-92.62-5.33-45.83-46.8-78.66-92.62-73.33Z" fill="#1e293b" fill-rule="evenodd"/>
+    <path d="M383.23,178.85l-10.26,1.19c-25.08,2.92-43.05,25.62-40.14,50.7l8.73,75.12c2.92,25.08,25.61,43.05,50.7,40.14l10.26-1.19c45.83-5.33,78.66-46.8,73.33-92.62-5.33-45.83-46.8-78.66-92.62-73.33Z" fill="#1e293b" fill-rule="evenodd"/>
+  </g>
+
+  <!-- Text -->
+  <text x="530" y="260" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="96" font-weight="700" fill="#ffffff" letter-spacing="-2">Prompty</text>
+  <text x="530" y="330" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="32" fill="#94a3b8">An open-source standard for LLM prompts</text>
+
+  <!-- Feature pills -->
+  <g transform="translate(530, 370)">
+    <rect x="0" y="0" width="130" height="36" rx="18" fill="#1e40af" opacity="0.6"/>
+    <text x="65" y="24" font-family="system-ui, sans-serif" font-size="15" fill="#93c5fd" text-anchor="middle">Python</text>
+
+    <rect x="145" y="0" width="150" height="36" rx="18" fill="#1e40af" opacity="0.6"/>
+    <text x="220" y="24" font-family="system-ui, sans-serif" font-size="15" fill="#93c5fd" text-anchor="middle">TypeScript</text>
+
+    <rect x="310" y="0" width="140" height="36" rx="18" fill="#1e40af" opacity="0.6"/>
+    <text x="380" y="24" font-family="system-ui, sans-serif" font-size="15" fill="#93c5fd" text-anchor="middle">VS Code</text>
+
+    <rect x="465" y="0" width="150" height="36" rx="18" fill="#1e40af" opacity="0.6"/>
+    <text x="540" y="24" font-family="system-ui, sans-serif" font-size="15" fill="#93c5fd" text-anchor="middle">Multi-Provider</text>
+  </g>
+
+  <!-- URL -->
+  <text x="530" y="480" font-family="system-ui, sans-serif" font-size="24" fill="#64748b">prompty.ai</text>
+
+  <!-- Microsoft attribution -->
+  <text x="530" y="530" font-family="system-ui, sans-serif" font-size="18" fill="#475569">Microsoft Open Source</text>
+</svg>

@@ -20,6 +20,36 @@ export default defineConfig({
         SiteTitle: "./src/overrides/SiteTitle.astro",
       },
       customCss: ["./src/styles/custom.css"],
+      head: [
+        {
+          tag: "meta",
+          attrs: { property: "og:image", content: "https://prompty.ai/og-image.png" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:width", content: "1200" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:height", content: "630" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:type", content: "website" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:site_name", content: "Prompty" },
+        },
+        {
+          tag: "meta",
+          attrs: { name: "twitter:card", content: "summary_large_image" },
+        },
+        {
+          tag: "meta",
+          attrs: { name: "twitter:image", content: "https://prompty.ai/og-image.png" },
+        },
+      ],
       social: [
         {
           icon: "github",

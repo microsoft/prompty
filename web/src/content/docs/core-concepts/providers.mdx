@@ -33,7 +33,7 @@ Direct access to the [OpenAI API](https://platform.openai.com/docs/api-reference
 
 **Provider key:** `openai`
 
-**Supported API types:** `chat`, `responses`, `embedding`, `image`, `agent` (tool-calling loop)
+**Supported API types:** `chat`, `responses`, `embedding`, `image`
 
 <Tabs>
 <TabItem label="Connection">
@@ -89,7 +89,7 @@ model:
 - Uses the official `openai` Python package
 - Supports streaming via `PromptyStream` / `AsyncPromptyStream`
 - Structured output is supported via `outputSchema` → `response_format`
-- Agent mode (`apiType: agent`) runs an automatic tool-calling loop
+- [Agent mode](../agent-mode/) is available via `execute_agent()` — it uses `apiType: chat` with an automatic tool-calling loop
 
 ---
 
@@ -102,7 +102,7 @@ covers both **Foundry project endpoints** (the recommended approach) and
 
 **Provider key:** `foundry`
 
-**Supported API types:** `chat`, `responses`, `embedding`, `image`, `agent` (tool-calling loop)
+**Supported API types:** `chat`, `responses`, `embedding`, `image`
 
 <Tabs>
 <TabItem label="Project Endpoint (API Key)">
