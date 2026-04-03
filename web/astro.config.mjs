@@ -60,7 +60,7 @@ export default defineConfig({
         },
         {
           label: "VS Code Extension",
-          slug: "vscode",
+          autogenerate: { directory: "vscode" },
         },
         {
           label: "Schema Reference",

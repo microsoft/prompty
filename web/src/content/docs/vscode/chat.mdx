@@ -1,0 +1,133 @@
+---
+title: Chat Mode
+description: Interactive multi-turn conversations with thread inputs, tool calling, and conversation history.
+sidebar:
+  order: 4
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+![Chat panel with tool calling support](/images/vscode/chat.png)
+
+## Overview
+
+When a `.prompty` file declares an input with `kind: thread`, pressing **F5**
+opens an **interactive chat webview** instead of running a single execution.
+This gives you a full multi-turn conversation interface directly inside VS Code.
+
+```yaml title="Frontmatter with thread input"
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: Hello
+    - name: conversation
+      kind: thread
+```
+
+The `thread` input tells the extension that this prompt is designed for
+conversation — the extension will manage the conversation history and pass it
+back into the prompt on every turn.
+
+---
+
+## Chat Interface
+
+The chat webview provides a dedicated set of UI elements for interactive
+conversations:
+
+- **Message list** — displays the full conversation history with role-colored
+  bubbles. System, user, and assistant messages are visually distinct so you
+  can scan the conversation structure at a glance.
+
+- **Text input** — type your message at the bottom of the panel and click
+  **Send** or press **Enter** to submit.
+
+- **Loading indicator** — a visual spinner appears while the extension waits
+  for the LLM to respond, so you know the request is in progress.
+
+- **Tool call cards** — when the model invokes tools, each call is shown as an
+  expandable card displaying the function name, arguments, and the inline
+  return value. You can expand or collapse individual cards to inspect details.
+
+- **End chat button** — stops the current session and saves the complete
+  multi-turn trace as a `.tracy` file. Click this when you're done with the
+  conversation.
+
+---
+
+## How It Works
+
+Each user turn re-runs the full prompt pipeline with the accumulated
+conversation history passed into the `thread` input. Here's the step-by-step
+flow:
+
+1. **User types a message** in the text input and presses Enter
+2. **Extension builds the full conversation history** — all previous user and
+   assistant messages, including any tool call results
+3. **Passes the history as the thread input** alongside the user's current
+   message
+4. **Runs the full pipeline** — render → parse → execute → process — just like
+   a single-shot execution, but with the conversation context included
+5. **Appends the response** to the conversation in the message list
+6. **If the model returns tool calls**, each call is displayed as an expandable
+   card and the tool function is executed automatically
+7. **Re-sends with tool results** if needed — the extension loops until the
+   model returns a final text response
+
+This means every turn sees the entire conversation, giving the model full
+context for coherent multi-turn dialogue.
+
+---
+
+## Tool Calling in Chat
+
+When your `.prompty` file defines tools in the frontmatter, the chat panel
+handles tool calls automatically during the conversation. If the model decides
+to invoke a tool:
+
+1. The tool call appears as an **expandable card** in the message list
+2. The card shows the **function name** and **arguments** the model provided
+3. The extension executes the tool and displays the **return value** inline
+4. The result is appended to the conversation and sent back to the model
+5. The model can then respond with a final answer or make additional tool calls
+
+This loop continues until the model produces a standard text response. You can
+expand any tool call card to inspect the arguments and result at any time during
+or after the conversation.
+
+<Aside type="tip">
+  Tool calling in chat mode works the same way as in single-shot execution —
+  the only difference is that the conversation history grows with each turn.
+  Define your tools in the frontmatter `tools:` section as you normally would.
+</Aside>
+
+---
+
+## Saving Traces
+
+The final `.tracy` file captures the **entire multi-turn session** — every user
+message, assistant response, tool call, and tool result across all turns. Click
+**End Chat** to stop the session and save the trace.
+
+The trace is written to the `.runs/` directory in your workspace, just like
+single-shot execution traces. Open it to inspect timing, token usage, and the
+full conversation flow.
+
+<Aside type="tip">
+  See [Tracing](/vscode/tracing/) for details on navigating the trace viewer.
+  The **Conversation** tab is especially useful for chat traces — it
+  reconstructs the full multi-turn dialogue with role labels and tool call
+  details.
+</Aside>
+
+---
+
+<Aside type="note">
+  Chat mode is activated by declaring a `kind: thread` input in your prompt —
+  it is **not** controlled by `apiType`. The `apiType` field determines which
+  LLM API to call (`chat`, `embedding`, `image`), while chat mode is a **UI
+  feature** of the extension. A prompt can use `apiType: chat` (or omit it
+  entirely) and still open the chat interface as long as it has a `thread`
+  input.
+</Aside>

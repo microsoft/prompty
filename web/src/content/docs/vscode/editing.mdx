@@ -1,0 +1,184 @@
+---
+title: Editing Prompts
+description: Language support, syntax highlighting, completions, and file creation in the Prompty VS Code extension.
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+![Creating a new prompty file from the explorer context menu](/images/vscode/create.png)
+
+## Language Support
+
+The Prompty extension registers `.prompty` as a first-class VS Code language.
+Opening any `.prompty` file activates the full language server, giving you
+rich editing features out of the box.
+
+### Syntax Highlighting
+
+A custom TextMate grammar provides scoped highlighting for every part of a
+`.prompty` file:
+
+- **YAML frontmatter** — property names, values, and structure between the
+  `---` delimiters
+- **Jinja2 template expressions** — `{{ variable }}` and `{% block %}` tags
+  inside the markdown body
+- **Role markers** — `system:`, `user:`, and `assistant:` labels that define
+  message boundaries
+- **Variable references** — `${env:VAR}` and `${file:path}` expansions in
+  frontmatter values
+
+### Validation
+
+The language server validates your file as you type:
+
+- **YAML syntax errors** — malformed frontmatter is underlined immediately
+- **Frontmatter schema violations** — unknown properties, wrong value types,
+  and missing required fields are flagged against the AgentSchema
+  `PromptAgent` spec
+- **Connection and provider validation** — mismatched `provider` / `connection`
+  combinations (for example, an `azure` provider with a missing `endpoint`)
+  are reported as warnings
+
+### Completions
+
+IntelliSense triggers in both the frontmatter and the body:
+
+| Context | What you get |
+|---|---|
+| Frontmatter properties | `name`, `description`, `model`, `inputSchema`, `outputSchema`, `tools`, `template`, `metadata` |
+| Enum values | `provider` → `openai`, `azure`, `foundry`; `apiType` → `chat`, `embedding`, `image`, `agent` |
+| Model IDs | Models discovered from configured connections |
+| Body variables | `{{ … }}` references matched against `inputSchema` properties |
+| Snippet blocks | Expand `model`, `inputs`, `template`, `tools`, `metadata` into full YAML scaffolds |
+
+<Aside type="tip">
+  Type `model` on a blank line inside the frontmatter and accept the snippet
+  completion to get a ready-made model block with `id`, `provider`,
+  `connection`, and `options` stubs.
+</Aside>
+
+### Hover
+
+Hover over a frontmatter property or a `{{ variable }}` reference to see:
+
+- **Variable types and defaults** — the `kind`, `default`, and `description`
+  from the corresponding `inputSchema` property
+- **Enum documentation** — allowed values for properties like `apiType` or
+  `connection.kind`
+
+### Semantic Tokens
+
+Semantic highlighting is enabled by default for `.prompty` files. The language
+server decorates tokens beyond what the TextMate grammar provides:
+
+- **Delimiters** — the `---` frontmatter fences
+- **Role labels** — `system:`, `user:`, `assistant:`
+- **Template variables** — `{{ name }}` expressions
+- **Environment references** — `${env:VAR}` and `${env:VAR:default}`
+- **Thread markers** — `{{ conversation }}` when the input has `kind: thread`
+
+### Document Symbols
+
+The **Outline** panel (`Ctrl+Shift+O`) shows a structured view of the file:
+
+- Each frontmatter section (`model`, `inputSchema`, `tools`, …) appears as a
+  symbol
+- Each role block (`system:`, `user:`, `assistant:`) appears as a child symbol
+
+This makes it easy to jump between sections in longer prompts.
+
+---
+
+## Creating a New File
+
+There are three ways to create a `.prompty` file:
+
+1. **Command Palette** — press `Ctrl+Shift+P` and run **Prompty: New Prompty**.
+   This creates a file pre-populated with a starter template.
+2. **Explorer context menu** — right-click a folder in the Explorer sidebar and
+   choose **New Prompty**. The file is created in that folder.
+3. **Manual** — create any file with the `.prompty` extension. The language
+   server activates automatically.
+
+<Aside type="note">
+  The scaffolded template includes a model block, sample inputs, and a
+  minimal system/user prompt so you can press **F5** immediately to test.
+</Aside>
+
+---
+
+## File Structure
+
+Every `.prompty` file has two parts separated by `---` delimiters:
+
+```yaml title="example.prompty"
+---
+# YAML frontmatter — agent configuration
+name: greeting
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT}
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 256
+inputSchema:
+  properties:
+    firstName:
+      kind: string
+      default: Jane
+    question:
+      kind: string
+      default: What is Prompty?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a friendly assistant helping {{ firstName }}.
+
+user:
+{{ question }}
+```
+
+The **frontmatter** declares the model, inputs, tools, and template
+configuration. The **body** contains the prompt text with role markers and
+template expressions.
+
+For a full property reference, see the
+[File Format](/core-concepts/file-format/) documentation.
+
+---
+
+## Tips
+
+<Aside type="tip">
+  Define `default` or `example` values for every input property. This lets you
+  press **F5** to run the prompt without manually supplying values each time.
+</Aside>
+
+<Aside type="tip">
+  Role markers (`system:`, `user:`, `assistant:`) must appear **at the start
+  of a line** followed by a newline. They split the body into separate messages
+  sent to the model.
+</Aside>
+
+<Aside type="tip">
+  `{{ variable }}` references in the body get autocomplete suggestions drawn
+  from your `inputSchema` properties — keep your schema up to date so
+  completions stay accurate.
+</Aside>
+
+<Aside type="tip">
+  Use `${env:VAR}` references in the frontmatter to keep secrets out of source
+  control. The extension resolves them from `.env` files in your workspace root
+  at load time.
+</Aside>

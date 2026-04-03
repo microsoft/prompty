@@ -1,0 +1,109 @@
+---
+title: Tracing
+description: Inspect execution traces with the built-in trace viewer — timing, tokens, messages, and raw API data.
+sidebar:
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+![Trace viewer showing pipeline stages with timing and token counts](/images/vscode/tracing.png)
+
+## Overview
+
+Every prompt execution produces a `.tracy` file in the `.runs/` directory next
+to your `.prompty` file. The extension includes a custom editor (registered as
+`prompty.traceViewer`) that opens these files in a rich, interactive trace
+viewer built with React.
+
+The viewer breaks each run into its pipeline stages — **load → render → parse →
+execute → process** — so you can see exactly what happened at every step, how
+long it took, and how many tokens were consumed.
+
+## The .tracy Format
+
+`.tracy` files are JSON trace data. The extension registers `.tracy` as a custom
+language in VS Code and automatically associates these files with the trace
+viewer custom editor.
+
+<Aside>
+  You can also right-click a `.tracy` file and choose **Open With…** → **Text
+  Editor** to inspect the raw JSON directly.
+</Aside>
+
+Each file captures the full trace tree for a single execution, including nested
+frames for every pipeline stage, timing information, token counts, and the
+complete request/response payloads sent to the model provider.
+
+## Navigating Traces
+
+The **Traces** panel in the Prompty Explorer sidebar gives you quick access to
+all recorded runs:
+
+- **Sort by date** (newest first) or **sort by name** using the toolbar buttons
+- **Refresh** the list after new runs to pick up the latest `.tracy` files
+- **Click** any trace to open it in the viewer
+- Traces are **grouped by workspace folder** when you have a multi-root
+  workspace open
+
+<Aside type="tip">
+  After running a prompt with **F5**, the trace viewer opens automatically so
+  you can inspect the result immediately.
+</Aside>
+
+## Trace Viewer Layout
+
+The viewer is split into two main areas: a **sidebar tree** on the left and a
+**detail panel** on the right.
+
+### Sidebar Tree
+
+The collapsible tree shows every trace frame in the execution:
+
+- **Frame names** — `load`, `render`, `execute`, `process`, and any custom
+  stages
+- **Duration badges** — how long each stage took in milliseconds
+- **Token usage counts** — prompt and completion tokens at a glance
+- **Provider icons** — visual indicators for OpenAI, Azure, Anthropic, and other
+  providers
+- **Nested child frames** — expand complex operations to see sub-steps (e.g.,
+  individual tool calls inside an agent loop)
+
+Click a frame in the tree to populate the detail panel with that stage's data.
+
+### Detail Panel
+
+The detail panel has five tabs:
+
+| Tab | Contents |
+|---|---|
+| **Overview** | Execution time, token counts (prompt + completion), and expandable input/output inspectors |
+| **Conversation** | Reconstructed message flow for agent loops and chat sessions, with role labels for system, user, assistant, and tool messages |
+| **Input** | The data passed into this pipeline stage |
+| **Output** | The data returned from this pipeline stage |
+| **Raw** | Complete unprocessed trace data as JSON |
+
+<Aside type="tip">
+  The **Conversation** tab is especially useful for agent loops with tool
+  calling — it reconstructs the full back-and-forth between the model and your
+  tool functions so you can follow the reasoning step by step.
+</Aside>
+
+## Working with Traces
+
+A few practical tips for day-to-day use:
+
+- **Add `.runs/` to your `.gitignore`** — trace files are local debugging
+  artifacts and shouldn't be committed to source control
+- **Each run creates a new `.tracy` file** with a timestamp in the filename, so
+  you never lose previous traces
+- **Chat mode sessions** produce a single trace covering all turns in the
+  conversation, making it easy to review the full exchange
+- **Compare traces side by side** by opening multiple `.tracy` files in separate
+  editor tabs — useful for spotting differences after changing your prompt or
+  model options
+
+<Aside type="caution">
+  Trace files can grow large for agent loops with many tool-call iterations.
+  Clean out `.runs/` periodically to keep your workspace tidy.
+</Aside>

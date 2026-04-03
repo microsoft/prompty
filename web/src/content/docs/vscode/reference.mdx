@@ -1,0 +1,152 @@
+---
+title: Reference
+description: Settings, keyboard shortcuts, extension API, and troubleshooting for the Prompty VS Code extension.
+sidebar:
+  order: 6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Settings
+
+Open VS Code settings (`Ctrl+,` or `Cmd+,` on macOS) and search for **Prompty** to
+find all extension settings.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `prompty.currentModelConfiguration` | `string` | `"default"` | The active model configuration name |
+| `prompty.showV1DeprecationWarnings` | `boolean` | `true` | Show deprecation warnings when loading `.prompty` files that use the legacy v1 format |
+| `prompty.envFilePath` | `string` | `""` | Custom path to a `.env` file. If empty, the extension searches the workspace hierarchy |
+| `promptyLanguageServer.trace.server` | `string` | `"off"` | Trace level for VS Code ↔ language server communication. Values: `off`, `messages`, `verbose` |
+
+Example `settings.json`:
+
+```json
+{
+  "prompty.currentModelConfiguration": "my-azure-connection",
+  "prompty.showV1DeprecationWarnings": true,
+  "prompty.envFilePath": "${workspaceFolder}/.env",
+  "promptyLanguageServer.trace.server": "off"
+}
+```
+
+<Aside type="tip">
+  Set `promptyLanguageServer.trace.server` to `"verbose"` when diagnosing
+  language server issues — then check the **Prompty Language Server** channel
+  in the Output panel.
+</Aside>
+
+## Keyboard Shortcuts
+
+| Action | Shortcut | Context |
+|---|---|---|
+| Run Prompt | `F5` | When a `.prompty` file is active |
+| New Prompty | `Ctrl+Shift+P` → "Prompty: New Prompty" | Any time |
+| Preview | `Ctrl+Shift+P` → "Prompty: Preview" | When a `.prompty` file is active |
+| Add Connection | `Ctrl+Shift+P` → "Prompty: Add Connection" | Any time |
+
+<Aside>
+  All commands are available in the Command Palette (`Ctrl+Shift+P` /
+  `Cmd+Shift+P`) under the **Prompty** category.
+</Aside>
+
+## All Commands
+
+The complete list of commands registered by the extension:
+
+| Command | Description |
+|---|---|
+| `Prompty: New Prompty` | Create a new `.prompty` file |
+| `Prompty: Run Prompt` | Execute the current `.prompty` file |
+| `Prompty: Preview` | Open live preview panel |
+| `Prompty: Add Connection` | Add a new LLM provider connection |
+| `Prompty: Edit Connection` | Modify an existing connection |
+| `Prompty: Delete Connection` | Remove a connection |
+| `Prompty: Test Connection` | Test connectivity to a provider |
+| `Prompty: Set Default Connection` | Set a connection as the default for its provider |
+| `Prompty: Refresh Connections` | Reload connections from disk |
+| `Prompty: Refresh Models` | Re-fetch available models for a connection |
+| `Prompty: View Trace` | Open a trace file in the viewer |
+| `Prompty: Refresh Traces` | Reload the traces list |
+| `Prompty: Sort Traces by Date` | Sort traces newest first |
+| `Prompty: Sort Traces by Name` | Sort traces alphabetically |
+
+## Extension API
+
+Other VS Code extensions can integrate with Prompty by activating the extension
+and using the returned API surface.
+
+```typescript
+const promptyExt = vscode.extensions.getExtension('ms-toolsai.prompty');
+const api = await promptyExt?.activate();
+```
+
+### Methods
+
+| Method | Description |
+|---|---|
+| `registerConnectionProvider(provider)` | Register a custom connection provider |
+| `registerExecutor(key, executor)` | Register a custom executor for a provider key |
+| `registerProcessor(key, processor)` | Register a custom processor for a provider key |
+| `getConnections()` | Query all configured connections |
+| `onConnectionsChanged(listener)` | Listen for connection changes |
+
+<Aside type="caution">
+  The extension API is experimental and may change between minor versions.
+  Pin your extension dependency to a specific version range if you rely on it.
+</Aside>
+
+## Troubleshooting
+
+### Connection test fails
+
+- **OpenAI / Anthropic** — verify that your API key is correct and has not
+  expired. Run `Prompty: Test Connection` to see the exact error.
+- **Microsoft Foundry** — ensure you are signed into Azure (`Azure: Sign In`
+  in the Command Palette). Double-check that the endpoint URL matches your
+  deployed resource.
+
+### No autocomplete in frontmatter
+
+The language server provides completions for frontmatter keys and values. If
+autocomplete stops working:
+
+1. Run **Developer: Reload Window** from the Command Palette.
+2. If the issue persists, the language server may need a restart — disable and
+   re-enable the extension.
+
+### Traces not appearing
+
+1. Open the **Output** panel (`Ctrl+Shift+U`) and select the **Prompty**
+   channel. Look for errors during execution.
+2. Verify that a `.runs/` directory exists in your workspace — traces are
+   written there as `.tracy` files.
+3. Click **Refresh** in the Traces view, or run `Prompty: Refresh Traces`.
+
+### V1 deprecation warnings
+
+If you see deprecation warnings when opening a `.prompty` file, the file uses
+the legacy v1 frontmatter format. See the [migration guide](/migration/) for
+instructions on updating to the v2 format.
+
+To suppress warnings without migrating, set:
+
+```json
+{
+  "prompty.showV1DeprecationWarnings": false
+}
+```
+
+### Language server not starting
+
+1. Set `promptyLanguageServer.trace.server` to `"verbose"` in settings.
+2. Open the **Output** panel and select **Prompty Language Server**.
+3. Look for startup errors or missing dependencies.
+4. If no output appears, try reinstalling the extension from the Marketplace.
+
+## Further Reading
+
+- [File format reference](/core-concepts/file-format/)
+- [Tracing](/core-concepts/tracing/)
+- [Getting started](/getting-started/)
+- [Legacy extension docs](/legacy/guides/extension/)
