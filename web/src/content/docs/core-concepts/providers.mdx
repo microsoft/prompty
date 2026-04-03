@@ -1,0 +1,311 @@
+---
+title: Providers
+description: >
+  Supported LLM providers in Prompty — OpenAI, Microsoft Foundry,
+  Anthropic — and how to configure connections for each.
+sidebar:
+  order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Prompty uses a **provider** system to connect to different LLM backends. Each
+provider has an **executor** (sends requests to the API) and a **processor**
+(extracts results from responses). You set the provider in your `.prompty` file's
+`model` section.
+
+```yaml
+model:
+  id: gpt-4o
+  provider: openai        # ← provider key
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT}
+    apiKey: ${env:OPENAI_API_KEY}
+```
+
+---
+
+## OpenAI
+
+Direct access to the [OpenAI API](https://platform.openai.com/docs/api-reference).
+
+**Provider key:** `openai`
+
+**Supported API types:** `chat`, `responses`, `embedding`, `image`, `agent` (tool-calling loop)
+
+<Tabs>
+<TabItem label="Connection">
+```yaml
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: https://api.openai.com/v1
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1000
+```
+</TabItem>
+<TabItem label="Embedding">
+```yaml
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+```
+</TabItem>
+<TabItem label="Image">
+```yaml
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+```
+</TabItem>
+</Tabs>
+
+<Aside type="tip">
+  The `endpoint` defaults to `https://api.openai.com/v1` and can be omitted for
+  standard OpenAI usage.
+</Aside>
+
+### Notes
+
+- Uses the official `openai` Python package
+- Supports streaming via `PromptyStream` / `AsyncPromptyStream`
+- Structured output is supported via `outputSchema` → `response_format`
+- Agent mode (`apiType: agent`) runs an automatic tool-calling loop
+
+---
+
+## Azure OpenAI
+
+Azure-hosted OpenAI models accessed through
+[Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/).
+
+**Provider key:** `azure`
+
+**Supported API types:** `chat`, `responses`, `embedding`, `image`, `agent` (tool-calling loop)
+
+<Tabs>
+<TabItem label="API Key">
+```yaml
+model:
+  id: gpt-4o                # your deployment name
+  provider: azure
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+```
+</TabItem>
+<TabItem label="Embedding">
+```yaml
+model:
+  id: text-embedding-3-small  # your deployment name
+  provider: azure
+  apiType: embedding
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  The `model.id` field maps to your **Azure deployment name**, not the underlying
+  model name. For example, if you deployed `gpt-4o` as `my-gpt4o-deployment`,
+  use `id: my-gpt4o-deployment`.
+</Aside>
+
+### Notes
+
+- Uses the `openai` Python package with Azure-specific configuration
+- Requires the `azure-identity` package for Azure AD authentication
+- The executor automatically sets `azure_endpoint` and `api_version` on the
+  `AzureOpenAI` client
+- Supports the same features as the OpenAI provider (streaming, structured output,
+  agent mode)
+
+---
+
+## Microsoft Foundry
+
+Connect to models deployed through
+[Microsoft Foundry](https://ai.azure.com/) (Azure AI Services).
+
+**Provider key:** `foundry`
+
+**Supported API types:** `chat`, `responses`, `embedding`
+
+<Tabs>
+<TabItem label="Connection">
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+    apiKey: ${env:AZURE_AI_PROJECT_KEY}
+```
+</TabItem>
+<TabItem label="Azure AD Auth">
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
+  apiType: chat
+  connection:
+    kind: reference
+    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  When using `kind: reference`, the runtime authenticates via
+  `DefaultAzureCredential`. Make sure you are logged in to Azure (e.g.,
+  via `az login`).
+</Aside>
+
+### Notes
+
+- Connects to Azure AI Foundry project endpoints
+- Supports both API key and Azure AD (managed identity) authentication
+- Model deployments are managed through the Azure AI Foundry portal
+
+---
+
+## Anthropic
+
+Access [Anthropic Claude](https://docs.anthropic.com/en/docs/) models directly.
+
+**Provider key:** `anthropic`
+
+**Supported API types:** `chat`
+
+<Tabs>
+<TabItem label="Connection">
+```yaml
+model:
+  id: claude-sonnet-4-6
+  provider: anthropic
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: https://api.anthropic.com
+    apiKey: ${env:ANTHROPIC_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+```
+</TabItem>
+</Tabs>
+
+### Notes
+
+- Uses the `anthropic` Python package
+- The `endpoint` defaults to `https://api.anthropic.com` and can typically be
+  omitted
+- Tool calling is supported through Anthropic's native tool use API
+
+---
+
+## Provider Comparison
+
+| Feature | OpenAI | Azure OpenAI | Microsoft Foundry | Anthropic |
+|---|:---:|:---:|:---:|:---:|
+| `chat` | ✅ | ✅ | ✅ | ✅ |
+| `responses` | ✅ | ✅ | ✅ | ❌ |
+| `embedding` | ✅ | ✅ | ✅ | ❌ |
+| `image` | ✅ | ✅ | ❌ | ❌ |
+| `agent` (tool loop) | ✅ | ✅ | ❌ | ❌ |
+| Streaming | ✅ | ✅ | ✅ | ✅ |
+| Structured output | ✅ | ✅ | ✅ | ✅ |
+| Azure AD auth | ❌ | ✅ | ✅ | ❌ |
+
+---
+
+## Custom Providers
+
+The provider system is **extensible**. You can create your own provider by
+implementing the executor and processor protocols, then registering them as
+Python entry points.
+
+### 1. Implement the Protocols
+
+```python
+from prompty.core.protocols import ExecutorProtocol, ProcessorProtocol
+from prompty.core.types import Message
+
+class MyExecutor:
+    def execute(self, agent, messages: list[Message], **kwargs):
+        # Call your LLM API here
+        ...
+
+    async def execute_async(self, agent, messages: list[Message], **kwargs):
+        # Async variant
+        ...
+
+class MyProcessor:
+    def process(self, agent, response, **kwargs):
+        # Extract content from the API response
+        ...
+
+    async def process_async(self, agent, response, **kwargs):
+        ...
+```
+
+### 2. Register Entry Points
+
+In your package's `pyproject.toml`:
+
+```toml
+[project.entry-points."prompty.executors"]
+myprovider = "my_package.executor:MyExecutor"
+
+[project.entry-points."prompty.processors"]
+myprovider = "my_package.processor:MyProcessor"
+```
+
+### 3. Use in `.prompty` Files
+
+```yaml
+model:
+  id: my-model
+  provider: myprovider
+  connection:
+    kind: key
+    endpoint: ${env:MY_ENDPOINT}
+    apiKey: ${env:MY_API_KEY}
+```
+
+After installing your package, the Prompty runtime discovers your provider
+automatically via the entry point system — no changes to the Prompty codebase
+are needed.
+
+<Aside type="tip">
+  See the [pipeline documentation](/core-concepts/pipeline/) for details on
+  how executors and processors fit into the overall execution flow.
+</Aside>
