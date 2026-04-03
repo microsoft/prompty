@@ -24,7 +24,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
 
       - name: Create tag
         run: |
@@ -42,10 +42,6 @@ jobs:
       - name: Generate Grammar
         working-directory: ./vscode/prompty
         run: npm run generate-grammar
-
-      - name: Generate Schemas
-        working-directory: ./vscode/prompty
-        run: npm run generate-schemas
 
       - name: Build
         working-directory: ./vscode/prompty

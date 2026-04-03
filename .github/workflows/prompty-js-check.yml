@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: ["16.x", "20.x"]
+        node-version: ["20.x", "22.x"]
         os: [ubuntu-latest, macOS-latest, windows-latest]
     permissions:
       # This permission is needed for private repositories.

@@ -7,8 +7,14 @@ on:
     branches:
       - "main"
 
+  workflow_dispatch:
+
 jobs:
-  extension-build:
+  check:
+    uses: ./.github/workflows/prompty-vscode-check.yml
+
+  upload-vsix:
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,7 +23,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
 
       - name: Create tag
         run: |
@@ -36,10 +42,6 @@ jobs:
         working-directory: ./vscode/prompty
         run: npm run generate-grammar
 
-      - name: Generate Schemas
-        working-directory: ./vscode/prompty
-        run: npm run generate-schemas
-
       - name: Build
         working-directory: ./vscode/prompty
         run: npm run build
@@ -52,8 +54,3 @@ jobs:
         with:
           name: vscode-vsix
           path: ./vscode/prompty/*.vsix
-
-      - name: Publish
-        run: npm run publish-pre
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
