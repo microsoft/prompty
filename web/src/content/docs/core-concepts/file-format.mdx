@@ -208,19 +208,17 @@ A list of tool definitions the model can call:
 
 Configures the rendering engine and the message parser.
 
-**Shorthand (recommended)** — just name the template engine. The parser
-defaults to `prompty`:
+**Shorthand (recommended)** — string values work at every level.
+`format: jinja2` expands to `format: { kind: jinja2 }`, and
+`parser: prompty` expands to `parser: { kind: prompty }`:
 
 ```yaml
-template: jinja2    # expands to {format: {kind: "jinja2"}, parser: {kind: "prompty"}}
+template:
+  format: jinja2
+  parser: prompty
 ```
 
-```yaml
-template: mustache  # expands to {format: {kind: "mustache"}, parser: {kind: "prompty"}}
-```
-
-**Full form** — use when you need to set the format and parser
-independently:
+**Full form** — use if you prefer explicit nesting:
 
 ```yaml
 template:
@@ -230,15 +228,10 @@ template:
     kind: prompty    # role-marker parser
 ```
 
-String shorthands also work inside the full form — `format: jinja2` is
-equivalent to `format: { kind: jinja2 }`, and `parser: prompty` is
-equivalent to `parser: { kind: prompty }`:
-
-```yaml
-template:
-  format: jinja2
-  parser: prompty
-```
+<Aside type="note" title="Template defaults">
+  If `template` is omitted entirely, the runtime defaults to Jinja2 rendering
+  with the Prompty chat parser (`format: jinja2`, `parser: prompty`).
+</Aside>
 
 ## The Markdown Body
 
