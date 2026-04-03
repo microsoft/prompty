@@ -9,75 +9,101 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ![Connections sidebar showing configured providers](/images/vscode/connections.png)
 
-Connections define how the extension reaches an LLM provider. The extension
-ships with built-in support for three providers:
+## Overview
+
+Connections define how the Prompty extension reaches an LLM provider. Each
+connection stores an endpoint, authentication credentials, and provider-specific
+settings so you can run `.prompty` files directly from VS Code without managing
+environment variables by hand.
+
+The extension ships with built-in support for three providers:
 
 | Provider | Auth Method | Model Discovery |
 |---|---|---|
-| **OpenAI** | API key | ✅ `models.list()` |
-| **Anthropic** | API key | ✅ `GET /v1/models` |
-| **Microsoft Foundry** | Azure AD (DefaultAzureCredential) | ✅ `GET /deployments` |
+| **OpenAI** | API key | ✅ Lists available models via the OpenAI API |
+| **Anthropic** | API key | ✅ Lists available models via the Anthropic API |
+| **Microsoft Foundry** | Azure AD / API key | ✅ Lists deployed models from your Foundry project |
+
+You can configure multiple connections per provider and mark one as the
+**default** — the extension uses that default whenever a `.prompty` file doesn't
+specify a connection explicitly.
 
 ---
 
 ## How Connections are Stored
 
-- **Profiles** are saved in your workspace at `.prompty/connections.json`
-- **Secrets** (API keys) are stored in VS Code's built-in `SecretStorage` — they
-  never appear in the JSON file
+Connection profiles are saved to a **`.prompty/connections.json`** file in your
+workspace root. Secrets (API keys, tokens) are stored separately in VS Code's
+**SecretStorage** — they never appear in the JSON file on disk.
+
+A typical `connections.json` looks like this:
 
 ```json title=".prompty/connections.json"
 {
-  "version": 1,
-  "connections": [
-    {
-      "id": "openai-a1b2c3",
-      "name": "My OpenAI",
-      "providerType": "openai",
-      "authType": "key",
-      "endpoint": "https://api.openai.com/v1",
-      "model": "gpt-4o",
-      "isDefault": true
-    }
-  ]
+  "openai-dev": {
+    "provider": "openai",
+    "endpoint": "https://api.openai.com/v1",
+    "isDefault": true
+  },
+  "azure-prod": {
+    "provider": "foundry",
+    "endpoint": "https://my-resource.services.ai.azure.com/api/projects/my-project",
+    "isDefault": false
+  }
 }
 ```
 
+Each key is the connection name you chose during setup. The `isDefault` flag
+controls which connection is used when multiple connections exist for the same
+provider.
+
 <Aside type="caution">
-  Add `.prompty/` to your `.gitignore` if your `connections.json` contains
-  endpoints or other values you don't want in source control. API keys are
-  always safe — they're stored in VS Code's SecretStorage, not the JSON file.
+  Add `.prompty/` to your `.gitignore` to keep connection profiles out of source
+  control. Even though secrets are stored in SecretStorage, the endpoint URLs and
+  connection names may be sensitive.
+</Aside>
+
+<Aside type="note">
+  SecretStorage keys follow the pattern `prompty-connection-<name>`. When you
+  delete a connection, the extension removes both the JSON entry and the
+  corresponding secret.
 </Aside>
 
 ---
 
 ## Adding a Connection
 
-1. In the Prompty Explorer sidebar, click the **+** button on the **Connections** panel
-   — or run **Prompty: Add Connection** from the Command Palette
-2. Pick a provider from the QuickPick menu: **OpenAI**, **Anthropic**, or **Microsoft Foundry**
-3. Fill in the fields (varies by provider — see below)
-4. The connection is saved and you're offered to **test it immediately**
+Open the **Connections** panel in the sidebar and click the **+** button (or run
+the **Prompty: Add Connection** command from the Command Palette). The extension
+walks you through a four-step wizard:
+
+1. **Pick a provider** — OpenAI, Anthropic, or Microsoft Foundry
+2. **Enter a name** — a short label for this connection (e.g. `openai-dev`)
+3. **Provide credentials** — endpoint URL and API key (or Azure AD for Foundry)
+4. **Test (optional)** — the wizard offers to test the connection before saving
+
+After the wizard completes, the connection appears in the sidebar and is ready
+to use.
 
 ### OpenAI
 
 <Tabs>
-<TabItem label="Wizard Steps">
-| Step | Field | Required | Default |
-|---|---|---|---|
-| 1 | **Connection name** | ✅ | — |
-| 2 | **API key** | ✅ | — |
-| 3 | **Endpoint** | ❌ | `https://api.openai.com/v1` |
-| 4 | **Model** | ❌ | `gpt-4o` |
-</TabItem>
-<TabItem label="Example">
-```
-Connection name: my-openai
-API key: sk-...
-Endpoint: (leave default)
-Model: gpt-4o-mini
-```
-</TabItem>
+  <TabItem label="Wizard Steps">
+    | Step | Field | Required | Default |
+    |---|---|---|---|
+    | 1 | **Connection name** | ✅ | — |
+    | 2 | **API key** | ✅ | — |
+    | 3 | **Endpoint** | ❌ | `https://api.openai.com/v1` |
+    | 4 | **Model** | ❌ | `gpt-4o` |
+  </TabItem>
+  <TabItem label="Example">
+    ```
+    Connection name: my-openai
+    API key: sk-...
+    Endpoint: (leave default)
+    Model: gpt-4o-mini
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -89,53 +115,55 @@ Model: gpt-4o-mini
 ### Anthropic
 
 <Tabs>
-<TabItem label="Wizard Steps">
-| Step | Field | Required | Default |
-|---|---|---|---|
-| 1 | **Connection name** | ✅ | — |
-| 2 | **API key** | ✅ | — |
-| 3 | **Endpoint** | ❌ | `https://api.anthropic.com` |
-| 4 | **Model** | ❌ | `claude-sonnet-4-6` |
-</TabItem>
-<TabItem label="Example">
-```
-Connection name: my-anthropic
-API key: sk-ant-...
-Endpoint: (leave default)
-Model: claude-sonnet-4-6
-```
-</TabItem>
+  <TabItem label="Wizard Steps">
+    | Step | Field | Required | Default |
+    |---|---|---|---|
+    | 1 | **Connection name** | ✅ | — |
+    | 2 | **API key** | ✅ | — |
+    | 3 | **Endpoint** | ❌ | `https://api.anthropic.com` |
+    | 4 | **Model** | ❌ | `claude-sonnet-4-6` |
+  </TabItem>
+  <TabItem label="Example">
+    ```
+    Connection name: my-anthropic
+    API key: sk-ant-...
+    Endpoint: (leave default)
+    Model: claude-sonnet-4-6
+    ```
+  </TabItem>
 </Tabs>
 
 ### Microsoft Foundry
 
 Microsoft Foundry connections use **Azure AD authentication** instead of API
-keys. The extension obtains a bearer token via
-`DefaultAzureCredential`, so you must be logged in to Azure (e.g., via the
-Azure CLI or the VS Code Azure Account extension).
+keys. The extension obtains a bearer token via `DefaultAzureCredential`, so you
+must be logged in to Azure (e.g., via the Azure CLI or the VS Code Azure Account
+extension).
 
 <Tabs>
-<TabItem label="Wizard Steps">
-| Step | Field | Required | Default |
-|---|---|---|---|
-| 1 | **Connection name** | ✅ | — |
-| 2 | **Project endpoint** | ✅ | — |
-| 3 | **Foundry connection name** | ❌ | — |
-| 4 | **Tenant ID** | ❌ | — |
-</TabItem>
-<TabItem label="Example">
-```
-Connection name: my-foundry
-Project endpoint: https://my-project.services.ai.azure.com
-Foundry connection name: (leave blank for default)
-Tenant ID: (leave blank for default)
-```
-</TabItem>
+  <TabItem label="Wizard Steps">
+    | Step | Field | Required | Default |
+    |---|---|---|---|
+    | 1 | **Connection name** | ✅ | — |
+    | 2 | **Project endpoint** | ✅ | — |
+    | 3 | **Foundry connection name** | ❌ | — |
+    | 4 | **Tenant ID** | ❌ | — |
+  </TabItem>
+  <TabItem label="Example">
+    ```
+    Connection name: my-foundry
+    Project endpoint: https://my-project.services.ai.azure.com
+    Foundry connection name: (leave blank for default)
+    Tenant ID: (leave blank for default)
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="note">
-  The project endpoint must start with `https://`. Model discovery calls
-  `GET {endpoint}/deployments?api-version=v1` to list deployed models.
+  The project endpoint must be the full Foundry project URL, starting with
+  `https://`. You can find this in the Azure portal under your AI Foundry
+  project's **Overview** page. Model discovery calls the deployments endpoint to
+  list deployed models.
 </Aside>
 
 ---
@@ -143,8 +171,9 @@ Tenant ID: (leave blank for default)
 ## Testing a Connection
 
 Right-click any connection in the sidebar and select **Test Connection**, or
-click the **plug icon** that appears inline. The extension runs a lightweight
-check for each provider:
+click the **plug icon** that appears inline. You can also run **Prompty: Test
+Connection** from the Command Palette. The extension runs a lightweight check
+for each provider:
 
 | Provider | What the test does | On success |
 |---|---|---|
@@ -152,62 +181,141 @@ check for each provider:
 | **Anthropic** | Sends a minimal `messages` request | Reports HTTP 200 |
 | **Foundry** | Authenticates with Azure AD, calls deployments endpoint | Reports deployment count and credential source |
 
+After the test, the connection's status icon updates in the sidebar:
+
+- ✅ **Connected** — all checks passed
+- ❌ **Failed** — one or more checks failed (hover for details)
+
+<Aside type="tip">
+  If a connection test fails, double-check your API key and endpoint URL. For
+  Foundry connections, make sure your Azure account has the correct role
+  assignment on the AI Foundry project.
+</Aside>
+
 ---
 
 ## Editing a Connection
 
-Right-click a connection in the sidebar and select **Edit Connection** to modify
-its settings. The wizard re-opens with the current values pre-filled. You can
-update the endpoint, model, or re-enter credentials.
+To update an existing connection, right-click it in the **Connections** panel
+and select **Edit Connection** (or run **Prompty: Edit Connection** from the
+Command Palette).
+
+The wizard reopens with your current settings pre-filled. You can change any
+field — name, endpoint, or credentials. When you save:
+
+- The profile in `.prompty/connections.json` is updated
+- If you changed the secret (API key), the old SecretStorage entry is replaced
+- The `isDefault` flag is preserved unless you explicitly change it
 
 <Aside type="tip">
   Use **Edit Connection** to rotate API keys — the new key replaces the old one
-  in VS Code's SecretStorage.
+  in VS Code's SecretStorage without affecting the rest of the connection
+  configuration.
+</Aside>
+
+<Aside type="note">
+  Editing a connection does not interrupt any running prompts. The updated
+  credentials take effect on the next execution.
 </Aside>
 
 ---
 
 ## Deleting a Connection
 
-Right-click a connection and select **Delete Connection** to remove it. This
-deletes the profile from `.prompty/connections.json` and removes any associated
-secrets from VS Code's SecretStorage.
+Right-click a connection in the sidebar and select **Delete Connection**, or run
+**Prompty: Delete Connection** from the Command Palette.
 
-If the deleted connection was the default for its provider type, you'll need to
-set a new default.
+Deleting a connection removes **both**:
+
+1. The profile entry from `.prompty/connections.json`
+2. The associated secret from VS Code's SecretStorage
+
+<Aside type="caution">
+  Deletion is permanent — there is no undo. If the deleted connection was the
+  default for its provider, you'll need to set a new default before running
+  prompts that rely on that provider.
+</Aside>
 
 ---
 
 ## Setting a Default
 
-Right-click a connection and select **Set as Default**, or click the star icon.
-The default connection is set **per provider type** — you can have one default
-OpenAI connection and one default Anthropic connection simultaneously.
+When you have multiple connections for the same provider, you can mark one as
+the **default**. Right-click a connection and select **Set as Default**, or
+click the star icon. The default connection is set **per provider type** — you
+can have one default OpenAI connection and one default Foundry connection
+simultaneously.
 
-When you run a prompt:
-1. If the `.prompty` frontmatter specifies a `model.connection`, that's used
-2. Otherwise, the default connection for the matching provider type is used
-3. If no provider-specific default exists, any available default is used
+The extension resolves which connection to use in this order:
 
-The status bar at the bottom right shows your current default:
-`$(plug) My OpenAI` — click it to change the default.
+| Priority | Source | Example |
+|---|---|---|
+| 1 | **Frontmatter** `model.connection` | Explicit endpoint + key in the `.prompty` file |
+| 2 | **Provider default** | The default connection for the provider named in `model.provider` |
+| 3 | **Any default** | Falls back to any connection marked as default |
+
+The status bar at the bottom of the VS Code window shows your current default
+connection — click it to quickly switch defaults.
+
+<Aside type="tip">
+  You can set a different default per provider. For example, keep an OpenAI
+  default for `gpt-4o` prompts and a Foundry default for Azure-deployed models —
+  the extension picks the right one based on `model.provider` in each `.prompty`
+  file.
+</Aside>
 
 ---
 
 ## Model Discovery
 
-For providers that support it, expand a connection in the sidebar to see a
-**Models** section listing all available models. Click the **refresh** button to
-re-fetch. The discovered model IDs can be used in your `.prompty` file's
-`model.id` field, and the language server offers them as completions.
+Expand any connection in the **Connections** panel to reveal a **Models**
+section. The extension queries the provider's API and lists all models available
+under that connection.
+
+- **OpenAI** — lists all models your API key has access to
+- **Anthropic** — lists available Claude model variants
+- **Microsoft Foundry** — lists models deployed in your Foundry project
+
+Model IDs from this list are what you use in the `model.id` field of your
+`.prompty` frontmatter:
+
+```yaml
+model:
+  id: gpt-4o          # ← model ID from the discovery list
+  provider: openai
+```
+
+Click the **refresh** icon next to the Models heading to re-fetch the model list
+(for example, after deploying a new model to your Foundry project). The language
+server also uses discovered models to offer completions when you type `model.id`
+in a `.prompty` file.
+
+<Aside type="note">
+  Model discovery requires a working connection. If the connection hasn't been
+  tested or has expired credentials, test it first to refresh authentication
+  before expanding the models list.
+</Aside>
 
 ---
 
 ## Refreshing Connections
 
-Click the **refresh button** in the Connections panel toolbar to reload
-connections from disk and re-authenticate with providers. This is useful after:
+Click the **refresh** button in the **Connections** panel toolbar to reload all
+connections from disk and re-authenticate with each provider.
 
-- Manually editing `.prompty/connections.json`
-- Rotating credentials outside of VS Code
-- Signing in to Azure after opening the workspace
+This is useful when:
+
+- You edited `.prompty/connections.json` outside of VS Code
+- An API key or Azure AD token has expired and needs re-acquisition
+- You switched Azure accounts and want to pick up the new credentials
+- Another workspace tool modified the connections file
+
+The refresh re-reads `connections.json`, re-validates secrets in SecretStorage,
+and updates the sidebar tree. Any connection whose credentials are no longer
+valid will show a failed status icon.
+
+<Aside type="tip">
+  The extension also watches `.prompty/connections.json` for file changes and
+  refreshes automatically. The manual refresh button is a fallback for cases
+  where the file watcher doesn't pick up external edits.
+</Aside>

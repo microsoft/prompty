@@ -35,23 +35,44 @@ graph LR
 
 ## Installation
 
-Install from the VS Code Marketplace:
+<Aside type="caution" title="v2 not yet on the Marketplace">
+  The **v2 extension** is not yet published to the VS Code Marketplace — the
+  Marketplace version is still v1. To get the latest v2 build, download the
+  `.vsix` artifact from GitHub CI and install it manually (see below).
+</Aside>
+
+### From a .vsix file (recommended for v2)
+
+1. Go to the [GitHub Actions — VS Code Extension build](https://github.com/microsoft/prompty/actions/workflows/prompty-vscode.yml) page
+2. Click the most recent successful run
+3. Download the **vscode-vsix** artifact (a `.zip` containing the `.vsix`)
+4. Extract the `.vsix` file from the zip
+5. In VS Code, open the Command Palette (`Ctrl+Shift+P`) and run
+   **Extensions: Install from VSIX…**, then select the file
+
+Or install from the command line:
+
+```bash
+code --install-extension prompty-0.0.0.vsix
+```
+
+<Aside type="tip">
+  If you have the v1 extension installed, VS Code will automatically replace it
+  with the `.vsix` version. You may need to reload the window afterward.
+</Aside>
+
+### From the Marketplace (v1)
+
+Once the v2 extension is published, you'll be able to install it directly:
 
 1. Open VS Code
 2. Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on macOS) to open Extensions
 3. Search for **Prompty**
 4. Click **Install** on the extension by **ms-toolsai**
 
-Or install from the command line:
-
 ```bash
 code --install-extension ms-toolsai.prompty
 ```
-
-<Aside type="tip">
-  The extension ID is `ms-toolsai.prompty`. You can also find it in the
-  [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
-</Aside>
 
 ## Next Steps
 
