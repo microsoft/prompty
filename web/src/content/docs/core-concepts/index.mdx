@@ -1,0 +1,28 @@
+---
+title: Core Concepts
+description: >
+  Understand how Prompty works — the file format, pipeline architecture,
+  connections, tools, tracing, streaming, structured output, and agent mode.
+sidebar:
+  order: 1
+---
+
+This section covers the fundamental concepts behind Prompty. Each page explains
+a key aspect of how Prompty processes `.prompty` files into LLM results.
+
+## The Basics
+
+- [**The .prompty File Format**](/core-concepts/file-format/) — anatomy of a `.prompty` file: frontmatter, body, role markers, template syntax
+- [**Pipeline Architecture**](/core-concepts/pipeline/) — the four-stage pipeline: render → parse → execute → process
+
+## Configuration
+
+- [**Connections**](/core-concepts/connections/) — how Prompty authenticates with LLM providers (API keys, AAD, registries)
+- [**Tools**](/core-concepts/tools/) — function, MCP, OpenAPI, and custom tool definitions
+
+## Advanced Features
+
+- [**Tracing & Observability**](/core-concepts/tracing/) — pluggable tracer backends, @trace decorator, OpenTelemetry
+- [**Streaming**](/core-concepts/streaming/) — real-time chunk delivery, PromptyStream, async iteration
+- [**Structured Output**](/core-concepts/structured-output/) — typed JSON responses via output schemas
+- [**Agent Mode**](/core-concepts/agent-mode/) — automatic tool-calling loop with error recovery

@@ -52,7 +52,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     compositionTypes: compositionTypes
   });
 
-  await emitMarkdownFile(context, "README", readmeContent, emitTarget["output-dir"]);
+  await emitMarkdownFile(context, "index", readmeContent, emitTarget["output-dir"]);
 
   const findNodeByName = (name: TypeName): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === name.name && n.typeName.namespace === name.namespace);

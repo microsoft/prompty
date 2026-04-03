@@ -1,0 +1,179 @@
+---
+title: Python
+description: >
+  Using Prompty with Python — installation, extras, API overview, and async patterns.
+sidebar:
+  order: 1
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installation
+
+Prompty v2 requires **Python ≥ 3.11**. We recommend [uv](https://docs.astral.sh/uv/) for environment management.
+
+```bash
+# Create a virtual environment
+uv venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+# Install with the extras you need
+uv pip install prompty[jinja2,openai]
+```
+
+### Available Extras
+
+| Extra | Packages Installed | What it enables |
+|-------|-------------------|-----------------|
+| `jinja2` | `jinja2` | Jinja2 template rendering |
+| `mustache` | `chevron` | Mustache template rendering |
+| `openai` | `openai` | OpenAI provider |
+| `azure` | `openai`, `azure-identity` | Azure OpenAI provider |
+| `otel` | `opentelemetry-api` | OpenTelemetry tracing |
+| `all` | All of the above | Everything |
+
+```bash
+# Install everything
+uv pip install prompty[all]
+```
+
+## Quick Start
+
+```python
+import prompty
+
+# All-in-one execution
+result = prompty.execute("greeting.prompty", inputs={"name": "Jane"})
+print(result)
+```
+
+## API Overview
+
+### Loading
+
+```python
+# Load a .prompty file into a typed Prompty object
+agent = prompty.load("chat.prompty")
+
+print(agent.name)          # "chat"
+print(agent.model.id)      # "gpt-4o"
+print(agent.instructions)  # the markdown body
+```
+
+### Pipeline Functions
+
+```python
+# Render template with inputs → string
+rendered = prompty.render(agent, inputs={"q": "Hi"})
+
+# Parse rendered string → list[Message]
+messages = prompty.parse(agent, rendered)
+
+# Render + parse + thread expansion → list[Message]
+messages = prompty.prepare(agent, inputs={"q": "Hi"})
+
+# Execute LLM + process response → clean result
+result = prompty.run(agent, messages)
+
+# Full pipeline: load + prepare + run
+result = prompty.execute("chat.prompty", inputs={"q": "Hi"})
+```
+
+### Async Variants
+
+Every function has an async counterpart:
+
+```python
+agent = await prompty.load_async("chat.prompty")
+messages = await prompty.prepare_async(agent, inputs={"q": "Hi"})
+result = await prompty.run_async(agent, messages)
+result = await prompty.execute_async("chat.prompty", inputs={"q": "Hi"})
+```
+
+### Agent Mode
+
+```python
+def get_weather(city: str) -> str:
+    return f"72°F and sunny in {city}"
+
+result = prompty.execute_agent(
+    "agent.prompty",
+    inputs={"question": "Weather in Seattle?"},
+    tools={"get_weather": get_weather},
+    max_iterations=10,
+)
+```
+
+### Headless Mode
+
+Create a `Prompty` object programmatically without a `.prompty` file:
+
+```python
+agent = prompty.headless(
+    api="chat",
+    content="Translate the following to French: Hello world",
+    model="gpt-4o-mini",
+    provider="openai",
+    connection={"kind": "key", "apiKey": os.environ["OPENAI_API_KEY"]},
+)
+result = prompty.run(agent, agent.metadata["content"])
+```
+
+### Connection Registry
+
+Pre-configure SDK clients for production use:
+
+```python
+from openai import AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+client = AzureOpenAI(
+    azure_endpoint=os.environ["AZURE_ENDPOINT"],
+    azure_ad_token_provider=get_bearer_token_provider(
+        DefaultAzureCredential(),
+        "https://cognitiveservices.azure.com/.default",
+    ),
+)
+prompty.register_connection("azure-prod", client=client)
+```
+
+### Tracing
+
+```python
+from prompty import Tracer, PromptyTracer, trace
+
+# Register a file-based tracer
+Tracer.add("json", PromptyTracer("./traces").tracer)
+
+# Trace custom functions
+@trace
+def my_pipeline(query: str) -> str:
+    return prompty.execute("search.prompty", inputs={"q": query})
+```
+
+## Providers
+
+| Provider | Registration Key | SDK | Extras |
+|----------|-----------------|-----|--------|
+| OpenAI | `openai` | `openai` | `prompty[openai]` |
+| Azure OpenAI | `azure` | `openai` + `azure-identity` | `prompty[azure]` |
+
+Providers are discovered via Python entry points. Third-party providers
+can register themselves in their `pyproject.toml`.
+
+## Environment Files
+
+Prompty automatically loads `.env` files via `python-dotenv`. Place a `.env`
+file in your project root:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+AZURE_OPENAI_ENDPOINT=https://myresource.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123
+```
+
+## Further Reading
+
+- [API Reference](/api-reference/) — complete function signatures
+- [How-To Guides](/how-to/openai/) — practical recipes
+- [Core Concepts](/core-concepts/) — architecture deep-dives

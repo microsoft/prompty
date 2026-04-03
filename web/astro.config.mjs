@@ -28,7 +28,14 @@ export default defineConfig({
         },
       ],
       plugins: [starlightAutoSidebar(), starlightLinksValidator({
-        exclude: ["http://localhost:4321"]
+        errorOnRelativeLinks: false,
+        exclude: ({ slug, link }) => {
+          // Exclude all links originating from legacy pages
+          if (slug && slug.startsWith("legacy")) return true;
+          // Exclude localhost dev server links in docs
+          if (link && link.startsWith("http://localhost")) return true;
+          return false;
+        },
       })],
       sidebar: [
         {
@@ -40,21 +47,34 @@ export default defineConfig({
           autogenerate: { directory: "getting-started" },
         },
         {
-          label: "Tutorials",
-          autogenerate: { directory: "tutorials" },
+          label: "Core Concepts",
+          autogenerate: { directory: "core-concepts" },
         },
         {
-          label: "Specification",
-          autogenerate: { directory: "specification" },
+          label: "Schema Reference",
+          autogenerate: { directory: "reference" },
         },
         {
-          label: "Guides",
-          autogenerate: { directory: "guides" },
+          label: "Implementation",
+          autogenerate: { directory: "implementation" },
         },
         {
-          label: "v2 (Alpha)",
-          autogenerate: { directory: "v2" },
-          badge: { text: "Alpha", variant: "caution" },
+          label: "How-To Guides",
+          autogenerate: { directory: "how-to" },
+        },
+        {
+          label: "API Reference",
+          autogenerate: { directory: "api-reference" },
+        },
+        {
+          label: "Migration",
+          slug: "migration",
+        },
+        {
+          label: "Legacy (v1)",
+          collapsed: true,
+          autogenerate: { directory: "legacy" },
+          badge: { text: "v1", variant: "note" },
         },
         {
           label: "Contributing",

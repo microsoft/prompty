@@ -27,4 +27,4 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
       - type: markdown
-        output-dir: "../docs/model"
+        output-dir: "../web/src/content/docs/reference"

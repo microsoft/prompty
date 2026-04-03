@@ -1,0 +1,51 @@
+---
+title: How-To Guides
+description: >
+  Practical recipes for common Prompty tasks — complete, copy-pasteable examples
+  for every provider, feature, and integration pattern.
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Overview
+
+These guides are **recipe-style** — each one shows a complete `.prompty` file and
+the code to run it. Copy, paste, fill in your API keys, and go.
+
+<Aside type="tip">
+  New to Prompty? Start with the [Getting Started guide](/getting-started/)
+  first, then come back here for specific use cases.
+</Aside>
+
+---
+
+## Guides
+
+| Guide | What you'll build |
+|---|---|
+| [Use with OpenAI](./openai) | Chat completion using the OpenAI API with API key auth |
+| [Use with Azure OpenAI](./azure-openai) | Chat completion using Azure OpenAI — API key and Azure AD options |
+| [Agent with Tool Calling](./agent-tool-calling) | An agent that calls your Python/TypeScript functions in a loop |
+| [Structured Output](../core-concepts/structured-output) | Get typed JSON responses matching a schema |
+| [Streaming Responses](../core-concepts/streaming) | Stream tokens as they arrive |
+| [Embeddings](../core-concepts/pipeline) | Generate text embeddings with `apiType: embedding` |
+| [Image Generation](../core-concepts/pipeline) | Generate images with DALL-E via `apiType: image` |
+| [Custom Providers](../implementation/python) | Write your own executor and processor |
+| [VS Code Extension](../getting-started/) | Author and test `.prompty` files in VS Code |
+
+---
+
+## Common Pattern
+
+Every guide follows the same three-step pattern:
+
+```text
+1. Write a .prompty file     →  declarative prompt + model config
+2. Call prompty.execute()     →  load → render → parse → call LLM → process
+3. Use the result             →  string, JSON, embeddings, or stream
+```
+
+The runtime handles template rendering, role-marker parsing, provider dispatch,
+and response processing automatically — your code stays minimal.

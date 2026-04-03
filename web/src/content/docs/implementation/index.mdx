@@ -1,0 +1,42 @@
+---
+title: Implementation
+description: >
+  Language-specific guides for using Prompty in Python, TypeScript, and C#.
+sidebar:
+  order: 1
+---
+
+Prompty has runtime implementations in multiple languages. Each follows the
+same pipeline architecture but uses language-native patterns and package managers.
+
+| Language | Status | Package |
+|----------|--------|---------|
+| [**Python**](/implementation/python/) | ✅ Stable (alpha) | `prompty` on PyPI |
+| [**TypeScript**](/implementation/typescript/) | ✅ Stable (alpha) | `@prompty/core` on npm |
+| [**C#**](/implementation/csharp/) | 🚧 In Progress | — |
+
+## Choosing a Runtime
+
+All runtimes share the same `.prompty` file format — a prompt written for one
+runtime works with any other. The differences are in installation, API style,
+and available providers.
+
+### Python
+
+- Most mature runtime with all features implemented
+- Async support via `_async` variants of every function
+- Entry-point-based plugin discovery
+- Install: `uv pip install prompty[all]`
+
+### TypeScript
+
+- Modular package architecture (`@prompty/core` + provider packages)
+- Native async/await throughout
+- Provider registration via side-effect imports
+- Install: `npm install @prompty/core @prompty/openai`
+
+### C#
+
+- Type system generated from TypeSpec schema
+- Runtime pipeline in development
+- Will follow the same four-stage architecture

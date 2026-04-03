@@ -1,0 +1,300 @@
+---
+title: Image Generation
+description: >
+  Generate images from text prompts using DALL-E — set apiType to image in
+  your .prompty file and get back image URLs.
+sidebar:
+  order: 8
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What You'll Build
+
+A `.prompty` file that generates **images from text descriptions** using
+DALL-E. Set `apiType: image` and the runtime calls the Images API instead
+of Chat Completions, returning image URLs.
+
+---
+
+## Step 1: Create an Image Prompt
+
+Set `apiType: image` and use a DALL-E model (`dall-e-3` or `dall-e-2`):
+
+```yaml title="generate-image.prompty"
+---
+name: image-generator
+description: Generate images from text descriptions
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+inputSchema:
+  properties:
+    - name: description
+      kind: string
+      default: A friendly robot painting a landscape
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{description}}
+```
+
+<Aside type="note">
+  For image generation, the template body is the image description — no role
+  markers are needed. The entire rendered text is sent as the prompt to the
+  Images API.
+</Aside>
+
+---
+
+## Step 2: Generate an Image
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
+
+    result = execute(
+        "generate-image.prompty",
+        inputs={"description": "A cat astronaut floating in space, digital art"},
+    )
+
+    # result is the image URL (or list of URLs)
+    print(result)  # "https://oaidalleapiprodscus.blob.core.windows.net/..."
+    ```
+
+    Async variant:
+
+    ```python
+    from prompty import execute_async
+
+    result = await execute_async(
+        "generate-image.prompty",
+        inputs={"description": "A sunset over mountains, watercolor style"},
+    )
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+
+    const result = await execute("generate-image.prompty", {
+      description: "A cat astronaut floating in space, digital art",
+    });
+
+    console.log(result);  // "https://oaidalleapiprodscus.blob.core.windows.net/..."
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Model Options
+
+Control image output through `options.additionalProperties`:
+
+```yaml title="custom-image.prompty"
+---
+name: custom-image
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1792x1024"
+      quality: hd
+      style: natural
+inputSchema:
+  properties:
+    - name: description
+      kind: string
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{description}}
+```
+
+### Available Options
+
+| Option | Values | Default | Notes |
+|---|---|---|---|
+| `size` | `1024x1024`, `1792x1024`, `1024x1792` | `1024x1024` | DALL-E 3 sizes |
+| `quality` | `standard`, `hd` | `standard` | `hd` costs more tokens |
+| `style` | `vivid`, `natural` | `vivid` | DALL-E 3 only |
+| `n` | `1` | `1` | DALL-E 3 only supports `n=1` |
+
+<Aside type="tip">
+  For cost-conscious development and testing, use `dall-e-2` with
+  `size: "256x256"` — it's significantly cheaper and faster for iteration.
+</Aside>
+
+### DALL-E 2 Options
+
+DALL-E 2 supports different sizes and multiple images per request:
+
+```yaml
+model:
+  id: dall-e-2
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "256x256"
+      n: 3
+```
+
+| Option | Values | Notes |
+|---|---|---|
+| `size` | `256x256`, `512x512`, `1024x1024` | Smaller = cheaper |
+| `n` | `1`–`10` | Number of images to generate |
+
+---
+
+## Downloading the Image
+
+The result is a URL that expires after a period. To save the image locally:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import urllib.request
+    from prompty import execute
+
+    url = execute(
+        "generate-image.prompty",
+        inputs={"description": "A cozy cabin in the woods"},
+    )
+
+    # Download and save
+    urllib.request.urlretrieve(url, "cabin.png")
+    print("Saved to cabin.png")
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+    import { writeFile } from "fs/promises";
+
+    const url = await execute("generate-image.prompty", {
+      description: "A cozy cabin in the woods",
+    });
+
+    // Download and save
+    const response = await fetch(url as string);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await writeFile("cabin.png", buffer);
+    console.log("Saved to cabin.png");
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  DALL-E image URLs are **temporary** — they expire after approximately one
+  hour. Always download and store images you want to keep.
+</Aside>
+
+---
+
+## Provider Support
+
+<Aside type="note">
+  Image generation is currently supported with **OpenAI only**. Azure OpenAI
+  DALL-E support depends on deployment availability in your Azure region.
+  Check the [Azure OpenAI models page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
+  for current DALL-E deployment options.
+</Aside>
+
+### Azure OpenAI (if available)
+
+If your Azure resource has a DALL-E deployment, use the Azure provider:
+
+```yaml
+model:
+  id: ${env:AZURE_OPENAI_IMAGE_DEPLOYMENT}
+  provider: azure
+  apiType: image
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+```
+
+---
+
+## Complete Example: Image Gallery Generator
+
+```yaml title="gallery.prompty"
+---
+name: gallery
+description: Generate themed images for a gallery
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+inputSchema:
+  properties:
+    - name: subject
+      kind: string
+    - name: style
+      kind: string
+      default: digital art
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{subject}}, {{style}}, high detail, professional quality
+```
+
+```python title="gallery_app.py"
+from prompty import execute
+import urllib.request
+
+subjects = [
+    "A mountain lake at sunrise",
+    "A bustling Tokyo street at night",
+    "An ancient library filled with magical books",
+]
+
+for i, subject in enumerate(subjects):
+    url = execute("gallery.prompty", inputs={"subject": subject, "style": "oil painting"})
+    urllib.request.urlretrieve(url, f"gallery_{i}.png")
+    print(f"Generated: gallery_{i}.png")
+```
+
+---
+
+## Further Reading
+
+- [File format reference](/core-concepts/file-format/) — full `.prompty` frontmatter syntax
+- [Connections](/core-concepts/connections/) — configuring provider connections

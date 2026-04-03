@@ -21,6 +21,25 @@ wheels = [
 ]
 
 [[package]]
+name = "anthropic"
+version = "0.88.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "docstring-parser" },
+    { name = "httpx" },
+    { name = "jiter" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/68/565f13059c0a6a6fd5f96f306f2a0fb478a0e1174ec18a4df16b5fac9379/anthropic-0.88.0.tar.gz", hash = "sha256:f4c7f6863d08c869913516f08d658fe53caaf8bcc4fbea3218df343d2a876c58", size = 596654, upload-time = "2026-04-01T19:59:05.287Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/ac/68f646998160c9f2e6f9353a31dd87292ef02b915b455aaf70a52a059a75/anthropic-0.88.0-py3-none-any.whl", hash = "sha256:71898b32332bc75d9739bc10095288d40a29605da6d00da2fe832b1aa036552f", size = 478338, upload-time = "2026-04-01T19:59:03.832Z" },
+]
+
+[[package]]
 name = "anyio"
 version = "4.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -393,6 +412,15 @@ wheels = [
 ]
 
 [[package]]
+name = "docstring-parser"
+version = "0.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/9d/c3b43da9515bd270df0f80548d9944e389870713cc1fe2b8fb35fe2bcefd/docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912", size = 27442, upload-time = "2025-07-21T07:35:01.868Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708", size = 36896, upload-time = "2025-07-21T07:35:00.684Z" },
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -744,11 +772,15 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "anthropic" },
     { name = "azure-identity" },
     { name = "chevron" },
     { name = "jinja2" },
     { name = "openai" },
     { name = "opentelemetry-api" },
+]
+anthropic = [
+    { name = "anthropic" },
 ]
 azure = [
     { name = "azure-identity" },
@@ -763,6 +795,10 @@ dev = [
     { name = "ruff" },
     { name = "types-aiofiles" },
     { name = "types-pyyaml" },
+]
+foundry = [
+    { name = "azure-identity" },
+    { name = "openai" },
 ]
 jinja2 = [
     { name = "jinja2" },
@@ -780,14 +816,18 @@ otel = [
 [package.metadata]
 requires-dist = [
     { name = "aiofiles", specifier = ">=24.1.0" },
+    { name = "anthropic", marker = "extra == 'all'" },
+    { name = "anthropic", marker = "extra == 'anthropic'" },
     { name = "azure-identity", marker = "extra == 'all'" },
     { name = "azure-identity", marker = "extra == 'azure'" },
+    { name = "azure-identity", marker = "extra == 'foundry'" },
     { name = "chevron", marker = "extra == 'all'" },
     { name = "chevron", marker = "extra == 'mustache'" },
     { name = "jinja2", marker = "extra == 'all'" },
     { name = "jinja2", marker = "extra == 'jinja2'" },
     { name = "openai", marker = "extra == 'all'" },
     { name = "openai", marker = "extra == 'azure'" },
+    { name = "openai", marker = "extra == 'foundry'" },
     { name = "openai", marker = "extra == 'openai'" },
     { name = "opentelemetry-api", marker = "extra == 'all'", specifier = ">=1.20" },
     { name = "opentelemetry-api", marker = "extra == 'dev'", specifier = ">=1.20" },
@@ -802,7 +842,7 @@ requires-dist = [
     { name = "types-aiofiles", marker = "extra == 'dev'" },
     { name = "types-pyyaml", marker = "extra == 'dev'" },
 ]
-provides-extras = ["all", "azure", "dev", "jinja2", "mustache", "openai", "otel"]
+provides-extras = ["all", "anthropic", "azure", "dev", "foundry", "jinja2", "mustache", "openai", "otel"]
 
 [[package]]
 name = "pycparser"

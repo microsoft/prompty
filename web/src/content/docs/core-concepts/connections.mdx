@@ -1,0 +1,518 @@
+---
+title: Connections
+description: >
+  How Prompty authenticates with LLM providers — connection types, environment
+  variable resolution, and the connection registry pattern for production use.
+sidebar:
+  order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+Connections define **how Prompty authenticates with LLM providers**. Every
+`.prompty` file can specify a connection inside its `model.connection`
+frontmatter block. The connection tells the runtime where to send requests and
+how to authenticate.
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure
+  connection:          # ← this section
+    kind: key
+    endpoint: https://my-resource.openai.azure.com/
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+```
+
+Prompty ships six connection types — each backed by a corresponding AgentSchema
+class — so you can match the auth strategy to your environment.
+
+---
+
+## Connection Types at a Glance
+
+<svg viewBox="0 0 650 370" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '650px', margin: '1.5rem auto', display: 'block' }}>
+  {/* Background */}
+  <rect width="650" height="370" rx="12" fill="#f8fafc" stroke="#e5e7eb" strokeWidth="1.5"/>
+
+  {/* Title */}
+  <text x="325" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1e293b">Connection Types</text>
+
+  {/* Base — Connection */}
+  <rect x="245" y="48" width="160" height="42" rx="8" fill="#1d4ed8" stroke="#1e40af" strokeWidth="1.5"/>
+  <text x="325" y="74" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="13" fontWeight="600" fill="#fff">Connection (base)</text>
+
+  {/* Arrows from base to each subtype */}
+  {/* ApiKey */}
+  <line x1="275" y1="90" x2="80" y2="140" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  {/* Reference */}
+  <line x1="305" y1="90" x2="230" y2="140" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  {/* Remote */}
+  <line x1="325" y1="90" x2="380" y2="140" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  {/* Anonymous */}
+  <line x1="370" y1="90" x2="530" y2="140" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  {/* Foundry — row 2 left */}
+  <line x1="290" y1="90" x2="155" y2="250" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  {/* OAuth — row 2 right */}
+  <line x1="355" y1="90" x2="460" y2="250" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+
+  {/* Row 1 — four types */}
+  {/* ApiKeyConnection */}
+  <rect x="10" y="140" width="140" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="80" y="160" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">ApiKeyConnection</text>
+  <text x="80" y="176" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: key</text>
+  <text x="80" y="192" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint · apiKey</text>
+  <text x="80" y="204" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">apiVersion</text>
+
+  {/* ReferenceConnection */}
+  <rect x="160" y="140" width="140" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="230" y="160" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">ReferenceConnection</text>
+  <text x="230" y="176" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: reference</text>
+  <text x="230" y="192" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">name</text>
+
+  {/* RemoteConnection */}
+  <rect x="310" y="140" width="140" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="380" y="160" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">RemoteConnection</text>
+  <text x="380" y="176" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: remote</text>
+  <text x="380" y="192" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">name · endpoint</text>
+
+  {/* AnonymousConnection */}
+  <rect x="460" y="140" width="140" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="530" y="160" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">AnonymousConnection</text>
+  <text x="530" y="176" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: anonymous</text>
+  <text x="530" y="192" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint</text>
+
+  {/* Row 2 — two types */}
+  {/* FoundryConnection */}
+  <rect x="60" y="250" width="190" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="155" y="270" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">FoundryConnection</text>
+  <text x="155" y="286" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: foundry</text>
+  <text x="155" y="302" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint · name · connectionType</text>
+  <text x="155" y="314" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">authenticationMode</text>
+
+  {/* OAuthConnection */}
+  <rect x="370" y="250" width="190" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="465" y="270" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">OAuthConnection</text>
+  <text x="465" y="286" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">kind: oauth</text>
+  <text x="465" y="302" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">clientId · clientSecret · tokenUrl</text>
+  <text x="465" y="314" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint · scopes</text>
+
+  {/* Legend */}
+  <rect x="220" y="342" width="10" height="10" rx="2" fill="#1d4ed8"/>
+  <text x="236" y="351" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Base class</text>
+  <rect x="290" y="342" width="10" height="10" rx="2" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="306" y="351" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Subtypes (dispatched by kind)</text>
+
+  {/* Arrow marker */}
+  <defs>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+</svg>
+
+---
+
+## ApiKeyConnection — `kind: key`
+
+The simplest connection: provide an endpoint and an API key. Ideal for **local
+development** and quick experiments.
+
+```yaml
+model:
+  id: gpt-4o
+  provider: openai
+  connection:
+    kind: key
+    endpoint: https://api.openai.com/v1
+    apiKey: ${env:OPENAI_API_KEY}
+```
+
+For **Azure OpenAI**, set the endpoint to your Azure resource:
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+```
+
+<Aside type="tip">
+  Always use `${env:VAR}` references instead of hardcoding secrets. The runtime
+  resolves them from your environment (or a `.env` file) at load time.
+</Aside>
+
+---
+
+## ReferenceConnection — `kind: reference`
+
+References a **pre-registered SDK client** by name. This is the recommended
+pattern for **production** because it supports Azure AD, managed identity,
+custom retry policies, and any authentication method the SDK supports.
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure
+  connection:
+    kind: reference
+    name: my-azure-client
+```
+
+Register the client at application startup:
+
+```python
+from openai import AzureOpenAI
+import prompty
+
+prompty.register_connection("my-azure-client", client=AzureOpenAI(
+    azure_endpoint="https://my-resource.openai.azure.com/",
+    api_key="...",
+))
+```
+
+The executor looks up `"my-azure-client"` in the connection registry and uses
+the pre-configured SDK client directly — no additional auth logic is needed in
+the `.prompty` file.
+
+<Aside type="note">
+  Because the client is constructed in Python, you have full control over
+  authentication, retries, timeouts, and custom headers — things that can't be
+  expressed in YAML alone.
+</Aside>
+
+---
+
+## RemoteConnection — `kind: remote`
+
+A named endpoint reference for **remote model-serving services**. Useful when
+you have a separate inference service behind a gateway.
+
+```yaml
+model:
+  id: my-fine-tuned-model
+  provider: openai
+  connection:
+    kind: remote
+    name: my-service
+    endpoint: https://my-model.azurewebsites.net
+```
+
+---
+
+## AnonymousConnection — `kind: anonymous`
+
+Endpoint only — **no authentication**. Perfect for self-hosted models like
+[Ollama](https://ollama.com/) or [vLLM](https://vllm.ai/) running locally.
+
+```yaml
+model:
+  id: llama3
+  provider: openai
+  connection:
+    kind: anonymous
+    endpoint: http://localhost:11434/v1
+```
+
+<Aside type="caution">
+  Only use anonymous connections with trusted local endpoints. Never expose
+  unauthenticated model endpoints to the public internet.
+</Aside>
+
+---
+
+## FoundryConnection — `kind: foundry`
+
+Integrates with **Azure AI Foundry** for managed model deployments, including
+serverless and managed-compute endpoints.
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure
+  connection:
+    kind: foundry
+    endpoint: ${env:FOUNDRY_ENDPOINT}
+    name: my-deployment
+    connectionType: serverless
+```
+
+| Field              | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `endpoint`         | Foundry project endpoint                                 |
+| `name`             | Deployment name within the Foundry project               |
+| `connectionType`   | `serverless` or `managedCompute`                         |
+| `authenticationMode` | Optional — override default Foundry authentication     |
+
+---
+
+## OAuthConnection — `kind: oauth`
+
+OAuth 2.0 **client credentials flow** for services that require token-based
+authentication.
+
+```yaml
+model:
+  id: my-model
+  provider: openai
+  connection:
+    kind: oauth
+    endpoint: https://api.example.com
+    clientId: ${env:CLIENT_ID}
+    clientSecret: ${env:CLIENT_SECRET}
+    tokenUrl: https://auth.example.com/token
+    scopes:
+      - api.read
+```
+
+| Field          | Description                                 |
+| -------------- | ------------------------------------------- |
+| `clientId`     | OAuth 2.0 client identifier                 |
+| `clientSecret` | OAuth 2.0 client secret                     |
+| `tokenUrl`     | Token endpoint URL                          |
+| `scopes`       | List of scopes to request                   |
+| `endpoint`     | The model-serving endpoint to call          |
+
+---
+
+## Connection Resolution Flow
+
+The following diagram shows how the runtime resolves a connection when a
+`.prompty` file is loaded and executed.
+
+<svg viewBox="0 0 650 480" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '650px', margin: '1.5rem auto', display: 'block' }}>
+  {/* Background */}
+  <rect width="650" height="480" rx="12" fill="#f8fafc" stroke="#e5e7eb" strokeWidth="1.5"/>
+
+  {/* Title */}
+  <text x="325" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1e293b">Connection Resolution Flow</text>
+
+  {/* Step 1 — Read frontmatter */}
+  <rect x="225" y="50" width="200" height="40" rx="8" fill="#1d4ed8" stroke="#1e40af" strokeWidth="1.5"/>
+  <text x="325" y="75" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#fff">Read model.connection</text>
+
+  {/* Arrow down */}
+  <line x1="325" y1="90" x2="325" y2="110" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+
+  {/* Decision — kind? */}
+  <polygon points="325,110 445,150 325,190 205,150" fill="#fff7ed" stroke="#f59e0b" strokeWidth="1.5"/>
+  <text x="325" y="154" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#92400e">kind = ?</text>
+
+  {/* Branch: key (left) */}
+  <line x1="205" y1="150" x2="100" y2="150" stroke="#f59e0b" strokeWidth="1.5"/>
+  <line x1="100" y1="150" x2="100" y2="220" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+  <text x="148" y="143" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#92400e">key</text>
+  <rect x="20" y="220" width="160" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="100" y="241" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">Use directly</text>
+  <text x="100" y="257" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint + apiKey → SDK client</text>
+
+  {/* Branch: reference (center-left) */}
+  <line x1="265" y1="190" x2="265" y2="220" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+  <text x="245" y="210" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#92400e">reference</text>
+  <rect x="195" y="220" width="140" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="265" y="241" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">Registry lookup</text>
+  <text x="265" y="257" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">name → pre-configured client</text>
+
+  {/* Branch: foundry (center-right) */}
+  <line x1="385" y1="190" x2="385" y2="220" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+  <text x="370" y="210" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#92400e">foundry</text>
+  <rect x="315" y="220" width="140" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="385" y="241" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">Foundry resolve</text>
+  <text x="385" y="257" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">endpoint + name → Foundry SDK</text>
+
+  {/* Branch: anonymous / remote / oauth (right) */}
+  <line x1="445" y1="150" x2="540" y2="150" stroke="#f59e0b" strokeWidth="1.5"/>
+  <line x1="540" y1="150" x2="540" y2="220" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+  <text x="468" y="143" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#92400e">other</text>
+  <rect x="465" y="220" width="160" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="545" y="241" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">Kind-specific</text>
+  <text x="545" y="257" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">anonymous · remote · oauth</text>
+
+  {/* Converge arrows down to env expansion */}
+  <line x1="100" y1="268" x2="100" y2="330" stroke="#6b7280" strokeWidth="1" strokeDasharray="4,3"/>
+  <line x1="265" y1="268" x2="265" y2="330" stroke="#6b7280" strokeWidth="1" strokeDasharray="4,3"/>
+  <line x1="385" y1="268" x2="385" y2="330" stroke="#6b7280" strokeWidth="1" strokeDasharray="4,3"/>
+  <line x1="545" y1="268" x2="545" y2="330" stroke="#6b7280" strokeWidth="1" strokeDasharray="4,3"/>
+
+  {/* Env expansion step */}
+  <rect x="125" y="330" width="400" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" strokeWidth="1.5"/>
+  <text x="325" y="349" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#92400e">Expand ${'{'}env:VAR{'}'} references</text>
+  <text x="325" y="365" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">LoadContext.pre_process resolves all string values in the tree</text>
+
+  {/* Arrow to final */}
+  <line x1="325" y1="374" x2="325" y2="404" stroke="#6b7280" strokeWidth="1.5" markerEnd="url(#arrowGray)"/>
+
+  {/* Final — SDK client */}
+  <rect x="195" y="404" width="260" height="44" rx="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5"/>
+  <text x="325" y="424" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="700" fill="#065f46">Configured SDK Client</text>
+  <text x="325" y="440" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#6b7280">Ready for executor to call LLM</text>
+
+  {/* Legend */}
+  <rect x="150" y="462" width="10" height="10" rx="2" fill="#1d4ed8"/>
+  <text x="166" y="471" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Input</text>
+  <polygon points="210,467 220,462 230,467 220,472" fill="#fff7ed" stroke="#f59e0b" strokeWidth="1"/>
+  <text x="236" y="471" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Decision</text>
+  <rect x="290" y="462" width="10" height="10" rx="2" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="306" y="471" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Resolution</text>
+  <rect x="370" y="462" width="10" height="10" rx="2" fill="#ecfdf5" stroke="#10b981" strokeWidth="1"/>
+  <text x="386" y="471" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Output</text>
+
+  {/* Arrow marker */}
+  <defs>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+  </defs>
+</svg>
+
+---
+
+## Connection Registry
+
+For production workloads you'll typically use `kind: reference` combined with a
+**connection registry** configured at application startup. This keeps secrets
+and complex auth logic in Python — not in YAML.
+
+```python
+import os
+import prompty
+from openai import AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+# Build a client with Azure AD token-based auth
+client = AzureOpenAI(
+    azure_endpoint=os.environ["AZURE_ENDPOINT"],
+    azure_ad_token_provider=get_bearer_token_provider(
+        DefaultAzureCredential(),
+        "https://cognitiveservices.azure.com/.default",
+    ),
+)
+
+# Register it by name — .prompty files reference this name
+prompty.register_connection("azure-prod", client=client)
+```
+
+Then in your `.prompty` file:
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure
+  connection:
+    kind: reference
+    name: azure-prod
+```
+
+<Aside type="tip">
+  The connection registry is an in-process dictionary. Register connections once
+  at startup (e.g., in your FastAPI `lifespan`, Django `AppConfig.ready()`, or
+  `__main__` block) before calling `prompty.run()`.
+</Aside>
+
+---
+
+## Environment Variable Resolution
+
+All string values in the frontmatter support `${env:VAR}` references. The
+runtime resolves them at load time via `LoadContext.pre_process`.
+
+| Syntax                  | Behavior                                              |
+| ----------------------- | ----------------------------------------------------- |
+| `${env:VAR}`            | Reads `VAR` from the environment. Raises `ValueError` if unset. |
+| `${env:VAR:default}`    | Falls back to `default` when `VAR` is unset.          |
+
+```yaml
+model:
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+```
+
+Environment variables are loaded from a `.env` file (via `python-dotenv`) if one
+exists alongside the `.prompty` file or in a parent directory.
+
+---
+
+## Which Connection Should I Use?
+
+<Tabs>
+  <TabItem label="Local Development">
+    Use **`kind: key`** with environment variables. It's the fastest way to get
+    started and keeps secrets out of source control.
+
+    ```yaml
+    model:
+      connection:
+        kind: key
+        endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+        apiKey: ${env:OPENAI_API_KEY}
+    ```
+  </TabItem>
+  <TabItem label="Production (Azure AD)">
+    Use **`kind: reference`** with the connection registry. Register an
+    `AzureOpenAI` client backed by `DefaultAzureCredential` at startup.
+
+    ```yaml
+    model:
+      connection:
+        kind: reference
+        name: azure-prod
+    ```
+  </TabItem>
+  <TabItem label="Azure AI Foundry">
+    Use **`kind: foundry`** to connect directly to a Foundry-managed
+    deployment — serverless or managed compute.
+
+    ```yaml
+    model:
+      connection:
+        kind: foundry
+        endpoint: ${env:FOUNDRY_ENDPOINT}
+        name: my-deployment
+    ```
+  </TabItem>
+  <TabItem label="Self-Hosted Models">
+    Use **`kind: anonymous`** for local inference servers like Ollama or vLLM
+    that don't require authentication.
+
+    ```yaml
+    model:
+      connection:
+        kind: anonymous
+        endpoint: http://localhost:11434/v1
+    ```
+  </TabItem>
+  <TabItem label="OAuth Services">
+    Use **`kind: oauth`** for services that require an OAuth 2.0 client
+    credentials flow.
+
+    ```yaml
+    model:
+      connection:
+        kind: oauth
+        endpoint: https://api.example.com
+        clientId: ${env:CLIENT_ID}
+        clientSecret: ${env:CLIENT_SECRET}
+        tokenUrl: https://auth.example.com/token
+        scopes:
+          - api.read
+    ```
+  </TabItem>
+</Tabs>
+
+### Quick Decision Guide
+
+| Scenario                      | Connection Kind | Why                                       |
+| ----------------------------- | --------------- | ----------------------------------------- |
+| Local dev with API key        | `key`           | Simplest setup, env-var-based secrets     |
+| Production with Azure AD      | `reference`     | Full SDK control, managed identity        |
+| Azure AI Foundry deployments  | `foundry`       | Native Foundry service integration        |
+| Self-hosted (Ollama, vLLM)    | `anonymous`     | No auth needed for local endpoints        |
+| OAuth 2.0 services            | `oauth`         | Client credentials token flow             |
+| Remote gateway / proxy        | `remote`        | Named endpoint reference                  |

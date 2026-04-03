@@ -1,57 +1,119 @@
 ---
 title: Welcome to Prompty
-description: This is the Prompty documentation landing page. Get an overview of what Prompty is and how it fits into the developer workflow for generative AI applications.
+description: >
+  Prompty is a markdown file format for LLM prompts. Define model config,
+  inputs, tools, and templates in YAML frontmatter — then execute across
+  Python, TypeScript, and more.
 sidebar:
   order: 1
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-<Aside type="tip" title="Prompty v2 Alpha Available">
-  Prompty v2 is a ground-up rewrite of the Python runtime with a new
-  pipeline architecture, agent mode, and connection registry — built on
-  [AgentSchema](https://microsoft.github.io/AgentSchema/).
-  [Check it out →](/v2/)
-</Aside>
+## What is Prompty?
 
-## 1. Introduction
+**Prompty** is an asset class and format for LLM prompts designed to enhance
+observability, understandability, and portability for developers. A `.prompty`
+file combines structured YAML frontmatter with a markdown prompt body — making
+prompts versionable, testable, and executable across languages.
 
-[Prompty](https://github.com/microsoft/prompty) is an asset class and format for LLM prompts designed to enhance observability, understandability, and portability for developers. The primary goal is to accelerate the developer inner loop of _prompt engineering_ and _prompt source management_ in a cross-language and cross-platform implementation. 
-
-The implementation currently supports popular runtimes (Python, C#) and frameworks (LangChain, Semantic Kernel, Prompt flow) with plans to add more. 
-The project is [open source](https://github.com/microsoft/prompty) and we encourage developers to extend the capabilities to new runtimes and tooling _and contribute those back to the core_ for use by the community.
-
-_Watch the [**Microsoft Build 2024 Breakout Session**](https://build.microsoft.com/sessions/86e41e8b-1fd2-40fa-a608-6f99a28d4a61?source=sessions)_ for an in-depth introduction. 
-<iframe width="800" height="900" src="https://www.youtube.com/embed/HALMFU7o9Gc" title="BRK114:Practical End-to-End AI Development using Prompty and AI Studio"></iframe>
-
-## 2. Developer Resources
-
-Check back for updates to the documentation site with _tutorials_ (coming soon) and _deep-dives_ (for contributors). In the meantime, here are three more resources to get you started:
-
-<details>
-<summary> [**Contoso Creative Writer: Multi-Agent Sample**](https://github.com/Azure-Samples/contoso-creative-writer) - Click for more details </summary>
-
-Contoso Creative Writer is an app that will help you write well researched, product specific articles. Enter the required information and then click "Start Work". To watch the steps in the agent workflow select the debug button in the bottom right corner of the screen. The result will begin writing once the agents complete the tasks to write the article. |  _The solution is built with Prompty and Azure AI Studio_ - [*Workshop Guide*](https://github.com/Azure-Samples/contoso-creative-writer/blob/main/docs/README.md)
-
-</details>
-
-<details>
-<summary> [**Contoso Chat: Retail RAG Sample**](https://github.com/Azure-Samples/contoso-chat) - Click for more details </summary>
-
-This sample implements a retail copilot solution for Contoso Outdoor that uses a retrieval augmented generation design pattern to ground chatbot responses in the retailer's product and customer data. Customers can now ask questions from the website in natural language, and get relevant responses along with potential recommendations based on their purchase history - with responsible AI practices to ensure response quality and safety. | _The solution is built with Prompty and Azure AI Studio_ - [*Workshop Guide*](https://aka.ms/aitour/contoso-chat/workshop)
-
-</details>
-
-<details>
-<summary> [**Azure AI Solution Templates**](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d) - Click for more details </summary>
-
-This is a curated set of Azure AI Templates for use with the Azure Developer CLI, and released initially at Microsoft Build 2024. The collection showcases complete end-to-end solutions for diverse application scenarios, languages, and frameworks - using Prompty and Azure AI Studio. Deploy the solution with one command, then customize it to your needs to learn by experimentation.
-
-</details>
-
-## Next Steps
-
-Start with the **[Getting Started](/getting-started/)** section to validate your development setup and build your first Prompty sample.
-
+```yaml
 ---
-[Want to Contribute To the Project?](/contributing/) - _Updated Guidance Coming Soon_.
+name: greeting
+model:
+  id: gpt-4o-mini
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  - name: userName
+    kind: string
+    default: World
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a friendly assistant.
+
+user:
+Say hello to {{userName}}.
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    result = prompty.execute("greeting.prompty", inputs={"userName": "Jane"})
+    print(result)  # "Hello Jane! How can I help you today?"
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+    import "@prompty/openai";
+
+    const result = await execute("greeting.prompty", { userName: "Jane" });
+    ```
+  </TabItem>
+</Tabs>
+
+## Key Features
+
+- **One file, complete prompt** — model config, inputs, tools, and instructions in a single `.prompty` file
+- **Multi-language runtimes** — Python and TypeScript today, C# coming soon
+- **Pipeline architecture** — render → parse → execute → process, each stage swappable
+- **Agent mode** — built-in tool-calling loop with error recovery
+- **Structured output** — define output schemas, get typed JSON back
+- **Streaming** — chunk-by-chunk delivery with full tracing support
+- **Pluggable tracing** — console, JSON file, or OpenTelemetry backends
+- **VS Code extension** — syntax highlighting, autocomplete, run & debug, trace viewer
+
+## Quick Links
+
+| | |
+|---|---|
+| 🚀 **[Getting Started](/getting-started/)** | Install, write your first prompt, run it |
+| 📖 **[Core Concepts](/core-concepts/)** | File format, pipeline, connections, tools, tracing |
+| 📋 **[Schema Reference](/reference/)** | All frontmatter properties (auto-generated) |
+| 🔧 **[How-To Guides](/how-to/)** | Practical recipes for common tasks |
+| 🐍 **[Python](/implementation/python/)** | Python runtime guide |
+| 📘 **[TypeScript](/implementation/typescript/)** | TypeScript runtime guide |
+
+## Developer Resources
+
+<details>
+<summary> [**Contoso Creative Writer: Multi-Agent Sample**](https://github.com/Azure-Samples/contoso-creative-writer) </summary>
+
+A multi-agent app that writes well-researched, product-specific articles.
+Built with Prompty and Azure AI Studio.
+[Workshop Guide →](https://github.com/Azure-Samples/contoso-creative-writer/blob/main/docs/README.md)
+
+</details>
+
+<details>
+<summary> [**Contoso Chat: Retail RAG Sample**](https://github.com/Azure-Samples/contoso-chat) </summary>
+
+A retail copilot using retrieval augmented generation to ground chatbot responses
+in product and customer data. Built with Prompty and Azure AI Studio.
+[Workshop Guide →](https://aka.ms/aitour/contoso-chat/workshop)
+
+</details>
+
+<details>
+<summary> [**Azure AI Solution Templates**](https://learn.microsoft.com/en-us/collections/5pq0uompdgje8d) </summary>
+
+Curated Azure AI templates for the Azure Developer CLI — complete end-to-end
+solutions for diverse scenarios, languages, and frameworks.
+
+</details>
+
+## Contributing
+
+Prompty is [open source](https://github.com/microsoft/prompty). We welcome
+contributions to the runtimes, tooling, and documentation.
+See the [Contributing guide](/contributing/) to get started.

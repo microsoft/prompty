@@ -1,0 +1,196 @@
+---
+title: Use with OpenAI
+description: >
+  Connect Prompty to the OpenAI API — complete .prompty file, Python and
+  TypeScript code, and tips for switching models.
+sidebar:
+  order: 2
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Prerequisites
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    pip install prompty[jinja2,openai]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @prompty/core @prompty/openai
+    ```
+  </TabItem>
+</Tabs>
+
+You also need an [OpenAI API key](https://platform.openai.com/api-keys).
+
+---
+
+## 1. Write the `.prompty` File
+
+Create **`chat.prompty`**:
+
+```yaml
+---
+name: openai-chat
+description: Simple chat completion with OpenAI
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: What is Prompty?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Answer concisely.
+
+user:
+{{question}}
+```
+
+<Aside type="note">
+  `${env:OPENAI_API_KEY}` is resolved at load time from your environment or
+  `.env` file. The key never appears in your prompt file.
+</Aside>
+
+---
+
+## 2. Run It
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    # One-liner: load → render → call LLM → return result
+    result = prompty.execute("chat.prompty", inputs={"question": "What is Prompty?"})
+    print(result)
+    ```
+
+    For more control, use the pipeline stages individually:
+
+    ```python
+    import prompty
+
+    # Step 1 — Load the .prompty file → PromptAgent
+    agent = prompty.load("chat.prompty")
+
+    # Step 2 — Render template + parse role markers → list[Message]
+    messages = prompty.prepare(agent, inputs={"question": "Explain async/await"})
+
+    # Step 3 — Call OpenAI + process response → string
+    result = prompty.run(agent, messages)
+    print(result)
+    ```
+
+    **Async variant:**
+
+    ```python
+    import asyncio
+    import prompty
+
+    async def main():
+        result = await prompty.execute_async(
+            "chat.prompty",
+            inputs={"question": "What is Prompty?"},
+        )
+        print(result)
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, execute } from "@prompty/core";
+    import { OpenAIExecutor } from "@prompty/openai";
+
+    const result = await execute("chat.prompty", {
+      inputs: { question: "What is Prompty?" },
+    });
+
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 3. Switch Models
+
+Change `model.id` in the frontmatter — no code changes needed:
+
+```yaml
+model:
+  id: gpt-4o          # GPT-4o (default, fast + capable)
+  # id: gpt-4o-mini   # Cheaper, good for simple tasks
+  # id: o1            # Reasoning model (higher latency)
+  # id: gpt-4-turbo   # 128K context window
+```
+
+<Aside type="caution">
+  Reasoning models like `o1` don't support `temperature` or `system` role
+  messages. Remove those from your `.prompty` file if you switch to `o1`.
+</Aside>
+
+---
+
+## 4. Environment Setup
+
+Create a **`.env`** file in the same directory as your script:
+
+```bash
+# .env
+OPENAI_API_KEY=sk-your-key-here
+```
+
+Prompty uses `python-dotenv` to load `.env` automatically. Make sure `.env` is
+in your `.gitignore`:
+
+```bash
+echo ".env" >> .gitignore
+```
+
+---
+
+## 5. Tune Model Options
+
+All options go under `model.options:` in the frontmatter:
+
+```yaml
+model:
+  id: gpt-4o-mini
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.3        # Lower = more deterministic
+    maxOutputTokens: 2048   # Max tokens in the response
+    topP: 0.9               # Nucleus sampling
+    frequencyPenalty: 0.2    # Reduce repetition
+    presencePenalty: 0.1     # Encourage new topics
+    seed: 42                 # Reproducible outputs
+    stopSequences:           # Stop generation at these strings
+      - "END"
+```
+
+<Aside type="tip">
+  Start with `temperature: 0.7` for creative tasks and `temperature: 0` for
+  factual extraction or classification.
+</Aside>

@@ -1,0 +1,446 @@
+---
+title: Agent with Tool Calling
+description: >
+  Build an agent that calls your functions — define tools in the .prompty file,
+  register Python/TypeScript handlers, and let the agent loop handle the rest.
+sidebar:
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+An **agent** is a prompt that can call your functions. The flow:
+
+1. You define tools in the `.prompty` frontmatter
+2. You register the matching functions in your code
+3. The runtime sends the tools to the LLM
+4. If the LLM returns a `tool_calls` response, the runtime **calls your function**,
+   appends the result to the conversation, and calls the LLM again
+5. This loops until the LLM returns a normal text response
+
+```text
+User message
+  → LLM (with tool definitions)
+  → tool_calls: get_weather("Seattle")
+  → Your function returns "72°F and sunny"
+  → LLM (with tool result in context)
+  → "The weather in Seattle is 72°F and sunny!"
+```
+
+---
+
+## 1. Define Your Tool Functions
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    def get_weather(city: str) -> str:
+        """Get the current weather for a city."""
+        # In production, call a real weather API
+        return f"72°F and sunny in {city}"
+
+    def get_time(timezone: str) -> str:
+        """Get the current time in a timezone."""
+        from datetime import datetime, timezone as tz
+        return datetime.now(tz.utc).isoformat()
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    function getWeather(city: string): string {
+      // In production, call a real weather API
+      return `72°F and sunny in ${city}`;
+    }
+
+    function getTime(timezone: string): string {
+      return new Date().toISOString();
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 2. Write the `.prompty` File
+
+Create **`agent.prompty`**:
+
+```yaml
+---
+name: weather-agent
+description: An agent that can check weather and time
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: agent
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      properties:
+        - name: city
+          kind: string
+          description: The city name, e.g. "Seattle"
+          required: true
+  - name: get_time
+    kind: function
+    description: Get the current time in a timezone
+    parameters:
+      properties:
+        - name: timezone
+          kind: string
+          description: IANA timezone, e.g. "America/New_York"
+          required: true
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: What's the weather in Seattle?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant with access to weather and time tools.
+Always use the tools when the user asks about weather or time.
+
+user:
+{{question}}
+```
+
+<Aside type="note">
+  `apiType: agent` tells the runtime to enable the agent loop. Without it, the
+  LLM may return `tool_calls` but the runtime won't execute them.
+</Aside>
+
+---
+
+## 3. Run the Agent
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    # Define your tool functions
+    def get_weather(city: str) -> str:
+        return f"72°F and sunny in {city}"
+
+    def get_time(timezone: str) -> str:
+        from datetime import datetime, timezone as tz
+        return datetime.now(tz.utc).isoformat()
+
+    # Execute with tool_functions in metadata
+    result = prompty.execute(
+        "agent.prompty",
+        inputs={"question": "What's the weather in Seattle and the time in Tokyo?"},
+        configuration={
+            "tool_functions": {
+                "get_weather": get_weather,
+                "get_time": get_time,
+            }
+        },
+    )
+    print(result)
+    # → "The weather in Seattle is 72°F and sunny, and the current time in Tokyo is ..."
+    ```
+
+    **Step-by-step variant:**
+
+    ```python
+    import prompty
+
+    agent = prompty.load("agent.prompty")
+
+    # Attach tool functions to the agent's metadata
+    agent.metadata = agent.metadata or {}
+    agent.metadata["tool_functions"] = {
+        "get_weather": get_weather,
+        "get_time": get_time,
+    }
+
+    messages = prompty.prepare(agent, inputs={"question": "Weather in NYC?"})
+    result = prompty.run(agent, messages)
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+
+    function getWeather(city: string): string {
+      return `72°F and sunny in ${city}`;
+    }
+
+    function getTime(timezone: string): string {
+      return new Date().toISOString();
+    }
+
+    const result = await execute("agent.prompty", {
+      inputs: { question: "What's the weather in Seattle?" },
+      configuration: {
+        toolFunctions: {
+          get_weather: getWeather,
+          get_time: getTime,
+        },
+      },
+    });
+
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 4. Async Tool Functions
+
+If your tools call external APIs, use async functions to avoid blocking:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import httpx
+    import prompty
+
+    async def get_weather(city: str) -> str:
+        """Async weather lookup."""
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"https://api.weather.com/v1/{city}")
+            data = resp.json()
+            return f"{data['temp']}°F, {data['condition']}"
+
+    async def main():
+        result = await prompty.execute_async(
+            "agent.prompty",
+            inputs={"question": "Weather in London?"},
+            configuration={
+                "tool_functions": {
+                    "get_weather": get_weather,
+                },
+            },
+        )
+        print(result)
+    ```
+
+    <Aside type="tip">
+      The agent loop detects async functions automatically via
+      `inspect.iscoroutinefunction()` and `await`s them correctly.
+    </Aside>
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    async function getWeather(city: string): Promise<string> {
+      const resp = await fetch(`https://api.weather.com/v1/${city}`);
+      const data = await resp.json();
+      return `${data.temp}°F, ${data.condition}`;
+    }
+
+    const result = await execute("agent.prompty", {
+      inputs: { question: "Weather in London?" },
+      configuration: {
+        toolFunctions: { get_weather: getWeather },
+      },
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 5. Multiple Tools Example
+
+You can define as many tools as needed. Here's a more complete agent with
+database and search capabilities:
+
+```yaml
+---
+name: research-agent
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: agent
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0
+tools:
+  - name: search_docs
+    kind: function
+    description: Search internal documentation
+    parameters:
+      properties:
+        - name: query
+          kind: string
+          description: The search query
+          required: true
+        - name: limit
+          kind: integer
+          description: Max number of results (default 5)
+  - name: get_user
+    kind: function
+    description: Look up a user by email
+    parameters:
+      properties:
+        - name: email
+          kind: string
+          description: The user's email address
+          required: true
+  - name: send_email
+    kind: function
+    description: Send an email to a user
+    parameters:
+      properties:
+        - name: to
+          kind: string
+          description: Recipient email
+          required: true
+        - name: subject
+          kind: string
+          description: Email subject
+          required: true
+        - name: body
+          kind: string
+          description: Email body
+          required: true
+inputSchema:
+  properties:
+    - name: request
+      kind: string
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are an office assistant. You can search docs, look up users, and send emails.
+Always confirm before sending emails.
+
+user:
+{{request}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    def search_docs(query: str, limit: int = 5) -> str:
+        # Your search implementation
+        return f"Found {limit} results for '{query}'"
+
+    def get_user(email: str) -> str:
+        return '{"name": "Jane Doe", "email": "jane@example.com", "role": "Engineer"}'
+
+    def send_email(to: str, subject: str, body: str) -> str:
+        # Your email implementation
+        return f"Email sent to {to}"
+
+    result = prompty.execute(
+        "research-agent.prompty",
+        inputs={"request": "Find docs about onboarding and email a summary to jane@example.com"},
+        configuration={
+            "tool_functions": {
+                "search_docs": search_docs,
+                "get_user": get_user,
+                "send_email": send_email,
+            },
+        },
+    )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+
+    const toolFunctions = {
+      search_docs: (query: string, limit = 5) =>
+        `Found ${limit} results for '${query}'`,
+      get_user: (email: string) =>
+        JSON.stringify({ name: "Jane Doe", email, role: "Engineer" }),
+      send_email: (to: string, subject: string, body: string) =>
+        `Email sent to ${to}`,
+    };
+
+    const result = await execute("research-agent.prompty", {
+      inputs: { request: "Find docs about onboarding and email a summary to jane@example.com" },
+      configuration: { toolFunctions },
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 6. Error Handling
+
+<Aside type="caution">
+  If the LLM calls a tool that isn't registered, the agent loop raises a
+  `ValueError`. Always register every tool defined in your `.prompty` file.
+</Aside>
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    try:
+        result = prompty.execute(
+            "agent.prompty",
+            inputs={"question": "What's the weather?"},
+            configuration={
+                "tool_functions": {
+                    "get_weather": get_weather,
+                    # Missing get_time — will raise if the LLM calls it!
+                },
+            },
+        )
+    except ValueError as e:
+        print(f"Tool error: {e}")
+    except Exception as e:
+        print(f"Execution error: {e}")
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    try {
+      const result = await execute("agent.prompty", {
+        inputs: { question: "What's the weather?" },
+        configuration: {
+          toolFunctions: {
+            get_weather: getWeather,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Agent error:", error);
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+**Common pitfalls:**
+
+| Issue | Cause | Fix |
+|---|---|---|
+| `ValueError: Tool 'X' not found` | Function not registered | Add it to `tool_functions` |
+| Agent loops forever | LLM keeps calling tools | Set `maxOutputTokens` or add "respond when done" to the system prompt |
+| Wrong arguments passed | Schema mismatch | Ensure `parameters` in `.prompty` match your function signature |
+| Tool returns non-string | Runtime expects string | Always return a string from tool functions (use `json.dumps()` for objects) |
+
+<Aside type="tip">
+  For Azure OpenAI, just change `provider: openai` to `provider: azure` and
+  update the connection — the agent loop works identically with both providers.
+</Aside>

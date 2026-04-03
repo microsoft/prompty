@@ -1,0 +1,529 @@
+---
+title: The .prompty File Format
+description: >
+  Anatomy of a .prompty file — YAML frontmatter for configuration,
+  markdown body for instructions, role markers, template syntax,
+  and variable references.
+sidebar:
+  order: 1
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+A `.prompty` file is a plain-text asset that pairs **configuration** with
+**prompt instructions** in a single, portable file. The top half is YAML
+frontmatter; the bottom half is a markdown body that becomes the
+`instructions` property on the loaded `PromptAgent`.
+
+## File Structure Overview
+
+Every `.prompty` file follows the same two-part layout:
+
+```text
+---          ← frontmatter start
+(YAML)       ← configuration: model, inputs, tools, template …
+---          ← frontmatter end
+(Markdown)   ← body: role markers + template syntax → instructions
+```
+
+The loader splits the file at the `---` delimiters, parses the YAML into
+typed AgentSchema objects, and assigns the markdown body to
+`agent.instructions`.
+
+{/* ── Inline SVG Diagram ─────────────────────────────────────── */}
+
+<svg
+  viewBox="0 0 620 520"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-label="Anatomy of a .prompty file: frontmatter on top, markdown body on bottom"
+  style={{ width: '100%', maxWidth: '620px', margin: '2rem auto', display: 'block' }}
+>
+  {/* Background */}
+  <rect x="0" y="0" width="620" height="520" rx="12" fill="#f9fafb" stroke="#e5e7eb" strokeWidth="1.5" />
+
+  {/* Title */}
+  <text x="310" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1d4ed8">
+    Anatomy of a .prompty File
+  </text>
+
+  {/* ── Frontmatter Section ──────────────────────────────────── */}
+  <rect x="30" y="48" width="560" height="218" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5" />
+
+  {/* Frontmatter label */}
+  <rect x="42" y="56" width="120" height="24" rx="4" fill="#3b82f6" />
+  <text x="102" y="73" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#fff">
+    FRONTMATTER
+  </text>
+
+  {/* --- delimiter top */}
+  <text x="50" y="100" fontFamily="monospace" fontSize="13" fill="#6b7280">---</text>
+
+  {/* model block */}
+  <rect x="50" y="108" width="240" height="64" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />
+  <text x="60" y="126" fontFamily="monospace" fontSize="11" fill="#1d4ed8">model:</text>
+  <text x="72" y="142" fontFamily="monospace" fontSize="11" fill="#6b7280">id: gpt-4o</text>
+  <text x="72" y="158" fontFamily="monospace" fontSize="11" fill="#6b7280">provider: azure</text>
+  <rect x="300" y="116" width="62" height="20" rx="4" fill="#f59e0b" />
+  <text x="331" y="130" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">model</text>
+
+  {/* inputs block */}
+  <rect x="50" y="180" width="240" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" />
+  <text x="60" y="198" fontFamily="monospace" fontSize="11" fill="#1d4ed8">inputSchema:</text>
+  <text x="72" y="212" fontFamily="monospace" fontSize="11" fill="#6b7280">properties: [...]</text>
+  <rect x="300" y="188" width="62" height="20" rx="4" fill="#f59e0b" />
+  <text x="331" y="202" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">inputs</text>
+
+  {/* tools + template labels on right */}
+  <rect x="380" y="116" width="56" height="20" rx="4" fill="#f59e0b" />
+  <text x="408" y="130" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">tools</text>
+
+  <rect x="380" y="148" width="76" height="20" rx="4" fill="#f59e0b" />
+  <text x="418" y="162" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">template</text>
+
+  {/* tools / template summary text */}
+  <text x="446" y="130" fontFamily="monospace" fontSize="10" fill="#6b7280">tools: [...]</text>
+  <text x="466" y="162" fontFamily="monospace" fontSize="10" fill="#6b7280">format + parser</text>
+
+  {/* metadata / identity labels */}
+  <rect x="380" y="188" width="80" height="20" rx="4" fill="#f59e0b" />
+  <text x="420" y="202" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="600" fill="#fff">metadata</text>
+  <text x="470" y="202" fontFamily="monospace" fontSize="10" fill="#6b7280">name, desc …</text>
+
+  {/* --- delimiter bottom */}
+  <text x="50" y="254" fontFamily="monospace" fontSize="13" fill="#6b7280">---</text>
+
+  {/* ── Body Section ─────────────────────────────────────────── */}
+  <rect x="30" y="272" width="560" height="230" rx="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
+
+  {/* Body label */}
+  <rect x="42" y="280" width="160" height="24" rx="4" fill="#10b981" />
+  <text x="122" y="297" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="12" fontWeight="600" fill="#fff">
+    BODY → instructions
+  </text>
+
+  {/* Role marker: system */}
+  <rect x="50" y="314" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
+  <text x="60" y="332" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">system:</text>
+  <text x="60" y="352" fontFamily="monospace" fontSize="11" fill="#6b7280">You are a helpful assistant.</text>
+  <rect x="480" y="318" width="80" height="18" rx="4" fill="#f59e0b" />
+  <text x="520" y="331" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">role marker</text>
+
+  {/* Role marker: user */}
+  <rect x="50" y="372" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
+  <text x="60" y="390" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">user:</text>
+  <text x="60" y="410" fontFamily="monospace" fontSize="11" fill="#6b7280">{"{{question}}"}</text>
+  <rect x="440" y="394" width="120" height="18" rx="4" fill="#f59e0b" />
+  <text x="500" y="407" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">template variable</text>
+
+  {/* Role marker: assistant */}
+  <rect x="50" y="430" width="520" height="50" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="1" strokeDasharray="4 2" />
+  <text x="60" y="448" fontFamily="monospace" fontSize="12" fontWeight="700" fill="#1d4ed8">assistant:</text>
+  <text x="60" y="468" fontFamily="monospace" fontSize="11" fill="#6b7280">Let me help with that.</text>
+  <rect x="480" y="434" width="80" height="18" rx="4" fill="#f59e0b" />
+  <text x="520" y="447" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fontWeight="600" fill="#fff">role marker</text>
+
+  {/* Connecting arrow between sections */}
+  <line x1="310" y1="266" x2="310" y2="272" stroke="#6b7280" strokeWidth="1.5" />
+  <polygon points="305,272 310,280 315,272" fill="#6b7280" />
+</svg>
+
+## Frontmatter Properties
+
+The YAML frontmatter maps directly to
+[AgentSchema](https://microsoft.github.io/AgentSchema/) `PromptAgent`
+fields. Here is a summary — see the **Schema Reference** page for the
+full specification of every property.
+
+### Identity
+
+| Property      | Type     | Description                    |
+| ------------- | -------- | ------------------------------ |
+| `name`        | `string` | Unique name for the prompt     |
+| `displayName` | `string` | Human-readable label           |
+| `description` | `string` | What this prompt does          |
+
+### Metadata
+
+Arbitrary key-value pairs. Common conventions:
+
+```yaml
+metadata:
+  authors: [alice, bob]
+  tags: [customer-support, v2]
+  version: "1.0"
+```
+
+### Model
+
+Configures the LLM to call. Full form:
+
+```yaml
+model:
+  id: gpt-4o
+  provider: azure          # or "openai"
+  apiType: chat            # chat | embedding | image | agent
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1000
+```
+
+Or the **shorthand** — just a model name:
+
+```yaml
+model: gpt-4o
+```
+
+This expands to `{ id: "gpt-4o" }` with provider and connection
+inherited from defaults or environment.
+
+### Input &amp; Output Schema
+
+Define the inputs your template expects and the structure of outputs:
+
+```yaml
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      description: The user's question
+      required: true
+    - name: language
+      kind: string
+      default: English
+
+outputSchema:
+  properties:
+    - name: answer
+      kind: string
+    - name: confidence
+      kind: float
+```
+
+Each property has a `kind` (`string`, `integer`, `float`, `boolean`,
+`array`, `object`, `thread`), optional `description`, `default`,
+`required`, and `enumValues` fields.
+
+### Tools
+
+A list of tool definitions the model can call:
+
+<Tabs>
+  <TabItem label="Function Tool">
+    ```yaml
+    tools:
+      - name: get_weather
+        kind: function
+        description: Get the current weather
+        parameters:
+          properties:
+            - name: city
+              kind: string
+              required: true
+    ```
+  </TabItem>
+  <TabItem label="MCP Tool">
+    ```yaml
+    tools:
+      - name: filesystem
+        kind: mcp
+        serverName: filesystem-server
+        connection:
+          kind: reference
+    ```
+  </TabItem>
+  <TabItem label="OpenAPI Tool">
+    ```yaml
+    tools:
+      - name: weather_api
+        kind: openapi
+        specification: ./weather.openapi.json
+        connection:
+          kind: key
+          endpoint: https://api.weather.com
+    ```
+  </TabItem>
+  <TabItem label="Custom Tool">
+    ```yaml
+    tools:
+      - name: my_tool
+        kind: my_provider
+        connection:
+          kind: key
+          endpoint: https://custom.example.com
+        options:
+          setting: value
+    ```
+  </TabItem>
+</Tabs>
+
+### Template
+
+Configures the rendering engine and the message parser:
+
+```yaml
+template:
+  format:
+    kind: jinja2     # or "mustache"
+  parser:
+    kind: prompty    # role-marker parser
+```
+
+<Aside type="caution" title="No string shorthand for template">
+  In v1, `template: jinja2` was valid. In v2, you must use the
+  structured form shown above. The loader will migrate old v1 files
+  automatically (with a deprecation warning), but new files should
+  always use the full object syntax.
+</Aside>
+
+## The Markdown Body
+
+Everything below the closing `---` is the **body**. The loader assigns
+it to `agent.instructions`. At runtime the body flows through two
+stages:
+
+1. **Renderer** — expands template variables (`{{name}}`) using the
+   inputs you provide.
+2. **Parser** — splits the rendered text on **role markers** into a
+   `list[Message]` ready for the LLM.
+
+## Role Markers
+
+Role markers are keywords on their own line followed by a colon. The
+parser recognises three roles:
+
+| Marker       | Resulting `role`  |
+| ------------ | ----------------- |
+| `system:`    | `system`          |
+| `user:`      | `user`            |
+| `assistant:` | `assistant`       |
+
+Everything after a marker (until the next marker or end-of-file) becomes
+the `content` of that message.
+
+```text
+system:
+You are an AI assistant who helps people find information.
+
+user:
+{{question}}
+
+assistant:
+Let me help with that.
+
+user:
+{{followUp}}
+```
+
+<Aside type="tip">
+  If the body contains **no role markers**, the entire text is treated as
+  a single `user` message.
+</Aside>
+
+## Template Syntax
+
+The default renderer is **Jinja2**. You can also use **Mustache** by
+setting `template.format.kind: mustache`.
+
+<Tabs>
+  <TabItem label="Jinja2 (default)">
+    ```text
+    system:
+    You are helping {{firstName}} {{lastName}}.
+
+    {% if context %}
+    Here is some context:
+    {{ context }}
+    {% endif %}
+
+    {% for item in history %}
+    - {{ item }}
+    {% endfor %}
+
+    user:
+    {{question}}
+    ```
+  </TabItem>
+  <TabItem label="Mustache">
+    ```text
+    system:
+    You are helping {{firstName}} {{lastName}}.
+
+    {{#context}}
+    Here is some context:
+    {{context}}
+    {{/context}}
+
+    {{#history}}
+    - {{.}}
+    {{/history}}
+
+    user:
+    {{question}}
+    ```
+  </TabItem>
+</Tabs>
+
+## Variable References in Frontmatter
+
+Frontmatter values can reference external data using `${protocol:value}`
+syntax. The loader resolves these at load time before the YAML is parsed
+into typed objects.
+
+### Environment Variables
+
+```yaml
+# Required — errors if AZURE_OPENAI_ENDPOINT is not set
+endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+
+# With a fallback default value
+region: ${env:AZURE_REGION:eastus}
+```
+
+### File References
+
+```yaml
+# Load a JSON file inline (path relative to the .prompty file)
+connection: ${file:shared/azure-connection.json}
+```
+
+<Aside type="danger" title="Missing references">
+  `${env:VAR}` without a default raises a `ValueError` if the variable
+  is not set. `${file:path}` raises `FileNotFoundError` if the file
+  does not exist. This is intentional — fail fast rather than silently
+  inject empty values.
+</Aside>
+
+## Shorthand Syntax
+
+Prompty supports a compact shorthand for the `model` property:
+
+```yaml
+# Shorthand — just the model name
+model: gpt-4o
+
+# Equivalent full form
+model:
+  id: gpt-4o
+```
+
+<Aside type="caution" title="template shorthand is not supported">
+  Unlike `model`, the `template` property does **not** accept a string
+  shorthand in v2. Always use the structured object form:
+
+  ```yaml
+  # ✗ Not valid in v2
+  template: jinja2
+
+  # ✓ Correct
+  template:
+    format:
+      kind: jinja2
+    parser:
+      kind: prompty
+  ```
+
+  The loader will auto-migrate old v1 files that use the string form,
+  but will emit a `DeprecationWarning`.
+</Aside>
+
+## Complete Example
+
+Here is a full `.prompty` file using all the features described above:
+
+```yaml
+---
+name: customer-support
+displayName: Customer Support Agent
+description: Answers customer questions using context from their account.
+metadata:
+  authors: [support-team]
+  tags: [production, customer-facing]
+  version: "2.1"
+
+model:
+  id: gpt-4o
+  provider: azure
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.3
+    maxOutputTokens: 2000
+
+inputSchema:
+  properties:
+    - name: customerName
+      kind: string
+      description: Full name of the customer
+      required: true
+    - name: question
+      kind: string
+      description: The customer's question
+      required: true
+    - name: orderHistory
+      kind: array
+      description: Recent orders for context
+      default: []
+
+outputSchema:
+  properties:
+    - name: answer
+      kind: string
+    - name: sentiment
+      kind: string
+      enumValues: [positive, neutral, negative]
+
+tools:
+  - name: lookup_order
+    kind: function
+    description: Look up an order by ID
+    parameters:
+      properties:
+        - name: orderId
+          kind: string
+          required: true
+
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a customer support agent for Contoso. Be helpful, concise,
+and empathetic. Always greet the customer by name.
+
+You have access to the following order history:
+{% for order in orderHistory %}
+- Order #{{ order.id }}: {{ order.status }} ({{ order.date }})
+{% endfor %}
+
+user:
+Hi, my name is {{customerName}}. {{question}}
+```
+
+Run it with the Python runtime:
+
+```python
+import prompty
+
+# Load + render + parse + execute + process in one call
+result = prompty.run(
+    "customer-support.prompty",
+    inputs={
+        "customerName": "Jane Doe",
+        "question": "Where is my order #12345?",
+        "orderHistory": [
+            {"id": "12345", "status": "shipped", "date": "2025-01-15"},
+            {"id": "12300", "status": "delivered", "date": "2025-01-02"},
+        ],
+    },
+)
+```

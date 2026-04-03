@@ -1,0 +1,49 @@
+---
+title: "C#"
+description: >
+  C# support for Prompty — current status and roadmap.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="tip" title="Coming Soon">
+  The C# runtime for Prompty v2 is under development. The type system
+  is already generated from the TypeSpec schema — runtime implementation
+  is the next step.
+</Aside>
+
+## Current Status
+
+The Prompty TypeSpec schema emitter generates C# model classes at
+`runtime/csharp/Prompty.Core/Model/`. These provide the typed data model
+for `.prompty` files but the runtime pipeline (loader, renderer, parser,
+executor, processor) is not yet implemented.
+
+## What's Generated
+
+The emitter produces C# classes for all schema types:
+
+- `Prompty` — root type
+- `Model`, `ModelOptions` — model configuration
+- `Connection` and subtypes (`ApiKeyConnection`, `ReferenceConnection`, etc.)
+- `Property`, `ArrayProperty`, `ObjectProperty` — input/output schemas
+- `Tool` and subtypes (`FunctionTool`, `McpTool`, `OpenApiTool`, `CustomTool`)
+- `Template`, `Format`, `Parser` — template configuration
+
+## Planned Architecture
+
+The C# runtime will follow the same four-stage pipeline as Python and TypeScript:
+
+1. **Renderer** — Jinja2-compatible template rendering (Scriban or DotLiquid)
+2. **Parser** — Role marker parsing → message list
+3. **Executor** — Azure OpenAI SDK / OpenAI SDK integration
+4. **Processor** — Response extraction and structured output
+
+## Contributing
+
+If you're interested in helping build the C# runtime, see the
+[Contributing](/contributing/) guide and check the
+[GitHub issues](https://github.com/microsoft/prompty/issues) for
+C#-related tasks.

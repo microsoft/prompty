@@ -1,0 +1,301 @@
+---
+title: Structured Output
+description: >
+  Constrain LLM responses to typed JSON matching your schema — define outputs in
+  your .prompty frontmatter and get back validated dicts or objects automatically.
+sidebar:
+  order: 7
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+By default, an LLM returns free-form text. When you define an **`outputSchema`**
+in your `.prompty` frontmatter, the runtime converts it to the provider's
+`response_format` parameter so the model is **constrained to return valid JSON**
+matching your schema. The processor then automatically parses the JSON string into
+a Python `dict` or JavaScript object — no manual `JSON.parse()` needed.
+
+<svg viewBox="0 0 620 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Structured output transformation flow: outputSchema to typed result" style="width:100%;max-width:620px;margin:1.5rem auto;display:block;">
+  <defs>
+    <marker id="so-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
+    </marker>
+    <marker id="so-arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  {/* Step 1: outputSchema (YAML) */}
+  <rect x="2" y="28" width="82" height="44" rx="7" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="43" y="47" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">outputSchema</text>
+  <text x="43" y="61" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">(YAML)</text>
+
+  {/* Arrow 1 */}
+  <line x1="88" y1="50" x2="108" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
+
+  {/* Step 2: _output_schema_to_wire */}
+  <rect x="112" y="24" width="98" height="52" rx="7" fill="#bfdbfe" stroke="#1d4ed8" strokeWidth="1.5"/>
+  <text x="161" y="44" textAnchor="middle" fontSize="7" fontFamily="ui-monospace,monospace" fill="#1e3a8a" fontWeight="700">_output_schema</text>
+  <text x="161" y="56" textAnchor="middle" fontSize="7" fontFamily="ui-monospace,monospace" fill="#1e3a8a" fontWeight="700">_to_wire()</text>
+  <text x="161" y="68" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#1d4ed8">conversion</text>
+
+  {/* Arrow 2 */}
+  <line x1="214" y1="50" x2="234" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
+
+  {/* Step 3: JSON Schema / response_format */}
+  <rect x="238" y="24" width="94" height="52" rx="7" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5"/>
+  <text x="285" y="42" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#92400e" fontWeight="700">response_format</text>
+  <text x="285" y="54" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#b45309">json_schema</text>
+  <text x="285" y="66" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#f59e0b">→ sent to LLM</text>
+
+  {/* Arrow 3 */}
+  <line x1="336" y1="50" x2="356" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
+
+  {/* Step 4: LLM returns JSON */}
+  <rect x="360" y="28" width="84" height="44" rx="7" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1.2"/>
+  <text x="402" y="46" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#374151" fontWeight="700">LLM response</text>
+  <text x="402" y="59" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">valid JSON</text>
+
+  {/* Arrow 4 */}
+  <line x1="448" y1="50" x2="468" y2="50" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#so-arrow)"/>
+
+  {/* Step 5: Processor parses */}
+  <rect x="472" y="24" width="66" height="52" rx="7" fill="#a7f3d0" stroke="#10b981" strokeWidth="1.5"/>
+  <text x="505" y="44" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">Processor</text>
+  <text x="505" y="57" textAnchor="middle" fontSize="7" fontFamily="system-ui,sans-serif" fill="#10b981">JSON.parse</text>
+
+  {/* Arrow 5 (green) */}
+  <line x1="542" y1="50" x2="562" y2="50" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#so-arrow-green)"/>
+
+  {/* Step 6: Result */}
+  <rect x="566" y="30" width="50" height="40" rx="7" fill="#d1fae5" stroke="#10b981" strokeWidth="1.5"/>
+  <text x="591" y="47" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">typed</text>
+  <text x="591" y="59" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#10b981">dict / obj</text>
+
+  {/* Bottom legend */}
+  <text x="310" y="96" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#9ca3af" fontStyle="italic">Your YAML schema → OpenAI response_format → typed result, fully automatic</text>
+</svg>
+
+---
+
+## Defining Output Schema
+
+Add an `outputSchema` block to your frontmatter with the properties you expect in
+the response. Each property has a `kind` (type) and optional `description`.
+
+```yaml title="weather.prompty"
+---
+name: weather-report
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+outputSchema:
+  properties:
+    - name: city
+      kind: string
+      description: The city name
+    - name: temperature
+      kind: integer
+      description: Temperature in degrees Fahrenheit
+    - name: conditions
+      kind: string
+      description: Current weather conditions
+---
+system:
+You are a weather assistant. Return the current weather for the requested city.
+
+user:
+What's the weather in {{city}}?
+```
+
+The runtime converts this to an OpenAI-compatible `response_format` with
+`type: "json_schema"`, ensuring the LLM **must** return a JSON object with exactly
+those three fields.
+
+---
+
+## How It Works
+
+Under the hood, the executor performs three steps when `outputSchema` is present:
+
+1. **Schema conversion** — `_output_schema_to_wire()` translates each `Property`
+   (with `kind`, `description`, `required`) into a standard JSON Schema object.
+   The result is wrapped in an OpenAI `response_format` parameter:
+
+   ```json
+   {
+     "type": "json_schema",
+     "json_schema": {
+       "name": "output_schema",
+       "strict": true,
+       "schema": {
+         "type": "object",
+         "properties": {
+           "city": { "type": "string", "description": "The city name" },
+           "temperature": { "type": "integer", "description": "Temperature in degrees Fahrenheit" },
+           "conditions": { "type": "string", "description": "Current weather conditions" }
+         },
+         "required": ["city", "temperature", "conditions"],
+         "additionalProperties": false
+       }
+     }
+   }
+   ```
+
+2. **LLM constrained generation** — the model is forced to return valid JSON matching
+   the schema. No malformed output, no missing fields.
+
+3. **Processor auto-parse** — the processor detects that `outputSchema` is defined and
+   calls `json.loads()` on the response content, returning a native `dict` (Python) or
+   object (JavaScript) instead of a raw string.
+
+<Aside type="note">
+  Structured output uses OpenAI's **strict mode** — `additionalProperties: false` is
+  set automatically, and all properties are marked as `required`. This guarantees the
+  model returns exactly the fields you specified.
+</Aside>
+
+---
+
+## Python Example
+
+With structured output, `execute()` returns a parsed dictionary directly:
+
+```python
+from prompty import execute
+
+result = execute("weather.prompty", inputs={"city": "Seattle"})
+
+# result is already a dict — no JSON.parse needed
+print(result["city"])         # "Seattle"
+print(result["temperature"])  # 62
+print(result["conditions"])   # "Partly cloudy"
+print(type(result))           # <class 'dict'>
+```
+
+The async variant works identically:
+
+```python
+from prompty import execute_async
+
+result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
+print(result["temperature"])  # 62
+```
+
+---
+
+## TypeScript Example
+
+The same `.prompty` file works with the TypeScript runtime:
+
+```typescript
+import { execute } from "prompty";
+
+const result = await execute("weather.prompty", { city: "Seattle" });
+
+// result is already a parsed object
+console.log(result.city);         // "Seattle"
+console.log(result.temperature);  // 62
+console.log(result.conditions);   // "Partly cloudy"
+```
+
+---
+
+## Without Output Schema
+
+If you **don't** define `outputSchema`, the processor returns the raw text content
+from the LLM response. You can still ask the model to return JSON in your prompt
+instructions, but there's no schema enforcement or automatic parsing.
+
+<Tabs>
+  <TabItem label="With outputSchema">
+    ```python
+    # outputSchema defined → dict returned automatically
+    result = execute("weather.prompty", inputs={"city": "Seattle"})
+    print(type(result))  # <class 'dict'>
+    print(result["temperature"])  # 62
+    ```
+  </TabItem>
+  <TabItem label="Without outputSchema">
+    ```python
+    # No outputSchema → raw string returned
+    result = execute("chat.prompty", inputs={"city": "Seattle"})
+    print(type(result))  # <class 'str'>
+    # You'd need to parse manually:
+    import json
+    data = json.loads(result)  # may fail if LLM didn't return valid JSON
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Without `outputSchema`, the LLM may return malformed JSON, add extra commentary
+  around the JSON block, or omit fields. Always prefer defining a schema when you
+  need structured data.
+</Aside>
+
+---
+
+## Nested Objects
+
+For complex responses, use `kind: object` with nested `properties` to define
+multi-level schemas:
+
+```yaml title="detailed-weather.prompty"
+---
+name: detailed-weather
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+outputSchema:
+  properties:
+    - name: city
+      kind: string
+    - name: current
+      kind: object
+      properties:
+        - name: temperature
+          kind: integer
+          description: Temperature in °F
+        - name: humidity
+          kind: integer
+          description: Humidity percentage
+        - name: conditions
+          kind: string
+    - name: forecast
+      kind: array
+      description: Next 3 days
+---
+system:
+Return current weather and a 3-day forecast for the requested city.
+
+user:
+Weather for {{city}}?
+```
+
+The result is a nested dictionary:
+
+```python
+result = execute("detailed-weather.prompty", inputs={"city": "Portland"})
+
+print(result["city"])                     # "Portland"
+print(result["current"]["temperature"])   # 58
+print(result["current"]["humidity"])      # 72
+print(result["forecast"])                 # [{"day": "Mon", ...}, ...]
+```
+
+<Aside type="tip">
+  Keep your output schemas as flat as possible — deeply nested schemas increase
+  token usage and can slow down constrained generation. Use nesting only when
+  the data genuinely has hierarchical structure.
+</Aside>

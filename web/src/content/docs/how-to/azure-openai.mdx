@@ -1,0 +1,292 @@
+---
+title: Use with Azure OpenAI
+description: >
+  Connect Prompty to Azure OpenAI — API key and Azure AD authentication,
+  complete .prompty files, and Python/TypeScript code.
+sidebar:
+  order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Prerequisites
+
+- An **Azure OpenAI resource** with a deployed model (e.g., `gpt-4o-mini`)
+- The resource **endpoint** (e.g., `https://my-resource.openai.azure.com/`)
+- Either an **API key** or **Azure AD credentials**
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    # API key auth
+    pip install prompty[jinja2,azure]
+
+    # Azure AD auth (adds azure-identity)
+    pip install prompty[jinja2,azure] azure-identity
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @prompty/core @prompty/azure
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Option A: API Key Authentication
+
+The simplest approach — use an API key from the Azure Portal.
+
+### 1. Write the `.prompty` File
+
+Create **`azure-chat.prompty`**:
+
+```yaml
+---
+name: azure-chat
+description: Chat completion with Azure OpenAI (API key)
+model:
+  id: gpt-4o-mini
+  provider: azure
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: What is Azure OpenAI?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Answer concisely.
+
+user:
+{{question}}
+```
+
+<Aside type="note">
+  `model.id` is the **deployment name** in Azure OpenAI, not the base model
+  name. If your deployment is called `my-gpt4o`, use `id: my-gpt4o`.
+</Aside>
+
+### 2. Run It
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    result = prompty.execute(
+        "azure-chat.prompty",
+        inputs={"question": "What services does Azure OpenAI offer?"},
+    )
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "@prompty/core";
+
+    const result = await execute("azure-chat.prompty", {
+      inputs: { question: "What services does Azure OpenAI offer?" },
+    });
+
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+### 3. Environment Setup
+
+```bash
+# .env
+AZURE_OPENAI_ENDPOINT=https://my-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123...
+```
+
+---
+
+## Option B: Azure AD Authentication
+
+For production workloads, use Azure AD (Entra ID) with `DefaultAzureCredential`
+— no API keys to manage or rotate.
+
+### 1. Write the `.prompty` File
+
+Create **`azure-chat-aad.prompty`**:
+
+```yaml
+---
+name: azure-chat-aad
+description: Chat completion with Azure OpenAI (Azure AD)
+model:
+  id: gpt-4o-mini
+  provider: azure
+  apiType: chat
+  connection:
+    kind: reference
+    name: azure_openai_default
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: What is Azure OpenAI?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Answer concisely.
+
+user:
+{{question}}
+```
+
+<Aside type="tip">
+  `kind: reference` tells Prompty to look up the connection by name at
+  runtime. This keeps credentials out of the `.prompty` file entirely.
+</Aside>
+
+### 2. Register the Connection and Run
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os
+    from azure.identity import DefaultAzureCredential
+    import prompty
+
+    # Register the named connection before loading the prompt
+    prompty.register_connection(
+        "azure_openai_default",
+        {
+            "endpoint": os.environ["AZURE_OPENAI_ENDPOINT"],
+            "credential": DefaultAzureCredential(),
+        },
+    )
+
+    result = prompty.execute(
+        "azure-chat-aad.prompty",
+        inputs={"question": "What is Azure OpenAI?"},
+    )
+    print(result)
+    ```
+
+    <Aside type="note">
+      `DefaultAzureCredential` automatically tries managed identity, Azure CLI,
+      VS Code, and other credential sources. No code changes needed between
+      local dev and production.
+    </Aside>
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute, registerConnection } from "@prompty/core";
+    import { DefaultAzureCredential } from "@azure/identity";
+
+    registerConnection("azure_openai_default", {
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+      credential: new DefaultAzureCredential(),
+    });
+
+    const result = await execute("azure-chat-aad.prompty", {
+      inputs: { question: "What is Azure OpenAI?" },
+    });
+
+    console.log(result);
+    ```
+  </TabItem>
+</Tabs>
+
+### 3. Required Azure RBAC
+
+The identity used by `DefaultAzureCredential` needs the
+**Cognitive Services OpenAI User** role on the Azure OpenAI resource:
+
+```bash
+az role assignment create \
+  --assignee <your-identity-object-id> \
+  --role "Cognitive Services OpenAI User" \
+  --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<resource>
+```
+
+---
+
+## Comparing the Two Options
+
+| | API Key (`kind: key`) | Azure AD (`kind: reference`) |
+|---|---|---|
+| **Setup** | Copy key from portal | Assign RBAC role |
+| **Security** | Key in env var — can leak | Token-based — no static secret |
+| **Rotation** | Manual | Automatic |
+| **Best for** | Local dev, prototyping | Production, CI/CD |
+
+<Aside type="caution">
+  Never commit API keys to source control. Always use `${env:...}` references
+  or `kind: reference` connections.
+</Aside>
+
+---
+
+## Using a Shared Connection File
+
+If multiple `.prompty` files share the same Azure config, extract it into a JSON
+file and reference it with `${file:...}`:
+
+**`shared/azure-connection.json`**:
+
+```json
+{
+  "kind": "key",
+  "endpoint": "https://my-resource.openai.azure.com/",
+  "apiKey": "${env:AZURE_OPENAI_API_KEY}"
+}
+```
+
+**`my-prompt.prompty`**:
+
+```yaml
+---
+name: shared-connection-demo
+model:
+  id: gpt-4o-mini
+  provider: azure
+  connection: ${file:shared/azure-connection.json}
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}
+```
+
+This avoids duplicating endpoint and auth config across prompts.
+
+---
+
+## Environment Setup (Both Options)
+
+```bash
+# .env
+AZURE_OPENAI_ENDPOINT=https://my-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123...              # Only needed for API key auth
+
+# Optional: specify deployment names per model type
+AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-small
+```

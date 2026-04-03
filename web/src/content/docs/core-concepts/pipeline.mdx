@@ -1,0 +1,431 @@
+---
+title: Pipeline Architecture
+description: >
+  How Prompty processes .prompty files through a four-stage pipeline —
+  Renderer, Parser, Executor, and Processor — with pluggable implementations
+  discovered via entry points.
+sidebar:
+  order: 2
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+Prompty processes `.prompty` files through a **four-stage pipeline**. Each stage
+is defined by a protocol — concrete implementations are discovered at runtime via
+Python entry points (or TypeScript imports). This design means you can swap any
+stage without touching the others: use a different template engine, a custom
+parser, or your own LLM provider.
+
+<svg viewBox="0 0 650 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The four pipeline stages: Renderer, Parser, Executor, Processor" style="width:100%;max-width:650px;margin:1.5rem auto;display:block;">
+  <defs>
+    <marker id="arrow1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  {/* Source node */}
+  <rect x="2" y="38" width="68" height="36" rx="6" fill="#e5e7eb" stroke="#6b7280" strokeWidth="1.2"/>
+  <text x="36" y="61" textAnchor="middle" fontSize="11" fontFamily="system-ui,sans-serif" fill="#374151" fontWeight="600">.prompty</text>
+
+  {/* Arrow 1 */}
+  <line x1="74" y1="56" x2="98" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
+
+  {/* Stage 1 — Renderer */}
+  <rect x="102" y="32" width="96" height="48" rx="8" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="150" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">RENDERER</text>
+  <text x="150" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">Stage 1</text>
+
+  {/* Arrow 2 + label */}
+  <line x1="202" y1="56" x2="238" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
+  <text x="220" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">rendered</text>
+  <text x="220" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">string</text>
+
+  {/* Stage 2 — Parser */}
+  <rect x="242" y="32" width="86" height="48" rx="8" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="285" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="700">PARSER</text>
+  <text x="285" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#3b82f6">Stage 2</text>
+
+  {/* Arrow 3 + label */}
+  <line x1="332" y1="56" x2="370" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
+  <text x="351" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">list</text>
+  <text x="351" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">[Message]</text>
+
+  {/* Stage 3 — Executor */}
+  <rect x="374" y="32" width="96" height="48" rx="8" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1.5"/>
+  <text x="422" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="700">EXECUTOR</text>
+  <text x="422" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1d4ed8">Stage 3</text>
+
+  {/* Arrow 4 + label */}
+  <line x1="474" y1="56" x2="512" y2="56" stroke="#6b7280" strokeWidth="1.2" markerEnd="url(#arrow1)"/>
+  <text x="493" y="48" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">raw</text>
+  <text x="493" y="72" textAnchor="middle" fontSize="7.5" fontFamily="system-ui,sans-serif" fill="#6b7280">response</text>
+
+  {/* Stage 4 — Processor */}
+  <rect x="516" y="32" width="96" height="48" rx="8" fill="#a7f3d0" stroke="#10b981" strokeWidth="1.5"/>
+  <text x="564" y="52" textAnchor="middle" fontSize="10" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="700">PROCESSOR</text>
+  <text x="564" y="68" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#10b981">Stage 4</text>
+
+  {/* Output label */}
+  <line x1="616" y1="56" x2="644" y2="56" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arrow1)"/>
+  <text x="648" y="50" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">clean</text>
+  <text x="648" y="62" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">result</text>
+
+  {/* Bottom legend */}
+  <text x="325" y="108" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#9ca3af" fontStyle="italic">Each stage is a protocol — swap any implementation without touching the others</text>
+</svg>
+
+---
+
+## Stage 1: Renderer
+
+The **Renderer** takes a `PromptAgent` and a dictionary of inputs, then renders the
+template (the `instructions` field) with those values. The result is a single rendered
+string containing role markers and filled-in variables.
+
+| Property | Value |
+|---|---|
+| **Registration key** | `agent.template.format.kind` |
+| **Built-in implementations** | `Jinja2Renderer` (`"jinja2"`), `MustacheRenderer` (`"mustache"`) |
+| **Input** | `PromptAgent` + `dict` of inputs |
+| **Output** | `str` — rendered template |
+
+The renderer also handles **thread markers** — when an input has `kind: thread`, the
+renderer emits special nonce markers that the pipeline later expands into `Message`
+objects for conversation history.
+
+<Tabs>
+  <TabItem label="Jinja2 (default)">
+    ```text
+    system:
+    You are an AI assistant helping {{ firstName }}.
+
+    user:
+    {{ question }}
+    ```
+  </TabItem>
+  <TabItem label="Mustache">
+    ```text
+    system:
+    You are an AI assistant helping {{firstName}}.
+
+    user:
+    {{question}}
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Stage 2: Parser
+
+The **Parser** takes the rendered string and splits it into a structured list of
+messages using **role markers** — lines ending with a colon that indicate who is
+speaking.
+
+| Property | Value |
+|---|---|
+| **Registration key** | `agent.template.parser.kind` |
+| **Built-in implementations** | `PromptyChatParser` (`"prompty"`) |
+| **Input** | `str` — rendered template |
+| **Output** | `list[Message]` — structured message objects |
+
+Recognized role markers:
+
+```text
+system:      → { role: "system",    content: "..." }
+user:        → { role: "user",      content: "..." }
+assistant:   → { role: "assistant", content: "..." }
+```
+
+<Aside type="tip">
+If no role marker appears at the start, the entire content is treated as a single
+`user` message.
+</Aside>
+
+---
+
+## Stage 3: Executor
+
+The **Executor** takes the list of messages and calls the LLM provider. It handles
+**API type dispatch** — routing to the appropriate SDK method based on
+`agent.model.apiType`.
+
+| Property | Value |
+|---|---|
+| **Registration key** | `agent.model.provider` |
+| **Built-in implementations** | `OpenAIExecutor` (`"openai"`), `AzureExecutor` (`"azure"`) |
+| **Input** | `list[Message]` + `PromptAgent` (for config) |
+| **Output** | Raw SDK response object |
+
+**API type dispatch:**
+
+| `apiType` | SDK method | Use case |
+|---|---|---|
+| `"chat"` (default) | `chat.completions.create()` | Conversational prompts |
+| `"embedding"` | `embeddings.create()` | Text → vector embeddings |
+| `"image"` | `images.generate()` | DALL-E image generation |
+| `"agent"` | Chat completions + tool-call loop | Autonomous tool use |
+
+<Aside type="note">
+The executor also wires up **structured output** when `agent.outputSchema` is defined —
+converting the schema to OpenAI's `response_format` parameter so the LLM returns JSON
+matching your schema.
+</Aside>
+
+---
+
+## Stage 4: Processor
+
+The **Processor** takes the raw SDK response and extracts clean, usable content.
+What "clean" means depends on the response type.
+
+| Property | Value |
+|---|---|
+| **Registration key** | `agent.model.provider` |
+| **Built-in implementations** | `OpenAIProcessor` (`"openai"`), `AzureProcessor` (`"azure"`) |
+| **Input** | Raw SDK response + `PromptAgent` |
+| **Output** | Processed result (string, list, dict, parsed JSON, etc.) |
+
+**Processing by response type:**
+
+| Response type | Output |
+|---|---|
+| Chat completion | `str` — the message content |
+| Embedding | `list[float]` or `list[list[float]]` |
+| Image | `str` — URL or base64 data |
+| Streaming | `PromptyStream` / `AsyncPromptyStream` iterator |
+| Structured output | Parsed `dict` matching `outputSchema` |
+
+---
+
+## Convenience Functions
+
+You don't always need the full pipeline. Prompty provides convenience functions
+that map to specific stage groupings:
+
+<svg viewBox="0 0 650 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How convenience functions map to pipeline stages" style="width:100%;max-width:650px;margin:1.5rem auto;display:block;">
+  <defs>
+    <marker id="arrow2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  {/* Column headers */}
+  <text x="195" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">RENDERER</text>
+  <text x="305" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">PARSER</text>
+  <text x="425" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">EXECUTOR</text>
+  <text x="555" y="20" textAnchor="middle" fontSize="9.5" fontFamily="system-ui,sans-serif" fill="#6b7280" fontWeight="600">PROCESSOR</text>
+
+  {/* Column lines */}
+  <line x1="145" y1="26" x2="145" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+  <line x1="250" y1="26" x2="250" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+  <line x1="365" y1="26" x2="365" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+  <line x1="490" y1="26" x2="490" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+  <line x1="615" y1="26" x2="615" y2="295" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,3"/>
+
+  {/* Row 1: render() */}
+  <text x="12" y="55" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">render()</text>
+  <rect x="150" y="38" width="95" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="197" y="56" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
+
+  {/* Row 2: parse() */}
+  <text x="12" y="100" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">parse()</text>
+  <rect x="255" y="83" width="105" height="28" rx="6" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="307" y="101" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
+
+  {/* Row 3: prepare() — spans Renderer + Parser */}
+  <text x="12" y="148" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">prepare()</text>
+  <rect x="150" y="128" width="210" height="32" rx="6" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="5,3"/>
+  <rect x="155" y="133" width="90" height="22" rx="5" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="200" y="148" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
+  <text x="253" y="148" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
+  <rect x="260" y="133" width="90" height="22" rx="5" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="305" y="148" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
+  <text x="370" y="148" textAnchor="start" fontSize="8" fontFamily="system-ui,sans-serif" fill="#f59e0b" fontWeight="600">+ thread expansion</text>
+
+  {/* Row 4: run() — spans Executor + Processor */}
+  <text x="12" y="198" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">run()</text>
+  <rect x="370" y="178" width="240" height="32" rx="6" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="5,3"/>
+  <rect x="375" y="183" width="100" height="22" rx="5" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1"/>
+  <text x="425" y="198" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="600">Executor</text>
+  <text x="483" y="198" textAnchor="middle" fontSize="9" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
+  <rect x="492" y="183" width="108" height="22" rx="5" fill="#a7f3d0" stroke="#10b981" strokeWidth="1"/>
+  <text x="546" y="198" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="600">Processor</text>
+
+  {/* Row 5: execute() — full pipeline */}
+  <text x="12" y="252" fontSize="11" fontFamily="ui-monospace,monospace" fill="#1d4ed8" fontWeight="700">execute()</text>
+  <rect x="100" y="232" width="515" height="36" rx="8" fill="none" stroke="#10b981" strokeWidth="2.5"/>
+  <text x="108" y="254" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">load +</text>
+  <rect x="148" y="237" width="80" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="188" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Renderer</text>
+  <text x="236" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
+  <rect x="244" y="237" width="80" height="26" rx="5" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="284" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e40af" fontWeight="600">Parser</text>
+  <text x="332" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
+  <rect x="340" y="237" width="80" height="26" rx="5" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1"/>
+  <text x="380" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#1e3a8a" fontWeight="600">Executor</text>
+  <text x="428" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#6b7280">→</text>
+  <rect x="436" y="237" width="84" height="26" rx="5" fill="#a7f3d0" stroke="#10b981" strokeWidth="1"/>
+  <text x="478" y="254" textAnchor="middle" fontSize="8" fontFamily="system-ui,sans-serif" fill="#065f46" fontWeight="600">Processor</text>
+  <text x="530" y="254" fontSize="8" fontFamily="system-ui,sans-serif" fill="#10b981" fontWeight="600">→ result</text>
+
+  {/* Full pipeline label */}
+  <text x="357" y="290" textAnchor="middle" fontSize="8.5" fontFamily="system-ui,sans-serif" fill="#10b981" fontStyle="italic">Full pipeline: load → render → parse → execute → process</text>
+</svg>
+
+### Using the convenience functions
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, prepare, execute
+    from prompty.core.pipeline import render, parse, run, process
+
+    agent = load("chat.prompty")
+    inputs = {"firstName": "Jane", "question": "What is AI?"}
+
+    # Stage 1 only — render the template
+    rendered = render(agent, inputs)
+
+    # Stage 2 only — parse rendered string into messages
+    messages = parse(agent, rendered)
+
+    # Stages 1 + 2 — render, parse, and expand threads
+    messages = prepare(agent, inputs)
+
+    # Stages 3 + 4 — execute LLM call and process response
+    result = run(agent, messages)
+
+    # Full pipeline — load + prepare + run
+    result = execute("chat.prompty", inputs=inputs)
+    ```
+  </TabItem>
+  <TabItem label="Python (async)">
+    ```python
+    from prompty import load_async, prepare_async, execute_async
+    from prompty.core.pipeline import render_async, parse_async, run_async
+
+    agent = await load_async("chat.prompty")
+    inputs = {"firstName": "Jane", "question": "What is AI?"}
+
+    rendered = await render_async(agent, inputs)
+    messages = await parse_async(agent, rendered)
+    messages = await prepare_async(agent, inputs)
+    result   = await run_async(agent, messages)
+    result   = await execute_async("chat.prompty", inputs=inputs)
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Most users only need **`execute()`** — it handles the full pipeline from file to
+  result. Use the granular functions when you need to inspect or modify intermediate
+  outputs (e.g., editing messages before sending them to the LLM).
+</Aside>
+
+---
+
+## Entry-Point Discovery
+
+The Python runtime discovers stage implementations using **Python entry points** —
+the same mechanism that powers CLI tools and pytest plugins. Each implementation
+registers itself under a group name in `pyproject.toml`.
+
+### Registration groups
+
+| Group | Resolved from | Example keys |
+|---|---|---|
+| `prompty.renderers` | `agent.template.format.kind` | `jinja2`, `mustache` |
+| `prompty.parsers` | `agent.template.parser.kind` | `prompty` |
+| `prompty.executors` | `agent.model.provider` | `openai`, `azure` |
+| `prompty.processors` | `agent.model.provider` | `openai`, `azure` |
+
+### Built-in entry points
+
+These are registered in Prompty's own `pyproject.toml`:
+
+```toml
+[project.entry-points."prompty.renderers"]
+jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
+mustache = "prompty.renderers.mustache:MustacheRenderer"
+
+[project.entry-points."prompty.parsers"]
+prompty = "prompty.parsers.prompty:PromptyChatParser"
+
+[project.entry-points."prompty.executors"]
+openai = "prompty.providers.openai.executor:OpenAIExecutor"
+azure = "prompty.providers.azure.executor:AzureExecutor"
+
+[project.entry-points."prompty.processors"]
+openai = "prompty.providers.openai.processor:OpenAIProcessor"
+azure = "prompty.providers.azure.processor:AzureProcessor"
+```
+
+The discovery module (`core/discovery.py`) caches lookups, so entry points are only
+resolved once per key. Call `clear_cache()` if you need to reset after dynamic registration.
+
+---
+
+## Custom Implementations
+
+You can write your own implementation for any stage by implementing the corresponding
+protocol and registering it as an entry point.
+
+### 1. Implement the protocol
+
+Each protocol defines `sync` and `async` methods. Here's an example custom executor:
+
+```python
+from __future__ import annotations
+
+from prompty.core.types import Message
+
+class AnthropicExecutor:
+    """Executor for the Anthropic Claude API."""
+
+    def execute(self, agent, messages: list[Message]) -> object:
+        import anthropic
+        client = anthropic.Anthropic()
+        return client.messages.create(
+            model=agent.model.id,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+        )
+
+    async def execute_async(self, agent, messages: list[Message]) -> object:
+        import anthropic
+        client = anthropic.AsyncAnthropic()
+        return await client.messages.create(
+            model=agent.model.id,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+        )
+```
+
+### 2. Register the entry point
+
+In your package's `pyproject.toml`:
+
+```toml
+[project.entry-points."prompty.executors"]
+anthropic = "my_package.executor:AnthropicExecutor"
+```
+
+### 3. Use it
+
+After installing the package, any `.prompty` file with `model.provider: "anthropic"` will
+automatically route to your executor.
+
+```yaml
+model:
+  id: claude-sonnet-4-20250514
+  provider: anthropic
+  connection:
+    kind: key
+    apiKey: ${env:ANTHROPIC_API_KEY}
+```
+
+<Aside type="caution">
+  After changing entry points in `pyproject.toml`, you must reinstall the package
+  for the new registrations to take effect: `uv pip install -e ".[dev,all]"`
+</Aside>

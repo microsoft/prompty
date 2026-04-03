@@ -4,8 +4,10 @@ description: >
   How to upgrade from Prompty v1 to v2 — what changed and what
   to update.
 sidebar:
-  order: 4
+  order: 1
 ---
+
+import { Aside } from '@astrojs/starlight/components';
 
 ## Overview
 
@@ -22,14 +24,14 @@ features (`X | Y` unions, `match`/`case`, etc.).
 
 ### Package Manager
 
-v2 uses `uv` instead of `pip`:
+v2 recommends `uv` for Python environment management:
 
 ```bash
 # v1
 pip install prompty
 
 # v2
-uv pip install prompty[jinja2,openai]==2.0.0a1
+uv pip install prompty[jinja2,openai]
 ```
 
 ### Extras Are Required
@@ -104,7 +106,7 @@ model:
 
 ## File Format Changes
 
-v2 uses AgentSchema property names. v1 names are auto-migrated
+v2 uses updated property names. v1 names are auto-migrated
 with deprecation warnings.
 
 ### Model Configuration
@@ -146,13 +148,12 @@ inputs:
     type: string
 
 # v2
-inputSchema:
-  properties:
-    - name: name
-      kind: string
-      default: World
-    - name: question
-      kind: string
+inputs:
+  - name: name
+    kind: string
+    default: World
+  - name: question
+    kind: string
 ```
 
 ### Template Format
@@ -182,8 +183,8 @@ template:
 | `model.parameters.frequency_penalty` | `model.options.frequencyPenalty` |
 | `model.parameters.presence_penalty` | `model.options.presencePenalty` |
 | `model.parameters.stop` | `model.options.stopSequences` |
-| `inputs` | `inputSchema` |
-| `outputs` | `outputSchema` |
+| `inputs` (dict) | `inputs` (list of Property) |
+| `outputs` | `outputs` |
 | `inputs.X.type` | `kind` |
 | `inputs.X.sample` | `default` |
 
@@ -195,3 +196,4 @@ template:
 - **Structured output** — `outputSchema` → `response_format`
 - **Thread safety** — renderer nonces use `threading.local()`
 - **Entry-point discovery** — third-party implementations
+- **TypeScript runtime** — `@prompty/core`, `@prompty/openai`, `@prompty/foundry`, `@prompty/anthropic`

@@ -1,0 +1,242 @@
+---
+title: VS Code Extension
+description: >
+  Install and use the Prompty VS Code extension for syntax highlighting,
+  frontmatter autocomplete, prompt validation, run/debug, and trace viewing.
+sidebar:
+  order: 10
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+The **Prompty VS Code extension** makes working with `.prompty` files a
+first-class experience — syntax highlighting, schema-aware autocomplete,
+one-click execution, and an integrated trace viewer.
+
+---
+
+## Installation
+
+Install from the VS Code Marketplace:
+
+1. Open VS Code
+2. Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on macOS) to open Extensions
+3. Search for **Prompty**
+4. Click **Install** on the extension by **ms-toolsai**
+
+Or install from the command line:
+
+```bash
+code --install-extension ms-toolsai.prompty
+```
+
+<Aside type="tip">
+  The extension ID is `ms-toolsai.prompty`. You can also find it in the
+  [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+</Aside>
+
+---
+
+## Features
+
+### Syntax Highlighting
+
+The extension provides full syntax highlighting for `.prompty` files:
+
+- **Frontmatter** — YAML block between `---` delimiters is highlighted with
+  property-aware coloring for `model`, `inputSchema`, `outputSchema`, `tools`, etc.
+- **Markdown body** — role markers (`system:`, `user:`, `assistant:`) are
+  highlighted distinctly so you can see conversation boundaries at a glance.
+- **Template syntax** — Jinja2 (`{{ }}`, `{% %}`) and Mustache (`{{ }}`)
+  expressions are highlighted within the body.
+
+### Frontmatter Autocomplete
+
+Get IntelliSense suggestions as you type frontmatter properties:
+
+- Top-level keys: `name`, `description`, `model`, `inputSchema`, `outputSchema`,
+  `tools`, `template`, `metadata`
+- Nested keys: `model.id`, `model.provider`, `model.apiType`,
+  `model.connection.kind`, `model.options.temperature`, etc.
+- Enum values: `provider` suggests `openai`, `azure`; `apiType` suggests
+  `chat`, `embedding`, `image`, `agent`; `connection.kind` suggests `key`,
+  `reference`, `remote`, `anonymous`
+
+### Validation
+
+The extension validates your `.prompty` file as you type:
+
+- **Missing required fields** — warns if `model` is missing
+- **Invalid values** — flags unknown `apiType` or `connection.kind` values
+- **Schema errors** — catches malformed `inputSchema` or `outputSchema`
+- **Reference errors** — flags `${env:VAR}` when the variable isn't set
+
+### Run and Debug Prompts
+
+Execute `.prompty` files directly from the editor:
+
+- **Run button** — click the play icon in the editor title bar or right-click
+  the file and select **Run Prompty**
+- **Debug mode** — step through the pipeline stages (render → parse → execute → process)
+  to inspect intermediate values
+- **Input overrides** — when running, the extension uses `default` values from
+  `inputSchema` properties, or prompts you for inputs
+
+### Trace Viewer
+
+After running a prompt, the extension opens an integrated **trace viewer**
+showing the full execution pipeline:
+
+- Template rendering input/output
+- Parsed message list
+- API request parameters
+- Raw API response
+- Processed result
+- Timing for each stage
+
+---
+
+## Creating a New `.prompty` File
+
+Use the Command Palette to scaffold a new prompt:
+
+1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
+2. Type **Prompty: Create**
+3. Select **Prompty: Create New Prompty File**
+4. Choose a template (basic chat, embedding, or blank)
+5. The extension creates the file with the appropriate frontmatter structure
+
+Or simply create a file with the `.prompty` extension — the extension
+activates automatically.
+
+---
+
+## Running Prompts from the Editor
+
+### Quick Run
+
+1. Open a `.prompty` file
+2. Click the **▶ Run** button in the editor toolbar (top right)
+3. The extension renders the template, calls the LLM, and shows the result
+   in an output panel
+
+### With Custom Inputs
+
+1. Right-click in the editor → **Run Prompty with Inputs**
+2. A dialog appears for each input defined in `inputSchema`
+3. Enter your values and click **Run**
+
+### Environment Variables
+
+The extension loads `.env` files from your workspace root automatically,
+just like the Python runtime. Make sure your API keys are configured:
+
+```bash title=".env"
+OPENAI_API_KEY=sk-your-key-here
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-azure-key
+```
+
+<Aside type="caution">
+  Never commit `.env` files to source control. Add `.env` to your
+  `.gitignore` file.
+</Aside>
+
+---
+
+## Viewing Traces
+
+After running a prompt, traces are available in two places:
+
+### Inline Trace Panel
+
+The extension shows a collapsible trace panel below the editor with:
+
+- **Render** — the rendered template string
+- **Parse** — the parsed `Message[]` array
+- **Execute** — the API request and response
+- **Process** — the final extracted result
+
+### Trace Files
+
+If you have `PromptyTracer` configured, traces are also saved as JSON files.
+Click **Open Trace File** in the output panel to view the full trace data.
+
+```python
+# Enable file-based tracing in your code
+from prompty import Tracer
+from prompty.tracing.tracer import PromptyTracer
+
+Tracer.add("prompty", PromptyTracer("traces/"))
+```
+
+---
+
+## Configuration Settings
+
+Open VS Code settings (`Ctrl+,`) and search for **Prompty** to configure:
+
+| Setting | Description | Default |
+|---|---|---|
+| `prompty.defaultProvider` | Default model provider for new files | `openai` |
+| `prompty.defaultModel` | Default model ID for new files | `gpt-4o-mini` |
+| `prompty.traceOutput` | Where to show traces | `panel` |
+| `prompty.envFile` | Path to `.env` file | `.env` |
+| `prompty.templateEngine` | Default template engine | `jinja2` |
+
+Example `settings.json`:
+
+```json
+{
+  "prompty.defaultProvider": "azure",
+  "prompty.defaultModel": "gpt-4o",
+  "prompty.traceOutput": "panel",
+  "prompty.envFile": ".env"
+}
+```
+
+---
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|---|---|
+| Run Prompty | `Ctrl+Shift+Enter` |
+| Create New Prompty | `Ctrl+Shift+P` → "Prompty: Create" |
+| Toggle Trace Panel | `Ctrl+Shift+T` |
+
+---
+
+## Troubleshooting
+
+### "Module not found" when running
+
+Make sure the Prompty Python package is installed in the active Python
+environment. The extension uses the Python interpreter selected in VS Code:
+
+```bash
+pip install prompty[jinja2,openai]
+```
+
+Check your selected interpreter: `Ctrl+Shift+P` → **Python: Select Interpreter**.
+
+### No autocomplete in frontmatter
+
+Reload the window: `Ctrl+Shift+P` → **Developer: Reload Window**. The
+extension registers the YAML schema on activation.
+
+### Traces not appearing
+
+Ensure the run completed without errors — check the **Output** panel
+(select **Prompty** from the dropdown) for error messages.
+
+---
+
+## Further Reading
+
+- [Legacy extension docs](/legacy/guides/extension/) — feature documentation
+  for older versions of the extension
+- [Tracing](/core-concepts/tracing/) — configuring trace backends
+- [Getting started](/getting-started/) — full setup guide

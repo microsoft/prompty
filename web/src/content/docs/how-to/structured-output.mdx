@@ -1,0 +1,238 @@
+---
+title: Structured Output
+description: >
+  Get typed JSON back from your LLM — define an outputSchema in your .prompty
+  frontmatter and receive parsed dicts or objects automatically.
+sidebar:
+  order: 5
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What You'll Build
+
+A prompt that returns **structured JSON** matching a schema you define — no
+manual parsing, no malformed output. The LLM is constrained to return exactly
+the fields you specify, and the Prompty processor auto-parses the result.
+
+---
+
+## Step 1: Define the Output Schema
+
+Add an `outputSchema` block to your `.prompty` frontmatter. Each property
+needs a `name`, `kind` (type), and optional `description`:
+
+```yaml title="weather.prompty"
+---
+name: weather-report
+description: Returns structured weather data for a city
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.3
+inputSchema:
+  properties:
+    - name: city
+      kind: string
+      default: Seattle
+outputSchema:
+  properties:
+    - name: city
+      kind: string
+      description: The city name
+    - name: temperature
+      kind: integer
+      description: Temperature in degrees Fahrenheit
+    - name: conditions
+      kind: string
+      description: Current weather conditions (e.g. sunny, cloudy, rain)
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a weather data API. Return the current weather for the requested city.
+
+user:
+What's the weather in {{city}}?
+```
+
+Prompty converts `outputSchema` into OpenAI's `response_format` with
+`type: "json_schema"` and **strict mode** enabled — the model must return
+valid JSON with exactly those fields.
+
+---
+
+## Step 2: Execute and Use the Result
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
+
+    result = execute("weather.prompty", inputs={"city": "Seattle"})
+
+    # result is already a dict — no JSON.parse needed
+    print(result["city"])         # "Seattle"
+    print(result["temperature"])  # 62
+    print(result["conditions"])   # "Partly cloudy"
+    print(type(result))           # <class 'dict'>
+    ```
+
+    The async variant works identically:
+
+    ```python
+    from prompty import execute_async
+
+    result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
+    print(result["temperature"])  # 62
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+
+    const result = await execute("weather.prompty", { city: "Seattle" });
+
+    // result is already a parsed object
+    console.log(result.city);         // "Seattle"
+    console.log(result.temperature);  // 62
+    console.log(result.conditions);   // "Partly cloudy"
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Without `outputSchema`, `execute()` returns a raw string. With it, you get
+  a parsed `dict` (Python) or object (TypeScript) automatically.
+</Aside>
+
+---
+
+## Nested Objects
+
+For complex responses, use `kind: object` with nested `properties`:
+
+```yaml title="detailed-weather.prompty"
+---
+name: detailed-weather
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+outputSchema:
+  properties:
+    - name: city
+      kind: string
+    - name: current
+      kind: object
+      properties:
+        - name: temperature
+          kind: integer
+          description: Temperature in °F
+        - name: humidity
+          kind: integer
+          description: Humidity percentage
+        - name: conditions
+          kind: string
+    - name: forecast
+      kind: array
+      description: Next 3 days forecast
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+Return current weather and a 3-day forecast for the requested city.
+
+user:
+Weather for {{city}}?
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
+
+    result = execute("detailed-weather.prompty", inputs={"city": "Portland"})
+
+    print(result["city"])                     # "Portland"
+    print(result["current"]["temperature"])   # 58
+    print(result["current"]["humidity"])      # 72
+    print(result["forecast"])                 # [{"day": "Mon", ...}, ...]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+
+    const result = await execute("detailed-weather.prompty", { city: "Portland" });
+
+    console.log(result.city);                  // "Portland"
+    console.log(result.current.temperature);   // 58
+    console.log(result.current.humidity);      // 72
+    console.log(result.forecast);              // [{day: "Mon", ...}, ...]
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Keep output schemas as flat as possible — deeply nested schemas increase
+  token usage and can slow down constrained generation. Use nesting only when
+  the data genuinely has hierarchical structure.
+</Aside>
+
+---
+
+## Provider Support
+
+<Aside type="note">
+  Structured output works with both **OpenAI** and **Azure OpenAI** — the
+  runtime converts `outputSchema` to the same `response_format` parameter
+  used by both providers. No changes needed when switching providers.
+</Aside>
+
+The runtime generates this wire format automatically:
+
+```json
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "output_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "city": { "type": "string" },
+        "temperature": { "type": "integer" },
+        "conditions": { "type": "string" }
+      },
+      "required": ["city", "temperature", "conditions"],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+All properties are marked `required` and `additionalProperties` is set to
+`false` — the model returns exactly the fields you specified, nothing more.
+
+---
+
+## Further Reading
+
+- [Structured Output concept](/core-concepts/structured-output/) — how the
+  conversion pipeline works under the hood
+- [Output Schema reference](/core-concepts/file-format/) — full `outputSchema` syntax

@@ -1,0 +1,272 @@
+---
+title: Embeddings
+description: >
+  Generate text embeddings with Prompty — set apiType to embedding and get
+  back float vectors for semantic search, RAG, and similarity scoring.
+sidebar:
+  order: 7
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What You'll Build
+
+A `.prompty` file that generates **text embeddings** — dense float vectors
+that capture semantic meaning. Use them for similarity search, retrieval
+augmented generation (RAG), clustering, or classification.
+
+---
+
+## Step 1: Create an Embedding Prompt
+
+Set `apiType: embedding` in the model block. The template body becomes the
+default text to embed, but you'll typically pass text as an input:
+
+```yaml title="embed.prompty"
+---
+name: text-embedder
+description: Generate embeddings for text input
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+inputSchema:
+  properties:
+    - name: text
+      kind: string
+      default: Hello, world!
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{text}}
+```
+
+<Aside type="note">
+  For embeddings, the template body is the raw text to embed — no role
+  markers (`system:`, `user:`) are needed. The parser produces a single
+  message whose content is sent to the embeddings API.
+</Aside>
+
+---
+
+## Step 2: Generate an Embedding
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
+
+    vector = execute("embed.prompty", inputs={"text": "Prompty is awesome"})
+
+    print(type(vector))    # <class 'list'>
+    print(len(vector))     # 1536 (for text-embedding-3-small)
+    print(vector[:5])      # [0.0123, -0.0456, 0.0789, ...]
+    ```
+
+    The result is a `list[float]` — one embedding vector for the input text.
+
+    Async works the same way:
+
+    ```python
+    from prompty import execute_async
+
+    vector = await execute_async("embed.prompty", inputs={"text": "Prompty is awesome"})
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+
+    const vector = await execute("embed.prompty", { text: "Prompty is awesome" });
+
+    console.log(Array.isArray(vector));  // true
+    console.log(vector.length);          // 1536
+    console.log(vector.slice(0, 5));     // [0.0123, -0.0456, 0.0789, ...]
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Batch Embeddings
+
+To embed multiple texts at once, pass a list. The API handles batching
+efficiently in a single request:
+
+```yaml title="batch-embed.prompty"
+---
+name: batch-embedder
+description: Embed multiple texts in one call
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+inputSchema:
+  properties:
+    - name: texts
+      kind: array
+      description: List of texts to embed
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{texts}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import execute
+
+    texts = [
+        "What is machine learning?",
+        "How do neural networks work?",
+        "Explain gradient descent",
+    ]
+
+    vectors = execute("batch-embed.prompty", inputs={"texts": texts})
+
+    print(len(vectors))        # 3 (one vector per input text)
+    print(len(vectors[0]))     # 1536
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { execute } from "prompty";
+
+    const texts = [
+      "What is machine learning?",
+      "How do neural networks work?",
+      "Explain gradient descent",
+    ];
+
+    const vectors = await execute("batch-embed.prompty", { texts });
+
+    console.log(vectors.length);     // 3
+    console.log(vectors[0].length);  // 1536
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Azure OpenAI Embeddings
+
+Switch to Azure by changing the provider and connection:
+
+```yaml title="embed-azure.prompty"
+---
+name: azure-embedder
+model:
+  id: ${env:AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+  provider: azure
+  apiType: embedding
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+inputSchema:
+  properties:
+    - name: text
+      kind: string
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{text}}
+```
+
+The code is identical — only the `.prompty` file changes:
+
+```python
+vector = execute("embed-azure.prompty", inputs={"text": "Hello from Azure"})
+```
+
+---
+
+## Use Cases
+
+### Semantic Search
+
+Generate embeddings for your document corpus, store them in a vector
+database, then embed the user's query and find nearest neighbors:
+
+```python
+from prompty import execute
+import numpy as np
+
+# Embed documents (do this once, store the vectors)
+docs = ["Python is a programming language", "Cats are cute animals", "The weather is sunny"]
+doc_vectors = [execute("embed.prompty", inputs={"text": d}) for d in docs]
+
+# Embed a query
+query_vector = execute("embed.prompty", inputs={"text": "coding languages"})
+
+# Cosine similarity
+def cosine_sim(a, b):
+    a, b = np.array(a), np.array(b)
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+similarities = [cosine_sim(query_vector, dv) for dv in doc_vectors]
+best_match = docs[np.argmax(similarities)]
+print(best_match)  # "Python is a programming language"
+```
+
+### RAG (Retrieval Augmented Generation)
+
+Combine embeddings with a chat prompt — retrieve relevant context, then
+pass it to a chat completion:
+
+```python
+from prompty import execute
+
+# 1. Embed the user's question
+query = "How do I install Prompty?"
+query_vector = execute("embed.prompty", inputs={"text": query})
+
+# 2. Search your vector store for relevant docs
+relevant_docs = vector_store.search(query_vector, top_k=3)
+
+# 3. Pass retrieved context to a chat prompt
+context = "\n".join(doc.text for doc in relevant_docs)
+answer = execute("rag-chat.prompty", inputs={"question": query, "context": context})
+```
+
+<Aside type="tip">
+  For production RAG pipelines, consider using batch embeddings to process
+  your document corpus more efficiently — one API call for many texts is
+  much faster than one call per document.
+</Aside>
+
+---
+
+## Available Embedding Models
+
+| Model | Dimensions | Provider |
+|---|---|---|
+| `text-embedding-3-small` | 1536 | OpenAI |
+| `text-embedding-3-large` | 3072 | OpenAI |
+| `text-embedding-ada-002` | 1536 | OpenAI / Azure |
+
+Set the model in `model.id` in your `.prompty` file. For Azure, use your
+deployment name as the `model.id`.
+
+---
+
+## Further Reading
+
+- [File format reference](/core-concepts/file-format/) — full `.prompty` frontmatter syntax
+- [Connections](/core-concepts/connections/) — configuring OpenAI and Azure connections

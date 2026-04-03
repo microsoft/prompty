@@ -1,0 +1,247 @@
+---
+title: Streaming Responses
+description: >
+  Stream LLM output token-by-token to your application using PromptyStream,
+  with full tracing support and no data loss.
+sidebar:
+  order: 6
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What You'll Build
+
+A prompt that streams responses **chunk by chunk** — ideal for chat UIs where
+users see tokens appear in real time. Prompty wraps the raw SDK stream in a
+tracing-aware `PromptyStream` so you get full observability without losing
+any data.
+
+---
+
+## Step 1: Enable Streaming
+
+Set `stream: true` in the model's `additionalProperties` — either in the
+`.prompty` file or at runtime.
+
+### In the `.prompty` File
+
+```yaml title="chat.prompty"
+---
+name: streaming-chat
+description: A chat prompt with streaming enabled
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    additionalProperties:
+      stream: true
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+      default: Tell me a joke
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}
+```
+
+### At Runtime
+
+If your `.prompty` file doesn't have streaming enabled, you can toggle it
+before execution:
+
+```python
+from prompty import load
+
+agent = load("chat.prompty")
+agent.model.options.additionalProperties["stream"] = True
+```
+
+<Aside type="tip">
+  The `additionalProperties` dict passes through to the underlying SDK call.
+  Any parameter the SDK accepts (like `stream`, `logprobs`, `n`) can be set here.
+</Aside>
+
+---
+
+## Step 2: Consume the Stream
+
+Use `run()` with `raw=True` to get the unprocessed `PromptyStream`, then
+pass it to `process()` which yields text chunks.
+
+<Tabs>
+  <TabItem label="Python (sync)">
+    ```python
+    from prompty import load, run, process
+
+    agent = load("chat.prompty")
+    agent.model.options.additionalProperties["stream"] = True
+
+    # run() with raw=True returns the PromptyStream
+    stream = run(agent, inputs={"question": "Tell me a joke"}, raw=True)
+
+    # process() yields text chunks
+    for chunk in process(agent, stream):
+        print(chunk, end="", flush=True)
+    print()  # newline after stream completes
+    ```
+  </TabItem>
+  <TabItem label="Python (async)">
+    ```python
+    import asyncio
+    from prompty import load_async, run_async, process_async
+
+    async def main():
+        agent = await load_async("chat.prompty")
+        agent.model.options.additionalProperties["stream"] = True
+
+        stream = await run_async(
+            agent, inputs={"question": "Tell me a joke"}, raw=True
+        )
+
+        async for chunk in process_async(agent, stream):
+            print(chunk, end="", flush=True)
+        print()
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, run, process } from "prompty";
+
+    const agent = await load("chat.prompty");
+    agent.model.options.additionalProperties.stream = true;
+
+    const stream = await run(agent, { question: "Tell me a joke" }, { raw: true });
+
+    for await (const chunk of process(agent, stream)) {
+      process.stdout.write(chunk);
+    }
+    console.log();
+    ```
+  </TabItem>
+</Tabs>
+
+Each `chunk` is a **string** — the processor extracts `delta.content` from
+the raw API response objects so you don't handle the wire format yourself.
+
+---
+
+## How Streaming + Tracing Works
+
+A common concern with streaming is losing observability — if chunks are
+consumed lazily, when does the trace fire?
+
+Prompty's `PromptyStream` wrapper solves this:
+
+1. The executor wraps the raw SDK iterator in a `PromptyStream`.
+2. As you iterate, each chunk is forwarded to your code **and** appended
+   to an internal accumulator.
+3. When the iterator is **exhausted** (`StopIteration`), the wrapper flushes
+   the complete accumulated response to the active tracer.
+
+```
+iterate chunk 1  →  yield + accumulate
+iterate chunk 2  →  yield + accumulate
+iterate chunk 3  →  yield + accumulate
+       ...
+StopIteration    →  flush accumulated data to tracer ✓
+```
+
+<Aside type="note">
+  **No trace data is lost.** The full response is captured exactly as if you
+  used a non-streaming call — the trace just fires at the end of iteration
+  rather than when the API call returns. The same applies to
+  `AsyncPromptyStream` for async iteration.
+</Aside>
+
+---
+
+## What the Processor Handles
+
+The streaming processor does more than forward raw chunks:
+
+| Scenario | Behavior |
+|---|---|
+| **Content deltas** | `delta.content` strings are yielded directly to the caller |
+| **Tool-call deltas** | Argument fragments are accumulated; a complete `ToolCall` is yielded when the stream ends |
+| **Refusal** | If `delta.refusal` is present, the processor raises a `ValueError` |
+| **Empty / heartbeat chunks** | Chunks with no content or tool-call data are silently skipped |
+
+<Aside type="caution">
+  When the model returns tool calls in a streaming response, you will **not**
+  see individual argument fragments. The processor accumulates them and yields
+  a single `ToolCall` at the end — matching non-streaming behavior.
+</Aside>
+
+---
+
+## Complete Example: Streaming Chat App
+
+Here's a self-contained example you can copy and run:
+
+```yaml title="stream-demo.prompty"
+---
+name: stream-demo
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.9
+    additionalProperties:
+      stream: true
+inputSchema:
+  properties:
+    - name: topic
+      kind: string
+      default: space exploration
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a creative storyteller.
+
+user:
+Write a short story about {{topic}}.
+```
+
+```python title="stream_app.py"
+from prompty import load, run, process
+
+agent = load("stream-demo.prompty")
+stream = run(agent, inputs={"topic": "a robot learning to paint"}, raw=True)
+
+print("Story: ", end="")
+for chunk in process(agent, stream):
+    print(chunk, end="", flush=True)
+print("\n--- Done ---")
+```
+
+---
+
+## Further Reading
+
+- [Streaming concept](/core-concepts/streaming/) — architecture details on
+  `PromptyStream` and `AsyncPromptyStream`
+- [Tracing](/core-concepts/tracing/) — how traces capture streaming data

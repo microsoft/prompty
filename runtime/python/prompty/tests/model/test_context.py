@@ -1,5 +1,5 @@
 # Prompty LoadContext
-from prompty.model._context import LoadContext, SaveContext
+from prompty._context import LoadContext, SaveContext
 
 
 class TestLoadContext:

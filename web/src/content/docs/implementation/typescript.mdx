@@ -1,0 +1,138 @@
+---
+title: TypeScript
+description: >
+  Using Prompty with TypeScript — packages, installation, and API overview.
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Packages
+
+The TypeScript runtime is split into focused packages:
+
+| Package | Description | npm |
+|---------|-------------|-----|
+| `@prompty/core` | Core runtime: loader, pipeline, types | [![npm](https://img.shields.io/npm/v/@prompty/core)](https://www.npmjs.com/package/@prompty/core) |
+| `@prompty/openai` | OpenAI provider (chat, embedding, image, agent) | [![npm](https://img.shields.io/npm/v/@prompty/openai)](https://www.npmjs.com/package/@prompty/openai) |
+| `@prompty/foundry` | Azure AI Foundry provider | [![npm](https://img.shields.io/npm/v/@prompty/foundry)](https://www.npmjs.com/package/@prompty/foundry) |
+| `@prompty/anthropic` | Anthropic provider | [![npm](https://img.shields.io/npm/v/@prompty/anthropic)](https://www.npmjs.com/package/@prompty/anthropic) |
+
+## Installation
+
+```bash
+# Core + OpenAI
+npm install @prompty/core @prompty/openai
+
+# Core + Azure AI Foundry
+npm install @prompty/core @prompty/foundry
+
+# Core + Anthropic
+npm install @prompty/core @prompty/anthropic
+```
+
+## Quick Start
+
+```typescript
+import { execute } from "@prompty/core";
+import "@prompty/openai"; // registers the OpenAI provider
+
+const result = await execute("greeting.prompty", {
+  userName: "Jane",
+});
+console.log(result);
+```
+
+<Aside type="note">
+  Provider packages like `@prompty/openai` register themselves when imported.
+  You must import them before calling pipeline functions.
+</Aside>
+
+## API Overview
+
+### Loading
+
+```typescript
+import { load } from "@prompty/core";
+
+const agent = await load("chat.prompty");
+console.log(agent.name);       // "chat"
+console.log(agent.model.id);   // "gpt-4o"
+```
+
+### Pipeline Functions
+
+```typescript
+import { load, prepare, run, execute } from "@prompty/core";
+import "@prompty/openai";
+
+// Step by step
+const agent = await load("chat.prompty");
+const messages = await prepare(agent, { question: "Hi" });
+const result = await run(agent, messages);
+
+// All-in-one
+const result2 = await execute("chat.prompty", { question: "Hi" });
+```
+
+### Agent Mode
+
+```typescript
+import { executeAgent } from "@prompty/core";
+import "@prompty/openai";
+
+function getWeather(city: string): string {
+  return `72°F and sunny in ${city}`;
+}
+
+const result = await executeAgent(
+  "agent.prompty",
+  { question: "Weather in Seattle?" },
+  { get_weather: getWeather },
+);
+```
+
+### Streaming
+
+```typescript
+import { load, prepare, run, process } from "@prompty/core";
+import "@prompty/openai";
+
+const agent = await load("chat.prompty");
+const messages = await prepare(agent, { question: "Tell me a story" });
+
+// Enable streaming
+agent.model.options.additionalProperties = { stream: true };
+
+const response = await run(agent, messages, { raw: true });
+for await (const chunk of process(agent, response)) {
+  process.stdout.write(chunk);
+}
+```
+
+## Providers
+
+Each provider package registers executors and processors via side-effect imports:
+
+| Package | Provider Key | SDK |
+|---------|-------------|-----|
+| `@prompty/openai` | `openai` | OpenAI Node SDK |
+| `@prompty/foundry` | `foundry` | Azure AI Foundry SDK |
+| `@prompty/anthropic` | `anthropic` | Anthropic SDK |
+
+## Environment Variables
+
+Set environment variables or use a `.env` file (with `dotenv`):
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+The `${env:VAR}` syntax in `.prompty` files works the same way as in Python.
+
+## Further Reading
+
+- [Core Concepts](/core-concepts/) — architecture deep-dives
+- [How-To Guides](/how-to/openai/) — practical recipes
+- [Schema Reference](/reference/) — all frontmatter properties

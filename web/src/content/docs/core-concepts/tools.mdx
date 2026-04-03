@@ -1,0 +1,325 @@
+---
+title: Tools
+description: >
+  Tool types in Prompty — function, MCP, OpenAPI, and custom tools that extend
+  what an LLM can do during prompt execution.
+sidebar:
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+Tools extend what an LLM can do beyond generating text. Define them in the
+`.prompty` frontmatter under the `tools:` key. When the prompt executes, the
+runtime passes tool definitions to the LLM as part of the API call. If the model
+decides to use a tool, the **agent loop** handles calling the function and
+feeding the result back into the conversation.
+
+```yaml
+tools:
+  - name: get_weather
+    kind: function
+    description: Get current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        required: true
+```
+
+Every tool has a `name`, a `kind` that determines its type, and an optional
+`description`. Beyond that, each kind carries its own fields. Prompty supports
+four tool kinds — backed by AgentSchema types — plus a wildcard catch-all.
+
+---
+
+## Tool Types at a Glance
+
+<svg viewBox="0 0 650 340" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', maxWidth: '650px', margin: '1.5rem auto', display: 'block' }}>
+  {/* Background */}
+  <rect width="650" height="340" rx="12" fill="#f8fafc" stroke="#e5e7eb" strokeWidth="1.5"/>
+
+  {/* Title */}
+  <text x="325" y="30" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="15" fontWeight="700" fill="#1e293b">Tool Type Taxonomy</text>
+
+  {/* Base — Tool */}
+  <rect x="245" y="48" width="160" height="52" rx="8" fill="#1d4ed8" stroke="#1e40af" strokeWidth="1.5"/>
+  <text x="325" y="70" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="13" fontWeight="600" fill="#fff">Tool (base)</text>
+  <text x="325" y="88" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#93c5fd">name · kind · description · bindings</text>
+
+  {/* Arrow marker definitions */}
+  <defs>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  {/* Arrows from base to each subtype */}
+  <line x1="270" y1="100" x2="85" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  <line x1="305" y1="100" x2="245" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  <line x1="345" y1="100" x2="405" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+  <line x1="380" y1="100" x2="565" y2="145" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrowBlue)"/>
+
+  {/* FunctionTool */}
+  <rect x="10" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="85" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">FunctionTool</text>
+  <text x="85" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: function</text>
+  <text x="85" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">parameters · strict</text>
+  <text x="85" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ local function call</text>
+
+  {/* McpTool */}
+  <rect x="170" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="245" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">McpTool</text>
+  <text x="245" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: mcp</text>
+  <text x="245" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">serverName · connection</text>
+  <text x="245" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">approvalMode · allowedTools</text>
+
+  {/* OpenApiTool */}
+  <rect x="330" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="405" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">OpenApiTool</text>
+  <text x="405" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: openapi</text>
+  <text x="405" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">connection · specification</text>
+  <text x="405" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ REST API call</text>
+
+  {/* CustomTool */}
+  <rect x="490" y="145" width="150" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5"/>
+  <text x="565" y="166" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" fontWeight="600" fill="#1d4ed8">CustomTool</text>
+  <text x="565" y="182" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fill="#f59e0b" fontWeight="500">kind: * (wildcard)</text>
+  <text x="565" y="197" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">connection · options</text>
+  <text x="565" y="211" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#10b981">→ provider-specific</text>
+
+  {/* Dispatch note */}
+  <rect x="130" y="255" width="390" height="42" rx="8" fill="#fefce8" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 2"/>
+  <text x="325" y="274" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="10" fontWeight="500" fill="#92400e">Dispatch: Tool.load_kind(data) resolves kind → concrete class</text>
+  <text x="325" y="288" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="9" fill="#92400e">Unknown kinds automatically become CustomTool</text>
+
+  {/* Legend */}
+  <rect x="175" y="314" width="10" height="10" rx="2" fill="#1d4ed8"/>
+  <text x="191" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Base class</text>
+  <rect x="250" y="314" width="10" height="10" rx="2" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1"/>
+  <text x="266" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Subtypes</text>
+  <rect x="312" y="314" width="10" height="10" rx="2" fill="#f59e0b"/>
+  <text x="328" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Kind label</text>
+  <rect x="380" y="314" width="10" height="10" rx="2" fill="#10b981"/>
+  <text x="396" y="323" fontFamily="system-ui,sans-serif" fontSize="9" fill="#6b7280">Execution target</text>
+</svg>
+
+---
+
+## FunctionTool — `kind: function`
+
+Function tools define **local functions** that the runtime can call directly when
+the LLM requests them. This is the most common tool type — you provide a
+function name, description, and a parameter schema, and the executor maps tool
+calls to your Python functions at runtime.
+
+```yaml
+tools:
+  - name: get_weather
+    kind: function
+    description: Get current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        description: City name
+        required: true
+      - name: units
+        kind: string
+        description: Temperature units
+        default: celsius
+```
+
+### Strict Mode
+
+Set `strict: true` to constrain the LLM to output **only** arguments that match
+the exact parameter schema. This adds `"strict": true` to the function
+definition and `"additionalProperties": false` to the JSON Schema sent to the
+API — preventing the model from hallucinating extra parameters.
+
+```yaml
+tools:
+  - name: get_weather
+    kind: function
+    description: Get current weather for a city
+    strict: true
+    parameters:
+      - name: city
+        kind: string
+        required: true
+```
+
+<Aside type="tip">
+  Strict mode works with OpenAI and Azure OpenAI. It is especially useful when
+  the tool has a rigid contract and you want to guarantee the model respects it.
+</Aside>
+
+---
+
+## McpTool — `kind: mcp`
+
+MCP (Model Context Protocol) tools connect to an **external MCP server** that
+exposes a set of capabilities. You reference the server by name and optionally
+restrict which tools the model can access.
+
+```yaml
+tools:
+  - name: filesystem
+    kind: mcp
+    serverName: fs-server
+    connection:
+      kind: reference
+      name: my-mcp-server
+    approvalMode:
+      kind: always
+    allowedTools:
+      - read_file
+      - list_directory
+```
+
+| Field | Description |
+|-------|-------------|
+| `serverName` | Identifier of the MCP server to connect to |
+| `connection` | How to reach the server (any [Connection](/core-concepts/connections/) type) |
+| `approvalMode` | When tool calls need approval — `always`, `never`, or custom |
+| `allowedTools` | Whitelist of tool names the model may invoke (optional) |
+
+<Aside>
+  The MCP server definition itself lives outside the `.prompty` file. The
+  `connection` block tells Prompty how to reach it — often via a
+  `ReferenceConnection` that resolves at runtime.
+</Aside>
+
+---
+
+## OpenApiTool — `kind: openapi`
+
+OpenAPI tools let the LLM call a **REST API** described by an OpenAPI
+specification. Prompty reads the spec to understand available operations and
+translates tool calls into HTTP requests.
+
+```yaml
+tools:
+  - name: weather_api
+    kind: openapi
+    connection:
+      kind: key
+      endpoint: https://api.weather.com
+      apiKey: ${env:WEATHER_API_KEY}
+    specification: ./weather.openapi.json
+```
+
+| Field | Description |
+|-------|-------------|
+| `connection` | Endpoint and auth for the API (any [Connection](/core-concepts/connections/) type) |
+| `specification` | Path to an OpenAPI JSON/YAML spec (relative to the `.prompty` file) |
+
+<Aside type="tip">
+  The `specification` path is resolved relative to the `.prompty` file's
+  directory, just like `$&#123;file:...&#125;` references in other frontmatter fields.
+</Aside>
+
+---
+
+## CustomTool — `kind: *` (Wildcard)
+
+Any `kind` value that doesn't match `function`, `mcp`, or `openapi` is caught
+by the **CustomTool** wildcard. This is the extensibility escape hatch — use it
+to integrate with tool providers that Prompty doesn't have built-in support for.
+
+```yaml
+tools:
+  - name: my_tool
+    kind: my_custom_provider
+    connection:
+      kind: key
+      endpoint: https://custom.example.com
+    options:
+      setting: value
+```
+
+| Field | Description |
+|-------|-------------|
+| `connection` | Optional connection for the custom provider |
+| `options` | Free-form dictionary passed through to the provider |
+
+The runtime loads these as `CustomTool` instances. Your executor or a plugin is
+responsible for interpreting the `kind` and `options` at execution time.
+
+---
+
+## Tool Bindings
+
+All tool types support optional **bindings** that map between the tool's
+parameters and the prompt's input schema. Use bindings when the tool's parameter
+names don't match your prompt's input variable names.
+
+```yaml
+tools:
+  - name: search
+    kind: function
+    description: Search for documents
+    bindings:
+      - name: query
+        input: userQuestion
+    parameters:
+      - name: query
+        kind: string
+        required: true
+```
+
+In this example, the tool parameter `query` is bound to the prompt input
+`userQuestion` — so the value of `userQuestion` is automatically passed as
+`query` when the tool is invoked.
+
+---
+
+## Using Tools at Runtime
+
+Tools defined in the frontmatter are sent to the LLM as part of the API
+request. To actually **execute** the tool calls the model returns, use
+`execute_agent` — which runs the agent loop: call the LLM, execute any
+requested tools, feed results back, and repeat until the model produces a final
+response.
+
+```python
+import prompty
+
+def get_weather(city: str, units: str = "celsius") -> str:
+    return f"72°F and sunny in {city}"
+
+result = prompty.execute_agent(
+    "agent.prompty",
+    inputs={"question": "Weather in Seattle?"},
+    tools={"get_weather": get_weather},
+)
+```
+
+<Tabs>
+  <TabItem label="Sync">
+    ```python
+    result = prompty.execute_agent(
+        "agent.prompty",
+        inputs={"question": "Weather in Seattle?"},
+        tools={"get_weather": get_weather},
+    )
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="Async">
+    ```python
+    result = await prompty.execute_agent_async(
+        "agent.prompty",
+        inputs={"question": "Weather in Seattle?"},
+        tools={"get_weather": get_weather},
+    )
+    print(result)
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Without `execute_agent`, tools are only **declared** to the model — the
+  runtime won't execute tool calls automatically. Use `execute` or `run` when
+  you want to handle tool calls yourself.
+</Aside>
