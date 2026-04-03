@@ -221,6 +221,31 @@ graph LR
     result   = await execute_async("chat.prompty", inputs=inputs)
     ```
   </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, prepare, execute } from "@prompty/core";
+    import { render, parse, run, process } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
+
+    const agent = load("chat.prompty");
+    const inputs = { firstName: "Jane", question: "What is AI?" };
+
+    // Stage 1 only — render the template
+    const rendered = await render(agent, inputs);
+
+    // Stage 2 only — parse rendered string into messages
+    const messages = await parse(agent, rendered);
+
+    // Stages 1 + 2 — render, parse, and expand threads
+    const prepared = await prepare(agent, inputs);
+
+    // Stages 3 + 4 — execute LLM call and process response
+    const result = await run(agent, prepared);
+
+    // Full pipeline — load + prepare + run
+    const output = await execute("chat.prompty", { inputs });
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -281,30 +306,50 @@ protocol and registering it as an entry point.
 
 Each protocol defines `sync` and `async` methods. Here's an example custom executor:
 
-```python
-from __future__ import annotations
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from __future__ import annotations
 
-from prompty.core.types import Message
+    from prompty.core.types import Message
 
-class AnthropicExecutor:
-    """Executor for the Anthropic Claude API."""
+    class AnthropicExecutor:
+        """Executor for the Anthropic Claude API."""
 
-    def execute(self, agent, messages: list[Message]) -> object:
-        import anthropic
-        client = anthropic.Anthropic()
-        return client.messages.create(
-            model=agent.model.id,
-            messages=[{"role": m.role, "content": m.content} for m in messages],
-        )
+        def execute(self, agent, messages: list[Message]) -> object:
+            import anthropic
+            client = anthropic.Anthropic()
+            return client.messages.create(
+                model=agent.model.id,
+                messages=[{"role": m.role, "content": m.content} for m in messages],
+            )
 
-    async def execute_async(self, agent, messages: list[Message]) -> object:
-        import anthropic
-        client = anthropic.AsyncAnthropic()
-        return await client.messages.create(
-            model=agent.model.id,
-            messages=[{"role": m.role, "content": m.content} for m in messages],
-        )
-```
+        async def execute_async(self, agent, messages: list[Message]) -> object:
+            import anthropic
+            client = anthropic.AsyncAnthropic()
+            return await client.messages.create(
+                model=agent.model.id,
+                messages=[{"role": m.role, "content": m.content} for m in messages],
+            )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import type { Prompty, Message } from "@prompty/core";
+    import Anthropic from "@anthropic-ai/sdk";
+
+    export class AnthropicExecutor {
+      async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+        const client = new Anthropic();
+        return client.messages.create({
+          model: agent.model.id,
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+        });
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 ### 2. Register the entry point
 

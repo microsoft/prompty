@@ -60,16 +60,32 @@ Register trace backends at application startup. Each backend is a callback
 function that receives structured trace data. You can register as many as you
 like — every trace event is dispatched to **all** registered backends.
 
-```python
-from prompty import Tracer, PromptyTracer
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer, PromptyTracer
 
-# JSON file tracer — writes structured traces to disk
-Tracer.add("json", PromptyTracer("./traces").tracer)
+    # JSON file tracer — writes structured traces to disk
+    Tracer.add("json", PromptyTracer("./traces").tracer)
 
-# Console tracer — prints to stdout
-from prompty.tracing.tracer import console_tracer
-Tracer.add("console", console_tracer)
-```
+    # Console tracer — prints to stdout
+    from prompty.tracing.tracer import console_tracer
+    Tracer.add("console", console_tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, PromptyTracer, consoleTracer } from "@prompty/core";
+
+    // JSON file tracer — writes structured traces to disk
+    const promptyTracer = new PromptyTracer("./traces");
+    Tracer.add("json", promptyTracer.tracer);
+
+    // Console tracer — prints to stdout
+    Tracer.add("console", consoleTracer);
+    ```
+  </TabItem>
+</Tabs>
 
 <Aside type="tip">
   Register backends **once** at startup (e.g. in your `main()` or app factory).
@@ -85,14 +101,30 @@ Wrap any function to include it in the trace tree. When a traced function calls
 other traced functions (including Prompty's built-in pipeline), they appear as
 **nested child spans**.
 
-```python
-from prompty import trace
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import trace
 
-@trace
-def my_business_logic(query: str) -> str:
-    result = prompty.execute("search.prompty", inputs={"q": query})
-    return process(result)
-```
+    @trace
+    def my_business_logic(query: str) -> str:
+        result = prompty.execute("search.prompty", inputs={"q": query})
+        return process(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { trace, execute } from "@prompty/core";
+
+    async function myBusinessLogic(query: string): Promise<string> {
+      const result = await execute("search.prompty", { inputs: { q: query } });
+      return process(result);
+    }
+
+    const tracedLogic = trace(myBusinessLogic, "myBusinessLogic");
+    ```
+  </TabItem>
+</Tabs>
 
 The decorator automatically captures:
 
@@ -116,12 +148,24 @@ The decorator automatically captures:
 The built-in **JSON file backend** for local development and debugging. It writes
 one `.tracy` file per top-level trace to the specified output directory.
 
-```python
-from prompty import Tracer, PromptyTracer
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer, PromptyTracer
 
-tracer = PromptyTracer("./traces")
-Tracer.add("json", tracer.tracer)
-```
+    tracer = PromptyTracer("./traces")
+    Tracer.add("json", tracer.tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, PromptyTracer } from "@prompty/core";
+
+    const tracer = new PromptyTracer("./traces");
+    Tracer.add("json", tracer.tracer);
+    ```
+  </TabItem>
+</Tabs>
 
 Each `.tracy` file contains structured JSON with the full trace tree — every
 span, its duration, inputs, outputs, and any nested child spans. These files
@@ -141,18 +185,39 @@ For **production observability**, Prompty integrates with
 spans, compatible with any collector — Azure Monitor, Jaeger, Zipkin, Datadog,
 and more.
 
-```python
-from prompty.tracing.otel import otel_tracer
-from prompty import Tracer
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty.tracing.otel import otel_tracer
+    from prompty import Tracer
 
-Tracer.add("otel", otel_tracer())
-```
+    Tracer.add("otel", otel_tracer())
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer } from "@prompty/core";
+    import { otelTracer } from "@prompty/core/tracing/otel";
+
+    Tracer.add("otel", otelTracer());
+    ```
+  </TabItem>
+</Tabs>
 
 <Aside type="caution">
-  Requires the `opentelemetry-api` package. Install via the `otel` extra:
-  ```bash
-  pip install prompty[otel]
-  ```
+  Requires the OpenTelemetry package:
+  <Tabs>
+    <TabItem label="Python">
+      ```bash
+      pip install prompty[otel]
+      ```
+    </TabItem>
+    <TabItem label="TypeScript">
+      ```bash
+      npm install @opentelemetry/api
+      ```
+    </TabItem>
+  </Tabs>
 </Aside>
 
 ### Combining Backends
@@ -160,20 +225,39 @@ Tracer.add("otel", otel_tracer())
 You can register **multiple backends simultaneously** — for example, OTel for
 production monitoring and console output for local debugging:
 
-```python
-from prompty import Tracer, PromptyTracer
-from prompty.tracing.tracer import console_tracer
-from prompty.tracing.otel import otel_tracer
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer, PromptyTracer
+    from prompty.tracing.tracer import console_tracer
+    from prompty.tracing.otel import otel_tracer
 
-# Production: send to OTel collector
-Tracer.add("otel", otel_tracer())
+    # Production: send to OTel collector
+    Tracer.add("otel", otel_tracer())
 
-# Development: also log to console
-Tracer.add("console", console_tracer)
+    # Development: also log to console
+    Tracer.add("console", console_tracer)
 
-# Debugging: also write .tracy files
-Tracer.add("json", PromptyTracer("./traces").tracer)
-```
+    # Debugging: also write .tracy files
+    Tracer.add("json", PromptyTracer("./traces").tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, PromptyTracer, consoleTracer } from "@prompty/core";
+    import { otelTracer } from "@prompty/core/tracing/otel";
+
+    // Production: send to OTel collector
+    Tracer.add("otel", otelTracer());
+
+    // Development: also log to console
+    Tracer.add("console", consoleTracer);
+
+    // Debugging: also write .tracy files
+    Tracer.add("json", new PromptyTracer("./traces").tracer);
+    ```
+  </TabItem>
+</Tabs>
 
 ---
 
@@ -204,14 +288,12 @@ When the executor calls the LLM, the trace includes:
 
 ---
 
-## TypeScript Tracing
+## TypeScript Support
 
-<Aside type="note">
-  The Prompty TypeScript runtime (`@prompty/core`) includes similar tracing
-  capabilities with a pluggable backend architecture. See the TypeScript
-  runtime documentation for details on configuring trace backends in
-  Node.js / browser environments.
-</Aside>
+The Prompty TypeScript runtime (`@prompty/core`) includes the same tracing
+capabilities with a pluggable backend architecture. All the patterns shown
+above — `Tracer.add()`, `trace()`, `PromptyTracer`, and `consoleTracer` —
+are available as TypeScript imports as shown in the code examples.
 
 ---
 
@@ -225,11 +307,26 @@ To disable tracing after it's been enabled, simply don't register any backends
 on the next application restart. There is no explicit "disable" API because the
 default state is already off.
 
-```python
-# No Tracer.add() calls → tracing is a no-op
-from prompty import load, run
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    # No Tracer.add() calls → tracing is a no-op
+    from prompty import load, run
 
-agent = load("my-prompt.prompty")
-result = run(agent, inputs={"query": "hello"})
-# No traces produced — zero overhead
-```
+    agent = load("my-prompt.prompty")
+    result = run(agent, inputs={"query": "hello"})
+    # No traces produced — zero overhead
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    // No Tracer.add() calls → tracing is a no-op
+    import { load, run } from "@prompty/core";
+    import "@prompty/openai";
+
+    const agent = load("my-prompt.prompty");
+    const result = await run(agent, [{ role: "user", content: "hello" }]);
+    // No traces produced — zero overhead
+    ```
+  </TabItem>
+</Tabs>

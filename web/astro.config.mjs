@@ -51,16 +51,20 @@ export default defineConfig({
           autogenerate: { directory: "core-concepts" },
         },
         {
-          label: "Schema Reference",
-          autogenerate: { directory: "reference" },
-        },
-        {
           label: "Implementation",
           autogenerate: { directory: "implementation" },
         },
         {
           label: "How-To Guides",
           autogenerate: { directory: "how-to" },
+        },
+        {
+          label: "VS Code Extension",
+          slug: "vscode",
+        },
+        {
+          label: "Schema Reference",
+          autogenerate: { directory: "reference" },
         },
         {
           label: "API Reference",
