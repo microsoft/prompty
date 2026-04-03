@@ -21,6 +21,7 @@
     "bundle": "webpack --mode=production"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "umd-compat-loader": "^2.1.2",
