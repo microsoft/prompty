@@ -892,10 +892,6 @@ def test_process_vector(vec: dict):
     provider = inp.get("provider", "openai")
     api_type = inp.get("apiType", "chat")
 
-    # Skip Responses API vectors — separate test
-    if api_type == "responses":
-        pytest.skip(f"Responses API processor tested separately: {name}")
-
     response_data = inp["response"]
     has_outputs = inp.get("has_outputs", False)
 
@@ -921,6 +917,8 @@ def test_process_vector(vec: dict):
         response = _make_mock_embedding_response(response_data)
     elif api_type == "image":
         response = _make_mock_image_response(response_data)
+    elif api_type == "responses":
+        response = _make_responses_api_mock(response_data)
     else:
         pytest.skip(f"Unknown apiType: {api_type}")
 
@@ -1186,47 +1184,8 @@ def _test_agent_error_vector(
 
 
 # ============================================================================
-# RESPONSES API PROCESS VECTORS (separate category)
+# Responses API mock helper
 # ============================================================================
-
-
-@pytest.mark.parametrize(
-    "vec",
-    [v for v in PROCESS_VECTORS if v["input"].get("apiType") == "responses"],
-    ids=[v["name"] for v in PROCESS_VECTORS if v["input"].get("apiType") == "responses"],
-)
-def test_process_responses_api_vector(vec: dict):
-    """Test Responses API process vectors."""
-    name = vec["name"]
-    inp = vec["input"]
-    expected = vec["expected"]
-    response_data = inp["response"]
-    has_outputs = inp.get("has_outputs", False)
-
-    agent = None
-    if has_outputs:
-        agent = Prompty(
-            name="process_test",
-            outputs=[Property(name="dummy", kind="string")],
-        )
-
-    # Build a mock Responses API response
-    mock = _make_responses_api_mock(response_data)
-    result = _process_response(mock, agent)
-    exp_result = expected["result"]
-
-    if isinstance(exp_result, list) and exp_result and isinstance(exp_result[0], dict):
-        # ToolCall comparison
-        assert isinstance(result, list), f"Responses '{name}': expected list, got {type(result).__name__}"
-        for i, (act, exp) in enumerate(zip(result, exp_result)):
-            if isinstance(act, ToolCall):
-                assert act.id == exp["id"], f"tc[{i}].id: {act.id!r} != {exp['id']!r}"
-                assert act.name == exp["name"], f"tc[{i}].name: {act.name!r} != {exp['name']!r}"
-                assert act.arguments == exp["arguments"], f"tc[{i}].arguments mismatch"
-    elif isinstance(exp_result, dict):
-        assert result == exp_result, f"Responses '{name}': {result!r} != {exp_result!r}"
-    else:
-        assert result == exp_result, f"Responses '{name}': {result!r} != {exp_result!r}"
 
 
 def _make_responses_api_mock(data: dict) -> MagicMock:
