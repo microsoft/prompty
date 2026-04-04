@@ -32,7 +32,7 @@ from ...tracing.tracer import trace
 
 __all__ = ["AnthropicExecutor"]
 
-DEFAULT_MAX_TOKENS = 1024
+DEFAULT_MAX_TOKENS = 4096
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +41,10 @@ DEFAULT_MAX_TOKENS = 1024
 
 
 def _message_to_wire(msg: Message) -> dict[str, Any]:
-    """Convert an abstract Message to Anthropic wire format."""
+    """Convert an abstract Message to Anthropic wire format.
+
+    Anthropic always uses array content format: ``[{type: "text", text: "..."}]``.
+    """
     wire: dict[str, Any] = {"role": msg.role}
 
     # Assistant message with raw_content from tool-call pipeline
@@ -77,11 +80,8 @@ def _message_to_wire(msg: Message) -> dict[str, Any]:
         ]
         return wire
 
-    content = msg.to_text_content()
-    if isinstance(content, str):
-        wire["content"] = content
-    else:
-        wire["content"] = [_part_to_wire(part) for part in msg.parts]
+    # Always use array content format for Anthropic
+    wire["content"] = [_part_to_wire(part) for part in msg.parts]
 
     return wire
 
@@ -91,6 +91,7 @@ def _part_to_wire(part: ContentPart) -> dict[str, Any]:
     if isinstance(part, TextPart):
         return {"type": "text", "text": part.value}
     elif isinstance(part, ImagePart):
+        # Data URI: data:image/png;base64,...
         if part.source.startswith("data:"):
             header, _, data = part.source.partition(",")
             import re
@@ -105,6 +106,17 @@ def _part_to_wire(part: ContentPart) -> dict[str, Any]:
                     "data": data,
                 },
             }
+        # Raw base64 data with media_type set on the part
+        if part.media_type:
+            return {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": part.media_type,
+                    "data": part.source,
+                },
+            }
+        # URL
         return {
             "type": "image",
             "source": {"type": "url", "url": part.source},
@@ -126,7 +138,7 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
         result["top_p"] = opts.topP
     if opts.topK is not None:
         result["top_k"] = opts.topK
-    if opts.stopSequences is not None:
+    if opts.stopSequences:
         result["stop_sequences"] = opts.stopSequences
 
     # Pass through additionalProperties

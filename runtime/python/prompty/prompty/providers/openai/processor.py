@@ -134,6 +134,11 @@ def _process_chat_completion(response: Any) -> Any:
             for tc in message.tool_calls
         ]
 
+    # Refusal — when content is null but the model refused
+    refusal = getattr(message, "refusal", None)
+    if message.content is None and isinstance(refusal, str):
+        return refusal
+
     return message.content
 
 

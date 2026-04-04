@@ -22,7 +22,7 @@ def _make_agent() -> Prompty:
     return Prompty.load({"name": "test", "model": "gpt-4"})
 
 
-def _mock_chat_completion(content: str | None = "Hello!", tool_calls=None):  # type: ignore[assignment]
+def _mock_chat_completion(content: str | None = "Hello!", tool_calls=None, refusal=None):  # type: ignore[assignment]
     """Create a mock ChatCompletion."""
     from openai.types.chat.chat_completion import ChatCompletion
 
@@ -30,6 +30,7 @@ def _mock_chat_completion(content: str | None = "Hello!", tool_calls=None):  # t
     choice = MagicMock()
     choice.message.content = content
     choice.message.tool_calls = tool_calls
+    choice.message.refusal = refusal
     response.choices = [choice]
     return response
 

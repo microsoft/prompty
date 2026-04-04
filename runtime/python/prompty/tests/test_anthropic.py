@@ -121,13 +121,14 @@ class TestMessageToWire:
         msg = Message("user", [TextPart(value="Hello")])
         wire = _message_to_wire(msg)
         assert wire["role"] == "user"
-        assert wire["content"] == "Hello"
+        # Anthropic always uses array content format
+        assert wire["content"] == [{"type": "text", "text": "Hello"}]
 
     def test_system_message(self):
         msg = Message("system", [TextPart(value="Be helpful")])
         wire = _message_to_wire(msg)
         assert wire["role"] == "system"
-        assert wire["content"] == "Be helpful"
+        assert wire["content"] == [{"type": "text", "text": "Be helpful"}]
 
     def test_multi_part_message(self):
         msg = Message(
@@ -272,7 +273,7 @@ class TestBuildChatArgs:
         agent = _make_agent()
         messages = _make_messages()
         args = _build_chat_args(agent, messages)
-        assert args["max_tokens"] == 1024  # DEFAULT_MAX_TOKENS
+        assert args["max_tokens"] == 4096  # DEFAULT_MAX_TOKENS
 
     def test_tools_included(self):
         agent = _make_agent(

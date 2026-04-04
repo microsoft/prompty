@@ -85,6 +85,8 @@ from .model import (
 from .parsers import PromptyChatParser
 
 # Provider implementations
+from .providers.anthropic.executor import AnthropicExecutor
+from .providers.anthropic.processor import AnthropicProcessor
 from .providers.foundry.executor import FoundryExecutor
 from .providers.foundry.processor import FoundryProcessor
 from .providers.openai.executor import OpenAIExecutor
