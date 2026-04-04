@@ -123,11 +123,18 @@ export class PreviewPanel implements Disposable {
 			</div>`;
 		}).join('\n');
 
+		// Build the wire-format JSON (what gets sent to the API)
+		const wireMessages = messages.map((msg) => ({
+			role: msg.role ?? 'unknown',
+			content: msg.toTextContent(),
+		}));
+		const rawJson = escapeHtml(JSON.stringify(wireMessages, null, 2));
+
 		return /*html*/`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style nonce="${nonce}">
 	body {
@@ -168,6 +175,27 @@ export class PreviewPanel implements Disposable {
 		font-size: 11px;
 	}
 	.muted { color: var(--vscode-descriptionForeground); }
+	.view-toggle {
+		display: flex;
+		gap: 0;
+		margin-bottom: 12px;
+	}
+	.view-toggle button {
+		padding: 4px 12px;
+		font-size: 12px;
+		font-family: var(--vscode-font-family);
+		border: 1px solid var(--vscode-button-secondaryBorder, var(--vscode-panel-border));
+		cursor: pointer;
+		background: var(--vscode-button-secondaryBackground);
+		color: var(--vscode-button-secondaryForeground);
+	}
+	.view-toggle button:first-child { border-radius: 3px 0 0 3px; }
+	.view-toggle button:last-child { border-radius: 0 3px 3px 0; border-left: none; }
+	.view-toggle button.active {
+		background: var(--vscode-button-background);
+		color: var(--vscode-button-foreground);
+		border-color: var(--vscode-button-background);
+	}
 	.message {
 		margin-bottom: 12px;
 		border-radius: 6px;
@@ -230,6 +258,17 @@ export class PreviewPanel implements Disposable {
 		padding-left: 10px;
 		opacity: 0.85;
 	}
+	.raw-json {
+		background: var(--vscode-textCodeBlock-background);
+		padding: 12px;
+		border-radius: 6px;
+		overflow-x: auto;
+		font-family: var(--vscode-editor-font-family);
+		font-size: var(--vscode-editor-font-size);
+		line-height: 1.4;
+		white-space: pre;
+		tab-size: 2;
+	}
 </style>
 </head>
 <body>
@@ -238,7 +277,20 @@ export class PreviewPanel implements Disposable {
 		<div class="model-info">Model: ${escapeHtml(modelInfo)}</div>
 	</div>
 	<div class="inputs-bar">Inputs: ${inputSummary}</div>
-	${messagesHtml}
+	<div class="view-toggle">
+		<button id="btn-rendered" class="active" onclick="showView('rendered')">Rendered</button>
+		<button id="btn-raw" onclick="showView('raw')">Raw JSON</button>
+	</div>
+	<div id="view-rendered">${messagesHtml}</div>
+	<div id="view-raw" style="display:none"><pre class="raw-json">${rawJson}</pre></div>
+	<script nonce="${nonce}">
+		function showView(view) {
+			document.getElementById('view-rendered').style.display = view === 'rendered' ? '' : 'none';
+			document.getElementById('view-raw').style.display = view === 'raw' ? '' : 'none';
+			document.getElementById('btn-rendered').className = view === 'rendered' ? 'active' : '';
+			document.getElementById('btn-raw').className = view === 'raw' ? 'active' : '';
+		}
+	</script>
 </body>
 </html>`;
 	}
