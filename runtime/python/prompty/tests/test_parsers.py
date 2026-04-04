@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.types import ImagePart, Message, TextPart
+from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
 from prompty.parsers import PromptyChatParser
 
@@ -215,35 +215,40 @@ class TestPreRender:
 # ---------------------------------------------------------------------------
 
 
-class TestInlineImages:
+class TestInlineImagesPreservedAsText:
+    """Inline markdown images are preserved as literal text.
+
+    Images should be passed via ``kind: image`` input properties instead.
+    """
+
     def setup_method(self):
         self.parser = PromptyChatParser()
         self.agent = _make_agent()
 
-    def test_url_image(self):
+    def test_url_image_preserved(self):
         rendered = "user:\n![photo](https://example.com/image.png)"
         result = self.parser.parse(self.agent, rendered)
         assert len(result) == 1
-        parts = result[0].parts
-        assert any(isinstance(p, ImagePart) for p in parts)
-        img = [p for p in parts if isinstance(p, ImagePart)][0]
-        assert img.source == "https://example.com/image.png"
+        assert len(result[0].parts) == 1
+        assert isinstance(result[0].parts[0], TextPart)
+        assert "![photo](https://example.com/image.png)" in result[0].text
 
-    def test_text_and_image_mixed(self):
+    def test_text_and_image_mixed_preserved(self):
         rendered = "user:\nLook at this: ![photo](https://example.com/img.png) and this text."
         result = self.parser.parse(self.agent, rendered)
         parts = result[0].parts
-        text_parts = [p for p in parts if isinstance(p, TextPart)]
-        img_parts = [p for p in parts if isinstance(p, ImagePart)]
-        assert len(text_parts) >= 1
-        assert len(img_parts) == 1
+        assert len(parts) == 1
+        assert isinstance(parts[0], TextPart)
+        assert "![photo]" in result[0].text
+        assert "and this text" in result[0].text
 
-    def test_data_uri_passthrough(self):
+    def test_data_uri_preserved(self):
         data_uri = "data:image/png;base64,iVBORw0KGgo="
         rendered = f"user:\n![img]({data_uri})"
         result = self.parser.parse(self.agent, rendered)
-        img = [p for p in result[0].parts if isinstance(p, ImagePart)][0]
-        assert img.source == data_uri
+        assert len(result[0].parts) == 1
+        assert isinstance(result[0].parts[0], TextPart)
+        assert data_uri in result[0].text
 
     def test_no_images_all_text(self):
         rendered = "user:\nJust plain text, no images."

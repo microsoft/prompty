@@ -59,19 +59,15 @@ Hello!`;
     expect(messages[0].metadata.name).toBe("Alice");
   });
 
-  it("parses inline markdown images", async () => {
+  it("preserves inline markdown images as text", async () => {
     const rendered = `user:
 Look at this ![photo](https://example.com/img.png)`;
 
     const messages = await parser.parse(agent, rendered);
     expect(messages).toHaveLength(1);
-    expect(messages[0].parts.length).toBeGreaterThan(1);
-
-    const imagePart = messages[0].parts.find((p) => p.kind === "image");
-    expect(imagePart).toBeDefined();
-    if (imagePart?.kind === "image") {
-      expect(imagePart.source).toBe("https://example.com/img.png");
-    }
+    expect(messages[0].parts).toHaveLength(1);
+    expect(messages[0].parts[0].kind).toBe("text");
+    expect(messages[0].text).toContain("![photo](https://example.com/img.png)");
   });
 
   it("implements preRender for strict mode", () => {

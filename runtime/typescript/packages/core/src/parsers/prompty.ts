@@ -1,20 +1,19 @@
 /**
  * Prompty chat parser — splits rendered text into abstract messages.
  *
- * Recognizes role markers (`system:`, `user:`, `assistant:`, `developer:`)
- * and inline markdown images. Supports nonce-based sanitization when
- * `Format.strict` is enabled.
+ * Recognizes role markers (`system:`, `user:`, `assistant:`, `developer:`).
+ * Supports nonce-based sanitization when `Format.strict` is enabled.
+ *
+ * Images should be passed via `kind: image` input properties rather than
+ * inline markdown syntax. Inline `![alt](url)` is preserved as literal text.
  *
  * @module
  */
 
-import { readFileSync, existsSync } from "node:fs";
-import { resolve, extname } from "node:path";
+import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import type { Prompty } from "../model/prompty.js";
 import {
-  type ContentPart,
-  type ImagePart,
   type TextPart,
   Message,
   ROLES,
@@ -27,9 +26,6 @@ const BOUNDARY_RE = new RegExp(
   `^\\s*#?\\s*(${ROLE_NAMES})(\\[((\\w+\\s*=\\s*"?[^"]*"?\\s*,?\\s*)+)\\])?\\s*:\\s*$`,
   "i",
 );
-
-// Markdown image regex — `![alt](url)`
-const IMAGE_RE = /(?<alt>!\[[^\]]*\])\((?<filename>[^\s)]+)(?:\s+[^)]*)?\)/g;
 
 // Attribute key=value regex
 const ATTR_RE = /(\w+)\s*=\s*"?([^",]*)"?/g;
@@ -138,8 +134,7 @@ export class PromptyChatParser implements Parser {
       }
     }
 
-    // Parse content for inline images
-    const parts = this.parseContent(content, basePath);
+    const parts: TextPart[] = [{ kind: "text", value: content }];
 
     // Remaining attrs become metadata
     const metadata: Record<string, unknown> = {};
@@ -177,67 +172,4 @@ export class PromptyChatParser implements Parser {
     return result;
   }
 
-  private parseContent(content: string, basePath: string | undefined): ContentPart[] {
-    const re = new RegExp(IMAGE_RE.source, IMAGE_RE.flags);
-    const matches: RegExpExecArray[] = [];
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(content)) !== null) {
-      matches.push(m);
-    }
-
-    if (matches.length === 0) {
-      return [{ kind: "text", value: content } as TextPart];
-    }
-
-    const parts: ContentPart[] = [];
-    let lastEnd = 0;
-
-    for (const match of matches) {
-      const before = content.slice(lastEnd, match.index).trim();
-      if (before) {
-        parts.push({ kind: "text", value: before } as TextPart);
-      }
-
-      const filename = match.groups!.filename.split(" ")[0].trim();
-      const source = this.resolveImage(filename, basePath);
-      parts.push({ kind: "image", source } as ImagePart);
-
-      lastEnd = match.index + match[0].length;
-    }
-
-    const after = content.slice(lastEnd).trim();
-    if (after) {
-      parts.push({ kind: "text", value: after } as TextPart);
-    }
-
-    return parts;
-  }
-
-  private resolveImage(imageRef: string, basePath: string | undefined): string {
-    if (imageRef.startsWith("http://") || imageRef.startsWith("https://") || imageRef.startsWith("data:")) {
-      return imageRef;
-    }
-
-    // Local file — resolve and base64 encode
-    const imagePath = basePath ? resolve(basePath, imageRef) : imageRef;
-
-    if (!existsSync(imagePath)) {
-      return imageRef;
-    }
-
-    const data = readFileSync(imagePath);
-    const b64 = data.toString("base64");
-
-    const ext = extname(imagePath).toLowerCase();
-    const mimeMap: Record<string, string> = {
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".gif": "image/gif",
-      ".webp": "image/webp",
-      ".svg": "image/svg+xml",
-    };
-    const mime = mimeMap[ext] ?? "application/octet-stream";
-    return `data:${mime};base64,${b64}`;
-  }
 }

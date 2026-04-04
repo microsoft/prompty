@@ -1,15 +1,16 @@
 """Prompty chat parser — splits rendered text into abstract messages.
 
-Recognizes role markers (``system:``, ``user:``, ``assistant:``, ``developer:``)
-and inline markdown images. Supports nonce-based sanitization when
-``Format.strict`` is enabled.
+Recognizes role markers (``system:``, ``user:``, ``assistant:``, ``developer:``).
+Supports nonce-based sanitization when ``Format.strict`` is enabled.
+
+Images should be passed via ``kind: image`` input properties rather than
+inline markdown syntax. Inline ``![alt](url)`` is preserved as literal text.
 
 Registered as ``prompty`` in ``prompty.parsers``.
 """
 
 from __future__ import annotations
 
-import base64
 import re
 import secrets
 from pathlib import Path
@@ -17,8 +18,6 @@ from typing import Any
 
 from ..core.types import (
     ROLES,
-    ContentPart,
-    ImagePart,
     Message,
     TextPart,
 )
@@ -33,9 +32,6 @@ _BOUNDARY_RE = re.compile(
     r"(?im)^\s*#?\s*(" + _ROLE_NAMES + r")"
     r"(\[((\w+\s*=\s*\"?[^\"]*\"?\s*,?\s*)+)\])?\s*:\s*$"
 )
-
-# Markdown image regex — ``![alt](url)``
-_IMAGE_RE = re.compile(r"(?P<alt>!\[[^\]]*\])\((?P<filename>[^\s\)]+)(?:\s+[^\)]*)?\)", re.MULTILINE)
 
 
 class PromptyChatParser:
@@ -184,8 +180,7 @@ class PromptyChatParser:
                     "injecting role markers."
                 )
 
-        # Parse content for inline images
-        parts = self._parse_content(content, base_path)
+        parts = [TextPart(value=content)]
 
         # Remaining attrs become metadata
         metadata = {k: v for k, v in attrs.items() if k != "nonce"}
@@ -216,67 +211,3 @@ class PromptyChatParser:
                         result[key] = val_str
 
         return result
-
-    def _parse_content(self, content: str, base_path: Path | None) -> list[ContentPart]:
-        """Parse content string into ContentPart list, handling inline images."""
-        matches = list(_IMAGE_RE.finditer(content))
-
-        if not matches:
-            return [TextPart(value=content)]
-
-        parts: list[ContentPart] = []
-        last_end = 0
-
-        for m in matches:
-            # Text before this image
-            before = content[last_end : m.start()].strip()
-            if before:
-                parts.append(TextPart(value=before))
-
-            # Image
-            filename = m.group("filename").split(" ")[0].strip()
-            source = self._resolve_image(filename, base_path)
-            parts.append(ImagePart(source=source))
-
-            last_end = m.end()
-
-        # Text after the last image
-        after = content[last_end:].strip()
-        if after:
-            parts.append(TextPart(value=after))
-
-        return parts
-
-    def _resolve_image(self, image_ref: str, base_path: Path | None) -> str:
-        """Resolve an image reference to a URL or data URI.
-
-        URLs and data URIs pass through unchanged. Local file paths
-        are base64-encoded into data URIs.
-        """
-        if image_ref.startswith(("http://", "https://", "data:")):
-            return image_ref
-
-        # Local file — resolve and base64 encode
-        if base_path is not None:
-            image_path = base_path / image_ref
-        else:
-            image_path = Path(image_ref)
-
-        if not image_path.exists():
-            # Return as-is if we can't resolve
-            return image_ref
-
-        with open(image_path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-
-        suffix = image_path.suffix.lower()
-        mime_map = {
-            ".png": "image/png",
-            ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg",
-            ".gif": "image/gif",
-            ".webp": "image/webp",
-            ".svg": "image/svg+xml",
-        }
-        mime = mime_map.get(suffix, "application/octet-stream")
-        return f"data:{mime};base64,{b64}"
