@@ -743,5 +743,292 @@
         "max_tokens": 4096
       }
     }
+  },
+  {
+    "name": "chat_image_part",
+    "description": "Image content part converted to OpenAI image_url format",
+    "input": {
+      "provider": "openai",
+      "apiType": "chat",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            { "kind": "text", "value": "What's in this image?" },
+            { "kind": "image", "value": "https://example.com/photo.jpg" }
+          ]
+        }
+      ],
+      "tools": [],
+      "options": {},
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              { "type": "text", "text": "What's in this image?" },
+              { "type": "image_url", "image_url": { "url": "https://example.com/photo.jpg" } }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "chat_image_base64",
+    "description": "Base64 data URI image part preserved as-is in image_url",
+    "input": {
+      "provider": "openai",
+      "apiType": "chat",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            { "kind": "text", "value": "Describe this" },
+            { "kind": "image", "value": "data:image/png;base64,iVBOR..." }
+          ]
+        }
+      ],
+      "tools": [],
+      "options": {},
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              { "type": "text", "text": "Describe this" },
+              { "type": "image_url", "image_url": { "url": "data:image/png;base64,iVBOR..." } }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "responses_simple",
+    "description": "Responses API: system becomes instructions, messages become input items",
+    "input": {
+      "provider": "openai",
+      "apiType": "responses",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "system",
+          "content": [{ "kind": "text", "value": "Be helpful" }]
+        },
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Hello" }]
+        }
+      ],
+      "tools": [],
+      "options": {},
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "instructions": "Be helpful",
+        "input": [
+          { "role": "user", "content": "Hello" }
+        ]
+      }
+    }
+  },
+  {
+    "name": "responses_with_tools",
+    "description": "Responses API: tools use flat format (no nested function key)",
+    "input": {
+      "provider": "openai",
+      "apiType": "responses",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Weather?" }]
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get weather",
+          "parameters": [
+            { "name": "city", "kind": "string", "required": true }
+          ]
+        }
+      ],
+      "options": {},
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "input": [
+          { "role": "user", "content": "Weather?" }
+        ],
+        "tools": [
+          {
+            "type": "function",
+            "name": "get_weather",
+            "description": "Get weather",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "city": { "type": "string" }
+              },
+              "required": ["city"]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "anthropic_tool_wire",
+    "description": "Anthropic: tools use input_schema (not parameters), name at top level",
+    "input": {
+      "provider": "anthropic",
+      "apiType": "chat",
+      "model_id": "claude-sonnet-4-20250514",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Weather?" }]
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get weather",
+          "parameters": [
+            { "name": "city", "kind": "string", "required": true }
+          ]
+        }
+      ],
+      "options": {},
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": [
+          {
+            "role": "user",
+            "content": [{ "type": "text", "text": "Weather?" }]
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_weather",
+            "description": "Get weather",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "city": { "type": "string" }
+              },
+              "required": ["city"]
+            }
+          }
+        ],
+        "max_tokens": 4096
+      }
+    }
+  },
+  {
+    "name": "anthropic_options",
+    "description": "Anthropic: option names map correctly (topK, stopSequences)",
+    "input": {
+      "provider": "anthropic",
+      "apiType": "chat",
+      "model_id": "claude-sonnet-4-20250514",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Hi" }]
+        }
+      ],
+      "tools": [],
+      "options": {
+        "temperature": 0.5,
+        "topP": 0.9,
+        "topK": 40,
+        "maxOutputTokens": 2000,
+        "stopSequences": ["END"]
+      },
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": [
+          {
+            "role": "user",
+            "content": [{ "type": "text", "text": "Hi" }]
+          }
+        ],
+        "temperature": 0.5,
+        "top_p": 0.9,
+        "top_k": 40,
+        "max_tokens": 2000,
+        "stop_sequences": ["END"]
+      }
+    }
+  },
+  {
+    "name": "responses_structured_output",
+    "description": "Responses API: structured output uses text.format.json_schema",
+    "input": {
+      "provider": "openai",
+      "apiType": "responses",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Give me data" }]
+        }
+      ],
+      "tools": [],
+      "options": {},
+      "outputs": [
+        { "name": "city", "kind": "string" },
+        { "name": "temp", "kind": "integer" }
+      ]
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "input": [
+          { "role": "user", "content": "Give me data" }
+        ],
+        "text": {
+          "format": {
+            "type": "json_schema",
+            "name": "structured_output",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "city": { "type": "string" },
+                "temp": { "type": "integer" }
+              },
+              "required": ["city", "temp"],
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        }
+      }
+    }
   }
 ]

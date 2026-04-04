@@ -639,5 +639,92 @@
     "expected": {
       "result": "Here is the answer: The weather in Paris is sunny."
     }
+  },
+  {
+    "name": "chat_empty_content",
+    "description": "Chat completion with empty string content returns empty string",
+    "input": {
+      "provider": "openai",
+      "apiType": "chat",
+      "response": {
+        "id": "chatcmpl-empty",
+        "object": "chat.completion",
+        "created": 1700000000,
+        "model": "gpt-4o-mini",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "",
+              "refusal": null
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 5,
+          "completion_tokens": 0,
+          "total_tokens": 5
+        }
+      },
+      "has_outputs": false
+    },
+    "expected": {
+      "result": ""
+    }
+  },
+  {
+    "name": "anthropic_structured_output",
+    "description": "Anthropic text response JSON-parsed when has_outputs is true",
+    "input": {
+      "provider": "anthropic",
+      "apiType": "chat",
+      "response": {
+        "id": "msg-struct",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"city\": \"Paris\", \"temp\": 22}"
+          }
+        ],
+        "model": "claude-sonnet-4-20250514",
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 20,
+          "output_tokens": 10
+        }
+      },
+      "has_outputs": true
+    },
+    "expected": {
+      "result": {
+        "city": "Paris",
+        "temp": 22
+      }
+    }
+  },
+  {
+    "name": "responses_empty_output",
+    "description": "Responses API with output_text empty returns empty string",
+    "input": {
+      "provider": "openai",
+      "apiType": "responses",
+      "response": {
+        "id": "resp-empty",
+        "object": "response",
+        "status": "completed",
+        "output": [],
+        "output_text": "",
+        "model": "gpt-4o"
+      },
+      "has_outputs": false
+    },
+    "expected": {
+      "result": ""
+    }
   }
 ]

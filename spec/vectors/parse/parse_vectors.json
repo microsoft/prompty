@@ -269,5 +269,34 @@
         }
       ]
     }
+  },
+  {
+    "name": "multiple_assistant_turns",
+    "description": "Multiple assistant messages in a conversation",
+    "input": {
+      "rendered": "system:\nYou are helpful.\n\nuser:\nHi\n\nassistant:\nHello!\n\nuser:\nThanks\n\nassistant:\nYou're welcome!"
+    },
+    "expected": {
+      "messages": [
+        { "role": "system", "content": [{ "kind": "text", "value": "You are helpful." }] },
+        { "role": "user", "content": [{ "kind": "text", "value": "Hi" }] },
+        { "role": "assistant", "content": [{ "kind": "text", "value": "Hello!" }] },
+        { "role": "user", "content": [{ "kind": "text", "value": "Thanks" }] },
+        { "role": "assistant", "content": [{ "kind": "text", "value": "You're welcome!" }] }
+      ]
+    }
+  },
+  {
+    "name": "role_marker_colon_in_content",
+    "description": "Colons in content (not at line start) are not treated as role markers",
+    "input": {
+      "rendered": "system:\nHere is a tip: always be kind.\n\nuser:\nTime is 3:30pm"
+    },
+    "expected": {
+      "messages": [
+        { "role": "system", "content": [{ "kind": "text", "value": "Here is a tip: always be kind." }] },
+        { "role": "user", "content": [{ "kind": "text", "value": "Time is 3:30pm" }] }
+      ]
+    }
   }
 ]

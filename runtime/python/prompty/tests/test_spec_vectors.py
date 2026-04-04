@@ -466,6 +466,22 @@ def _check_tools(actual: list, expected: list[dict], errors: list[str]):
         if "parameters" in exp:
             act_params = getattr(act, "parameters", []) or []
             _check_properties(act_params, exp["parameters"], f"{prefix}.parameters", errors)
+        if "serverName" in exp:
+            act_val = getattr(act, "serverName", None)
+            if act_val != exp["serverName"]:
+                errors.append(f"  {prefix}.serverName: {act_val!r} != expected {exp['serverName']!r}")
+        if "specification" in exp:
+            act_val = getattr(act, "specification", None)
+            if act_val != exp["specification"]:
+                errors.append(f"  {prefix}.specification: {act_val!r} != expected {exp['specification']!r}")
+        if "path" in exp:
+            act_val = getattr(act, "path", None)
+            if act_val != exp["path"]:
+                errors.append(f"  {prefix}.path: {act_val!r} != expected {exp['path']!r}")
+        if "mode" in exp:
+            act_val = getattr(act, "mode", None)
+            if act_val != exp["mode"]:
+                errors.append(f"  {prefix}.mode: {act_val!r} != expected {exp['mode']!r}")
         if "bindings" in exp:
             act_bindings = getattr(act, "bindings", []) or []
             exp_bindings = exp["bindings"]

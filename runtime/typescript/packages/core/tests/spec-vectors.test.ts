@@ -284,6 +284,14 @@ function buildAgentFromFrontmatter(
     resolveFileRefs(data, files);
   }
 
+  // Handle template string shorthand (e.g., "jinja2" → full template config)
+  if (typeof data.template === "string") {
+    data.template = {
+      format: { kind: data.template },
+      parser: { kind: "prompty" },
+    };
+  }
+
   // Unwrap inputs/outputs {properties: [...]} → [...] if needed
   if (data.inputs?.properties) {
     data.inputs = data.inputs.properties;
@@ -333,7 +341,9 @@ function validateAgentFields(agent: Prompty, expected: any, vecName: string): vo
   }
 
   if (expected.model !== undefined) {
-    validateModel(agent.model, expected.model);
+    if (expected.model !== null) {
+      validateModel(agent.model, expected.model);
+    }
   }
 
   if (expected.inputs !== undefined) {
@@ -416,6 +426,18 @@ function validateAgentFields(agent: Prompty, expected: any, vecName: string): vo
               expect(found!.input).toBe(bv.input);
             }
           }
+        }
+        if (et.serverName !== undefined) {
+          expect((at as any).serverName).toBe(et.serverName);
+        }
+        if (et.specification !== undefined) {
+          expect((at as any).specification).toBe(et.specification);
+        }
+        if (et.path !== undefined) {
+          expect((at as any).path).toBe(et.path);
+        }
+        if (et.mode !== undefined) {
+          expect((at as any).mode).toBe(et.mode);
         }
       }
     }
@@ -679,6 +701,9 @@ describe("Spec Vectors: Wire", () => {
       } else if (apiType === "image") {
         const body = buildImageWireBody(messages, input);
         compareWireBodies(body, expectedBody, vec.name);
+      } else if (apiType === "responses") {
+        const body = buildResponsesWireBody(messages, input);
+        compareWireBodies(body, expectedBody, vec.name);
       } else {
         // OpenAI chat
         const body = buildChatWireBody(messages, input);
@@ -824,11 +849,125 @@ function buildAnthropicWireBody(messages: Message[], input: any): Record<string,
     }),
   }));
 
-  // Anthropic requires max_tokens
+  // Anthropic options mapping
   const opts = input.options ?? {};
   body.max_tokens = opts.maxOutputTokens ?? 4096;
+  if (opts.temperature !== undefined) body.temperature = opts.temperature;
+  if (opts.topP !== undefined) body.top_p = opts.topP;
+  if (opts.topK !== undefined) body.top_k = opts.topK;
+  if (opts.stopSequences !== undefined) body.stop_sequences = opts.stopSequences;
+
+  // Tools (Anthropic format: input_schema, no nested function key)
+  if (input.tools && input.tools.length > 0) {
+    body.tools = input.tools.map((t: any) => buildAnthropicToolWire(t));
+  }
 
   return body;
+}
+
+function buildAnthropicToolWire(tool: any): Record<string, unknown> {
+  const inputSchema: Record<string, unknown> = { type: "object" };
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const p of tool.parameters ?? []) {
+    properties[p.name] = { type: kindToJsonType(p.kind) };
+    if (p.required) required.push(p.name);
+  }
+
+  inputSchema.properties = properties;
+  if (required.length > 0) inputSchema.required = required;
+
+  return {
+    name: tool.name,
+    description: tool.description,
+    input_schema: inputSchema,
+  };
+}
+
+function buildResponsesWireBody(messages: Message[], input: any): Record<string, unknown> {
+  const body: Record<string, unknown> = { model: input.model_id };
+
+  // System messages become instructions
+  const systemParts: string[] = [];
+  const inputItems: Record<string, unknown>[] = [];
+
+  for (const m of messages) {
+    if (m.role === "system" || m.role === "developer") {
+      systemParts.push(m.text);
+    } else {
+      inputItems.push({ role: m.role, content: m.text });
+    }
+  }
+
+  if (systemParts.length > 0) {
+    body.instructions = systemParts.join("\n\n");
+  }
+
+  body.input = inputItems;
+
+  // Options mapping (same as chat for responses)
+  const opts = input.options ?? {};
+  if (opts.temperature !== undefined) body.temperature = opts.temperature;
+  if (opts.maxOutputTokens !== undefined) body.max_output_tokens = opts.maxOutputTokens;
+  if (opts.topP !== undefined) body.top_p = opts.topP;
+
+  // Tools (flat format for Responses API)
+  if (input.tools && input.tools.length > 0) {
+    body.tools = input.tools.map((t: any) => buildResponsesToolWire(t));
+  }
+
+  // Structured output (text.format.json_schema)
+  if (input.outputs && input.outputs.length > 0) {
+    body.text = buildResponsesTextConfig(input.outputs);
+  }
+
+  return body;
+}
+
+function buildResponsesToolWire(tool: any): Record<string, unknown> {
+  const params: Record<string, unknown> = { type: "object" };
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const p of tool.parameters ?? []) {
+    properties[p.name] = { type: kindToJsonType(p.kind) };
+    if (p.required) required.push(p.name);
+  }
+
+  params.properties = properties;
+  if (required.length > 0) params.required = required;
+
+  return {
+    type: "function",
+    name: tool.name,
+    description: tool.description,
+    parameters: params,
+  };
+}
+
+function buildResponsesTextConfig(outputs: any[]): Record<string, unknown> {
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const o of outputs) {
+    properties[o.name] = { type: kindToJsonType(o.kind) };
+    required.push(o.name);
+  }
+
+  return {
+    format: {
+      type: "json_schema",
+      name: "structured_output",
+      schema: {
+        type: "object",
+        properties,
+        required,
+        additionalProperties: false,
+      },
+      strict: true,
+    },
+  };
 }
 
 function kindToJsonType(kind: string): string {

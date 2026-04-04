@@ -1085,5 +1085,96 @@
       },
       "notes": "Empty string result must NOT be skipped. The tool result message is still appended to the conversation so the LLM can see the tool was executed successfully."
     }
+  },
+  {
+    "name": "async_tool_function",
+    "description": "Agent loop correctly handles async tool functions",
+    "input": {
+      "messages": [
+        { "role": "system", "content": "You are helpful." },
+        { "role": "user", "content": "Look up the data" }
+      ],
+      "tools": [
+        {
+          "name": "lookup",
+          "kind": "function",
+          "description": "Look up data",
+          "parameters": {
+            "properties": [
+              { "name": "query", "kind": "string", "required": true }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "lookup": "returns lookup result"
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-async-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_async1",
+                    "type": "function",
+                    "function": {
+                      "name": "lookup",
+                      "arguments": "{\"query\":\"test\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_async1",
+            "name": "lookup",
+            "arguments": { "query": "test" }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_async1",
+            "result": "found: test data"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-async-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "I found: test data",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "I found: test data",
+      "iterations": 2,
+      "total_messages": 6
+    }
   }
 ]

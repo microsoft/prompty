@@ -228,5 +228,89 @@
     "expected": {
       "rendered": "stranger"
     }
+  },
+  {
+    "name": "jinja2_comment",
+    "description": "Jinja2 comments are stripped from output",
+    "input": {
+      "template": "Hello{# this is a comment #} World",
+      "engine": "jinja2",
+      "inputs": {}
+    },
+    "expected": {
+      "rendered": "Hello World"
+    }
+  },
+  {
+    "name": "filter_upper",
+    "description": "Jinja2 upper filter converts to uppercase",
+    "input": {
+      "template": "{{ name | upper }}",
+      "engine": "jinja2",
+      "inputs": { "name": "hello" }
+    },
+    "expected": {
+      "rendered": "HELLO"
+    }
+  },
+  {
+    "name": "filter_lower",
+    "description": "Jinja2 lower filter converts to lowercase",
+    "input": {
+      "template": "{{ name | lower }}",
+      "engine": "jinja2",
+      "inputs": { "name": "HELLO" }
+    },
+    "expected": {
+      "rendered": "hello"
+    }
+  },
+  {
+    "name": "filter_trim",
+    "description": "Jinja2 trim filter removes surrounding whitespace",
+    "input": {
+      "template": "{{ name | trim }}",
+      "engine": "jinja2",
+      "inputs": { "name": "  hello  " }
+    },
+    "expected": {
+      "rendered": "hello"
+    }
+  },
+  {
+    "name": "filter_join",
+    "description": "Jinja2 join filter joins a list with separator",
+    "input": {
+      "template": "{{ items | join(', ') }}",
+      "engine": "jinja2",
+      "inputs": { "items": ["a", "b", "c"] }
+    },
+    "expected": {
+      "rendered": "a, b, c"
+    }
+  },
+  {
+    "name": "filter_length",
+    "description": "Jinja2 length filter returns collection size",
+    "input": {
+      "template": "{{ items | length }}",
+      "engine": "jinja2",
+      "inputs": { "items": [1, 2, 3, 4, 5] }
+    },
+    "expected": {
+      "rendered": "5"
+    }
+  },
+  {
+    "name": "mustache_loop",
+    "description": "Mustache section iterates over list items",
+    "input": {
+      "template": "{{#items}}{{.}} {{/items}}",
+      "engine": "mustache",
+      "inputs": { "items": ["a", "b", "c"] }
+    },
+    "expected": {
+      "rendered": "a b c "
+    }
   }
 ]

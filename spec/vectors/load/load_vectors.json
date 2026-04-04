@@ -384,5 +384,178 @@
     "expected": {
       "validated_inputs": {}
     }
+  },
+  {
+    "name": "tools_mcp_load",
+    "description": "Load a prompty with an MCP tool — kind, serverName, connection preserved",
+    "input": {
+      "frontmatter": {
+        "name": "mcp-test",
+        "model": "gpt-4",
+        "tools": [
+          {
+            "name": "filesystem",
+            "kind": "mcp",
+            "serverName": "fs-server",
+            "connection": { "kind": "reference", "name": "my-mcp" }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tools": [
+        { "name": "filesystem", "kind": "mcp", "serverName": "fs-server" }
+      ]
+    }
+  },
+  {
+    "name": "tools_openapi_load",
+    "description": "Load a prompty with an OpenAPI tool — specification path preserved",
+    "input": {
+      "frontmatter": {
+        "name": "openapi-test",
+        "model": "gpt-4",
+        "tools": [
+          {
+            "name": "weather_api",
+            "kind": "openapi",
+            "specification": "./weather.json",
+            "connection": { "kind": "key", "endpoint": "https://api.weather.com" }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tools": [
+        { "name": "weather_api", "kind": "openapi", "specification": "./weather.json" }
+      ]
+    }
+  },
+  {
+    "name": "tools_prompty_load",
+    "description": "Load a prompty with a PromptyTool — path and mode preserved",
+    "input": {
+      "frontmatter": {
+        "name": "prompty-tool-test",
+        "model": "gpt-4",
+        "tools": [
+          {
+            "name": "helper",
+            "kind": "prompty",
+            "path": "./helper.prompty",
+            "mode": "single"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tools": [
+        { "name": "helper", "kind": "prompty", "path": "./helper.prompty", "mode": "single" }
+      ]
+    }
+  },
+  {
+    "name": "tools_custom_load",
+    "description": "Load a prompty with an unknown tool kind — falls through to CustomTool",
+    "input": {
+      "frontmatter": {
+        "name": "custom-tool-test",
+        "model": "gpt-4",
+        "tools": [
+          {
+            "name": "my_tool",
+            "kind": "my_provider",
+            "connection": { "kind": "key", "endpoint": "https://custom.example.com" }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "tools": [
+        { "name": "my_tool", "kind": "my_provider" }
+      ]
+    }
+  },
+  {
+    "name": "template_string_shorthand",
+    "description": "Template string shorthand 'jinja2' expands to full template config",
+    "input": {
+      "frontmatter": {
+        "name": "shorthand-test",
+        "model": {
+          "id": "gpt-4"
+        },
+        "template": "jinja2"
+      }
+    },
+    "expected": {
+      "template": {
+        "format": { "kind": "jinja2" },
+        "parser": { "kind": "prompty" }
+      }
+    }
+  },
+  {
+    "name": "input_scalar_shorthand",
+    "description": "Scalar input values create typed Property with default set",
+    "input": {
+      "frontmatter": {
+        "name": "scalar-test",
+        "model": "gpt-4",
+        "inputs": [
+          { "name": "topic", "kind": "string", "default": "science" },
+          { "name": "count", "kind": "integer", "default": 5 }
+        ]
+      }
+    },
+    "expected": {
+      "inputs": {
+        "properties": [
+          { "name": "topic", "kind": "string", "default": "science" },
+          { "name": "count", "kind": "integer", "default": 5 }
+        ]
+      }
+    }
+  },
+  {
+    "name": "empty_frontmatter_body_only",
+    "description": "Empty frontmatter with body — instructions extracted, defaults applied",
+    "input": {
+      "frontmatter": {
+        "name": "empty-fm"
+      }
+    },
+    "expected": {
+      "kind": "prompt",
+      "name": "empty-fm",
+      "model": null,
+      "inputs": null,
+      "tools": null
+    }
+  },
+  {
+    "name": "connection_types_load",
+    "description": "All connection kinds (key, reference, remote, anonymous) load correctly",
+    "input": {
+      "frontmatter": {
+        "name": "connection-test",
+        "model": {
+          "id": "gpt-4",
+          "connection": {
+            "kind": "anonymous",
+            "endpoint": "https://localhost:8080"
+          }
+        }
+      }
+    },
+    "expected": {
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "anonymous",
+          "endpoint": "https://localhost:8080"
+        }
+      }
+    }
   }
 ]
