@@ -1,0 +1,273 @@
+[
+  {
+    "name": "single_system",
+    "description": "A single system role marker produces one system message",
+    "input": {
+      "rendered": "system:\nYou are helpful."
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "You are helpful."}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "system_user",
+    "description": "System and user role markers produce two messages in order",
+    "input": {
+      "rendered": "system:\nYou are helpful.\n\nuser:\nHello"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "You are helpful."}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hello"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "system_user_assistant",
+    "description": "Three role markers (system, user, assistant) produce three messages in order",
+    "input": {
+      "rendered": "system:\nBe concise.\n\nuser:\nHi\n\nassistant:\nHello! How can I help?"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "Be concise."}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hi"}]
+        },
+        {
+          "role": "assistant",
+          "content": [{"kind": "text", "value": "Hello! How can I help?"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "multiline_content",
+    "description": "Multiple lines within a single role block are preserved as multiline content",
+    "input": {
+      "rendered": "system:\nLine one.\nLine two.\nLine three.\n\nuser:\nQuestion"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "Line one.\nLine two.\nLine three."}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Question"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "multiple_user_turns",
+    "description": "Alternating user and assistant turns produce four messages in conversation order",
+    "input": {
+      "rendered": "system:\nHelper\n\nuser:\nFirst question\n\nassistant:\nFirst answer\n\nuser:\nSecond question"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "Helper"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "First question"}]
+        },
+        {
+          "role": "assistant",
+          "content": [{"kind": "text", "value": "First answer"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Second question"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "no_role_marker_defaults_to_system",
+    "description": "Content with no role marker at all defaults to a single system message",
+    "input": {
+      "rendered": "Just a plain message with no role marker"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "Just a plain message with no role marker"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "content_trimmed",
+    "description": "Leading and trailing newlines are stripped from each message's content, but internal whitespace (spaces, indentation) is preserved",
+    "input": {
+      "rendered": "system:\n  \n  You are helpful.  \n  \n\nuser:\n  Hello  "
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "  \n  You are helpful.  \n  "}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "  Hello  "}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "empty_content",
+    "description": "A role marker followed immediately by another role marker produces a message with empty string content",
+    "input": {
+      "rendered": "system:\n\nuser:\nHello"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": ""}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hello"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "role_marker_at_line_start_only",
+    "description": "A role name followed by colon mid-line (e.g. 'The user: said') is NOT treated as a role boundary — only lines matching the boundary regex (role name at line start, colon at end) split messages",
+    "input": {
+      "rendered": "system:\nThe user: said hello\n\nuser:\nHi"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "The user: said hello"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hi"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "thread_nonce_expansion",
+    "description": "Thread nonce markers emitted by the renderer are expanded into actual conversation messages by the prepare pipeline. The nonce placeholder is replaced by the thread's message list, interleaved at the correct position.",
+    "input": {
+      "rendered": "system:\nYou are helpful.\n\n__PROMPTY_THREAD_abcd1234_conversation__\n\nuser:\nHi",
+      "thread_inputs": {
+        "conversation": [
+          {
+            "role": "user",
+            "content": [{"kind": "text", "value": "prev question"}]
+          },
+          {
+            "role": "assistant",
+            "content": [{"kind": "text", "value": "prev answer"}]
+          }
+        ]
+      }
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "You are helpful."}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "prev question"}]
+        },
+        {
+          "role": "assistant",
+          "content": [{"kind": "text", "value": "prev answer"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hi"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "markdown_in_content",
+    "description": "Markdown formatting (headers, bold, lists) within a role block is preserved verbatim as text content",
+    "input": {
+      "rendered": "system:\n# Title\n\nSome **bold** text\n\n- item 1\n- item 2\n\nuser:\nHello"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "# Title\n\nSome **bold** text\n\n- item 1\n- item 2"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hello"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "consecutive_newlines_between_roles",
+    "description": "Extra blank lines between role markers are part of the preceding message's content but are stripped by trailing-newline trimming, resulting in clean content",
+    "input": {
+      "rendered": "system:\nHelper\n\n\n\nuser:\nHi"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "system",
+          "content": [{"kind": "text", "value": "Helper"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Hi"}]
+        }
+      ]
+    }
+  },
+  {
+    "name": "assistant_with_code_block",
+    "description": "Code blocks with triple backticks inside a role block are preserved as literal text content",
+    "input": {
+      "rendered": "assistant:\nHere is code:\n```python\nprint('hello')\n```\n\nuser:\nThanks"
+    },
+    "expected": {
+      "messages": [
+        {
+          "role": "assistant",
+          "content": [{"kind": "text", "value": "Here is code:\n```python\nprint('hello')\n```"}]
+        },
+        {
+          "role": "user",
+          "content": [{"kind": "text", "value": "Thanks"}]
+        }
+      ]
+    }
+  }
+]

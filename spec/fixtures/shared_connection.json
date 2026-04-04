@@ -1,0 +1,5 @@
+{
+  "kind": "key",
+  "endpoint": "https://api.openai.com/v1",
+  "apiKey": "${env:OPENAI_API_KEY}"
+}

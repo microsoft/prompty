@@ -1,0 +1,21 @@
+---
+name: image-gen
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+inputs:
+  - name: prompt
+    kind: string
+    default: A sunset over mountains
+---
+user:
+{{prompt}}

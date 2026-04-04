@@ -1,0 +1,34 @@
+---
+name: function-tools
+model:
+  id: gpt-4
+  apiType: chat
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather in a given location
+    strict: true
+    parameters:
+      - name: location
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      - name: unit
+        kind: string
+        description: Temperature unit
+        enumValues: [celsius, fahrenheit]
+    bindings:
+      unit:
+        input: preferred_unit
+inputs:
+  - name: question
+    kind: string
+    default: What's the weather in Paris?
+  - name: preferred_unit
+    kind: string
+    default: celsius
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}

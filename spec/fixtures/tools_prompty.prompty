@@ -1,0 +1,31 @@
+---
+name: prompty-tools
+model:
+  id: gpt-4
+  apiType: chat
+tools:
+  - name: summarize
+    kind: prompty
+    description: Summarize a piece of text
+    path: ./summarize.prompty
+    mode: single
+    parameters:
+      - name: text
+        kind: string
+        description: The text to summarize
+    bindings:
+      context:
+        input: document
+inputs:
+  - name: question
+    kind: string
+    default: Can you summarize this document?
+  - name: document
+    kind: string
+    default: ""
+---
+system:
+You are a helpful assistant that can summarize documents.
+
+user:
+{{question}}

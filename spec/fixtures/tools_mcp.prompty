@@ -1,0 +1,18 @@
+---
+name: mcp-tools
+model:
+  id: gpt-4
+tools:
+  - name: filesystem
+    kind: mcp
+    description: Access the filesystem
+    connection:
+      kind: reference
+      name: fs-server
+    serverName: filesystem-server
+---
+system:
+You have access to filesystem tools.
+
+user:
+{{question}}

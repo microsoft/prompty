@@ -1,0 +1,19 @@
+---
+name: openapi-tools
+model:
+  id: gpt-4
+tools:
+  - name: weather_api
+    kind: openapi
+    description: Weather API
+    connection:
+      kind: key
+      endpoint: https://api.weather.com
+      apiKey: ${env:WEATHER_API_KEY:demo}
+    specification: ./weather_spec.json
+---
+system:
+You can check the weather via API.
+
+user:
+{{question}}

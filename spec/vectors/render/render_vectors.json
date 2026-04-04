@@ -1,0 +1,232 @@
+[
+  {
+    "name": "simple_substitution",
+    "description": "Basic Jinja2 variable substitution with a single variable",
+    "input": {
+      "template": "Hello {{name}}!",
+      "engine": "jinja2",
+      "inputs": {
+        "name": "World"
+      }
+    },
+    "expected": {
+      "rendered": "Hello World!"
+    }
+  },
+  {
+    "name": "multiple_variables",
+    "description": "Multiple Jinja2 variables of different types including an integer",
+    "input": {
+      "template": "{{first}} {{last}} is {{age}}",
+      "engine": "jinja2",
+      "inputs": {
+        "first": "Jane",
+        "last": "Doe",
+        "age": 30
+      }
+    },
+    "expected": {
+      "rendered": "Jane Doe is 30"
+    }
+  },
+  {
+    "name": "conditional_block",
+    "description": "Jinja2 if/else block where condition is true",
+    "input": {
+      "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+      "engine": "jinja2",
+      "inputs": {
+        "premium": true
+      }
+    },
+    "expected": {
+      "rendered": "Welcome VIP!"
+    }
+  },
+  {
+    "name": "conditional_false",
+    "description": "Jinja2 if/else block where condition is false",
+    "input": {
+      "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+      "engine": "jinja2",
+      "inputs": {
+        "premium": false
+      }
+    },
+    "expected": {
+      "rendered": "Hello!"
+    }
+  },
+  {
+    "name": "for_loop",
+    "description": "Jinja2 for loop iterating over a list of items",
+    "input": {
+      "template": "Items: {% for item in items %}{{item}} {% endfor %}",
+      "engine": "jinja2",
+      "inputs": {
+        "items": ["a", "b", "c"]
+      }
+    },
+    "expected": {
+      "rendered": "Items: a b c "
+    }
+  },
+  {
+    "name": "nested_object",
+    "description": "Jinja2 dot notation access into a nested object",
+    "input": {
+      "template": "{{user.name}} ({{user.email}})",
+      "engine": "jinja2",
+      "inputs": {
+        "user": {
+          "name": "Jane",
+          "email": "jane@test.com"
+        }
+      }
+    },
+    "expected": {
+      "rendered": "Jane (jane@test.com)"
+    }
+  },
+  {
+    "name": "mustache_simple",
+    "description": "Basic Mustache variable substitution",
+    "input": {
+      "template": "Hello {{name}}!",
+      "engine": "mustache",
+      "inputs": {
+        "name": "World"
+      }
+    },
+    "expected": {
+      "rendered": "Hello World!"
+    }
+  },
+  {
+    "name": "mustache_section",
+    "description": "Mustache truthy section renders its content",
+    "input": {
+      "template": "{{#show}}Visible{{/show}}",
+      "engine": "mustache",
+      "inputs": {
+        "show": true
+      }
+    },
+    "expected": {
+      "rendered": "Visible"
+    }
+  },
+  {
+    "name": "mustache_inverted",
+    "description": "Mustache inverted section renders when value is falsy",
+    "input": {
+      "template": "{{^show}}Hidden{{/show}}",
+      "engine": "mustache",
+      "inputs": {
+        "show": false
+      }
+    },
+    "expected": {
+      "rendered": "Hidden"
+    }
+  },
+  {
+    "name": "thread_nonce_injection",
+    "description": "Thread-kind input is replaced with a nonce marker instead of being rendered directly",
+    "input": {
+      "template": "system:\nYou are helpful.\n\n{{conversation}}\n\nuser:\n{{question}}",
+      "engine": "jinja2",
+      "inputs": {
+        "question": "Hi",
+        "conversation": {
+          "_kind": "thread",
+          "messages": [
+            {"role": "user", "content": "previous question"},
+            {"role": "assistant", "content": "previous answer"}
+          ]
+        }
+      }
+    },
+    "expected": {
+      "nonce_pattern": "^system:\nYou are helpful\\.\n\n__PROMPTY_THREAD_[a-f0-9]{8}_conversation__\n\nuser:\nHi$"
+    }
+  },
+  {
+    "name": "missing_variable_renders_empty",
+    "description": "Undefined Jinja2 variable renders as empty string with default Undefined config",
+    "input": {
+      "template": "Hello {{name}}!",
+      "engine": "jinja2",
+      "inputs": {}
+    },
+    "expected": {
+      "rendered": "Hello !"
+    }
+  },
+  {
+    "name": "html_not_escaped",
+    "description": "HTML content is NOT escaped — prompty templates are not HTML templates",
+    "input": {
+      "template": "{{content}}",
+      "engine": "jinja2",
+      "inputs": {
+        "content": "<b>bold</b>"
+      }
+    },
+    "expected": {
+      "rendered": "<b>bold</b>"
+    }
+  },
+  {
+    "name": "whitespace_preserved",
+    "description": "Whitespace including indentation and newlines is exactly preserved",
+    "input": {
+      "template": "line1\n  line2\n    line3",
+      "engine": "jinja2",
+      "inputs": {}
+    },
+    "expected": {
+      "rendered": "line1\n  line2\n    line3"
+    }
+  },
+  {
+    "name": "role_markers_preserved",
+    "description": "Role markers (system:/user:) are passed through by the renderer — parsing is the parser's job",
+    "input": {
+      "template": "system:\nYou are helpful.\n\nuser:\n{{question}}",
+      "engine": "jinja2",
+      "inputs": {
+        "question": "Hello"
+      }
+    },
+    "expected": {
+      "rendered": "system:\nYou are helpful.\n\nuser:\nHello"
+    }
+  },
+  {
+    "name": "filter_basic",
+    "description": "Jinja2 built-in filter (upper) works in prompty templates",
+    "input": {
+      "template": "{{name|upper}}",
+      "engine": "jinja2",
+      "inputs": {
+        "name": "hello"
+      }
+    },
+    "expected": {
+      "rendered": "HELLO"
+    }
+  },
+  {
+    "name": "default_filter",
+    "description": "Jinja2 default filter provides fallback for missing variables",
+    "input": {
+      "template": "{{name|default(\"stranger\")}}",
+      "engine": "jinja2",
+      "inputs": {}
+    },
+    "expected": {
+      "rendered": "stranger"
+    }
+  }
+]

@@ -1,0 +1,19 @@
+---
+name: threaded-chat
+model:
+  id: gpt-4
+  apiType: chat
+inputs:
+  - name: question
+    kind: string
+    default: Hello
+  - name: conversation
+    kind: thread
+---
+system:
+You are a helpful assistant.
+
+{{conversation}}
+
+user:
+{{question}}

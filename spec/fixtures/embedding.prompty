@@ -1,0 +1,16 @@
+---
+name: embedding
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  - name: text
+    kind: string
+    default: Hello world
+---
+{{text}}

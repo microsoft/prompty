@@ -1,0 +1,28 @@
+---
+name: structured-output
+model:
+  id: gpt-4
+  apiType: chat
+inputs:
+  - name: text
+    kind: string
+    default: The weather in Paris is 72°F and sunny.
+outputs:
+  - name: temperature
+    kind: integer
+    description: Temperature in Fahrenheit
+    required: true
+  - name: condition
+    kind: string
+    description: Weather condition
+    required: true
+  - name: city
+    kind: string
+    description: City name
+    required: true
+---
+system:
+Extract structured weather data from the text.
+
+user:
+{{text}}

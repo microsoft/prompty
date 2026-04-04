@@ -1,0 +1,20 @@
+---
+name: responses-api
+model:
+  id: gpt-4
+  provider: openai
+  apiType: responses
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  - name: question
+    kind: string
+    default: What is 2+2?
+---
+system:
+You are a helpful math assistant.
+
+user:
+{{question}}
