@@ -107,8 +107,6 @@ def validate_inputs(
         if name not in result:
             if prop.default is not None:
                 result[name] = prop.default
-            elif prop.example is not None:
-                result[name] = prop.example
             elif prop.required:
                 raise ValueError(f"Required input '{name}' not provided and has no default value.")
 

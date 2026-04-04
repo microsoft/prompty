@@ -440,7 +440,7 @@ class TestOutputSchemaToWire:
         result = _output_schema_to_wire(agent)
         assert result is not None
         assert result["type"] == "json_schema"
-        assert result["json_schema"]["name"] == "test"
+        assert result["json_schema"]["name"] == "structured_output"
         assert result["json_schema"]["strict"] is True
         schema = result["json_schema"]["schema"]
         assert schema["type"] == "object"
@@ -495,7 +495,8 @@ class TestOutputSchemaToWire:
         assert items_prop["type"] == "array"
         assert items_prop["items"]["type"] == "string"
 
-    def test_name_from_agent(self):
+    def test_name_is_fixed(self):
+        """Schema name is always 'structured_output' regardless of agent name."""
         agent = _make_agent(
             name="My Cool Agent",
             outputs=[
@@ -504,7 +505,7 @@ class TestOutputSchemaToWire:
         )
         result = _output_schema_to_wire(agent)
         assert result is not None
-        assert result["json_schema"]["name"] == "my_cool_agent"
+        assert result["json_schema"]["name"] == "structured_output"
 
 
 class TestBuildArgsResponseFormat:

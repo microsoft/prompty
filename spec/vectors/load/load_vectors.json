@@ -30,7 +30,7 @@
           "maxOutputTokens": 1000
         }
       },
-      "inputSchema": {
+      "inputs": {
         "properties": [
           { "name": "firstName", "kind": "string", "default": "Jane" },
           { "name": "lastName", "kind": "string", "default": "Doe" },
@@ -57,8 +57,8 @@
         "id": "gpt-4"
       },
       "instructions": "system:\nHello world.",
-      "inputSchema": null,
-      "outputSchema": null,
+      "inputs": null,
+      "outputs": null,
       "tools": null
     }
   },
@@ -222,7 +222,7 @@
           }
         }
       ],
-      "inputSchema": {
+      "inputs": {
         "properties": [
           { "name": "question", "kind": "string", "default": "What's the weather in Paris?" },
           { "name": "preferred_unit", "kind": "string", "default": "celsius" }
@@ -254,7 +254,7 @@
           "apiKey": "sk-test123"
         }
       },
-      "inputSchema": {
+      "inputs": {
         "properties": [
           { "name": "text", "kind": "string", "default": "Hello world" }
         ]
@@ -313,7 +313,7 @@
       "frontmatter": {
         "name": "required-input-test",
         "model": "gpt-4",
-        "inputSchema": {
+        "inputs": {
           "properties": [
             { "name": "city", "kind": "string", "required": true }
           ]
@@ -333,7 +333,7 @@
       "frontmatter": {
         "name": "default-fill-test",
         "model": "gpt-4",
-        "inputSchema": {
+        "inputs": {
           "properties": [
             { "name": "name", "kind": "string", "default": "world" }
           ]
@@ -354,7 +354,7 @@
       "frontmatter": {
         "name": "optional-omit-test",
         "model": "gpt-4",
-        "inputSchema": {
+        "inputs": {
           "properties": [
             { "name": "nickname", "kind": "string", "required": false }
           ]
@@ -373,7 +373,7 @@
       "frontmatter": {
         "name": "example-not-used-test",
         "model": "gpt-4",
-        "inputSchema": {
+        "inputs": {
           "properties": [
             { "name": "topic", "kind": "string", "required": false, "example": "sample" }
           ]

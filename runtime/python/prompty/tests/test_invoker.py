@@ -297,7 +297,8 @@ class TestValidateInputs:
         result = validate_inputs(agent, {})
         assert result["name"] == "World"
 
-    def test_example_as_fallback(self):
+    def test_example_not_used_as_fallback(self):
+        """Spec says example is documentation-only and MUST NOT be used at runtime."""
         from prompty.model import Property
 
         p = Property()
@@ -308,7 +309,7 @@ class TestValidateInputs:
 
         agent = _make_agent(inputs=[p])
         result = validate_inputs(agent, {})
-        assert result["name"] == "Jane"
+        assert "name" not in result
 
     def test_required_missing_raises(self):
         from prompty.model import Property
@@ -531,8 +532,7 @@ class TestPrepare:
         assert "How?" in messages[1].text
 
     def test_prepare_with_template_config(self):
-        from prompty.model import FormatConfig, Template
-        from prompty.model import ParserConfig
+        from prompty.model import FormatConfig, ParserConfig, Template
 
         fmt = mock.Mock(spec=FormatConfig)
         fmt.kind = "jinja2"

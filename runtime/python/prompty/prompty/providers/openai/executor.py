@@ -92,7 +92,7 @@ def _audio_format(media_type: str | None) -> str:
     if media_type:
         if "wav" in media_type:
             return "wav"
-        if "mp3" in media_type:
+        if "mp3" in media_type or media_type == "audio/mpeg":
             return "mp3"
     return "wav"
 
@@ -111,7 +111,9 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if tool.description:
                 func_def["description"] = tool.description
             if hasattr(tool, "parameters") and tool.parameters:
-                func_def["parameters"] = _schema_to_wire(tool.parameters)
+                bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
+                params = [p for p in tool.parameters if p.name not in bound_names]
+                func_def["parameters"] = _schema_to_wire(params)
             if hasattr(tool, "strict") and tool.strict:
                 func_def["strict"] = True
                 if "parameters" in func_def:
@@ -221,7 +223,7 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
         "required": required,
     }
 
-    name = (agent.name or "response").lower().replace(" ", "_").replace("-", "_")
+    name = "structured_output"
 
     return {
         "type": "json_schema",
@@ -340,7 +342,7 @@ def _output_schema_to_responses_wire(agent: Prompty) -> dict[str, Any] | None:
         properties[prop.name] = _property_to_json_schema(prop)
         required.append(prop.name)
 
-    name = (agent.name or "response").lower().replace(" ", "_").replace("-", "_")
+    name = "structured_output"
 
     return {
         "format": {

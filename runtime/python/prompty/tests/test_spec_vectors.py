@@ -87,8 +87,8 @@ def _load_vectors(stage: str) -> list[dict]:
 def _make_prompty_from_frontmatter(data: dict, instructions: str = "") -> Prompty:
     """Build a Prompty from a frontmatter dict (like the vectors provide).
 
-    The spec vectors use ``inputSchema``/``outputSchema`` but the runtime model
-    uses ``inputs``/``outputs``.  This helper maps between the two.
+    Spec vectors use ``inputs``/``outputs`` with a ``properties`` sub-key.
+    The runtime model expects ``inputs``/``outputs`` as a flat list of Property dicts.
     """
     from prompty.model import LoadContext
 
@@ -96,19 +96,11 @@ def _make_prompty_from_frontmatter(data: dict, instructions: str = "") -> Prompt
     if instructions:
         d["instructions"] = instructions
 
-    # Map spec names to runtime names
-    if "inputSchema" in d and "inputs" not in d:
-        schema = d.pop("inputSchema")
-        if isinstance(schema, dict) and "properties" in schema:
-            d["inputs"] = schema["properties"]
-        elif schema is not None:
-            d["inputs"] = schema
-    if "outputSchema" in d and "outputs" not in d:
-        schema = d.pop("outputSchema")
-        if isinstance(schema, dict) and "properties" in schema:
-            d["outputs"] = schema["properties"]
-        elif schema is not None:
-            d["outputs"] = schema
+    # Unwrap {properties: [...]} → [...] if needed
+    if "inputs" in d and isinstance(d["inputs"], dict) and "properties" in d["inputs"]:
+        d["inputs"] = d["inputs"]["properties"]
+    if "outputs" in d and isinstance(d["outputs"], dict) and "properties" in d["outputs"]:
+        d["outputs"] = d["outputs"]["properties"]
 
     return Prompty.load(d, LoadContext())
 
@@ -363,16 +355,18 @@ def _assert_load_expected(agent: Prompty, expected: dict, vec_name: str):
     if "model" in expected and expected["model"] is not None:
         _check_model(agent.model, expected["model"], errors)
 
-    if "inputSchema" in expected:
-        exp_schema = expected["inputSchema"]
-        if exp_schema is None:
+    if "inputs" in expected:
+        exp_inputs = expected["inputs"]
+        if exp_inputs is None:
             if agent.inputs:
                 errors.append(f"  inputs: expected None/empty, got {len(agent.inputs)} properties")
-        elif "properties" in exp_schema:
-            _check_properties(agent.inputs, exp_schema["properties"], "inputs", errors)
+        elif isinstance(exp_inputs, dict) and "properties" in exp_inputs:
+            _check_properties(agent.inputs, exp_inputs["properties"], "inputs", errors)
+        elif isinstance(exp_inputs, list):
+            _check_properties(agent.inputs, exp_inputs, "inputs", errors)
 
-    if "outputSchema" in expected:
-        exp_out = expected["outputSchema"]
+    if "outputs" in expected:
+        exp_out = expected["outputs"]
         if exp_out is None:
             if agent.outputs:
                 errors.append(f"  outputs: expected None/empty, got {len(agent.outputs)} properties")
@@ -799,24 +793,12 @@ def _check_wire_anthropic_chat(agent: Prompty, messages: list[Message], exp_body
         errors.append("  Unexpected 'system' key in actual")
 
     if errors:
-        # Classify known gaps
-        known_gaps = []
-        real_errors = []
-        for err in errors:
-            if "structured_output" in vec_name and "json_schema.name" in err:
-                known_gaps.append(f"KNOWN GAP (structured output name derived from agent.name): {err}")
-            else:
-                real_errors.append(err)
-
-        if known_gaps and not real_errors:
-            pytest.xfail(f"Wire vector '{vec_name}' has known gaps:\n" + "\n".join(known_gaps))
-        if real_errors:
-            pytest.fail(
-                f"Wire vector '{vec_name}' failed:\n"
-                + "\n".join(real_errors + known_gaps)
-                + f"\n\nActual body:\n{json.dumps(actual_body, indent=2)}"
-                + f"\n\nExpected body:\n{json.dumps(exp_body, indent=2)}"
-            )
+        pytest.fail(
+            f"Wire vector '{vec_name}' failed:\n"
+            + "\n".join(errors)
+            + f"\n\nActual body:\n{json.dumps(actual_body, indent=2)}"
+            + f"\n\nExpected body:\n{json.dumps(exp_body, indent=2)}"
+        )
 
 
 PROCESS_VECTORS = _load_vectors("process")

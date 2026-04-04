@@ -40,7 +40,7 @@ def _prepare_render_inputs(
     thread_nonces: dict[str, str] = {}
 
     for name in thread_props:
-        nonce = secrets.token_hex(8)
+        nonce = secrets.token_hex(4)
         marker = f"{THREAD_NONCE_PREFIX}{nonce}_{name}__"
         thread_nonces[marker] = name
         render_inputs[name] = marker

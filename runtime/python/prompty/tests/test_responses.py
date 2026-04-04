@@ -224,7 +224,7 @@ class TestOutputSchemaToResponsesWire:
 
         fmt = result["format"]
         assert fmt["type"] == "json_schema"
-        assert fmt["name"] == "weather_response"
+        assert fmt["name"] == "structured_output"
         assert fmt["strict"] is True
 
         schema = fmt["schema"]
