@@ -9,7 +9,7 @@ namespace Prompty;
 /// <summary>
 /// Template format definition
 /// </summary>
-public class Format
+public class FormatConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -17,10 +17,10 @@ public class Format
     public static string? ShorthandProperty => "kind";
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Format"/>.
+    /// Initializes a new instance of <see cref="FormatConfig"/>.
     /// </summary>
 #pragma warning disable CS8618
-    public Format()
+    public FormatConfig()
     {
     }
 #pragma warning restore CS8618
@@ -44,12 +44,12 @@ public class Format
     #region Load Methods
 
     /// <summary>
-    /// Load a Format instance from a dictionary.
+    /// Load a FormatConfig instance from a dictionary.
     /// </summary>
     /// <param name="data">The dictionary containing the data.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Format instance.</returns>
-    public static Format Load(Dictionary<string, object?> data, LoadContext? context = null)
+    /// <returns>The loaded FormatConfig instance.</returns>
+    public static FormatConfig Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
         if (context is not null)
         {
@@ -60,7 +60,7 @@ public class Format
 
 
         // Create new instance
-        var instance = new Format();
+        var instance = new FormatConfig();
 
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
@@ -92,7 +92,7 @@ public class Format
     #region Save Methods
 
     /// <summary>
-    /// Save the Format instance to a dictionary.
+    /// Save the FormatConfig instance to a dictionary.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
@@ -134,7 +134,7 @@ public class Format
 
 
     /// <summary>
-    /// Convert the Format instance to a YAML string.
+    /// Convert the FormatConfig instance to a YAML string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The YAML string representation of this instance.</returns>
@@ -145,7 +145,7 @@ public class Format
     }
 
     /// <summary>
-    /// Convert the Format instance to a JSON string.
+    /// Convert the FormatConfig instance to a JSON string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <param name="indent">Whether to indent the output. Defaults to true.</param>
@@ -157,12 +157,12 @@ public class Format
     }
 
     /// <summary>
-    /// Load a Format instance from a JSON string.
+    /// Load a FormatConfig instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Format instance.</returns>
-    public static Format FromJson(string json, LoadContext? context = null)
+    /// <returns>The loaded FormatConfig instance.</returns>
+    public static FormatConfig FromJson(string json, LoadContext? context = null)
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
@@ -192,12 +192,12 @@ public class Format
     }
 
     /// <summary>
-    /// Load a Format instance from a YAML string.
+    /// Load a FormatConfig instance from a YAML string.
     /// </summary>
     /// <param name="yaml">The YAML string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Format instance.</returns>
-    public static Format FromYaml(string yaml, LoadContext? context = null)
+    /// <returns>The loaded FormatConfig instance.</returns>
+    public static FormatConfig FromYaml(string yaml, LoadContext? context = null)
     {
         // Handle alternate representations - try object first, fall back to scalar
         Dictionary<string, object?>? dictResult = null;

@@ -11,30 +11,33 @@ from ._context import LoadContext, SaveContext
 
 
 @dataclass
-class Parser:
-    """Template parser definition
+class FormatConfig:
+    """Template format definition
 
     Attributes
     ----------
     kind : str
-        Parser used to process the rendered template into API-compatible format
+        Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
+    strict : Optional[bool]
+        Whether the template can emit structural text for parsing output
     options : Optional[dict[str, Any]]
-        Options for the parser
+        Options for the template engine
     """
 
     _shorthand_property: ClassVar[str | None] = "kind"
 
     kind: str = field(default="*")
+    strict: bool | None = None
     options: dict[str, Any] | None = None
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "Parser":
-        """Load a Parser instance.
+    def load(data: Any, context: LoadContext | None = None) -> "FormatConfig":
+        """Load a FormatConfig instance.
         Args:
             data (Any): The data to load the instance from.
             context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
         Returns:
-            Parser: The loaded Parser instance.
+            FormatConfig: The loaded FormatConfig instance.
 
         """
 
@@ -46,13 +49,15 @@ class Parser:
             data = {"kind": data}
 
         if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for Parser: {data}")
+            raise ValueError(f"Invalid data for FormatConfig: {data}")
 
         # create new instance
-        instance = Parser()
+        instance = FormatConfig()
 
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
+        if data is not None and "strict" in data:
+            instance.strict = data["strict"]
         if data is not None and "options" in data:
             instance.options = data["options"]
         if context is not None:
@@ -60,7 +65,7 @@ class Parser:
         return instance
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the Parser instance to a dictionary.
+        """Save the FormatConfig instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
         Returns:
@@ -75,6 +80,8 @@ class Parser:
 
         if obj.kind is not None:
             result["kind"] = obj.kind
+        if obj.strict is not None:
+            result["strict"] = obj.strict
         if obj.options is not None:
             result["options"] = obj.options
 
@@ -83,7 +90,7 @@ class Parser:
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the Parser instance to a YAML string.
+        """Convert the FormatConfig instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
         Returns:
@@ -95,7 +102,7 @@ class Parser:
         return context.to_yaml(self.save(context))
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the Parser instance to a JSON string.
+        """Convert the FormatConfig instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

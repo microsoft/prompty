@@ -15,7 +15,7 @@ public class OpenApiToolConversionTests
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 
 """;
 
@@ -23,7 +23,7 @@ specification: full_sepcification_here
 
         Assert.NotNull(instance);
         Assert.Equal("openapi", instance.Kind);
-        Assert.Equal("full_sepcification_here", instance.Specification);
+        Assert.Equal("./openapi.json", instance.Specification);
     }
 
     [Fact]
@@ -35,14 +35,14 @@ specification: full_sepcification_here
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 """;
 
         var instance = OpenApiTool.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("openapi", instance.Kind);
-        Assert.Equal("full_sepcification_here", instance.Specification);
+        Assert.Equal("./openapi.json", instance.Specification);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ specification: full_sepcification_here
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 """;
 
@@ -68,7 +68,7 @@ specification: full_sepcification_here
         var reloaded = OpenApiTool.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("openapi", reloaded.Kind);
-        Assert.Equal("full_sepcification_here", reloaded.Specification);
+        Assert.Equal("./openapi.json", reloaded.Specification);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ specification: full_sepcification_here
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 
 """;
 
@@ -92,7 +92,7 @@ specification: full_sepcification_here
         var reloaded = OpenApiTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("openapi", reloaded.Kind);
-        Assert.Equal("full_sepcification_here", reloaded.Specification);
+        Assert.Equal("./openapi.json", reloaded.Specification);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ specification: full_sepcification_here
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 """;
 
@@ -123,7 +123,7 @@ specification: full_sepcification_here
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 
 """;
 

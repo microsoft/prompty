@@ -7,6 +7,7 @@ export interface EmitTarget {
   "alias"?: { [key: string]: any };
   "format"?: boolean;
   "namespace"?: string;
+  "import-path"?: string;
 }
 export interface PromptyEmitterOptions {
   "root-object": string;
@@ -52,6 +53,11 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
             type: "string",
             nullable: true,
             description: "Override the namespace for the emitted code"
+          },
+          "import-path": {
+            type: "string",
+            nullable: true,
+            description: "Python import path for generated code in tests (e.g., 'prompty.model'). Defaults to the lowercased namespace."
           }
         },
         required: ["type"]

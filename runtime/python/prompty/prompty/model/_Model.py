@@ -23,7 +23,7 @@ class Model:
     id : str
         The unique identifier of the model - can be used as the single property shorthand
     provider : Optional[str]
-        The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+        The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
     apiType : Optional[str]
         The type of API to use for the model (e.g., 'chat', 'response', etc.)
     connection : Optional[Connection]

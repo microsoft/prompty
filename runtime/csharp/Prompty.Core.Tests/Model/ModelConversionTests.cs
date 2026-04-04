@@ -13,7 +13,7 @@ public class ModelConversionTests
     {
         string yamlData = """
 id: gpt-35-turbo
-provider: azure
+provider: foundry
 apiType: chat
 connection:
   kind: key
@@ -22,7 +22,7 @@ connection:
 options:
   type: chat
   temperature: 0.7
-  maxTokens: 1000
+  maxOutputTokens: 1000
 
 """;
 
@@ -30,7 +30,7 @@ options:
 
         Assert.NotNull(instance);
         Assert.Equal("gpt-35-turbo", instance.Id);
-        Assert.Equal("azure", instance.Provider);
+        Assert.Equal("foundry", instance.Provider);
         Assert.Equal("chat", instance.ApiType);
     }
 
@@ -40,7 +40,7 @@ options:
         string jsonData = """
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -50,7 +50,7 @@ options:
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 """;
@@ -58,7 +58,7 @@ options:
         var instance = Model.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("gpt-35-turbo", instance.Id);
-        Assert.Equal("azure", instance.Provider);
+        Assert.Equal("foundry", instance.Provider);
         Assert.Equal("chat", instance.ApiType);
     }
 
@@ -69,7 +69,7 @@ options:
         string jsonData = """
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -79,7 +79,7 @@ options:
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 """;
@@ -93,7 +93,7 @@ options:
         var reloaded = Model.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("gpt-35-turbo", reloaded.Id);
-        Assert.Equal("azure", reloaded.Provider);
+        Assert.Equal("foundry", reloaded.Provider);
         Assert.Equal("chat", reloaded.ApiType);
     }
 
@@ -103,7 +103,7 @@ options:
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 id: gpt-35-turbo
-provider: azure
+provider: foundry
 apiType: chat
 connection:
   kind: key
@@ -112,7 +112,7 @@ connection:
 options:
   type: chat
   temperature: 0.7
-  maxTokens: 1000
+  maxOutputTokens: 1000
 
 """;
 
@@ -125,7 +125,7 @@ options:
         var reloaded = Model.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("gpt-35-turbo", reloaded.Id);
-        Assert.Equal("azure", reloaded.Provider);
+        Assert.Equal("foundry", reloaded.Provider);
         Assert.Equal("chat", reloaded.ApiType);
     }
 
@@ -135,7 +135,7 @@ options:
         string jsonData = """
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -145,7 +145,7 @@ options:
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 """;
@@ -163,7 +163,7 @@ options:
     {
         string yamlData = """
 id: gpt-35-turbo
-provider: azure
+provider: foundry
 apiType: chat
 connection:
   kind: key
@@ -172,7 +172,7 @@ connection:
 options:
   type: chat
   temperature: 0.7
-  maxTokens: 1000
+  maxOutputTokens: 1000
 
 """;
 

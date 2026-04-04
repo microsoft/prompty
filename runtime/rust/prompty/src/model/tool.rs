@@ -424,3 +424,68 @@ impl OpenApiTool {
 }
 
 
+/// A tool that references another .prompty file to be invoked as a tool.  In `single` mode, the child prompty is executed with a single LLM call. In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+#[derive(Debug, Clone, Default)]
+pub struct PromptyTool {
+    /// The kind identifier for prompty tools
+    pub kind: String,
+    /// Path to the child .prompty file, relative to the parent
+    pub path: String,
+    /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+    pub mode: String,
+}
+
+impl PromptyTool {
+    /// Create a new PromptyTool with default values.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Load PromptyTool from a JSON string.
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        let value: serde_json::Value = serde_json::from_str(json)?;
+        Ok(Self::load_from_value(&value))
+    }
+
+    /// Load PromptyTool from a YAML string.
+    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
+        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Ok(Self::load_from_value(&value))
+    }
+
+    /// Load PromptyTool from a `serde_json::Value`.
+    pub fn load_from_value(value: &serde_json::Value) -> Self {
+        Self {
+            kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            path: value.get("path").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            mode: value.get("mode").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+        }
+    }
+
+    /// Serialize PromptyTool to a `serde_json::Value`.
+    pub fn to_value(&self) -> serde_json::Value {
+        let mut result = serde_json::Map::new();
+        if !self.kind.is_empty() {
+            result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
+        }
+        if !self.path.is_empty() {
+            result.insert("path".to_string(), serde_json::Value::String(self.path.clone()));
+        }
+        if !self.mode.is_empty() {
+            result.insert("mode".to_string(), serde_json::Value::String(self.mode.clone()));
+        }
+        serde_json::Value::Object(result)
+    }
+
+    /// Serialize PromptyTool to a JSON string.
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(&self.to_value())
+    }
+
+    /// Serialize PromptyTool to a YAML string.
+    pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
+        serde_yaml::to_string(&self.to_value())
+    }
+}
+
+

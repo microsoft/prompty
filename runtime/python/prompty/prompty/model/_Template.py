@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-from ._Format import Format
-from ._Parser import Parser
+from ._FormatConfig import FormatConfig
+from ._ParserConfig import ParserConfig
 
 
 @dataclass
@@ -25,16 +25,16 @@ class Template:
 
     Attributes
     ----------
-    format : Format
+    format : FormatConfig
         Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
-    parser : Parser
+    parser : ParserConfig
         Parser used to process the rendered template into API-compatible format
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
-    format: Format = field(default_factory=Format)
-    parser: Parser = field(default_factory=Parser)
+    format: FormatConfig = field(default_factory=FormatConfig)
+    parser: ParserConfig = field(default_factory=ParserConfig)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Template":
@@ -57,9 +57,9 @@ class Template:
         instance = Template()
 
         if data is not None and "format" in data:
-            instance.format = Format.load(data["format"], context)
+            instance.format = FormatConfig.load(data["format"], context)
         if data is not None and "parser" in data:
-            instance.parser = Parser.load(data["parser"], context)
+            instance.parser = ParserConfig.load(data["parser"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance

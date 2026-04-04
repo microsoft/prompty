@@ -21,13 +21,20 @@ export { Model } from "./model";
 
 export { Binding } from "./binding";
 
-export { Tool, FunctionTool, CustomTool, McpTool, OpenApiTool } from "./tool";
+export {
+  Tool,
+  FunctionTool,
+  CustomTool,
+  McpTool,
+  OpenApiTool,
+  PromptyTool,
+} from "./tool";
 
 export { McpApprovalMode } from "./mcp-approval-mode";
 
-export { Format } from "./format";
+export { FormatConfig } from "./format-config";
 
-export { Parser } from "./parser";
+export { ParserConfig } from "./parser-config";
 
 export { Template } from "./template";
 

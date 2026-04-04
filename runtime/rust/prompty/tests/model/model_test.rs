@@ -9,7 +9,7 @@ fn test_model_load_json() {
     let json = r####"
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -19,7 +19,7 @@ fn test_model_load_json() {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 "####;
@@ -28,7 +28,7 @@ fn test_model_load_json() {
     let instance = result.unwrap();
     assert_eq!(instance.id, "gpt-35-turbo");
     assert!(instance.provider.is_some(), "Expected provider to be Some");
-    assert_eq!(instance.provider.as_ref().unwrap(), &"azure");
+    assert_eq!(instance.provider.as_ref().unwrap(), &"foundry");
     assert!(instance.api_type.is_some(), "Expected api_type to be Some");
     assert_eq!(instance.api_type.as_ref().unwrap(), &"chat");
 }
@@ -37,7 +37,7 @@ fn test_model_load_json() {
 fn test_model_load_yaml() {
     let yaml = r####"
 id: gpt-35-turbo
-provider: azure
+provider: foundry
 apiType: chat
 connection:
   kind: key
@@ -46,7 +46,7 @@ connection:
 options:
   type: chat
   temperature: 0.7
-  maxTokens: 1000
+  maxOutputTokens: 1000
 
 "####;
     let result = Model::from_yaml(yaml);
@@ -62,7 +62,7 @@ fn test_model_roundtrip() {
     let json = r####"
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -72,7 +72,7 @@ fn test_model_roundtrip() {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 "####;

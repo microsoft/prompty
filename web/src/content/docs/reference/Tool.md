@@ -52,6 +52,12 @@ classDiagram
         +string specification
     }
     Tool <|-- OpenApiTool
+    class PromptyTool {
+        +string kind
+        +string path
+        +string mode
+    }
+    Tool <|-- PromptyTool
     class Binding {
         +string name
         +string input
@@ -86,6 +92,7 @@ The following types extend `Tool`:
 - [CustomTool](../customtool/)
 - [McpTool](../mcptool/)
 - [OpenApiTool](../openapitool/)
+- [PromptyTool](../promptytool/)
 
 ## Composed Types
 

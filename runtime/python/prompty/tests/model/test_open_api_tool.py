@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import OpenApiTool
+from prompty.model import OpenApiTool
 
 
 def test_load_json_openapitool():
@@ -12,14 +12,14 @@ def test_load_json_openapitool():
       "connection": {
         "kind": "reference"
       },
-      "specification": "full_sepcification_here"
+      "specification": "./openapi.json"
     }
     """
     data = json.loads(json_data, strict=False)
     instance = OpenApiTool.load(data)
     assert instance is not None
     assert instance.kind == "openapi"
-    assert instance.specification == "full_sepcification_here"
+    assert instance.specification == "./openapi.json"
 
 
 def test_load_yaml_openapitool():
@@ -27,14 +27,14 @@ def test_load_yaml_openapitool():
     kind: openapi
     connection:
       kind: reference
-    specification: full_sepcification_here
+    specification: ./openapi.json
     
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = OpenApiTool.load(data)
     assert instance is not None
     assert instance.kind == "openapi"
-    assert instance.specification == "full_sepcification_here"
+    assert instance.specification == "./openapi.json"
 
 
 def test_roundtrip_json_openapitool():
@@ -45,7 +45,7 @@ def test_roundtrip_json_openapitool():
       "connection": {
         "kind": "reference"
       },
-      "specification": "full_sepcification_here"
+      "specification": "./openapi.json"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -54,7 +54,7 @@ def test_roundtrip_json_openapitool():
     reloaded = OpenApiTool.load(saved_data)
     assert reloaded is not None
     assert reloaded.kind == "openapi"
-    assert reloaded.specification == "full_sepcification_here"
+    assert reloaded.specification == "./openapi.json"
 
 
 def test_to_json_openapitool():
@@ -65,7 +65,7 @@ def test_to_json_openapitool():
       "connection": {
         "kind": "reference"
       },
-      "specification": "full_sepcification_here"
+      "specification": "./openapi.json"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -84,7 +84,7 @@ def test_to_yaml_openapitool():
       "connection": {
         "kind": "reference"
       },
-      "specification": "full_sepcification_here"
+      "specification": "./openapi.json"
     }
     """
     data = json.loads(json_data, strict=False)

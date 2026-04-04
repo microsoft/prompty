@@ -19,7 +19,7 @@ func TestOpenApiToolLoadJSON(t *testing.T) {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 `
 	var data map[string]interface{}
@@ -35,8 +35,8 @@ func TestOpenApiToolLoadJSON(t *testing.T) {
 	if instance.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
 	}
-	if instance.Specification != "full_sepcification_here" {
-		t.Errorf(`Expected Specification to be "full_sepcification_here", got %v`, instance.Specification)
+	if instance.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, instance.Specification)
 	}
 }
 
@@ -46,7 +46,7 @@ func TestOpenApiToolLoadYAML(t *testing.T) {
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 
 `
 	var data map[string]interface{}
@@ -62,8 +62,8 @@ specification: full_sepcification_here
 	if instance.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
 	}
-	if instance.Specification != "full_sepcification_here" {
-		t.Errorf(`Expected Specification to be "full_sepcification_here", got %v`, instance.Specification)
+	if instance.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, instance.Specification)
 	}
 }
 
@@ -75,7 +75,7 @@ func TestOpenApiToolRoundtrip(t *testing.T) {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 `
 	var data map[string]interface{}
@@ -98,8 +98,8 @@ func TestOpenApiToolRoundtrip(t *testing.T) {
 	if reloaded.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, reloaded.Kind)
 	}
-	if reloaded.Specification != "full_sepcification_here" {
-		t.Errorf(`Expected Specification to be "full_sepcification_here", got %v`, reloaded.Specification)
+	if reloaded.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, reloaded.Specification)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestOpenApiToolToJSON(t *testing.T) {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 `
 	var data map[string]interface{}
@@ -143,7 +143,7 @@ func TestOpenApiToolToYAML(t *testing.T) {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 `
 	var data map[string]interface{}

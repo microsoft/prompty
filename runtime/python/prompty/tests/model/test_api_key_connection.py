@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import ApiKeyConnection
+from prompty.model import ApiKeyConnection
 
 
 def test_load_json_apikeyconnection():

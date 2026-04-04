@@ -121,10 +121,12 @@ export const generateTypeScript = async (
 
   // Emit test files for all types
   if (emitTarget["test-dir"]) {
+    const importPath = emitTarget["import-path"] || "../src/index";
     for (const n of nodes) {
       const testContext = buildTestContext(n);
       const testCode = testTemplate.render({
         ...testContext,
+        importPath,
         renderName,
         namespace: tsNamespace,
         toKebabCase,

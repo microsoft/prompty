@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import FoundryConnection
+from prompty.model import FoundryConnection
 
 
 def test_load_json_foundryconnection():

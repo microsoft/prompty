@@ -1,16 +1,16 @@
 ---
-title: "Parser"
-description: "Documentation for the Parser type."
-slug: "reference/parser"
+title: "FormatConfig"
+description: "Documentation for the FormatConfig type."
+slug: "reference/formatconfig"
 ---
 
-Template parser definition
+Template format definition
 
 ## Class Diagram
 
 ```mermaid
 ---
-title: Parser
+title: FormatConfig
 config:
   look: handDrawn
   theme: colorful
@@ -18,9 +18,10 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class Parser {
+    class FormatConfig {
       
         +string kind
+        +boolean strict
         +dictionary options
     }
 ```
@@ -28,7 +29,8 @@ classDiagram
 ## Yaml Example
 
 ```yaml
-kind: prompty
+kind: mustache
+strict: true
 options:
   key: value
 ```
@@ -37,27 +39,28 @@ options:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | Parser used to process the rendered template into API-compatible format |
-| options | dictionary | Options for the parser |
+| kind | string | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2) |
+| strict | boolean | Whether the template can emit structural text for parsing output |
+| options | dictionary | Options for the template engine |
 
 ## Alternate Constructions
 
-The following alternate constructions are available for `Parser`.
+The following alternate constructions are available for `FormatConfig`.
 These allow for simplified creation of instances using a single property.
 
-### string parser
+### string format
 
 Simple construction with just a &quot;kind&quot; string
 
 The following simplified representation can be used:
 
 ```yaml
-parser: "example"
+format: "example"
 ```
 
 This is equivalent to the full representation:
 
 ```yaml
-parser:
+format:
   kind: "example"
 ```

@@ -7,7 +7,7 @@
 
 /// Template format definition
 #[derive(Debug, Clone, Default)]
-pub struct Format {
+pub struct FormatConfig {
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
     pub kind: String,
     /// Whether the template can emit structural text for parsing output
@@ -16,25 +16,25 @@ pub struct Format {
     pub options: serde_json::Value,
 }
 
-impl Format {
-    /// Create a new Format with default values.
+impl FormatConfig {
+    /// Create a new FormatConfig with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Load Format from a JSON string.
+    /// Load FormatConfig from a JSON string.
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
         Ok(Self::load_from_value(&value))
     }
 
-    /// Load Format from a YAML string.
+    /// Load FormatConfig from a YAML string.
     pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
         Ok(Self::load_from_value(&value))
     }
 
-    /// Load Format from a `serde_json::Value`.
+    /// Load FormatConfig from a `serde_json::Value`.
     pub fn load_from_value(value: &serde_json::Value) -> Self {
         if let Some(s) = value.as_str() {
             let value = s.to_string();
@@ -48,7 +48,7 @@ impl Format {
         }
     }
 
-    /// Serialize Format to a `serde_json::Value`.
+    /// Serialize FormatConfig to a `serde_json::Value`.
     pub fn to_value(&self) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         if !self.kind.is_empty() {
@@ -63,12 +63,12 @@ impl Format {
         serde_json::Value::Object(result)
     }
 
-    /// Serialize Format to a JSON string.
+    /// Serialize FormatConfig to a JSON string.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(&self.to_value())
     }
 
-    /// Serialize Format to a YAML string.
+    /// Serialize FormatConfig to a YAML string.
     pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value())
     }

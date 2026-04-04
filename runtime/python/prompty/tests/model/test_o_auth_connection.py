@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import OAuthConnection
+from prompty.model import OAuthConnection
 
 
 def test_load_json_oauthconnection():

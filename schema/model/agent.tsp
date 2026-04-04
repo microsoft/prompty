@@ -94,7 +94,7 @@ model Prompty {
       connection: #{
         kind: "key",
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
-        key: "{your-api-key}",
+        apiKey: "{your-api-key}",
       },
     },
   })

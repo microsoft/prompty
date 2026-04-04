@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import Binding
+from prompty.model import Binding
 
 
 def test_load_json_binding():

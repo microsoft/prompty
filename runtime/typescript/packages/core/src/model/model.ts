@@ -23,7 +23,7 @@ export class Model {
   id: string = "";
 
   /**
-   * The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+   * The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
    */
   provider?: string | undefined;
 

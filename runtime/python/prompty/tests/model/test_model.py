@@ -2,14 +2,14 @@ import json
 
 import yaml
 
-from prompty import Model
+from prompty.model import Model
 
 
 def test_load_json_model():
     json_data = r"""
     {
       "id": "gpt-35-turbo",
-      "provider": "azure",
+      "provider": "foundry",
       "apiType": "chat",
       "connection": {
         "kind": "key",
@@ -19,7 +19,7 @@ def test_load_json_model():
       "options": {
         "type": "chat",
         "temperature": 0.7,
-        "maxTokens": 1000
+        "maxOutputTokens": 1000
       }
     }
     """
@@ -27,14 +27,14 @@ def test_load_json_model():
     instance = Model.load(data)
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
-    assert instance.provider == "azure"
+    assert instance.provider == "foundry"
     assert instance.apiType == "chat"
 
 
 def test_load_yaml_model():
     yaml_data = r"""
     id: gpt-35-turbo
-    provider: azure
+    provider: foundry
     apiType: chat
     connection:
       kind: key
@@ -43,14 +43,14 @@ def test_load_yaml_model():
     options:
       type: chat
       temperature: 0.7
-      maxTokens: 1000
+      maxOutputTokens: 1000
     
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Model.load(data)
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
-    assert instance.provider == "azure"
+    assert instance.provider == "foundry"
     assert instance.apiType == "chat"
 
 
@@ -59,7 +59,7 @@ def test_roundtrip_json_model():
     json_data = r"""
     {
       "id": "gpt-35-turbo",
-      "provider": "azure",
+      "provider": "foundry",
       "apiType": "chat",
       "connection": {
         "kind": "key",
@@ -69,7 +69,7 @@ def test_roundtrip_json_model():
       "options": {
         "type": "chat",
         "temperature": 0.7,
-        "maxTokens": 1000
+        "maxOutputTokens": 1000
       }
     }
     """
@@ -79,7 +79,7 @@ def test_roundtrip_json_model():
     reloaded = Model.load(saved_data)
     assert reloaded is not None
     assert reloaded.id == "gpt-35-turbo"
-    assert reloaded.provider == "azure"
+    assert reloaded.provider == "foundry"
     assert reloaded.apiType == "chat"
 
 
@@ -88,7 +88,7 @@ def test_to_json_model():
     json_data = r"""
     {
       "id": "gpt-35-turbo",
-      "provider": "azure",
+      "provider": "foundry",
       "apiType": "chat",
       "connection": {
         "kind": "key",
@@ -98,7 +98,7 @@ def test_to_json_model():
       "options": {
         "type": "chat",
         "temperature": 0.7,
-        "maxTokens": 1000
+        "maxOutputTokens": 1000
       }
     }
     """
@@ -115,7 +115,7 @@ def test_to_yaml_model():
     json_data = r"""
     {
       "id": "gpt-35-turbo",
-      "provider": "azure",
+      "provider": "foundry",
       "apiType": "chat",
       "connection": {
         "kind": "key",
@@ -125,7 +125,7 @@ def test_to_yaml_model():
       "options": {
         "type": "chat",
         "temperature": 0.7,
-        "maxTokens": 1000
+        "maxOutputTokens": 1000
       }
     }
     """

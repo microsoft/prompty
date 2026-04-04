@@ -12,14 +12,14 @@ fn test_open_api_tool_load_json() {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 "####;
     let result = OpenApiTool::from_json(json);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.kind, "openapi");
-    assert_eq!(instance.specification, "full_sepcification_here");
+    assert_eq!(instance.specification, "./openapi.json");
 }
 
 #[test]
@@ -28,14 +28,14 @@ fn test_open_api_tool_load_yaml() {
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 
 "####;
     let result = OpenApiTool::from_yaml(yaml);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.kind, "openapi");
-    assert_eq!(instance.specification, "full_sepcification_here");
+    assert_eq!(instance.specification, "./openapi.json");
 }
 
 #[test]
@@ -46,7 +46,7 @@ fn test_open_api_tool_roundtrip() {
   "connection": {
     "kind": "reference"
   },
-  "specification": "full_sepcification_here"
+  "specification": "./openapi.json"
 }
 "####;
     let result = OpenApiTool::from_json(json);

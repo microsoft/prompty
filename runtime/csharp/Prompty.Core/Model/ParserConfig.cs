@@ -9,7 +9,7 @@ namespace Prompty;
 /// <summary>
 /// Template parser definition
 /// </summary>
-public class Parser
+public class ParserConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -17,10 +17,10 @@ public class Parser
     public static string? ShorthandProperty => "kind";
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Parser"/>.
+    /// Initializes a new instance of <see cref="ParserConfig"/>.
     /// </summary>
 #pragma warning disable CS8618
-    public Parser()
+    public ParserConfig()
     {
     }
 #pragma warning restore CS8618
@@ -39,12 +39,12 @@ public class Parser
     #region Load Methods
 
     /// <summary>
-    /// Load a Parser instance from a dictionary.
+    /// Load a ParserConfig instance from a dictionary.
     /// </summary>
     /// <param name="data">The dictionary containing the data.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Parser instance.</returns>
-    public static Parser Load(Dictionary<string, object?> data, LoadContext? context = null)
+    /// <returns>The loaded ParserConfig instance.</returns>
+    public static ParserConfig Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
         if (context is not null)
         {
@@ -55,7 +55,7 @@ public class Parser
 
 
         // Create new instance
-        var instance = new Parser();
+        var instance = new ParserConfig();
 
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
@@ -82,7 +82,7 @@ public class Parser
     #region Save Methods
 
     /// <summary>
-    /// Save the Parser instance to a dictionary.
+    /// Save the ParserConfig instance to a dictionary.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
@@ -119,7 +119,7 @@ public class Parser
 
 
     /// <summary>
-    /// Convert the Parser instance to a YAML string.
+    /// Convert the ParserConfig instance to a YAML string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The YAML string representation of this instance.</returns>
@@ -130,7 +130,7 @@ public class Parser
     }
 
     /// <summary>
-    /// Convert the Parser instance to a JSON string.
+    /// Convert the ParserConfig instance to a JSON string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <param name="indent">Whether to indent the output. Defaults to true.</param>
@@ -142,12 +142,12 @@ public class Parser
     }
 
     /// <summary>
-    /// Load a Parser instance from a JSON string.
+    /// Load a ParserConfig instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Parser instance.</returns>
-    public static Parser FromJson(string json, LoadContext? context = null)
+    /// <returns>The loaded ParserConfig instance.</returns>
+    public static ParserConfig FromJson(string json, LoadContext? context = null)
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
@@ -177,12 +177,12 @@ public class Parser
     }
 
     /// <summary>
-    /// Load a Parser instance from a YAML string.
+    /// Load a ParserConfig instance from a YAML string.
     /// </summary>
     /// <param name="yaml">The YAML string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Parser instance.</returns>
-    public static Parser FromYaml(string yaml, LoadContext? context = null)
+    /// <returns>The loaded ParserConfig instance.</returns>
+    public static ParserConfig FromYaml(string yaml, LoadContext? context = null)
     {
         // Handle alternate representations - try object first, fall back to scalar
         Dictionary<string, object?>? dictResult = null;

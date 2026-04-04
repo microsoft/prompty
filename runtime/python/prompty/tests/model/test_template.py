@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import Template
+from prompty.model import Template
 
 
 def test_load_json_template():

@@ -25,11 +25,11 @@ pub use tool::*;
 pub mod mcp_approval_mode;
 pub use mcp_approval_mode::*;
 
-pub mod format;
-pub use format::*;
+pub mod format_config;
+pub use format_config::*;
 
-pub mod parser;
-pub use parser::*;
+pub mod parser_config;
+pub use parser_config::*;
 
 pub mod template;
 pub use template::*;

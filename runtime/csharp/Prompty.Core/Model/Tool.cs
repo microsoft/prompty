@@ -150,6 +150,7 @@ public abstract class Tool
                 "function" => FunctionTool.Load(data, context),
                 "mcp" => McpTool.Load(data, context),
                 "openapi" => OpenApiTool.Load(data, context),
+                "prompty" => PromptyTool.Load(data, context),
                 _ => CustomTool.Load(data, context),
             };
         }

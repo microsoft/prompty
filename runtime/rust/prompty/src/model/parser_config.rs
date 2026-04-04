@@ -7,32 +7,32 @@
 
 /// Template parser definition
 #[derive(Debug, Clone, Default)]
-pub struct Parser {
+pub struct ParserConfig {
     /// Parser used to process the rendered template into API-compatible format
     pub kind: String,
     /// Options for the parser
     pub options: serde_json::Value,
 }
 
-impl Parser {
-    /// Create a new Parser with default values.
+impl ParserConfig {
+    /// Create a new ParserConfig with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Load Parser from a JSON string.
+    /// Load ParserConfig from a JSON string.
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
         Ok(Self::load_from_value(&value))
     }
 
-    /// Load Parser from a YAML string.
+    /// Load ParserConfig from a YAML string.
     pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
         Ok(Self::load_from_value(&value))
     }
 
-    /// Load Parser from a `serde_json::Value`.
+    /// Load ParserConfig from a `serde_json::Value`.
     pub fn load_from_value(value: &serde_json::Value) -> Self {
         if let Some(s) = value.as_str() {
             let value = s.to_string();
@@ -45,7 +45,7 @@ impl Parser {
         }
     }
 
-    /// Serialize Parser to a `serde_json::Value`.
+    /// Serialize ParserConfig to a `serde_json::Value`.
     pub fn to_value(&self) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         if !self.kind.is_empty() {
@@ -57,12 +57,12 @@ impl Parser {
         serde_json::Value::Object(result)
     }
 
-    /// Serialize Parser to a JSON string.
+    /// Serialize ParserConfig to a JSON string.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(&self.to_value())
     }
 
-    /// Serialize Parser to a YAML string.
+    /// Serialize ParserConfig to a YAML string.
     pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value())
     }

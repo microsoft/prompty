@@ -104,8 +104,8 @@ export {
   Model,
   ModelOptions,
   Template,
-  Format,
-  Parser as SchemaParser,
+  FormatConfig,
+  ParserConfig,
   Property,
   ArrayProperty,
   ObjectProperty,
@@ -123,6 +123,7 @@ export {
   CustomTool,
   McpTool,
   OpenApiTool,
+  PromptyTool,
   McpApprovalMode,
   Binding,
 } from "./model/index.js";

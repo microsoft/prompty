@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import Prompty
+from prompty.model import Prompty
 
 
 def test_load_json_prompty():
@@ -46,7 +46,7 @@ def test_load_json_prompty():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -126,7 +126,7 @@ def test_load_yaml_prompty():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       - name: getCurrentWeather
         kind: function
@@ -227,7 +227,7 @@ def test_roundtrip_json_prompty():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -320,7 +320,7 @@ def test_to_json_prompty():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -397,7 +397,7 @@ def test_to_yaml_prompty():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -473,7 +473,7 @@ def test_load_json_prompty_1():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -552,7 +552,7 @@ def test_load_yaml_prompty_1():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       getCurrentWeather:
         kind: function
@@ -653,7 +653,7 @@ def test_roundtrip_json_prompty_1():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -745,7 +745,7 @@ def test_to_json_prompty_1():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -821,7 +821,7 @@ def test_to_yaml_prompty_1():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -897,7 +897,7 @@ def test_load_json_prompty_2():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -977,7 +977,7 @@ def test_load_yaml_prompty_2():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       - name: getCurrentWeather
         kind: function
@@ -1079,7 +1079,7 @@ def test_roundtrip_json_prompty_2():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -1173,7 +1173,7 @@ def test_to_json_prompty_2():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -1251,7 +1251,7 @@ def test_to_yaml_prompty_2():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -1328,7 +1328,7 @@ def test_load_json_prompty_3():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -1407,7 +1407,7 @@ def test_load_yaml_prompty_3():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       getCurrentWeather:
         kind: function
@@ -1509,7 +1509,7 @@ def test_roundtrip_json_prompty_3():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -1602,7 +1602,7 @@ def test_to_json_prompty_3():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -1679,7 +1679,7 @@ def test_to_yaml_prompty_3():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -1757,7 +1757,7 @@ def test_load_json_prompty_4():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -1837,7 +1837,7 @@ def test_load_yaml_prompty_4():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       - name: getCurrentWeather
         kind: function
@@ -1941,7 +1941,7 @@ def test_roundtrip_json_prompty_4():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2037,7 +2037,7 @@ def test_to_json_prompty_4():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2117,7 +2117,7 @@ def test_to_yaml_prompty_4():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2196,7 +2196,7 @@ def test_load_json_prompty_5():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -2275,7 +2275,7 @@ def test_load_yaml_prompty_5():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       getCurrentWeather:
         kind: function
@@ -2379,7 +2379,7 @@ def test_roundtrip_json_prompty_5():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -2474,7 +2474,7 @@ def test_to_json_prompty_5():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -2553,7 +2553,7 @@ def test_to_yaml_prompty_5():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -2632,7 +2632,7 @@ def test_load_json_prompty_6():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2712,7 +2712,7 @@ def test_load_yaml_prompty_6():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       - name: getCurrentWeather
         kind: function
@@ -2817,7 +2817,7 @@ def test_roundtrip_json_prompty_6():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2914,7 +2914,7 @@ def test_to_json_prompty_6():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -2995,7 +2995,7 @@ def test_to_yaml_prompty_6():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": [
@@ -3075,7 +3075,7 @@ def test_load_json_prompty_7():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -3154,7 +3154,7 @@ def test_load_yaml_prompty_7():
       connection:
         kind: key
         endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
+        apiKey: "{your-api-key}"
     tools:
       getCurrentWeather:
         kind: function
@@ -3259,7 +3259,7 @@ def test_roundtrip_json_prompty_7():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -3355,7 +3355,7 @@ def test_to_json_prompty_7():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {
@@ -3435,7 +3435,7 @@ def test_to_yaml_prompty_7():
         "connection": {
           "kind": "key",
           "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
+          "apiKey": "{your-api-key}"
         }
       },
       "tools": {

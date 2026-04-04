@@ -32,6 +32,8 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 				return LoadMcpTool(data, ctx)
 			case "openapi":
 				return LoadOpenApiTool(data, ctx)
+			case "prompty":
+				return LoadPromptyTool(data, ctx)
 			default:
 				return LoadCustomTool(data, ctx)
 			}
@@ -543,4 +545,87 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 	}
 	ctx := NewLoadContext()
 	return LoadOpenApiTool(data, ctx)
+}
+
+// PromptyTool represents A tool that references another .prompty file to be invoked as a tool.
+//
+// In `single` mode, the child prompty is executed with a single LLM call.
+// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+
+type PromptyTool struct {
+	Kind string `json:"kind" yaml:"kind"`
+	Path string `json:"path" yaml:"path"`
+	Mode string `json:"mode" yaml:"mode"`
+}
+
+// LoadPromptyTool creates a PromptyTool from a map[string]interface{}
+func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
+	result := PromptyTool{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = val.(string)
+		}
+		if val, ok := m["path"]; ok && val != nil {
+			result.Path = val.(string)
+		}
+		if val, ok := m["mode"]; ok && val != nil {
+			result.Mode = val.(string)
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes PromptyTool to map[string]interface{}
+func (obj *PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	result["path"] = obj.Path
+	result["mode"] = obj.Mode
+
+	return result
+}
+
+// ToJSON serializes PromptyTool to JSON string
+func (obj *PromptyTool) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes PromptyTool to YAML string
+func (obj *PromptyTool) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := yaml.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// FromJSON creates PromptyTool from JSON string
+func PromptyToolFromJSON(jsonStr string) (PromptyTool, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return PromptyTool{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadPromptyTool(data, ctx)
+}
+
+// FromYAML creates PromptyTool from YAML string
+func PromptyToolFromYAML(yamlStr string) (PromptyTool, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return PromptyTool{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadPromptyTool(data, ctx)
 }

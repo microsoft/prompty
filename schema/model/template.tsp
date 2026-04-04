@@ -17,11 +17,11 @@ namespace Prompty;
 model Template {
   @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
   @sample(#{ format: #{ kind: "mustache" } })
-  format: Format | string;
+  format: FormatConfig | string;
 
   @doc("Parser used to process the rendered template into API-compatible format")
   @sample(#{ parser: #{ kind: "mustache" } })
-  parser: Parser | string;
+  parser: ParserConfig | string;
 }
 
 /**
@@ -34,7 +34,7 @@ model Template {
   "format",
   "Simple construction with just a \"kind\" string"
 )
-model Format {
+model FormatConfig {
   @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
   @sample(#{ kind: "mustache" })
   kind: string = "*";
@@ -58,7 +58,7 @@ model Format {
   "parser",
   "Simple construction with just a \"kind\" string"
 )
-model Parser {
+model ParserConfig {
   @doc("Parser used to process the rendered template into API-compatible format")
   @sample(#{ kind: "prompty" })
   kind: string = "*";

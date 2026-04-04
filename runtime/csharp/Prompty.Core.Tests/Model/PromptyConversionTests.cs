@@ -41,7 +41,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -141,7 +141,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -231,7 +231,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -317,7 +317,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -422,7 +422,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -491,7 +491,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -570,7 +570,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -670,7 +670,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -759,7 +759,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -844,7 +844,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -949,7 +949,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1017,7 +1017,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -1096,7 +1096,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -1197,7 +1197,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1288,7 +1288,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1374,7 +1374,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -1480,7 +1480,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1549,7 +1549,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -1628,7 +1628,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -1729,7 +1729,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1819,7 +1819,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1904,7 +1904,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -2010,7 +2010,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2078,7 +2078,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -2157,7 +2157,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -2260,7 +2260,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2353,7 +2353,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2439,7 +2439,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -2547,7 +2547,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2616,7 +2616,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -2695,7 +2695,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -2798,7 +2798,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2890,7 +2890,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2975,7 +2975,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -3083,7 +3083,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -3151,7 +3151,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -3230,7 +3230,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -3334,7 +3334,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3428,7 +3428,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3514,7 +3514,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -3623,7 +3623,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3692,7 +3692,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -3771,7 +3771,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -3875,7 +3875,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -3968,7 +3968,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -4053,7 +4053,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -4162,7 +4162,7 @@ user:
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -4230,7 +4230,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function

@@ -23,6 +23,9 @@ alias Bindings = Record<Binding> | Named<
 
 union ToolTypes {
   functionType: "function",
+  mcpType: "mcp",
+  openapiType: "openapi",
+  promptyType: "prompty",
   string,
 }
 

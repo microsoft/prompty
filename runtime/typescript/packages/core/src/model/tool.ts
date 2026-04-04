@@ -148,6 +148,8 @@ export abstract class Tool {
           return McpTool.load(data, context);
         case "openapi":
           return OpenApiTool.load(data, context);
+        case "prompty":
+          return PromptyTool.load(data, context);
         default:
           return CustomTool.load(data, context);
       }
@@ -1023,6 +1025,163 @@ export class OpenApiTool extends Tool {
     const data = parse(yaml);
 
     return OpenApiTool.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+/**
+ * A tool that references another .prompty file to be invoked as a tool.
+ *
+ * In `single` mode, the child prompty is executed with a single LLM call.
+ * In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+ *
+ */
+export class PromptyTool extends Tool {
+  /**
+   * The shorthand property name for this type, if any.
+   */
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  /**
+   * The kind identifier for prompty tools
+   */
+  kind: string = "prompty";
+
+  /**
+   * Path to the child .prompty file, relative to the parent
+   */
+  path: string = "";
+
+  /**
+   * Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+   */
+  mode: string = "single";
+
+  /**
+   * Initializes a new instance of PromptyTool.
+   */
+  constructor(init?: Partial<PromptyTool>) {
+    super(init);
+
+    this.kind = init?.kind ?? "prompty";
+
+    this.path = init?.path ?? "";
+
+    this.mode = init?.mode ?? "single";
+  }
+
+  //#region Load Methods
+
+  /**
+   * Load a PromptyTool instance from a dictionary.
+   * @param data - The dictionary containing the data.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @returns The loaded PromptyTool instance.
+   */
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): PromptyTool {
+    if (context) {
+      data = context.processInput(data);
+    }
+
+    // Create new instance
+    const instance = new PromptyTool();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (data["path"] !== undefined && data["path"] !== null) {
+      instance.path = String(data["path"]);
+    }
+
+    if (data["mode"] !== undefined && data["mode"] !== null) {
+      instance.mode = String(data["mode"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as PromptyTool;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  /**
+   * Save the PromptyTool instance to a dictionary.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @returns The dictionary representation of this instance.
+   */
+  save(context?: SaveContext): Record<string, unknown> {
+    const obj = context ? (context.processObject(this) as PromptyTool) : this;
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+
+    if (obj.path !== undefined && obj.path !== null) {
+      result["path"] = obj.path;
+    }
+
+    if (obj.mode !== undefined && obj.mode !== null) {
+      result["mode"] = obj.mode;
+    }
+
+    return result;
+  }
+
+  /**
+   * Convert the PromptyTool instance to a YAML string.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @returns The YAML string representation of this instance.
+   */
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  /**
+   * Convert the PromptyTool instance to a JSON string.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @param indent - Number of spaces for indentation. Defaults to 2.
+   * @returns The JSON string representation of this instance.
+   */
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  /**
+   * Load a PromptyTool instance from a JSON string.
+   * @param json - The JSON string to parse.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @returns The loaded PromptyTool instance.
+   */
+  static fromJson(json: string, context?: LoadContext): PromptyTool {
+    const data = JSON.parse(json);
+
+    return PromptyTool.load(data as Record<string, unknown>, context);
+  }
+
+  /**
+   * Load a PromptyTool instance from a YAML string.
+   * @param yaml - The YAML string to parse.
+   * @param context - Optional context with pre/post processing callbacks.
+   * @returns The loaded PromptyTool instance.
+   */
+  static fromYaml(yaml: string, context?: LoadContext): PromptyTool {
+    const { parse } = require("yaml");
+    const data = parse(yaml);
+
+    return PromptyTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

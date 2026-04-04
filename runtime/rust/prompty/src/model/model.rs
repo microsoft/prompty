@@ -12,7 +12,7 @@ use crate::model_options::ModelOptions;
 pub struct Model {
     /// The unique identifier of the model - can be used as the single property shorthand
     pub id: String,
-    /// The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+    /// The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
     pub provider: Option<String>,
     /// The type of API to use for the model (e.g., 'chat', 'response', etc.)
     pub api_type: Option<String>,

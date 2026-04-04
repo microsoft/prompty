@@ -7,7 +7,7 @@ import { LoadContext, SaveContext } from "./context";
  * Template format definition
  *
  */
-export class Format {
+export class FormatConfig {
   /**
    * The shorthand property name for this type, if any.
    */
@@ -29,9 +29,9 @@ export class Format {
   options?: Record<string, unknown> | undefined = {};
 
   /**
-   * Initializes a new instance of Format.
+   * Initializes a new instance of FormatConfig.
    */
-  constructor(init?: Partial<Format>) {
+  constructor(init?: Partial<FormatConfig>) {
     this.kind = init?.kind ?? "*";
 
     if (init?.strict !== undefined) {
@@ -46,12 +46,15 @@ export class Format {
   //#region Load Methods
 
   /**
-   * Load a Format instance from a dictionary.
+   * Load a FormatConfig instance from a dictionary.
    * @param data - The dictionary containing the data.
    * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Format instance.
+   * @returns The loaded FormatConfig instance.
    */
-  static load(data: Record<string, unknown>, context?: LoadContext): Format {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FormatConfig {
     if (context) {
       data = context.processInput(data);
     }
@@ -64,7 +67,7 @@ export class Format {
     }
 
     // Create new instance
-    const instance = new Format();
+    const instance = new FormatConfig();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
@@ -79,7 +82,7 @@ export class Format {
     }
 
     if (context) {
-      return context.processOutput(instance) as Format;
+      return context.processOutput(instance) as FormatConfig;
     }
     return instance;
   }
@@ -89,12 +92,12 @@ export class Format {
   //#region Save Methods
 
   /**
-   * Save the Format instance to a dictionary.
+   * Save the FormatConfig instance to a dictionary.
    * @param context - Optional context with pre/post processing callbacks.
    * @returns The dictionary representation of this instance.
    */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Format) : this;
+    const obj = context ? (context.processObject(this) as FormatConfig) : this;
 
     const result: Record<string, unknown> = {};
 
@@ -118,7 +121,7 @@ export class Format {
   }
 
   /**
-   * Convert the Format instance to a YAML string.
+   * Convert the FormatConfig instance to a YAML string.
    * @param context - Optional context with pre/post processing callbacks.
    * @returns The YAML string representation of this instance.
    */
@@ -128,7 +131,7 @@ export class Format {
   }
 
   /**
-   * Convert the Format instance to a JSON string.
+   * Convert the FormatConfig instance to a JSON string.
    * @param context - Optional context with pre/post processing callbacks.
    * @param indent - Number of spaces for indentation. Defaults to 2.
    * @returns The JSON string representation of this instance.
@@ -139,18 +142,18 @@ export class Format {
   }
 
   /**
-   * Load a Format instance from a JSON string.
+   * Load a FormatConfig instance from a JSON string.
    * @param json - The JSON string to parse.
    * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Format instance.
+   * @returns The loaded FormatConfig instance.
    */
-  static fromJson(json: string, context?: LoadContext): Format {
+  static fromJson(json: string, context?: LoadContext): FormatConfig {
     const data = JSON.parse(json);
 
     // Handle alternate representations
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       if (typeof data === "string") {
-        return Format.load({ kind: data }, context);
+        return FormatConfig.load({ kind: data }, context);
       } else if (typeof data === "number") {
         // Check if it's an integer or float
         if (Number.isInteger(data)) {
@@ -159,26 +162,26 @@ export class Format {
       } else if (typeof data === "boolean") {
       }
       // Fallback - shouldn't reach here
-      return Format.load({ kind: data }, context);
+      return FormatConfig.load({ kind: data }, context);
     }
 
-    return Format.load(data as Record<string, unknown>, context);
+    return FormatConfig.load(data as Record<string, unknown>, context);
   }
 
   /**
-   * Load a Format instance from a YAML string.
+   * Load a FormatConfig instance from a YAML string.
    * @param yaml - The YAML string to parse.
    * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Format instance.
+   * @returns The loaded FormatConfig instance.
    */
-  static fromYaml(yaml: string, context?: LoadContext): Format {
+  static fromYaml(yaml: string, context?: LoadContext): FormatConfig {
     const { parse } = require("yaml");
     const data = parse(yaml);
 
     // Handle alternate representations
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       if (typeof data === "string") {
-        return Format.load({ kind: data }, context);
+        return FormatConfig.load({ kind: data }, context);
       } else if (typeof data === "number") {
         // Check if it's an integer or float
         if (Number.isInteger(data)) {
@@ -187,10 +190,10 @@ export class Format {
       } else if (typeof data === "boolean") {
       }
       // Fallback - shouldn't reach here
-      return Format.load({ kind: data }, context);
+      return FormatConfig.load({ kind: data }, context);
     }
 
-    return Format.load(data as Record<string, unknown>, context);
+    return FormatConfig.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

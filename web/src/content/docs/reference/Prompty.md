@@ -62,8 +62,8 @@ classDiagram
     }
     Prompty *-- Tool
     class Template {
-        +Format format
-        +Parser parser
+        +FormatConfig format
+        +ParserConfig parser
     }
     Prompty *-- Template
 ```
@@ -101,7 +101,7 @@ model:
   connection:
     kind: key
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -162,7 +162,7 @@ model:
   connection:
     kind: key
     endpoint: https://{your-custom-endpoint}.openai.azure.com/
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -202,7 +202,7 @@ instructions: |-
 | inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/)) |
 | outputs | [Property[]](../property/) | Expected output format and structure |
 | model | [Model](../model/) | AI model configuration |
-| tools | [Tool[]](../tool/) | Tools available for extended functionality(Related Types: [FunctionTool](../functiontool/), [CustomTool](../customtool/), [McpTool](../mcptool/), [OpenApiTool](../openapitool/)) |
+| tools | [Tool[]](../tool/) | Tools available for extended functionality(Related Types: [FunctionTool](../functiontool/), [CustomTool](../customtool/), [McpTool](../mcptool/), [OpenApiTool](../openapitool/), [PromptyTool](../promptytool/)) |
 | template | [Template](../template/) | Template configuration for prompt rendering |
 | instructions | string | Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body. |
 

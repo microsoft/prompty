@@ -3,7 +3,7 @@ import "./connection.tsp";
 
 namespace Prompty;
 
-alias apiType = "chat" | "responses" | string;
+alias apiType = "chat" | "embedding" | "image" | "responses" | string;
 /**
  * Options for configuring the behavior of the AI model.
  */
@@ -70,8 +70,8 @@ model Model {
   @sample(#{ id: "gpt-35-turbo" })
   id: string = "";
 
-  @doc("The provider of the model (e.g., 'openai', 'azure', 'anthropic')")
-  @sample(#{ provider: "azure" })
+  @doc("The provider of the model (e.g., 'openai', 'foundry', 'anthropic')")
+  @sample(#{ provider: "foundry" })
   provider?: string;
 
   @doc("The type of API to use for the model (e.g., 'chat', 'response', etc.)")
@@ -89,6 +89,6 @@ model Model {
   connection?: Connection;
 
   @doc("Additional options for the model")
-  @sample(#{ options: #{ type: "chat", temperature: 0.7, maxTokens: 1000 } })
+  @sample(#{ options: #{ type: "chat", temperature: 0.7, maxOutputTokens: 1000 } })
   options?: ModelOptions;
 }

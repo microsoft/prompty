@@ -27,20 +27,20 @@ config:
 classDiagram
     class Template {
       
-        +Format format
-        +Parser parser
+        +FormatConfig format
+        +ParserConfig parser
     }
-    class Format {
+    class FormatConfig {
         +string kind
         +boolean strict
         +dictionary options
     }
-    Template *-- Format
-    class Parser {
+    Template *-- FormatConfig
+    class ParserConfig {
         +string kind
         +dictionary options
     }
-    Template *-- Parser
+    Template *-- ParserConfig
 ```
 
 ## Yaml Example
@@ -56,12 +56,12 @@ parser:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| format | [Format](../format/) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2) |
-| parser | [Parser](../parser/) | Parser used to process the rendered template into API-compatible format |
+| format | [FormatConfig](../formatconfig/) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2) |
+| parser | [ParserConfig](../parserconfig/) | Parser used to process the rendered template into API-compatible format |
 
 ## Composed Types
 
 The following types are composed within `Template`:
 
-- [Format](../format/)
-- [Parser](../parser/)
+- [FormatConfig](../formatconfig/)
+- [ParserConfig](../parserconfig/)

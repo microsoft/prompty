@@ -59,6 +59,9 @@ export const generatePython = async (
   // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase();
 
+  // Import path for test files — defaults to packageName, can be overridden via import-path config
+  const importPath = emitTarget["import-path"] || packageName;
+
   // Emit py.typed marker for PEP 561 compliance
   await emitPythonFile(context, 'py.typed', '', emitTarget["output-dir"]);
 
@@ -69,7 +72,7 @@ export const generatePython = async (
 
   // Render LoadContext tests
   if (emitTarget["test-dir"]) {
-    const testContextContext = buildLoadContextContext(packageName);
+    const testContextContext = buildLoadContextContext(importPath);
     const testContextContent = engine.render('test_context.py.njk', testContextContext);
     await emitPythonFile(context, 'test_context.py', testContextContent, emitTarget["test-dir"]);
   }
@@ -90,7 +93,7 @@ export const generatePython = async (
 
     // Render test file for each type
     if (emitTarget["test-dir"]) {
-      const testContext = buildTestContext(n, packageName);
+      const testContext = buildTestContext(n, importPath);
       const testContent = engine.render('test.py.njk', testContext);
       await emitPythonFile(context, `test_${toSnakeCase(n.typeName.name)}.py`, testContent, emitTarget["test-dir"]);
     }

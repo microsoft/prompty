@@ -4,12 +4,12 @@ type: object
 properties:
   format:
     anyOf:
-      - $ref: Format.yaml
+      - $ref: FormatConfig.yaml
       - type: string
     description: Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
   parser:
     anyOf:
-      - $ref: Parser.yaml
+      - $ref: ParserConfig.yaml
       - type: string
     description: Parser used to process the rendered template into API-compatible format
 required:

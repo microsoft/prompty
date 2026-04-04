@@ -8,28 +8,33 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Parser represents Template parser definition
+// FormatConfig represents Template format definition
 
-type Parser struct {
+type FormatConfig struct {
 	Kind    string                 `json:"kind" yaml:"kind"`
+	Strict  *bool                  `json:"strict,omitempty" yaml:"strict,omitempty"`
 	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
-// LoadParser creates a Parser from a map[string]interface{}
-func LoadParser(data interface{}, ctx *LoadContext) (Parser, error) {
-	result := Parser{}
+// LoadFormatConfig creates a FormatConfig from a map[string]interface{}
+func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) {
+	result := FormatConfig{}
 
 	// Handle alternate scalar representations
 	switch v := data.(type) {
 	case string:
-		// Shorthand: string -> Parser
+		// Shorthand: string -> FormatConfig
 		expansion := map[string]interface{}{"kind": v}
-		return LoadParser(expansion, ctx)
+		return LoadFormatConfig(expansion, ctx)
 	}
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = val.(string)
+		}
+		if val, ok := m["strict"]; ok && val != nil {
+			v := val.(bool)
+			result.Strict = &v
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -41,10 +46,13 @@ func LoadParser(data interface{}, ctx *LoadContext) (Parser, error) {
 	return result, nil
 }
 
-// Save serializes Parser to map[string]interface{}
-func (obj *Parser) Save(ctx *SaveContext) map[string]interface{} {
+// Save serializes FormatConfig to map[string]interface{}
+func (obj *FormatConfig) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.Strict != nil {
+		result["strict"] = *obj.Strict
+	}
 	if obj.Options != nil {
 		result["options"] = obj.Options
 	}
@@ -52,8 +60,8 @@ func (obj *Parser) Save(ctx *SaveContext) map[string]interface{} {
 	return result
 }
 
-// ToJSON serializes Parser to JSON string
-func (obj *Parser) ToJSON() (string, error) {
+// ToJSON serializes FormatConfig to JSON string
+func (obj *FormatConfig) ToJSON() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
 	bytes, err := json.Marshal(data)
@@ -63,8 +71,8 @@ func (obj *Parser) ToJSON() (string, error) {
 	return string(bytes), nil
 }
 
-// ToYAML serializes Parser to YAML string
-func (obj *Parser) ToYAML() (string, error) {
+// ToYAML serializes FormatConfig to YAML string
+func (obj *FormatConfig) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
 	bytes, err := yaml.Marshal(data)
@@ -74,22 +82,22 @@ func (obj *Parser) ToYAML() (string, error) {
 	return string(bytes), nil
 }
 
-// FromJSON creates Parser from JSON string
-func ParserFromJSON(jsonStr string) (Parser, error) {
+// FromJSON creates FormatConfig from JSON string
+func FormatConfigFromJSON(jsonStr string) (FormatConfig, error) {
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return Parser{}, err
+		return FormatConfig{}, err
 	}
 	ctx := NewLoadContext()
-	return LoadParser(data, ctx)
+	return LoadFormatConfig(data, ctx)
 }
 
-// FromYAML creates Parser from YAML string
-func ParserFromYAML(yamlStr string) (Parser, error) {
+// FromYAML creates FormatConfig from YAML string
+func FormatConfigFromYAML(yamlStr string) (FormatConfig, error) {
 	var data map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return Parser{}, err
+		return FormatConfig{}, err
 	}
 	ctx := NewLoadContext()
-	return LoadParser(data, ctx)
+	return LoadFormatConfig(data, ctx)
 }

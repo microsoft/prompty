@@ -455,7 +455,7 @@ def prepare(
 
     Pipeline:
         1. Validate inputs against ``agent.inputs``
-        2. Discover parser; if ``Format.strict``, call ``pre_render()``
+        2. Discover parser; if ``FormatConfig.strict``, call ``pre_render()``
         3. Discover renderer; call ``render()``
         4. Call ``parser.parse()``
         5. Expand thread markers with structured messages from inputs

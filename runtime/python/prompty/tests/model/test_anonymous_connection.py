@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import AnonymousConnection
+from prompty.model import AnonymousConnection
 
 
 def test_load_json_anonymousconnection():

@@ -17,6 +17,6 @@ model OpenApiTool extends Tool {
   connection: Connection;
 
   @doc("The full OpenAPI specification")
-  @sample(#{ specification: "full_sepcification_here" })
+  @sample(#{ specification: "./openapi.json" })
   specification: string;
 }

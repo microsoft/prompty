@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import ObjectProperty
+from prompty.model import ObjectProperty
 
 
 def test_load_json_objectproperty():

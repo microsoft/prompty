@@ -32,4 +32,8 @@ alias SimpleTypes =
   | "float"
   | "boolean"
   | "array"
-  | "object";
+  | "object"
+  | "thread"
+  | "image"
+  | "audio"
+  | "file";

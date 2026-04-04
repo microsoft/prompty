@@ -6,22 +6,24 @@ namespace Prompty;
 #pragma warning restore IDE0130
 
 
-public class ParserConversionTests
+public class PromptyToolConversionTests
 {   
     [Fact]
     public void LoadYamlInput()
     {
         string yamlData = """
 kind: prompty
-options:
-  key: value
+path: ./summarize.prompty
+mode: single
 
 """;
 
-        var instance = Parser.FromYaml(yamlData);
+        var instance = PromptyTool.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
+        Assert.Equal("./summarize.prompty", instance.Path);
+        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -30,15 +32,16 @@ options:
         string jsonData = """
 {
   "kind": "prompty",
-  "options": {
-    "key": "value"
-  }
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
-        var instance = Parser.FromJson(jsonData);
+        var instance = PromptyTool.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
+        Assert.Equal("./summarize.prompty", instance.Path);
+        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -48,21 +51,22 @@ options:
         string jsonData = """
 {
   "kind": "prompty",
-  "options": {
-    "key": "value"
-  }
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
-        var original = Parser.FromJson(jsonData);
+        var original = PromptyTool.FromJson(jsonData);
         Assert.NotNull(original);
         
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
         
-        var reloaded = Parser.FromJson(json);
+        var reloaded = PromptyTool.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
+        Assert.Equal("./summarize.prompty", reloaded.Path);
+        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -71,20 +75,22 @@ options:
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 kind: prompty
-options:
-  key: value
+path: ./summarize.prompty
+mode: single
 
 """;
 
-        var original = Parser.FromYaml(yamlData);
+        var original = PromptyTool.FromYaml(yamlData);
         Assert.NotNull(original);
         
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
         
-        var reloaded = Parser.FromYaml(yaml);
+        var reloaded = PromptyTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
+        Assert.Equal("./summarize.prompty", reloaded.Path);
+        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -93,13 +99,12 @@ options:
         string jsonData = """
 {
   "kind": "prompty",
-  "options": {
-    "key": "value"
-  }
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
-        var instance = Parser.FromJson(jsonData);
+        var instance = PromptyTool.FromJson(jsonData);
         var json = instance.ToJson();
         
         // Verify it's valid JSON by parsing it
@@ -112,12 +117,12 @@ options:
     {
         string yamlData = """
 kind: prompty
-options:
-  key: value
+path: ./summarize.prompty
+mode: single
 
 """;
 
-        var instance = Parser.FromYaml(yamlData);
+        var instance = PromptyTool.FromYaml(yamlData);
         var yaml = instance.ToYaml();
         
         // Verify it's valid YAML by parsing it
@@ -125,25 +130,4 @@ options:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
-    [Fact]
-    public void LoadJsonFromString()
-    {
-        // alternate representation as string
-        var data = "\"example\"";
-        var instance = Parser.FromJson(data);
-        Assert.NotNull(instance);
-        Assert.Equal("example", instance.Kind);
-    }
-
-
-    [Fact]
-    public void LoadYamlFromString()
-    {
-        // alternate representation as string
-        var data = "\"example\"";
-        var instance = Parser.FromYaml(data);
-        Assert.NotNull(instance);
-        Assert.Equal("example", instance.Kind);
-    }
-    
 }

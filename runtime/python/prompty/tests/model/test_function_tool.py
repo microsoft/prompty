@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import FunctionTool
+from prompty.model import FunctionTool
 
 
 def test_load_json_functiontool():

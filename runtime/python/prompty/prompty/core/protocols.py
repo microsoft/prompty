@@ -54,7 +54,7 @@ class ParserProtocol(Protocol):
     """Parses rendered text into an abstract message array.
 
     Implementations may optionally provide ``pre_render()`` for
-    template sanitization (e.g. nonce injection when ``Format.strict``
+    template sanitization (e.g. nonce injection when ``FormatConfig.strict``
     is enabled).
     """
 

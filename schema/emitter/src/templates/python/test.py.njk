@@ -14,7 +14,7 @@
 import json
 import yaml
 {% endif %}
-from {{ node.typeName.namespace | lower }} import {{node.typeName.name}}
+from {{ package }} import {{node.typeName.name}}
 
 {% for sample in examples %}
 def test_load_json_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.index - 1}}{% endif %}():

@@ -18,8 +18,8 @@ import (
 // and processed to generate prompts for AI models.
 
 type Template struct {
-	Format Format `json:"format" yaml:"format"`
-	Parser Parser `json:"parser" yaml:"parser"`
+	Format FormatConfig `json:"format" yaml:"format"`
+	Parser ParserConfig `json:"parser" yaml:"parser"`
 }
 
 // LoadTemplate creates a Template from a map[string]interface{}
@@ -30,13 +30,13 @@ func LoadTemplate(data interface{}, ctx *LoadContext) (Template, error) {
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["format"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadFormat(m, ctx)
+				loaded, _ := LoadFormatConfig(m, ctx)
 				result.Format = loaded
 			}
 		}
 		if val, ok := m["parser"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadParser(m, ctx)
+				loaded, _ := LoadParserConfig(m, ctx)
 				result.Parser = loaded
 			}
 		}

@@ -11,12 +11,11 @@ import (
 	"github.com/microsoft/agentschema-go/prompty"
 )
 
-// TestFormatLoadJSON tests loading Format from JSON
-func TestFormatLoadJSON(t *testing.T) {
+// TestParserConfigLoadJSON tests loading ParserConfig from JSON
+func TestParserConfigLoadJSON(t *testing.T) {
 	jsonData := `
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
@@ -28,20 +27,19 @@ func TestFormatLoadJSON(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat(data, ctx)
+	instance, err := prompty.LoadParserConfig(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Format: %v", err)
+		t.Fatalf("Failed to load ParserConfig: %v", err)
 	}
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
-// TestFormatLoadYAML tests loading Format from YAML
-func TestFormatLoadYAML(t *testing.T) {
+// TestParserConfigLoadYAML tests loading ParserConfig from YAML
+func TestParserConfigLoadYAML(t *testing.T) {
 	yamlData := `
-kind: mustache
-strict: true
+kind: prompty
 options:
   key: value
 
@@ -52,21 +50,20 @@ options:
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat(data, ctx)
+	instance, err := prompty.LoadParserConfig(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Format: %v", err)
+		t.Fatalf("Failed to load ParserConfig: %v", err)
 	}
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
-// TestFormatRoundtrip tests load -> save -> load produces equivalent data
-func TestFormatRoundtrip(t *testing.T) {
+// TestParserConfigRoundtrip tests load -> save -> load produces equivalent data
+func TestParserConfigRoundtrip(t *testing.T) {
 	jsonData := `
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
@@ -78,21 +75,20 @@ func TestFormatRoundtrip(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat(data, loadCtx)
+	instance, err := prompty.LoadParserConfig(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Format: %v", err)
+		t.Fatalf("Failed to load ParserConfig: %v", err)
 	}
 	// Polymorphic roundtrip testing requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Roundtrip test skipped for polymorphic base types - test child types directly
 }
 
-// TestFormatToJSON tests that ToJSON produces valid JSON
-func TestFormatToJSON(t *testing.T) {
+// TestParserConfigToJSON tests that ToJSON produces valid JSON
+func TestParserConfigToJSON(t *testing.T) {
 	jsonData := `
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
@@ -104,21 +100,20 @@ func TestFormatToJSON(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat(data, ctx)
+	instance, err := prompty.LoadParserConfig(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Format: %v", err)
+		t.Fatalf("Failed to load ParserConfig: %v", err)
 	}
 	// Polymorphic ToJSON requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToJSON test skipped for polymorphic base types - test child types directly
 }
 
-// TestFormatToYAML tests that ToYAML produces valid YAML
-func TestFormatToYAML(t *testing.T) {
+// TestParserConfigToYAML tests that ToYAML produces valid YAML
+func TestParserConfigToYAML(t *testing.T) {
 	jsonData := `
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
@@ -130,21 +125,21 @@ func TestFormatToYAML(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat(data, ctx)
+	instance, err := prompty.LoadParserConfig(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Format: %v", err)
+		t.Fatalf("Failed to load ParserConfig: %v", err)
 	}
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
 }
 
-// TestFormatFromFormat tests loading Format from string
-func TestFormatFromFormat(t *testing.T) {
+// TestParserConfigFromParser tests loading ParserConfig from string
+func TestParserConfigFromParser(t *testing.T) {
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadFormat("example", ctx)
+	instance, err := prompty.LoadParserConfig("example", ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Format from string: %v", err)
+		t.Fatalf("Failed to load ParserConfig from string: %v", err)
 	}
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator

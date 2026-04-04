@@ -8,11 +8,15 @@ properties:
     description: The unique identifier of the model - can be used as the single property shorthand
   provider:
     type: string
-    description: The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+    description: The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
   apiType:
     anyOf:
       - type: string
         const: chat
+      - type: string
+        const: embedding
+      - type: string
+        const: image
       - type: string
         const: responses
       - type: string

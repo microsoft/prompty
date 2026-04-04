@@ -7,51 +7,52 @@ namespace Prompty;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// Template model for defining prompt templates.
+/// A tool that references another .prompty file to be invoked as a tool.
 /// 
-/// This model specifies the rendering engine used for slot filling prompts,
-/// the parser used to process the rendered template into API-compatible format,
-/// and additional options for the template engine.
-/// 
-/// It allows for the creation of reusable templates that can be filled with dynamic data
-/// and processed to generate prompts for AI models.
+/// In `single` mode, the child prompty is executed with a single LLM call.
+/// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
 /// </summary>
-public class Template
+public class PromptyTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
     /// </summary>
-    public static string? ShorthandProperty => null;
+    public new static string? ShorthandProperty => null;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Template"/>.
+    /// Initializes a new instance of <see cref="PromptyTool"/>.
     /// </summary>
 #pragma warning disable CS8618
-    public Template()
+    public PromptyTool()
     {
     }
 #pragma warning restore CS8618
 
     /// <summary>
-    /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
+    /// The kind identifier for prompty tools
     /// </summary>
-    public FormatConfig Format { get; set; }
+    public override string Kind { get; set; } = "prompty";
 
     /// <summary>
-    /// Parser used to process the rendered template into API-compatible format
+    /// Path to the child .prompty file, relative to the parent
     /// </summary>
-    public ParserConfig Parser { get; set; }
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+    /// </summary>
+    public string Mode { get; set; } = "single";
 
 
     #region Load Methods
 
     /// <summary>
-    /// Load a Template instance from a dictionary.
+    /// Load a PromptyTool instance from a dictionary.
     /// </summary>
     /// <param name="data">The dictionary containing the data.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Template instance.</returns>
-    public static Template Load(Dictionary<string, object?> data, LoadContext? context = null)
+    /// <returns>The loaded PromptyTool instance.</returns>
+    public new static PromptyTool Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
         if (context is not null)
         {
@@ -60,17 +61,22 @@ public class Template
 
 
         // Create new instance
-        var instance = new Template();
+        var instance = new PromptyTool();
 
 
-        if (data.TryGetValue("format", out var formatValue) && formatValue is not null)
+        if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Format = FormatConfig.Load(formatValue.GetDictionary(), context);
+            instance.Kind = kindValue?.ToString()!;
         }
 
-        if (data.TryGetValue("parser", out var parserValue) && parserValue is not null)
+        if (data.TryGetValue("path", out var pathValue) && pathValue is not null)
         {
-            instance.Parser = ParserConfig.Load(parserValue.GetDictionary(), context);
+            instance.Path = pathValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
+        {
+            instance.Mode = modeValue?.ToString()!;
         }
 
         if (context is not null)
@@ -87,11 +93,11 @@ public class Template
     #region Save Methods
 
     /// <summary>
-    /// Save the Template instance to a dictionary.
+    /// Save the PromptyTool instance to a dictionary.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
-    public Dictionary<string, object?> Save(SaveContext? context = null)
+    public override Dictionary<string, object?> Save(SaveContext? context = null)
     {
         var obj = this;
         if (context is not null)
@@ -100,59 +106,60 @@ public class Template
         }
 
 
-        var result = new Dictionary<string, object?>();
+        // Start with parent class properties
+        var result = base.Save(context);
 
 
-        if (obj.Format is not null)
+        if (obj.Kind is not null)
         {
-            result["format"] = obj.Format?.Save(context);
+            result["kind"] = obj.Kind;
         }
 
-        if (obj.Parser is not null)
+        if (obj.Path is not null)
         {
-            result["parser"] = obj.Parser?.Save(context);
+            result["path"] = obj.Path;
         }
 
-
-        if (context is not null)
+        if (obj.Mode is not null)
         {
-            result = context.ProcessDict(result);
+            result["mode"] = obj.Mode;
         }
+
 
         return result;
     }
 
 
     /// <summary>
-    /// Convert the Template instance to a YAML string.
+    /// Convert the PromptyTool instance to a YAML string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The YAML string representation of this instance.</returns>
-    public string ToYaml(SaveContext? context = null)
+    public new string ToYaml(SaveContext? context = null)
     {
         context ??= new SaveContext();
         return context.ToYaml(Save(context));
     }
 
     /// <summary>
-    /// Convert the Template instance to a JSON string.
+    /// Convert the PromptyTool instance to a JSON string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <param name="indent">Whether to indent the output. Defaults to true.</param>
     /// <returns>The JSON string representation of this instance.</returns>
-    public string ToJson(SaveContext? context = null, bool indent = true)
+    public new string ToJson(SaveContext? context = null, bool indent = true)
     {
         context ??= new SaveContext();
         return context.ToJson(Save(context), indent);
     }
 
     /// <summary>
-    /// Load a Template instance from a JSON string.
+    /// Load a PromptyTool instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Template instance.</returns>
-    public static Template FromJson(string json, LoadContext? context = null)
+    /// <returns>The loaded PromptyTool instance.</returns>
+    public new static PromptyTool FromJson(string json, LoadContext? context = null)
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
@@ -163,12 +170,12 @@ public class Template
     }
 
     /// <summary>
-    /// Load a Template instance from a YAML string.
+    /// Load a PromptyTool instance from a YAML string.
     /// </summary>
     /// <param name="yaml">The YAML string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Template instance.</returns>
-    public static Template FromYaml(string yaml, LoadContext? context = null)
+    /// <returns>The loaded PromptyTool instance.</returns>
+    public new static PromptyTool FromYaml(string yaml, LoadContext? context = null)
     {
         var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
             ?? throw new ArgumentException("Failed to parse YAML as dictionary");

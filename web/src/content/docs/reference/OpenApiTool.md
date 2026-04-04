@@ -39,7 +39,7 @@ classDiagram
 kind: openapi
 connection:
   kind: reference
-specification: full_sepcification_here
+specification: ./openapi.json
 ```
 
 ## Properties

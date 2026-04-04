@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import McpTool
+from prompty.model import McpTool
 
 
 def test_load_json_mcptool():

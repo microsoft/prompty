@@ -6,24 +6,22 @@ namespace Prompty;
 #pragma warning restore IDE0130
 
 
-public class FormatConversionTests
+public class ParserConfigConversionTests
 {   
     [Fact]
     public void LoadYamlInput()
     {
         string yamlData = """
-kind: mustache
-strict: true
+kind: prompty
 options:
   key: value
 
 """;
 
-        var instance = Format.FromYaml(yamlData);
+        var instance = ParserConfig.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        Assert.Equal("mustache", instance.Kind);
-        Assert.True(instance.Strict);
+        Assert.Equal("prompty", instance.Kind);
     }
 
     [Fact]
@@ -31,18 +29,16 @@ options:
     {
         string jsonData = """
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
 }
 """;
 
-        var instance = Format.FromJson(jsonData);
+        var instance = ParserConfig.FromJson(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal("mustache", instance.Kind);
-        Assert.True(instance.Strict);
+        Assert.Equal("prompty", instance.Kind);
     }
 
     [Fact]
@@ -51,24 +47,22 @@ options:
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
 }
 """;
 
-        var original = Format.FromJson(jsonData);
+        var original = ParserConfig.FromJson(jsonData);
         Assert.NotNull(original);
         
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
         
-        var reloaded = Format.FromJson(json);
+        var reloaded = ParserConfig.FromJson(json);
         Assert.NotNull(reloaded);
-        Assert.Equal("mustache", reloaded.Kind);
-        Assert.True(reloaded.Strict);
+        Assert.Equal("prompty", reloaded.Kind);
     }
 
     [Fact]
@@ -76,23 +70,21 @@ options:
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
-kind: mustache
-strict: true
+kind: prompty
 options:
   key: value
 
 """;
 
-        var original = Format.FromYaml(yamlData);
+        var original = ParserConfig.FromYaml(yamlData);
         Assert.NotNull(original);
         
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
         
-        var reloaded = Format.FromYaml(yaml);
+        var reloaded = ParserConfig.FromYaml(yaml);
         Assert.NotNull(reloaded);
-        Assert.Equal("mustache", reloaded.Kind);
-        Assert.True(reloaded.Strict);
+        Assert.Equal("prompty", reloaded.Kind);
     }
 
     [Fact]
@@ -100,15 +92,14 @@ options:
     {
         string jsonData = """
 {
-  "kind": "mustache",
-  "strict": true,
+  "kind": "prompty",
   "options": {
     "key": "value"
   }
 }
 """;
 
-        var instance = Format.FromJson(jsonData);
+        var instance = ParserConfig.FromJson(jsonData);
         var json = instance.ToJson();
         
         // Verify it's valid JSON by parsing it
@@ -120,14 +111,13 @@ options:
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
-kind: mustache
-strict: true
+kind: prompty
 options:
   key: value
 
 """;
 
-        var instance = Format.FromYaml(yamlData);
+        var instance = ParserConfig.FromYaml(yamlData);
         var yaml = instance.ToYaml();
         
         // Verify it's valid YAML by parsing it
@@ -140,7 +130,7 @@ options:
     {
         // alternate representation as string
         var data = "\"example\"";
-        var instance = Format.FromJson(data);
+        var instance = ParserConfig.FromJson(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }
@@ -151,7 +141,7 @@ options:
     {
         // alternate representation as string
         var data = "\"example\"";
-        var instance = Format.FromYaml(data);
+        var instance = ParserConfig.FromYaml(data);
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }

@@ -53,7 +53,7 @@ func TestPromptyLoadJSON(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -136,7 +136,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -239,7 +239,7 @@ func TestPromptyRoundtrip(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -339,7 +339,7 @@ func TestPromptyToJSON(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -429,7 +429,7 @@ func TestPromptyToYAML(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -519,7 +519,7 @@ func TestPromptyLoadJSON1(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -601,7 +601,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -704,7 +704,7 @@ func TestPromptyRoundtrip1(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -803,7 +803,7 @@ func TestPromptyToJSON1(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -892,7 +892,7 @@ func TestPromptyToYAML1(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -982,7 +982,7 @@ func TestPromptyLoadJSON2(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1065,7 +1065,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -1169,7 +1169,7 @@ func TestPromptyRoundtrip2(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1270,7 +1270,7 @@ func TestPromptyToJSON2(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1361,7 +1361,7 @@ func TestPromptyToYAML2(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -1452,7 +1452,7 @@ func TestPromptyLoadJSON3(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1534,7 +1534,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -1638,7 +1638,7 @@ func TestPromptyRoundtrip3(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1738,7 +1738,7 @@ func TestPromptyToJSON3(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1828,7 +1828,7 @@ func TestPromptyToYAML3(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -1920,7 +1920,7 @@ func TestPromptyLoadJSON4(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2003,7 +2003,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -2109,7 +2109,7 @@ func TestPromptyRoundtrip4(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2212,7 +2212,7 @@ func TestPromptyToJSON4(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2305,7 +2305,7 @@ func TestPromptyToYAML4(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2398,7 +2398,7 @@ func TestPromptyLoadJSON5(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2480,7 +2480,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -2586,7 +2586,7 @@ func TestPromptyRoundtrip5(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2688,7 +2688,7 @@ func TestPromptyToJSON5(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2780,7 +2780,7 @@ func TestPromptyToYAML5(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -2873,7 +2873,7 @@ func TestPromptyLoadJSON6(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -2956,7 +2956,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   - name: getCurrentWeather
     kind: function
@@ -3063,7 +3063,7 @@ func TestPromptyRoundtrip6(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3167,7 +3167,7 @@ func TestPromptyToJSON6(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3261,7 +3261,7 @@ func TestPromptyToYAML6(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": [
@@ -3355,7 +3355,7 @@ func TestPromptyLoadJSON7(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -3437,7 +3437,7 @@ model:
   connection:
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    key: "{your-api-key}"
+    apiKey: "{your-api-key}"
 tools:
   getCurrentWeather:
     kind: function
@@ -3544,7 +3544,7 @@ func TestPromptyRoundtrip7(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -3647,7 +3647,7 @@ func TestPromptyToJSON7(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {
@@ -3740,7 +3740,7 @@ func TestPromptyToYAML7(t *testing.T) {
     "connection": {
       "kind": "key",
       "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-      "key": "{your-api-key}"
+      "apiKey": "{your-api-key}"
     }
   },
   "tools": {

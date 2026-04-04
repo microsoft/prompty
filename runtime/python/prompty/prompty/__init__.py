@@ -59,7 +59,7 @@ from .model import (
     Binding,
     Connection,
     CustomTool,
-    Format,
+    FormatConfig,
     FoundryConnection,
     FunctionTool,
     LoadContext,
@@ -70,16 +70,15 @@ from .model import (
     OAuthConnection,
     ObjectProperty,
     OpenApiTool,
+    ParserConfig,
     Prompty,
+    PromptyTool,
     Property,
     ReferenceConnection,
     RemoteConnection,
     SaveContext,
     Template,
     Tool,
-)
-from .model import (
-    Parser as SchemaParser,
 )
 
 # Concrete invokers

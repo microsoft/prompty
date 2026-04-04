@@ -2,7 +2,7 @@ import json
 
 import yaml
 
-from prompty import McpApprovalMode
+from prompty.model import McpApprovalMode
 
 
 def test_load_json_mcpapprovalmode():

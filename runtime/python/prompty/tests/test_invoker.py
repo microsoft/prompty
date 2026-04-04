@@ -531,14 +531,14 @@ class TestPrepare:
         assert "How?" in messages[1].text
 
     def test_prepare_with_template_config(self):
-        from prompty.model import Format, Template
-        from prompty.model import Parser as SchemaParser
+        from prompty.model import FormatConfig, Template
+        from prompty.model import ParserConfig
 
-        fmt = mock.Mock(spec=Format)
+        fmt = mock.Mock(spec=FormatConfig)
         fmt.kind = "jinja2"
         fmt.strict = None
 
-        parser = mock.Mock(spec=SchemaParser)
+        parser = mock.Mock(spec=ParserConfig)
         parser.kind = "prompty"
 
         template = mock.Mock(spec=Template)

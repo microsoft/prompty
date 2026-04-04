@@ -14,9 +14,11 @@ options:
       - type: TypeScript
         output-dir: "../runtime/typescript/packages/core/src/model"
         test-dir: "../runtime/typescript/packages/core/tests/model"
+        import-path: "../../src/model/index"
       - type: Python
         output-dir: "../runtime/python/prompty/prompty/model"
         test-dir: "../runtime/python/prompty/tests/model"
+        import-path: "prompty.model"
       - type: CSharp
         output-dir: "../runtime/csharp/Prompty.Core/Model"
         test-dir: "../runtime/csharp/Prompty.Core.Tests/Model"

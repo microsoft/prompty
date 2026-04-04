@@ -1,7 +1,7 @@
 """Prompty chat parser — splits rendered text into abstract messages.
 
 Recognizes role markers (``system:``, ``user:``, ``assistant:``, ``developer:``).
-Supports nonce-based sanitization when ``Format.strict`` is enabled.
+Supports nonce-based sanitization when ``FormatConfig.strict`` is enabled.
 
 Images should be passed via ``kind: image`` input properties rather than
 inline markdown syntax. Inline ``![alt](url)`` is preserved as literal text.
@@ -39,7 +39,7 @@ class PromptyChatParser:
 
     Supports optional nonce-based pre-render sanitization to prevent
     template variables from injecting structural role markers when
-    ``Format.strict`` is enabled.
+    ``FormatConfig.strict`` is enabled.
     """
 
     # ---- pre_render (optional sanitization) ----

@@ -33,7 +33,7 @@ public class Model
     public string Id { get; set; } = string.Empty;
 
     /// <summary>
-    /// The provider of the model (e.g., 'openai', 'azure', 'anthropic')
+    /// The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
     /// </summary>
     public string? Provider { get; set; }
 

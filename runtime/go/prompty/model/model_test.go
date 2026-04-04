@@ -16,7 +16,7 @@ func TestModelLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -26,7 +26,7 @@ func TestModelLoadJSON(t *testing.T) {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 `
@@ -43,8 +43,8 @@ func TestModelLoadJSON(t *testing.T) {
 	if instance.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
 	}
-	if instance.Provider == nil || *instance.Provider != "azure" {
-		t.Errorf(`Expected Provider to be "azure", got %v`, instance.Provider)
+	if instance.Provider == nil || *instance.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, instance.Provider)
 	}
 	if instance.ApiType == nil || *instance.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
@@ -55,7 +55,7 @@ func TestModelLoadJSON(t *testing.T) {
 func TestModelLoadYAML(t *testing.T) {
 	yamlData := `
 id: gpt-35-turbo
-provider: azure
+provider: foundry
 apiType: chat
 connection:
   kind: key
@@ -64,7 +64,7 @@ connection:
 options:
   type: chat
   temperature: 0.7
-  maxTokens: 1000
+  maxOutputTokens: 1000
 
 `
 	var data map[string]interface{}
@@ -80,8 +80,8 @@ options:
 	if instance.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
 	}
-	if instance.Provider == nil || *instance.Provider != "azure" {
-		t.Errorf(`Expected Provider to be "azure", got %v`, instance.Provider)
+	if instance.Provider == nil || *instance.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, instance.Provider)
 	}
 	if instance.ApiType == nil || *instance.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
@@ -93,7 +93,7 @@ func TestModelRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -103,7 +103,7 @@ func TestModelRoundtrip(t *testing.T) {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 `
@@ -127,8 +127,8 @@ func TestModelRoundtrip(t *testing.T) {
 	if reloaded.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, reloaded.Id)
 	}
-	if reloaded.Provider == nil || *reloaded.Provider != "azure" {
-		t.Errorf(`Expected Provider to be "azure", got %v`, reloaded.Provider)
+	if reloaded.Provider == nil || *reloaded.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, reloaded.Provider)
 	}
 	if reloaded.ApiType == nil || *reloaded.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, reloaded.ApiType)
@@ -140,7 +140,7 @@ func TestModelToJSON(t *testing.T) {
 	jsonData := `
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -150,7 +150,7 @@ func TestModelToJSON(t *testing.T) {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 `
@@ -180,7 +180,7 @@ func TestModelToYAML(t *testing.T) {
 	jsonData := `
 {
   "id": "gpt-35-turbo",
-  "provider": "azure",
+  "provider": "foundry",
   "apiType": "chat",
   "connection": {
     "kind": "key",
@@ -190,7 +190,7 @@ func TestModelToYAML(t *testing.T) {
   "options": {
     "type": "chat",
     "temperature": 0.7,
-    "maxTokens": 1000
+    "maxOutputTokens": 1000
   }
 }
 `

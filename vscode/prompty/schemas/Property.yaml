@@ -16,6 +16,14 @@ properties:
         const: array
       - type: string
         const: object
+      - type: string
+        const: thread
+      - type: string
+        const: image
+      - type: string
+        const: audio
+      - type: string
+        const: file
     description: The data type of the input property
   description:
     type: string

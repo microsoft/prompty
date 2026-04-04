@@ -1,7 +1,7 @@
 ---
 title: "Schema Reference"
 description: "Auto-generated reference for all Prompty schema types."
-slug: "reference"
+slug: "reference/index"
 sidebar:
   order: 1
 ---
@@ -150,21 +150,27 @@ classDiagram
         +Connection connection
         +string specification
     }
-    class Format {
+    class PromptyTool {
+      
+        +string kind
+        +string path
+        +string mode
+    }
+    class FormatConfig {
       
         +string kind
         +boolean strict
         +dictionary options
     }
-    class Parser {
+    class ParserConfig {
       
         +string kind
         +dictionary options
     }
     class Template {
       
-        +Format format
-        +Parser parser
+        +FormatConfig format
+        +ParserConfig parser
     }
     class Prompty {
       
@@ -191,6 +197,7 @@ classDiagram
     Tool <|-- CustomTool
     Tool <|-- McpTool
     Tool <|-- OpenApiTool
+    Tool <|-- PromptyTool
     ObjectProperty *-- Property
     ArrayProperty *-- Property
     Model *-- Connection
@@ -201,8 +208,8 @@ classDiagram
     McpTool *-- Connection
     McpTool *-- McpApprovalMode
     OpenApiTool *-- Connection
-    Template *-- Format
-    Template *-- Parser
+    Template *-- FormatConfig
+    Template *-- ParserConfig
     Prompty *-- Property
     Prompty *-- Property
     Prompty *-- Model
