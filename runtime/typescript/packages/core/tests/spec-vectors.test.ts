@@ -15,7 +15,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { resolve, join } from "node:path";
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 
 // Core imports
 import {
@@ -35,9 +35,7 @@ import {
   parse,
   validateInputs,
   executeAgent,
-  resolveBindings,
   Message,
-  type ToolCall,
   NunjucksRenderer,
   MustacheRenderer,
   PromptyChatParser,
@@ -46,8 +44,6 @@ import {
   registerExecutor,
   registerProcessor,
   clearCache,
-  getRenderer,
-  getParser,
   type Executor,
   type Processor,
 } from "../src/index.js";

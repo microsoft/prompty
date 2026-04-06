@@ -587,7 +587,7 @@ class TestEmbeddingDispatch:
         assert result == mock_response
         mock_client.embeddings.create.assert_called_once()
         call_args = mock_client.embeddings.create.call_args
-        assert call_args.kwargs["input"] == ["hello world"]
+        assert call_args.kwargs["input"] == "hello world"
         assert call_args.kwargs["model"] == "text-embedding-ada-002"
 
     def test_list_input_passthrough(self):

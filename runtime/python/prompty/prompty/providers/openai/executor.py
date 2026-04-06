@@ -495,7 +495,7 @@ class _BaseExecutor:
         """Build arguments dict for embeddings.create."""
         model = agent.model.id or "text-embedding-ada-002"
         args: dict[str, Any] = {
-            "input": data if isinstance(data, list) else [data],
+            "input": data,
             "model": model,
         }
         # Only pass through additional properties — standard chat options

@@ -48,6 +48,7 @@ from prompty.providers.anthropic.processor import (
     _process_response as _anthropic_process_response,
 )
 from prompty.providers.openai.executor import (
+    OpenAIExecutor,
     _build_options,
     _build_responses_options,
     _message_to_responses_input,
@@ -709,18 +710,15 @@ def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, ve
 
 
 def _check_wire_embedding(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
-    """Validate embedding wire format."""
-    # Extract text from messages for embedding input
+    """Validate embedding wire format using REAL production builder."""
     texts = [m.text for m in messages if m.text]
     if len(texts) == 1:
         embed_input = texts[0]
     else:
         embed_input = texts
 
-    actual_body: dict[str, Any] = {
-        "model": agent.model.id or "text-embedding-ada-002",
-        "input": embed_input,
-    }
+    executor = OpenAIExecutor()
+    actual_body = executor._build_embedding_args(agent, embed_input)
 
     errors = _dict_subset_match(exp_body, actual_body)
     if errors:
@@ -732,15 +730,12 @@ def _check_wire_embedding(agent: Prompty, messages: list[Message], exp_body: dic
 
 
 def _check_wire_image(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
-    """Validate image wire format."""
-    # Extract prompt from last user message
+    """Validate image wire format using REAL production builder."""
     user_msgs = [m for m in messages if m.role == "user"]
     prompt = user_msgs[-1].text if user_msgs else ""
 
-    actual_body: dict[str, Any] = {
-        "model": agent.model.id or "dall-e-3",
-        "prompt": prompt,
-    }
+    executor = OpenAIExecutor()
+    actual_body = executor._build_image_args(agent, prompt)
 
     errors = _dict_subset_match(exp_body, actual_body)
     if errors:
@@ -1046,14 +1041,7 @@ def test_agent_vector(vec: dict):
     captured_args: dict[str, dict] = {}  # tool_name -> last received args
     tool_result_queue: dict[str, list[str]] = {}  # tool_name -> [result1, result2, ...]
 
-    for step in sequence:
-        for tr in step.get("tool_results", []):
-            # Map call_id → result, and also build per-tool result queues
-            for tc in step.get("expected_tool_calls", []):
-                if tc.get("id") == tr["tool_call_id"] or True:
-                    # Just queue results by position for each tool
-                    pass
-    # Simpler approach: build per-tool result queues from sequence order
+    # Build per-tool result queues from sequence order
     for step in sequence:
         if "tool_results" not in step:
             continue

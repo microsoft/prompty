@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { messageToWire, buildChatArgs } from "../src/wire.js";
+import { messageToWire } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
 import { Message, text } from "@prompty/core";
 import { Prompty } from "@prompty/core";
