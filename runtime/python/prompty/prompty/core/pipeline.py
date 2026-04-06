@@ -126,28 +126,34 @@ def _get_rich_input_names(agent: Prompty) -> dict[str, str]:
 
 def _inject_thread_markers(
     messages: list[Message],
-    thread_nonces: dict[str, str],
+    nonces: dict[str, str],
+    rich_inputs: dict[str, str],
 ) -> list[Message | ThreadMarker]:
     """Scan parsed messages for nonce markers emitted by the renderer.
 
-    When a thread-kind input appears as ``{{thread_var}}`` in the template,
+    When a rich-kind input appears as ``{{var}}`` in the template,
     the renderer substitutes a nonce marker string. After parsing, that
     marker ends up inside a ``Message``'s ``TextPart`` content. This
-    function finds those markers, splits the message, and inserts a
-    ``ThreadMarker`` at the correct position.
+    function finds those markers and:
+
+    - For ``thread`` kind: inserts a ``ThreadMarker`` at the correct position.
+    - For ``image``/``file``/``audio`` kinds: inserts a ``RichMarker`` that
+      will be resolved during expansion.
 
     Parameters
     ----------
     messages:
-        Parsed message list (no ThreadMarkers yet).
-    thread_nonces:
+        Parsed message list (no markers yet).
+    nonces:
         Mapping from nonce marker strings to input property names,
         provided by the renderer.
+    rich_inputs:
+        Mapping from input property names to their kinds.
 
     Returns
     -------
     list[Message | ThreadMarker]
-        Messages with ``ThreadMarker`` objects injected at nonce positions.
+        Messages with markers injected at nonce positions.
     """
     from .types import TextPart
 
@@ -157,7 +163,7 @@ def _inject_thread_markers(
         text = msg.text
         # Check if any nonce marker appears in this message's text
         found_marker = None
-        for marker, name in thread_nonces.items():
+        for marker, name in nonces.items():
             if marker in text:
                 found_marker = (marker, name)
                 break
@@ -167,6 +173,7 @@ def _inject_thread_markers(
             continue
 
         marker, name = found_marker
+        kind = rich_inputs.get(name, "thread")
 
         # Split the message text at the nonce marker
         before, _, after = text.partition(marker)
@@ -182,7 +189,11 @@ def _inject_thread_markers(
                 )
             )
 
-        result.append(ThreadMarker(name=name))
+        if kind == "thread":
+            result.append(ThreadMarker(name=name))
+        else:
+            # image/file/audio — insert a RichMarker with the kind
+            result.append(ThreadMarker(name=name, kind=kind))
 
         if after:
             result.append(
@@ -201,25 +212,55 @@ def _expand_thread_markers(
     inputs: dict[str, Any],
     rich_inputs: dict[str, str],
 ) -> list[Message]:
-    """Replace ThreadMarker entries with actual messages from inputs.
+    """Replace marker entries with actual content from inputs.
 
-    If no markers exist but thread-kind inputs are provided, append
-    thread messages at the end.
+    - ``thread`` markers expand to ``Message[]`` from conversation history.
+    - ``image``/``file``/``audio`` markers resolve to the appropriate
+      ``ContentPart`` inserted into the surrounding message.
     """
+    from .types import AudioPart, FilePart, ImagePart
+
     expanded: list[Message] = []
     marker_found = False
 
     for item in messages:
         if isinstance(item, ThreadMarker):
             marker_found = True
-            thread_data = inputs.get(item.name, [])
-            if isinstance(thread_data, list):
-                for msg in thread_data:
-                    if isinstance(msg, Message):
-                        expanded.append(msg)
-                    elif isinstance(msg, dict):
-                        expanded.append(_dict_to_message(msg))
-            # else: skip non-list thread values
+            kind = getattr(item, "kind", None) or rich_inputs.get(item.name, "thread")
+            value = inputs.get(item.name)
+
+            if kind == "thread":
+                # Thread: expand to Message[]
+                if isinstance(value, list):
+                    for msg in value:
+                        if isinstance(msg, Message):
+                            expanded.append(msg)
+                        elif isinstance(msg, dict):
+                            expanded.append(_dict_to_message(msg))
+                # else: skip non-list thread values
+            elif kind == "image":
+                # Image: insert as ImagePart in a user message
+                source = str(value) if value else ""
+                part = ImagePart(source=source)
+                # Attach to preceding message if same role, else create new
+                if expanded and expanded[-1].role == "user":
+                    expanded[-1].parts.append(part)
+                else:
+                    expanded.append(Message(role="user", parts=[part]))
+            elif kind == "file":
+                source = str(value) if value else ""
+                part = FilePart(source=source)
+                if expanded and expanded[-1].role == "user":
+                    expanded[-1].parts.append(part)
+                else:
+                    expanded.append(Message(role="user", parts=[part]))
+            elif kind == "audio":
+                source = str(value) if value else ""
+                part = AudioPart(source=source)
+                if expanded and expanded[-1].role == "user":
+                    expanded[-1].parts.append(part)
+                else:
+                    expanded.append(Message(role="user", parts=[part]))
         else:
             expanded.append(item)
 
@@ -329,14 +370,14 @@ def _resolve_prepare_config(
 
 def _finalize_messages(
     messages: list[Message],
-    thread_nonces: dict[str, str],
+    nonces: dict[str, str],
     inputs: dict[str, Any],
     rich_inputs: dict[str, str],
 ) -> list[Message]:
-    """Inject thread markers and expand them with actual conversation messages."""
+    """Inject rich-kind markers and expand them with actual content."""
     expanded: list[Message | ThreadMarker] = list(messages)
-    if thread_nonces:
-        expanded = _inject_thread_markers(messages, thread_nonces)
+    if nonces:
+        expanded = _inject_thread_markers(messages, nonces, rich_inputs)
     return _expand_thread_markers(expanded, inputs, rich_inputs)
 
 

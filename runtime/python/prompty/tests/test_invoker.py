@@ -28,6 +28,9 @@ from prompty.core.pipeline import (
     _invoke_executor,
 )
 from prompty.core.types import (
+    AudioPart,
+    FilePart,
+    ImagePart,
     Message,
     TextPart,
     ThreadMarker,
@@ -437,7 +440,7 @@ class TestInjectThreadMarkers:
         ]
         thread_nonces = {marker: "conv"}
 
-        result = _inject_thread_markers(messages, thread_nonces)
+        result = _inject_thread_markers(messages, thread_nonces, {"conv": "thread"})
         # Should produce: system(Before), ThreadMarker(conv), system(After), user(Question)
         assert len(result) == 4
         assert isinstance(result[0], Message)
@@ -457,7 +460,7 @@ class TestInjectThreadMarkers:
         ]
         thread_nonces = {marker: "history"}
 
-        result = _inject_thread_markers(messages, thread_nonces)
+        result = _inject_thread_markers(messages, thread_nonces, {"history": "thread"})
         assert len(result) == 1
         assert isinstance(result[0], ThreadMarker)
         assert result[0].name == "history"
@@ -467,7 +470,7 @@ class TestInjectThreadMarkers:
         messages = [
             Message(role="system", parts=[TextPart(value="Hello")]),
         ]
-        result = _inject_thread_markers(messages, {})
+        result = _inject_thread_markers(messages, {}, {})
         assert len(result) == 1
         assert isinstance(result[0], Message)
         assert result[0].text == "Hello"
@@ -479,10 +482,140 @@ class TestInjectThreadMarkers:
         ]
         thread_nonces = {"__PROMPTY_THREAD_abc_x__": "x"}
 
-        result = _inject_thread_markers(messages, thread_nonces)
+        result = _inject_thread_markers(messages, thread_nonces, {"x": "thread"})
         assert len(result) == 1
         assert isinstance(result[0], Message)
         assert result[0].text == "Hello world"
+
+    def test_inject_image_marker(self):
+        """Image-kind nonce produces ThreadMarker with kind='image'."""
+        marker = "__PROMPTY_THREAD_img1_photo__"
+        messages = [
+            Message(role="user", parts=[TextPart(value=f"See this: {marker}")]),
+        ]
+        thread_nonces = {marker: "photo"}
+
+        result = _inject_thread_markers(messages, thread_nonces, {"photo": "image"})
+        # Should produce: user("See this:"), ThreadMarker(photo, kind=image)
+        assert len(result) == 2
+        assert isinstance(result[0], Message)
+        assert result[0].text == "See this:"
+        assert isinstance(result[1], ThreadMarker)
+        assert result[1].name == "photo"
+        assert result[1].kind == "image"
+
+
+# ---------------------------------------------------------------------------
+# Tests: Rich-kind nonce expansion (image, file, audio)
+# ---------------------------------------------------------------------------
+
+
+class TestRichKindExpansion:
+    """Tests that image/file/audio markers expand to the correct ContentPart types."""
+
+    def test_image_expands_to_image_part(self):
+        """Image marker expands to ImagePart in user message."""
+        messages: list[Message | ThreadMarker] = [
+            Message(role="system", parts=[TextPart(value="You are helpful.")]),
+            Message(role="user", parts=[TextPart(value="Describe this:")]),
+            ThreadMarker(name="photo", kind="image"),
+        ]
+        inputs = {"photo": "https://example.com/cat.jpg"}
+        rich_inputs = {"photo": "image"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        assert len(result) == 2  # system + user (image appended to preceding user)
+        assert result[0].role == "system"
+        user_msg = result[1]
+        assert user_msg.role == "user"
+        assert len(user_msg.parts) == 2
+        assert isinstance(user_msg.parts[0], TextPart)
+        assert isinstance(user_msg.parts[1], ImagePart)
+        assert user_msg.parts[1].source == "https://example.com/cat.jpg"
+
+    def test_file_expands_to_file_part(self):
+        """File marker expands to FilePart."""
+        messages: list[Message | ThreadMarker] = [
+            Message(role="user", parts=[TextPart(value="Read this file:")]),
+            ThreadMarker(name="doc", kind="file"),
+        ]
+        inputs = {"doc": "data:application/pdf;base64,abc123"}
+        rich_inputs = {"doc": "file"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        assert len(result) == 1  # appended to preceding user
+        assert len(result[0].parts) == 2
+        assert isinstance(result[0].parts[1], FilePart)
+        assert result[0].parts[1].source == "data:application/pdf;base64,abc123"
+
+    def test_audio_expands_to_audio_part(self):
+        """Audio marker expands to AudioPart."""
+        messages: list[Message | ThreadMarker] = [
+            Message(role="user", parts=[TextPart(value="Transcribe:")]),
+            ThreadMarker(name="clip", kind="audio"),
+        ]
+        inputs = {"clip": "https://example.com/audio.mp3"}
+        rich_inputs = {"clip": "audio"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        assert len(result) == 1
+        assert len(result[0].parts) == 2
+        assert isinstance(result[0].parts[1], AudioPart)
+        assert result[0].parts[1].source == "https://example.com/audio.mp3"
+
+    def test_rich_kind_creates_new_message_when_no_preceding_user(self):
+        """Without a preceding user message, a new user message is created."""
+        messages: list[Message | ThreadMarker] = [
+            ThreadMarker(name="photo", kind="image"),
+        ]
+        inputs = {"photo": "https://example.com/pic.png"}
+        rich_inputs = {"photo": "image"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        assert len(result) == 1
+        assert result[0].role == "user"
+        assert len(result[0].parts) == 1
+        assert isinstance(result[0].parts[0], ImagePart)
+
+    def test_rich_kind_does_not_attach_to_system_message(self):
+        """Rich parts should not attach to a preceding system message."""
+        messages: list[Message | ThreadMarker] = [
+            Message(role="system", parts=[TextPart(value="System prompt")]),
+            ThreadMarker(name="photo", kind="image"),
+        ]
+        inputs = {"photo": "https://example.com/pic.png"}
+        rich_inputs = {"photo": "image"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        assert len(result) == 2
+        assert result[0].role == "system"
+        assert result[1].role == "user"
+        assert isinstance(result[1].parts[0], ImagePart)
+
+    def test_mixed_thread_and_image(self):
+        """Thread and image markers can coexist."""
+        messages: list[Message | ThreadMarker] = [
+            Message(role="system", parts=[TextPart(value="You are helpful.")]),
+            ThreadMarker(name="history", kind="thread"),
+            Message(role="user", parts=[TextPart(value="Describe this:")]),
+            ThreadMarker(name="photo", kind="image"),
+        ]
+        inputs = {
+            "history": [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Hello!"}],
+            "photo": "https://example.com/cat.jpg",
+        }
+        rich_inputs = {"history": "thread", "photo": "image"}
+
+        result = _expand_thread_markers(messages, inputs, rich_inputs)
+        # system, user(Hi), assistant(Hello!), user(Describe this: + ImagePart)
+        assert len(result) == 4
+        assert result[0].role == "system"
+        assert result[1].role == "user"
+        assert result[1].text == "Hi"
+        assert result[2].role == "assistant"
+        assert result[2].text == "Hello!"
+        assert result[3].role == "user"
+        assert isinstance(result[3].parts[1], ImagePart)
 
 
 # ---------------------------------------------------------------------------

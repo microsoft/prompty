@@ -140,17 +140,19 @@ class Message:
 
 @dataclass
 class ThreadMarker:
-    """Positional marker for thread (conversation history) insertion.
+    """Positional marker for rich-kind input insertion.
 
-    Emitted by the parser when it encounters a thread-kind input variable.
-    ``prepare()`` replaces these with actual messages from the ``thread``
-    input.
+    Emitted during prepare when the renderer nonce for a rich-kind input
+    (thread, image, file, audio) is found in parsed message text.
+    ``prepare()`` replaces these with actual content from the inputs.
 
     Attributes:
         name: The input property name (e.g. ``"conversation"``).
+        kind: The rich kind (``"thread"``, ``"image"``, ``"file"``, ``"audio"``).
     """
 
     name: str = "thread"
+    kind: str = "thread"
 
 
 # ---------------------------------------------------------------------------
