@@ -276,8 +276,14 @@ export function toolsToWire(agent: Prompty): Record<string, unknown>[] {
     const tool: Record<string, unknown> = { name: t.name };
     if (t.description) tool.description = t.description;
 
-    const params = (t as { parameters?: unknown[] }).parameters;
+    // Collect bound parameter names to strip from wire format
+    const boundNames = new Set((t.bindings ?? []).map((b) => b.name));
+
+    let params = (t as { parameters?: unknown[] }).parameters;
     if (params && Array.isArray(params)) {
+      if (boundNames.size > 0) {
+        params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+      }
       tool.input_schema = schemaToWire(params);
     } else {
       tool.input_schema = { type: "object", properties: {} };

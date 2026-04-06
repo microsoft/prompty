@@ -752,12 +752,59 @@ async def execute_async(
 _DEFAULT_MAX_ITERATIONS = 10
 
 
+def _resolve_bindings(
+    agent: Any,
+    fn_name: str,
+    fn_args: dict[str, Any],
+    parent_inputs: dict[str, Any],
+) -> dict[str, Any]:
+    """Merge bound values from parent_inputs into tool call arguments.
+
+    For each binding on the matching tool, if the bound input key exists in
+    *parent_inputs*, its value is injected into *fn_args* (overriding any
+    LLM-provided value, since the LLM shouldn't see bound params at all).
+
+    Returns a new dict — the original *fn_args* is not mutated.
+    """
+    tools = getattr(agent, "tools", None)
+    if not tools or not parent_inputs:
+        return fn_args
+
+    # Find the tool definition matching fn_name
+    tool = None
+    for t in tools:
+        if getattr(t, "name", None) == fn_name:
+            tool = t
+            break
+
+    if tool is None:
+        return fn_args
+
+    bindings = getattr(tool, "bindings", None)
+    if not bindings:
+        return fn_args
+
+    # Merge bound values
+    merged = dict(fn_args)
+    for binding in bindings:
+        input_key = binding.input
+        if input_key and input_key in parent_inputs:
+            merged[binding.name] = parent_inputs[input_key]
+
+    return merged
+
+
 def _execute_tool(
     fn: Callable[..., Any],
     fn_name: str,
     arguments_json: str,
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> str:
     """Execute a tool function with JSON arguments, handling errors gracefully.
+
+    If *agent* and *parent_inputs* are provided, binding values are injected
+    into the parsed arguments before calling the function.
 
     Returns the tool result as a string. On JSON parse error or tool
     function exception, returns an error message so the model can self-correct.
@@ -766,6 +813,9 @@ def _execute_tool(
         fn_args = json.loads(arguments_json)
     except json.JSONDecodeError as e:
         return f"Error: invalid JSON arguments for '{fn_name}': {e}"
+
+    if agent is not None and parent_inputs:
+        fn_args = _resolve_bindings(agent, fn_name, fn_args, parent_inputs)
 
     try:
         result = fn(**fn_args)
@@ -779,12 +829,17 @@ async def _execute_tool_async(
     fn: Callable[..., Any],
     fn_name: str,
     arguments_json: str,
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> str:
     """Async variant of :func:`_execute_tool`."""
     try:
         fn_args = json.loads(arguments_json)
     except json.JSONDecodeError as e:
         return f"Error: invalid JSON arguments for '{fn_name}': {e}"
+
+    if agent is not None and parent_inputs:
+        fn_args = _resolve_bindings(agent, fn_name, fn_args, parent_inputs)
 
     try:
         if inspect.iscoroutinefunction(fn):
@@ -841,6 +896,8 @@ def _is_responses_api(response: Any) -> bool:
 def _build_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> tuple[list[Message], bool]:
     """Execute tool calls from the response and build result messages.
 
@@ -850,15 +907,17 @@ def _build_tool_result_messages(
     Dispatches between OpenAI, Anthropic, and Responses API formats.
     """
     if _is_anthropic_response(response):
-        return _build_anthropic_tool_result_messages(response, tools), False
+        return _build_anthropic_tool_result_messages(response, tools, agent, parent_inputs), False
     if _is_responses_api(response):
-        return _build_responses_tool_result_messages(response, tools)
-    return _build_openai_tool_result_messages(response, tools)
+        return _build_responses_tool_result_messages(response, tools, agent, parent_inputs)
+    return _build_openai_tool_result_messages(response, tools, agent, parent_inputs)
 
 
 def _build_openai_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> tuple[list[Message], bool]:
     """Handle OpenAI tool call responses."""
     from .types import TextPart
@@ -885,7 +944,7 @@ def _build_openai_tool_result_messages(
         elif inspect.iscoroutinefunction(fn):
             tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
         else:
-            tool_result = _execute_tool(fn, fn_name, tc.function.arguments)
+            tool_result = _execute_tool(fn, fn_name, tc.function.arguments, agent, parent_inputs)
 
         result_messages.append(
             Message(
@@ -901,6 +960,8 @@ def _build_openai_tool_result_messages(
 def _build_anthropic_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Handle Anthropic tool_use content blocks.
 
@@ -956,7 +1017,7 @@ def _build_anthropic_tool_result_messages(
         elif inspect.iscoroutinefunction(fn):
             tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
         else:
-            tool_result = _execute_tool(fn, fn_name, arguments)
+            tool_result = _execute_tool(fn, fn_name, arguments, agent, parent_inputs)
 
         tool_results.append(
             {
@@ -981,18 +1042,22 @@ def _build_anthropic_tool_result_messages(
 async def _build_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async variant of :func:`_build_tool_result_messages`."""
     if _is_anthropic_response(response):
-        return await _build_anthropic_tool_result_messages_async(response, tools)
+        return await _build_anthropic_tool_result_messages_async(response, tools, agent, parent_inputs)
     if _is_responses_api(response):
-        return await _build_responses_tool_result_messages_async(response, tools)
-    return await _build_openai_tool_result_messages_async(response, tools)
+        return await _build_responses_tool_result_messages_async(response, tools, agent, parent_inputs)
+    return await _build_openai_tool_result_messages_async(response, tools, agent, parent_inputs)
 
 
 async def _build_openai_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: handle OpenAI tool call responses."""
     from .types import TextPart
@@ -1016,7 +1081,7 @@ async def _build_openai_tool_result_messages_async(
                 f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
-            tool_result = await _execute_tool_async(fn, fn_name, tc.function.arguments)
+            tool_result = await _execute_tool_async(fn, fn_name, tc.function.arguments, agent, parent_inputs)
 
         result_messages.append(
             Message(
@@ -1032,6 +1097,8 @@ async def _build_openai_tool_result_messages_async(
 async def _build_anthropic_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: handle Anthropic tool_use content blocks."""
     import json as _json
@@ -1076,7 +1143,7 @@ async def _build_anthropic_tool_result_messages_async(
                 f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
-            tool_result = await _execute_tool_async(fn, fn_name, arguments)
+            tool_result = await _execute_tool_async(fn, fn_name, arguments, agent, parent_inputs)
 
         tool_results.append(
             {
@@ -1100,6 +1167,8 @@ async def _build_anthropic_tool_result_messages_async(
 def _build_responses_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> tuple[list[Message], bool]:
     """Handle OpenAI Responses API tool calls: output[].type == 'function_call'.
 
@@ -1144,7 +1213,7 @@ def _build_responses_tool_result_messages(
         elif inspect.iscoroutinefunction(fn):
             tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
         else:
-            tool_result = _execute_tool(fn, fn_name, arguments)
+            tool_result = _execute_tool(fn, fn_name, arguments, agent, parent_inputs)
 
         result_messages.append(
             Message(
@@ -1160,6 +1229,8 @@ def _build_responses_tool_result_messages(
 async def _build_responses_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
+    agent: Any = None,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: handle OpenAI Responses API tool calls."""
     from .types import TextPart
@@ -1196,7 +1267,7 @@ async def _build_responses_tool_result_messages_async(
                 f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
-            tool_result = await _execute_tool_async(fn, fn_name, arguments)
+            tool_result = await _execute_tool_async(fn, fn_name, arguments, agent, parent_inputs)
 
         result_messages.append(
             Message(
@@ -1273,6 +1344,7 @@ def _build_tool_messages_from_calls(
     text_content: str,
     tools: dict[str, Callable[..., Any]],
     agent: Prompty,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Build tool result messages from processed ToolCall objects (streaming path).
 
@@ -1348,7 +1420,7 @@ def _build_tool_messages_from_calls(
         elif inspect.iscoroutinefunction(fn):
             tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
         else:
-            tool_result = _execute_tool(fn, fn_name, tc.arguments)
+            tool_result = _execute_tool(fn, fn_name, tc.arguments, agent, parent_inputs)
 
         if provider == "anthropic":
             tool_result_blocks.append(
@@ -1385,6 +1457,7 @@ async def _build_tool_messages_from_calls_async(
     text_content: str,
     tools: dict[str, Callable[..., Any]],
     agent: Prompty,
+    parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: build tool result messages from processed ToolCall objects."""
     from .types import TextPart
@@ -1454,7 +1527,7 @@ async def _build_tool_messages_from_calls_async(
                 f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
             )
         else:
-            tool_result = await _execute_tool_async(fn, fn_name, tc.arguments)
+            tool_result = await _execute_tool_async(fn, fn_name, tc.arguments, agent, parent_inputs)
 
         if provider == "anthropic":
             tool_result_blocks.append(
@@ -1534,6 +1607,7 @@ def execute_agent(
 
     agent = load(prompt) if isinstance(prompt, str) else prompt
     tools = tools or {}
+    parent_inputs = inputs or {}
     messages = prepare(agent, inputs)
 
     with Tracer.start("AgentLoop") as t:
@@ -1566,6 +1640,7 @@ def execute_agent(
                     content,
                     tools,
                     agent,
+                    parent_inputs,
                 )
                 messages.extend(tool_messages)
                 response = _invoke_executor(agent, messages)
@@ -1582,7 +1657,7 @@ def execute_agent(
                     f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                 )
 
-            tool_messages, _ = _build_tool_result_messages(response, tools)
+            tool_messages, _ = _build_tool_result_messages(response, tools, agent, parent_inputs)
             messages.extend(tool_messages)
             response = _invoke_executor(agent, messages)
 
@@ -1612,6 +1687,7 @@ async def execute_agent_async(
     else:
         agent = prompt
     tools = tools or {}
+    parent_inputs = inputs or {}
     messages = await prepare_async(agent, inputs)
 
     with Tracer.start("AgentLoopAsync") as t:
@@ -1643,6 +1719,7 @@ async def execute_agent_async(
                     content,
                     tools,
                     agent,
+                    parent_inputs,
                 )
                 messages.extend(tool_messages)
                 response = await _invoke_executor_async(agent, messages)
@@ -1659,7 +1736,7 @@ async def execute_agent_async(
                     f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                 )
 
-            tool_messages = await _build_tool_result_messages_async(response, tools)
+            tool_messages = await _build_tool_result_messages_async(response, tools, agent, parent_inputs)
             messages.extend(tool_messages)
             response = await _invoke_executor_async(agent, messages)
 

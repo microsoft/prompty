@@ -372,6 +372,36 @@ export async function execute(
 }
 
 // ---------------------------------------------------------------------------
+// Binding resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve tool bindings: inject values from parentInputs into tool arguments.
+ *
+ * For each binding on the matched tool, looks up `binding.input` in parentInputs
+ * and sets `args[binding.name]` to that value. Returns a new args object.
+ */
+export function resolveBindings(
+  agent: Prompty,
+  toolName: string,
+  args: Record<string, unknown>,
+  parentInputs?: Record<string, unknown>,
+): Record<string, unknown> {
+  if (!parentInputs || !agent.tools || agent.tools.length === 0) return args;
+
+  const toolDef = agent.tools.find((t) => t.name === toolName);
+  if (!toolDef || !toolDef.bindings || toolDef.bindings.length === 0) return args;
+
+  const merged = { ...args };
+  for (const binding of toolDef.bindings) {
+    if (binding.input in parentInputs) {
+      merged[binding.name] = parentInputs[binding.input];
+    }
+  }
+  return merged;
+}
+
+// ---------------------------------------------------------------------------
 // Agent loop: executeAgent()
 // ---------------------------------------------------------------------------
 
@@ -428,6 +458,7 @@ async function buildToolMessagesFromCalls(
   textContent: string,
   tools: Record<string, (...args: unknown[]) => unknown>,
   agent: Prompty,
+  parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const provider = resolveProvider(agent);
@@ -487,6 +518,10 @@ async function buildToolMessagesFromCalls(
     let parsedArgs: unknown;
     try {
       parsedArgs = JSON.parse(tc.arguments);
+      // Resolve bindings: inject values from parentInputs
+      if (parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
+        parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
+      }
       const toolFn = tools[tc.name];
       if (!toolFn) {
         result = `Error: tool "${tc.name}" not found`;
@@ -560,6 +595,7 @@ export async function executeAgent(
     emit("inputs", { prompt: serializeAgent(agent), tools: Object.keys(tools), inputs: inputs ?? {} });
 
     const messages = await prepare(agent, inputs);
+    const parentInputs = inputs ?? {};
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
 
@@ -589,7 +625,7 @@ export async function executeAgent(
         const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
           toolEmit("signature", "prompty.executeAgent.toolCalls");
           toolEmit("description", `Tool call round ${iteration}`);
-          const result = await buildToolMessagesFromCalls(toolCalls, content, tools, agent, toolEmit);
+          const result = await buildToolMessagesFromCalls(toolCalls, content, tools, agent, parentInputs, toolEmit);
           toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
           return result;
         });
@@ -613,7 +649,7 @@ export async function executeAgent(
       const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
         toolEmit("signature", "prompty.executeAgent.toolCalls");
         toolEmit("description", `Tool call round ${iteration}`);
-        const result = await buildToolResultMessages(response, tools, toolEmit);
+        const result = await buildToolResultMessages(response, tools, agent, parentInputs, toolEmit);
         toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
         return result;
       });
@@ -761,27 +797,31 @@ function hasToolCalls(response: unknown): boolean {
 async function buildToolResultMessages(
   response: unknown,
   tools: Record<string, (...args: unknown[]) => unknown>,
+  agent?: Prompty,
+  parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const r = response as Record<string, unknown>;
 
   // Detect response format and dispatch
   if (Array.isArray(r.content) && r.stop_reason === "tool_use") {
-    return buildAnthropicToolResultMessages(r, tools, parentEmit);
+    return buildAnthropicToolResultMessages(r, tools, agent, parentInputs, parentEmit);
   }
 
   // OpenAI Responses API: output[].type === "function_call"
   if (r.object === "response" && Array.isArray(r.output)) {
-    return buildResponsesToolResultMessages(r, tools, parentEmit);
+    return buildResponsesToolResultMessages(r, tools, agent, parentInputs, parentEmit);
   }
 
-  return buildOpenAIToolResultMessages(r, tools, parentEmit);
+  return buildOpenAIToolResultMessages(r, tools, agent, parentInputs, parentEmit);
 }
 
 /** Handle OpenAI ChatCompletion tool calls: choices[0].message.tool_calls */
 async function buildOpenAIToolResultMessages(
   r: Record<string, unknown>,
   tools: Record<string, (...args: unknown[]) => unknown>,
+  agent?: Prompty,
+  parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const choices = r.choices as unknown[];
@@ -811,6 +851,10 @@ async function buildOpenAIToolResultMessages(
     let parsedArgs: unknown;
     try {
       parsedArgs = JSON.parse(fn.arguments as string);
+      // Resolve bindings: inject values from parentInputs
+      if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
+        parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
+      }
       const toolFn = tools[toolName];
       if (!toolFn) {
         result = `Error: tool "${toolName}" not found`;
@@ -851,6 +895,8 @@ async function buildOpenAIToolResultMessages(
 async function buildAnthropicToolResultMessages(
   r: Record<string, unknown>,
   tools: Record<string, (...args: unknown[]) => unknown>,
+  agent?: Prompty,
+  parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const content = r.content as Record<string, unknown>[];
@@ -874,7 +920,12 @@ async function buildAnthropicToolResultMessages(
   for (const block of toolUseBlocks) {
     const toolName = block.name as string;
     const toolCallId = block.id as string;
-    const toolArgs = block.input as Record<string, unknown>;
+    let toolArgs = block.input as Record<string, unknown>;
+
+    // Resolve bindings: inject values from parentInputs
+    if (agent && parentInputs && typeof toolArgs === "object" && toolArgs !== null && !Array.isArray(toolArgs)) {
+      toolArgs = resolveBindings(agent, toolName, toolArgs, parentInputs);
+    }
 
     let result: string;
     try {
@@ -924,6 +975,8 @@ async function buildAnthropicToolResultMessages(
 async function buildResponsesToolResultMessages(
   r: Record<string, unknown>,
   tools: Record<string, (...args: unknown[]) => unknown>,
+  agent?: Prompty,
+  parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
   const output = r.output as Record<string, unknown>[];
@@ -954,6 +1007,10 @@ async function buildResponsesToolResultMessages(
     let parsedArgs: unknown;
     try {
       parsedArgs = JSON.parse(argsStr);
+      // Resolve bindings: inject values from parentInputs
+      if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
+        parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
+      }
       const toolFn = tools[toolName];
       if (!toolFn) {
         result = `Error: tool "${toolName}" not found`;
