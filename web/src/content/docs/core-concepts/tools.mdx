@@ -1,7 +1,7 @@
 ---
 title: Tools
 description: >
-  Tool types in Prompty — function, MCP, OpenAPI, and custom tools that extend
+  Tool types in Prompty — function, prompty, MCP, OpenAPI, and custom tools that extend
   what an LLM can do during prompt execution.
 sidebar:
   order: 4
@@ -30,7 +30,7 @@ tools:
 
 Every tool has a `name`, a `kind` that determines its type, and an optional
 `description`. Beyond that, each kind carries its own fields. Prompty supports
-four tool kinds — backed by AgentSchema types — plus a wildcard catch-all.
+five tool kinds — plus a wildcard catch-all.
 
 ---
 
@@ -40,6 +40,7 @@ four tool kinds — backed by AgentSchema types — plus a wildcard catch-all.
 flowchart TD
     Tool["Tool (base)\nname · kind · description · bindings"]
     Tool --> FunctionTool["FunctionTool\nkind: function\nparameters · strict\n→ local function call"]
+    Tool --> PromptyTool["PromptyTool\nkind: prompty\npath · mode\n→ child .prompty execution"]
     Tool --> McpTool["McpTool\nkind: mcp\nserverName · connection\napprovalMode · allowedTools"]
     Tool --> OpenApiTool["OpenApiTool\nkind: openapi\nconnection · specification\n→ REST API call"]
     Tool --> CustomTool["CustomTool\nkind: * (wildcard)\nconnection · options\n→ provider-specific"]
@@ -48,6 +49,7 @@ flowchart TD
 
     style Tool fill:#1d4ed8,stroke:#1e40af,color:#fff
     style FunctionTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style PromptyTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
     style McpTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
     style OpenApiTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
     style CustomTool fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
@@ -105,6 +107,56 @@ tools:
 
 ---
 
+## PromptyTool — `kind: prompty`
+
+Prompty tools let one `.prompty` file **call another** as a tool. Instead of
+writing a function, you point at a child `.prompty` file — the runtime loads it,
+sends the LLM-provided arguments as inputs, and returns the result.
+
+```yaml
+tools:
+  - name: summarize
+    kind: prompty
+    description: Summarize a piece of text
+    path: ./summarize.prompty
+    mode: single
+    parameters:
+      - name: text
+        kind: string
+        description: The text to summarize
+    bindings:
+      - name: context
+        input: document
+```
+
+| Field | Description |
+|-------|-------------|
+| `path` | Relative path to the child `.prompty` file (resolved from the parent's location) |
+| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `executeAgent` |
+| `parameters` | Optional parameter schema. If omitted, the child's `inputs` are used automatically |
+| `bindings` | Map parent inputs → child parameters (the bound parameters are stripped from the wire schema) |
+
+### Wire Projection
+
+When sent to the LLM, a PromptyTool is **projected** as a standard function
+tool. The runtime:
+
+1. Loads the child `.prompty` file
+2. Uses its `inputs` as the function `parameters`
+3. Strips any bound parameter names from the schema
+4. Uses the tool's `description` (or the child's if not set)
+
+The LLM sees it as a regular function call — it doesn't know it's backed by
+another prompt.
+
+<Aside type="tip">
+  PromptyTool is ideal for **composable prompt chains** — break complex tasks
+  into focused sub-prompts (summarization, extraction, classification) and let
+  the agent decide when to use each one.
+</Aside>
+
+---
+
 ## McpTool — `kind: mcp`
 
 MCP (Model Context Protocol) tools connect to an **external MCP server** that
@@ -130,7 +182,7 @@ tools:
 |-------|-------------|
 | `serverName` | Identifier of the MCP server to connect to |
 | `connection` | How to reach the server (any [Connection](/core-concepts/connections/) type) |
-| `approvalMode` | When tool calls need approval — `always`, `never`, or custom |
+| `approvalMode` | When tool calls need approval — `always`, `never`, or `specify` (with per-tool lists) |
 | `allowedTools` | Whitelist of tool names the model may invoke (optional) |
 
 <Aside>

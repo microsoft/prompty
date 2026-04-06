@@ -274,7 +274,7 @@ user:
 
 <Aside type="tip">
   If the body contains **no role markers**, the entire text is treated as
-  a single `user` message.
+  a single `system` message.
 </Aside>
 
 ## Template Syntax
@@ -364,15 +364,16 @@ model:
   id: gpt-4o
 ```
 
-<Aside type="caution" title="template shorthand is not supported">
-  Unlike `model`, the `template` property does **not** accept a string
-  shorthand in v2. Always use the structured object form:
+<Aside type="caution" title="template shorthand is deprecated">
+  The `template` property accepts a string shorthand for backward compatibility,
+  but it emits a `DeprecationWarning` and will be removed in a future version.
+  Prefer the structured object form:
 
   ```yaml
-  # ✗ Not valid in v2
+  # ⚠ Deprecated (still works, emits warning)
   template: jinja2
 
-  # ✓ Correct
+  # ✓ Recommended
   template:
     format:
       kind: jinja2
@@ -380,8 +381,7 @@ model:
       kind: prompty
   ```
 
-  The loader will auto-migrate old v1 files that use the string form,
-  but will emit a `DeprecationWarning`.
+  The loader auto-migrates old v1 files that use the string form.
 </Aside>
 
 ## Complete Example
