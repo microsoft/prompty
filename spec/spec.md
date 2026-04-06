@@ -2129,34 +2129,30 @@ function invoke_agent(path_or_agent, inputs, tools=null) → result:
       for tool_call in result:
         TRACE: emit "execute_tool" span for tool_call.name
 
-        // Look up handler
+        // Look up handler — two-layer dispatch (§11.2)
+        tool_def = find_tool_definition(agent, tool_call.name)
+
+        // Layer 1: explicit name override
         handler = get_tool(tool_call.name)
-        if handler is null:
-          raise ValueError("Tool not registered: " + tool_call.name)
 
         // Parse arguments
         args = json_parse(tool_call.arguments)
 
         // Apply bindings (inject bound values from inputs)
-        args = apply_bindings(
-          find_tool_definition(agent, tool_call.name),
-          args,
-          inputs
-        )
+        args = apply_bindings(tool_def, args, inputs)
 
-        // Dispatch by tool kind
-        tool_def = find_tool_definition(agent, tool_call.name)
-        match tool_def.kind:
-          "function":
-            tool_result = handler(args)
-          "prompty":
-            tool_result = execute_prompty_tool(tool_def, args, inputs)
-          "mcp":
-            tool_result = mcp_client.call(tool_call.name, args)
-          "openapi":
-            tool_result = http_call(tool_def.specification, tool_call.name, args)
-          default:   // CustomTool
-            tool_result = handler.execute(args)
+        if handler is not null:
+          // Name registry hit — direct call
+          tool_result = handler(args)
+        else:
+          // Layer 2: kind handler fallback
+          kind_handler = get_tool_handler(tool_def.kind)
+          if kind_handler is null:
+            raise ValueError(
+              "No handler registered for tool: " + tool_call.name
+              + " (kind: " + tool_def.kind + ")"
+            )
+          tool_result = kind_handler(tool_def, args, agent, inputs)
 
         // Build tool result message
         tool_msg = Message(
@@ -2414,29 +2410,72 @@ executor MUST raise an error.
 
 ### §11.2 Tool Registry
 
-The tool registry stores handlers that the agent loop invokes when the LLM
-returns tool calls.
+The tool registry provides two layers of dispatch for tool execution in the
+agent loop (§9):
 
-**API:**
+1. **Name registry** — per-tool handlers keyed by tool name. Explicit
+   overrides and user-provided function callables live here.
+2. **Kind handlers** — per-kind handlers keyed by tool kind (`"function"`,
+   `"prompty"`, `"mcp"`, `"openapi"`, `"*"`). These are extensible fallbacks
+   that handle entire categories of tools without per-name registration.
+
+When the agent loop needs to execute a tool call, it resolves the handler
+using the dispatch order defined below.
+
+#### Name Registry API
 
 | Function                        | Description                              |
 | ------------------------------- | ---------------------------------------- |
-| `register_tool(name, handler)`  | Store a tool handler                     |
+| `register_tool(name, handler)`  | Store a per-name tool handler            |
 | `get_tool(name) → handler`     | Retrieve by name; return `null` if absent |
-| `clear_tools()`                 | Remove all entries (for testing)          |
+| `clear_tools()`                 | Remove all name entries (for testing)    |
 
 - All registry operations MUST be thread-safe.
-- The registry MUST be a process-global singleton.
+- The name registry MUST be a process-global singleton.
 
-**Handler types by tool kind:**
+#### Kind Handler API
 
-| Tool Kind   | Handler Type        | Behaviour                          |
-| ----------- | ------------------- | ---------------------------------- |
-| `function`  | callable(args) → result | Direct function call             |
-| `prompty`   | PromptyTool config  | Load child `.prompty`, execute     |
-| `mcp`       | MCP client          | Send MCP tool-call request         |
-| `openapi`   | OpenAPI handler     | Make HTTP call per specification   |
-| custom (`*`)| user-defined        | User-provided execution logic      |
+| Function                               | Description                                       |
+| -------------------------------------- | ------------------------------------------------- |
+| `register_tool_handler(kind, handler)` | Store a kind handler; replaces any existing        |
+| `get_tool_handler(kind) → handler`    | Retrieve by kind; return `null` if absent          |
+| `clear_tool_handlers()`               | Remove all kind entries (for testing)              |
+
+- Kind handlers MUST be a process-global singleton.
+- Implementations SHOULD register built-in kind handlers for `"function"` and
+  `"prompty"` at startup. Handlers for `"mcp"`, `"openapi"`, and `"*"`
+  (custom) MAY be registered by extension packages.
+
+#### Dispatch Order
+
+When resolving a tool call with name `N` and tool definition kind `K`:
+
+```
+1. handler = get_tool(N)
+   → if found, execute handler(args) and return result
+
+2. handler = get_tool_handler(K)
+   → if found, execute handler(tool_def, args, agent, inputs) and return result
+
+3. raise ValueError("No handler registered for tool: " + N + " (kind: " + K + ")")
+```
+
+The name registry (layer 1) always takes priority, allowing users to override
+any tool — including built-in prompty tools — with a custom callable.
+
+#### Built-in Kind Handlers
+
+| Tool Kind    | Handler Behaviour                                             |
+| ------------ | ------------------------------------------------------------- |
+| `"function"` | Look up callable in name registry, call `handler(args)`       |
+| `"prompty"`  | Load child `.prompty` via `tool.path`, execute per §9.6       |
+| `"mcp"`      | Send tool-call request via MCP client protocol                |
+| `"openapi"`  | Make HTTP call per OpenAPI specification                      |
+| `"*"`        | Delegate to user-provided handler's `execute(args)` method   |
+
+Implementations that do not yet support a kind SHOULD register a handler that
+raises `NotImplementedError` with a descriptive message, rather than leaving
+the kind unregistered.
 
 ### §11.3 Invoker Discovery
 

@@ -98,13 +98,19 @@ def _audio_format(media_type: str | None) -> str:
 
 
 def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
-    """Convert agent tools to OpenAI function tool format."""
+    """Convert agent tools to OpenAI function tool format.
+
+    Supports ``kind: function`` (direct schema) and ``kind: prompty``
+    (loads child .prompty to extract its inputSchema as parameters).
+    """
     if not agent.tools:
         return None
 
     wire_tools: list[dict[str, Any]] = []
     for tool in agent.tools:
-        if getattr(tool, "kind", None) == "function":
+        kind = getattr(tool, "kind", None)
+
+        if kind == "function":
             func_def: dict[str, Any] = {
                 "name": tool.name,
             }
@@ -120,7 +126,45 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
                     func_def["parameters"]["additionalProperties"] = False
             wire_tools.append({"type": "function", "function": func_def})
 
+        elif kind == "prompty":
+            func_def = _project_prompty_tool(tool, agent)
+            wire_tools.append({"type": "function", "function": func_def})
+
     return wire_tools if wire_tools else None
+
+
+def _project_prompty_tool(tool: Any, parent: Prompty) -> dict[str, Any]:
+    """Project a PromptyTool as an OpenAI function definition.
+
+    Loads the child ``.prompty`` file, uses its ``inputs`` as the
+    function parameters, and applies binding/strict stripping.
+    """
+    from pathlib import Path
+
+    from ...core.loader import load
+
+    # Resolve child path relative to the parent .prompty file
+    parent_path = (parent.metadata or {}).get("__source_path", "")
+    if not parent_path:
+        raise ValueError(f"Cannot resolve PromptyTool '{tool.name}': parent agent has no __source_path in metadata")
+    child_path = Path(parent_path).parent / tool.path
+    child = load(str(child_path))
+
+    func_def: dict[str, Any] = {"name": tool.name}
+    func_def["description"] = tool.description or child.description or ""
+
+    # Use child's inputs as parameters, stripping bound params
+    if child.inputs:
+        bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
+        params = [p for p in child.inputs if p.name not in bound_names]
+        func_def["parameters"] = _schema_to_wire(params)
+
+    if hasattr(tool, "strict") and tool.strict:
+        func_def["strict"] = True
+        if "parameters" in func_def:
+            func_def["parameters"]["additionalProperties"] = False
+
+    return func_def
 
 
 def _schema_to_wire(properties: list) -> dict[str, Any]:

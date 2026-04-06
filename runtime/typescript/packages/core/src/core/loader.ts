@@ -11,7 +11,7 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname, extname } from "node:path";
 import matter from "gray-matter";
-import { LoadContext } from "../model/context.js";
+import { LoadContext, SaveContext } from "../model/context.js";
 import { Prompty } from "../model/prompty.js";
 
 // ---------------------------------------------------------------------------
@@ -28,6 +28,40 @@ export function load(path: string): Prompty {
   const resolved = resolve(path);
   const raw = readFileSync(resolved, "utf-8");
   return buildAgent(raw, resolved);
+}
+
+/**
+ * Return a `SaveContext` that strips internal `__`-prefixed metadata keys.
+ *
+ * This is the save-side counterpart to the `LoadContext` used during
+ * {@link load}. Pass it to `agent.save()`, `agent.toYaml()`, or
+ * `agent.toJson()` to keep serialised output clean.
+ */
+export function defaultSaveContext(
+  overrides?: Partial<Pick<SaveContext, "collectionFormat" | "useShorthand">>,
+): SaveContext {
+  return new SaveContext({
+    postSave: (data: Record<string, unknown>) => {
+      const meta = data["metadata"];
+      if (meta && typeof meta === "object" && !Array.isArray(meta)) {
+        const cleaned: Record<string, unknown> = {};
+        let hasKeys = false;
+        for (const [k, v] of Object.entries(meta as Record<string, unknown>)) {
+          if (!k.startsWith("__")) {
+            cleaned[k] = v;
+            hasKeys = true;
+          }
+        }
+        if (hasKeys) {
+          data["metadata"] = cleaned;
+        } else {
+          delete data["metadata"];
+        }
+      }
+      return data;
+    },
+    ...overrides,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +82,15 @@ function buildAgent(raw: string, filePath: string): Prompty {
   const ctx = new LoadContext({
     preProcess: makePreProcess(filePath) as (data: Record<string, unknown>) => Record<string, unknown>,
   });
-  return Prompty.load(frontmatter, ctx);
+  const agent = Prompty.load(frontmatter, ctx);
+
+  // Store source path for PromptyTool resolution (relative path lookups)
+  if (!agent.metadata) {
+    agent.metadata = {};
+  }
+  agent.metadata["__source_path"] = filePath;
+
+  return agent;
 }
 
 // ---------------------------------------------------------------------------

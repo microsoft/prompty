@@ -14,12 +14,11 @@ import pytest
 
 from prompty.core.pipeline import (
     _build_tool_result_messages,
-    _execute_tool,
-    _execute_tool_async,
     _has_tool_calls,
     execute_agent,
     execute_agent_async,
 )
+from prompty.core.tool_dispatch import dispatch_tool, dispatch_tool_async
 from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
 
@@ -106,17 +105,19 @@ class TestHasToolCalls:
 
 
 # ---------------------------------------------------------------------------
-# _execute_tool
+# dispatch_tool
 # ---------------------------------------------------------------------------
 
 
 class TestExecuteTool:
     def test_success(self):
-        result = _execute_tool(lambda city: f"Sunny in {city}", "get_weather", '{"city": "Seattle"}')
+        tools = {"get_weather": lambda city: f"Sunny in {city}"}
+        result = dispatch_tool("get_weather", '{"city": "Seattle"}', tools, None, {})
         assert result == "Sunny in Seattle"
 
     def test_bad_json(self):
-        result = _execute_tool(lambda: None, "fn", "not json")
+        tools = {"fn": lambda: None}
+        result = dispatch_tool("fn", "not json", tools, None, {})
         assert "invalid JSON" in result
         assert "fn" in result
 
@@ -124,20 +125,23 @@ class TestExecuteTool:
         def failing_fn():
             raise RuntimeError("oops")
 
-        result = _execute_tool(failing_fn, "fn", "{}")
+        tools = {"fn": failing_fn}
+        result = dispatch_tool("fn", "{}", tools, None, {})
         assert "Error calling 'fn'" in result
         assert "RuntimeError" in result
         assert "oops" in result
 
     def test_result_is_stringified(self):
-        result = _execute_tool(lambda: {"temp": 72}, "fn", "{}")
+        tools = {"fn": lambda: {"temp": 72}}
+        result = dispatch_tool("fn", "{}", tools, None, {})
         assert result == "{'temp': 72}"
 
 
 class TestExecuteToolAsync:
     def test_success_sync_fn(self):
+        tools = {"fn": lambda city: f"Rainy in {city}"}
         result = asyncio.get_event_loop().run_until_complete(
-            _execute_tool_async(lambda city: f"Rainy in {city}", "fn", '{"city": "London"}')
+            dispatch_tool_async("fn", '{"city": "London"}', tools, None, {})
         )
         assert result == "Rainy in London"
 
@@ -145,11 +149,15 @@ class TestExecuteToolAsync:
         async def async_fn(city: str) -> str:
             return f"Cloudy in {city}"
 
-        result = asyncio.get_event_loop().run_until_complete(_execute_tool_async(async_fn, "fn", '{"city": "Paris"}'))
+        tools = {"fn": async_fn}
+        result = asyncio.get_event_loop().run_until_complete(
+            dispatch_tool_async("fn", '{"city": "Paris"}', tools, None, {})
+        )
         assert result == "Cloudy in Paris"
 
     def test_bad_json(self):
-        result = asyncio.get_event_loop().run_until_complete(_execute_tool_async(lambda: None, "fn", "{bad}"))
+        tools = {"fn": lambda: None}
+        result = asyncio.get_event_loop().run_until_complete(dispatch_tool_async("fn", "{bad}", tools, None, {}))
         assert "invalid JSON" in result
 
 
@@ -182,7 +190,7 @@ class TestBuildToolResultMessages:
         messages, _ = _build_tool_result_messages(response, tools)
 
         assert len(messages) == 2
-        assert "not registered" in messages[1].parts[0].value
+        assert "not registered" in messages[1].parts[0].value or "not found" in messages[1].parts[0].value
 
     def test_async_tool_in_sync_mode(self):
         async def async_fn():
@@ -358,7 +366,7 @@ class TestRunAgent:
 
         assert result == "I'll try differently."
         tool_msg = [m for m in messages if m.role == "tool"][0]
-        assert "not registered" in tool_msg.parts[0].value
+        assert "not registered" in tool_msg.parts[0].value or "not found" in tool_msg.parts[0].value
 
     @patch("prompty.core.pipeline.process")
     @patch("prompty.core.pipeline._invoke_executor")

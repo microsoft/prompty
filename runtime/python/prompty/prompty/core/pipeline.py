@@ -19,7 +19,6 @@ plugin discovery system.
 
 from __future__ import annotations
 
-import inspect
 import json
 from collections.abc import Callable
 from typing import Any
@@ -34,6 +33,7 @@ from .discovery import (
     get_processor,
     get_renderer,
 )
+from .tool_dispatch import dispatch_tool, dispatch_tool_async
 from .types import RICH_KINDS, ContentPart, Message, ThreadMarker
 
 __all__ = [
@@ -794,64 +794,6 @@ def _resolve_bindings(
     return merged
 
 
-def _execute_tool(
-    fn: Callable[..., Any],
-    fn_name: str,
-    arguments_json: str,
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> str:
-    """Execute a tool function with JSON arguments, handling errors gracefully.
-
-    If *agent* and *parent_inputs* are provided, binding values are injected
-    into the parsed arguments before calling the function.
-
-    Returns the tool result as a string. On JSON parse error or tool
-    function exception, returns an error message so the model can self-correct.
-    """
-    try:
-        fn_args = json.loads(arguments_json)
-    except json.JSONDecodeError as e:
-        return f"Error: invalid JSON arguments for '{fn_name}': {e}"
-
-    if agent is not None and parent_inputs:
-        fn_args = _resolve_bindings(agent, fn_name, fn_args, parent_inputs)
-
-    try:
-        result = fn(**fn_args)
-    except Exception as e:
-        return f"Error calling '{fn_name}': {type(e).__name__}: {e}"
-
-    return str(result)
-
-
-async def _execute_tool_async(
-    fn: Callable[..., Any],
-    fn_name: str,
-    arguments_json: str,
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> str:
-    """Async variant of :func:`_execute_tool`."""
-    try:
-        fn_args = json.loads(arguments_json)
-    except json.JSONDecodeError as e:
-        return f"Error: invalid JSON arguments for '{fn_name}': {e}"
-
-    if agent is not None and parent_inputs:
-        fn_args = _resolve_bindings(agent, fn_name, fn_args, parent_inputs)
-
-    try:
-        if inspect.iscoroutinefunction(fn):
-            result = await fn(**fn_args)
-        else:
-            result = fn(**fn_args)
-    except Exception as e:
-        return f"Error calling '{fn_name}': {type(e).__name__}: {e}"
-
-    return str(result)
-
-
 def _has_tool_calls(response: Any) -> bool:
     """Check if an LLM response contains tool calls (OpenAI, Anthropic, or Responses API)."""
     # OpenAI format: response.choices[0].finish_reason == "tool_calls"
@@ -936,15 +878,7 @@ def _build_openai_tool_result_messages(
 
     for tc in tool_calls:
         fn_name = tc.function.name
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        elif inspect.iscoroutinefunction(fn):
-            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
-        else:
-            tool_result = _execute_tool(fn, fn_name, tc.function.arguments, agent, parent_inputs)
+        tool_result = dispatch_tool(fn_name, tc.function.arguments, tools, agent, parent_inputs or {})
 
         result_messages.append(
             Message(
@@ -1006,18 +940,10 @@ def _build_anthropic_tool_result_messages(
     tool_results: list[dict[str, Any]] = []
     for block in tool_use_blocks:
         fn_name = block.name
-        fn = tools.get(fn_name)
         tool_input = block.input
         arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
 
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        elif inspect.iscoroutinefunction(fn):
-            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
-        else:
-            tool_result = _execute_tool(fn, fn_name, arguments, agent, parent_inputs)
+        tool_result = dispatch_tool(fn_name, arguments, tools, agent, parent_inputs or {})
 
         tool_results.append(
             {
@@ -1075,13 +1001,7 @@ async def _build_openai_tool_result_messages_async(
 
     for tc in tool_calls:
         fn_name = tc.function.name
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        else:
-            tool_result = await _execute_tool_async(fn, fn_name, tc.function.arguments, agent, parent_inputs)
+        tool_result = await dispatch_tool_async(fn_name, tc.function.arguments, tools, agent, parent_inputs or {})
 
         result_messages.append(
             Message(
@@ -1134,16 +1054,10 @@ async def _build_anthropic_tool_result_messages_async(
     tool_results: list[dict[str, Any]] = []
     for block in tool_use_blocks:
         fn_name = block.name
-        fn = tools.get(fn_name)
         tool_input = block.input
         arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
 
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        else:
-            tool_result = await _execute_tool_async(fn, fn_name, arguments, agent, parent_inputs)
+        tool_result = await dispatch_tool_async(fn_name, arguments, tools, agent, parent_inputs or {})
 
         tool_results.append(
             {
@@ -1204,16 +1118,9 @@ def _build_responses_tool_result_messages(
             )
         )
 
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
+        tool_result = dispatch_tool(fn_name, arguments, tools, agent, parent_inputs or {})
+        if tool_result.startswith("Error:") and fn_name not in tools:
             had_missing = True
-        elif inspect.iscoroutinefunction(fn):
-            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
-        else:
-            tool_result = _execute_tool(fn, fn_name, arguments, agent, parent_inputs)
 
         result_messages.append(
             Message(
@@ -1261,13 +1168,7 @@ async def _build_responses_tool_result_messages_async(
             )
         )
 
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        else:
-            tool_result = await _execute_tool_async(fn, fn_name, arguments, agent, parent_inputs)
+        tool_result = await dispatch_tool_async(fn_name, arguments, tools, agent, parent_inputs or {})
 
         result_messages.append(
             Message(
@@ -1412,15 +1313,7 @@ def _build_tool_messages_from_calls(
 
     for tc in tool_calls:
         fn_name = tc.name
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        elif inspect.iscoroutinefunction(fn):
-            tool_result = f"Error: async tool '{fn_name}' cannot be called in sync mode"
-        else:
-            tool_result = _execute_tool(fn, fn_name, tc.arguments, agent, parent_inputs)
+        tool_result = dispatch_tool(fn_name, tc.arguments, tools, agent, parent_inputs or {})
 
         if provider == "anthropic":
             tool_result_blocks.append(
@@ -1521,13 +1414,7 @@ async def _build_tool_messages_from_calls_async(
 
     for tc in tool_calls:
         fn_name = tc.name
-        fn = tools.get(fn_name)
-        if fn is None:
-            tool_result = (
-                f"Error: tool function '{fn_name}' not registered. Available: {', '.join(sorted(tools)) or '(none)'}"
-            )
-        else:
-            tool_result = await _execute_tool_async(fn, fn_name, tc.arguments, agent, parent_inputs)
+        tool_result = await dispatch_tool_async(fn_name, tc.arguments, tools, agent, parent_inputs or {})
 
         if provider == "anthropic":
             tool_result_blocks.append(

@@ -1,4 +1,4 @@
-"""Core infrastructure — loading, types, protocols, discovery, pipeline, and connections."""
+"""Core infrastructure — loading, types, protocols, discovery, pipeline, connections, and tool dispatch."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from .discovery import (
     get_processor,
     get_renderer,
 )
-from .loader import load, load_async
+from .loader import default_save_context, load, load_async
 from .pipeline import (
     execute,
     execute_async,
@@ -30,6 +30,18 @@ from .protocols import (
     ParserProtocol,
     ProcessorProtocol,
     RendererProtocol,
+)
+from .tool_dispatch import (
+    ToolHandler,
+    ToolHandlerError,
+    clear_tool_handlers,
+    clear_tools,
+    dispatch_tool,
+    dispatch_tool_async,
+    get_tool,
+    get_tool_handler,
+    register_tool,
+    register_tool_handler,
 )
 from .types import (
     RICH_KINDS,

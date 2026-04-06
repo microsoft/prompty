@@ -16,11 +16,11 @@ from typing import Any
 
 import yaml
 
-from ..model import LoadContext, Prompty
+from ..model import LoadContext, Prompty, SaveContext
 from .migration import migrate
 from .utils import load_prompty, load_prompty_async
 
-__all__ = ["load", "load_async"]
+__all__ = ["load", "load_async", "default_save_context"]
 
 
 # ---------------------------------------------------------------------------
@@ -62,6 +62,27 @@ async def load_async(path: str | Path) -> Prompty:
     return _build_agent(data, path)
 
 
+def default_save_context(**kwargs: Any) -> SaveContext:
+    """Return a ``SaveContext`` that strips internal ``__``-prefixed metadata keys.
+
+    This is the save-side counterpart to the ``LoadContext`` used during
+    :func:`load`. Pass it to ``agent.save()``, ``agent.to_yaml()``, or
+    ``agent.to_json()`` to keep serialised output clean.
+    """
+
+    def _strip_internals(data: dict[str, Any]) -> dict[str, Any]:
+        meta = data.get("metadata")
+        if isinstance(meta, dict):
+            cleaned = {k: v for k, v in meta.items() if not k.startswith("__")}
+            if cleaned:
+                data["metadata"] = cleaned
+            else:
+                data.pop("metadata", None)
+        return data
+
+    return SaveContext(post_save=_strip_internals, **kwargs)
+
+
 # ---------------------------------------------------------------------------
 # Internal pipeline
 # ---------------------------------------------------------------------------
@@ -82,6 +103,12 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
     # 3. Load via Prompty.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path))
     agent = Prompty.load(data, ctx)
+
+    # Store source path for PromptyTool resolution (relative path lookups)
+    if agent.metadata is None:
+        agent.metadata = {}
+    agent.metadata["__source_path"] = str(path)
+
     return agent
 
 

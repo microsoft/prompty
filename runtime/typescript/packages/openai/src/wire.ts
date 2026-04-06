@@ -6,6 +6,8 @@
 
 import type { Prompty } from "@prompty/core";
 import type { ContentPart, Message } from "@prompty/core";
+import { load as loadPrompty } from "@prompty/core";
+import { dirname, resolve } from "node:path";
 
 /**
  * Convert an abstract Message to OpenAI wire format.
@@ -299,36 +301,87 @@ function toolsToWire(agent: Prompty): Record<string, unknown>[] {
   const result: Record<string, unknown>[] = [];
 
   for (const t of tools) {
-    if (t.kind !== "function") continue;
+    if (t.kind === "function") {
+      const funcDef: Record<string, unknown> = { name: t.name };
+      if (t.description) funcDef.description = t.description;
 
-    const funcDef: Record<string, unknown> = { name: t.name };
-    if (t.description) funcDef.description = t.description;
+      // Collect bound parameter names to strip from wire format
+      const boundNames = new Set((t.bindings ?? []).map((b) => b.name));
 
-    // Collect bound parameter names to strip from wire format
-    const boundNames = new Set((t.bindings ?? []).map((b) => b.name));
-
-    // Serialize parameters via schemaToWire, filtering out bound params
-    let params = (t as { parameters?: unknown[] }).parameters;
-    if (params && Array.isArray(params)) {
-      if (boundNames.size > 0) {
-        params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+      // Serialize parameters via schemaToWire, filtering out bound params
+      let params = (t as { parameters?: unknown[] }).parameters;
+      if (params && Array.isArray(params)) {
+        if (boundNames.size > 0) {
+          params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+        }
+        funcDef.parameters = schemaToWire(params);
       }
-      funcDef.parameters = schemaToWire(params);
-    }
 
-    // Strict mode
-    const strict = (t as { strict?: boolean }).strict;
-    if (strict) {
-      funcDef.strict = true;
-      if (funcDef.parameters) {
-        (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+      // Strict mode
+      const strict = (t as { strict?: boolean }).strict;
+      if (strict) {
+        funcDef.strict = true;
+        if (funcDef.parameters) {
+          (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+        }
       }
-    }
 
-    result.push({ type: "function", function: funcDef });
+      result.push({ type: "function", function: funcDef });
+    } else if (t.kind === "prompty") {
+      const funcDef = projectPromptyTool(t, agent);
+      result.push({ type: "function", function: funcDef });
+    }
   }
 
   return result;
+}
+
+/**
+ * Project a PromptyTool as an OpenAI function definition.
+ *
+ * Loads the child `.prompty` file, uses its `inputs` as the
+ * function parameters, and applies binding/strict stripping.
+ */
+function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Record<string, unknown> {
+  const toolPath = tool.path as string | undefined;
+  if (!toolPath) {
+    throw new Error(`PromptyTool '${tool.name}' has no path`);
+  }
+
+  // Resolve child path relative to the parent .prompty file
+  const parentPath = (parent.metadata ?? {}).__source_path as string | undefined;
+  if (!parentPath) {
+    throw new Error(
+      `Cannot resolve PromptyTool '${tool.name}': parent agent has no __source_path in metadata`,
+    );
+  }
+  const childPath = resolve(dirname(parentPath), toolPath);
+  const child = loadPrompty(childPath);
+
+  const funcDef: Record<string, unknown> = { name: tool.name };
+  funcDef.description = (tool.description as string) || child.description || "";
+
+  // Use child's inputs as parameters, stripping bound params
+  const bindings = (tool as { bindings?: { name: string }[] }).bindings;
+  const boundNames = new Set((bindings ?? []).map((b) => b.name));
+
+  if (child.inputs && child.inputs.length > 0) {
+    let params: unknown[] = child.inputs;
+    if (boundNames.size > 0) {
+      params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+    }
+    funcDef.parameters = schemaToWire(params);
+  }
+
+  const strict = (tool as { strict?: boolean }).strict;
+  if (strict) {
+    funcDef.strict = true;
+    if (funcDef.parameters) {
+      (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+    }
+  }
+
+  return funcDef;
 }
 
 function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {

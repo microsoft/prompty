@@ -34,6 +34,7 @@ import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
+import { dispatchTool } from "./tool-dispatch.js";
 
 // ---------------------------------------------------------------------------
 // Defaults
@@ -522,21 +523,14 @@ async function buildToolMessagesFromCalls(
       if (parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
         parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
       }
-      const toolFn = tools[tc.name];
-      if (!toolFn) {
-        result = `Error: tool "${tc.name}" not found`;
-      } else {
-        const toolResult = await traceSpan(tc.name, async (toolEmit) => {
-          toolEmit("signature", `prompty.tool.${tc.name}`);
-          toolEmit("description", `Execute tool: ${tc.name}`);
-          toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
-          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
-          const str = typeof r === "string" ? r : JSON.stringify(r);
-          toolEmit("result", str);
-          return str;
-        });
-        result = toolResult as string;
-      }
+      result = await traceSpan(tc.name, async (toolEmit) => {
+        toolEmit("signature", `prompty.tool.${tc.name}`);
+        toolEmit("description", `Execute tool: ${tc.name}`);
+        toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
+        const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs ?? {});
+        toolEmit("result", r);
+        return r;
+      }) as string;
     } catch (err) {
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
@@ -855,21 +849,14 @@ async function buildOpenAIToolResultMessages(
       if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
         parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
       }
-      const toolFn = tools[toolName];
-      if (!toolFn) {
-        result = `Error: tool "${toolName}" not found`;
-      } else {
-        const toolResult = await traceSpan(toolName, async (toolEmit) => {
-          toolEmit("signature", `prompty.tool.${toolName}`);
-          toolEmit("description", `Execute tool: ${toolName}`);
-          toolEmit("inputs", { arguments: parsedArgs, tool_call_id: toolCallId });
-          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
-          const str = typeof r === "string" ? r : JSON.stringify(r);
-          toolEmit("result", str);
-          return str;
-        });
-        result = toolResult as string;
-      }
+      result = await traceSpan(toolName, async (toolEmit) => {
+        toolEmit("signature", `prompty.tool.${toolName}`);
+        toolEmit("description", `Execute tool: ${toolName}`);
+        toolEmit("inputs", { arguments: parsedArgs, tool_call_id: toolCallId });
+        const r = await dispatchTool(toolName, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
+        toolEmit("result", r);
+        return r;
+      }) as string;
     } catch (err) {
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
@@ -929,21 +916,14 @@ async function buildAnthropicToolResultMessages(
 
     let result: string;
     try {
-      const toolFn = tools[toolName];
-      if (!toolFn) {
-        result = `Error: tool "${toolName}" not found`;
-      } else {
-        const toolResult = await traceSpan(toolName, async (toolEmit) => {
-          toolEmit("signature", `prompty.tool.${toolName}`);
-          toolEmit("description", `Execute tool: ${toolName}`);
-          toolEmit("inputs", { arguments: toolArgs, tool_use_id: toolCallId });
-          const r = await toolFn(...(Array.isArray(toolArgs) ? toolArgs : [toolArgs]));
-          const str = typeof r === "string" ? r : JSON.stringify(r);
-          toolEmit("result", str);
-          return str;
-        });
-        result = toolResult as string;
-      }
+      result = await traceSpan(toolName, async (toolEmit) => {
+        toolEmit("signature", `prompty.tool.${toolName}`);
+        toolEmit("description", `Execute tool: ${toolName}`);
+        toolEmit("inputs", { arguments: toolArgs, tool_use_id: toolCallId });
+        const r = await dispatchTool(toolName, toolArgs, tools, agent ?? ({} as Prompty), parentInputs ?? {});
+        toolEmit("result", r);
+        return r;
+      }) as string;
     } catch (err) {
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
@@ -1011,21 +991,14 @@ async function buildResponsesToolResultMessages(
       if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
         parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
       }
-      const toolFn = tools[toolName];
-      if (!toolFn) {
-        result = `Error: tool "${toolName}" not found`;
-      } else {
-        const toolResult = await traceSpan(toolName, async (toolEmit) => {
-          toolEmit("signature", `prompty.tool.${toolName}`);
-          toolEmit("description", `Execute tool: ${toolName}`);
-          toolEmit("inputs", { arguments: parsedArgs, call_id: callId });
-          const r = await toolFn(...(Array.isArray(parsedArgs) ? parsedArgs : [parsedArgs]));
-          const str = typeof r === "string" ? r : JSON.stringify(r);
-          toolEmit("result", str);
-          return str;
-        });
-        result = toolResult as string;
-      }
+      result = await traceSpan(toolName, async (toolEmit) => {
+        toolEmit("signature", `prompty.tool.${toolName}`);
+        toolEmit("description", `Execute tool: ${toolName}`);
+        toolEmit("inputs", { arguments: parsedArgs, call_id: callId });
+        const r = await dispatchTool(toolName, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
+        toolEmit("result", r);
+        return r;
+      }) as string;
     } catch (err) {
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
