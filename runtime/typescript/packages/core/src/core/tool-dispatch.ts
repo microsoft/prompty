@@ -293,10 +293,22 @@ export async function dispatchTool(
     // 3. Look up declarative tool on agent.tools by name → kind handler (Layer 2)
     const tool = agent.tools?.find((t) => t.name === toolName);
     if (!tool) {
-      return `Error: tool "${toolName}" not found`;
+      const available = Object.keys(userTools).sort().join(", ") || "(none)";
+      return `Error: tool "${toolName}" not found in userTools or agent.tools. Available user tools: ${available}`;
     }
 
-    const handler = getToolHandler(tool.kind);
+    const kind = tool.kind || "*";
+    let handler: ToolHandler;
+    try {
+      handler = getToolHandler(kind);
+    } catch {
+      // Fall back to wildcard handler
+      try {
+        handler = getToolHandler("*");
+      } catch {
+        return `Error: no handler registered for tool kind '${kind}' (tool '${toolName}')`;
+      }
+    }
     return await handler.executeTool(
       tool as unknown as Record<string, unknown>,
       args,

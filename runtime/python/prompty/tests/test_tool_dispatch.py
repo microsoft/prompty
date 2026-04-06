@@ -25,7 +25,6 @@ from prompty.core.tool_dispatch import (
     McpToolHandler,
     OpenApiToolHandler,
     PromptyToolHandler,
-    ToolHandler,
     ToolHandlerError,
     clear_tool_handlers,
     clear_tools,
@@ -93,7 +92,9 @@ class TestNameRegistry:
     """Test register_tool / get_tool / clear_tools."""
 
     def test_register_and_get(self):
-        fn = lambda **kw: "hello"
+        def fn(**kw: Any) -> str:
+            return "hello"
+
         register_tool("my_tool", fn)
         assert get_tool("my_tool") is fn
 
@@ -108,8 +109,12 @@ class TestNameRegistry:
         assert get_tool("b") is None
 
     def test_overwrite(self):
-        fn1 = lambda: "first"
-        fn2 = lambda: "second"
+        def fn1() -> str:
+            return "first"
+
+        def fn2() -> str:
+            return "second"
+
         register_tool("x", fn1)
         register_tool("x", fn2)
         assert get_tool("x") is fn2
@@ -189,7 +194,9 @@ class TestDispatchPriority:
 
     def test_kind_handler_fallback(self):
         """Kind handler used when neither user_tools nor name registry has it."""
-        tool_def = _make_tool_def(name="summarize", kind="prompty", path="./child.prompty", mode="single", bindings=None)
+        tool_def = _make_tool_def(
+            name="summarize", kind="prompty", path="./child.prompty", mode="single", bindings=None
+        )
         agent = _make_agent(
             tools=[tool_def],
             metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")},
@@ -363,8 +370,6 @@ class TestPromptyToolHandler:
         tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty", mode="single")
         agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
 
-        mock_child = MagicMock()
-        mock_messages = [MagicMock()]
         with (
             patch("prompty.core.tool_dispatch.PromptyToolHandler.execute_tool") as mock_exec,
         ):
