@@ -63,7 +63,7 @@ describe("FoundryExecutor.resolveClient", () => {
       }),
     });
 
-    await expect(executor.execute(agent, [])).rejects.toThrow("FoundryConnection");
+    await expect(executor.execute(agent, [])).rejects.toThrow("FoundryConnection requires");
   });
 
   it("throws when connection is ApiKeyConnection (wrong type)", async () => {
@@ -78,7 +78,7 @@ describe("FoundryExecutor.resolveClient", () => {
       }),
     });
 
-    await expect(executor.execute(agent, [])).rejects.toThrow("FoundryConnection");
+    await expect(executor.execute(agent, [])).rejects.toThrow("not supported by the Foundry executor");
   });
 });
 

@@ -139,7 +139,13 @@ export class FoundryExecutor extends OpenAIExecutor {
     }
 
     // Build an AzureOpenAI client from the FoundryConnection endpoint
-    if (conn instanceof FoundryConnection && conn.endpoint) {
+    if (conn instanceof FoundryConnection) {
+      if (!conn.endpoint) {
+        throw new Error(
+          "FoundryConnection requires a non-empty 'endpoint'. " +
+          "Set model.connection.endpoint to your Azure OpenAI resource URL.",
+        );
+      }
       const { AzureOpenAI } = require("openai");
       const { DefaultAzureCredential, getBearerTokenProvider } = require("@azure/identity");
 
@@ -156,11 +162,11 @@ export class FoundryExecutor extends OpenAIExecutor {
       }) as OpenAI;
     }
 
+    const kind = conn?.kind ?? "unknown";
     throw new Error(
-      "Foundry executor requires a FoundryConnection (with endpoint) " +
-      "or a ReferenceConnection (with a pre-registered client). " +
-      "Set model.connection.kind to 'foundry' with an endpoint, " +
-      "or register a client with registerConnection().",
+      `Connection kind '${kind}' is not supported by the Foundry executor. ` +
+      "Use 'foundry' (with endpoint + DefaultAzureCredential) or " +
+      "'reference' (with registerConnection()) for pre-configured clients.",
     );
   }
 }

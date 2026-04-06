@@ -126,6 +126,11 @@ export class AzureExecutor extends OpenAIExecutor {
     if (conn instanceof ApiKeyConnection) {
       if (conn.apiKey) kwargs.apiKey = conn.apiKey;
       if (conn.endpoint) kwargs.endpoint = conn.endpoint;
+    } else if (conn) {
+      throw new Error(
+        `Connection kind '${conn.kind}' is not supported by the Azure executor. ` +
+          `Use 'key' for API key auth or 'reference' with registerConnection() for pre-configured clients.`,
+      );
     }
 
     // Azure requires deployment = model id

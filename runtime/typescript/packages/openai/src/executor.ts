@@ -133,6 +133,11 @@ export class OpenAIExecutor implements Executor {
     if (conn instanceof ApiKeyConnection) {
       if (conn.apiKey) kwargs.apiKey = conn.apiKey;
       if (conn.endpoint) kwargs.baseURL = conn.endpoint;
+    } else if (conn) {
+      throw new Error(
+        `Connection kind '${conn.kind}' is not supported by the OpenAI executor. ` +
+          `Use 'key' for API key auth or 'reference' with registerConnection() for pre-configured clients.`,
+      );
     }
 
     return kwargs;

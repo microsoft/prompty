@@ -424,5 +424,11 @@ class AnthropicExecutor:
                 kwargs["api_key"] = conn.apiKey
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
+        elif conn:
+            kind = getattr(conn, "kind", type(conn).__name__)
+            raise NotImplementedError(
+                f"Connection kind '{kind}' is not supported by the Anthropic executor. "
+                f"Use 'key' for API key auth or 'reference' with register_connection() for pre-configured clients."
+            )
 
         return kwargs
