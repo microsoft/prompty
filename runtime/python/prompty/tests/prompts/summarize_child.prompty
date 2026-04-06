@@ -1,0 +1,22 @@
+---
+name: summarize-child
+description: Summarize a piece of text
+model:
+  id: gpt-4
+  apiType: chat
+inputs:
+  - name: text
+    kind: string
+  - name: context
+    kind: string
+    default: ""
+---
+system:
+You are a summarization assistant. Summarize the following text concisely.
+
+{% if context %}
+Context: {{context}}
+{% endif %}
+
+user:
+{{text}}
