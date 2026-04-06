@@ -15,7 +15,6 @@ from .loader import load, load_async
 from .pipeline import (
     execute,
     execute_async,
-    headless,
     prepare,
     prepare_async,
     process,

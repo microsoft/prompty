@@ -107,7 +107,6 @@ result = await prompty.execute_async(
 | `process(agent, resp)` | Extract content → clean result |
 | `execute(prompt, inputs)` | Full pipeline: load + prepare + run |
 | `execute_agent(prompt, ...)` | Full pipeline with tool-call loop |
-| `headless(api, ...)` | Create `Prompty` w/o a file |
 | `validate_inputs(...)` | Check required inputs present |
 
 All functions have `_async` variants (e.g.,

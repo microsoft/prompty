@@ -451,12 +451,7 @@ import prompty
 def validate_config():
     try:
         # Test configuration with a simple prompt
-        test_prompt = prompty.headless(
-            api="chat",
-            content="Test",
-            connection="default"
-        )
-        prompty.execute(test_prompt)
+        prompty.execute("test.prompty")
         print("✅ Configuration valid")
     except Exception as e:
         print(f"❌ Configuration error: {e}")

@@ -37,7 +37,6 @@ from .invoker import (
     execute_agent,
     execute_agent_async,
     execute_async,
-    headless,
     parse,
     parse_async,
     prepare,

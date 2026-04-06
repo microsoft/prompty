@@ -31,7 +31,6 @@ from .core.pipeline import (
     execute_agent,
     execute_agent_async,
     execute_async,
-    headless,
     parse,
     parse_async,
     prepare,
@@ -94,6 +93,4 @@ __all__ = [
     "run_agent_async",
     # Validation
     "validate_inputs",
-    # Headless
-    "headless",
 ]

@@ -534,13 +534,7 @@ print(f"API Key: {'***' if os.getenv('AZURE_OPENAI_API_KEY') else 'Not set'}")
 ```python
 # Test model availability
 try:
-    response = prompty.execute(
-        prompty.headless(
-            api="chat",
-            content="Test",
-            configuration={"type": "azure_openai", "azure_deployment": "gpt-35-turbo"}
-        )
-    )
+    response = prompty.execute("test.prompty")
     print("Model is available")
 except Exception as e:
     print(f"Model not available: {e}")

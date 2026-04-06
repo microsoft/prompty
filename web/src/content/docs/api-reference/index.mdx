@@ -147,21 +147,6 @@ prompty.validate_inputs(agent, {"name": "Jane"})
 # Raises ValueError if 'name' isn't in the schema or required fields are missing
 ```
 
-### `headless(api, content, model, ...)`
-
-Create a `Prompty` programmatically without a `.prompty` file:
-
-```python
-agent = prompty.headless(
-    api="embedding",
-    content="Hello world",
-    model="text-embedding-3-small",
-    provider="openai",
-    connection={"kind": "key", "apiKey": "sk-..."},
-)
-result = prompty.run(agent, agent.metadata["content"])
-```
-
 ## Async Variants
 
 Every pipeline function has an async counterpart (Python):

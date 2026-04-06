@@ -2616,46 +2616,7 @@ references during the load phase.
 - `.env` files MUST NOT override environment variables that are already set
   in the process environment.
 
-### §12.4 Headless Mode
-
-Implementations MAY provide a convenience function for creating a
-`PromptAgent` programmatically without a `.prompty` file:
-
-```
-function headless(options) → PromptAgent:
-  options:
-    api:        string = "chat"       // model.apiType
-    content:    string = ""           // instructions / prompt text
-    model:      string = ""           // model.id
-    provider:   string = "openai"     // model.provider
-    connection: dict   = null         // model.connection config
-    options:    dict   = null         // model.options config
-
-  agent = new PromptAgent()
-  agent.name         = "headless"
-  agent.kind         = "prompt"
-  agent.model.id     = options.model
-  agent.model.provider = options.provider
-  agent.model.apiType  = options.api
-  agent.instructions   = options.content
-
-  if options.connection is not null:
-    agent.model.connection = build_connection(options.connection)
-
-  if options.options is not null:
-    agent.model.options = build_model_options(options.options)
-
-  // Store content in metadata for execute() to use when
-  // no instructions/template rendering is needed
-  agent.metadata = { "content": options.content }
-
-  return agent
-```
-
-This is a convenience shortcut. The returned `PromptAgent` MUST be usable
-with `execute()` and `process()` without further modification.
-
-### §12.5 Error Conditions
+### §12.4 Error Conditions
 
 Implementations MUST raise appropriate errors for the conditions listed
 below. This specification defines **what** error to raise and **when**; the

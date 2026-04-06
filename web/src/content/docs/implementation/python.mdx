@@ -106,21 +106,6 @@ result = prompty.execute_agent(
 )
 ```
 
-### Headless Mode
-
-Create a `Prompty` object programmatically without a `.prompty` file:
-
-```python
-agent = prompty.headless(
-    api="chat",
-    content="Translate the following to French: Hello world",
-    model="gpt-4o-mini",
-    provider="openai",
-    connection={"kind": "key", "apiKey": os.environ["OPENAI_API_KEY"]},
-)
-result = prompty.run(agent, agent.metadata["content"])
-```
-
 ### Connection Registry
 
 Pre-configure SDK clients for production use:

@@ -118,26 +118,6 @@ Execute a prepared prompt against the model:
 result = prompty.run(prepared)
 ```
 
-## Headless Usage
-
-For programmatic prompt creation without files:
-
-```python
-# Create a headless prompt
-prompt = prompty.headless(
-    api="chat",
-    content="Hello, {{name}}! Tell me about {{topic}}.",
-    connection={
-        "type": "azure_openai",
-        "azure_endpoint": "https://your-endpoint.openai.azure.com/",
-        "azure_deployment": "gpt-35-turbo"
-    }
-)
-
-# Execute it
-response = prompty.execute(prompt, inputs={"name": "Bob", "topic": "Python"})
-```
-
 ## Available Invokers
 
 The runtime supports multiple AI service providers:

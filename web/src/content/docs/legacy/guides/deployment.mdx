@@ -228,13 +228,7 @@ class PromptResponse(BaseModel):
 async def health_check():
     try:
         # Test prompty functionality
-        test_result = prompty.execute(
-            prompty.headless(
-                api="chat",
-                content="Test",
-                connection="default"
-            )
-        )
+        test_result = prompty.execute("health_check.prompty")
         return {"status": "healthy", "timestamp": "2024-01-15T10:30:00Z"}
     except Exception as e:
         logger.error(f"Health check failed: {e}")
