@@ -496,7 +496,6 @@ resolved during loading (§4).
 Resolves to the value of environment variable `VAR_NAME`.
 
 - If `VAR_NAME` is not set, implementations MUST raise a `ValueError` (or equivalent).
-- Implementations SHOULD load `.env` files before resolving (see §4).
 
 #### `${env:VAR_NAME:default}`
 
@@ -882,10 +881,11 @@ function load(path):
 
 ### §4.3 Dotenv Loading
 
-Implementations SHOULD load `.env` files before resolving `${env:}` references.
-
-**Search order**: Starting from the `.prompty` file's directory, walk up parent
-directories until a `.env` file is found or the filesystem root is reached.
+Loading `.env` files is an **application-level concern**, not a runtime library
+responsibility. Runtime libraries MUST NOT automatically load `.env` files as a
+side effect of `load()`. Applications and tools (e.g., VS Code extensions, CLI
+runners) SHOULD load `.env` files before invoking `load()` so that `${env:}`
+references resolve correctly.
 
 `.env` file format: One `KEY=VALUE` pair per line. Lines starting with `#` are comments.
 Blank lines are ignored. Values MAY be quoted with single or double quotes.
@@ -2604,13 +2604,15 @@ function validate_inputs(agent, inputs) → dict:
 
 ### §12.3 Dotenv Loading
 
-Implementations SHOULD load `.env` files before resolving `${env:}`
-references during the load phase.
+Loading `.env` files is an **application-level concern**. Runtime libraries
+MUST NOT automatically load `.env` files as a side effect of loading a
+`.prompty` file.
 
-**Requirements:**
+**Guidance for application authors:**
 
-- Look for `.env` in the `.prompty` file's parent directory.
-- Implementations MAY additionally search parent directories.
+- Load `.env` files at application startup, before calling `load()`.
+- Look for `.env` in the `.prompty` file's parent directory or the
+  project root.
 - Format: standard dotenv (`KEY=VALUE`, one per line, `#` comments,
   optional quoting).
 - `.env` files MUST NOT override environment variables that are already set

@@ -57,6 +57,7 @@
     "@prompty/core": "file:../core",
     "@anthropic-ai/sdk": "^0.39.0",
     "@types/node": "^20.11.0",
+    "dotenv": "^16.4.0",
     "tsup": "^8.4.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

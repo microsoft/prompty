@@ -2,6 +2,7 @@
  * Foundry (Azure OpenAI) integration tests — real API calls.
  * Auto-skipped when Azure env vars are not set.
  */
+import "dotenv/config";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";

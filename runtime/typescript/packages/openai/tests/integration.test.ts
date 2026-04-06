@@ -2,6 +2,7 @@
  * OpenAI integration tests — real API calls against OpenAI endpoints.
  * Auto-skipped when OPENAI_API_KEY is not set.
  */
+import "dotenv/config";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";

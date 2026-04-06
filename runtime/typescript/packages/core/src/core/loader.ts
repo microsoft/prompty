@@ -13,7 +13,6 @@ import { resolve, dirname, extname } from "node:path";
 import matter from "gray-matter";
 import { LoadContext } from "../model/context.js";
 import { Prompty } from "../model/prompty.js";
-import "dotenv/config";
 
 // ---------------------------------------------------------------------------
 // Public API

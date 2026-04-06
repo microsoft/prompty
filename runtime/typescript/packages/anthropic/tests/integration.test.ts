@@ -2,6 +2,7 @@
  * Anthropic integration tests — real API calls against Anthropic Messages API.
  * Auto-skipped when ANTHROPIC_API_KEY is not set.
  */
+import "dotenv/config";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
