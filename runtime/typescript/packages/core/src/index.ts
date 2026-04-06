@@ -90,9 +90,12 @@ export {
   toSerializable,
   consoleTracer,
   PromptyTracer,
+  otelTracer,
   type TracerBackend,
   type TracerFactory,
   type SpanEmitter,
+  type OtelTracerOptions,
+  type OtelApi,
 } from "./tracing/index.js";
 
 // ---------------------------------------------------------------------------
