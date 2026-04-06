@@ -528,29 +528,48 @@ function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
   const result: Record<string, unknown>[] = [];
 
   for (const t of tools) {
-    if (t.kind !== "function") continue;
+    if (t.kind === "function") {
+      // Responses API uses flat tool format (not nested under "function:")
+      const tool: Record<string, unknown> = {
+        type: "function",
+        name: t.name,
+      };
+      if (t.description) tool.description = t.description;
 
-    // Responses API uses flat tool format (not nested under "function:")
-    const tool: Record<string, unknown> = {
-      type: "function",
-      name: t.name,
-    };
-    if (t.description) tool.description = t.description;
-
-    const params = (t as { parameters?: unknown[] }).parameters;
-    if (params && Array.isArray(params)) {
-      tool.parameters = schemaToWire(params);
-    }
-
-    const strict = (t as { strict?: boolean }).strict;
-    if (strict) {
-      tool.strict = true;
-      if (tool.parameters) {
-        (tool.parameters as Record<string, unknown>).additionalProperties = false;
+      const params = (t as { parameters?: unknown[] }).parameters;
+      if (params && Array.isArray(params)) {
+        tool.parameters = schemaToWire(params);
       }
-    }
 
-    result.push(tool);
+      const strict = (t as { strict?: boolean }).strict;
+      if (strict) {
+        tool.strict = true;
+        if (tool.parameters) {
+          (tool.parameters as Record<string, unknown>).additionalProperties = false;
+        }
+      }
+
+      result.push(tool);
+    } else if (t.kind === "prompty") {
+      // Project prompty tool as a flat function definition (Responses API format)
+      const projected = projectPromptyTool(t, agent);
+      const tool: Record<string, unknown> = {
+        type: "function",
+        name: projected.name,
+      };
+      if (projected.description) tool.description = projected.description;
+      if (projected.parameters) tool.parameters = projected.parameters;
+
+      const strict = (projected as Record<string, unknown>).strict;
+      if (strict) {
+        tool.strict = true;
+        if (tool.parameters) {
+          (tool.parameters as Record<string, unknown>).additionalProperties = false;
+        }
+      }
+
+      result.push(tool);
+    }
   }
 
   return result;

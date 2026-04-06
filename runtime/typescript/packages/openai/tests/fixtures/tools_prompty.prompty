@@ -1,0 +1,30 @@
+---
+name: prompty-tools-test
+model:
+  id: gpt-4
+  apiType: chat
+  connection:
+    kind: reference
+    name: mock-openai
+tools:
+  - name: summarize
+    kind: prompty
+    description: Summarize a piece of text
+    path: ./summarize_child.prompty
+    mode: single
+    bindings:
+      - name: context
+        input: document
+inputs:
+  - name: question
+    kind: string
+    default: Can you summarize this document?
+  - name: document
+    kind: string
+    default: ""
+---
+system:
+You are a helpful assistant that can summarize documents.
+
+user:
+{{question}}

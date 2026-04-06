@@ -351,7 +351,9 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
 
     wire_tools: list[dict[str, Any]] = []
     for tool in agent.tools:
-        if getattr(tool, "kind", None) == "function":
+        kind = getattr(tool, "kind", None)
+
+        if kind == "function":
             tool_def: dict[str, Any] = {
                 "type": "function",
                 "name": tool.name,
@@ -361,6 +363,23 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if hasattr(tool, "parameters") and tool.parameters:
                 tool_def["parameters"] = _schema_to_wire(tool.parameters)
             if hasattr(tool, "strict") and tool.strict:
+                tool_def["strict"] = True
+                if "parameters" in tool_def:
+                    tool_def["parameters"]["additionalProperties"] = False
+            wire_tools.append(tool_def)
+
+        elif kind == "prompty":
+            # Project prompty tool as a flat function definition (Responses API format)
+            projected = _project_prompty_tool(tool, agent)
+            tool_def = {
+                "type": "function",
+                "name": projected["name"],
+            }
+            if projected.get("description"):
+                tool_def["description"] = projected["description"]
+            if projected.get("parameters"):
+                tool_def["parameters"] = projected["parameters"]
+            if projected.get("strict"):
                 tool_def["strict"] = True
                 if "parameters" in tool_def:
                     tool_def["parameters"]["additionalProperties"] = False

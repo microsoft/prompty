@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 import {
   Prompty,
   Model,
@@ -8,9 +10,14 @@ import {
   ApiKeyConnection,
   Property,
   FunctionTool,
+  PromptyTool,
   Message,
   text,
+  load,
 } from "@prompty/core";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -168,6 +175,65 @@ describe("buildChatArgs tools", () => {
     const tools = args.tools as Record<string, unknown>[];
     const fn = tools[0].function as Record<string, unknown>;
     expect(fn.description).toBeUndefined();
+  });
+});
+
+// ===========================================================================
+// buildChatArgs — PromptyTool wire projection
+// ===========================================================================
+
+describe("buildChatArgs prompty tools", () => {
+  it("projects prompty tool as function definition using child inputs", () => {
+    const fixturePath = resolve(__dirname, "fixtures", "tools_prompty.prompty");
+    const agent = load(fixturePath);
+    const args = buildChatArgs(agent, []);
+
+    const tools = args.tools as Record<string, unknown>[];
+    expect(tools).toBeDefined();
+    expect(tools.length).toBe(1);
+    expect(tools[0].type).toBe("function");
+
+    const fn = tools[0].function as Record<string, unknown>;
+    expect(fn.name).toBe("summarize");
+    expect(fn.description).toBe("Summarize a piece of text");
+    expect(fn.parameters).toBeDefined();
+
+    // Child has inputs: text (string) + context (string), but context is bound → stripped
+    const params = fn.parameters as Record<string, unknown>;
+    const props = params.properties as Record<string, unknown>;
+    expect(props.text).toBeDefined();
+    expect(props.context).toBeUndefined(); // bound via bindings
+  });
+
+  it("projects prompty tool in responses API flat format", () => {
+    const fixturePath = resolve(__dirname, "fixtures", "tools_prompty.prompty");
+    const agent = load(fixturePath);
+    // Override apiType for responses
+    agent.model!.apiType = "responses";
+    const msgs = [new Message("user", [text("summarize this")])];
+    const args = buildResponsesArgs(agent, msgs);
+
+    const tools = args.tools as Record<string, unknown>[];
+    expect(tools).toBeDefined();
+    expect(tools.length).toBe(1);
+    expect(tools[0].type).toBe("function");
+    expect(tools[0].name).toBe("summarize");
+    // Flat format — no `function:` wrapper
+    expect(tools[0].function).toBeUndefined();
+    expect(tools[0].parameters).toBeDefined();
+  });
+
+  it("throws when parent has no __source_path", () => {
+    const tool = new PromptyTool({
+      name: "child",
+      kind: "prompty",
+      path: "./child.prompty",
+    });
+    const agent = makeAgent({ tools: [tool] });
+    // Remove source path
+    if (agent.metadata) delete agent.metadata.__source_path;
+
+    expect(() => buildChatArgs(agent, [])).toThrow("__source_path");
   });
 });
 
