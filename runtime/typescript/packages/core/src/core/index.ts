@@ -12,5 +12,6 @@ export {
   run,
   execute,
   executeAgent,
+  resolveBindings,
   runAgent,
 } from "./pipeline.js";

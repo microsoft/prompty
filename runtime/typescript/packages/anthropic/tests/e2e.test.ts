@@ -134,14 +134,14 @@ describe("wire format", () => {
     const args = buildChatArgs(mockAgent as any, msgs);
 
     expect(args.system).toBe("You are helpful.");
-    expect(args.messages).toEqual([{ role: "user", content: "Hello" }]);
+    expect(args.messages).toEqual([{ role: "user", content: [{ type: "text", text: "Hello" }] }]);
     expect(args.max_tokens).toBe(512);
   });
 
   it("defaults max_tokens to 1024", () => {
     const msgs = [textMsg("user", "Hi")];
     const args = buildChatArgs({ model: { id: "claude-sonnet-4-5-20250929" } } as any, msgs);
-    expect(args.max_tokens).toBe(1024);
+    expect(args.max_tokens).toBe(4096);
   });
 
   it("maps model options correctly", () => {

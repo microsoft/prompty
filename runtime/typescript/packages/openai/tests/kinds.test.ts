@@ -191,7 +191,7 @@ describe("buildChatArgs structured output", () => {
     expect(rf.type).toBe("json_schema");
 
     const jsonSchema = rf.json_schema as Record<string, unknown>;
-    expect(jsonSchema.name).toBe("my_research_agent");
+    expect(jsonSchema.name).toBe("structured_output");
     expect(jsonSchema.strict).toBe(true);
 
     const inner = jsonSchema.schema as Record<string, unknown>;
@@ -251,7 +251,7 @@ describe("buildEmbeddingArgs", () => {
     const args = buildEmbeddingArgs(agent, "Hello world");
 
     expect(args.model).toBe("text-embedding-3-small");
-    expect(args.input).toEqual(["Hello world"]);
+    expect(args.input).toBe("Hello world");
   });
 
   it("passes array input through", () => {
@@ -629,7 +629,7 @@ describe("buildResponsesArgs", () => {
     const textConfig = args.text as Record<string, unknown>;
     const format = textConfig.format as Record<string, unknown>;
     expect(format.type).toBe("json_schema");
-    expect(format.name).toBe("test_structured");
+    expect(format.name).toBe("structured_output");
     expect(format.strict).toBe(true);
     expect(format.schema).toBeDefined();
   });

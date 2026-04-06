@@ -51,13 +51,8 @@ export function messageToWire(msg: Message): Record<string, unknown> {
     return wire;
   }
 
-  const content = msg.toTextContent();
-  if (typeof content === "string") {
-    wire.content = content;
-  } else {
-    // Multimodal — convert parts to Anthropic format
-    wire.content = msg.parts.map(partToWire);
-  }
+  // Always use content blocks array for Anthropic wire format
+  wire.content = msg.parts.map(partToWire);
 
   return wire;
 }
@@ -71,8 +66,19 @@ function partToWire(part: ContentPart): Record<string, unknown> {
       return { type: "text", text: part.value };
     case "image": {
       // Anthropic uses base64 source blocks or URL
-      if (part.source.startsWith("data:") || part.source.startsWith("/")) {
-        // Base64 encoded
+      if (part.mediaType) {
+        // mediaType present → treat source as base64 data
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: part.mediaType,
+            data: part.source,
+          },
+        };
+      }
+      if (part.source.startsWith("data:")) {
+        // Data URL — extract base64 payload and MIME type
         const [header, data] = part.source.split(",", 2);
         const mediaType = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
         return {
@@ -101,7 +107,7 @@ function partToWire(part: ContentPart): Record<string, unknown> {
 // Build API arguments
 // ---------------------------------------------------------------------------
 
-const DEFAULT_MAX_TOKENS = 1024;
+const DEFAULT_MAX_TOKENS = 4096;
 
 /**
  * Build Anthropic Messages API arguments from agent config and messages.

@@ -264,7 +264,7 @@ describe("Foundry E2E Pipeline", () => {
       expect(rf.type).toBe("json_schema");
 
       const jsonSchema = rf.json_schema as Record<string, unknown>;
-      expect(jsonSchema.name).toBe("foundry_structured");
+      expect(jsonSchema.name).toBe("structured_output");
       expect(jsonSchema.strict).toBe(true);
     });
   });
@@ -660,7 +660,7 @@ describe("Foundry E2E Pipeline", () => {
       const textField = lastResponsesArgs!.text as Record<string, unknown>;
       const format = textField.format as Record<string, unknown>;
       expect(format.type).toBe("json_schema");
-      expect(format.name).toBe("foundry_responses_structured");
+      expect(format.name).toBe("structured_output");
     });
 
     it("handles tool calls from Responses API", async () => {

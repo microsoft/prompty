@@ -48,12 +48,28 @@ function partToWire(part: ContentPart): Record<string, unknown> {
         type: "input_audio",
         input_audio: {
           data: part.source,
-          ...(part.mediaType && { format: part.mediaType }),
+          ...(part.mediaType && { format: mimeToAudioFormat(part.mediaType) }),
         },
       };
     case "file":
       return { type: "file", file: { url: part.source } };
   }
+}
+
+/** Map audio MIME types to OpenAI short format names. */
+const AUDIO_MIME_MAP: Record<string, string> = {
+  "audio/wav": "wav",
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/mp4": "mp4",
+  "audio/ogg": "ogg",
+  "audio/flac": "flac",
+  "audio/webm": "webm",
+  "audio/pcm": "pcm",
+};
+
+function mimeToAudioFormat(mediaType: string): string {
+  return AUDIO_MIME_MAP[mediaType.toLowerCase()] ?? mediaType;
 }
 
 /**
@@ -109,11 +125,12 @@ export function buildEmbeddingArgs(
       }
       return String(item);
     });
-    input = texts;
+    // Single input → string, multiple → array
+    input = texts.length === 1 ? texts[0] : texts;
   } else if (typeof data === "string") {
-    input = [data];
+    input = data;
   } else {
-    input = [String(data)];
+    input = String(data);
   }
 
   const args: Record<string, unknown> = { input, model };
@@ -327,7 +344,7 @@ function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
     required.push(prop.name);
   }
 
-  const name = (agent.name || "response").toLowerCase().replace(/[\s-]/g, "_");
+  const name = "structured_output";
 
   return {
     type: "json_schema",
@@ -500,7 +517,7 @@ function outputSchemaToResponsesWire(agent: Prompty): Record<string, unknown> | 
     required.push(prop.name);
   }
 
-  const name = (agent.name || "response").toLowerCase().replace(/[\s-]/g, "_");
+  const name = "structured_output";
 
   return {
     format: {

@@ -247,7 +247,13 @@ function processChatCompletion(
 
   // Content
   const content = message.content as string | null;
-  if (content === null) return null;
+
+  // Refusal — when content is null but refusal is present, return the refusal
+  if (content === null) {
+    const refusal = message.refusal as string | undefined;
+    if (typeof refusal === "string") return refusal;
+    return null;
+  }
 
   // Structured output — JSON parse when outputs schema exists
   if (agent.outputs && agent.outputs.length > 0) {

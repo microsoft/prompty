@@ -67,6 +67,7 @@ export {
   run,
   execute,
   executeAgent,
+  resolveBindings,
   runAgent,
 } from "./core/index.js";
 

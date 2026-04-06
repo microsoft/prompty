@@ -237,7 +237,7 @@ describe("E2E Pipeline", () => {
       expect(rf.type).toBe("json_schema");
 
       const jsonSchema = (rf.json_schema as Record<string, unknown>);
-      expect(jsonSchema.name).toBe("e2e_structured");
+      expect(jsonSchema.name).toBe("structured_output");
       expect(jsonSchema.strict).toBe(true);
     });
   });
@@ -303,7 +303,7 @@ describe("E2E Pipeline", () => {
 
       expect(lastEmbeddingArgs).toBeDefined();
       expect(lastEmbeddingArgs!.model).toBe("text-embedding-3-small");
-      expect(Array.isArray(lastEmbeddingArgs!.input)).toBe(true);
+      expect(typeof lastEmbeddingArgs!.input).toBe("string");
 
       // Should NOT have chat-specific fields
       expect(lastEmbeddingArgs!.temperature).toBeUndefined();
@@ -668,7 +668,7 @@ describe("E2E Pipeline", () => {
       const text = lastResponsesArgs!.text as Record<string, unknown>;
       const format = text.format as Record<string, unknown>;
       expect(format.type).toBe("json_schema");
-      expect(format.name).toBe("e2e_responses_structured");
+      expect(format.name).toBe("structured_output");
     });
 
     it("handles tool calls from Responses API", async () => {

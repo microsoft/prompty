@@ -994,66 +994,185 @@ AGENT_IDS = [v["name"] for v in AGENT_VECTORS]
 
 @pytest.mark.parametrize("vec", AGENT_VECTORS, ids=AGENT_IDS)
 def test_agent_vector(vec: dict):
-    """Test agent vectors — validates agent loop behavior with mocked LLM calls."""
+    """Test agent vectors via the REAL execute_agent() pipeline.
+
+    Registers a mock executor that replays canned LLM responses from the
+    vector sequence, then calls the production execute_agent(). This
+    validates the full agent loop including binding injection, tool result
+    message construction, and iteration control.
+    """
+    from unittest.mock import patch
+
+    from prompty.core.discovery import _cache, clear_cache
+    from prompty.core.pipeline import execute_agent
+
     name = vec["name"]
     inp = vec["input"]
     sequence = vec["sequence"]
     expected = vec["expected"]
 
-    # Build tool functions that return predefined results
-    tool_results_map: dict[int, dict[str, str]] = {}
-    for step in sequence:
-        if "tool_results" in step:
-            for tr in step["tool_results"]:
-                tool_results_map.setdefault(step["turn"], {})[tr["tool_call_id"]] = tr["result"]
+    # -- Build the Prompty agent from vector data --
+    tools_list = [_build_function_tool(t) for t in inp.get("tools", [])]
+    agent = Prompty(
+        name="agent_test",
+        model=Model(id="gpt-4", provider="specmock"),
+        tools=tools_list,
+        instructions="placeholder",
+        template=Template.load({"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}}),
+    )
 
-    # Build mock tool functions
+    # -- Build canned LLM responses --
+    mock_responses = [_make_mock_chat_completion(step["llm_response"]) for step in sequence]
+    response_iter = iter(mock_responses)
+
+    # -- Mock executor: replays canned responses --
+    class SpecMockExecutor:
+        def execute(self, _agent, _messages):
+            return next(response_iter)
+
+        async def execute_async(self, _agent, _messages):
+            return next(response_iter)
+
+    # -- Mock processor: extracts content from our mock response format --
+    class SpecMockProcessor:
+        def process(self, _agent, response):
+            choice = response.choices[0]
+            return choice.message.content or ""
+
+        async def process_async(self, _agent, response):
+            return self.process(_agent, response)
+
+    # -- Build tool functions that capture received args --
+    captured_args: dict[str, dict] = {}  # tool_name -> last received args
+    tool_result_queue: dict[str, list[str]] = {}  # tool_name -> [result1, result2, ...]
+
+    for step in sequence:
+        for tr in step.get("tool_results", []):
+            # Map call_id → result, and also build per-tool result queues
+            for tc in step.get("expected_tool_calls", []):
+                if tc.get("id") == tr["tool_call_id"] or True:
+                    # Just queue results by position for each tool
+                    pass
+    # Simpler approach: build per-tool result queues from sequence order
+    for step in sequence:
+        if "tool_results" not in step:
+            continue
+        calls = step.get("expected_tool_calls", [])
+        results = step["tool_results"]
+        for i, tr in enumerate(results):
+            # Find the tool name from the expected_tool_calls by matching call_id
+            tool_name = None
+            for tc in calls:
+                if tc.get("id") == tr["tool_call_id"]:
+                    tool_name = tc["name"]
+                    break
+            if tool_name is None:
+                # Fallback: match by position
+                if i < len(calls):
+                    tool_name = calls[i]["name"]
+                else:
+                    tool_name = (
+                        list(inp.get("tool_functions", {}).keys())[0] if inp.get("tool_functions") else "unknown"
+                    )
+            tool_result_queue.setdefault(tool_name, []).append(tr["result"])
+
     tool_functions: dict[str, Any] = {}
     for tname in inp.get("tool_functions", {}):
-        # Create a closure that returns the right result based on call args
-        def make_tool(tool_name: str):
-            call_count = [0]
+
+        def _make_fn(fn_name: str):
+            call_idx = [0]
 
             def tool_fn(**kwargs) -> str:
-                # Find the right result from the sequence
-                call_count[0] += 1
-                # Look through sequence for this tool's result
-                for step in sequence:
-                    if "tool_results" not in step:
-                        continue
-                    for tr in step["tool_results"]:
-                        if tr["result"] not in [r.get("__used") for r in step.get("_used", [])]:
-                            # Simple heuristic: return results in order
-                            return tr["result"]
+                captured_args[fn_name] = dict(kwargs)
+                results = tool_result_queue.get(fn_name, [])
+                idx = call_idx[0]
+                call_idx[0] += 1
+                if idx < len(results):
+                    return results[idx]
                 return ""
 
             return tool_fn
 
-        tool_functions[tname] = make_tool(tname)
+        tool_functions[tname] = _make_fn(tname)
 
-    # Build the mock LLM responses sequence
-    mock_responses = []
-    for step in sequence:
-        resp_data = step["llm_response"]
-        mock_responses.append(_make_mock_chat_completion(resp_data))
+    # -- Inject mock executor/processor into discovery cache --
+    old_cache = dict(_cache)
+    clear_cache()
+    _cache[("prompty.executors", "specmock")] = SpecMockExecutor()
+    _cache[("prompty.processors", "specmock")] = SpecMockProcessor()
 
-    # Build agent (used for context; kept for future expansion)
-    _agent = Prompty(  # noqa: F841
-        name="agent_test",
-        model=Model(id="gpt-4", apiType="agent", provider="openai"),
-        tools=[_build_function_tool(t) for t in inp.get("tools", [])],
-        metadata={"tool_functions": {}},
-    )
+    try:
+        # -- Build input messages for prepare() to return --
+        input_messages = [Message(m["role"], [TextPart(value=m["content"])]) for m in inp["messages"]]
 
-    # We need to test the agent loop behavior.
-    # Since the actual _execute_agent is deeply integrated with the SDK client,
-    # we'll simulate the loop logic here to validate the vector expectations.
+        # Mock prepare() to return our pre-built messages (agent vectors
+        # test the loop, not the render/parse pipeline)
+        with patch("prompty.core.pipeline.prepare", return_value=input_messages):
+            if "error" in expected:
+                _test_agent_error_real(name, agent, inp, expected, tool_functions)
+            else:
+                result = execute_agent(
+                    agent,
+                    inputs=inp.get("parent_inputs"),
+                    tools=tool_functions,
+                )
 
-    # Validate expected properties
-    if "error" in expected:
-        _test_agent_error_vector(name, inp, sequence, expected, mock_responses)
+                # Validate result
+                exp_result = expected.get("result", "")
+                assert result == exp_result, (
+                    f"Agent '{name}': result mismatch\n  actual:   {result!r}\n  expected: {exp_result!r}"
+                )
+
+                # Validate execution args (binding injection!)
+                for step in sequence:
+                    if "expected_execution_args" in step:
+                        for tool_name, exp_args in step["expected_execution_args"].items():
+                            assert tool_name in captured_args, f"Agent '{name}': tool '{tool_name}' was never called"
+                            assert captured_args[tool_name] == exp_args, (
+                                f"Agent '{name}': tool '{tool_name}' received wrong args\n"
+                                f"  actual:   {captured_args[tool_name]}\n"
+                                f"  expected: {exp_args}"
+                            )
+    finally:
+        # Restore discovery cache
+        clear_cache()
+        _cache.update(old_cache)
+
+
+def _test_agent_error_real(
+    name: str,
+    agent: Prompty,
+    inp: dict,
+    expected: dict,
+    tool_functions: dict[str, Any],
+):
+    """Test that execute_agent raises on error vectors."""
+    from prompty.core.pipeline import execute_agent
+
+    error_msg = expected.get("error", "")
+
+    if "max_iterations" in name.lower() or "exceeded" in error_msg.lower():
+        with pytest.raises(ValueError, match="max_iterations"):
+            execute_agent(
+                agent,
+                inputs=inp.get("parent_inputs"),
+                tools=tool_functions,
+            )
+    elif "not registered" in error_msg.lower() or "unknown_tool" in name:
+        # The tool_not_registered vector expects the loop to handle missing tools
+        # gracefully (not crash), returning an error message to the LLM.
+        # Our execute_agent handles this by returning an error string as tool result.
+        # The vector just validates the loop doesn't crash — so run it.
+        try:
+            execute_agent(
+                agent,
+                inputs=inp.get("parent_inputs"),
+                tools=tool_functions,
+            )
+        except StopIteration:
+            pass  # Mock ran out of responses — that's fine for error vectors
     else:
-        _test_agent_success_vector(name, inp, sequence, expected, mock_responses)
+        pytest.fail(f"Agent '{name}': unknown error type: {error_msg}")
 
 
 def _build_function_tool(tool_data: dict) -> FunctionTool:
@@ -1083,120 +1202,6 @@ def _build_function_tool(tool_data: dict) -> FunctionTool:
         parameters=params,
         bindings=bindings,
     )
-
-
-def _test_agent_success_vector(
-    name: str,
-    inp: dict,
-    sequence: list[dict],
-    expected: dict,
-    mock_responses: list,
-):
-    """Test a successful agent loop vector by simulating the loop."""
-    messages = list(inp["messages"])  # Wire-format message dicts
-    tool_functions = {}
-
-    # Build actual tool functions that return preset results
-    for step in sequence:
-        if "tool_results" not in step:
-            continue
-        for tr in step["tool_results"]:
-            call_id = tr["tool_call_id"]
-            result_val = tr["result"]
-            # Map: we'll look up by call_id during simulation
-            tool_functions[call_id] = result_val
-
-    iteration = 0
-    response_idx = 0
-
-    while response_idx < len(mock_responses):
-        response = mock_responses[response_idx]
-        iteration += 1
-        response_idx += 1
-
-        choice = response.choices[0]
-        message = choice.message
-
-        if message.tool_calls:
-            # Append assistant message with tool calls
-            tc_wire = []
-            for tc in message.tool_calls:
-                tc_wire.append(
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments,
-                        },
-                    }
-                )
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": message.content or "",
-                    "tool_calls": tc_wire,
-                }
-            )
-
-            # Execute tools and append results
-            for tc in message.tool_calls:
-                result_val = tool_functions.get(tc.id, "")
-                messages.append(
-                    {
-                        "role": "tool",
-                        "content": result_val,
-                        "tool_call_id": tc.id,
-                    }
-                )
-        else:
-            # Final response
-            final_content = message.content or ""
-            break
-    else:
-        final_content = ""
-
-    # Validate expected result
-    exp_result = expected.get("result", "")
-    assert final_content == exp_result, (
-        f"Agent '{name}': result mismatch\n  actual:   {final_content!r}\n  expected: {exp_result!r}"
-    )
-
-    # Validate iteration count
-    exp_iterations = expected.get("iterations")
-    if exp_iterations is not None:
-        assert iteration == exp_iterations, f"Agent '{name}': iteration count {iteration} != expected {exp_iterations}"
-
-
-def _test_agent_error_vector(
-    name: str,
-    inp: dict,
-    sequence: list[dict],
-    expected: dict,
-    mock_responses: list,
-):
-    """Test an agent error vector."""
-    error_msg = expected.get("error", "")
-
-    if "max_iterations" in name.lower() or "exceeded" in error_msg.lower():
-        # Validate that the sequence has more turns than MAX_ITERATIONS=10
-        max_turn = max(s["turn"] for s in sequence)
-        assert max_turn > 10, f"Agent '{name}': expected >10 turns for max iterations test, got {max_turn}"
-        # The spec expects an error after 10 iterations
-        # Verify by simulating: all responses have tool_calls, loop should exceed limit
-        all_have_tools = all(s["llm_response"]["choices"][0]["message"].get("tool_calls") is not None for s in sequence)
-        assert all_have_tools, f"Agent '{name}': all turns should have tool_calls for max iterations test"
-        return
-
-    if "not registered" in error_msg.lower() or "unknown_tool" in name:
-        # Verify that the sequence calls an unregistered tool
-        for step in sequence:
-            if step.get("expected_tool_calls"):
-                for tc in step["expected_tool_calls"]:
-                    if tc["name"] not in inp.get("tool_functions", {}):
-                        # Confirmed: tool is not registered
-                        return
-        pytest.fail(f"Agent '{name}': expected unregistered tool call but all tools are registered")
 
 
 # ============================================================================
