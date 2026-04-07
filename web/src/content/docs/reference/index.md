@@ -1,6 +1,7 @@
 ---
 title: "Schema Reference"
 description: "Auto-generated reference for all Prompty schema types."
+slug: "reference/index"
 sidebar:
   order: 1
 ---

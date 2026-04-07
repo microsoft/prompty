@@ -114,10 +114,13 @@ public abstract class Tool
                 }
                 else
                 {
-                    // Value is a scalar — let Load() infer kind from value
-                    var prop = Binding.Load(kvp.Value, context);
-                    prop.Name = kvp.Key;
-                    result.Add(prop);
+                    // Value is a scalar, use it as the primary property
+                    var newDict = new Dictionary<string, object?>
+                    {
+                        ["name"] = kvp.Key,
+                        ["input"] = kvp.Value
+                    };
+                    result.Add(Binding.Load(newDict, context));
                 }
             }
         }

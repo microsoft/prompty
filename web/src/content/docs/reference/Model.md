@@ -58,8 +58,9 @@ apiType: chat
 connection:
   kind: key
   endpoint: https://{your-custom-endpoint}.openai.azure.com/
-  apiKey: "{your-api-key}"
+  key: "{your-api-key}"
 options:
+  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 ```
