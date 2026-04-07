@@ -328,7 +328,7 @@ function toolsToWire(agent: Prompty): Record<string, unknown>[] {
 
       result.push({ type: "function", function: funcDef });
     } else if (t.kind === "prompty") {
-      const funcDef = projectPromptyTool(t, agent);
+      const funcDef = projectPromptyTool(t as unknown as Record<string, unknown>, agent);
       result.push({ type: "function", function: funcDef });
     }
   }
@@ -551,7 +551,7 @@ function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
       result.push(tool);
     } else if (t.kind === "prompty") {
       // Project prompty tool as a flat function definition (Responses API format)
-      const projected = projectPromptyTool(t, agent);
+      const projected = projectPromptyTool(t as unknown as Record<string, unknown>, agent);
       const tool: Record<string, unknown> = {
         type: "function",
         name: projected.name,
