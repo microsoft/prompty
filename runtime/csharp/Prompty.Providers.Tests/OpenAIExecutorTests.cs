@@ -110,5 +110,40 @@ public class OpenAIExecutorTests
             return new global::OpenAI.OpenAIClient("test-fake-key");
         }
     }
+
+    // -----------------------------------------------------------------------
+    // FormatToolMessages — OpenAI individual tool messages
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void FormatToolMessages_CreatesIndividualToolMessages()
+    {
+        var executor = new OpenAI.OpenAIExecutor();
+        var toolCalls = new List<ToolCall>
+        {
+            new() { Id = "call_1", Name = "get_weather", Arguments = """{"city":"Seattle"}""" },
+            new() { Id = "call_2", Name = "get_time", Arguments = """{"tz":"PST"}""" },
+        };
+        var toolResults = new List<string> { "72°F", "3:00 PM" };
+
+        var messages = executor.FormatToolMessages("raw", toolCalls, toolResults, "Let me check.");
+
+        // Should be 3 messages: 1 assistant + 2 individual tool messages
+        Assert.Equal(3, messages.Count);
+
+        // Assistant message with tool_calls metadata
+        Assert.Equal(Roles.Assistant, messages[0].Role);
+        Assert.Equal("Let me check.", messages[0].Text);
+        Assert.NotNull(messages[0].Metadata["tool_calls"]);
+
+        // Individual tool messages
+        Assert.Equal(Roles.Tool, messages[1].Role);
+        Assert.Equal("72°F", messages[1].Text);
+        Assert.Equal("call_1", messages[1].Metadata["tool_call_id"]);
+
+        Assert.Equal(Roles.Tool, messages[2].Role);
+        Assert.Equal("3:00 PM", messages[2].Text);
+        Assert.Equal("call_2", messages[2].Metadata["tool_call_id"]);
+    }
 }
 

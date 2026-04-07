@@ -138,4 +138,58 @@ public class OpenAIExecutor : IExecutor
         var result = await imageClient.GenerateImageAsync(prompt);
         return result.Value;
     }
+
+    // -----------------------------------------------------------------------
+    // FormatToolMessages — OpenAI / Chat + Responses wire format
+    // -----------------------------------------------------------------------
+
+    /// <inheritdoc />
+    public virtual List<Message> FormatToolMessages(
+        object rawResponse,
+        List<ToolCall> toolCalls,
+        List<string> toolResults,
+        string? textContent = null)
+    {
+        var messages = new List<Message>();
+
+        // --- Assistant message with tool_calls metadata ---
+        var assistantParts = string.IsNullOrEmpty(textContent)
+            ? new List<ContentPart>()
+            : new List<ContentPart> { new TextPart { Value = textContent } };
+
+        var rawToolCalls = toolCalls.Select(tc => new Dictionary<string, object?>
+        {
+            ["id"] = tc.Id,
+            ["type"] = "function",
+            ["function"] = new Dictionary<string, object?>
+            {
+                ["name"] = tc.Name,
+                ["arguments"] = tc.Arguments,
+            },
+        }).ToList();
+
+        messages.Add(new Message
+        {
+            Role = Roles.Assistant,
+            Parts = assistantParts,
+            Metadata = new Dictionary<string, object?> { ["tool_calls"] = rawToolCalls },
+        });
+
+        // --- One tool message per result ---
+        for (var i = 0; i < toolCalls.Count; i++)
+        {
+            messages.Add(new Message
+            {
+                Role = Roles.Tool,
+                Parts = [new TextPart { Value = toolResults[i] }],
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["tool_call_id"] = toolCalls[i].Id,
+                    ["name"] = toolCalls[i].Name,
+                },
+            });
+        }
+
+        return messages;
+    }
 }

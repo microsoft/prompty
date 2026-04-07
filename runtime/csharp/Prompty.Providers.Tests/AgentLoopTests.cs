@@ -268,6 +268,9 @@ public class AgentLoopTests : IDisposable
     {
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(response);
+
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
     }
 
     /// <summary>Processor that returns the value as-is (identity).</summary>
@@ -296,6 +299,9 @@ public class AgentLoopTests : IDisposable
                 throw new InvalidOperationException("SequenceExecutor ran out of responses.");
             return Task.FromResult(responses[_index++]);
         }
+
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
     }
 
     /// <summary>Executor that always returns a tool call — for testing max iterations.</summary>
@@ -308,5 +314,20 @@ public class AgentLoopTests : IDisposable
                 ToolCalls = [new ToolCall { Id = $"c{Guid.NewGuid()}", Name = "loop_fn", Arguments = "{}" }],
             });
         }
+
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
+    }
+
+    /// <summary>Default OpenAI-style format for mock executors.</summary>
+    private static List<Message> DefaultFormatToolMessages(List<ToolCall> toolCalls, List<string> toolResults, string? textContent)
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new() { ["tool_calls"] = toolCalls } },
+        };
+        for (var i = 0; i < toolCalls.Count; i++)
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+        return messages;
     }
 }

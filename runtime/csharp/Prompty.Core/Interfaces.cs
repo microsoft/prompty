@@ -37,6 +37,21 @@ public interface IPreRenderable
 public interface IExecutor
 {
     Task<object> ExecuteAsync(Prompty agent, List<Message> messages);
+
+    /// <summary>
+    /// Formats the assistant tool-call response and dispatched tool results into
+    /// messages for the next agent loop iteration. Each provider implements this
+    /// to match its API's expected wire format, keeping the pipeline provider-agnostic.
+    /// </summary>
+    /// <param name="rawResponse">Original LLM response (for content block preservation).</param>
+    /// <param name="toolCalls">Tool calls extracted by the processor.</param>
+    /// <param name="toolResults">Results from dispatching each tool call, parallel to toolCalls.</param>
+    /// <param name="textContent">Any non-tool text content from the response.</param>
+    List<Message> FormatToolMessages(
+        object rawResponse,
+        List<ToolCall> toolCalls,
+        List<string> toolResults,
+        string? textContent = null);
 }
 
 /// <summary>

@@ -271,4 +271,70 @@ public class AnthropicExecutor : IExecutor
             },
         };
     }
+
+    // -----------------------------------------------------------------------
+    // FormatToolMessages — Anthropic wire format
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Formats tool messages for the Anthropic Messages API.
+    /// Anthropic requires:
+    /// 1. Assistant message preserves ALL content blocks (text + tool_use)
+    /// 2. Tool results are batched into a single "user" message with tool_result blocks
+    /// </summary>
+    public List<Message> FormatToolMessages(
+        object rawResponse,
+        List<ToolCall> toolCalls,
+        List<string> toolResults,
+        string? textContent = null)
+    {
+        var messages = new List<Message>();
+
+        // --- Assistant message with ALL content blocks (text + tool_use) ---
+        var rawContent = new List<Dictionary<string, object?>>();
+        if (!string.IsNullOrEmpty(textContent))
+        {
+            rawContent.Add(new() { ["type"] = "text", ["text"] = textContent });
+        }
+        foreach (var tc in toolCalls)
+        {
+            rawContent.Add(new()
+            {
+                ["type"] = "tool_use",
+                ["id"] = tc.Id,
+                ["name"] = tc.Name,
+                ["input"] = JsonSerializer.Deserialize<JsonElement>(tc.Arguments),
+            });
+        }
+
+        messages.Add(new Message
+        {
+            Role = Roles.Assistant,
+            Parts = !string.IsNullOrEmpty(textContent)
+                ? [new TextPart { Value = textContent }]
+                : [],
+            Metadata = new Dictionary<string, object?> { ["content"] = rawContent },
+        });
+
+        // --- Single user message with batched tool_result blocks ---
+        var toolResultBlocks = new List<Dictionary<string, object?>>();
+        for (var i = 0; i < toolCalls.Count; i++)
+        {
+            toolResultBlocks.Add(new()
+            {
+                ["type"] = "tool_result",
+                ["tool_use_id"] = toolCalls[i].Id,
+                ["content"] = toolResults[i],
+            });
+        }
+
+        messages.Add(new Message
+        {
+            Role = Roles.User,
+            Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
+            Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
+        });
+
+        return messages;
+    }
 }

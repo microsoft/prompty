@@ -222,6 +222,7 @@ public static class Pipeline
         {
             emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["maxIterations"] = maxIterations });
             var messages = await PrepareAsync(agent, inputs);
+            var executor = InvokerRegistry.GetExecutor(agent.Model?.Provider ?? "openai");
 
             for (var i = 0; i < maxIterations; i++)
             {
@@ -239,16 +240,8 @@ public static class Pipeline
 
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
-                    var assistantMsg = new Message
-                    {
-                        Role = Roles.Assistant,
-                        Parts = string.IsNullOrEmpty(toolResult.Content)
-                            ? []
-                            : [new TextPart { Value = toolResult.Content }],
-                        Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolResult.ToolCalls },
-                    };
-                    messages.Add(assistantMsg);
-
+                    // Dispatch all tool calls
+                    var toolResults = new List<string>();
                     foreach (var call in toolResult.ToolCalls)
                     {
                         var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
@@ -256,18 +249,13 @@ public static class Pipeline
                             toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
                             return await ToolDispatch.DispatchAsync(agent, call, tools);
                         });
-
-                        messages.Add(new Message
-                        {
-                            Role = Roles.Tool,
-                            Parts = [new TextPart { Value = toolResponse }],
-                            Metadata = new Dictionary<string, object?>
-                            {
-                                ["tool_call_id"] = call.Id,
-                                ["name"] = call.Name,
-                            },
-                        });
+                        toolResults.Add(toolResponse);
                     }
+
+                    // Delegate message formatting to the executor (provider-specific)
+                    var toolMessages = executor.FormatToolMessages(
+                        response, toolResult.ToolCalls, toolResults, toolResult.Content);
+                    messages.AddRange(toolMessages);
 
                     continue;
                 }

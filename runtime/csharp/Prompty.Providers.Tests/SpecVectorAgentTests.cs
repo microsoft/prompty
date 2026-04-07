@@ -375,5 +375,16 @@ public class SpecVectorAgentTests : IDisposable
     {
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(fn(messages));
+
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+        {
+            var messages = new List<Message>
+            {
+                new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+            };
+            for (var i = 0; i < toolCalls.Count; i++)
+                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+            return messages;
+        }
     }
 }

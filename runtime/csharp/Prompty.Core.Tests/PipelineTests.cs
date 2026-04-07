@@ -597,6 +597,17 @@ internal class MockExecutor : IExecutor
 {
     public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
         => Task.FromResult<object>("mock-response");
+
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+        };
+        for (var i = 0; i < toolCalls.Count; i++)
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id } });
+        return messages;
+    }
 }
 
 internal class MockProcessor : IProcessor
@@ -620,6 +631,17 @@ internal class ToolCallingExecutor : IExecutor
             return Task.FromResult<object>("tool_calls_response");
         }
         return Task.FromResult<object>("final_response");
+    }
+
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+        };
+        for (var i = 0; i < toolCalls.Count; i++)
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id } });
+        return messages;
     }
 }
 
