@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using Prompty.Core.Tracing;
+
 namespace Prompty.Core;
 
 /// <summary>
@@ -60,10 +62,15 @@ public static class Pipeline
     /// </summary>
     public static async Task<string> RenderAsync(Prompty agent, Dictionary<string, object?> inputs)
     {
-        var formatKind = agent.Template?.Format?.Kind ?? "jinja2";
-        var renderer = InvokerRegistry.GetRenderer(formatKind);
-        var template = agent.Instructions ?? "";
-        return await renderer.RenderAsync(agent, template, inputs);
+        return await Trace.TraceAsync<string>("Prompty.Core.Pipeline.RenderAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["inputs"] = inputs });
+            var formatKind = agent.Template?.Format?.Kind ?? "jinja2";
+            var renderer = InvokerRegistry.GetRenderer(formatKind);
+            var template = agent.Instructions ?? "";
+            var result = await renderer.RenderAsync(agent, template, inputs);
+            return result;
+        });
     }
 
     /// <summary>
@@ -71,9 +78,13 @@ public static class Pipeline
     /// </summary>
     public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered)
     {
-        var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
-        var parser = InvokerRegistry.GetParser(parserKind);
-        return await parser.ParseAsync(agent, rendered);
+        return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.ParseAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name });
+            var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
+            var parser = InvokerRegistry.GetParser(parserKind);
+            return await parser.ParseAsync(agent, rendered);
+        });
     }
 
     /// <summary>
@@ -81,9 +92,13 @@ public static class Pipeline
     /// </summary>
     public static async Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
     {
-        var provider = agent.Model?.Provider ?? "openai";
-        var executor = InvokerRegistry.GetExecutor(provider);
-        return await executor.ExecuteAsync(agent, messages);
+        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.ExecuteAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["message_count"] = messages.Count });
+            var provider = agent.Model?.Provider ?? "openai";
+            var executor = InvokerRegistry.GetExecutor(provider);
+            return await executor.ExecuteAsync(agent, messages);
+        });
     }
 
     /// <summary>
@@ -91,9 +106,13 @@ public static class Pipeline
     /// </summary>
     public static async Task<object> ProcessAsync(Prompty agent, object response)
     {
-        var provider = agent.Model?.Provider ?? "openai";
-        var processor = InvokerRegistry.GetProcessor(provider);
-        return await processor.ProcessAsync(agent, response);
+        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.ProcessAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name });
+            var provider = agent.Model?.Provider ?? "openai";
+            var processor = InvokerRegistry.GetProcessor(provider);
+            return await processor.ProcessAsync(agent, response);
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -108,34 +127,34 @@ public static class Pipeline
         Prompty agent,
         Dictionary<string, object?>? inputs = null)
     {
-        var validatedInputs = ValidateInputs(agent, inputs);
-
-        var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
-        var parser = InvokerRegistry.GetParser(parserKind);
-
-        string rendered;
-        Dictionary<string, object?>? parserContext = null;
-
-        // If the parser supports pre-rendering, use it to sanitize the template
-        if (parser is IPreRenderable preRenderable)
+        return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.PrepareAsync", async (emit) =>
         {
-            var (sanitized, ctx) = preRenderable.PreRender(agent.Instructions ?? "");
-            parserContext = ctx;
-            var formatKind = agent.Template?.Format?.Kind ?? "jinja2";
-            var renderer = InvokerRegistry.GetRenderer(formatKind);
-            rendered = await renderer.RenderAsync(agent, sanitized, validatedInputs);
-        }
-        else
-        {
-            rendered = await RenderAsync(agent, validatedInputs);
-        }
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["inputs"] = inputs });
+            var validatedInputs = ValidateInputs(agent, inputs);
 
-        var messages = await parser.ParseAsync(agent, rendered);
+            var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
+            var parser = InvokerRegistry.GetParser(parserKind);
 
-        // Expand thread markers from rich inputs
-        messages = ExpandThreadMarkers(messages, validatedInputs);
+            string rendered;
+            Dictionary<string, object?>? parserContext = null;
 
-        return messages;
+            if (parser is IPreRenderable preRenderable)
+            {
+                var (sanitized, ctx) = preRenderable.PreRender(agent.Instructions ?? "");
+                parserContext = ctx;
+                var formatKind = agent.Template?.Format?.Kind ?? "jinja2";
+                var renderer = InvokerRegistry.GetRenderer(formatKind);
+                rendered = await renderer.RenderAsync(agent, sanitized, validatedInputs);
+            }
+            else
+            {
+                rendered = await RenderAsync(agent, validatedInputs);
+            }
+
+            var messages = await parser.ParseAsync(agent, rendered);
+            messages = ExpandThreadMarkers(messages, validatedInputs);
+            return messages;
+        });
     }
 
     /// <summary>
@@ -159,8 +178,12 @@ public static class Pipeline
         Dictionary<string, object?>? inputs = null,
         bool raw = false)
     {
-        var agent = PromptyLoader.Load(path);
-        return await InvokeAsync(agent, inputs, raw);
+        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.InvokeAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["path"] = path, ["inputs"] = inputs });
+            var agent = PromptyLoader.Load(path);
+            return await InvokeAsync(agent, inputs, raw);
+        });
     }
 
     /// <summary>
@@ -171,8 +194,12 @@ public static class Pipeline
         Dictionary<string, object?>? inputs = null,
         bool raw = false)
     {
-        var messages = await PrepareAsync(agent, inputs);
-        return await RunAsync(agent, messages, raw);
+        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.InvokeAsync", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["inputs"] = inputs });
+            var messages = await PrepareAsync(agent, inputs);
+            return await RunAsync(agent, messages, raw);
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -191,50 +218,57 @@ public static class Pipeline
         int maxIterations = 10,
         bool raw = false)
     {
-        var messages = await PrepareAsync(agent, inputs);
-
-        for (var i = 0; i < maxIterations; i++)
+        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.InvokeAgentAsync", async (emit) =>
         {
-            var response = await ExecuteAsync(agent, messages);
-            var result = raw ? response : await ProcessAsync(agent, response);
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["maxIterations"] = maxIterations });
+            var messages = await PrepareAsync(agent, inputs);
 
-            if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
+            for (var i = 0; i < maxIterations; i++)
             {
-                // Add assistant message with tool calls
-                var assistantMsg = new Message
-                {
-                    Role = Roles.Assistant,
-                    Parts = string.IsNullOrEmpty(toolResult.Content)
-                        ? []
-                        : [new TextPart { Value = toolResult.Content }],
-                    Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolResult.ToolCalls },
-                };
-                messages.Add(assistantMsg);
+                var response = await ExecuteAsync(agent, messages);
+                var result = raw ? response : await ProcessAsync(agent, response);
 
-                // Execute each tool call via dispatch
-                foreach (var call in toolResult.ToolCalls)
+                if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
-                    var toolResponse = await ToolDispatch.DispatchAsync(agent, call, tools);
-                    messages.Add(new Message
+                    var assistantMsg = new Message
                     {
-                        Role = Roles.Tool,
-                        Parts = [new TextPart { Value = toolResponse }],
-                        Metadata = new Dictionary<string, object?>
+                        Role = Roles.Assistant,
+                        Parts = string.IsNullOrEmpty(toolResult.Content)
+                            ? []
+                            : [new TextPart { Value = toolResult.Content }],
+                        Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolResult.ToolCalls },
+                    };
+                    messages.Add(assistantMsg);
+
+                    foreach (var call in toolResult.ToolCalls)
+                    {
+                        var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
                         {
-                            ["tool_call_id"] = call.Id,
-                            ["name"] = call.Name,
-                        },
-                    });
+                            toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+                            return await ToolDispatch.DispatchAsync(agent, call, tools);
+                        });
+
+                        messages.Add(new Message
+                        {
+                            Role = Roles.Tool,
+                            Parts = [new TextPart { Value = toolResponse }],
+                            Metadata = new Dictionary<string, object?>
+                            {
+                                ["tool_call_id"] = call.Id,
+                                ["name"] = call.Name,
+                            },
+                        });
+                    }
+
+                    continue;
                 }
 
-                continue; // Loop back to call LLM with tool results
+                return result;
             }
 
-            return result; // No tool calls — final answer
-        }
-
-        throw new InvalidOperationException(
-            $"Agent loop exceeded maximum iterations ({maxIterations}).");
+            throw new InvalidOperationException(
+                $"Agent loop exceeded maximum iterations ({maxIterations}).");
+        });
     }
 
     // -----------------------------------------------------------------------

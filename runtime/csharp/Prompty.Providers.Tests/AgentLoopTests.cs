@@ -7,6 +7,7 @@ namespace Prompty.Providers.Tests;
 /// <summary>
 /// Tests for the agent loop (Pipeline.InvokeAgentAsync) with mock executors/processors.
 /// </summary>
+[Collection("ToolDispatch")]
 public class AgentLoopTests : IDisposable
 {
     public AgentLoopTests()

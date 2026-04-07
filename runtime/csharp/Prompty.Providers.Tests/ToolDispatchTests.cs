@@ -7,6 +7,7 @@ namespace Prompty.Providers.Tests;
 /// <summary>
 /// Tests for the two-layer tool dispatch system and agent loop.
 /// </summary>
+[Collection("ToolDispatch")]
 public class ToolDispatchTests : IDisposable
 {
     public ToolDispatchTests()
