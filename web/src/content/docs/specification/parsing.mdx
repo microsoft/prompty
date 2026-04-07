@@ -1,0 +1,219 @@
+---
+title: "§6 Parsing"
+sidebar:
+  order: 7
+---
+
+## §6.1 Public API
+
+| Function      | Signature                              | Returns      |
+| ------------- | -------------------------------------- | ------------ |
+| `parse`       | `(agent, rendered) → Message[]`        | Message list |
+| `parse_async` | `(agent, rendered) → Message[]`        | Message list |
+
+Both functions MUST be traced: emit a `parse` span.
+
+## §6.2 Role Boundary Regex
+
+```
+^\s*#?\s*(system|user|assistant)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$
+```
+
+**Flags**: case-insensitive (`i`).
+
+**Match groups**:
+
+| Group | Content                                    | Example              |
+| ----- | ------------------------------------------ | -------------------- |
+| 1     | Role name                                  | `system`, `user`     |
+| 2     | Attribute block (optional)                 | `[nonce=abc123]`     |
+| 3     | Last attribute key=value (capture artifact)| `nonce=abc123`       |
+
+**Valid matches**:
+
+```
+system:                          → role="system", attrs={}
+user:                            → role="user", attrs={}
+  assistant:                     → role="assistant", attrs={}
+# system:                        → role="system", attrs={}
+assistant[nonce=abc123]:         → role="assistant", attrs={nonce: "abc123"}
+user[nonce=abc, name="test"]:    → role="user", attrs={nonce: "abc", name: "test"}
+```
+
+## §6.3 Injection Defense (Pre-render Nonce)
+
+To defend against template injection (where user-provided input could contain role
+markers that alter message structure), implementations SHOULD support a strict parsing
+mode.
+
+**Pre-render step** (before template rendering):
+
+```
+function pre_render(instructions, render_nonce):
+  lines ← instructions.split("\n")
+  FOR EACH line in lines:
+    IF line matches role boundary regex:
+      role ← extracted role name
+      existing_attrs ← extracted attributes (if any)
+      Inject nonce: rebuild line as "role[nonce=<render_nonce>, ...existing_attrs]:"
+  RETURN modified instructions joined by "\n"
+```
+
+**Post-parse validation** (during parsing):
+
+```
+When a role boundary with a nonce attribute is encountered:
+  IF attrs["nonce"] != expected_render_nonce:
+    RAISE ValueError("Role marker nonce mismatch — possible injection")
+  Remove "nonce" from attrs (internal use only)
+```
+
+This mechanism ensures that role boundaries present in the original template are
+distinguished from role boundaries injected via user input.
+
+## §6.4 Parsing Algorithm
+
+```
+function parse(agent, rendered):
+  1. nonce_map ← retrieve from per-request thread-safe storage (set by render, §5)
+  2. messages ← []
+     current_role ← null
+     current_content ← []
+     current_attrs ← {}
+  3. FOR EACH line in rendered.split("\n"):
+       IF line matches role boundary regex:
+         IF current_role is not null:
+           // Flush accumulated content as a message
+           content_text ← join(current_content, "\n")
+           content_text ← trim_blank_lines(content_text)
+           message ← Message(
+             role: current_role,
+             content: [TextPart(kind: "text", value: content_text)],
+             metadata: current_attrs if non-empty else null
+           )
+           messages.append(message)
+         // Start new message
+         current_role ← lowercase(regex_group_1)
+         current_attrs ← parse_attributes(regex_group_2)  // {} if no attrs
+         current_content ← []
+       ELSE:
+         current_content.append(line)
+  4. // Flush final message
+     IF current_role is not null:
+       content_text ← join(current_content, "\n")
+       content_text ← trim_blank_lines(content_text)
+       message ← Message(
+         role: current_role,
+         content: [TextPart(kind: "text", value: content_text)],
+         metadata: current_attrs if non-empty else null
+       )
+       messages.append(message)
+     ELSE IF current_content is not empty:
+       // Content before any role marker → default to system
+       content_text ← join(current_content, "\n")
+       content_text ← trim_blank_lines(content_text)
+       messages.append(Message(
+         role: "system",
+         content: [TextPart(kind: "text", value: content_text)]
+       ))
+  5. // Expand thread nonces
+     expanded ← []
+     FOR EACH message in messages:
+       text_value ← message.content[0].value  // TextPart
+       IF text_value contains a thread nonce (matching __PROMPTY_THREAD_<hex>_<name>__):
+         // Split content around the nonce
+         // Text before nonce → message with current role (if non-empty)
+         // Nonce → replaced with Message[] from nonce_map
+         // Text after nonce → message with current role (if non-empty)
+         thread_messages ← nonce_map[matched_nonce]
+         IF thread_messages is a list of Message objects:
+           // Insert the thread messages at this position
+           before_text ← text before nonce (trimmed)
+           after_text ← text after nonce (trimmed)
+           IF before_text is not empty:
+             expanded.append(Message(role: message.role, content: [TextPart(value: before_text)]))
+           expanded.extend(thread_messages)
+           IF after_text is not empty:
+             expanded.append(Message(role: message.role, content: [TextPart(value: after_text)]))
+         ELSE:
+           // Not a valid thread — keep the nonce as literal text
+           expanded.append(message)
+       ELSE:
+         expanded.append(message)
+     messages ← expanded
+  6. RETURN messages
+```
+
+## §6.5 Message Structure
+
+```
+Message:
+  role:     string           // "system" | "user" | "assistant"
+  content:  ContentPart[]    // List of content parts
+  metadata: dict | null      // Optional attributes from role markers
+
+ContentPart = TextPart | ImagePart | AudioPart | FilePart
+
+TextPart:
+  kind:  "text"
+  value: string              // The text content
+
+ImagePart:
+  kind:      "image"
+  value:     string           // URL or base64-encoded data
+  mediaType: string | null    // MIME type (e.g., "image/png")
+  detail:    string | null    // Detail level (e.g., "auto", "low", "high")
+
+AudioPart:
+  kind:      "audio"
+  value:     string           // URL or base64-encoded data
+  mediaType: string | null    // MIME type (e.g., "audio/wav")
+
+FilePart:
+  kind:      "file"
+  value:     string           // URL or base64-encoded data
+  mediaType: string | null    // MIME type
+```
+
+## §6.6 Content Handling Rules
+
+**Blank line trimming**: Leading and trailing blank lines within each message's content
+MUST be trimmed. Internal blank lines MUST be preserved.
+
+**Inline images**: Markdown image syntax (`![alt](url)`) in message content MUST be
+preserved as literal text within a `TextPart`. Implementations MUST NOT automatically
+parse inline markdown images into `ImagePart` objects. Image inputs should be provided
+via `kind: image` input properties, which follow the nonce replacement path.
+
+**Empty messages**: If a role marker is followed by another role marker with no content
+between them (or only blank lines), the resulting message MUST have
+`content: [TextPart(kind: "text", value: "")]`. Empty messages MUST NOT be silently
+discarded.
+
+## §6.7 Thread Expansion
+
+Thread expansion occurs after all role markers have been parsed into messages. It
+replaces nonce placeholders with actual `Message[]` conversation history.
+
+**Expansion rules**:
+
+1. Scan each message's text content for nonce patterns matching
+   `__PROMPTY_THREAD_<hex16>_<name>__`.
+2. Look up the nonce in `nonce_map` (populated during rendering, [§5 Rendering](/specification/rendering/)).
+3. If the mapped value is a `Message[]`:
+   - Split the containing message at the nonce boundary.
+   - Insert the thread's messages at that position in the message list.
+   - Any text before the nonce becomes a separate message with the same role.
+   - Any text after the nonce becomes a separate message with the same role.
+4. If the mapped value is not a `Message[]`, treat the nonce as literal text (no expansion).
+
+**Thread messages preserve their original roles**: A thread may contain messages with
+roles different from the containing message's role. After expansion, the thread's
+messages appear in the final list with their original roles intact.
+
+## §6.8 Error Conditions
+
+| Condition                                        | Error Type    |
+| ------------------------------------------------ | ------------- |
+| Nonce mismatch in strict mode                    | `ValueError`  |
+| Unknown parser kind (no parser found via discovery) | `InvokerError` |

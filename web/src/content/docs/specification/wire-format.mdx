@@ -1,0 +1,558 @@
+---
+title: "§7 Wire Format"
+sidebar:
+  order: 8
+---
+
+This section defines how the internal `Message[]` representation (produced by
+the parser in [§6 Parsing](/specification/parsing/)) is converted to the wire format expected by each LLM
+provider's API. Implementations MUST support at least one provider; OpenAI
+Chat Completions is the reference format.
+
+## §7.1 OpenAI Chat Completions
+
+### §7.1.1 Message Conversion
+
+Each internal `Message` MUST be converted to the OpenAI wire format before
+submission. The algorithm is:
+
+```
+function message_to_wire(message) → dict:
+  wire = { role: message.role }
+
+  // Metadata pass-through (tool_call_id, name, tool_calls, etc.)
+  if message.metadata exists and is non-empty:
+    merge metadata keys into wire
+
+  // Content: single TextPart → string; otherwise → array of content parts
+  if message.content has exactly 1 element AND that element is a TextPart:
+    wire.content = message.content[0].value        // plain string
+  else:
+    wire.content = [part_to_wire(part) for part in message.content]
+
+  return wire
+```
+
+Implementations MUST preserve the single-string optimisation for messages
+containing exactly one `TextPart`. Multi-part messages MUST use the array
+form.
+
+### §7.1.2 Part Conversion
+
+Each `ContentPart` MUST be mapped to the corresponding OpenAI content-block
+type:
+
+```
+function part_to_wire(part) → dict:
+  match part.kind:
+    "text"  → { type: "text", text: part.value }
+    "image" → { type: "image_url",
+                image_url: { url: part.value,
+                             detail: part.detail if present } }
+    "audio" → { type: "input_audio",
+                input_audio: { data: part.value,
+                               format: map_audio_format(part.mediaType) } }
+    "file"  → { type: "file", file: { url: part.value } }
+```
+
+**Audio format mapping.** The `mediaType` field MUST be mapped as follows:
+
+| `mediaType` value              | API `format` value |
+| ------------------------------ | ------------------ |
+| `audio/wav`, `audio/x-wav`    | `wav`              |
+| `audio/mp3`, `audio/mpeg`     | `mp3`              |
+| `audio/flac`                  | `flac`             |
+| `audio/ogg`                   | `ogg`              |
+| any other `audio/*`           | strip `audio/` prefix |
+
+Implementations MUST NOT send an empty `detail` field; it SHOULD be omitted
+when no detail level is specified on the `ImagePart`.
+
+### §7.1.3 Tool Conversion
+
+All tool kinds MUST be projected as OpenAI function definitions in the wire
+`tools` array so the LLM can discover and invoke them. Each tool kind requires
+a different projection strategy, but the wire format is always the same:
+`{ type: "function", function: { name, description, parameters } }`.
+
+**Projection by tool kind:**
+
+| Tool Kind    | Projection Strategy                                                        |
+| ------------ | -------------------------------------------------------------------------- |
+| `function`   | Already function-shaped — convert `parameters` (`list[Property]`) to JSON Schema directly |
+| `prompty`    | Load child `.prompty` file, project its `inputs` as the function's `parameters` |
+| `mcp`        | Resolve MCP server connection, discover its tools, project each as a function definition |
+| `openapi`    | Parse OpenAPI specification, project each operation as a function definition |
+| custom (`*`) | Look up in tool registry, use registered function signature               |
+
+The agent loop ([§9 Agent Loop](/specification/agent-loop/)) intercepts tool calls from the LLM response and routes
+them to the appropriate handler based on the original tool kind.
+
+```
+function tools_to_wire(tools, inputs) → list | null:
+  wire_tools = []
+
+  for tool in tools:
+    func_defs = project_tool(tool)
+    for func_def in func_defs:
+      // Strip bound parameters — these are injected at call time, not
+      // exposed to the LLM.
+      if tool.bindings:
+        params = func_def.function.parameters
+        for bound_param in tool.bindings:
+          remove bound_param from params.properties
+          remove bound_param from params.required (if present)
+
+      // Strict mode: flag lives on function definition (NOT inside schema)
+      if tool.strict:
+        func_def.function.strict = true
+        func_def.function.parameters.additionalProperties = false
+
+      wire_tools.append(func_def)
+
+  return wire_tools if non-empty else null
+
+
+function project_tool(tool) → list of func_defs:
+  match tool.kind:
+    "function":
+      return [{
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: schema_to_wire(tool.parameters)
+        }
+      }]
+
+    "prompty":
+      // Load child prompty to extract its input schema
+      child = load(tool.path)
+      params = schema_to_wire(child.inputs)
+      return [{
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description or child.description,
+          parameters: params
+        }
+      }]
+
+    "mcp":
+      // Resolve MCP server → returns list of tool definitions
+      mcp_tools = resolve_mcp_server(tool.connection, tool.serverName)
+      if tool.allowedTools:
+        mcp_tools = filter(mcp_tools, name in tool.allowedTools)
+      return [mcp_tool_to_func_def(t) for t in mcp_tools]
+
+    "openapi":
+      // Parse OpenAPI spec → returns list of operation definitions
+      operations = parse_openapi_spec(tool.specification, tool.connection)
+      return [openapi_op_to_func_def(op) for op in operations]
+
+    default:  // CustomTool (wildcard *)
+      // Look up in tool registry for function signature
+      handler = get_tool(tool.name)
+      return [{
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: handler.parameters_schema
+        }
+      }]
+```
+
+:::note
+`McpTool` and `OpenApiTool` can project to **multiple** function
+definitions (one per MCP tool or API operation). All other kinds project to
+exactly one. The agent loop uses the tool name to route calls back to the
+correct handler.
+:::
+
+When `tools_to_wire` returns `null`, the `tools` key MUST be omitted from the
+request entirely (not sent as an empty array).
+
+### §7.1.4 Schema Conversion
+
+A `list[Property]` (used for `inputs`, `outputs`, and `FunctionTool.parameters`)
+MUST be converted to a JSON Schema object for wire transmission:
+
+```
+function schema_to_wire(properties: list[Property]) → dict:
+  schema = { type: "object", properties: {}, required: [] }
+
+  for prop in properties:
+    prop_schema = { type: map_kind_to_json_type(prop.kind) }
+    if prop.description:
+      prop_schema.description = prop.description
+    if prop.enumValues:
+      prop_schema.enum = prop.enumValues
+    schema.properties[prop.name] = prop_schema
+    if prop.required:
+      schema.required.append(prop.name)
+
+  if schema.required is empty:
+    delete schema.required
+
+  return schema
+```
+
+**Kind → JSON Schema type mapping.** Implementations MUST use this table:
+
+| Property `kind` | JSON Schema `type` |
+| --------------- | ------------------ |
+| `string`        | `string`           |
+| `integer`       | `integer`          |
+| `float`         | `number`           |
+| `boolean`       | `boolean`          |
+| `array`         | `array`            |
+| `object`        | `object`           |
+
+### §7.1.5 Options Mapping
+
+`ModelOptions` fields MUST be mapped to OpenAI request parameters:
+
+```
+function build_options(model_options) → dict:
+  opts = {}
+  if model_options is null:
+    return opts
+
+  mapping = {
+    temperature      → temperature,
+    maxOutputTokens  → max_completion_tokens,   // NOT max_tokens (deprecated)
+    topP             → top_p,
+    frequencyPenalty → frequency_penalty,
+    presencePenalty  → presence_penalty,
+    stopSequences    → stop,
+    seed             → seed
+  }
+
+  for each field in model_options:
+    if field.name in mapping:
+      opts[mapping[field.name]] = field.value
+
+  // Pass through additionalProperties unmapped
+  if model_options.additionalProperties:
+    for key, value in model_options.additionalProperties:
+      if key not in opts:
+        opts[key] = value
+
+  return opts
+```
+
+:::caution[Important]
+Implementations MUST map `maxOutputTokens` to
+`max_completion_tokens`, not `max_tokens`. The `max_tokens` parameter is
+deprecated by OpenAI and is incompatible with o-series reasoning models.
+:::
+
+### §7.1.6 Structured Output
+
+When `agent.outputs` is non-empty, the executor MUST convert it to an
+OpenAI `response_format` parameter:
+
+```
+function output_schema_to_wire(outputs: list[Property]) → dict | null:
+  if outputs is empty:
+    return null
+
+  json_schema = schema_to_wire(outputs)
+  json_schema.additionalProperties = false
+
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: "structured_output",
+      strict: true,
+      schema: json_schema
+    }
+  }
+```
+
+The processor MUST JSON-parse the response content when `outputs` is
+present (see [§8 Processing](/specification/processing/)).
+
+### §7.1.7 Full Chat Request Building
+
+```
+function build_chat_args(agent, messages) → dict:
+  args = {
+    model: agent.model.id,
+    messages: [message_to_wire(m) for m in messages],
+    **build_options(agent.model.options)
+  }
+
+  tools = tools_to_wire(agent.tools, null)
+  if tools:
+    args.tools = tools
+
+  response_format = output_schema_to_wire(agent.outputs)
+  if response_format:
+    args.response_format = response_format
+
+  return args
+```
+
+### §7.1.8 Tracing Requirements
+
+The executor MUST emit an `execute` trace span with the following
+[OpenTelemetry Semantic Conventions for GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+attributes:
+
+| Attribute                        | Value                       |
+| -------------------------------- | --------------------------- |
+| `gen_ai.operation.name`          | `"chat"`                    |
+| `gen_ai.provider.name`          | `agent.model.provider`      |
+| `gen_ai.request.model`          | `agent.model.id`            |
+| All request options              | `gen_ai.request.*`          |
+| `gen_ai.usage.input_tokens`     | From response usage         |
+| `gen_ai.usage.output_tokens`    | From response usage         |
+| `gen_ai.response.finish_reasons`| From response choices       |
+| `gen_ai.response.id`            | From response id            |
+
+## §7.2 OpenAI Embeddings
+
+When `agent.model.apiType` is `"embedding"`, the executor MUST build an
+embeddings request:
+
+```
+function build_embedding_args(agent, messages) → dict:
+  // Extract text content from all messages
+  texts = []
+  for msg in messages:
+    for part in msg.content:
+      if part.kind == "text":
+        texts.append(part.value)
+
+  input = texts[0] if len(texts) == 1 else texts
+
+  return {
+    model: agent.model.id,
+    input: input
+  }
+```
+
+Implementations MUST use a single string when there is exactly one text
+input and an array of strings when there are multiple.
+
+**Tracing:** The span MUST set `gen_ai.operation.name = "embeddings"`.
+
+## §7.3 OpenAI Images
+
+When `agent.model.apiType` is `"image"`, the executor MUST build an image
+generation request:
+
+```
+function build_image_args(agent, messages) → dict:
+  // Extract prompt from last user message
+  prompt = ""
+  for msg in reversed(messages):
+    if msg.role == "user":
+      for part in msg.content:
+        if part.kind == "text":
+          prompt = part.value
+          break
+      break
+
+  args = { model: agent.model.id, prompt: prompt }
+
+  // Pass through model options (size, quality, n, etc.)
+  opts = build_options(agent.model.options)
+  args.update(opts)
+
+  return args
+```
+
+The prompt MUST be extracted from the last `user`-role message. If no user
+message exists, the prompt MUST be the empty string.
+
+## §7.4 OpenAI Responses API
+
+The Responses API uses a different request/response model from Chat
+Completions. When `agent.model.apiType` is `"responses"`, the executor
+MUST use this wire format instead of the Chat Completions format.
+
+### §7.4.1 Request Format
+
+```
+function build_responses_args(agent, messages) → dict:
+  input_items = []
+
+  for msg in messages:
+    item = { role: msg.role }
+
+    // Function-call metadata from a previous agent-loop iteration
+    if msg.metadata and "responses_function_call" in msg.metadata:
+      input_items.append(msg.metadata["responses_function_call"])
+      input_items.append({
+        type: "function_call_output",
+        call_id: msg.metadata.get("tool_call_id"),
+        output: msg.content[0].value if msg.content else ""
+      })
+      continue
+
+    // Normal message
+    if len(msg.content) == 1 and msg.content[0].kind == "text":
+      item.content = msg.content[0].value
+    else:
+      item.content = [part_to_wire(part) for part in msg.content]
+
+    input_items.append(item)
+
+  args = { model: agent.model.id, input: input_items }
+
+  // Tools
+  tools = tools_to_wire(agent.tools, null)
+  if tools:
+    args.tools = tools
+
+  // Structured output
+  if agent.outputs:
+    schema = schema_to_wire(agent.outputs)
+    schema.additionalProperties = false
+    args.text = {
+      format: {
+        type: "json_schema",
+        name: "structured_output",
+        strict: true,
+        schema: schema
+      }
+    }
+
+  return args
+```
+
+Response processing for the Responses API is defined in [§8.4](/specification/processing/).
+
+## §7.5 Anthropic Messages API
+
+Anthropic's Messages API differs from OpenAI in several key ways.
+Implementations MAY support Anthropic as a provider.
+
+```
+function build_anthropic_args(agent, messages) → dict:
+  // Anthropic REQUIRES the system message as a separate top-level field
+  system_text = null
+  non_system = []
+
+  for msg in messages:
+    if msg.role == "system":
+      system_text = extract_text(msg)
+    else:
+      non_system.append(anthropic_message(msg))
+
+  args = {
+    model: agent.model.id,
+    messages: non_system,
+    max_tokens: agent.model.options.maxOutputTokens or 4096
+  }
+
+  if system_text:
+    args.system = system_text
+
+  // Options mapping (Anthropic-specific)
+  if agent.model.options:
+    if agent.model.options.temperature is not null:
+      args.temperature = agent.model.options.temperature
+    if agent.model.options.topP is not null:
+      args.top_p = agent.model.options.topP
+    if agent.model.options.topK is not null:
+      args.top_k = agent.model.options.topK
+    if agent.model.options.stopSequences is not null:
+      args.stop_sequences = agent.model.options.stopSequences
+
+  // Tools
+  if agent.tools:
+    tools = [anthropic_tool(t) for t in agent.tools if t.kind == "function"]
+    if tools:
+      args.tools = tools
+
+  return args
+```
+
+**Anthropic tool format:**
+
+```
+function anthropic_tool(tool) → dict:
+  return {
+    name: tool.name,
+    description: tool.description,
+    input_schema: schema_to_wire(tool.parameters)
+  }
+```
+
+**Anthropic message format:**
+
+```
+function anthropic_message(msg) → dict:
+  // Anthropic always uses an array of typed content blocks
+  blocks = []
+  for part in msg.content:
+    match part.kind:
+      "text"  → blocks.append({ type: "text", text: part.value })
+      "image" → blocks.append({
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: part.mediaType,
+                    data: part.value
+                  }
+                })
+
+  return { role: msg.role, content: blocks }
+```
+
+Implementations MUST always use the array-of-blocks form for Anthropic
+messages, even when there is only one text block.
+
+## §7.6 Options Mapping Table
+
+The following table defines the canonical mapping from Prompty `ModelOptions`
+fields to provider-specific parameter names. Implementations MUST respect
+these mappings for each supported provider.
+
+| Prompty (`ModelOptions`) | OpenAI Chat           | Anthropic Messages | Notes                                    |
+| ------------------------ | --------------------- | ------------------ | ---------------------------------------- |
+| `temperature`            | `temperature`         | `temperature`      |                                          |
+| `maxOutputTokens`        | `max_completion_tokens` | `max_tokens`     | OpenAI deprecated `max_tokens`           |
+| `topP`                   | `top_p`               | `top_p`            |                                          |
+| `topK`                   | —                     | `top_k`            | OpenAI does not support                  |
+| `frequencyPenalty`       | `frequency_penalty`   | —                  | Anthropic does not support               |
+| `presencePenalty`        | `presence_penalty`    | —                  | Anthropic does not support               |
+| `stopSequences`          | `stop`                | `stop_sequences`   | Different parameter name                 |
+| `seed`                   | `seed`                | —                  | Anthropic does not support               |
+
+When a provider does not support an option, the implementation MUST silently
+ignore it (MUST NOT raise an error).
+
+## §7.7 Structured Output
+
+When `agent.outputs` is non-empty, the following two-phase process applies:
+
+1. **Request phase:** The executor MUST convert the output schema to the
+   provider's structured-output mechanism (e.g., `response_format` for
+   OpenAI, or constrained decoding where supported).
+2. **Response phase:** The processor MUST JSON-parse the content string from
+   the response and return the parsed object instead of a raw string. If
+   parsing fails, the processor SHOULD return the raw string as a fallback.
+
+See §7.1.6 for the OpenAI wire format and [§8 Processing](/specification/processing/) for processing details.
+
+## §7.8 Adding a New Provider
+
+To add support for a new LLM provider, an implementation MUST:
+
+1. Implement the executor interface (`execute` / `execute_async`) as defined
+   in [§11.3](/specification/registries/).
+2. Implement the processor interface (`process` / `process_async`) as defined
+   in [§11.3](/specification/registries/).
+3. Register both via the invoker discovery mechanism ([§11.3](/specification/registries/)) under the
+   provider key (e.g., `"anthropic"`).
+4. Document the wire-format mappings (message conversion, tool format, options
+   mapping) in a provider-specific subsection.
+
+**User-Agent headers.** Implementations SHOULD send
+`User-Agent: prompty/<version>` on all API requests to aid provider-side
+diagnostics.

@@ -1,0 +1,372 @@
+---
+title: "§2 File Format"
+sidebar:
+  order: 3
+---
+
+## §2.1 Structure
+
+A `.prompty` file consists of an optional YAML frontmatter block followed by a markdown
+body. The frontmatter is delimited by `---` or `+++` markers:
+
+```
+---
+<YAML frontmatter>
+---
+<markdown body>
+```
+
+The markdown body becomes the `instructions` field on the loaded `PromptAgent`.
+
+If no frontmatter markers are found, the entire file content MUST be treated as the body
+(instructions only), with no frontmatter properties set.
+
+If frontmatter markers are found but the content between them is not valid YAML,
+implementations MUST raise a parse error (`ValueError` or equivalent).
+
+## §2.2 Frontmatter Splitting
+
+Implementations MUST split frontmatter from body using the following contract:
+
+**Reference regex**:
+
+```
+^\s*(?:---|\+\+\+)(.*?)(?:---|\+\+\+)\s*(.+)$
+```
+
+With flags: **dotall** (`.` matches newlines) and **multiline**.
+
+- **Group 1**: YAML frontmatter content (between the delimiters).
+- **Group 2**: Markdown body (everything after the closing delimiter).
+
+**Behavior**:
+
+1. If the content does not start with a frontmatter delimiter (`---` or `+++`), return
+   `{instructions: <entire content>}` — no frontmatter is parsed.
+2. If a delimiter is found at the start but no closing delimiter matches, implementations
+   MUST raise a `ValueError` (malformed frontmatter).
+3. Leading whitespace before the opening delimiter is permitted.
+4. The opening and closing delimiters need not match (e.g., `---` may close with `+++`),
+   but implementations SHOULD use matching delimiters.
+
+**Test vectors** (normative — tie-breaker for ambiguous behavior):
+
+```yaml
+# Vector 1: Standard frontmatter
+input: "---\nname: test\n---\nHello world"
+frontmatter: "name: test"
+body: "Hello world"
+
+# Vector 2: No frontmatter
+input: "Just a prompt with no frontmatter"
+frontmatter: null
+body: "Just a prompt with no frontmatter"
+
+# Vector 3: Empty frontmatter
+input: "---\n---\nBody only"
+frontmatter: ""
+body: "Body only"
+
+# Vector 4: Whitespace before delimiter
+input: "  ---\nname: test\n---\nBody"
+frontmatter: "name: test"
+body: "Body"
+```
+
+## §2.3 Frontmatter Properties
+
+The following properties are valid at the top level of the frontmatter YAML. The types
+correspond to the TypeSpec-generated data model.
+
+| Property      | Type                     | Description                                    |
+| ------------- | ------------------------ | ---------------------------------------------- |
+| `name`        | `string`                 | Prompt name identifier                         |
+| `displayName` | `string`                 | Human-readable display name                    |
+| `description` | `string`                 | Prompt description                             |
+| `metadata`    | `dict`                   | Arbitrary metadata (authors, tags, version, etc.) |
+| `model`       | `Model` or `string`      | Model configuration (see §2.4)                 |
+| `inputs`      | `Property[]` or `dict`   | Input schema definition (see §2.7)             |
+| `outputs`     | `Property[]` or `dict`   | Output schema definition (see §2.7)            |
+| `tools`       | `Tool[]`                 | Tool definitions (see §2.9)                    |
+| `template`    | `Template`               | Template engine configuration (see §2.8)       |
+
+Unknown top-level properties SHOULD be preserved in `metadata` or ignored. Implementations
+MUST NOT raise an error for unknown properties.
+
+## §2.4 Model
+
+The `model` property configures the LLM provider and parameters.
+
+**Shorthand form**: When `model` is a plain string, it is equivalent to `Model(id: <string>)`.
+
+```yaml
+# Shorthand
+model: gpt-4
+
+# Equivalent expanded form
+model:
+  id: gpt-4
+```
+
+**Full Model properties**:
+
+| Property     | Type             | Default   | Description                                         |
+| ------------ | ---------------- | --------- | --------------------------------------------------- |
+| `id`         | `string`         | —         | Model identifier (e.g., `gpt-4`, `text-embedding-3-small`) |
+| `provider`   | `string`         | —         | Provider key: `openai`, `azure`, `anthropic`, `foundry`, etc. |
+| `apiType`    | `string`         | `"chat"`  | API type: `chat`, `embedding`, `image`, `responses` |
+| `connection` | `Connection`     | —         | Authentication and endpoint configuration           |
+| `options`    | `ModelOptions`   | —         | Model parameters (temperature, tokens, etc.)        |
+
+## §2.5 Connection
+
+The `connection` property under `model` defines how to authenticate with the LLM provider.
+Connection types are discriminated by the `kind` field:
+
+| Kind          | Required Fields                | Description                             |
+| ------------- | ------------------------------ | --------------------------------------- |
+| `key`         | `endpoint`, `apiKey`           | API key authentication                  |
+| `reference`   | `name`                         | Named reference to external config      |
+| `remote`      | `endpoint`, `target`           | Remote connection with auth mode        |
+| `anonymous`   | `endpoint`                     | No authentication                       |
+| `foundry`     | `endpoint`                     | Microsoft Foundry connection             |
+| `oauth`       | `endpoint`, `authenticationMode` | OAuth-based authentication            |
+
+## §2.6 ModelOptions
+
+| Property                  | Type       | Description                                |
+| ------------------------- | ---------- | ------------------------------------------ |
+| `temperature`             | `float`    | Sampling temperature (0.0–2.0)             |
+| `maxOutputTokens`         | `integer`  | Maximum tokens in the completion           |
+| `topP`                    | `float`    | Nucleus sampling threshold                 |
+| `topK`                    | `integer`  | Top-K sampling (provider-dependent)        |
+| `frequencyPenalty`        | `float`    | Frequency penalty (-2.0–2.0)              |
+| `presencePenalty`         | `float`    | Presence penalty (-2.0–2.0)               |
+| `seed`                    | `integer`  | Random seed for reproducibility            |
+| `stopSequences`           | `string[]` | Sequences that stop generation             |
+| `allowMultipleToolCalls`  | `boolean`  | Allow parallel tool calls                  |
+| `additionalProperties`    | `dict`     | Provider-specific options (passthrough)    |
+
+## §2.7 Input/Output Schema (Property)
+
+Input and output schemas define the data contract for the prompt. Each property in the
+schema is a `Property` object:
+
+| Field          | Type       | Description                                         |
+| -------------- | ---------- | --------------------------------------------------- |
+| `kind`         | `string`   | Type discriminator (see below)                      |
+| `description`  | `string`   | Human-readable description                          |
+| `required`     | `boolean`  | Whether the input is required (default: `false`)    |
+| `default`      | `any`      | Default value when input is not provided            |
+| `example`      | `any`      | Example value (for documentation/testing)           |
+| `enumValues`   | `any[]`    | Allowed values (enum constraint)                    |
+
+**Property kinds**:
+
+| Kind      | Description                                   | Category |
+| --------- | --------------------------------------------- | -------- |
+| `string`  | Text value                                    | Simple   |
+| `integer` | Whole number                                  | Simple   |
+| `float`   | Decimal number                                | Simple   |
+| `boolean` | True/false                                    | Simple   |
+| `array`   | List of values                                | Simple   |
+| `object`  | Nested dictionary/map                         | Simple   |
+| `thread`  | Conversation history (`Message[]`)            | Rich     |
+| `image`   | Image data (URL or base64)                    | Rich     |
+| `file`    | File data (URL or base64)                     | Rich     |
+| `audio`   | Audio data (URL or base64)                    | Rich     |
+
+Rich kinds (`thread`, `image`, `file`, `audio`) receive special handling during
+rendering — see [§5 Rendering](/specification/rendering/) for details.
+
+**Scalar shorthand**: When a property value is a plain scalar instead of a `Property`
+object, it MUST be interpreted as `Property(kind: <inferred>, default: <value>)`.
+
+```yaml
+# Shorthand
+inputs:
+  firstName: Jane
+
+# Equivalent expanded form
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+```
+
+Kind inference from scalar type: string → `"string"`, integer → `"integer"`,
+float → `"float"`, boolean → `"boolean"`, list → `"array"`, dict → `"object"`.
+
+## §2.8 Template
+
+The `template` property selects the template engine and parser.
+
+| Field    | Type     | Default                   | Description                    |
+| -------- | -------- | ------------------------- | ------------------------------ |
+| `format` | `Format` | `{kind: "jinja2"}`        | Template engine to use         |
+| `parser` | `Parser` | `{kind: "prompty"}`       | Output parser to use           |
+
+**Shorthand form**: When `template` is a plain string, it is the format kind:
+
+```yaml
+# Shorthand
+template: jinja2
+
+# Equivalent
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+```
+
+When `template` is omitted entirely, implementations MUST default to
+`{format: {kind: "jinja2"}, parser: {kind: "prompty"}}`.
+
+## §2.9 Tools
+
+Tools are defined as a list under the `tools` frontmatter property. Each tool has a
+`kind` discriminator that determines its type and required fields.
+
+**Common fields** (all tool kinds):
+
+| Field        | Type       | Description                               |
+| ------------ | ---------- | ----------------------------------------- |
+| `name`       | `string`   | Tool name (unique within the agent)       |
+| `kind`       | `string`   | Tool type discriminator                   |
+| `description`| `string`   | Human-readable tool description           |
+| `bindings`   | `dict`     | Static parameter bindings (see §2.9.1)    |
+
+**Tool kinds**:
+
+| Kind       | Type           | Additional Fields                                      |
+| ---------- | -------------- | ------------------------------------------------------ |
+| `function` | `FunctionTool` | `parameters` (`list[Property]`), `strict` (boolean)    |
+| `prompty`  | `PromptyTool`  | `path` (string), `mode` (`single` or `agentic`)        |
+| `mcp`      | `McpTool`      | `connection`, `serverName`, `approvalMode`, `allowedTools` |
+| `openapi`  | `OpenApiTool`  | `connection`, `specification` (path or URL)             |
+| `*`        | `CustomTool`   | `connection`, `options` — wildcard catch-all            |
+
+Any `kind` value that does not match `function`, `prompty`, `mcp`, or `openapi` MUST
+be loaded as a `CustomTool` (the wildcard `*` catch-all).
+
+### §2.9.1 Tool Bindings
+
+Bindings are static parameter values that are injected when a tool is executed but
+MUST NOT appear in the tool definition sent to the LLM. This allows prompts to bind
+context (user IDs, session tokens, API keys) without exposing them in the tool schema.
+
+```yaml
+tools:
+  - name: get_user_orders
+    kind: function
+    description: Get orders for a user
+    parameters:
+      properties:
+        - name: user_id
+          kind: string
+          required: true
+        - name: limit
+          kind: integer
+          default: 10
+    bindings:
+      user_id: ${env:CURRENT_USER_ID}
+```
+
+**Binding behavior**:
+
+1. When converting tools to wire format ([§7 Wire Format](/specification/wire-format/)), parameters listed in `bindings` MUST be
+   **stripped** from the tool's parameter schema sent to the LLM.
+2. When executing a tool call from the LLM's response, bound parameters MUST be
+   **injected** into the tool's arguments before invocation.
+3. If the LLM provides a value for a bound parameter, the binding MUST take precedence.
+
+### §2.9.2 PromptyTool
+
+The `prompty` tool kind allows one `.prompty` file to invoke another as a tool:
+
+```yaml
+tools:
+  - name: summarize
+    kind: prompty
+    path: ./summarize.prompty
+    mode: single
+    description: Summarize a block of text
+```
+
+| Field  | Type     | Default    | Description                                        |
+| ------ | -------- | ---------- | -------------------------------------------------- |
+| `path` | `string` | —          | Relative path to the `.prompty` file               |
+| `mode` | `string` | `"single"` | `single`: one-shot call. `agentic`: full agent loop |
+
+When the LLM invokes this tool:
+
+1. Load the referenced `.prompty` file via `load(path)`.
+2. If `mode` is `"single"`: call `invoke(path, arguments)` — one pass, no tool loop.
+3. If `mode` is `"agentic"`: call `invoke_agent(path, arguments)` — full agent loop
+   with any tools defined in the referenced prompty.
+4. Return the result as the tool's output.
+
+## §2.10 Role Markers
+
+Role markers in the markdown body define message boundaries. Each marker produces a new
+message in the parsed `Message[]` list.
+
+**Recognized roles**: `system`, `user`, `assistant`
+
+**Syntax**:
+
+```
+role:
+role[key=value, key2=value2]:
+```
+
+Role markers MUST be on their own line (possibly with leading whitespace or a leading
+`#` for markdown heading compatibility). Role names are case-insensitive.
+
+**Examples of valid role markers**:
+
+```
+system:
+user:
+assistant:
+  user:
+# system:
+assistant[nonce=abc123]:
+```
+
+**Content between markers** becomes the message content. Leading and trailing blank lines
+within a message MUST be trimmed.
+
+**Default role**: If the body has content before any role marker, implementations MUST
+treat it as a `system` message.
+
+## §2.11 Reference Resolution
+
+String values in the frontmatter MAY contain `${protocol:value}` references that are
+resolved during loading ([§4 Loading](/specification/loading/)).
+
+### `${env:VAR_NAME}`
+
+Resolves to the value of environment variable `VAR_NAME`.
+
+- If `VAR_NAME` is not set, implementations MUST raise a `ValueError` (or equivalent).
+
+### `${env:VAR_NAME:default}`
+
+Resolves to the value of `VAR_NAME`, or `default` if the variable is not set.
+
+- The `default` is everything after the second `:` in the expression.
+
+### `${file:relative/path}`
+
+Loads file content relative to the `.prompty` file's directory.
+
+- If the file has a `.json` extension, it MUST be parsed as JSON.
+- If the file has a `.yaml` or `.yml` extension, it MUST be parsed as YAML.
+- All other extensions MUST be read as raw text.
+- If the file does not exist, implementations MUST raise a `FileNotFoundError`.
+
+**Resolution scope**: References are resolved in ALL string values throughout the
+frontmatter dict tree, not just at the top level. Implementations MUST walk the entire
+dict recursively.

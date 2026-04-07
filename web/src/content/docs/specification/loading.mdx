@@ -1,0 +1,122 @@
+---
+title: "§4 Loading"
+sidebar:
+  order: 5
+---
+
+## §4.1 Public API
+
+| Function     | Signature                          | Returns       |
+| ------------ | ---------------------------------- | ------------- |
+| `load`       | `(path: string) → PromptAgent`     | PromptAgent   |
+| `load_async` | `(path: string) → PromptAgent`     | PromptAgent   |
+
+Both functions MUST be traced: emit a `load` span with `inputs = {path: <path>}` and
+`result = {agent_name: <name>, ...}`.
+
+## §4.2 Algorithm
+
+```
+function load(path):
+  1. path ← resolve_to_absolute(path)
+  2. If file at path does not exist:
+       RAISE FileNotFoundError("File not found: {path}")
+  3. contents ← read_file_utf8(path)
+  4. data ← parse_frontmatter(contents):
+       a. If contents does not start with "---" or "+++" (ignoring leading whitespace):
+            RETURN {instructions: contents}
+       b. Apply reference regex (§2.2) to contents
+       c. If regex does not match:
+            RAISE ValueError("Malformed frontmatter in {path}")
+       d. frontmatter_yaml ← regex group 1
+       e. body ← regex group 2
+       f. parsed ← yaml_parse(frontmatter_yaml)
+       g. If parsed is not a dict:
+            RAISE ValueError("Frontmatter must be a YAML mapping")
+       h. parsed["instructions"] ← body
+       i. RETURN parsed
+  5. data ← resolve_references(data, base_dir=parent(path)):
+       Walk every value in data recursively:
+       For each string value matching ${protocol:content}:
+         protocol ← lowercase text before first ":"
+         content ← text after first ":"
+         SWITCH protocol:
+           CASE "env":
+             var_name, _, default ← content.partition(":")
+             value ← environment_variable(var_name)
+             IF value is not set:
+               IF default is not empty:
+                 REPLACE with default
+               ELSE:
+                 RAISE ValueError("Environment variable '{var_name}' not set")
+             ELSE:
+               REPLACE with value
+           CASE "file":
+             file_path ← resolve(base_dir / content)
+             IF file does not exist:
+               RAISE FileNotFoundError("Referenced file '{content}' not found")
+             extension ← file_path.suffix.lower()
+             IF extension == ".json":
+               REPLACE with json_parse(read_file(file_path))
+             ELIF extension in (".yaml", ".yml"):
+               REPLACE with yaml_parse(read_file(file_path))
+             ELSE:
+               REPLACE with read_file_text(file_path)
+           DEFAULT:
+             Leave value unchanged (unknown protocol)
+  6. Apply shorthand expansions:
+       a. IF data["model"] is a string:
+            data["model"] ← {id: data["model"]}
+       b. IF data["template"] is missing:
+            data["template"] ← {format: {kind: "jinja2"}, parser: {kind: "prompty"}}
+       c. IF data["template"] is a string:
+            data["template"] ← {format: {kind: data["template"]}, parser: {kind: "prompty"}}
+       d. For each property in data["inputs"] (if dict form):
+            IF value is a scalar (not a dict):
+              Convert to Property(kind: infer_kind(value), default: value)
+  7. Inject kind:
+       data["kind"] ← "prompt"
+       // .prompty files always produce PromptAgents
+  8. agent ← load_typed_agent(data)
+       // Use the generated model loader for the target language
+       // This validates types and produces a PromptAgent instance
+  9. RETURN agent
+```
+
+## §4.3 Dotenv Loading
+
+Loading `.env` files is an **application-level concern**, not a runtime library
+responsibility. Runtime libraries MUST NOT automatically load `.env` files as a
+side effect of `load()`. Applications and tools (e.g., VS Code extensions, CLI
+runners) SHOULD load `.env` files before invoking `load()` so that `${env:}`
+references resolve correctly.
+
+`.env` file format: One `KEY=VALUE` pair per line. Lines starting with `#` are comments.
+Blank lines are ignored. Values MAY be quoted with single or double quotes.
+
+Variables loaded from `.env` MUST NOT override variables already set in the actual
+environment. Environment variables take precedence.
+
+## §4.4 Shorthand Reference
+
+| Shorthand                | Expanded Form                                                       |
+| ------------------------ | ------------------------------------------------------------------- |
+| `model: "gpt-4"`        | `model: {id: "gpt-4"}`                                             |
+| `template: "jinja2"`    | `template: {format: {kind: "jinja2"}, parser: {kind: "prompty"}}`   |
+| `inputs.X: "Jane"`      | `inputs.X: {kind: "string", default: "Jane"}`                      |
+| `inputs.X: 42`          | `inputs.X: {kind: "integer", default: 42}`                         |
+| `inputs.X: 3.14`        | `inputs.X: {kind: "float", default: 3.14}`                         |
+| `inputs.X: true`        | `inputs.X: {kind: "boolean", default: true}`                       |
+| `inputs.X: [1, 2, 3]`  | `inputs.X: {kind: "array", default: [1, 2, 3]}`                    |
+| `inputs.X: {a: 1}`     | `inputs.X: {kind: "object", default: {a: 1}}`                      |
+
+## §4.5 Error Conditions
+
+| Condition                                  | Error Type            |
+| ------------------------------------------ | --------------------- |
+| File does not exist                        | `FileNotFoundError`   |
+| Malformed frontmatter (markers but no match) | `ValueError`        |
+| Frontmatter is not a YAML mapping          | `ValueError`          |
+| `${env:VAR}` where VAR is not set (no default) | `ValueError`     |
+| `${file:path}` where file does not exist   | `FileNotFoundError`   |
+| Invalid YAML in frontmatter               | `ValueError` (or YAML parse error) |

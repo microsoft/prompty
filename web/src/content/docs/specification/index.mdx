@@ -1,0 +1,60 @@
+---
+title: "Prompty Specification"
+sidebar:
+  order: 1
+---
+
+The Prompty Runtime Specification defines the runtime behavior of Prompty — a markdown file format and execution pipeline for LLM prompts. It is language-agnostic: implementations in any programming language MUST conform to the behavioral contracts defined here.
+
+This specification is intended for **implementers building Prompty runtimes** in any language. It defines the behavioral contracts that all implementations must satisfy. For user-facing guides on using Prompty, see the [Getting Started](/getting-started/) section.
+
+**Version**: 0.1.0-draft · **Status**: Draft
+
+:::note
+The type system (data model) is defined separately in TypeSpec (`schema/`). This specification covers what implementations **do** with those types.
+:::
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
+
+## Sections
+
+| § | Title | Page |
+|---|-------|------|
+| 1 | Overview & Architecture | [§1 Overview & Architecture](/specification/architecture/) |
+| 2 | File Format | [§2 File Format](/specification/file-format/) |
+| 3 | Tracing | [§3 Tracing](/specification/tracing/) |
+| 4 | Loading | [§4 Loading](/specification/loading/) |
+| 5 | Rendering | [§5 Rendering](/specification/rendering/) |
+| 6 | Parsing | [§6 Parsing](/specification/parsing/) |
+| 7 | Wire Format | [§7 Wire Format](/specification/wire-format/) |
+| 8 | Processing | [§8 Processing](/specification/processing/) |
+| 9 | Agent Loop | [§9 Agent Loop](/specification/agent-loop/) |
+| 10 | Streaming | [§10 Streaming](/specification/streaming/) |
+| 11 | Registries & Plugin Discovery | [§11 Registries & Plugin Discovery](/specification/registries/) |
+| 12 | Cross-Cutting Concerns | [§12 Cross-Cutting Concerns](/specification/cross-cutting/) |
+
+## Public API Surface
+
+Implementations MUST expose the following functions. Each function MUST have an async variant (e.g., `load_async`). Each function SHOULD have a sync variant.
+
+| Function | Signature | Returns | Spec Section |
+|----------|-----------|---------|-------------|
+| `load` | `(path: string) → PromptAgent` | PromptAgent | [§4](/specification/loading/) |
+| `render` | `(agent, inputs) → string` | Rendered string | [§5](/specification/rendering/) |
+| `parse` | `(agent, rendered) → Message[]` | Message list | [§6](/specification/parsing/) |
+| `prepare` | `(agent, inputs) → Message[]` | Message list | [§5](/specification/rendering/) + [§6](/specification/parsing/) |
+| `run` | `(agent, messages) → result` | Processed result | [§7](/specification/wire-format/) + [§8](/specification/processing/) |
+| `invoke` | `(path, inputs) → result` | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) |
+| `invoke_agent` | `(path, inputs, tools?) → result` | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
+| `process` | `(agent, response) → result` | Extracted result | [§8](/specification/processing/) |
+| `validate_inputs` | `(agent, inputs) → validated_inputs` | Validated dict | [§12](/specification/cross-cutting/) |
+
+**Async contract**: All pipeline functions MUST have async variants. Implementations SHOULD also provide sync variants. When both exist, they MUST produce identical results for the same inputs.
+
+## Conformance Levels
+
+This specification uses three conformance levels:
+
+- **MUST** — An absolute requirement. An implementation that does not satisfy a MUST requirement is non-conformant.
+- **SHOULD** — Recommended but not required. An implementation may omit a SHOULD requirement with good reason, but the implications must be understood.
+- **MAY** — Truly optional. An implementation may provide or omit a MAY feature freely.

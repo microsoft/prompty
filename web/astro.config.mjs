@@ -101,6 +101,11 @@ export default defineConfig({
           autogenerate: { directory: "api-reference" },
         },
         {
+          label: "Specification",
+          autogenerate: { directory: "specification" },
+          badge: { text: "spec", variant: "tip" },
+        },
+        {
           label: "Migration",
           slug: "migration",
         },

@@ -1,0 +1,272 @@
+---
+title: "§9 Agent Loop"
+sidebar:
+  order: 10
+---
+
+The agent loop enables multi-turn tool-calling workflows. It calls the LLM,
+inspects the response for tool calls, executes them, appends results to the
+conversation, and re-calls the LLM—repeating until the LLM produces a normal
+(non-tool-call) response.
+
+**Public API:**
+
+- `invoke_agent(path_or_agent, inputs, tools?) → result`
+- `invoke_agent_async(path_or_agent, inputs, tools?) → result`
+
+Both MUST emit an `invoke_agent` trace span that wraps
+the entire loop including all inner `execute` and `execute_tool` spans.
+
+## §9.1 Constants
+
+| Constant           | Default | Notes                          |
+| ------------------ | ------- | ------------------------------ |
+| `MAX_ITERATIONS`   | `10`    | MAY be configurable at runtime |
+
+## §9.2 Algorithm
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null) → result:
+  // Step 1: Resolve agent
+  if path_or_agent is a string path:
+    agent = load(path_or_agent)
+  else:
+    agent = path_or_agent
+
+  // Step 2: Prepare initial messages
+  messages = prepare(agent, inputs)
+
+  // Step 3: Merge runtime tools into the agent
+  if tools is not null:
+    merge tools into agent.tools
+    merge tool handlers into tool registry
+
+  // Step 4: Iteration counter
+  iteration = 0
+
+  // Step 5: Loop
+  loop:
+    // 5a. Guard against infinite loops
+    if iteration >= MAX_ITERATIONS:
+      raise RuntimeError(
+        "Agent loop exceeded " + MAX_ITERATIONS + " iterations"
+      )
+
+    // 5b. Call the LLM
+    response = execute_llm(agent, messages)      // raw API call
+
+    // 5c. Process response
+    result = process(agent, response)
+
+    // 5d. Check for tool calls
+    if result is a list of ToolCall:
+      // Build assistant message preserving tool_calls in metadata
+      assistant_msg = Message(
+        role: "assistant",
+        content: [],
+        metadata: {
+          tool_calls: [
+            {
+              id:       tc.id,
+              type:     "function",
+              function: { name: tc.name, arguments: tc.arguments }
+            }
+            for tc in result
+          ]
+        }
+      )
+      append assistant_msg to messages
+
+      // Execute each tool call
+      for tool_call in result:
+        TRACE: emit "execute_tool" span for tool_call.name
+
+        // Look up handler — two-layer dispatch (§11.2)
+        tool_def = find_tool_definition(agent, tool_call.name)
+
+        // Layer 1: explicit name override
+        handler = get_tool(tool_call.name)
+
+        // Parse arguments
+        args = json_parse(tool_call.arguments)
+
+        // Apply bindings (inject bound values from inputs)
+        args = apply_bindings(tool_def, args, inputs)
+
+        if handler is not null:
+          // Name registry hit — direct call
+          tool_result = handler(args)
+        else:
+          // Layer 2: kind handler fallback
+          kind_handler = get_tool_handler(tool_def.kind)
+          if kind_handler is null:
+            raise ValueError(
+              "No handler registered for tool: " + tool_call.name
+              + " (kind: " + tool_def.kind + ")"
+            )
+          tool_result = kind_handler(tool_def, args, agent, inputs)
+
+        // Build tool result message
+        tool_msg = Message(
+          role: "tool",
+          content: [TextPart(value: str(tool_result))],
+          metadata: { tool_call_id: tool_call.id }
+        )
+        append tool_msg to messages
+
+      iteration += 1
+      continue loop
+
+    // 5e. Normal response (no tool calls) — return
+    return result
+```
+
+## §9.3 Streaming in Agent Mode
+
+When streaming is enabled during agent mode, implementations SHOULD forward
+content chunks to the caller where possible rather than buffering the entire
+response. The key constraint: tool call arguments arrive incrementally and
+MUST be fully accumulated before tool execution.
+
+**Detection strategy:** LLM streaming APIs send `tool_calls` deltas from the
+start of a response — they do not appear after content deltas. Implementations
+SHOULD use the first chunk's delta to determine the response type:
+
+```
+When response is a stream:
+  1. Begin consuming chunks through the processor.
+  2. If tool_calls are detected (present in early chunks):
+     - MUST accumulate ALL chunks to collect complete tool call data
+       (function names + full argument JSON).
+     - MUST NOT yield content to the caller for this iteration.
+     - Execute tools, append results, re-loop.
+  3. If only content is detected (no tool_calls):
+     - This is the final response — SHOULD yield content chunks
+       through a PromptyStream to the caller as they arrive.
+     - Return the stream (caller consumes at their pace).
+```
+
+This means intermediate iterations (tool calls) are buffered internally,
+while the **final iteration** (content only) is streamed through to the
+caller. The caller sees a normal `PromptyStream` for the final answer.
+
+Implementations that cannot distinguish early MAY fall back to fully
+consuming the stream before deciding, but this is not preferred.
+
+## §9.4 Provider-Specific Tool Message Formats
+
+Each provider has a different wire format for tool-call messages. The agent
+loop MUST produce messages in the correct format for the active provider.
+
+**OpenAI Chat Completions:**
+
+```json
+// Assistant message with tool calls
+{
+  "role": "assistant",
+  "tool_calls": [
+    {
+      "id": "call_123",
+      "type": "function",
+      "function": { "name": "get_weather", "arguments": "{\"city\":\"Paris\"}" }
+    }
+  ]
+}
+
+// Tool result message
+{
+  "role": "tool",
+  "content": "72°F and sunny",
+  "tool_call_id": "call_123"
+}
+```
+
+**Anthropic:**
+
+```json
+// Assistant message — MUST preserve ALL content blocks (text + tool_use)
+{
+  "role": "assistant",
+  "content": ["<original content blocks from API response>"]
+}
+
+// Tool results — ALL results in ONE user message
+{
+  "role": "user",
+  "content": [
+    { "type": "tool_result", "tool_use_id": "toolu_123", "content": "72°F and sunny" },
+    { "type": "tool_result", "tool_use_id": "toolu_456", "content": "Pizza Palace" }
+  ]
+}
+```
+
+:::caution
+Anthropic implementations MUST batch all tool results into a single `user`
+message. Sending individual `user` messages per tool result is incorrect and
+will cause API errors.
+:::
+
+**OpenAI Responses API:**
+
+```json
+// MUST include original function_call item in input
+{
+  "type": "function_call",
+  "id": "fc_123",
+  "call_id": "call_123",
+  "name": "get_weather",
+  "arguments": "{\"city\":\"Paris\"}"
+}
+
+// Function call output
+{
+  "type": "function_call_output",
+  "call_id": "call_123",
+  "output": "72°F and sunny"
+}
+```
+
+## §9.5 Bindings Injection
+
+During tool execution, bound parameters MUST be injected into the arguments
+before calling the handler:
+
+```
+function apply_bindings(tool, args, inputs) → dict:
+  if tool.bindings is null:
+    return args
+
+  for param_name, binding in tool.bindings:
+    input_name = binding.input    // e.g., "preferred_unit"
+    if input_name in inputs:
+      args[param_name] = inputs[input_name]
+
+  return args
+```
+
+Bindings MUST override any value the LLM may have generated for the same
+parameter name.
+
+## §9.6 PromptyTool Execution
+
+A `PromptyTool` references another `.prompty` file to be invoked as a tool:
+
+```
+function execute_prompty_tool(tool, args, parent_inputs) → result:
+  // Resolve path relative to the parent .prompty file
+  child_agent = load(tool.path)
+
+  // Merge: LLM-provided args + bindings from parent inputs
+  merged = apply_bindings(tool, args, parent_inputs)
+
+  match tool.mode:
+    "single":
+      // One LLM call — no agent loop
+      return run(child_agent, merged)
+    "agentic":
+      // Full agent loop — child may call tools too
+      return invoke_agent(child_agent, merged)
+```
+
+Child `PromptyTool` execution MUST inherit the parent's tracer registry,
+producing nested trace spans that show the full call hierarchy.

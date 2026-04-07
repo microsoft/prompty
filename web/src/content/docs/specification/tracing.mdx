@@ -1,0 +1,283 @@
+---
+title: "§3 Tracing"
+sidebar:
+  order: 4
+---
+
+Tracing is the cross-cutting observability layer that wraps every pipeline stage.
+It is **not optional**: conformant implementations MUST implement the core tracing
+infrastructure. Individual backends beyond the `.tracy` file backend are SHOULD/MAY.
+
+## §3.1 Tracer Registry
+
+The tracer registry manages named tracing backends. It MUST be thread-safe.
+
+**Operations**:
+
+| Operation                   | Description                                          |
+| --------------------------- | ---------------------------------------------------- |
+| `add(name, factory)`        | Register a named backend factory                     |
+| `remove(name)`              | Unregister a named backend                           |
+| `clear()`                   | Remove all registered backends                       |
+| `start(spanName) → emitter` | Open ALL registered backends, return a fan-out emitter |
+
+**Factory signature**:
+
+```
+factory: (spanName: string) → ContextManager<(key: string, value: any) → void>
+```
+
+A factory receives a span name and returns a context manager. On enter, the context
+manager yields an emitter function `(key, value) → void`. On exit, the span ends.
+
+**Fan-out**: `start(spanName)` MUST invoke every registered factory and return a
+composite emitter that forwards every `(key, value)` call to all active backends
+simultaneously. If any individual backend raises an error, it MUST NOT prevent other
+backends from receiving the emission.
+
+**Thread safety**: The registry MUST be safe for concurrent `add`/`remove`/`start` calls
+from multiple threads or async tasks.
+
+## §3.2 The `@trace` Decorator
+
+The `@trace` decorator (or equivalent wrapper mechanism) instruments a function with
+automatic span creation, input capture, and result capture.
+
+**Algorithm**:
+
+```
+function trace(fn, options?):
+  return wrapped_fn(*args, **kwargs):
+    1. signature ← module_name + "." + qualified_name(fn)
+    2. bound_args ← bind function parameters to (args, kwargs)
+    3. Remove 'self' from bound_args (if present)
+    4. If options.ignore_params specified:
+         Remove those parameter names from bound_args
+    5. emitter ← Tracer.start(signature)
+    6. emitter("signature", signature)
+    7. emitter("inputs", {name: to_dict(value) for name, value in bound_args})
+    8. try:
+         result ← call fn(*args, **kwargs)
+         emitter("result", to_dict(result))
+         return result
+       catch error:
+         emitter("result", {
+           "exception": type_name(error),
+           "message": str(error),
+           "traceback": format_traceback(error)
+         })
+         re-raise error
+       finally:
+         end span (exit context manager)
+```
+
+**Requirements**:
+
+- MUST work on async functions (awaiting the result within the span).
+- SHOULD work on sync functions.
+- SHOULD support custom attributes via decorator arguments or options.
+- MUST NOT alter the return value or exception behavior of the wrapped function.
+- If no backends are registered, the decorator MUST still call the original function
+  (tracing becomes a no-op, not a failure).
+
+## §3.3 Serialization (`to_dict`)
+
+Before emitting values to backends, all values MUST be serialized to a JSON-safe
+representation.
+
+**Conversion rules** (applied recursively):
+
+| Input Type             | Output                                |
+| ---------------------- | ------------------------------------- |
+| `string`               | Passthrough                           |
+| `int`, `float`, `bool` | Passthrough                           |
+| `null` / `None`        | `null`                                |
+| `datetime`             | ISO 8601 string (e.g., `"2026-04-04T12:00:00Z"`) |
+| `dataclass` / model    | Dict representation (field → value)   |
+| `Path` / file path     | String representation                 |
+| `list` / array         | Recursive `to_dict` on each element   |
+| `dict` / map           | Recursive `to_dict` on each value     |
+| Everything else        | `str(value)` (string coercion)        |
+
+## §3.4 Redaction
+
+Before emitting values to any backend, implementations MUST redact sensitive data.
+
+**Sensitive key detection**: A key is sensitive if it contains any of the following
+substrings (case-insensitive match):
+
+- `secret`
+- `password`
+- `api_key`
+- `apikey`
+- `token`
+- `auth`
+- `credential`
+- `cookie`
+
+:::caution
+`key` alone is NOT sensitive (too broad). Only compound forms like `api_key`,
+`apiKey`, `secret_key` trigger redaction.
+:::
+
+**Redacted value**: `"[REDACTED]"` (or language-idiomatic equivalent).
+
+**Scope**: Redaction applies recursively to all dict keys at every nesting level in the
+serialized `inputs` and `result` values. Redaction MUST occur before the value reaches
+any backend — including the `.tracy` file backend.
+
+## §3.5 Usage Hoisting
+
+Token usage information MUST be propagated from child spans to parent spans.
+
+**Algorithm**:
+
+```
+function hoist_usage(span):
+  If span.result contains a "usage" field:
+    usage ← span.result.usage
+    propagate to parent span as "__usage":
+      __usage.prompt_tokens  += usage.prompt_tokens  (or usage.input_tokens)
+      __usage.completion_tokens += usage.completion_tokens (or usage.output_tokens)
+      __usage.total_tokens += usage.total_tokens
+  For each child in span.__frames:
+    hoist_usage(child)  // recursive — deepest spans propagate first
+```
+
+Usage hoisting enables the root span to report aggregate token consumption across the
+entire pipeline execution, including agent loops with multiple LLM calls.
+
+## §3.6 Built-in Backends
+
+### §3.6.1 `.tracy` File Backend — MUST Implement
+
+Every conformant implementation MUST provide a `.tracy` file backend that writes
+structured JSON traces to disk.
+
+**File naming**: `<sanitized_span_name>.<YYYYMMDD.HHMMSS>.tracy`
+
+- `sanitized_span_name`: the root span name with filesystem-unsafe characters replaced
+  by underscores.
+- Timestamp: UTC time when the root span **ends**.
+
+**File is written only when the root span ends** — intermediate spans accumulate in
+memory.
+
+**JSON schema**:
+
+```json
+{
+  "runtime": "<language_name>",
+  "version": "<prompty_library_version>",
+  "trace": {
+    "name": "<span_name>",
+    "__time": {
+      "start": "<ISO8601_UTC>",
+      "end": "<ISO8601_UTC>",
+      "duration": "<milliseconds_as_number>"
+    },
+    "signature": "<module.function_name>",
+    "inputs": { "<param_name>": "<serialized_value>", "..." : "..." },
+    "result": "<serialized_value>",
+    "__frames": [
+      {
+        "name": "<child_span_name>",
+        "__time": { "..." : "..." },
+        "signature": "...",
+        "inputs": { "..." : "..." },
+        "result": "...",
+        "__frames": []
+      }
+    ],
+    "__usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    }
+  }
+}
+```
+
+**Field definitions**:
+
+| Field        | Type     | Description                                             |
+| ------------ | -------- | ------------------------------------------------------- |
+| `runtime`    | `string` | Language/runtime name (e.g., `"python"`, `"csharp"`, `"javascript"`) |
+| `version`    | `string` | Prompty library version (e.g., `"2.0.0"`)               |
+| `name`       | `string` | Span name                                               |
+| `__time`     | `object` | Timing information                                      |
+| `signature`  | `string` | Fully-qualified function signature                      |
+| `inputs`     | `object` | Serialized input parameters (redacted)                  |
+| `result`     | `any`    | Serialized return value (redacted)                      |
+| `__frames`   | `array`  | Child spans (recursive, same structure)                 |
+| `__usage`    | `object` | Aggregated token usage (hoisted from children)          |
+
+The `__` prefix on internal fields (`__time`, `__frames`, `__usage`) distinguishes them
+from user-emitted keys.
+
+### §3.6.2 Console Tracer — SHOULD Implement
+
+Implementations SHOULD provide a console tracer that prints span start/end events to
+stderr (or the platform-equivalent diagnostic output).
+
+**Output format** (RECOMMENDED):
+
+```
+[prompty] ▶ <span_name>
+[prompty] ◀ <span_name> (<duration_ms>ms)
+```
+
+### §3.6.3 OpenTelemetry Backend — SHOULD Implement
+
+Implementations SHOULD provide an OpenTelemetry tracing backend that conforms to the
+[OpenTelemetry GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/).
+
+**Span attributes mapping**:
+
+| Prompty Concept              | OTel Attribute                   | Value                              |
+| ---------------------------- | -------------------------------- | ---------------------------------- |
+| API type                     | `gen_ai.operation.name`          | `"chat"`, `"embeddings"`, `"invoke_agent"`, `"execute_tool"` |
+| Provider name                | `gen_ai.provider.name`           | `"openai"`, `"microsoft.foundry"`, `"anthropic"` |
+| Model ID                     | `gen_ai.request.model`           | From `agent.model.id`              |
+| Temperature                  | `gen_ai.request.temperature`     | From `agent.model.options.temperature` |
+| Max tokens                   | `gen_ai.request.max_tokens`      | From `agent.model.options.maxOutputTokens` |
+| Input token count            | `gen_ai.usage.input_tokens`      | From response usage                |
+| Output token count           | `gen_ai.usage.output_tokens`     | From response usage                |
+| Finish reasons               | `gen_ai.response.finish_reasons` | From response choices              |
+| Response ID                  | `gen_ai.response.id`             | From response                      |
+| Response model               | `gen_ai.response.model`          | From response                      |
+
+**Span events** (opt-in — implementations MAY emit these):
+
+| Event Name                  | Content                          |
+| --------------------------- | -------------------------------- |
+| `gen_ai.input.messages`     | Messages sent to LLM             |
+| `gen_ai.output.messages`    | Messages received from LLM       |
+| `gen_ai.system_instructions`| System message content           |
+| `gen_ai.tool.definitions`   | Tool definitions sent to LLM     |
+
+**Span kinds**:
+
+- `CLIENT` for remote LLM API calls (executor).
+- `INTERNAL` for local processing (renderer, parser, processor).
+
+**Agent and tool spans**:
+
+- Agent loop spans: `gen_ai.operation.name = "invoke_agent"`, with `gen_ai.agent.name`.
+- Tool execution spans: `gen_ai.operation.name = "execute_tool"`.
+
+**Error handling**: On error, set span status to `ERROR` and record `error.type` attribute.
+
+## §3.7 Extensibility
+
+Users add custom backends by implementing the factory interface and calling
+`add(name, factory)` on the tracer registry.
+
+**Example use cases**:
+- Database logging (write spans to a SQL or NoSQL store)
+- Webhook notifications (POST span data to an HTTP endpoint)
+- Custom dashboards (stream span data to a visualization tool)
+- Cost tracking (aggregate `__usage` across runs)
+
+Backends MUST NOT block the pipeline — if a backend is slow, it SHOULD buffer or
+flush asynchronously. A failing backend MUST NOT cause the pipeline to fail.

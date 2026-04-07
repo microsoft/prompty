@@ -1,0 +1,133 @@
+---
+title: "§5 Rendering"
+sidebar:
+  order: 6
+---
+
+## §5.1 Public API
+
+| Function       | Signature                            | Returns          |
+| -------------- | ------------------------------------ | ---------------- |
+| `render`       | `(agent, inputs) → string`           | Rendered string  |
+| `render_async` | `(agent, inputs) → string`           | Rendered string  |
+
+Both functions MUST be traced: emit a `render` span.
+
+## §5.2 Rich Kinds
+
+The following property kinds contain structured data that cannot be directly interpolated
+into a template string:
+
+```
+RICH_KINDS = {thread, image, file, audio}
+```
+
+| Kind     | Contains                    | Rendering Behavior         | Resolution Point |
+| -------- | --------------------------- | -------------------------- | ---------------- |
+| `thread` | `Message[]` (history)       | Nonce → expanded in parser | [§6 Parsing](/specification/parsing/)     |
+| `image`  | Image data/URL              | Nonce → resolved in wire   | [§7 Wire Format](/specification/wire-format/)   |
+| `file`   | File data/URL               | Nonce → resolved in wire   | [§7 Wire Format](/specification/wire-format/)   |
+| `audio`  | Audio data/URL              | Nonce → resolved in wire   | [§7 Wire Format](/specification/wire-format/)   |
+
+All rich kinds are replaced with nonce strings during rendering. Only `thread` is
+expanded back into `Message[]` during parsing ([§6 Parsing](/specification/parsing/)). The others are resolved during
+wire format conversion ([§7 Wire Format](/specification/wire-format/)).
+
+## §5.3 Nonce Format
+
+```
+__PROMPTY_THREAD_<hex8>_<propertyName>__
+```
+
+| Component      | Description                                              |
+| -------------- | -------------------------------------------------------- |
+| `__PROMPTY_THREAD_` | Fixed prefix (identifies Prompty nonces)             |
+| `<hex8>`       | 8 bytes of cryptographic random data, hex-encoded (16 chars) |
+| `<propertyName>` | The input property name (for debuggability)            |
+| `__`           | Fixed suffix                                             |
+
+**Example**: `__PROMPTY_THREAD_a1b2c3d4e5f6a7b8_conversation__`
+
+**Requirements**:
+
+- MUST use cryptographically secure random bytes (not pseudo-random sequences).
+- MUST be unique per render invocation (a new nonce for each call to `render`).
+- The nonce-to-value mapping MUST be stored in thread-safe per-request storage.
+- Nonce generation and storage MUST be thread-safe.
+
+## §5.4 Algorithm
+
+```
+function render(agent, inputs):
+  1. validated_inputs ← validate_inputs(agent, inputs)  // §12
+  2. prepared_inputs ← {}
+     nonce_map ← {}  // thread-safe map
+     FOR EACH property in agent.inputs:
+       name ← property.name
+       value ← validated_inputs[name]
+       IF property.kind IN RICH_KINDS:
+         nonce ← "__PROMPTY_THREAD_" + crypto_random_hex(8) + "_" + name + "__"
+         prepared_inputs[name] ← nonce
+         nonce_map[nonce] ← value
+       ELSE:
+         prepared_inputs[name] ← value
+  3. renderer ← get_renderer(agent.template.format.kind)
+       // Look up via invoker discovery (§11)
+       // Default: "jinja2" → Jinja2-compatible engine
+       //          "mustache" → Mustache engine
+       // Unknown key → RAISE InvokerError
+  4. rendered ← renderer.render(agent.instructions, prepared_inputs)
+  5. Store nonce_map in per-request thread-safe storage
+       // The parser (§6) needs this to expand thread nonces
+  6. RETURN rendered
+```
+
+## §5.5 Jinja2 Common Subset (Conformance Floor)
+
+The default renderer (format kind `"jinja2"`) MUST support the following Jinja2 template
+features as a conformance floor:
+
+**MUST support**:
+
+| Feature            | Syntax                                        |
+| ------------------ | --------------------------------------------- |
+| Variable output    | `{{variable}}`, `{{object.property}}`         |
+| Conditionals       | `{% if cond %}...{% elif %}...{% else %}...{% endif %}` |
+| Loops              | `{% for item in list %}...{% endfor %}`       |
+| Comments           | `{# comment text #}`                          |
+| Filter: `default`  | `{{var\|default("fallback")}}`                 |
+| Filter: `upper`    | `{{var\|upper}}`                               |
+| Filter: `lower`    | `{{var\|lower}}`                               |
+| Filter: `join`     | `{{list\|join(", ")}}`                         |
+| Filter: `length`   | `{{list\|length}}`                             |
+| Filter: `trim`     | `{{var\|trim}}`                                |
+
+**MAY support**:
+
+- Template inheritance (`{% extends %}`, `{% block %}`)
+- Macros (`{% macro name(args) %}...{% endmacro %}`)
+- Custom filters (registered by the implementation)
+- Advanced expressions and tests (`is defined`, `is none`, etc.)
+
+**Sandboxing**: The template engine SHOULD run in sandboxed mode where available, to
+prevent template injection attacks. Implementations MUST NOT allow templates to execute
+arbitrary code, access the filesystem, or make network calls.
+
+## §5.6 Custom Renderers
+
+Implementations MAY support additional template engines beyond Jinja2 and Mustache via
+the invoker discovery mechanism ([§11 Registries & Plugin Discovery](/specification/registries/)). Custom renderers MUST implement the same interface:
+
+```
+interface Renderer:
+  render(template: string, inputs: dict) → string
+  render_async(template: string, inputs: dict) → string
+```
+
+## §5.7 Error Conditions
+
+| Condition                                     | Error Type      |
+| --------------------------------------------- | --------------- |
+| Unknown template format kind (no renderer)    | `InvokerError`  |
+| Template syntax error (invalid Jinja2, etc.)  | `ValueError`    |
+| Missing required input (not in inputs dict)   | `ValueError`    |

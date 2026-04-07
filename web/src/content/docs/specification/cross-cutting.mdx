@@ -1,0 +1,140 @@
+---
+title: "§12 Cross-Cutting Concerns"
+sidebar:
+  order: 13
+---
+
+## §12.1 Async Contract
+
+All pipeline functions MUST have async variants. Pipeline functions SHOULD
+also have sync variants where the language supports synchronous execution.
+
+The following functions MUST exist in both sync and async forms:
+
+| Sync                | Async                      |
+| ------------------- | -------------------------- |
+| `load`              | `load_async`               |
+| `render`            | `render_async`             |
+| `parse`             | `parse_async`              |
+| `prepare`           | `prepare_async`            |
+| `run`               | `run_async`                |
+| `invoke`            | `invoke_async`             |
+| `process`           | `process_async`            |
+| `invoke_agent`      | `invoke_agent_async`       |
+
+**Naming convention:** `function_name` for sync, `function_name_async` for
+async. Language-idiomatic alternatives are acceptable (e.g., TypeScript MAY
+provide only async functions since its ecosystem is async-first).
+
+Registry operations (`register_connection`, `get_connection`,
+`register_tool`, `get_tool`, `clear_cache`, etc.) are sync-only. They
+perform in-memory lookups and MUST NOT perform I/O.
+
+## §12.2 Input Validation
+
+The `validate_inputs` function MUST be called as part of `prepare()`, before
+rendering:
+
+```
+function validate_inputs(agent, inputs) → dict:
+  validated = shallow_copy(inputs)
+
+  for prop in agent.inputs:
+    if prop.name not in validated:
+      if prop.default is not null:
+        validated[prop.name] = prop.default
+      elif prop.required:
+        raise ValueError("Missing required input: " + prop.name)
+      // else: optional with no default — omit
+
+  return validated
+```
+
+**Behaviour requirements:**
+
+- MUST fill missing inputs from `default` when available.
+- MUST raise `ValueError` for missing inputs that are `required` and have
+  no `default`.
+- MUST NOT raise for optional inputs with no value and no default — they
+  are simply omitted from the validated dict.
+- MUST NOT use `example` as a runtime value under any circumstances — it
+  exists solely for documentation and tooling. Using `example` as a fallback
+  is the fastest path to unexpected behavior.
+- MUST NOT type-check input values (the template engine handles coercion).
+- MUST NOT reject extra inputs not declared in `inputs` (they are
+  passed through to the template).
+
+## §12.3 Dotenv Loading
+
+Loading `.env` files is an **application-level concern**. Runtime libraries
+MUST NOT automatically load `.env` files as a side effect of loading a
+`.prompty` file.
+
+**Guidance for application authors:**
+
+- Load `.env` files at application startup, before calling `load()`.
+- Look for `.env` in the `.prompty` file's parent directory or the
+  project root.
+- Format: standard dotenv (`KEY=VALUE`, one per line, `#` comments,
+  optional quoting).
+- `.env` files MUST NOT override environment variables that are already set
+  in the process environment.
+
+## §12.4 Error Conditions
+
+Implementations MUST raise appropriate errors for the conditions listed
+below. This specification defines **what** error to raise and **when**; the
+specific exception class SHOULD follow language idioms.
+
+| Stage       | Condition                                  | Error Type          | Message Pattern                                     |
+| ----------- | ------------------------------------------ | ------------------- | --------------------------------------------------- |
+| Load        | File not found                             | FileNotFoundError   | `"Prompty file not found: {path}"`                  |
+| Load        | Invalid YAML frontmatter                   | ValueError          | `"Invalid frontmatter YAML: {details}"`             |
+| Load        | Missing env var (no default)               | ValueError          | `"Environment variable '{name}' not set"`           |
+| Load        | Referenced file not found (`${file:}`)     | FileNotFoundError   | `"Referenced file not found: {path}"`               |
+| Render      | Undefined template variable                | ValueError          | `"Undefined template variable: {name}"`             |
+| Render      | Template syntax error                      | ValueError          | `"Template syntax error: {details}"`                |
+| Parse       | Role marker nonce mismatch (strict mode)   | ValueError          | `"Role marker nonce mismatch (possible injection)"` |
+| Execute     | Unsupported `apiType`                      | ValueError          | `"Unsupported API type: {type}"`                    |
+| Execute     | Connection failure                         | ConnectionError     | Provider-specific message                           |
+| Process     | Unexpected response format                 | ValueError          | `"Unexpected response format"`                      |
+| Agent Loop  | Tool not registered                        | ValueError          | `"Tool not registered: {name}"`                     |
+| Agent Loop  | Max iterations exceeded                    | RuntimeError        | `"Agent loop exceeded {n} iterations"`              |
+| Agent Loop  | Model refusal                              | ValueError          | `"Model refused: {message}"`                        |
+| Discovery   | No implementation for key                  | InvokerError        | `"No {component} registered for key: {key}"`        |
+
+## §12.6 Rich Kinds
+
+`RICH_KINDS = { thread, image, file, audio }`
+
+These are input property kinds that contain structured data requiring special
+handling during rendering and parsing. They MUST NOT be passed directly to
+the template engine as raw values.
+
+| Kind     | Contains           | Rendering                | Parsing                         | Wire Format                |
+| -------- | ------------------ | ------------------------ | ------------------------------- | -------------------------- |
+| `thread` | `Message[]`        | Nonce replacement        | Expanded back to `Message[]`    | N/A (already messages)     |
+| `image`  | Image data or URL  | Nonce replacement        | Preserved as nonce              | Resolved to `ImagePart`    |
+| `file`   | File data or URL   | Nonce replacement        | Preserved as nonce              | Resolved to `FilePart`     |
+| `audio`  | Audio data or URL  | Nonce replacement        | Preserved as nonce              | Resolved to `AudioPart`    |
+
+**Nonce format:** All rich kinds use the same nonce format:
+
+```
+__PROMPTY_THREAD_<hex8>_<name>__
+```
+
+Where `<hex8>` is 8 random hexadecimal characters and `<name>` is the input
+property name. The nonce MUST be unique per render invocation.
+
+**Purpose:** The nonce prevents template engines from interpreting or
+mangling structured data. During rendering, the structured value is replaced
+with a nonce string. After parsing, the nonce is resolved back to the
+appropriate content:
+
+- **Thread nonces** are expanded during the parse/prepare phase into the
+  actual `Message[]` sequence, spliced into the message list at the nonce's
+  position.
+- **Image, file, and audio nonces** are resolved during wire-format
+  conversion ([§7 Wire Format](/specification/wire-format/)) when the actual `ImagePart`, `FilePart`, or `AudioPart`
+  content types are constructed.

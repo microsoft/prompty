@@ -1,0 +1,133 @@
+---
+title: "§1 Overview & Architecture"
+sidebar:
+  order: 2
+---
+
+## §1.1 What is Prompty?
+
+Prompty is a markdown file format (`.prompty`) for LLM prompts paired with a runtime
+pipeline that loads, renders, parses, executes, and post-processes those prompts.
+
+A `.prompty` file consists of:
+
+- **YAML frontmatter** — configuration: model settings, input/output schemas, tool
+  definitions, template engine selection, and metadata.
+- **Markdown body** — the prompt template containing role markers, template variables,
+  and instructions that become the `instructions` field on the loaded agent.
+
+## §1.2 Type System
+
+The data model (types such as `PromptAgent`, `Model`, `Connection`, `Property`, `Tool`,
+and their subtypes) is defined in TypeSpec (`schema/`) and generated into each target
+language. This specification does **not** redefine those types. It defines the **runtime
+behavior**: what implementations do with those types at each pipeline stage.
+
+When this specification refers to a type name (e.g., `PromptAgent`, `Message`,
+`FunctionTool`), it refers to the generated type from the TypeSpec schema or the
+runtime-defined type described in this specification.
+
+## §1.3 Pipeline Architecture
+
+Every `.prompty` file passes through a five-stage pipeline. Tracing ([§3 Tracing](/specification/tracing/)) wraps every
+stage. Registries ([§11 Registries & Plugin Discovery](/specification/registries/)) provide pluggable discovery for renderers,
+parsers, executors, and processors.
+
+```
+                        ┌─────────────────────────────────┐
+                        │        .prompty file             │
+                        │  ┌───────────┐ ┌──────────────┐ │
+                        │  │ YAML      │ │ Markdown     │ │
+                        │  │ frontmatter│ │ body         │ │
+                        │  └───────────┘ └──────────────┘ │
+                        └────────────┬────────────────────┘
+                                     │
+                    ┌────────────────▼─────────────────┐
+                    │  §4  LOAD                        │
+                    │  parse frontmatter + body         │
+                    │  resolve ${env:} ${file:}         │
+                    │  produce PromptAgent              │
+                    └────────────────┬─────────────────┘
+                                     │ PromptAgent
+                    ┌────────────────▼─────────────────┐
+                    │  §5  RENDER                      │
+                    │  template engine (Jinja2/Mustache)│
+                    │  substitute inputs into template  │
+                    │  replace rich kinds with nonces   │
+                    └────────────────┬─────────────────┘
+                                     │ rendered string
+                    ┌────────────────▼─────────────────┐
+                    │  §6  PARSE                       │
+                    │  split on role markers            │
+                    │  build Message[] list             │
+                    │  expand thread nonces → messages  │
+                    └────────────────┬─────────────────┘
+                                     │ Message[]
+                    ┌────────────────▼─────────────────┐
+                    │  §7  EXECUTE                     │
+                    │  convert to wire format           │
+                    │  call LLM provider API            │
+                    │  handle streaming                 │
+                    └────────────────┬─────────────────┘
+                                     │ raw API response
+                    ┌────────────────▼─────────────────┐
+                    │  §8  PROCESS                     │
+                    │  extract content / tool_calls     │
+                    │  structured output parsing        │
+                    └────────────────┬─────────────────┘
+                                     │ final result
+                                     ▼
+
+    ╔═══════════════════════════════════════════════════════╗
+    ║  TRACING (§3) wraps every stage above.               ║
+    ║  Every function emits a span with inputs and result. ║
+    ╚═══════════════════════════════════════════════════════╝
+```
+
+## §1.4 Composite Operations
+
+The five pipeline stages compose into higher-level operations:
+
+| Operation      | Composition                          | Description                            |
+| -------------- | ------------------------------------ | -------------------------------------- |
+| `prepare`      | render + parse + thread expansion    | Produce `Message[]` ready for the LLM  |
+| `run`          | execute + process                    | Send messages to LLM, extract result   |
+| `invoke`       | load + prepare + run                 | End-to-end from file path to result    |
+| `invoke_agent` | load + prepare + run in agent loop   | With automatic tool-call handling      |
+
+:::note[Naming Note]
+The pipeline stage that calls the LLM is called **execute** (the
+`ExecutorProtocol`). The top-level convenience functions that run the entire pipeline
+end-to-end are called **invoke** / **invoke_agent** to avoid ambiguity.
+:::
+
+## §1.5 Public API Surface
+
+Implementations MUST expose the following functions. Each function MUST have an async
+variant (e.g., `load_async`). Each function SHOULD have a sync variant.
+
+| Function           | Signature                                    | Returns          | Spec Section |
+| ------------------ | -------------------------------------------- | ---------------- | ------------ |
+| `load`             | `(path: string) → PromptAgent`               | PromptAgent      | [§4](/specification/loading/)           |
+| `render`           | `(agent, inputs) → string`                   | Rendered string  | [§5](/specification/rendering/)           |
+| `parse`            | `(agent, rendered) → Message[]`              | Message list     | [§6](/specification/parsing/)           |
+| `prepare`          | `(agent, inputs) → Message[]`                | Message list     | [§5](/specification/rendering/) + [§6](/specification/parsing/)      |
+| `run`              | `(agent, messages) → result`                 | Processed result | [§7](/specification/wire-format/) + [§8](/specification/processing/)      |
+| `invoke`           | `(path, inputs) → result`                    | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/)        |
+| `invoke_agent`     | `(path, inputs, tools?) → result`            | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
+| `process`          | `(agent, response) → result`                 | Extracted result | [§8](/specification/processing/)           |
+| `validate_inputs`  | `(agent, inputs) → validated_inputs`         | Validated dict   | [§12](/specification/cross-cutting/)          |
+
+**Async contract**: All pipeline functions MUST have async variants. Implementations
+SHOULD also provide sync variants. When both exist, they MUST produce identical results
+for the same inputs.
+
+## §1.6 Conformance Levels
+
+This specification uses three conformance levels:
+
+- **MUST** — An absolute requirement. An implementation that does not satisfy a MUST
+  requirement is non-conformant.
+- **SHOULD** — Recommended but not required. An implementation may omit a SHOULD
+  requirement with good reason, but the implications must be understood.
+- **MAY** — Truly optional. An implementation may provide or omit a MAY feature freely.
