@@ -1,8 +1,8 @@
 import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } from 'vscode';
 import {
-	load, prepare, invoke, invokeAgent,
+	load, prepare, invoke, invokeAgent, run, process,
 	registerConnection, clearConnections,
-	ReferenceConnection, Model,
+	ReferenceConnection, Model, ModelOptions,
 	Tracer, PromptyTracer, traceSpan,
 	type ToolCall, Message,
 } from '@prompty/core';
@@ -10,10 +10,32 @@ import type { PromptAgent } from '@prompty/core';
 import '@prompty/openai';
 import '@prompty/foundry';
 import '@prompty/anthropic';
+import { marked } from 'marked';
 import * as path from 'path';
 import { getNonce } from '../utils/nonce';
 import { ConnectionStore } from '../connections/store';
 import { ConnectionProviderRegistry } from '../connections/registry';
+
+/** Render markdown to HTML for the chat webview. Detects image URLs and embeds them. */
+function renderMarkdown(content: string): string {
+	// If the content looks like an image URL (from apiType: image), embed it
+	const imageUrlPattern = /^https?:\/\/\S+\.(png|jpg|jpeg|gif|webp|svg)(\?\S*)?$/i;
+	const lines = content.split('\n');
+	const transformed = lines.map(line => {
+		const trimmed = line.trim();
+		if (imageUrlPattern.test(trimmed)) {
+			return `![Generated image](${trimmed})`;
+		}
+		return line;
+	}).join('\n');
+
+	return marked.parse(transformed, { async: false }) as string;
+}
+
+/** Check if a value is an async iterable (i.e. a streaming response). */
+function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+	return value != null && typeof value === 'object' && Symbol.asyncIterator in value;
+}
 
 /**
  * Chat message for the webview.
@@ -89,6 +111,16 @@ export class ChatPanel {
 		this.threadInputName = threadInputName;
 		this.sampleInputs = { ...sampleInputs };
 		this.hasTools = (agent.tools?.length ?? 0) > 0;
+
+		// Enable streaming for the chat panel — better UX for interactive use.
+		// Only applies to non-agent mode (invokeAgent consumes streams internally).
+		if (!this.hasTools && this.agent.model?.options) {
+			const opts = this.agent.model.options;
+			if (!opts.additionalProperties) opts.additionalProperties = {};
+			if (opts.additionalProperties.stream === undefined) {
+				opts.additionalProperties.stream = true;
+			}
+		}
 
 		this.promptyTracer = new PromptyTracer({ outputDir: runsDir });
 		Tracer.add('prompty-chat', this.promptyTracer.factory);
@@ -167,9 +199,10 @@ export class ChatPanel {
 
 	/**
 	 * Handle a user message: add to conversation, run the agent, display response.
+	 * Streams tokens into the webview with debounced DOM updates when possible.
 	 */
 	private async handleUserMessage(text: string): Promise<void> {
-		// Show user message in chat
+		// Show user message in chat (user messages rendered as plain text for safety)
 		this.postMessage({ command: 'addMessage', role: 'user', content: text });
 		this.postMessage({ command: 'setLoading', loading: true });
 
@@ -190,36 +223,110 @@ export class ChatPanel {
 				[this.threadInputName]: threadMessages,
 			};
 
-			let result: unknown;
-
 			if (this.hasTools) {
-				// Use invokeAgent with mock tool functions
+				// Agent mode: use invokeAgent (consumes stream internally).
+				// Tool calls appear in real-time via buildToolFunctions callbacks.
 				const toolFns = this.buildToolFunctions();
-				result = await invokeAgent(this.agent, inputs, { tools: toolFns });
-			} else {
-				result = await invoke(this.agent, inputs);
+				this.postMessage({ command: 'setLoadingText', text: 'Running agent' });
+				const result = await invokeAgent(this.agent, inputs, { tools: toolFns });
+				const assistantContent = typeof result === 'string'
+					? result
+					: JSON.stringify(result, null, 2);
+				this.conversation.push({ role: 'assistant', content: assistantContent });
+				this.postMessage({
+					command: 'addMessage',
+					role: 'assistant',
+					content: renderMarkdown(assistantContent),
+					isHtml: true,
+				});
+			}else {
+				// Non-agent: prepare + run for streaming support
+				const messages = await prepare(this.agent, inputs);
+				const result = await run(this.agent, messages);
+
+				if (isAsyncIterable(result)) {
+					// Streaming path: debounced chunk delivery
+					await this.handleStreamingResponse(result);
+				} else {
+					// Non-streaming: process and render markdown
+					const processed = await process(this.agent, result);
+					const assistantContent = typeof processed === 'string'
+						? processed
+						: JSON.stringify(processed, null, 2);
+					this.conversation.push({ role: 'assistant', content: assistantContent });
+					this.postMessage({
+						command: 'addMessage',
+						role: 'assistant',
+						content: renderMarkdown(assistantContent),
+						isHtml: true,
+					});
+				}
 			}
-
-			// Extract assistant response
-			const assistantContent = typeof result === 'string'
-				? result
-				: JSON.stringify(result, null, 2);
-
-			// Add to conversation history
-			this.conversation.push({ role: 'assistant', content: assistantContent });
-
-			// Show assistant response in chat
-			this.postMessage({
-				command: 'addMessage',
-				role: 'assistant',
-				content: assistantContent,
-			});
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
 			this.postMessage({ command: 'addError', content: message });
 		} finally {
 			this.postMessage({ command: 'setLoading', loading: false });
 		}
+	}
+
+	/**
+	 * Stream an async iterable response into the webview with debounced updates.
+	 *
+	 * Accumulates text chunks and re-renders markdown at most every 50ms
+	 * to prevent webview jitter while keeping the UI responsive.
+	 */
+	private async handleStreamingResponse(stream: AsyncIterable<unknown>): Promise<void> {
+		const DEBOUNCE_MS = 50;
+		let accumulated = '';
+		let flushTimer: ReturnType<typeof setTimeout> | undefined;
+		let needsFlush = false;
+
+		// Tell the webview to create the streaming message container
+		this.postMessage({ command: 'startStream', role: 'assistant' });
+
+		const flush = () => {
+			flushTimer = undefined;
+			needsFlush = false;
+			this.postMessage({
+				command: 'streamChunk',
+				html: renderMarkdown(accumulated),
+			});
+		};
+
+		// Process the response through the processor to get text chunks
+		const processed = await process(this.agent, stream);
+
+		if (isAsyncIterable(processed)) {
+			for await (const chunk of processed) {
+				if (typeof chunk === 'string') {
+					accumulated += chunk;
+					needsFlush = true;
+					// Debounce: schedule a flush if one isn't pending
+					if (!flushTimer) {
+						flushTimer = setTimeout(flush, DEBOUNCE_MS);
+					}
+				}
+			}
+		} else if (typeof processed === 'string') {
+			accumulated = processed;
+			needsFlush = true;
+		}
+
+		// Final flush — clear any pending timer and send the complete content
+		if (flushTimer) {
+			clearTimeout(flushTimer);
+		}
+		if (needsFlush || accumulated) {
+			this.postMessage({
+				command: 'streamChunk',
+				html: renderMarkdown(accumulated),
+			});
+		}
+
+		// Finalize the stream
+		this.postMessage({ command: 'streamEnd' });
+		this.conversation.push({ role: 'assistant', content: accumulated });
 	}
 
 	/**
@@ -250,6 +357,8 @@ export class ChatPanel {
 					const handler = this.panel.webview.onDidReceiveMessage((msg) => {
 						if (msg.command === 'toolCallResponse' && msg.callId === callId) {
 							handler.dispose();
+							// Update loading to show we're sending the result back
+							this.postMessage({ command: 'setLoadingText', text: `Processing ${toolName} result` });
 							resolve(msg.response);
 						}
 					});
@@ -310,7 +419,7 @@ export class ChatPanel {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
+		content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src https:;">
 	<title>Chat: ${this.fileName}</title>
 	<style nonce="${nonce}">
 		:root {
@@ -380,16 +489,18 @@ export class ChatPanel {
 		.msg.error .msg-role { color: var(--error-fg); }
 
 		.msg-content {
-			padding: 8px 12px; border-radius: 6px; white-space: pre-wrap;
+			padding: 8px 12px; border-radius: 6px;
 			word-break: break-word; line-height: 1.5;
 		}
 		.msg.system .msg-content {
 			background: transparent; color: var(--muted); font-style: italic;
 			font-size: 0.9em; border-left: 2px solid var(--purple); padding-left: 10px;
+			white-space: pre-wrap;
 		}
 		.msg.user .msg-content {
 			background: var(--user-bg); color: #fff;
 			align-self: flex-end; border-radius: 12px 12px 2px 12px; max-width: 80%;
+			white-space: pre-wrap;
 		}
 		.msg.assistant .msg-content {
 			background: var(--card-bg); border: 1px solid var(--border);
@@ -397,6 +508,57 @@ export class ChatPanel {
 		.msg.error .msg-content {
 			background: transparent; color: var(--error-fg); border: 1px solid var(--error-fg);
 		}
+
+		/* Markdown content styles */
+		.msg-content p { margin: 0.4em 0; }
+		.msg-content p:first-child { margin-top: 0; }
+		.msg-content p:last-child { margin-bottom: 0; }
+		.msg-content code {
+			font-family: var(--code-font); font-size: 0.9em;
+			background: rgba(255,255,255,0.06); padding: 1px 4px;
+			border-radius: 3px;
+		}
+		.msg-content pre {
+			margin: 0.5em 0; padding: 8px 10px; border-radius: 4px;
+			background: var(--bg); overflow-x: auto; line-height: 1.4;
+		}
+		.msg-content pre code {
+			background: none; padding: 0; font-size: 12px;
+		}
+		.msg-content ul, .msg-content ol {
+			margin: 0.4em 0; padding-left: 1.5em;
+		}
+		.msg-content li { margin: 0.2em 0; }
+		.msg-content blockquote {
+			margin: 0.4em 0; padding-left: 10px;
+			border-left: 2px solid var(--muted); color: var(--muted);
+		}
+		.msg-content h1, .msg-content h2, .msg-content h3,
+		.msg-content h4, .msg-content h5, .msg-content h6 {
+			margin: 0.5em 0 0.3em; font-weight: 600;
+		}
+		.msg-content h1 { font-size: 1.3em; }
+		.msg-content h2 { font-size: 1.15em; }
+		.msg-content h3 { font-size: 1.05em; }
+		.msg-content a { color: var(--blue); text-decoration: none; }
+		.msg-content a:hover { text-decoration: underline; }
+		.msg-content table {
+			border-collapse: collapse; margin: 0.4em 0; font-size: 0.9em;
+		}
+		.msg-content th, .msg-content td {
+			border: 1px solid var(--border); padding: 4px 8px;
+		}
+		.msg-content th { background: rgba(255,255,255,0.04); font-weight: 600; }
+		.msg-content hr { border: none; border-top: 1px solid var(--border); margin: 0.6em 0; }
+		.msg-content img {
+			max-width: 100%; border-radius: 6px; margin: 0.4em 0;
+		}
+
+		/* Streaming cursor effect */
+		.msg.streaming .msg-content::after {
+			content: '▍'; animation: blink 0.8s step-end infinite; color: var(--muted);
+		}
+		@keyframes blink { 50% { opacity: 0; } }
 
 		/* Tool calls */
 		.tool-call {
@@ -568,10 +730,59 @@ export class ChatPanel {
 
 			const contentEl = document.createElement('div');
 			contentEl.className = 'msg-content';
-			contentEl.textContent = content;
+			if (opts.isHtml) {
+				contentEl.innerHTML = content;
+			} else {
+				contentEl.textContent = content;
+			}
 			div.appendChild(contentEl);
 
 			messagesEl.appendChild(div);
+			scrollToBottom();
+		}
+
+		// Streaming state
+		let streamDiv = null;
+		let streamContentEl = null;
+		let scrollRafId = null;
+
+		function startStream(role) {
+			streamDiv = document.createElement('div');
+			streamDiv.className = 'msg ' + role + ' streaming';
+
+			const roleEl = document.createElement('div');
+			roleEl.className = 'msg-role';
+			roleEl.textContent = role;
+			streamDiv.appendChild(roleEl);
+
+			streamContentEl = document.createElement('div');
+			streamContentEl.className = 'msg-content';
+			streamDiv.appendChild(streamContentEl);
+
+			messagesEl.appendChild(streamDiv);
+			scrollToBottom();
+		}
+
+		function streamChunk(html) {
+			if (!streamContentEl) return;
+			streamContentEl.innerHTML = html;
+			// Debounce scroll with rAF to avoid layout thrashing
+			if (!scrollRafId) {
+				scrollRafId = requestAnimationFrame(() => {
+					scrollRafId = null;
+					scrollToBottom();
+				});
+			}
+		}
+
+		function streamEnd() {
+			if (streamDiv) streamDiv.classList.remove('streaming');
+			streamDiv = null;
+			streamContentEl = null;
+			if (scrollRafId) {
+				cancelAnimationFrame(scrollRafId);
+				scrollRafId = null;
+			}
 			scrollToBottom();
 		}
 
@@ -657,7 +868,16 @@ export class ChatPanel {
 			const msg = e.data;
 			switch (msg.command) {
 				case 'addMessage':
-					addMessage(msg.role, msg.content, { collapsed: msg.collapsed });
+					addMessage(msg.role, msg.content, { collapsed: msg.collapsed, isHtml: msg.isHtml });
+					break;
+				case 'startStream':
+					startStream(msg.role);
+					break;
+				case 'streamChunk':
+					streamChunk(msg.html);
+					break;
+				case 'streamEnd':
+					streamEnd();
 					break;
 				case 'showToolCall':
 					addToolCall(msg.callId, msg.toolName, msg.arguments);
@@ -668,8 +888,12 @@ export class ChatPanel {
 				case 'setLoading':
 					isLoading = msg.loading;
 					loadingEl.className = 'loading' + (msg.loading ? ' active' : '');
+					loadingEl.textContent = 'Thinking';
 					sendBtn.disabled = msg.loading;
 					if (!msg.loading) inputEl.focus();
+					break;
+				case 'setLoadingText':
+					loadingEl.textContent = msg.text;
 					break;
 				case 'setReady':
 					inputEl.focus();

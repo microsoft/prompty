@@ -1,4 +1,4 @@
-import { ExtensionContext, TextDocument, TextEditor, ViewColumn, WebviewPanel, window, workspace, Disposable, Uri } from 'vscode';
+import { ExtensionContext, TextDocument, TextEditor, ViewColumn, WebviewPanel, window, workspace, Disposable, Uri, RelativePattern } from 'vscode';
 import { load, prepare, Message, text as textPart } from '@prompty/core';
 import type { Prompty } from '@prompty/core';
 import { marked } from 'marked';
@@ -62,6 +62,17 @@ export class PreviewPanel implements Disposable {
 				this.update();
 			}
 		}, null, this.disposables);
+
+		// Watch for changes to ${file:...} referenced files in the same directory.
+		// Uses a broad glob so any JSON/YAML/text file change triggers a refresh.
+		const dirPattern = new RelativePattern(
+			path.dirname(filePath), '**/*.{json,yaml,yml,txt}',
+		);
+		const fileWatcher = workspace.createFileSystemWatcher(dirPattern);
+		fileWatcher.onDidChange(() => this.scheduleUpdate(), null, this.disposables);
+		fileWatcher.onDidCreate(() => this.scheduleUpdate(), null, this.disposables);
+		fileWatcher.onDidDelete(() => this.scheduleUpdate(), null, this.disposables);
+		this.disposables.push(fileWatcher);
 	}
 
 	private scheduleUpdate(): void {

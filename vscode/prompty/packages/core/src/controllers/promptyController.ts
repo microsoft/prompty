@@ -62,16 +62,20 @@ export class PromptyController implements Disposable {
 				}
 			}
 
-			// Check for thread inputs — if found, open chat mode instead
+			// Check for thread inputs or tools — if found, open chat mode instead.
+			// Thread inputs need multi-turn conversation; tools need interactive
+			// mock responses, so both require the chat UI.
 			const threadInput = agent.inputs?.find(p => p.kind === 'thread');
-			if (threadInput?.name) {
+			const hasTools = (agent.tools?.length ?? 0) > 0;
+			if (threadInput?.name || hasTools) {
 				Tracer.remove('prompty-file');
+				const threadName = threadInput?.name ?? '__auto_thread';
 				await ChatPanel.open(
 					this.context,
 					filePath,
 					agent,
 					sampleInputs,
-					threadInput.name,
+					threadName,
 					this.connectionStore,
 					this.connectionRegistry,
 					() => this.bridgeConnections(),
@@ -97,8 +101,39 @@ export class PromptyController implements Disposable {
 			Tracer.remove('prompty-file');
 
 			// Show result
+			const apiType = agent.model?.apiType ?? 'chat';
 			this.outputChannel.appendLine('');
-			if (typeof result === 'string') {
+
+			if (apiType === 'image') {
+				// Image results: show URLs and hint that images were generated
+				if (typeof result === 'string') {
+					this.outputChannel.appendLine(`🖼 Image URL: ${result}`);
+				} else if (Array.isArray(result)) {
+					for (const url of result) {
+						this.outputChannel.appendLine(`🖼 Image URL: ${url}`);
+					}
+				} else {
+					this.outputChannel.appendLine(JSON.stringify(result, null, 2));
+				}
+			} else if (apiType === 'embedding') {
+				// Embedding results: show dimensions and a preview
+				if (Array.isArray(result)) {
+					if (Array.isArray(result[0])) {
+						// Batch embeddings
+						this.outputChannel.appendLine(`📐 ${result.length} embeddings, ${result[0].length} dimensions each`);
+					} else {
+						// Single embedding vector
+						this.outputChannel.appendLine(`📐 Embedding: ${result.length} dimensions`);
+						this.outputChannel.appendLine(`   [${result.slice(0, 5).map((n: number) => n.toFixed(6)).join(', ')}, ...]`);
+					}
+				} else {
+					this.outputChannel.appendLine(JSON.stringify(result, null, 2));
+				}
+			} else if (typeof result === 'object' && result !== null && !Array.isArray(result) && agent.outputs?.length) {
+				// Structured output (outputSchema defined): pretty-print JSON
+				this.outputChannel.appendLine('📋 Structured output:');
+				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
+			} else if (typeof result === 'string') {
 				this.outputChannel.appendLine(result);
 			} else {
 				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
