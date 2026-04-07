@@ -1,0 +1,8 @@
+---
+name: file-ref-test
+model:
+  id: gpt-4
+  connection: ${file:shared_connection.json}
+---
+system:
+Testing file resolution.

@@ -1,0 +1,6 @@
+---
+name: minimal
+model: gpt-4
+---
+system:
+Hello world.

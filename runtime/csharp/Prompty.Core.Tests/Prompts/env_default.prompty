@@ -1,0 +1,10 @@
+---
+name: env-default
+model:
+  id: gpt-4
+  connection:
+    kind: key
+    endpoint: ${env:NONEXISTENT_VAR:https://fallback.openai.azure.com}
+---
+system:
+Testing env default.

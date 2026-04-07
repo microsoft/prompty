@@ -1,0 +1,11 @@
+---
+name: env-test
+model:
+  id: gpt-4
+  connection:
+    kind: key
+    endpoint: ${env:TEST_ENDPOINT}
+    apiKey: ${env:TEST_API_KEY}
+---
+system:
+Testing env resolution.

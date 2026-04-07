@@ -1,0 +1,20 @@
+---
+name: tools-prompt
+model:
+  id: gpt-4
+  apiType: chat
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather
+    parameters:
+      properties:
+        - name: location
+          kind: string
+          description: City and state
+---
+system:
+You are a helpful assistant with access to tools.
+
+user:
+{{question}}
