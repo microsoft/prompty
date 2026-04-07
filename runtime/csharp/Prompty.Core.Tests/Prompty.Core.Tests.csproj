@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
+    <ProjectReference Include="..\Prompty.OpenAI\Prompty.OpenAI.csproj" />
+    <ProjectReference Include="..\Prompty.Foundry\Prompty.Foundry.csproj" />
+    <ProjectReference Include="..\Prompty.Anthropic\Prompty.Anthropic.csproj" />
   </ItemGroup>
 
   <ItemGroup>

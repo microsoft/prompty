@@ -1,0 +1,79 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+using System.ClientModel;
+using OpenAI;
+using OpenAI.Chat;
+using OpenAI.Embeddings;
+using OpenAI.Images;
+using Prompty.Core;
+
+namespace Prompty.OpenAI;
+
+/// <summary>
+/// Executes LLM calls against the OpenAI API.
+/// Dispatches on apiType: chat (default), embedding, image.
+/// Registered under key "openai".
+/// </summary>
+public class OpenAIExecutor : IExecutor
+{
+    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    {
+        var apiType = agent.Model?.ApiType ?? "chat";
+        var model = agent.Model?.Id ?? "gpt-4";
+        var client = CreateClient(agent);
+
+        return apiType switch
+        {
+            "chat" => await ExecuteChatAsync(client, model, agent, messages),
+            "embedding" => await ExecuteEmbeddingAsync(client, model, messages),
+            "image" => await ExecuteImageAsync(client, model, messages),
+            _ => throw new InvalidOperationException($"Unsupported API type: {apiType}"),
+        };
+    }
+
+    protected virtual OpenAIClient CreateClient(Core.Prompty agent)
+    {
+        var conn = agent.Model?.Connection;
+        string? apiKey = null;
+
+        if (conn is Core.ApiKeyConnection keyConn)
+        {
+            apiKey = keyConn.ApiKey;
+        }
+
+        if (string.IsNullOrEmpty(apiKey))
+            throw new InvalidOperationException(
+                "OpenAI API key is required. Set model.connection.apiKey or ${env:OPENAI_API_KEY}.");
+
+        return new OpenAIClient(apiKey);
+    }
+
+    private static async Task<object> ExecuteChatAsync(
+        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+    {
+        var chatClient = client.GetChatClient(model);
+        var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
+        var options = WireFormat.BuildOptions(agent);
+
+        var result = await chatClient.CompleteChatAsync(chatMessages, options);
+        return result.Value;
+    }
+
+    private static async Task<object> ExecuteEmbeddingAsync(
+        OpenAIClient client, string model, List<Message> messages)
+    {
+        var embeddingClient = client.GetEmbeddingClient(model);
+        var inputs = messages.Select(m => m.Text).ToList();
+        var result = await embeddingClient.GenerateEmbeddingsAsync(inputs);
+        return result.Value;
+    }
+
+    private static async Task<object> ExecuteImageAsync(
+        OpenAIClient client, string model, List<Message> messages)
+    {
+        var imageClient = client.GetImageClient(model);
+        var prompt = messages.LastOrDefault()?.Text ?? "";
+        var result = await imageClient.GenerateImageAsync(prompt);
+        return result.Value;
+    }
+}

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using Prompty;
 using Prompty.Core;
-
-using PromptyModel = Prompty.Prompty;
 
 namespace Prompty.Core.Tests;
 
@@ -81,12 +78,12 @@ public class RenderHelpersTests
         Assert.Equal("Jane", result["name"]); // Non-rich kinds unchanged
     }
 
-    private static PromptyModel CreateAgent() => CreateAgentWithInputs();
+    private static Prompty CreateAgent() => CreateAgentWithInputs();
 
-    private static PromptyModel CreateAgentWithThreadInput(string name) =>
+    private static Prompty CreateAgentWithThreadInput(string name) =>
         CreateAgentWithInputs(new Property { Name = name, Kind = "thread" });
 
-    private static PromptyModel CreateAgentWithInputs(params Property[] props)
+    private static Prompty CreateAgentWithInputs(params Property[] props)
     {
         var data = new Dictionary<string, object?>
         {
@@ -95,7 +92,7 @@ public class RenderHelpersTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        var agent = PromptyModel.Load(data, new LoadContext());
+        var agent = Prompty.Load(data, new LoadContext());
         agent.Inputs = [.. props];
         return agent;
     }
@@ -180,17 +177,17 @@ public class Jinja2RendererTests
         Assert.Equal("", result);
     }
 
-    private static PromptyModel CreateAgent() =>
+    private static Prompty CreateAgent() =>
         CreateAgentBase();
 
-    private static PromptyModel CreateAgentWithThreadInput(string name)
+    private static Prompty CreateAgentWithThreadInput(string name)
     {
         var agent = CreateAgentBase();
         agent.Inputs = [new Property { Name = name, Kind = "thread" }];
         return agent;
     }
 
-    private static PromptyModel CreateAgentBase()
+    private static Prompty CreateAgentBase()
     {
         var data = new Dictionary<string, object?>
         {
@@ -199,7 +196,7 @@ public class Jinja2RendererTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return PromptyModel.Load(data, new LoadContext());
+        return Prompty.Load(data, new LoadContext());
     }
 }
 
@@ -240,7 +237,7 @@ public class MustacheRendererTests
         Assert.Equal("a b c ", result);
     }
 
-    private static PromptyModel CreateAgent()
+    private static Prompty CreateAgent()
     {
         var data = new Dictionary<string, object?>
         {
@@ -249,6 +246,6 @@ public class MustacheRendererTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return PromptyModel.Load(data, new LoadContext());
+        return Prompty.Load(data, new LoadContext());
     }
 }

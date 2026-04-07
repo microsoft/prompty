@@ -1,0 +1,203 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Prompty.Core;
+
+namespace Prompty.Anthropic;
+
+/// <summary>
+/// Executes LLM calls against the Anthropic Messages API.
+/// Uses raw HTTP — no official C# SDK dependency.
+/// Registered under key "anthropic".
+/// </summary>
+public class AnthropicExecutor : IExecutor
+{
+    private static readonly HttpClient _httpClient = new();
+    private const string DefaultEndpoint = "https://api.anthropic.com";
+    private const string ApiVersion = "2023-06-01";
+    private const int DefaultMaxTokens = 4096;
+
+    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    {
+        var (endpoint, apiKey) = GetConnectionInfo(agent);
+        var model = agent.Model?.Id ?? "claude-sonnet-4-20250514";
+        var maxTokens = agent.Model?.Options?.MaxOutputTokens ?? DefaultMaxTokens;
+
+        // Separate system messages from conversation messages
+        var systemParts = new List<string>();
+        var conversationMessages = new List<Dictionary<string, object?>>();
+
+        foreach (var msg in messages)
+        {
+            if (msg.Role == Roles.System || msg.Role == Roles.Developer)
+            {
+                systemParts.Add(msg.Text);
+            }
+            else
+            {
+                conversationMessages.Add(MessageToWire(msg));
+            }
+        }
+
+        var body = new Dictionary<string, object?>
+        {
+            ["model"] = model,
+            ["max_tokens"] = (int)maxTokens,
+            ["messages"] = conversationMessages,
+        };
+
+        if (systemParts.Count > 0)
+            body["system"] = string.Join("\n\n", systemParts);
+
+        // Options
+        var opts = agent.Model?.Options;
+        if (opts?.Temperature is not null) body["temperature"] = opts.Temperature;
+        if (opts?.TopP is not null) body["top_p"] = opts.TopP;
+        if (opts?.TopK is not null) body["top_k"] = opts.TopK;
+        if (opts?.StopSequences is not null) body["stop_sequences"] = opts.StopSequences;
+
+        // Tools
+        var tools = ToolsToWire(agent);
+        if (tools is not null) body["tools"] = tools;
+
+        // Structured output
+        if (agent.Outputs is not null && agent.Outputs.Count > 0)
+        {
+            // not yet supported by Anthropic in the same way — skip for now
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/v1/messages")
+        {
+            Content = JsonContent.Create(body, options: new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            }),
+        };
+        request.Headers.Add("x-api-key", apiKey);
+        request.Headers.Add("anthropic-version", ApiVersion);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return json;
+    }
+
+    private static Dictionary<string, object?> MessageToWire(Message msg)
+    {
+        var role = msg.Role switch
+        {
+            Roles.Assistant => "assistant",
+            Roles.Tool => "user", // Tool results go as user messages
+            _ => "user",
+        };
+
+        // Handle tool results
+        if (msg.Role == Roles.Tool)
+        {
+            var toolCallId = msg.Metadata.TryGetValue("tool_call_id", out var id)
+                ? id?.ToString() ?? ""
+                : "";
+            return new Dictionary<string, object?>
+            {
+                ["role"] = "user",
+                ["content"] = new List<Dictionary<string, object?>>
+                {
+                    new()
+                    {
+                        ["type"] = "tool_result",
+                        ["tool_use_id"] = toolCallId,
+                        ["content"] = msg.Text,
+                    }
+                },
+            };
+        }
+
+        // Build content blocks
+        var content = new List<Dictionary<string, object?>>();
+        foreach (var part in msg.Parts)
+        {
+            switch (part)
+            {
+                case TextPart t:
+                    content.Add(new() { ["type"] = "text", ["text"] = t.Value });
+                    break;
+                case ImagePart i when !string.IsNullOrEmpty(i.MediaType):
+                    content.Add(new()
+                    {
+                        ["type"] = "image",
+                        ["source"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = "base64",
+                            ["media_type"] = i.MediaType,
+                            ["data"] = i.Source,
+                        }
+                    });
+                    break;
+                case ImagePart i:
+                    content.Add(new()
+                    {
+                        ["type"] = "image",
+                        ["source"] = new Dictionary<string, object?>
+                        {
+                            ["type"] = "url",
+                            ["url"] = i.Source,
+                        }
+                    });
+                    break;
+            }
+        }
+
+        // Simplify single text content
+        if (content.Count == 1 && content[0]["type"]?.ToString() == "text")
+        {
+            return new() { ["role"] = role, ["content"] = content[0]["text"] };
+        }
+
+        return new() { ["role"] = role, ["content"] = content };
+    }
+
+    private static List<Dictionary<string, object?>>? ToolsToWire(Core.Prompty agent)
+    {
+        if (agent.Tools is null || agent.Tools.Count == 0)
+            return null;
+
+        var tools = new List<Dictionary<string, object?>>();
+        foreach (var tool in agent.Tools)
+        {
+            if (tool is Core.FunctionTool ft)
+            {
+                var inputSchema = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters);
+                tools.Add(new()
+                {
+                    ["name"] = ft.Name ?? "",
+                    ["description"] = ft.Description,
+                    ["input_schema"] = inputSchema,
+                });
+            }
+        }
+
+        return tools.Count > 0 ? tools : null;
+    }
+
+    private static (string endpoint, string apiKey) GetConnectionInfo(Core.Prompty agent)
+    {
+        var conn = agent.Model?.Connection;
+        string? apiKey = null;
+        string? endpoint = null;
+
+        if (conn is Core.ApiKeyConnection keyConn)
+        {
+            apiKey = keyConn.ApiKey;
+            endpoint = keyConn.Endpoint;
+        }
+
+        if (string.IsNullOrEmpty(apiKey))
+            throw new InvalidOperationException(
+                "Anthropic API key is required. Set model.connection.apiKey or ${env:ANTHROPIC_API_KEY}.");
+
+        return (endpoint ?? DefaultEndpoint, apiKey);
+    }
+}

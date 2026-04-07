@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using Prompty;
 using Prompty.Core;
-
-using PromptyModel = Prompty.Prompty;
 
 namespace Prompty.Core.Tests;
 
@@ -440,7 +437,7 @@ public class PipelineTests : IDisposable
                 ["parser"] = new Dictionary<string, object?> { ["kind"] = "prompty" },
             },
         };
-        return PromptyModel.Load(data, new LoadContext());
+        return Prompty.Load(data, new LoadContext());
     }
 
     private static Prompty CreateAgentWithInputs(params Property[] props)

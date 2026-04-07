@@ -22,6 +22,7 @@ options:
       - type: CSharp
         output-dir: "../runtime/csharp/Prompty.Core/Model"
         test-dir: "../runtime/csharp/Prompty.Core.Tests/Model"
+        namespace: "Prompty.Core"
       - type: Go
         output-dir: "../runtime/go/prompty/model"
         test-dir: "../runtime/go/prompty/model"

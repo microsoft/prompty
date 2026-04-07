@@ -72,9 +72,9 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
 
-  // Determine namespace: use override, or default to removing '.Core' suffix
+  // Determine namespace: use explicit override from config, or fall back to TypeSpec namespace
   const originalNamespace = node.typeName.namespace;
-  const csharpNamespace = emitTarget.namespace ?? originalNamespace.replace(/\.Core$/, '');
+  const csharpNamespace = emitTarget.namespace ?? originalNamespace;
 
   // Emit context classes (LoadContext, SaveContext)
   const contextCode = contextTemplate.render({

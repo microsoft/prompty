@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using Prompty;
 using Prompty.Core;
-
-using PromptyModel = Prompty.Prompty;
 
 namespace Prompty.Core.Tests;
 
@@ -182,7 +179,7 @@ public class PromptyChatParserTests
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static PromptyModel CreateAgent()
+    private static Prompty CreateAgent()
     {
         var data = new Dictionary<string, object?>
         {
@@ -191,6 +188,6 @@ public class PromptyChatParserTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return PromptyModel.Load(data, new LoadContext());
+        return Prompty.Load(data, new LoadContext());
     }
 }
