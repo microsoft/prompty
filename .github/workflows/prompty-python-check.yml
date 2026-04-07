@@ -88,7 +88,7 @@ jobs:
           flit build --format wheel
           flit build --format sdist
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: prompty-v2-artifacts
           path: ./runtime/python/prompty/dist/*

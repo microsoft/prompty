@@ -24,7 +24,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "22.x"
+          node-version: "24"
 
       - name: Install dependencies
         working-directory: ./vscode/prompty

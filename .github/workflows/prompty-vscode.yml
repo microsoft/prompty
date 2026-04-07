@@ -17,7 +17,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "22.x"
+          node-version: "24"
 
       - name: Extract version from tag
         run: |
@@ -49,7 +49,7 @@ jobs:
         working-directory: ./vscode/prompty
         run: npm run package-pre -- $VERSION
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: vscode-vsix
           path: ./vscode/prompty/*.vsix
