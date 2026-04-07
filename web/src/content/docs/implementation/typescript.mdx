@@ -96,7 +96,7 @@ const result = await invokeAgent(
 ### Streaming
 
 ```typescript
-import { load, prepare, run, process } from "@prompty/core";
+import { load, prepare, run, process as processResponse } from "@prompty/core";
 import "@prompty/openai";
 
 const agent = await load("chat.prompty");
@@ -106,7 +106,7 @@ const messages = await prepare(agent, { question: "Tell me a story" });
 agent.model.options.additionalProperties = { stream: true };
 
 const response = await run(agent, messages, { raw: true });
-for await (const chunk of process(agent, response)) {
+for await (const chunk of processResponse(agent, response)) {
   process.stdout.write(chunk);
 }
 ```

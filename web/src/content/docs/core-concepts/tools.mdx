@@ -352,3 +352,116 @@ response.
   runtime won't execute tool calls automatically. Use `invoke` or `run` when
   you want to handle tool calls yourself.
 </Aside>
+
+---
+
+## Custom Tool Registry
+
+Prompty uses a **two-layer registry** for extensible tool support. This lets you
+add custom tool kinds (beyond the built-in `function`, `mcp`, `openapi`) and
+control both how they're presented to the LLM and how they're executed.
+
+### Layer 1: Wire Projection — `registerTool()`
+
+The **tool projector** converts a tool definition from your `.prompty` frontmatter
+into the wire format the LLM expects (typically an OpenAI-style function definition).
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import register_tool
+
+    def my_tool_projector(tool) -> dict:
+        """Convert a custom tool kind into an OpenAI function definition."""
+        return {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        p.name: {"type": p.kind, "description": p.description}
+                        for p in tool.parameters.properties
+                    },
+                },
+            },
+        }
+
+    register_tool("my_provider", my_tool_projector)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { registerTool } from "@prompty/core";
+    import type { Tool } from "@prompty/core";
+
+    function myToolProjector(tool: Tool): object {
+      return {
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: { /* ... */ },
+        },
+      };
+    }
+
+    registerTool("my_provider", myToolProjector);
+    ```
+  </TabItem>
+</Tabs>
+
+When the executor sends tools to the LLM, it calls each tool's registered
+projector to produce the wire-format definition. Built-in kinds (`function`,
+`prompty`) have projectors pre-registered.
+
+### Layer 2: Dispatch — `registerToolHandler()`
+
+The **tool handler** is called during the agent loop when the LLM requests a
+tool call. It receives the tool definition and the arguments from the LLM, and
+returns the result string.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import register_tool_handler
+
+    def my_tool_handler(tool, args: dict) -> str:
+        """Execute a custom tool kind during the agent loop."""
+        # Use tool.connection, tool.options, etc.
+        result = call_my_service(tool.connection.endpoint, args)
+        return str(result)
+
+    register_tool_handler("my_provider", my_tool_handler)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { registerToolHandler } from "@prompty/core";
+    import type { Tool } from "@prompty/core";
+
+    function myToolHandler(tool: Tool, args: Record<string, unknown>): string {
+      // Use tool.connection, tool.options, etc.
+      return callMyService(tool.connection.endpoint, args);
+    }
+
+    registerToolHandler("my_provider", myToolHandler);
+    ```
+  </TabItem>
+</Tabs>
+
+### When Do You Need This?
+
+| Scenario | Register projector? | Register handler? |
+|---|---|---|
+| Custom tool kind (e.g., a proprietary API) | ✅ Yes | ✅ Yes |
+| Override wire format for built-in kind | ✅ Yes | No — use `tools` dict in `invoke_agent` |
+| Custom execution for built-in kind | No | ✅ Yes |
+| Standard `function` tools | No — pre-registered | No — use `tools` dict |
+
+<Aside type="tip">
+  For most use cases, you don't need the registry at all — just pass your
+  functions in the `tools` dict to `invoke_agent()`. The registry is for
+  **custom tool kinds** that need special wire projection or dispatch logic.
+</Aside>

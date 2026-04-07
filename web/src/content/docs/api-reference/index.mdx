@@ -280,7 +280,7 @@ Set `stream: true` in model options:
     ```typescript
     agent.model.options.additionalProperties = { stream: true };
     const response = await run(agent, messages, { raw: true });
-    for await (const chunk of process(agent, response)) {
+    for await (const chunk of processResponse(agent, response)) {
       process.stdout.write(chunk);
     }
     ```

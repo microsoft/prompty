@@ -97,7 +97,8 @@ valid JSON with exactly those fields.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const result = await invoke("weather.prompty", { city: "Seattle" });
 
@@ -176,7 +177,8 @@ Weather for {{city}}?
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const result = await invoke("detailed-weather.prompty", { city: "Portland" });
 

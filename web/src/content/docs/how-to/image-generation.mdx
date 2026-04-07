@@ -88,7 +88,8 @@ template:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const result = await invoke("generate-image.prompty", {
       description: "A cat astronaut floating in space, digital art",
@@ -194,7 +195,8 @@ The result is a URL that expires after a period. To save the image locally:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
     import { writeFile } from "fs/promises";
 
     const url = await invoke("generate-image.prompty", {

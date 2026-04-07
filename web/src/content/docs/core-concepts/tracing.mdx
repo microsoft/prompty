@@ -104,12 +104,12 @@ other traced functions (including Prompty's built-in pipeline), they appear as
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import trace
+    from prompty import trace, invoke
 
     @trace
     def my_business_logic(query: str) -> str:
-        result = prompty.invoke("search.prompty", inputs={"q": query})
-        return process(result)
+        result = invoke("search.prompty", inputs={"q": query})
+        return result
     ```
   </TabItem>
   <TabItem label="TypeScript">

@@ -254,7 +254,8 @@ except ValueError as e:
 <Tabs>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent } from "prompty";
+import { load, invokeAgent } from "@prompty/core";
+import "@prompty/openai"; // registers provider
 
 function getWeather(city: string): string {
   return `72°F and sunny in ${city}`;

@@ -81,7 +81,8 @@ template:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const vector = await invoke("embed.prompty", { text: "Prompty is awesome" });
 
@@ -143,7 +144,8 @@ template:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "prompty";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const texts = [
       "What is machine learning?",

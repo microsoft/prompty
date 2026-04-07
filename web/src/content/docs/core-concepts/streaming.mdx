@@ -139,7 +139,8 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, run, process } from "@prompty/core";
+    import { load, run, process as processResponse } from "@prompty/core";
+    import "@prompty/openai"; // registers provider
 
     const agent = load("chat.prompty");
     agent.model.options!.additionalProperties!.stream = true;
@@ -147,8 +148,8 @@ user:
     // run with raw: true returns the PromptyStream
     const stream = await run(agent, { question: "Tell me a joke" }, { raw: true });
 
-    // process yields text chunks
-    for await (const chunk of await process(agent, stream)) {
+    // processResponse yields text chunks
+    for await (const chunk of await processResponse(agent, stream)) {
       process.stdout.write(String(chunk));
     }
     console.log();
