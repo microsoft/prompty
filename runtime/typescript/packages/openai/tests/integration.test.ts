@@ -8,8 +8,8 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import {
   Tracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -132,7 +132,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
   // --- Chat ---
   it("chat completion", { timeout: 30_000 }, async () => {
     const agent = makeAgent();
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -142,7 +142,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
     const agent = makeAgent({
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
     });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     const chunks: string[] = [];
     for await (const chunk of result as AsyncIterable<unknown>) {
       if (typeof chunk === "string" && chunk.length > 0) chunks.push(chunk);
@@ -159,7 +159,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
       instructions: "Hello world",
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(Array.isArray(result)).toBe(true);
     expect((result as number[]).length).toBeGreaterThan(0);
     expect(typeof (result as number[])[0]).toBe("number");
@@ -174,7 +174,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
       options: { additionalProperties: { size: "1024x1024", n: 1 } },
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(typeof result).toBe("string");
     // Result is either a URL or base64-encoded image data
     const s = result as string;
@@ -193,7 +193,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
       ],
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(typeof result).toBe("object");
     expect(result).toHaveProperty("city");
     expect(result).toHaveProperty("country");
@@ -215,7 +215,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -245,8 +245,8 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    // executeAgent should disable streaming internally, run tool loop, and return a string
-    const result = await executeAgent(
+    // invokeAgent should disable streaming internally, run tool loop, and return a string
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -262,7 +262,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
   // --- Responses API ---
   it("responses API chat", { timeout: 30_000 }, async () => {
     const agent = makeAgent({ apiType: "responses" });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -284,7 +284,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -339,7 +339,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
   // --- Chat ---
   it("chat completion", { timeout: 30_000 }, async () => {
     const agent = makeDirectAgent();
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -349,7 +349,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
     const agent = makeDirectAgent({
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
     });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     const chunks: string[] = [];
     for await (const chunk of result as AsyncIterable<unknown>) {
       if (typeof chunk === "string" && chunk.length > 0) chunks.push(chunk);
@@ -370,7 +370,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
       ],
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(typeof result).toBe("object");
     expect(result).toHaveProperty("city");
     expect(result).toHaveProperty("country");
@@ -383,7 +383,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
         "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
       tools: toolSpec,
     });
-    const result = await executeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });
@@ -396,7 +396,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
       tools: toolSpec,
     });
-    const result = await executeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });
@@ -404,7 +404,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
   // --- Responses API ---
   it("responses API chat", { timeout: 30_000 }, async () => {
     const agent = makeDirectAgent({ apiType: "responses" });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -417,7 +417,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
         "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
       tools: toolSpec,
     });
-    const result = await executeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });

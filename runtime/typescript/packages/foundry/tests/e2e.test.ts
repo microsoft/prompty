@@ -15,8 +15,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   Tracer,
   PromptyTracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -180,7 +180,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "chat.prompty"),
         { name: "Seth" },
       );
@@ -192,7 +192,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
 
       expect(lastChatArgs).toBeDefined();
       expect(lastChatArgs!.model).toBe("gpt-4o");
@@ -212,11 +212,11 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
 
       const { runtime, trace } = readTrace();
       expect(runtime).toBe("typescript");
-      expect(trace.name).toBe("execute");
+      expect(trace.name).toBe("invoke");
 
       const frames = trace.__frames ?? [];
       const frameNames = frames.map((f: TraceFrame) => f.name);
@@ -229,7 +229,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
 
       const { trace } = readTrace();
       expect(findSignature(trace, "prompty.foundry.executor.FoundryExecutor.invoke")).toBe(true);
@@ -255,7 +255,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "structured.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "structured.prompty"));
 
       expect(result).toEqual({ summary: "Quantum computing uses qubits", confidence: 0.9 });
 
@@ -293,7 +293,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "tools.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "tools.prompty"));
 
       expect(Array.isArray(result)).toBe(true);
       const toolCalls = result as { id: string; name: string; arguments: string }[];
@@ -319,7 +319,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "embedding.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "embedding.prompty"));
 
       expect(result).toEqual([0.1, 0.2, 0.3, 0.4, 0.5]);
 
@@ -335,7 +335,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "embedding.prompty"));
+      await invoke(path.resolve(FIXTURES, "embedding.prompty"));
 
       const { trace } = readTrace();
       expect(findSignature(trace, "AzureOpenAI.embeddings.create")).toBe(true);
@@ -351,7 +351,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "image.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "image.prompty"));
 
       expect(result).toBe("https://foundry-mock.example.com/image.png");
 
@@ -411,7 +411,7 @@ describe("Foundry E2E Pipeline", () => {
         get_weather: (_args: { city: string }) => "72°F and sunny",
       };
 
-      const result = await executeAgent(
+      const result = await invokeAgent(
         path.resolve(FIXTURES, "agent.prompty"),
         { question: "What is the weather in Seattle?" },
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },
@@ -456,14 +456,14 @@ describe("Foundry E2E Pipeline", () => {
         get_weather: () => "sunny",
       };
 
-      await executeAgent(
+      await invokeAgent(
         path.resolve(FIXTURES, "agent.prompty"),
         {},
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },
       );
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("executeAgent");
+      expect(trace.name).toBe("invokeAgent");
       expect(trace.iterations).toBe(1);
     });
   });
@@ -493,7 +493,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "streaming" },
       );
@@ -528,7 +528,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "trace" },
       );
@@ -537,7 +537,7 @@ describe("Foundry E2E Pipeline", () => {
       for await (const _ of result as AsyncIterable<unknown>) { /* drain */ }
 
       const { trace } = readTrace();
-      // Trace root may be "execute" or "PromptyStream" depending on
+      // Trace root may be "invoke" or "PromptyStream" depending on
       // async trace flush ordering — both are valid. The key assertion
       // is that PromptyStream appears somewhere in the trace tree.
       const streamFrame = findFrame(trace, "PromptyStream");
@@ -585,7 +585,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "tools" },
       );
@@ -612,7 +612,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses.prompty"),
         { name: "Seth" },
       );
@@ -650,7 +650,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses-structured.prompty"),
       );
 
@@ -680,7 +680,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses-tools.prompty"),
       );
 
@@ -701,7 +701,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "responses.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "responses.prompty"), { name: "Seth" });
 
       const { trace } = readTrace();
       expect(findSignature(trace, "AzureOpenAI.responses.create")).toBe(true);
@@ -717,7 +717,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "azure-chat.prompty"),
         { name: "Azure" },
       );
@@ -737,7 +737,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "azure-chat.prompty"), { name: "Azure" });
+      await invoke(path.resolve(FIXTURES, "azure-chat.prompty"), { name: "Azure" });
 
       const { trace } = readTrace();
       expect(findSignature(trace, "prompty.azure.executor.AzureExecutor.invoke")).toBe(true);
@@ -747,7 +747,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "azure-responses.prompty"),
         { name: "Seth" },
       );
@@ -780,7 +780,7 @@ describe("Foundry E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "azure-streaming.prompty"),
         { topic: "streaming" },
       );

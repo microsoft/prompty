@@ -34,7 +34,7 @@ import {
   render,
   parse,
   validateInputs,
-  executeAgent,
+  invokeAgent,
   Message,
   NunjucksRenderer,
   MustacheRenderer,
@@ -839,7 +839,7 @@ describe("Spec Vectors: Process", () => {
 });
 
 // =========================================================================
-// AGENT VECTORS — calls REAL executeAgent() with mock executor
+// AGENT VECTORS — calls REAL invokeAgent() with mock executor
 // =========================================================================
 
 describe("Spec Vectors: Agent", () => {
@@ -957,15 +957,15 @@ describe("Spec Vectors: Agent", () => {
           // Error vectors
           if (expected.error.includes("exceeded")) {
             await expect(
-              executeAgent(agent, input.parent_inputs ?? {}, {
+              invokeAgent(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
               }),
             ).rejects.toThrow("maxIterations");
           } else if (expected.error.includes("not registered")) {
-            // tool_not_registered: execute_agent handles this gracefully
+            // tool_not_registered: invoke_agent handles this gracefully
             // (returns error string to LLM, doesn't crash)
             try {
-              await executeAgent(agent, input.parent_inputs ?? {}, {
+              await invokeAgent(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
               });
             } catch {
@@ -974,7 +974,7 @@ describe("Spec Vectors: Agent", () => {
           }
         } else {
           // Success vectors
-          const result = await executeAgent(agent, input.parent_inputs ?? {}, {
+          const result = await invokeAgent(agent, input.parent_inputs ?? {}, {
             tools: toolFunctions,
           });
 

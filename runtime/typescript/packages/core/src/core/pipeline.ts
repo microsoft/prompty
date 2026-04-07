@@ -2,7 +2,7 @@
  * Four-step execution pipeline.
  *
  * ```
- * execute(prompt, inputs)              → top-level orchestrator
+ * invoke(prompt, inputs)               → top-level orchestrator
  *   ├── prepare(agent, inputs)         → template → wire format
  *   │     ├── render(agent, inputs)    → template + inputs → rendered string
  *   │     └── parse(agent, rendered)   → rendered string → Message[]
@@ -339,18 +339,18 @@ export async function run(
 }
 
 // ---------------------------------------------------------------------------
-// Top-level: execute() = load + prepare + run
+// Top-level: invoke() = load + prepare + run
 // ---------------------------------------------------------------------------
 
 /**
  * Full pipeline: load → prepare → run.
  */
-export async function execute(
+export async function invoke(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
   options?: { raw?: boolean },
 ): Promise<unknown> {
-  return traceSpan("execute", async (emit) => {
+  return traceSpan("invoke", async (emit) => {
     const agent = typeof prompt === "string"
       ? await traceSpan("load", async (loadEmit) => {
           loadEmit("signature", "prompty.load");
@@ -362,8 +362,8 @@ export async function execute(
         })
       : prompt;
 
-    emit("signature", "prompty.execute");
-    emit("description", "Execute a prompty");
+    emit("signature", "prompty.invoke");
+    emit("description", "Invoke a prompty");
     emit("inputs", { prompt: serializeAgent(agent), inputs: inputs ?? {} });
     const messages = await prepare(agent, inputs);
     const result = await run(agent, messages, options);
@@ -403,7 +403,7 @@ export function resolveBindings(
 }
 
 // ---------------------------------------------------------------------------
-// Agent loop: executeAgent()
+// Agent loop: invokeAgent()
 // ---------------------------------------------------------------------------
 
 /** Check if a value is an async iterable (i.e. a stream). */
@@ -561,7 +561,7 @@ async function buildToolMessagesFromCalls(
 /**
  * Run a prompt with automatic tool-call execution loop.
  */
-export async function executeAgent(
+export async function invokeAgent(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
   options?: {
@@ -570,7 +570,7 @@ export async function executeAgent(
     raw?: boolean;
   },
 ): Promise<unknown> {
-  return traceSpan("executeAgent", async (emit) => {
+  return traceSpan("invokeAgent", async (emit) => {
     const agent = typeof prompt === "string"
       ? await traceSpan("load", async (loadEmit) => {
           loadEmit("signature", "prompty.load");
@@ -584,8 +584,8 @@ export async function executeAgent(
     const tools = options?.tools ?? {};
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
 
-    emit("signature", "prompty.executeAgent");
-    emit("description", "Execute a prompty with tool calling");
+    emit("signature", "prompty.invokeAgent");
+    emit("description", "Invoke a prompty with tool calling");
     emit("inputs", { prompt: serializeAgent(agent), tools: Object.keys(tools), inputs: inputs ?? {} });
 
     const messages = await prepare(agent, inputs);
@@ -617,7 +617,7 @@ export async function executeAgent(
         }
 
         const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-          toolEmit("signature", "prompty.executeAgent.toolCalls");
+          toolEmit("signature", "prompty.invokeAgent.toolCalls");
           toolEmit("description", `Tool call round ${iteration}`);
           const result = await buildToolMessagesFromCalls(toolCalls, content, tools, agent, parentInputs, toolEmit);
           toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
@@ -641,7 +641,7 @@ export async function executeAgent(
       }
 
       const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-        toolEmit("signature", "prompty.executeAgent.toolCalls");
+        toolEmit("signature", "prompty.invokeAgent.toolCalls");
         toolEmit("description", `Tool call round ${iteration}`);
         const result = await buildToolResultMessages(response, tools, agent, parentInputs, toolEmit);
         toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
@@ -1022,5 +1022,7 @@ async function buildResponsesToolResultMessages(
   return messages;
 }
 
-// Backward-compatibility alias
-export const runAgent = executeAgent;
+// Backward-compatibility aliases
+export const execute = invoke;
+export const executeAgent = invokeAgent;
+export const runAgent = invokeAgent;

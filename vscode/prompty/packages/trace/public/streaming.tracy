@@ -12,14 +12,14 @@
         "inputs": {},
         "__frames": [
             {
-                "name": "execute",
+                "name": "invoke",
                 "__time": {
                     "start": "2024-08-13T18:19:28.759673",
                     "end": "2024-08-13T18:19:28.780673",
                     "duration": 21
                 },
-                "signature": "prompty.execute",
-                "description": "Execute a prompty",
+                "signature": "prompty.invoke",
+                "description": "Invoke a prompty",
                 "inputs": {
                     "prompt": "prompts/streaming.prompty",
                     "configuration": {},

@@ -13,8 +13,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   Tracer,
   PromptyTracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
 } from "@prompty/core";
@@ -160,7 +160,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "chat.prompty"),
         { name: "Seth" },
       );
@@ -172,7 +172,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
 
       expect(lastChatArgs).toBeDefined();
       expect(lastChatArgs!.model).toBe("gpt-4o");
@@ -192,11 +192,11 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "chat.prompty"), { name: "Seth" });
 
       const { runtime, trace } = readTrace();
       expect(runtime).toBe("typescript");
-      expect(trace.name).toBe("execute");
+      expect(trace.name).toBe("invoke");
 
       // Should have child frames: load, prepare (with render + parse), run (with executor + processor)
       const frames = trace.__frames ?? [];
@@ -226,7 +226,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "structured.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "structured.prompty"));
 
       // Result should be parsed JSON, not a string
       expect(result).toEqual({ summary: "Quantum computing uses qubits", confidence: 0.9 });
@@ -266,7 +266,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "tools.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "tools.prompty"));
 
       // Processor should extract tool calls
       expect(Array.isArray(result)).toBe(true);
@@ -297,7 +297,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "embedding.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "embedding.prompty"));
 
       expect(result).toEqual([0.1, 0.2, 0.3, 0.4, 0.5]);
 
@@ -314,7 +314,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "embedding.prompty"));
+      await invoke(path.resolve(FIXTURES, "embedding.prompty"));
 
       const { trace } = readTrace();
       // Find the executor frame
@@ -332,7 +332,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(path.resolve(FIXTURES, "image.prompty"));
+      const result = await invoke(path.resolve(FIXTURES, "image.prompty"));
 
       expect(result).toBe("https://mock.example.com/image.png");
 
@@ -394,7 +394,7 @@ describe("E2E Pipeline", () => {
         get_weather: (args: { city: string }) => `72°F and sunny`,
       };
 
-      const result = await executeAgent(
+      const result = await invokeAgent(
         path.resolve(FIXTURES, "agent.prompty"),
         { question: "What is the weather in Seattle?" },
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },
@@ -439,14 +439,14 @@ describe("E2E Pipeline", () => {
         get_weather: () => "sunny",
       };
 
-      await executeAgent(
+      await invokeAgent(
         path.resolve(FIXTURES, "agent.prompty"),
         {},
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },
       );
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("executeAgent");
+      expect(trace.name).toBe("invokeAgent");
 
       // Should record iterations
       expect(trace.iterations).toBe(1);
@@ -482,7 +482,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "streaming" },
       );
@@ -543,7 +543,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "tools" },
       );
@@ -580,7 +580,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "streaming.prompty"),
         { topic: "trace" },
       );
@@ -600,9 +600,9 @@ describe("E2E Pipeline", () => {
         return null;
       }
 
-      // Both execute and PromptyStream should appear somewhere in the trace tree
-      const executeFrame = findFrame(trace, "execute");
-      expect(executeFrame).toBeDefined();
+      // Both invoke and PromptyStream should appear somewhere in the trace tree
+      const invokeFrame = findFrame(trace, "invoke");
+      expect(invokeFrame).toBeDefined();
 
       const streamFrame = findFrame(trace, "PromptyStream");
       expect(streamFrame).toBeDefined();
@@ -618,7 +618,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses.prompty"),
         { name: "Seth" },
       );
@@ -657,7 +657,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses-structured.prompty"),
       );
 
@@ -688,7 +688,7 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      const result = await execute(
+      const result = await invoke(
         path.resolve(FIXTURES, "responses-tools.prompty"),
       );
 
@@ -709,10 +709,10 @@ describe("E2E Pipeline", () => {
       const pt = new PromptyTracer({ outputDir: tempDir });
       Tracer.add("test", pt.factory);
 
-      await execute(path.resolve(FIXTURES, "responses.prompty"), { name: "Seth" });
+      await invoke(path.resolve(FIXTURES, "responses.prompty"), { name: "Seth" });
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("execute");
+      expect(trace.name).toBe("invoke");
 
       // Find the executor span — should reference responses.create
       function findSignature(frame: TraceFrame): string | null {

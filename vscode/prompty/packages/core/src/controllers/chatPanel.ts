@@ -1,6 +1,6 @@
 import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } from 'vscode';
 import {
-	load, prepare, execute, executeAgent,
+	load, prepare, invoke, invokeAgent,
 	registerConnection, clearConnections,
 	ReferenceConnection, Model,
 	Tracer, PromptyTracer, traceSpan,
@@ -29,7 +29,7 @@ interface ChatMessage {
  * Interactive chat panel for prompty files with thread inputs.
  *
  * Opens a webview with a chat UI. Each user message triggers a full
- * prepare→execute cycle with the accumulated conversation history
+ * prepare→invoke cycle with the accumulated conversation history
  * passed as the thread input.
  */
 export class ChatPanel {
@@ -193,11 +193,11 @@ export class ChatPanel {
 			let result: unknown;
 
 			if (this.hasTools) {
-				// Use executeAgent with mock tool functions
+				// Use invokeAgent with mock tool functions
 				const toolFns = this.buildToolFunctions();
-				result = await executeAgent(this.agent, inputs, { tools: toolFns });
+				result = await invokeAgent(this.agent, inputs, { tools: toolFns });
 			} else {
-				result = await execute(this.agent, inputs);
+				result = await invoke(this.agent, inputs);
 			}
 
 			// Extract assistant response

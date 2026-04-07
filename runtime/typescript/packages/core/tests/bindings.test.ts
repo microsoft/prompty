@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  executeAgent,
+  invokeAgent,
 } from "../src/core/pipeline.js";
 import {
   registerRenderer,
@@ -178,10 +178,10 @@ describe("resolveBindings()", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Tests: executeAgent() with bindings
+// Tests: invokeAgent() with bindings
 // ---------------------------------------------------------------------------
 
-describe("executeAgent() with bindings", () => {
+describe("invokeAgent() with bindings", () => {
   let callCount: number;
   let receivedArgs: Record<string, unknown> | null;
 
@@ -236,7 +236,7 @@ describe("executeAgent() with bindings", () => {
       },
     };
 
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { name: "World", temperatureUnit: "celsius" },
       { tools: tools as any },
@@ -285,7 +285,7 @@ describe("executeAgent() with bindings", () => {
       },
     };
 
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { name: "Test" },
       { tools: tools as any },

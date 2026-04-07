@@ -81,14 +81,14 @@
                         ]
                     },
                     {
-                        "name": "execute",
+                        "name": "invoke",
                         "__time": {
                             "start": "2024-09-02T23:09:54.500629",
                             "end": "2024-09-02T23:10:05.571616",
                             "duration": 11070
                         },
-                        "signature": "prompty.execute",
-                        "description": "Execute a prompty",
+                        "signature": "prompty.invoke",
+                        "description": "Invoke a prompty",
                         "inputs": {
                             "prompt": "prompts/context.prompty",
                             "configuration": {},

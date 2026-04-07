@@ -8,8 +8,8 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import {
   Tracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -94,7 +94,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
   // --- Chat ---
   it("chat completion", { timeout: 30_000 }, async () => {
     const agent = makeAgent();
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -104,7 +104,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
     const agent = makeAgent({
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
     });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     const chunks: string[] = [];
     for await (const chunk of result as AsyncIterable<unknown>) {
       if (typeof chunk === "string" && chunk.length > 0) chunks.push(chunk);
@@ -125,7 +125,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
       ],
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(typeof result).toBe("object");
     expect(result).toHaveProperty("city");
     expect(result).toHaveProperty("country");
@@ -147,7 +147,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -177,7 +177,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {

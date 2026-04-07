@@ -8,8 +8,8 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import {
   Tracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -114,7 +114,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
   // --- Chat ---
   it("chat completion", { timeout: 30_000 }, async () => {
     const agent = makeAgent();
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -124,7 +124,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
     const agent = makeAgent({
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
     });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     const chunks: string[] = [];
     for await (const chunk of result as AsyncIterable<unknown>) {
       if (typeof chunk === "string" && chunk.length > 0) chunks.push(chunk);
@@ -141,7 +141,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
       instructions: "Hello world",
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(Array.isArray(result)).toBe(true);
     expect((result as number[]).length).toBeGreaterThan(0);
     expect(typeof (result as number[])[0]).toBe("number");
@@ -159,7 +159,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
       ],
       inputs: [],
     });
-    const result = await execute(agent);
+    const result = await invoke(agent);
     expect(typeof result).toBe("object");
     expect(result).toHaveProperty("city");
     expect(result).toHaveProperty("country");
@@ -181,7 +181,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -211,7 +211,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -227,7 +227,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
   // --- Responses API (requires api-version 2025-03-01-preview or later) ---
   it.skipIf(!hasResponses)("responses API chat", { timeout: 30_000 }, async () => {
     const agent = makeAgent({ apiType: "responses" });
-    const result = await execute(agent, { question: "Say hello in exactly 3 words." });
+    const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
   });
@@ -249,7 +249,7 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
         },
       ],
     });
-    const result = await executeAgent(
+    const result = await invokeAgent(
       agent,
       { question: "What is the weather in Seattle?" },
       {

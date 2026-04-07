@@ -1,5 +1,5 @@
 import { ExtensionContext, Uri, Disposable, window, workspace, commands } from 'vscode';
-import { load, execute, registerConnection, clearConnections, ReferenceConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
+import { load, invoke, registerConnection, clearConnections, ReferenceConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
@@ -84,10 +84,10 @@ export class PromptyController implements Disposable {
 			const startTime = Date.now();
 			const result = await traceSpan(promptName, async (emit) => {
 				emit('type', 'vscode');
-				emit('signature', 'prompty.vscode.execute');
+				emit('signature', 'prompty.vscode.invoke');
 				emit('inputs', { prompt_path: filePath, inputs: sampleInputs });
 
-				const executionResult = await execute(agent, sampleInputs);
+				const executionResult = await invoke(agent, sampleInputs);
 				emit('result', executionResult);
 				return executionResult;
 			});

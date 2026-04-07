@@ -121,7 +121,7 @@ function getContent(msg: ConversationMessage): string {
 }
 
 /**
- * Extract the full conversation from an executeAgent trace.
+ * Extract the full conversation from an invokeAgent trace.
  *
  * Strategy:
  * 1. Start with the prepare result (initial messages after rendering)
@@ -206,7 +206,7 @@ function formatArgs(argsStr: string): string {
 
 /** Check if this trace should show the Conversation tab */
 export function isAgentTrace(trace: TraceItem): boolean {
-  return trace.signature === "prompty.executeAgent" || trace.signature === "prompty.chatSession";
+  return trace.signature === "prompty.invokeAgent" || trace.signature === "prompty.chatSession";
 }
 
 interface Props {
@@ -220,13 +220,13 @@ const Conversation = ({ trace }: Props) => {
   return <AgentConversation trace={trace} />;
 };
 
-/** Render a chatSession trace — walks child executeAgent frames for full detail */
+/** Render a chatSession trace — walks child invokeAgent frames for full detail */
 const SessionConversation = ({ trace }: { trace: TraceItem }) => {
   const elements: React.ReactNode[] = [];
   const frames = trace.__frames ?? [];
 
-  // Find all executeAgent child frames
-  const agentFrames = frames.filter((f) => f.signature === "prompty.executeAgent");
+  // Find all invokeAgent child frames
+  const agentFrames = frames.filter((f) => f.signature === "prompty.invokeAgent");
 
   for (let turnIdx = 0; turnIdx < agentFrames.length; turnIdx++) {
     const agentFrame = agentFrames[turnIdx];
@@ -266,7 +266,7 @@ const SessionConversation = ({ trace }: { trace: TraceItem }) => {
   return <Container>{elements}</Container>;
 };
 
-/** Render an executeAgent trace — single invocation */
+/** Render an invokeAgent trace — single invocation */
 const AgentConversation = ({ trace }: { trace: TraceItem }) => {
   const { messages, iterations } = extractConversation(trace);
   let currentIteration = 0;

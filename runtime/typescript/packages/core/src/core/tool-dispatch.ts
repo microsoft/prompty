@@ -153,7 +153,7 @@ class FunctionToolHandler implements ToolHandler {
     const name = (tool.name as string) ?? "unknown";
     throw new Error(
       `Function tool '${name}' declared but no callable provided. ` +
-        `Pass it via tools: { '${name}': fn } in executeAgent().`,
+        `Pass it via tools: { '${name}': fn } in invokeAgent().`,
     );
   }
 }
@@ -163,7 +163,7 @@ class FunctionToolHandler implements ToolHandler {
  * relative to the parent agent and executing it.
  *
  * - `mode === "single"` (default): `prepare()` → `run()`
- * - `mode === "agentic"`: `executeAgent()`
+ * - `mode === "agentic"`: `invokeAgent()`
  */
 class PromptyToolHandler implements ToolHandler {
   async executeTool(
@@ -174,7 +174,7 @@ class PromptyToolHandler implements ToolHandler {
   ): Promise<string> {
     // Dynamic imports to break circular dependency with pipeline.ts
     const { load } = await import("./loader.js");
-    const { prepare, run, executeAgent } = await import("./pipeline.js");
+    const { prepare, run, invokeAgent } = await import("./pipeline.js");
 
     const parentPath = (agent.metadata ?? {}).__source_path as string | undefined;
     if (!parentPath) {
@@ -201,7 +201,7 @@ class PromptyToolHandler implements ToolHandler {
       const mode = (tool.mode as string) ?? "single";
 
       if (mode === "agentic") {
-        const result = await executeAgent(child, args);
+        const result = await invokeAgent(child, args);
         return typeof result === "string" ? result : JSON.stringify(result);
       } else {
         const messages = await prepare(child, args);

@@ -65,9 +65,12 @@ export {
   process,
   prepare,
   run,
+  invoke,
+  invokeAgent,
+  resolveBindings,
+  // Backward-compatibility aliases
   execute,
   executeAgent,
-  resolveBindings,
   runAgent,
 } from "./core/index.js";
 

@@ -13,8 +13,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   Tracer,
   PromptyTracer,
-  execute,
-  executeAgent,
+  invoke,
+  invokeAgent,
   registerConnection,
   clearConnections,
 } from "@prompty/core";
@@ -422,7 +422,7 @@ describe("streaming processor", () => {
 
 describe("e2e pipeline", () => {
   it("chat: full pipeline produces string result", async () => {
-    const result = await execute(fixtureFile("chat.prompty"), {
+    const result = await invoke(fixtureFile("chat.prompty"), {
       question: "Hello",
     });
     expect(typeof result).toBe("string");
@@ -437,7 +437,7 @@ describe("e2e pipeline", () => {
   });
 
   it("tools: includes tools in wire format", async () => {
-    const result = await execute(fixtureFile("tools.prompty"), {
+    const result = await invoke(fixtureFile("tools.prompty"), {
       question: "What is the weather?",
     });
     expect(result).toBe("Hello from mock Anthropic!");
@@ -467,7 +467,7 @@ describe("e2e pipeline", () => {
       usage: { input_tokens: 20, output_tokens: 15 },
     });
 
-    const result = await execute(fixtureFile("structured.prompty"), {
+    const result = await invoke(fixtureFile("structured.prompty"), {
       topic: "quantum computing",
     });
 
@@ -482,7 +482,7 @@ describe("e2e pipeline", () => {
     expect(lastCreateArgs!.output_config).toBeDefined();
   });
 
-  it("agent loop: executeAgent handles tool calls", async () => {
+  it("agent loop: invokeAgent handles tool calls", async () => {
     let callNum = 0;
     createResponder = () => {
       callNum++;
@@ -519,7 +519,7 @@ describe("e2e pipeline", () => {
       return `72°F and sunny in ${args.city}`;
     }
 
-    const result = await executeAgent(
+    const result = await invokeAgent(
       fixtureFile("agent.prompty"),
       { question: "What is the weather in Seattle?" },
       { tools: { get_weather: getWeather } },
@@ -531,7 +531,7 @@ describe("e2e pipeline", () => {
   });
 
   it("produces .tracy trace file", async () => {
-    await execute(fixtureFile("chat.prompty"), { question: "Trace test" });
+    await invoke(fixtureFile("chat.prompty"), { question: "Trace test" });
 
     const tracyFiles = fs.readdirSync(tracyDir).filter((f) => f.endsWith(".tracy"));
     expect(tracyFiles.length).toBeGreaterThan(0);

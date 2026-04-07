@@ -404,7 +404,7 @@ describe("PromptyTracer", () => {
 
     await traceSpan("completion", async (emit) => {
       emit("type", "vscode");
-      emit("signature", "prompty.vscode.execute");
+      emit("signature", "prompty.vscode.invoke");
       emit("description", "Prompty VS Code Execution");
       emit("inputs", { prompt_path: "test.prompty" });
 
@@ -415,9 +415,9 @@ describe("PromptyTracer", () => {
         loadEmit("result", { name: "test", model: { id: "gpt-4", api: "chat" } });
       });
 
-      await traceSpan("execute", async (execEmit) => {
-        execEmit("signature", "prompty.execute");
-        execEmit("description", "Execute a prompty");
+      await traceSpan("invoke", async (execEmit) => {
+        execEmit("signature", "prompty.invoke");
+        execEmit("description", "Invoke a prompty");
 
         await traceSpan("prepare", async (prepEmit) => {
           prepEmit("signature", "prompty.prepare");
@@ -452,20 +452,20 @@ describe("PromptyTracer", () => {
     expect(content.version).toBe("2.0.0");
     expect(content.trace.name).toBe("completion");
     expect(content.trace.type).toBe("vscode");
-    expect(content.trace.signature).toBe("prompty.vscode.execute");
+    expect(content.trace.signature).toBe("prompty.vscode.invoke");
     expect(content.trace.description).toBe("Prompty VS Code Execution");
     expect(content.trace.__time).toBeDefined();
     expect(content.trace.__time.start).toBeTruthy();
     expect(content.trace.__time.end).toBeTruthy();
     expect(content.trace.__time.duration).toBeGreaterThanOrEqual(0);
 
-    // Nested frame structure: load + execute
+    // Nested frame structure: load + invoke
     expect(content.trace.__frames).toHaveLength(2);
     expect(content.trace.__frames[0].name).toBe("load");
     expect(content.trace.__frames[0].signature).toBe("prompty.load");
-    expect(content.trace.__frames[1].name).toBe("execute");
+    expect(content.trace.__frames[1].name).toBe("invoke");
 
-    // execute has prepare + run
+    // invoke has prepare + run
     const execFrame = content.trace.__frames[1];
     expect(execFrame.__frames).toHaveLength(2);
     expect(execFrame.__frames[0].name).toBe("prepare");
