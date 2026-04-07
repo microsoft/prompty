@@ -121,6 +121,7 @@ public class RolesTests
 // InvokerRegistry Tests
 // -----------------------------------------------------------------------
 
+[Collection("InvokerRegistry")]
 public class InvokerRegistryTests : IDisposable
 {
     public InvokerRegistryTests()
@@ -242,6 +243,7 @@ public class InvokerRegistryTests : IDisposable
 // Pipeline Tests
 // -----------------------------------------------------------------------
 
+[Collection("InvokerRegistry")]
 public class PipelineTests : IDisposable
 {
     public PipelineTests()
