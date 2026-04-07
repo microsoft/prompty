@@ -13,10 +13,6 @@ from .discovery import (
 )
 from .loader import default_save_context, load, load_async
 from .pipeline import (
-    execute,
-    execute_agent,
-    execute_agent_async,
-    execute_async,
     invoke,
     invoke_agent,
     invoke_agent_async,
@@ -26,8 +22,6 @@ from .pipeline import (
     process,
     process_async,
     run,
-    run_agent,
-    run_agent_async,
     run_async,
     validate_inputs,
 )

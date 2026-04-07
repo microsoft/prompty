@@ -55,13 +55,6 @@ __all__ = [
     "invoke_async",
     "invoke_agent",
     "invoke_agent_async",
-    # Backward-compat aliases
-    "execute",
-    "execute_async",
-    "execute_agent",
-    "execute_agent_async",
-    "run_agent",
-    "run_agent_async",
     # Helpers (used by tests)
     "_get_rich_input_names",
     "_inject_thread_markers",
@@ -1636,12 +1629,3 @@ async def invoke_agent_async(
     if raw:
         return response
     return await process_async(agent, response)
-
-
-# Backward-compatibility aliases
-execute = invoke
-execute_async = invoke_async
-execute_agent = invoke_agent
-execute_agent_async = invoke_agent_async
-run_agent = invoke_agent
-run_agent_async = invoke_agent_async

@@ -27,10 +27,6 @@ from .core.discovery import (
 
 # --- Pipeline ---
 from .core.pipeline import (
-    execute,
-    execute_agent,
-    execute_agent_async,
-    execute_async,
     invoke,
     invoke_agent,
     invoke_agent_async,
@@ -44,8 +40,6 @@ from .core.pipeline import (
     render,
     render_async,
     run,
-    run_agent,
-    run_agent_async,
     run_async,
     validate_inputs,
 )
@@ -92,13 +86,6 @@ __all__ = [
     "invoke_async",
     "invoke_agent",
     "invoke_agent_async",
-    # Backward-compat aliases
-    "execute",
-    "execute_async",
-    "execute_agent",
-    "execute_agent_async",
-    "run_agent",
-    "run_agent_async",
     # Validation
     "validate_inputs",
 ]

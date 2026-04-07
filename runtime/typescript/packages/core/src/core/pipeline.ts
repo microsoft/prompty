@@ -1021,8 +1021,3 @@ async function buildResponsesToolResultMessages(
 
   return messages;
 }
-
-// Backward-compatibility aliases
-export const execute = invoke;
-export const executeAgent = invokeAgent;
-export const runAgent = invokeAgent;
