@@ -1,5 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>OPENAI001</NoWarn>
+    <Version>2.0.0-alpha.1</Version>
+    <PackageId>Prompty.OpenAI</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>OpenAI provider for Prompty — executor and processor for OpenAI chat, embedding, image, and agent APIs.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://prompty.ai</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/microsoft/prompty</RepositoryUrl>
+    <PackageTags>prompty;openai;llm;ai;chat;embedding</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
   </ItemGroup>
@@ -7,12 +22,5 @@
   <ItemGroup>
     <PackageReference Include="OpenAI" Version="2.10.0" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <NoWarn>OPENAI001</NoWarn>
-  </PropertyGroup>
 
 </Project>

@@ -283,10 +283,62 @@ public static class Pipeline
         List<Message> messages,
         Dictionary<string, object?> inputs)
     {
-        // For now, scan message text for thread nonce patterns and expand them.
-        // Full nonce-based expansion will be implemented with renderers in Phase 3.
-        // This is a passthrough until then.
-        return messages;
+        var threadNonceRegex = new System.Text.RegularExpressions.Regex(
+            @"__PROMPTY_THREAD_[a-f0-9]{8}_(\w+)__");
+
+        var result = new List<Message>();
+
+        foreach (var msg in messages)
+        {
+            var text = msg.Text;
+            var match = threadNonceRegex.Match(text);
+
+            if (!match.Success)
+            {
+                result.Add(msg);
+                continue;
+            }
+
+            var inputName = match.Groups[1].Value;
+
+            // Get thread messages from inputs
+            if (!inputs.TryGetValue(inputName, out var threadValue) || threadValue is not IList<Message> threadMessages)
+            {
+                result.Add(msg);
+                continue;
+            }
+
+            // Split text around the nonce
+            var before = text[..match.Index].TrimEnd();
+            var after = text[(match.Index + match.Length)..].TrimStart();
+
+            // Add any text before the nonce as a message (if non-empty)
+            if (!string.IsNullOrWhiteSpace(before))
+            {
+                result.Add(new Message
+                {
+                    Role = msg.Role,
+                    Parts = [new TextPart { Value = before }],
+                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                });
+            }
+
+            // Splice in the thread messages
+            result.AddRange(threadMessages);
+
+            // Add any text after the nonce as a message (if non-empty)
+            if (!string.IsNullOrWhiteSpace(after))
+            {
+                result.Add(new Message
+                {
+                    Role = msg.Role,
+                    Parts = [new TextPart { Value = after }],
+                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                });
+            }
+        }
+
+        return result;
     }
 }
 

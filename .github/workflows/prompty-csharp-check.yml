@@ -1,13 +1,9 @@
-# DISABLED — reference for future C# runtime build
-# TODO: Update working-directory from ./runtime/promptycs to actual path
-#       when C# runtime is ready, and re-enable triggers.
-
 name: prompty CSharp build and test
 
 on:
-  # pull_request:
-  #   paths:
-  #     - 'runtime/promptycs/**'
+  pull_request:
+    paths:
+      - 'runtime/csharp/**'
   workflow_dispatch:
   workflow_call:
 
@@ -17,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        dotnet-version: [ '8.0.x', '9.0.x' ]
+        dotnet-version: [ '9.0.x' ]
         os: [ubuntu-latest, macOS-latest, windows-latest]
     permissions:
       contents: read
@@ -30,13 +26,13 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: dotnet restore
-        working-directory: ./runtime/promptycs
+        working-directory: ./runtime/csharp
         run: dotnet restore
 
       - name: dotnet build
-        working-directory: ./runtime/promptycs
-        run: dotnet build
+        working-directory: ./runtime/csharp
+        run: dotnet build --nologo
 
       - name: dotnet test
-        working-directory: ./runtime/promptycs
-        run: dotnet test --logger "console;verbosity=detailed"
+        working-directory: ./runtime/csharp
+        run: dotnet test --nologo --logger "console;verbosity=normal"

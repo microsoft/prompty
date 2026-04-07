@@ -1,13 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>2.0.0-alpha.1</Version>
+    <PackageId>Prompty.Anthropic</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Anthropic provider for Prompty — executor and processor for Claude models via the Anthropic Messages API.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://prompty.ai</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/microsoft/prompty</RepositoryUrl>
+    <PackageTags>prompty;anthropic;claude;llm;ai</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
+  </ItemGroup>
 
 </Project>
