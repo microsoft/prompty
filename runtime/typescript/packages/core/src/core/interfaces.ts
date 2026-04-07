@@ -58,6 +58,18 @@ export interface Parser {
  */
 export interface Executor {
   execute(agent: Prompty, messages: Message[]): Promise<unknown>;
+
+  /**
+   * Format tool call results into provider-specific message format.
+   * Called after tool dispatch; the pipeline provides extracted tool calls
+   * and their string results.
+   */
+  formatToolMessages(
+    rawResponse: unknown,
+    toolCalls: { id: string; name: string; arguments: string }[],
+    toolResults: string[],
+    textContent?: string,
+  ): Message[];
 }
 
 // ---------------------------------------------------------------------------

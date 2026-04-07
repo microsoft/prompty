@@ -11,9 +11,8 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Prompty } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
 import type { Executor } from "@prompty/core";
-import type { Message } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
 import { buildChatArgs } from "./wire.js";
@@ -86,6 +85,40 @@ export class AnthropicExecutor implements Executor {
             `Anthropic only supports "chat" (Messages API).`,
         );
     }
+  }
+
+  formatToolMessages(
+    _rawResponse: unknown,
+    toolCalls: { id: string; name: string; arguments: string }[],
+    toolResults: string[],
+    textContent = "",
+  ): Message[] {
+    const messages: Message[] = [];
+
+    // Assistant message with ALL content blocks (text + tool_use)
+    const rawContent: Record<string, unknown>[] = [];
+    if (textContent) rawContent.push({ type: "text", text: textContent });
+    for (const tc of toolCalls) {
+      rawContent.push({
+        type: "tool_use",
+        id: tc.id,
+        name: tc.name,
+        input: JSON.parse(tc.arguments),
+      });
+    }
+    messages.push(
+      new Message("assistant", textContent ? [text(textContent)] : [], { content: rawContent }),
+    );
+
+    // Single user message with batched tool_result blocks
+    const toolResultBlocks = toolCalls.map((tc, i) => ({
+      type: "tool_result",
+      tool_use_id: tc.id,
+      content: toolResults[i],
+    }));
+    messages.push(new Message("user", [], { tool_results: toolResultBlocks }));
+
+    return messages;
   }
 
   protected resolveClient(agent: Prompty): Anthropic {

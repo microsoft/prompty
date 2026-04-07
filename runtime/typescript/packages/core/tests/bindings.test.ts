@@ -216,6 +216,23 @@ describe("invokeAgent() with bindings", () => {
           choices: [{ message: { role: "assistant", content: "Done!" } }],
         };
       }
+
+      formatToolMessages(
+        _rawResponse: unknown,
+        toolCalls: { id: string; name: string; arguments: string }[],
+        toolResults: string[],
+        textContent = "",
+      ): Message[] {
+        const messages: Message[] = [];
+        const rawToolCalls = toolCalls.map((tc) => ({
+          id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
+        }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+        for (let i = 0; i < toolCalls.length; i++) {
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+        }
+        return messages;
+      }
     }
 
     registerExecutor("bindmock", new BindingExecutor());
@@ -268,6 +285,23 @@ describe("invokeAgent() with bindings", () => {
         return {
           choices: [{ message: { role: "assistant", content: "Done!" } }],
         };
+      }
+
+      formatToolMessages(
+        _rawResponse: unknown,
+        toolCalls: { id: string; name: string; arguments: string }[],
+        toolResults: string[],
+        textContent = "",
+      ): Message[] {
+        const messages: Message[] = [];
+        const rawToolCalls = toolCalls.map((tc) => ({
+          id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
+        }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+        for (let i = 0; i < toolCalls.length; i++) {
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+        }
+        return messages;
       }
     }
 

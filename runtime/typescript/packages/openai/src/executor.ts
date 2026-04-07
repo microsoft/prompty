@@ -8,9 +8,8 @@
 
 import OpenAI from "openai";
 import type { Prompty } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
 import type { Executor } from "@prompty/core";
-import type { Message } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
@@ -113,6 +112,65 @@ export class OpenAIExecutor implements Executor {
       default:
         throw new Error(`Unsupported apiType: ${apiType}`);
     }
+  }
+
+  formatToolMessages(
+    rawResponse: unknown,
+    toolCalls: { id: string; name: string; arguments: string }[],
+    toolResults: string[],
+    textContent = "",
+  ): Message[] {
+    const messages: Message[] = [];
+
+    // Detect Responses API by checking for call_id on tool calls
+    const isResponses =
+      toolCalls.length > 0 && "call_id" in (toolCalls[0] as Record<string, unknown>);
+
+    if (isResponses) {
+      // Responses API: individual function_call items
+      for (const tc of toolCalls) {
+        messages.push(
+          new Message("assistant", [], {
+            responses_function_call: {
+              type: "function_call",
+              call_id: tc.id,
+              name: tc.name,
+              arguments: tc.arguments,
+            },
+          }),
+        );
+      }
+      for (let i = 0; i < toolCalls.length; i++) {
+        messages.push(
+          new Message("tool", [text(toolResults[i])], {
+            tool_call_id: toolCalls[i].id,
+            name: toolCalls[i].name,
+          }),
+        );
+      }
+    } else {
+      // OpenAI Chat format: single assistant + individual tool messages
+      const rawToolCalls = toolCalls.map((tc) => ({
+        id: tc.id,
+        type: "function",
+        function: { name: tc.name, arguments: tc.arguments },
+      }));
+      messages.push(
+        new Message("assistant", textContent ? [text(textContent)] : [], {
+          tool_calls: rawToolCalls,
+        }),
+      );
+      for (let i = 0; i < toolCalls.length; i++) {
+        messages.push(
+          new Message("tool", [text(toolResults[i])], {
+            tool_call_id: toolCalls[i].id,
+            name: toolCalls[i].name,
+          }),
+        );
+      }
+    }
+
+    return messages;
   }
 
   protected resolveClient(agent: Prompty): OpenAI {

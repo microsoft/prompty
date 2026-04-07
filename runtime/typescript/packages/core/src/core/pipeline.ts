@@ -452,7 +452,7 @@ async function consumeStream(
 
 /**
  * Build tool result messages from processed ToolCall objects (streaming path).
- * Dispatches to the correct wire format based on provider and apiType.
+ * Dispatches tools, then delegates message formatting to the provider's executor.
  */
 async function buildToolMessagesFromCalls(
   toolCalls: ToolCall[],
@@ -462,57 +462,8 @@ async function buildToolMessagesFromCalls(
   parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
-  const provider = resolveProvider(agent);
-  const apiType = agent.model?.apiType || "chat";
-  const messages: Message[] = [];
+  const toolResults: string[] = [];
   const toolInputs: Record<string, unknown>[] = [];
-
-  // --- Assistant message with provider-appropriate metadata ---
-  if (provider === "anthropic") {
-    // Anthropic: raw content blocks (text + tool_use)
-    const rawContent: Record<string, unknown>[] = [];
-    if (textContent) rawContent.push({ type: "text", text: textContent });
-    for (const tc of toolCalls) {
-      rawContent.push({
-        type: "tool_use",
-        id: tc.id,
-        name: tc.name,
-        input: JSON.parse(tc.arguments),
-      });
-    }
-    messages.push(
-      new Message("assistant", textContent ? [text(textContent)] : [], { content: rawContent }),
-    );
-  } else if (apiType === "responses") {
-    // Responses API: individual function_call items
-    for (const tc of toolCalls) {
-      messages.push(
-        new Message("assistant", [], {
-          responses_function_call: {
-            type: "function_call",
-            call_id: tc.id,
-            name: tc.name,
-            arguments: tc.arguments,
-          },
-        }),
-      );
-    }
-  } else {
-    // OpenAI Chat: tool_calls metadata
-    const rawToolCalls = toolCalls.map((tc) => ({
-      id: tc.id,
-      type: "function",
-      function: { name: tc.name, arguments: tc.arguments },
-    }));
-    messages.push(
-      new Message("assistant", textContent ? [text(textContent)] : [], {
-        tool_calls: rawToolCalls,
-      }),
-    );
-  }
-
-  // --- Execute tools and build result messages ---
-  const toolResultBlocks: Record<string, unknown>[] = [];
 
   for (const tc of toolCalls) {
     let result: string;
@@ -535,27 +486,19 @@ async function buildToolMessagesFromCalls(
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
 
+    toolResults.push(result);
     toolInputs.push({ name: tc.name, arguments: parsedArgs, id: tc.id, result });
-
-    if (provider === "anthropic") {
-      toolResultBlocks.push({ type: "tool_result", tool_use_id: tc.id, content: result });
-    } else {
-      messages.push(
-        new Message("tool", [text(result)], { tool_call_id: tc.id, name: tc.name }),
-      );
-    }
-  }
-
-  // Anthropic: batch all tool results in single user message
-  if (provider === "anthropic" && toolResultBlocks.length > 0) {
-    messages.push(new Message("user", [], { tool_results: toolResultBlocks }));
   }
 
   if (parentEmit) {
     parentEmit("inputs", { tool_calls: toolInputs });
   }
 
-  return messages;
+  // Delegate message formatting to executor
+  const provider = resolveProvider(agent);
+  const executor = getExecutor(provider);
+  const normalizedCalls = toolCalls.map((tc) => ({ id: tc.id, name: tc.name, arguments: tc.arguments }));
+  return executor.formatToolMessages(null, normalizedCalls, toolResults, textContent);
 }
 
 /**
@@ -788,6 +731,76 @@ function hasToolCalls(response: unknown): boolean {
   return false;
 }
 
+/**
+ * Extract normalized tool call info from any provider's raw response.
+ * Returns a uniform array of `{id, name, arguments}` and any text content.
+ */
+function extractToolInfo(response: unknown): {
+  toolCalls: { id: string; name: string; arguments: string; [key: string]: string }[];
+  textContent: string;
+} {
+  if (typeof response !== "object" || response === null) {
+    return { toolCalls: [], textContent: "" };
+  }
+  const r = response as Record<string, unknown>;
+
+  // Anthropic: content[].type === "tool_use"
+  if (Array.isArray(r.content) && r.stop_reason === "tool_use") {
+    const content = r.content as Record<string, unknown>[];
+    const toolCalls = content
+      .filter((b) => b.type === "tool_use")
+      .map((b) => ({
+        id: b.id as string,
+        name: b.name as string,
+        arguments: JSON.stringify(b.input),
+      }));
+    const textContent = content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text as string)
+      .join("");
+    return { toolCalls, textContent };
+  }
+
+  // OpenAI Responses API: output[].type === "function_call"
+  if (r.object === "response" && Array.isArray(r.output)) {
+    const funcCalls = (r.output as Record<string, unknown>[]).filter(
+      (item) => item.type === "function_call",
+    );
+    const toolCalls = funcCalls.map((fc) => ({
+      id: ((fc.call_id ?? fc.id ?? "") as string),
+      call_id: ((fc.call_id ?? fc.id ?? "") as string),
+      name: fc.name as string,
+      arguments: (fc.arguments as string) ?? "{}",
+    }));
+    return { toolCalls, textContent: "" };
+  }
+
+  // OpenAI Chat: choices[0].message.tool_calls
+  const choices = r.choices as unknown[] | undefined;
+  if (Array.isArray(choices) && choices.length > 0) {
+    const choice = choices[0] as Record<string, unknown>;
+    const message = choice.message as Record<string, unknown> | undefined;
+    if (message && Array.isArray(message.tool_calls)) {
+      const toolCalls = (message.tool_calls as Record<string, unknown>[]).map((tc) => {
+        const fn = tc.function as Record<string, unknown>;
+        return {
+          id: tc.id as string,
+          name: fn.name as string,
+          arguments: fn.arguments as string,
+        };
+      });
+      return { toolCalls, textContent: (message.content as string) ?? "" };
+    }
+  }
+
+  return { toolCalls: [], textContent: "" };
+}
+
+/**
+ * Build tool result messages from a raw LLM response (non-streaming path).
+ * Extracts tool call info, dispatches tools, then delegates message
+ * formatting to the provider's executor.
+ */
 async function buildToolResultMessages(
   response: unknown,
   tools: Record<string, (...args: unknown[]) => unknown>,
@@ -795,65 +808,24 @@ async function buildToolResultMessages(
   parentInputs?: Record<string, unknown>,
   parentEmit?: (key: string, value: unknown) => void,
 ): Promise<Message[]> {
-  const r = response as Record<string, unknown>;
-
-  // Detect response format and dispatch
-  if (Array.isArray(r.content) && r.stop_reason === "tool_use") {
-    return buildAnthropicToolResultMessages(r, tools, agent, parentInputs, parentEmit);
-  }
-
-  // OpenAI Responses API: output[].type === "function_call"
-  if (r.object === "response" && Array.isArray(r.output)) {
-    return buildResponsesToolResultMessages(r, tools, agent, parentInputs, parentEmit);
-  }
-
-  return buildOpenAIToolResultMessages(r, tools, agent, parentInputs, parentEmit);
-}
-
-/** Handle OpenAI ChatCompletion tool calls: choices[0].message.tool_calls */
-async function buildOpenAIToolResultMessages(
-  r: Record<string, unknown>,
-  tools: Record<string, (...args: unknown[]) => unknown>,
-  agent?: Prompty,
-  parentInputs?: Record<string, unknown>,
-  parentEmit?: (key: string, value: unknown) => void,
-): Promise<Message[]> {
-  const choices = r.choices as unknown[];
-  const choice = choices[0] as Record<string, unknown>;
-  const message = choice.message as Record<string, unknown>;
-  const toolCalls = message.tool_calls as Record<string, unknown>[];
-
-  const messages: Message[] = [];
-
-  // First, add assistant message with tool_calls metadata
-  const assistantContent = (message.content as string) ?? "";
-  messages.push(
-    new Message("assistant", assistantContent ? [text(assistantContent)] : [], {
-      tool_calls: toolCalls,
-    }),
-  );
-
+  const { toolCalls, textContent } = extractToolInfo(response);
+  const toolResults: string[] = [];
   const toolInputs: Record<string, unknown>[] = [];
 
-  // Then, execute each tool and build tool result messages
   for (const tc of toolCalls) {
-    const fn = tc.function as Record<string, unknown>;
-    const toolName = fn.name as string;
-    const toolCallId = tc.id as string;
-
     let result: string;
     let parsedArgs: unknown;
     try {
-      parsedArgs = JSON.parse(fn.arguments as string);
+      parsedArgs = JSON.parse(tc.arguments);
       // Resolve bindings: inject values from parentInputs
       if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
-        parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
+        parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
       }
-      result = await traceSpan(toolName, async (toolEmit) => {
-        toolEmit("signature", `prompty.tool.${toolName}`);
-        toolEmit("description", `Execute tool: ${toolName}`);
-        toolEmit("inputs", { arguments: parsedArgs, tool_call_id: toolCallId });
-        const r = await dispatchTool(toolName, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
+      result = await traceSpan(tc.name, async (toolEmit) => {
+        toolEmit("signature", `prompty.tool.${tc.name}`);
+        toolEmit("description", `Execute tool: ${tc.name}`);
+        toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
+        const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
         toolEmit("result", r);
         return r;
       }) as string;
@@ -861,163 +833,16 @@ async function buildOpenAIToolResultMessages(
       result = `Error: ${err instanceof Error ? err.message : String(err)}`;
     }
 
-    toolInputs.push({ name: toolName, arguments: parsedArgs, tool_call_id: toolCallId, result });
-
-    messages.push(
-      new Message("tool", [text(result)], {
-        tool_call_id: toolCallId,
-        name: toolName,
-      }),
-    );
+    toolResults.push(result);
+    toolInputs.push({ name: tc.name, arguments: parsedArgs, id: tc.id, result });
   }
 
   if (parentEmit) {
     parentEmit("inputs", { tool_calls: toolInputs });
   }
 
-  return messages;
-}
-
-/** Handle Anthropic Messages tool calls: content[].type === "tool_use" */
-async function buildAnthropicToolResultMessages(
-  r: Record<string, unknown>,
-  tools: Record<string, (...args: unknown[]) => unknown>,
-  agent?: Prompty,
-  parentInputs?: Record<string, unknown>,
-  parentEmit?: (key: string, value: unknown) => void,
-): Promise<Message[]> {
-  const content = r.content as Record<string, unknown>[];
-  const toolUseBlocks = content.filter((block) => block.type === "tool_use");
-
-  const messages: Message[] = [];
-
-  // Add assistant message with the FULL content blocks (including tool_use).
-  // Anthropic requires the assistant message to contain the original tool_use
-  // blocks so the API can match tool_result blocks to their tool_use origins.
-  const textParts = content
-    .filter((block) => block.type === "text")
-    .map((block) => text(block.text as string));
-  messages.push(
-    new Message("assistant", textParts, { content }),
-  );
-
-  const toolInputs: Record<string, unknown>[] = [];
-  const toolResultBlocks: Record<string, unknown>[] = [];
-
-  for (const block of toolUseBlocks) {
-    const toolName = block.name as string;
-    const toolCallId = block.id as string;
-    let toolArgs = block.input as Record<string, unknown>;
-
-    // Resolve bindings: inject values from parentInputs
-    if (agent && parentInputs && typeof toolArgs === "object" && toolArgs !== null && !Array.isArray(toolArgs)) {
-      toolArgs = resolveBindings(agent, toolName, toolArgs, parentInputs);
-    }
-
-    let result: string;
-    try {
-      result = await traceSpan(toolName, async (toolEmit) => {
-        toolEmit("signature", `prompty.tool.${toolName}`);
-        toolEmit("description", `Execute tool: ${toolName}`);
-        toolEmit("inputs", { arguments: toolArgs, tool_use_id: toolCallId });
-        const r = await dispatchTool(toolName, toolArgs, tools, agent ?? ({} as Prompty), parentInputs ?? {});
-        toolEmit("result", r);
-        return r;
-      }) as string;
-    } catch (err) {
-      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
-    }
-
-    toolInputs.push({ name: toolName, arguments: toolArgs, tool_use_id: toolCallId, result });
-
-    // Collect tool_result blocks for batching into a single user message
-    toolResultBlocks.push({
-      type: "tool_result",
-      tool_use_id: toolCallId,
-      content: result,
-    });
-  }
-
-  if (parentEmit) {
-    parentEmit("inputs", { tool_calls: toolInputs });
-  }
-
-  // Anthropic requires ALL tool results in a SINGLE user message
-  // with the tool_result content blocks batched together.
-  messages.push(
-    new Message("user", [], { tool_results: toolResultBlocks }),
-  );
-
-  return messages;
-}
-
-/** Handle OpenAI Responses API tool calls: output[].type === "function_call" */
-async function buildResponsesToolResultMessages(
-  r: Record<string, unknown>,
-  tools: Record<string, (...args: unknown[]) => unknown>,
-  agent?: Prompty,
-  parentInputs?: Record<string, unknown>,
-  parentEmit?: (key: string, value: unknown) => void,
-): Promise<Message[]> {
-  const output = r.output as Record<string, unknown>[];
-  const funcCalls = output.filter((item) => item.type === "function_call");
-
-  const messages: Message[] = [];
-  const toolInputs: Record<string, unknown>[] = [];
-
-  for (const fc of funcCalls) {
-    const toolName = fc.name as string;
-    const callId = (fc.call_id ?? fc.id ?? "") as string;
-    const argsStr = (fc.arguments as string) ?? "{}";
-
-    // Include the original function_call item so the Responses API can match
-    // function_call_output items to their origin function_call
-    messages.push(
-      new Message("assistant", [], {
-        responses_function_call: {
-          type: "function_call",
-          call_id: callId,
-          name: toolName,
-          arguments: argsStr,
-        },
-      }),
-    );
-
-    let result: string;
-    let parsedArgs: unknown;
-    try {
-      parsedArgs = JSON.parse(argsStr);
-      // Resolve bindings: inject values from parentInputs
-      if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
-        parsedArgs = resolveBindings(agent, toolName, parsedArgs as Record<string, unknown>, parentInputs);
-      }
-      result = await traceSpan(toolName, async (toolEmit) => {
-        toolEmit("signature", `prompty.tool.${toolName}`);
-        toolEmit("description", `Execute tool: ${toolName}`);
-        toolEmit("inputs", { arguments: parsedArgs, call_id: callId });
-        const r = await dispatchTool(toolName, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
-        toolEmit("result", r);
-        return r;
-      }) as string;
-    } catch (err) {
-      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
-    }
-
-    toolInputs.push({ name: toolName, arguments: parsedArgs, call_id: callId, result });
-
-    // Responses API tool results use tool_call_id metadata so the wire format
-    // (messageToResponsesInput) maps them to { type: "function_call_output", call_id, output }
-    messages.push(
-      new Message("tool", [text(result)], {
-        tool_call_id: callId,
-        name: toolName,
-      }),
-    );
-  }
-
-  if (parentEmit) {
-    parentEmit("inputs", { tool_calls: toolInputs });
-  }
-
-  return messages;
+  // Delegate message formatting to executor
+  const provider = resolveProvider(agent ?? ({} as Prompty));
+  const executor = getExecutor(provider);
+  return executor.formatToolMessages(response, toolCalls, toolResults, textContent);
 }

@@ -36,6 +36,7 @@ import {
   validateInputs,
   invokeAgent,
   Message,
+  text,
   NunjucksRenderer,
   MustacheRenderer,
   PromptyChatParser,
@@ -891,6 +892,22 @@ describe("Spec Vectors: Agent", () => {
             throw new Error("Mock executor: ran out of canned responses");
           }
           return mockResponses[responseIdx++];
+        },
+        formatToolMessages(
+          _rawResponse: unknown,
+          toolCalls: { id: string; name: string; arguments: string }[],
+          toolResults: string[],
+          textContent = "",
+        ): Message[] {
+          const messages: Message[] = [];
+          const rawToolCalls = toolCalls.map((tc) => ({
+            id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
+          }));
+          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          for (let i = 0; i < toolCalls.length; i++) {
+            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          }
+          return messages;
         },
       };
 
