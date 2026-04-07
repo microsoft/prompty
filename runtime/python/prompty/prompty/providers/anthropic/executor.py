@@ -432,3 +432,66 @@ class AnthropicExecutor:
             )
 
         return kwargs
+
+    # -- FormatToolMessages -------------------------------------------------
+
+    def format_tool_messages(
+        self,
+        raw_response: Any,
+        tool_calls: list[Any],
+        tool_results: list[str],
+        text_content: str = "",
+    ) -> list[Message]:
+        """Format tool messages in Anthropic wire format.
+
+        Anthropic requires:
+        1. Assistant message preserves ALL content blocks (text + tool_use)
+        2. Tool results are batched into a single ``user`` message with
+           ``tool_result`` content blocks.
+        """
+        import json
+
+        from ...core.types import Message, TextPart
+
+        result_messages: list[Message] = []
+
+        # --- Assistant message with ALL content blocks (text + tool_use) ---
+        raw_content: list[dict[str, Any]] = []
+        if text_content:
+            raw_content.append({"type": "text", "text": text_content})
+        for tc in tool_calls:
+            raw_content.append(
+                {
+                    "type": "tool_use",
+                    "id": tc.id,
+                    "name": tc.name,
+                    "input": json.loads(tc.arguments),
+                }
+            )
+        result_messages.append(
+            Message(
+                role="assistant",
+                parts=[TextPart(value=text_content)] if text_content else [],
+                metadata={"raw_content": raw_content},
+            )
+        )
+
+        # --- Single user message with batched tool_result blocks ---
+        tool_result_blocks: list[dict[str, Any]] = []
+        for i, tc in enumerate(tool_calls):
+            tool_result_blocks.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tc.id,
+                    "content": tool_results[i],
+                }
+            )
+        result_messages.append(
+            Message(
+                role="tool",
+                parts=[TextPart(value=r) for r in tool_results],
+                metadata={"tool_results": tool_result_blocks},
+            )
+        )
+
+        return result_messages

@@ -657,6 +657,82 @@ class _BaseExecutor:
 
         return args
 
+    # -- FormatToolMessages -------------------------------------------------
+
+    def format_tool_messages(
+        self,
+        raw_response: Any,
+        tool_calls: list[Any],
+        tool_results: list[str],
+        text_content: str = "",
+    ) -> list[Message]:
+        """Format tool messages in OpenAI wire format.
+
+        Returns an assistant message with tool_calls metadata followed by
+        individual tool-role messages (one per call). For Responses API,
+        returns individual assistant messages with responses_function_call
+        metadata followed by function_call_output messages.
+        """
+
+        from ...core.types import Message, TextPart
+
+        result_messages: list[Message] = []
+
+        # Detect if this was a Responses API call by checking tool call structure
+        # (Responses API tool calls have call_id instead of id)
+        is_responses = hasattr(tool_calls[0], "call_id") if tool_calls else False
+
+        if is_responses:
+            # Responses API: individual function_call items
+            for tc in tool_calls:
+                call_id = getattr(tc, "call_id", tc.id)
+                result_messages.append(
+                    Message(
+                        role="assistant",
+                        parts=[],
+                        metadata={
+                            "responses_function_call": {
+                                "type": "function_call",
+                                "call_id": call_id,
+                                "name": tc.name,
+                                "arguments": tc.arguments,
+                            }
+                        },
+                    )
+                )
+            for i, tc in enumerate(tool_calls):
+                call_id = getattr(tc, "call_id", tc.id)
+                result_messages.append(
+                    Message(
+                        role="tool",
+                        parts=[TextPart(value=tool_results[i])],
+                        metadata={"tool_call_id": call_id, "name": tc.name},
+                    )
+                )
+        else:
+            # OpenAI Chat format: single assistant message + individual tool messages
+            raw_tool_calls = [
+                {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
+                for tc in tool_calls
+            ]
+            result_messages.append(
+                Message(
+                    role="assistant",
+                    parts=[TextPart(value=text_content)] if text_content else [],
+                    metadata={"tool_calls": raw_tool_calls},
+                )
+            )
+            for i, tc in enumerate(tool_calls):
+                result_messages.append(
+                    Message(
+                        role="tool",
+                        parts=[TextPart(value=tool_results[i])],
+                        metadata={"tool_call_id": tc.id, "name": tc.name},
+                    )
+                )
+
+        return result_messages
+
 
 # ---------------------------------------------------------------------------
 # OpenAI Executor

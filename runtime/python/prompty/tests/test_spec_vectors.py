@@ -1028,6 +1028,32 @@ def test_agent_vector(vec: dict):
         async def execute_async(self, _agent, _messages):
             return next(response_iter)
 
+        def format_tool_messages(self, raw_response, tool_calls, tool_results, text_content=""):
+            """Default OpenAI-style tool message formatting for spec vectors."""
+            from prompty.core.types import Message, TextPart
+
+            result_messages: list[Message] = []
+            raw_tool_calls = [
+                {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
+                for tc in tool_calls
+            ]
+            result_messages.append(
+                Message(
+                    role="assistant",
+                    parts=[TextPart(value=text_content)] if text_content else [],
+                    metadata={"tool_calls": raw_tool_calls},
+                )
+            )
+            for i, tc in enumerate(tool_calls):
+                result_messages.append(
+                    Message(
+                        role="tool",
+                        parts=[TextPart(value=tool_results[i])],
+                        metadata={"tool_call_id": tc.id, "name": tc.name},
+                    )
+                )
+            return result_messages
+
     # -- Mock processor: extracts content from our mock response format --
     class SpecMockProcessor:
         def process(self, _agent, response):

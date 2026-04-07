@@ -85,6 +85,11 @@ class ExecutorProtocol(Protocol):
 
     The executor is responsible for mapping abstract ``Message`` objects
     to the provider's wire format internally.
+
+    ``format_tool_messages`` formats the assistant tool-call response and
+    dispatched tool results into messages for the next agent loop iteration.
+    Each provider implements this to match its API's expected wire format,
+    keeping the pipeline provider-agnostic.
     """
 
     def execute(
@@ -98,6 +103,26 @@ class ExecutorProtocol(Protocol):
         agent: Prompty,
         messages: list[Message],
     ) -> Any: ...
+
+    def format_tool_messages(
+        self,
+        raw_response: Any,
+        tool_calls: list[Any],
+        tool_results: list[str],
+        text_content: str = "",
+    ) -> list[Message]:
+        """Format tool call results into messages for the next loop iteration.
+
+        Args:
+            raw_response: Original LLM response (for content block preservation).
+            tool_calls: Tool calls extracted by the processor (ToolCall objects).
+            tool_results: Results from dispatching each tool call, parallel to tool_calls.
+            text_content: Any non-tool text content from the response.
+
+        Returns:
+            Messages to append to the conversation (assistant + tool result messages).
+        """
+        ...
 
 
 @runtime_checkable

@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from prompty.core.pipeline import (
-    _build_openai_tool_result_messages,
     _build_tool_messages_from_calls,
+    _build_tool_result_messages,
     _resolve_bindings,
     invoke_agent,
     invoke_agent_async,
@@ -235,12 +235,12 @@ class TestWireFormatBindings:
 
 
 # ---------------------------------------------------------------------------
-# Tests: _build_openai_tool_result_messages with bindings
+# Tests: _build_tool_result_messages with bindings
 # ---------------------------------------------------------------------------
 
 
 class TestBuildToolResultMessagesWithBindings:
-    """_build_openai_tool_result_messages should inject bound values before calling tools."""
+    """_build_tool_result_messages should inject bound values before calling tools."""
 
     def test_binding_injected_into_tool_call(self):
         """Tool function receives merged args including bound values."""
@@ -258,7 +258,7 @@ class TestBuildToolResultMessagesWithBindings:
             return f"{city}: 22°C"
 
         tools = {"get_weather": get_weather}
-        _build_openai_tool_result_messages(response, tools, agent, parent_inputs)
+        _build_tool_result_messages(response, tools, agent, parent_inputs)
 
         assert received_args["city"] == "Paris"
         assert received_args["unit"] == "celsius"
@@ -275,7 +275,7 @@ class TestBuildToolResultMessagesWithBindings:
             return "sunny"
 
         tools = {"get_weather": get_weather}
-        _build_openai_tool_result_messages(response, tools, agent, {})
+        _build_tool_result_messages(response, tools, agent, {})
 
         assert received_args["city"] == "Paris"
 

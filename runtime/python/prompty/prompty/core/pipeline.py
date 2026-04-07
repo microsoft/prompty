@@ -821,360 +821,122 @@ def _has_tool_calls(response: Any) -> bool:
     return False
 
 
-def _is_anthropic_response(response: Any) -> bool:
-    """Check if a response is from Anthropic (has stop_reason, not choices)."""
-    return hasattr(response, "stop_reason") and not hasattr(response, "choices")
+def _extract_tool_info(response: Any) -> tuple[list[Any], str]:
+    """Extract tool calls from any provider's raw response into a normalized format.
 
+    Returns ``(tool_calls, text_content)`` where each tool call object has
+    ``.id``, ``.name``, ``.arguments`` (string). For Responses API calls,
+    ``.call_id`` is also set.
+    """
+    from types import SimpleNamespace
 
-def _is_responses_api(response: Any) -> bool:
-    """Check if a response is from the OpenAI Responses API."""
-    return getattr(response, "object", None) == "response" and hasattr(response, "output")
+    # Anthropic: response.content with tool_use blocks
+    if hasattr(response, "stop_reason") and hasattr(response, "content"):
+        content = response.content
+        tool_calls: list[Any] = []
+        text_parts: list[str] = []
+        for b in content:
+            if getattr(b, "type", None) == "tool_use":
+                tool_calls.append(
+                    SimpleNamespace(
+                        id=b.id,
+                        name=b.name,
+                        arguments=json.dumps(b.input) if not isinstance(b.input, str) else b.input,
+                    )
+                )
+            elif getattr(b, "type", None) == "text":
+                text_parts.append(b.text)
+        if tool_calls:
+            return tool_calls, "".join(text_parts)
+
+    # Responses API: response.output with function_call items
+    if getattr(response, "object", None) == "response" and hasattr(response, "output"):
+        func_calls = [item for item in response.output if getattr(item, "type", None) == "function_call"]
+        if func_calls:
+            tool_calls = []
+            for fc in func_calls:
+                cid = getattr(fc, "call_id", None) or getattr(fc, "id", "")
+                tool_calls.append(
+                    SimpleNamespace(
+                        id=cid,
+                        call_id=cid,
+                        name=getattr(fc, "name", ""),
+                        arguments=getattr(fc, "arguments", "{}"),
+                    )
+                )
+            return tool_calls, ""
+
+    # OpenAI Chat: response.choices[0].message.tool_calls
+    if hasattr(response, "choices") and response.choices:
+        msg = response.choices[0].message
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            text_content = getattr(msg, "content", "") or ""
+            tool_calls = []
+            for tc in msg.tool_calls:
+                tool_calls.append(
+                    SimpleNamespace(
+                        id=tc.id,
+                        name=tc.function.name,
+                        arguments=tc.function.arguments,
+                    )
+                )
+            return tool_calls, text_content
+
+    return [], ""
 
 
 def _build_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
+    agent: Prompty,
     parent_inputs: dict[str, Any] | None = None,
 ) -> tuple[list[Message], bool]:
     """Execute tool calls from the response and build result messages.
 
-    Returns (messages_to_append, had_missing_tool). The messages include
-    the assistant's tool-call message and each tool result.
+    Extracts tool calls, dispatches them, then delegates message formatting
+    to the executor's ``format_tool_messages`` method.
 
-    Dispatches between OpenAI, Anthropic, and Responses API formats.
+    Returns ``(messages_to_append, False)``.
     """
-    if _is_anthropic_response(response):
-        return _build_anthropic_tool_result_messages(response, tools, agent, parent_inputs), False
-    if _is_responses_api(response):
-        return _build_responses_tool_result_messages(response, tools, agent, parent_inputs)
-    return _build_openai_tool_result_messages(response, tools, agent, parent_inputs)
+    from .discovery import get_executor
 
+    tool_calls, text_content = _extract_tool_info(response)
 
-def _build_openai_tool_result_messages(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> tuple[list[Message], bool]:
-    """Handle OpenAI tool call responses."""
-    from .types import TextPart
-
-    tool_calls = response.choices[0].message.tool_calls
-    result_messages: list[Message] = []
-
-    # Assistant message with tool_calls metadata
-    result_messages.append(
-        Message(
-            role="assistant",
-            parts=[],
-            metadata={"tool_calls": [tc.model_dump() for tc in tool_calls]},
-        )
-    )
-
+    # Dispatch tools
+    tool_results: list[str] = []
     for tc in tool_calls:
-        fn_name = tc.function.name
-        tool_result = dispatch_tool(fn_name, tc.function.arguments, tools, agent, parent_inputs or {})
+        result = dispatch_tool(tc.name, tc.arguments, tools, agent, parent_inputs or {})
+        tool_results.append(result)
 
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=tool_result)],
-                metadata={"tool_call_id": tc.id, "name": fn_name},
-            )
-        )
+    # Delegate message formatting to executor
+    provider = agent.model.provider or ""
+    executor = get_executor(provider)
+    messages = executor.format_tool_messages(response, tool_calls, tool_results, text_content)
 
-    return result_messages, False
-
-
-def _build_anthropic_tool_result_messages(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> list[Message]:
-    """Handle Anthropic tool_use content blocks.
-
-    Returns two messages:
-    1. Assistant message with the full raw content (including tool_use blocks)
-    2. A single tool message with all tool_result blocks (Anthropic requires
-       tool_results in a single user message following the assistant)
-    """
-    import json as _json
-
-    from .types import TextPart
-
-    content = response.content
-    tool_use_blocks = [b for b in content if getattr(b, "type", None) == "tool_use"]
-    text_blocks = [b for b in content if getattr(b, "type", None) == "text"]
-
-    result_messages: list[Message] = []
-
-    # Assistant message must preserve the raw content blocks for wire format
-    # so Anthropic sees the tool_use blocks it generated
-    text_parts = [TextPart(value=b.text) for b in text_blocks]
-    raw_content = []
-    for b in content:
-        block_dict: dict[str, Any] = {"type": getattr(b, "type", "")}
-        if getattr(b, "type", None) == "text":
-            block_dict["text"] = b.text
-        elif getattr(b, "type", None) == "tool_use":
-            block_dict["id"] = b.id
-            block_dict["name"] = b.name
-            block_dict["input"] = b.input
-        raw_content.append(block_dict)
-
-    result_messages.append(
-        Message(
-            role="assistant",
-            parts=text_parts,
-            metadata={"raw_content": raw_content},
-        )
-    )
-
-    # All tool results go in a single message
-    tool_results: list[dict[str, Any]] = []
-    for block in tool_use_blocks:
-        fn_name = block.name
-        tool_input = block.input
-        arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
-
-        tool_result = dispatch_tool(fn_name, arguments, tools, agent, parent_inputs or {})
-
-        tool_results.append(
-            {
-                "tool_use_id": block.id,
-                "name": fn_name,
-                "result": tool_result,
-            }
-        )
-
-    # Single tool message with all results
-    result_messages.append(
-        Message(
-            role="tool",
-            parts=[TextPart(value=r["result"]) for r in tool_results],
-            metadata={"tool_results": tool_results},
-        )
-    )
-
-    return result_messages
+    return messages, False
 
 
 async def _build_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
+    agent: Prompty,
     parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async variant of :func:`_build_tool_result_messages`."""
-    if _is_anthropic_response(response):
-        return await _build_anthropic_tool_result_messages_async(response, tools, agent, parent_inputs)
-    if _is_responses_api(response):
-        return await _build_responses_tool_result_messages_async(response, tools, agent, parent_inputs)
-    return await _build_openai_tool_result_messages_async(response, tools, agent, parent_inputs)
+    from .discovery import get_executor
 
+    tool_calls, text_content = _extract_tool_info(response)
 
-async def _build_openai_tool_result_messages_async(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> list[Message]:
-    """Async: handle OpenAI tool call responses."""
-    from .types import TextPart
-
-    tool_calls = response.choices[0].message.tool_calls
-    result_messages: list[Message] = []
-
-    result_messages.append(
-        Message(
-            role="assistant",
-            parts=[],
-            metadata={"tool_calls": [tc.model_dump() for tc in tool_calls]},
-        )
-    )
-
+    # Dispatch tools (async)
+    tool_results: list[str] = []
     for tc in tool_calls:
-        fn_name = tc.function.name
-        tool_result = await dispatch_tool_async(fn_name, tc.function.arguments, tools, agent, parent_inputs or {})
+        result = await dispatch_tool_async(tc.name, tc.arguments, tools, agent, parent_inputs or {})
+        tool_results.append(result)
 
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=tool_result)],
-                metadata={"tool_call_id": tc.id, "name": fn_name},
-            )
-        )
-
-    return result_messages
-
-
-async def _build_anthropic_tool_result_messages_async(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> list[Message]:
-    """Async: handle Anthropic tool_use content blocks."""
-    import json as _json
-
-    from .types import TextPart
-
-    content = response.content
-    tool_use_blocks = [b for b in content if getattr(b, "type", None) == "tool_use"]
-    text_blocks = [b for b in content if getattr(b, "type", None) == "text"]
-
-    result_messages: list[Message] = []
-
-    text_parts = [TextPart(value=b.text) for b in text_blocks]
-    raw_content = []
-    for b in content:
-        block_dict: dict[str, Any] = {"type": getattr(b, "type", "")}
-        if getattr(b, "type", None) == "text":
-            block_dict["text"] = b.text
-        elif getattr(b, "type", None) == "tool_use":
-            block_dict["id"] = b.id
-            block_dict["name"] = b.name
-            block_dict["input"] = b.input
-        raw_content.append(block_dict)
-
-    result_messages.append(
-        Message(
-            role="assistant",
-            parts=text_parts,
-            metadata={"raw_content": raw_content},
-        )
-    )
-
-    tool_results: list[dict[str, Any]] = []
-    for block in tool_use_blocks:
-        fn_name = block.name
-        tool_input = block.input
-        arguments = _json.dumps(tool_input) if not isinstance(tool_input, str) else tool_input
-
-        tool_result = await dispatch_tool_async(fn_name, arguments, tools, agent, parent_inputs or {})
-
-        tool_results.append(
-            {
-                "tool_use_id": block.id,
-                "name": fn_name,
-                "result": tool_result,
-            }
-        )
-
-    result_messages.append(
-        Message(
-            role="tool",
-            parts=[TextPart(value=r["result"]) for r in tool_results],
-            metadata={"tool_results": tool_results},
-        )
-    )
-
-    return result_messages
-
-
-def _build_responses_tool_result_messages(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> tuple[list[Message], bool]:
-    """Handle OpenAI Responses API tool calls: output[].type == 'function_call'.
-
-    Returns (messages_to_append, had_missing_tool).
-    """
-    from .types import TextPart
-
-    output = response.output
-    func_calls = [item for item in output if getattr(item, "type", None) == "function_call"]
-
-    result_messages: list[Message] = []
-    had_missing = False
-
-    for fc in func_calls:
-        fn_name = getattr(fc, "name", "")
-        call_id = getattr(fc, "call_id", None) or getattr(fc, "id", None) or ""
-        arguments = getattr(fc, "arguments", None) or "{}"
-
-        # Include original function_call item so the Responses API can match
-        # function_call_output items to their origin
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[],
-                metadata={
-                    "responses_function_call": {
-                        "type": "function_call",
-                        "call_id": call_id,
-                        "name": fn_name,
-                        "arguments": arguments,
-                    }
-                },
-            )
-        )
-
-        tool_result = dispatch_tool(fn_name, arguments, tools, agent, parent_inputs or {})
-        if tool_result.startswith("Error:") and fn_name not in tools:
-            had_missing = True
-
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=tool_result)],
-                metadata={"tool_call_id": call_id, "name": fn_name},
-            )
-        )
-
-    return result_messages, had_missing
-
-
-async def _build_responses_tool_result_messages_async(
-    response: Any,
-    tools: dict[str, Callable[..., Any]],
-    agent: Any = None,
-    parent_inputs: dict[str, Any] | None = None,
-) -> list[Message]:
-    """Async: handle OpenAI Responses API tool calls."""
-    from .types import TextPart
-
-    output = response.output
-    func_calls = [item for item in output if getattr(item, "type", None) == "function_call"]
-
-    result_messages: list[Message] = []
-
-    for fc in func_calls:
-        fn_name = getattr(fc, "name", "")
-        call_id = getattr(fc, "call_id", None) or getattr(fc, "id", None) or ""
-        arguments = getattr(fc, "arguments", None) or "{}"
-
-        # Include original function_call item
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[],
-                metadata={
-                    "responses_function_call": {
-                        "type": "function_call",
-                        "call_id": call_id,
-                        "name": fn_name,
-                        "arguments": arguments,
-                    }
-                },
-            )
-        )
-
-        tool_result = await dispatch_tool_async(fn_name, arguments, tools, agent, parent_inputs or {})
-
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=tool_result)],
-                metadata={"tool_call_id": call_id, "name": fn_name},
-            )
-        )
-
-    return result_messages
+    # Delegate message formatting to executor
+    provider = agent.model.provider or ""
+    executor = get_executor(provider)
+    return executor.format_tool_messages(response, tool_calls, tool_results, text_content)
 
 
 def _is_stream(response: Any) -> bool:
@@ -1245,100 +1007,20 @@ def _build_tool_messages_from_calls(
 ) -> list[Message]:
     """Build tool result messages from processed ToolCall objects (streaming path).
 
-    Dispatches to the correct wire format based on provider and apiType.
+    Dispatches tools, then delegates message formatting to the executor.
     """
-    from .types import TextPart
+    from .discovery import get_executor
 
-    provider = agent.model.provider or ""
-    api_type = agent.model.apiType or "chat"
-    result_messages: list[Message] = []
-
-    # --- Assistant message with provider-appropriate metadata ---
-    if provider == "anthropic":
-        raw_content: list[dict[str, Any]] = []
-        if text_content:
-            raw_content.append({"type": "text", "text": text_content})
-        for tc in tool_calls:
-            raw_content.append(
-                {
-                    "type": "tool_use",
-                    "id": tc.id,
-                    "name": tc.name,
-                    "input": json.loads(tc.arguments),
-                }
-            )
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[TextPart(value=text_content)] if text_content else [],
-                metadata={"raw_content": raw_content},
-            )
-        )
-    elif api_type == "responses":
-        for tc in tool_calls:
-            result_messages.append(
-                Message(
-                    role="assistant",
-                    parts=[],
-                    metadata={
-                        "responses_function_call": {
-                            "type": "function_call",
-                            "call_id": tc.id,
-                            "name": tc.name,
-                            "arguments": tc.arguments,
-                        }
-                    },
-                )
-            )
-    else:
-        # OpenAI Chat format
-        raw_tool_calls = [
-            {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
-            for tc in tool_calls
-        ]
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[TextPart(value=text_content)] if text_content else [],
-                metadata={"tool_calls": raw_tool_calls},
-            )
-        )
-
-    # --- Execute tools and build result messages ---
-    tool_result_blocks: list[dict[str, Any]] = []
-
+    # Dispatch tools
+    tool_results: list[str] = []
     for tc in tool_calls:
-        fn_name = tc.name
-        tool_result = dispatch_tool(fn_name, tc.arguments, tools, agent, parent_inputs or {})
+        result = dispatch_tool(tc.name, tc.arguments, tools, agent, parent_inputs or {})
+        tool_results.append(result)
 
-        if provider == "anthropic":
-            tool_result_blocks.append(
-                {
-                    "tool_use_id": tc.id,
-                    "name": fn_name,
-                    "result": tool_result,
-                }
-            )
-        else:
-            result_messages.append(
-                Message(
-                    role="tool",
-                    parts=[TextPart(value=tool_result)],
-                    metadata={"tool_call_id": tc.id, "name": fn_name},
-                )
-            )
-
-    # Anthropic: batch all tool results in single user message
-    if provider == "anthropic" and tool_result_blocks:
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=r["result"]) for r in tool_result_blocks],
-                metadata={"tool_results": tool_result_blocks},
-            )
-        )
-
-    return result_messages
+    # Delegate message formatting to executor
+    provider = agent.model.provider or ""
+    executor = get_executor(provider)
+    return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
 
 async def _build_tool_messages_from_calls_async(
@@ -1349,96 +1031,18 @@ async def _build_tool_messages_from_calls_async(
     parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: build tool result messages from processed ToolCall objects."""
-    from .types import TextPart
+    from .discovery import get_executor
 
-    provider = agent.model.provider or ""
-    api_type = agent.model.apiType or "chat"
-    result_messages: list[Message] = []
-
-    # --- Assistant message (same as sync) ---
-    if provider == "anthropic":
-        raw_content: list[dict[str, Any]] = []
-        if text_content:
-            raw_content.append({"type": "text", "text": text_content})
-        for tc in tool_calls:
-            raw_content.append(
-                {
-                    "type": "tool_use",
-                    "id": tc.id,
-                    "name": tc.name,
-                    "input": json.loads(tc.arguments),
-                }
-            )
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[TextPart(value=text_content)] if text_content else [],
-                metadata={"raw_content": raw_content},
-            )
-        )
-    elif api_type == "responses":
-        for tc in tool_calls:
-            result_messages.append(
-                Message(
-                    role="assistant",
-                    parts=[],
-                    metadata={
-                        "responses_function_call": {
-                            "type": "function_call",
-                            "call_id": tc.id,
-                            "name": tc.name,
-                            "arguments": tc.arguments,
-                        }
-                    },
-                )
-            )
-    else:
-        raw_tool_calls = [
-            {"id": tc.id, "type": "function", "function": {"name": tc.name, "arguments": tc.arguments}}
-            for tc in tool_calls
-        ]
-        result_messages.append(
-            Message(
-                role="assistant",
-                parts=[TextPart(value=text_content)] if text_content else [],
-                metadata={"tool_calls": raw_tool_calls},
-            )
-        )
-
-    # --- Execute tools ---
-    tool_result_blocks: list[dict[str, Any]] = []
-
+    # Dispatch tools (async)
+    tool_results: list[str] = []
     for tc in tool_calls:
-        fn_name = tc.name
-        tool_result = await dispatch_tool_async(fn_name, tc.arguments, tools, agent, parent_inputs or {})
+        result = await dispatch_tool_async(tc.name, tc.arguments, tools, agent, parent_inputs or {})
+        tool_results.append(result)
 
-        if provider == "anthropic":
-            tool_result_blocks.append(
-                {
-                    "tool_use_id": tc.id,
-                    "name": fn_name,
-                    "result": tool_result,
-                }
-            )
-        else:
-            result_messages.append(
-                Message(
-                    role="tool",
-                    parts=[TextPart(value=tool_result)],
-                    metadata={"tool_call_id": tc.id, "name": fn_name},
-                )
-            )
-
-    if provider == "anthropic" and tool_result_blocks:
-        result_messages.append(
-            Message(
-                role="tool",
-                parts=[TextPart(value=r["result"]) for r in tool_result_blocks],
-                metadata={"tool_results": tool_result_blocks},
-            )
-        )
-
-    return result_messages
+    # Delegate message formatting to executor
+    provider = agent.model.provider or ""
+    executor = get_executor(provider)
+    return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
 
 @trace

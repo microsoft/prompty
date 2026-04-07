@@ -168,10 +168,11 @@ class TestExecuteToolAsync:
 
 class TestBuildToolResultMessages:
     def test_basic(self):
+        agent = _make_agent()
         response = _mock_tool_call_response("get_weather", '{"location": "Seattle"}')
         tools = {"get_weather": lambda location: f"Sunny in {location}"}
 
-        messages, _ = _build_tool_result_messages(response, tools)
+        messages, _ = _build_tool_result_messages(response, tools, agent)
 
         assert len(messages) == 2
         # First message is assistant with tool_calls metadata
@@ -184,10 +185,11 @@ class TestBuildToolResultMessages:
         assert messages[1].parts[0].value == "Sunny in Seattle"
 
     def test_missing_tool(self):
+        agent = _make_agent()
         response = _mock_tool_call_response("unknown_fn", "{}")
         tools: dict[str, Any] = {}
 
-        messages, _ = _build_tool_result_messages(response, tools)
+        messages, _ = _build_tool_result_messages(response, tools, agent)
 
         assert len(messages) == 2
         assert "not registered" in messages[1].parts[0].value or "not found" in messages[1].parts[0].value
@@ -196,10 +198,11 @@ class TestBuildToolResultMessages:
         async def async_fn():
             return "hi"
 
+        agent = _make_agent()
         response = _mock_tool_call_response("async_fn", "{}")
         tools = {"async_fn": async_fn}
 
-        messages, _ = _build_tool_result_messages(response, tools)
+        messages, _ = _build_tool_result_messages(response, tools, agent)
 
         assert "async tool" in messages[1].parts[0].value
         assert "sync mode" in messages[1].parts[0].value
