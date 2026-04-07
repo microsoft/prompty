@@ -411,7 +411,7 @@ public class PipelineTests : IDisposable
         InvokerRegistry.RegisterProcessor("openai", new ToolCallingProcessor());
 
         var agent = CreateAgent();
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<ToolHandlerError>(
             () => Pipeline.InvokeAgentAsync(agent));
     }
 

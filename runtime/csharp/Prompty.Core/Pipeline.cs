@@ -180,8 +180,9 @@ public static class Pipeline
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// Agent mode: runs the LLM in a loop, executing tool calls until the model
-    /// returns a final response or maxIterations is reached.
+    /// Agent mode: runs the LLM in a loop, executing tool calls via the
+    /// two-layer dispatch system until the model returns a final response
+    /// or maxIterations is reached.
     /// </summary>
     public static async Task<object> InvokeAgentAsync(
         Prompty agent,
@@ -191,45 +192,39 @@ public static class Pipeline
         bool raw = false)
     {
         var messages = await PrepareAsync(agent, inputs);
-        tools ??= [];
 
         for (var i = 0; i < maxIterations; i++)
         {
             var response = await ExecuteAsync(agent, messages);
             var result = raw ? response : await ProcessAsync(agent, response);
 
-            // Check if result contains tool calls (provider-specific)
             if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
             {
                 // Add assistant message with tool calls
-                messages.Add(new Message
+                var assistantMsg = new Message
                 {
                     Role = Roles.Assistant,
-                    Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolResult.ToolCalls }
-                });
+                    Parts = string.IsNullOrEmpty(toolResult.Content)
+                        ? []
+                        : [new TextPart { Value = toolResult.Content }],
+                    Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolResult.ToolCalls },
+                };
+                messages.Add(assistantMsg);
 
-                // Execute each tool call
+                // Execute each tool call via dispatch
                 foreach (var call in toolResult.ToolCalls)
                 {
-                    if (tools.TryGetValue(call.Name, out var fn))
+                    var toolResponse = await ToolDispatch.DispatchAsync(agent, call, tools);
+                    messages.Add(new Message
                     {
-                        var toolResponse = await fn(call.Arguments);
-                        messages.Add(new Message
+                        Role = Roles.Tool,
+                        Parts = [new TextPart { Value = toolResponse }],
+                        Metadata = new Dictionary<string, object?>
                         {
-                            Role = Roles.Tool,
-                            Parts = [new TextPart { Value = toolResponse }],
-                            Metadata = new Dictionary<string, object?>
-                            {
-                                ["tool_call_id"] = call.Id,
-                                ["name"] = call.Name,
-                            }
-                        });
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(
-                            $"Tool '{call.Name}' was requested by the model but not registered.");
-                    }
+                            ["tool_call_id"] = call.Id,
+                            ["name"] = call.Name,
+                        },
+                    });
                 }
 
                 continue; // Loop back to call LLM with tool results
