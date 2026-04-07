@@ -33,8 +33,9 @@ public partial class PromptyChatParser : IParser, IPreRenderable
 
     /// <summary>
     /// The nonce injected by PreRender for strict mode validation.
+    /// Uses AsyncLocal to be thread-safe across concurrent pipeline calls.
     /// </summary>
-    private string? _renderNonce;
+    private readonly AsyncLocal<string?> _renderNonce = new();
 
     // -----------------------------------------------------------------------
     // IPreRenderable — strict mode protection
@@ -47,7 +48,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     public (string template, Dictionary<string, object?> context) PreRender(string template)
     {
         var nonce = GenerateNonce();
-        _renderNonce = nonce;
+        _renderNonce.Value = nonce;
 
         var sanitized = RoleMarkerRegex().Replace(template, match =>
         {
@@ -137,9 +138,9 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     private Message CreateMessage(string role, List<string> contentLines, Dictionary<string, string>? attrs)
     {
         // Validate nonce if strict mode was used
-        if (_renderNonce is not null && attrs is not null)
+        if (_renderNonce.Value is not null && attrs is not null)
         {
-            if (!attrs.TryGetValue("nonce", out var foundNonce) || foundNonce != _renderNonce)
+            if (!attrs.TryGetValue("nonce", out var foundNonce) || foundNonce != _renderNonce.Value)
             {
                 throw new InvalidOperationException(
                     $"Role marker injection detected: nonce mismatch for '{role}:' marker.");

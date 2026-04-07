@@ -45,10 +45,16 @@ public static class SchemaHelpers
         }
 
         result["properties"] = props;
-        if (required.Count > 0)
-            result["required"] = required;
         if (strict)
+        {
+            // OpenAI strict mode requires ALL properties in the required array
+            result["required"] = props.Keys.ToList();
             result["additionalProperties"] = false;
+        }
+        else if (required.Count > 0)
+        {
+            result["required"] = required;
+        }
 
         return result;
     }

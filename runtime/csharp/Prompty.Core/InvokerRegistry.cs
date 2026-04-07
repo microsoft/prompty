@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.Collections.Concurrent;
+
 namespace Prompty.Core;
 
 /// <summary>
@@ -33,10 +35,10 @@ public class InvokerError : InvalidOperationException
 /// </summary>
 public static class InvokerRegistry
 {
-    private static readonly Dictionary<string, IRenderer> _renderers = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<string, IParser> _parsers = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<string, IExecutor> _executors = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<string, IProcessor> _processors = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, IRenderer> _renderers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, IParser> _parsers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, IExecutor> _executors = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, IProcessor> _processors = new(StringComparer.OrdinalIgnoreCase);
 
     // --- Registration ---
 

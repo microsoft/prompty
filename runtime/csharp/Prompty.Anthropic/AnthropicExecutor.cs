@@ -248,7 +248,7 @@ public class AnthropicExecutor : IExecutor
             throw new InvalidOperationException(
                 "Anthropic API key is required. Set model.connection.apiKey or ${env:ANTHROPIC_API_KEY}.");
 
-        return (endpoint ?? DefaultEndpoint, apiKey);
+        return (string.IsNullOrEmpty(endpoint) ? DefaultEndpoint : endpoint, apiKey);
     }
 
     /// <summary>

@@ -14,7 +14,14 @@ public class AnthropicProcessor : IProcessor
     public Task<object> ProcessAsync(Core.Prompty agent, object response)
     {
         if (response is PromptyStream stream)
+        {
+            // If stream was already consumed (agent loop pre-drains it),
+            // reconstruct the result from accumulated SSE events
+            if (stream.Items.Count > 0)
+                return Task.FromResult(ReconstructFromStreamItems(stream.Items, agent));
+
             return Task.FromResult<object>(new AnthropicProcessedStream(stream));
+        }
 
         if (response is not JsonElement json)
             return Task.FromResult(response);
@@ -104,6 +111,123 @@ public class AnthropicProcessor : IProcessor
             Content = textContent,
             ToolCalls = toolCalls,
         };
+    }
+
+    /// <summary>
+    /// Reconstructs a final result from accumulated SSE events (after the stream has been consumed).
+    /// Handles tool calls (content_block_start/delta with tool_use) and text deltas.
+    /// </summary>
+    private static object ReconstructFromStreamItems(IReadOnlyList<object> items, Core.Prompty agent)
+    {
+        var textParts = new List<string>();
+        var toolCalls = new Dictionary<int, ToolCall>();
+        var toolInputJsonParts = new Dictionary<int, List<string>>();
+        string? stopReason = null;
+
+        foreach (var item in items)
+        {
+            if (item is not JsonElement evt) continue;
+
+            var eventType = evt.TryGetProperty("type", out var t) ? t.GetString() : null;
+
+            switch (eventType)
+            {
+                case "content_block_start":
+                    if (evt.TryGetProperty("index", out var idxProp) &&
+                        evt.TryGetProperty("content_block", out var block))
+                    {
+                        var idx = idxProp.GetInt32();
+                        var blockType = block.TryGetProperty("type", out var bt) ? bt.GetString() : null;
+                        if (blockType == "tool_use")
+                        {
+                            toolCalls[idx] = new ToolCall
+                            {
+                                Id = block.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
+                                Name = block.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
+                                Arguments = "",
+                            };
+                            toolInputJsonParts[idx] = [];
+                        }
+                    }
+                    break;
+
+                case "content_block_delta":
+                    if (evt.TryGetProperty("index", out var deltaIdx) &&
+                        evt.TryGetProperty("delta", out var delta))
+                    {
+                        var idx2 = deltaIdx.GetInt32();
+                        var deltaType = delta.TryGetProperty("type", out var dt) ? dt.GetString() : null;
+
+                        if (deltaType == "text_delta")
+                        {
+                            if (delta.TryGetProperty("text", out var text))
+                            {
+                                var txt = text.GetString();
+                                if (!string.IsNullOrEmpty(txt))
+                                    textParts.Add(txt);
+                            }
+                        }
+                        else if (deltaType == "input_json_delta")
+                        {
+                            if (delta.TryGetProperty("partial_json", out var pj))
+                            {
+                                var partial = pj.GetString();
+                                if (!string.IsNullOrEmpty(partial))
+                                {
+                                    if (!toolInputJsonParts.ContainsKey(idx2))
+                                        toolInputJsonParts[idx2] = [];
+                                    toolInputJsonParts[idx2].Add(partial);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case "message_delta":
+                    if (evt.TryGetProperty("delta", out var msgDelta) &&
+                        msgDelta.TryGetProperty("stop_reason", out var sr))
+                    {
+                        stopReason = sr.GetString();
+                    }
+                    break;
+            }
+        }
+
+        // Assemble tool call arguments from partial JSON chunks
+        foreach (var (idx, parts) in toolInputJsonParts)
+        {
+            if (toolCalls.TryGetValue(idx, out var tc))
+            {
+                tc.Arguments = string.Join("", parts);
+            }
+        }
+
+        // If we have tool calls, return ToolCallResult
+        if (toolCalls.Count > 0 || stopReason == "tool_use")
+        {
+            return new ToolCallResult
+            {
+                Content = textParts.Count > 0 ? string.Join("", textParts) : null,
+                ToolCalls = toolCalls.Values.ToList(),
+            };
+        }
+
+        // Otherwise return accumulated text
+        var fullText = string.Join("", textParts);
+
+        if (agent.Outputs is not null && agent.Outputs.Count > 0 && !string.IsNullOrEmpty(fullText))
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<JsonElement>(fullText);
+            }
+            catch (JsonException)
+            {
+                return fullText;
+            }
+        }
+
+        return fullText;
     }
 }
 

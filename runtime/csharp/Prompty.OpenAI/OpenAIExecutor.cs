@@ -43,15 +43,23 @@ public class OpenAIExecutor : IExecutor
     {
         var conn = agent.Model?.Connection;
         string? apiKey = null;
+        string? endpoint = null;
 
         if (conn is Core.ApiKeyConnection keyConn)
         {
             apiKey = keyConn.ApiKey;
+            endpoint = keyConn.Endpoint;
         }
 
         if (string.IsNullOrEmpty(apiKey))
             throw new InvalidOperationException(
                 "OpenAI API key is required. Set model.connection.apiKey or ${env:OPENAI_API_KEY}.");
+
+        if (!string.IsNullOrEmpty(endpoint))
+        {
+            var options = new OpenAIClientOptions { Endpoint = new Uri(endpoint) };
+            return new OpenAIClient(new ApiKeyCredential(apiKey), options);
+        }
 
         return new OpenAIClient(apiKey);
     }
@@ -104,6 +112,7 @@ public class OpenAIExecutor : IExecutor
     {
         var responsesClient = client.GetResponsesClient();
         var options = WireFormat.BuildResponsesOptions(model, agent, messages);
+        options.StreamingEnabled = true;
 
         async IAsyncEnumerable<object> StreamChunks([EnumeratorCancellation] CancellationToken ct = default)
         {
@@ -152,27 +161,52 @@ public class OpenAIExecutor : IExecutor
     {
         var messages = new List<Message>();
 
-        // --- Assistant message with tool_calls metadata ---
+        // For Responses API: echo back original function_call items then add outputs
+        if (rawResponse is ResponseResult responsesResult)
+        {
+            var functionCalls = responsesResult.OutputItems
+                .OfType<FunctionCallResponseItem>()
+                .ToList();
+
+            // Echo each function_call item as a passthrough message
+            foreach (var fc in functionCalls)
+            {
+                messages.Add(new Message
+                {
+                    Role = Roles.Assistant,
+                    Parts = [],
+                    Metadata = new Dictionary<string, object?> { ["responses_function_call"] = (ResponseItem)fc },
+                });
+            }
+
+            // Add function_call_output for each tool result
+            for (var i = 0; i < toolCalls.Count; i++)
+            {
+                messages.Add(new Message
+                {
+                    Role = Roles.Tool,
+                    Parts = [new TextPart { Value = toolResults[i] }],
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["tool_call_id"] = toolCalls[i].Id,
+                        ["name"] = toolCalls[i].Name,
+                    },
+                });
+            }
+
+            return messages;
+        }
+
+        // --- Chat Completions: Assistant message with tool_calls metadata ---
         var assistantParts = string.IsNullOrEmpty(textContent)
             ? new List<ContentPart>()
             : new List<ContentPart> { new TextPart { Value = textContent } };
-
-        var rawToolCalls = toolCalls.Select(tc => new Dictionary<string, object?>
-        {
-            ["id"] = tc.Id,
-            ["type"] = "function",
-            ["function"] = new Dictionary<string, object?>
-            {
-                ["name"] = tc.Name,
-                ["arguments"] = tc.Arguments,
-            },
-        }).ToList();
 
         messages.Add(new Message
         {
             Role = Roles.Assistant,
             Parts = assistantParts,
-            Metadata = new Dictionary<string, object?> { ["tool_calls"] = rawToolCalls },
+            Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls.ToList() },
         });
 
         // --- One tool message per result ---

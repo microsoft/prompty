@@ -304,6 +304,7 @@ public class ProcessedStream : IAsyncEnumerable<string>
     {
         await foreach (var chunk in _inner.WithCancellation(cancellationToken))
         {
+            // Chat Completions streaming
             if (chunk is StreamingChatCompletionUpdate update)
             {
                 foreach (var part in update.ContentUpdate)
@@ -311,6 +312,12 @@ public class ProcessedStream : IAsyncEnumerable<string>
                     if (!string.IsNullOrEmpty(part.Text))
                         yield return part.Text;
                 }
+            }
+            // Responses API streaming — text deltas
+            else if (chunk is StreamingResponseOutputTextDeltaUpdate textDelta)
+            {
+                if (!string.IsNullOrEmpty(textDelta.Delta))
+                    yield return textDelta.Delta;
             }
         }
     }
