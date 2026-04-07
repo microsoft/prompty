@@ -79,7 +79,7 @@ user:
     import prompty
 
     # One-liner: load → render → call LLM → return result
-    result = prompty.execute("chat.prompty", inputs={"question": "What is Prompty?"})
+    result = prompty.invoke("chat.prompty", inputs={"question": "What is Prompty?"})
     print(result)
     ```
 
@@ -106,7 +106,7 @@ user:
     import prompty
 
     async def main():
-        result = await prompty.execute_async(
+        result = await prompty.invoke_async(
             "chat.prompty",
             inputs={"question": "What is Prompty?"},
         )
@@ -117,10 +117,10 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, execute } from "@prompty/core";
+    import { load, invoke } from "@prompty/core";
     import { OpenAIExecutor } from "@prompty/openai";
 
-    const result = await execute("chat.prompty", {
+    const result = await invoke("chat.prompty", {
       inputs: { question: "What is Prompty?" },
     });
 

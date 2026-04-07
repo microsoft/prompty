@@ -53,7 +53,7 @@ flowchart TD
 
 ## Basic Usage
 
-Define one or more Python functions, then pass them to `execute_agent()` along
+Define one or more Python functions, then pass them to `invoke_agent()` along
 with a loaded agent. The executor calls the LLM, dispatches any tool requests to
 your functions, and loops until the model is done.
 
@@ -76,7 +76,7 @@ def get_time(timezone: str) -> str:
 agent = prompty.load("agent.prompty")
 
 # 3. Run the agent loop
-result = prompty.execute_agent(
+result = prompty.invoke_agent(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
     tools={"get_weather": get_weather, "get_time": get_time},
@@ -156,15 +156,15 @@ user:
 <Aside type="note">
   The `.prompty` file uses `apiType: chat` — it's a normal chat prompt that
   happens to declare tools. Agent behavior is activated by your calling code:
-  use `execute_agent()` (Python) or `executeAgent()` (TypeScript) to enable the
-  automatic tool-calling loop. If you use `execute()` instead, tools are sent to
+  use `invoke_agent()` (Python) or `invokeAgent()` (TypeScript) to enable the
+  automatic tool-calling loop. If you use `invoke()` instead, tools are sent to
   the LLM but Prompty will **not** automatically execute them — you receive the
   raw `tool_calls` in the response.
 </Aside>
 
 ## Async Agent Mode
 
-For async applications, use `execute_agent_async()`. Your tool functions can be
+For async applications, use `invoke_agent_async()`. Your tool functions can be
 either sync or async — the executor detects coroutine functions automatically
 and `await`s them.
 
@@ -179,7 +179,7 @@ async def get_weather(city: str) -> str:
 
 async def main():
     agent = await prompty.load_async("agent.prompty")
-    result = await prompty.execute_agent_async(
+    result = await prompty.invoke_agent_async(
         agent,
         inputs={"question": "Weather in Tokyo?"},
         tools={"get_weather": get_weather},
@@ -191,8 +191,8 @@ asyncio.run(main())
 ```
 
 <Aside type="caution">
-  In **sync** mode (`execute_agent`), passing an async function raises a
-  `ValueError`. Use `execute_agent_async` when any of your tool functions are
+  In **sync** mode (`invoke_agent`), passing an async function raises a
+  `ValueError`. Use `invoke_agent_async` when any of your tool functions are
   coroutines.
 </Aside>
 
@@ -239,7 +239,7 @@ loops when the model gets stuck in a tool-calling cycle.
 
 ```python
 try:
-    result = prompty.execute_agent(agent, inputs, tools, max_iterations=5)
+    result = prompty.invoke_agent(agent, inputs, tools, max_iterations=5)
 except ValueError as e:
     print(e)  # "Agent loop exceeded max_iterations (5)"
 ```
@@ -254,14 +254,14 @@ except ValueError as e:
 <Tabs>
 <TabItem label="TypeScript">
 ```typescript
-import { load, executeAgent } from "prompty";
+import { load, invokeAgent } from "prompty";
 
 function getWeather(city: string): string {
   return `72°F and sunny in ${city}`;
 }
 
 const agent = await load("agent.prompty");
-const result = await executeAgent(agent, {
+const result = await invokeAgent(agent, {
   inputs: { question: "What's the weather in London?" },
   tools: { get_weather: getWeather },
   maxIterations: 10,

@@ -485,11 +485,11 @@ Run it with the Prompty runtime:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
     import "@prompty/foundry"; // registers "azure" provider
 
     // Load + render + parse + execute + process in one call
-    const result = await execute("customer-support.prompty", {
+    const result = await invoke("customer-support.prompty", {
       inputs: {
         customerName: "Jane Doe",
         question: "Where is my order #12345?",

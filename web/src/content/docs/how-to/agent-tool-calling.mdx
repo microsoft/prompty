@@ -121,8 +121,8 @@ user:
 <Aside type="note">
   The `.prompty` file uses `apiType: chat` — it's a normal chat prompt with
   tools declared. The agent loop is activated by your calling code: use
-  `execute_agent()` (Python) or `executeAgent()` (TypeScript) instead of
-  `execute()`. Without it, the LLM may return `tool_calls` but the runtime
+  `invoke_agent()` (Python) or `invokeAgent()` (TypeScript) instead of
+  `invoke()`. Without it, the LLM may return `tool_calls` but the runtime
   won't automatically execute them.
 </Aside>
 
@@ -144,7 +144,7 @@ user:
         return datetime.now(tz.utc).isoformat()
 
     # Execute with the agent loop — tools are called automatically
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         "agent.prompty",
         inputs={"question": "What's the weather in Seattle and the time in Tokyo?"},
         tools={
@@ -165,7 +165,7 @@ user:
 
     # Run the agent loop with explicit tool functions
     messages = prompty.prepare(agent, inputs={"question": "Weather in NYC?"})
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         agent,
         inputs={"question": "Weather in NYC?"},
         tools={
@@ -178,7 +178,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { executeAgent } from "@prompty/core";
+    import { invokeAgent } from "@prompty/core";
 
     function getWeather(city: string): string {
       return `72°F and sunny in ${city}`;
@@ -188,7 +188,7 @@ user:
       return new Date().toISOString();
     }
 
-    const result = await executeAgent("agent.prompty", {
+    const result = await invokeAgent("agent.prompty", {
       inputs: { question: "What's the weather in Seattle?" },
       tools: {
         get_weather: getWeather,
@@ -221,7 +221,7 @@ If your tools call external APIs, use async functions to avoid blocking:
             return f"{data['temp']}°F, {data['condition']}"
 
     async def main():
-        result = await prompty.execute_agent_async(
+        result = await prompty.invoke_agent_async(
             "agent.prompty",
             inputs={"question": "Weather in London?"},
             tools={
@@ -244,7 +244,7 @@ If your tools call external APIs, use async functions to avoid blocking:
       return `${data.temp}°F, ${data.condition}`;
     }
 
-    const result = await executeAgent("agent.prompty", {
+    const result = await invokeAgent("agent.prompty", {
       inputs: { question: "Weather in London?" },
       tools: { get_weather: getWeather },
     });
@@ -344,7 +344,7 @@ user:
         # Your email implementation
         return f"Email sent to {to}"
 
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         "research-agent.prompty",
         inputs={"request": "Find docs about onboarding and email a summary to jane@example.com"},
         tools={
@@ -357,7 +357,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { executeAgent } from "@prompty/core";
+    import { invokeAgent } from "@prompty/core";
 
     const tools = {
       search_docs: (query: string, limit = 5) =>
@@ -368,7 +368,7 @@ user:
         `Email sent to ${to}`,
     };
 
-    const result = await executeAgent("research-agent.prompty", {
+    const result = await invokeAgent("research-agent.prompty", {
       inputs: { request: "Find docs about onboarding and email a summary to jane@example.com" },
       tools,
     });
@@ -391,7 +391,7 @@ user:
     import prompty
 
     try:
-        result = prompty.execute_agent(
+        result = prompty.invoke_agent(
             "agent.prompty",
             inputs={"question": "What's the weather?"},
             tools={
@@ -408,7 +408,7 @@ user:
   <TabItem label="TypeScript">
     ```typescript
     try {
-      const result = await executeAgent("agent.prompty", {
+      const result = await invokeAgent("agent.prompty", {
         inputs: { question: "What's the weather?" },
         tools: {
           get_weather: getWeather,

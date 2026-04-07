@@ -35,10 +35,10 @@ npm install @prompty/core @prompty/anthropic
 ## Quick Start
 
 ```typescript
-import { execute } from "@prompty/core";
+import { invoke } from "@prompty/core";
 import "@prompty/openai"; // registers the OpenAI provider
 
-const result = await execute("greeting.prompty", {
+const result = await invoke("greeting.prompty", {
   userName: "Jane",
 });
 console.log(result);
@@ -64,7 +64,7 @@ console.log(agent.model.id);   // "gpt-4o"
 ### Pipeline Functions
 
 ```typescript
-import { load, prepare, run, execute } from "@prompty/core";
+import { load, prepare, run, invoke } from "@prompty/core";
 import "@prompty/openai";
 
 // Step by step
@@ -73,20 +73,20 @@ const messages = await prepare(agent, { question: "Hi" });
 const result = await run(agent, messages);
 
 // All-in-one
-const result2 = await execute("chat.prompty", { question: "Hi" });
+const result2 = await invoke("chat.prompty", { question: "Hi" });
 ```
 
 ### Agent Mode
 
 ```typescript
-import { executeAgent } from "@prompty/core";
+import { invokeAgent } from "@prompty/core";
 import "@prompty/openai";
 
 function getWeather(city: string): string {
   return `72°F and sunny in ${city}`;
 }
 
-const result = await executeAgent(
+const result = await invokeAgent(
   "agent.prompty",
   { question: "Weather in Seattle?" },
   { get_weather: getWeather },

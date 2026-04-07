@@ -45,7 +45,7 @@ uv pip install prompty[all]
 import prompty
 
 # All-in-one execution
-result = prompty.execute("greeting.prompty", inputs={"name": "Jane"})
+result = prompty.invoke("greeting.prompty", inputs={"name": "Jane"})
 print(result)
 ```
 
@@ -78,7 +78,7 @@ messages = prompty.prepare(agent, inputs={"q": "Hi"})
 result = prompty.run(agent, messages)
 
 # Full pipeline: load + prepare + run
-result = prompty.execute("chat.prompty", inputs={"q": "Hi"})
+result = prompty.invoke("chat.prompty", inputs={"q": "Hi"})
 ```
 
 ### Async Variants
@@ -89,7 +89,7 @@ Every function has an async counterpart:
 agent = await prompty.load_async("chat.prompty")
 messages = await prompty.prepare_async(agent, inputs={"q": "Hi"})
 result = await prompty.run_async(agent, messages)
-result = await prompty.execute_async("chat.prompty", inputs={"q": "Hi"})
+result = await prompty.invoke_async("chat.prompty", inputs={"q": "Hi"})
 ```
 
 ### Agent Mode
@@ -98,7 +98,7 @@ result = await prompty.execute_async("chat.prompty", inputs={"q": "Hi"})
 def get_weather(city: str) -> str:
     return f"72°F and sunny in {city}"
 
-result = prompty.execute_agent(
+result = prompty.invoke_agent(
     "agent.prompty",
     inputs={"question": "Weather in Seattle?"},
     tools={"get_weather": get_weather},
@@ -135,7 +135,7 @@ Tracer.add("json", PromptyTracer("./traces").tracer)
 # Trace custom functions
 @trace
 def my_pipeline(query: str) -> str:
-    return prompty.execute("search.prompty", inputs={"q": query})
+    return prompty.invoke("search.prompty", inputs={"q": query})
 ```
 
 ## Providers

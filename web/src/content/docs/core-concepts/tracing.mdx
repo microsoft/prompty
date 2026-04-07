@@ -108,16 +108,16 @@ other traced functions (including Prompty's built-in pipeline), they appear as
 
     @trace
     def my_business_logic(query: str) -> str:
-        result = prompty.execute("search.prompty", inputs={"q": query})
+        result = prompty.invoke("search.prompty", inputs={"q": query})
         return process(result)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { trace, execute } from "@prompty/core";
+    import { trace, invoke } from "@prompty/core";
 
     async function myBusinessLogic(query: string): Promise<string> {
-      const result = await execute("search.prompty", { inputs: { q: query } });
+      const result = await invoke("search.prompty", { inputs: { q: query } });
       return process(result);
     }
 
@@ -272,7 +272,7 @@ Prompty **automatically traces every pipeline stage**. You don't need to add
 | **render** | Template engine, input variables, rendered output |
 | **parse** | Parser type, role markers found, message count |
 | **prepare** | Combined render + parse, thread expansion |
-| **execute** | Model, provider, API type, request payload |
+| **invoke** | Model, provider, API type, request payload |
 | **run** | LLM call — token usage, latency, full response |
 | **process** | Response extraction, content type, tool calls |
 

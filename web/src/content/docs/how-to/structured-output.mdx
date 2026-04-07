@@ -75,9 +75,9 @@ valid JSON with exactly those fields.
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
-    result = execute("weather.prompty", inputs={"city": "Seattle"})
+    result = invoke("weather.prompty", inputs={"city": "Seattle"})
 
     # result is already a dict — no JSON.parse needed
     print(result["city"])         # "Seattle"
@@ -89,17 +89,17 @@ valid JSON with exactly those fields.
     The async variant works identically:
 
     ```python
-    from prompty import execute_async
+    from prompty import invoke_async
 
-    result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
+    result = await invoke_async("weather.prompty", inputs={"city": "Seattle"})
     print(result["temperature"])  # 62
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
 
-    const result = await execute("weather.prompty", { city: "Seattle" });
+    const result = await invoke("weather.prompty", { city: "Seattle" });
 
     // result is already a parsed object
     console.log(result.city);         // "Seattle"
@@ -110,7 +110,7 @@ valid JSON with exactly those fields.
 </Tabs>
 
 <Aside type="tip">
-  Without `outputSchema`, `execute()` returns a raw string. With it, you get
+  Without `outputSchema`, `invoke()` returns a raw string. With it, you get
   a parsed `dict` (Python) or object (TypeScript) automatically.
 </Aside>
 
@@ -164,9 +164,9 @@ Weather for {{city}}?
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
-    result = execute("detailed-weather.prompty", inputs={"city": "Portland"})
+    result = invoke("detailed-weather.prompty", inputs={"city": "Portland"})
 
     print(result["city"])                     # "Portland"
     print(result["current"]["temperature"])   # 58
@@ -176,9 +176,9 @@ Weather for {{city}}?
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
 
-    const result = await execute("detailed-weather.prompty", { city: "Portland" });
+    const result = await invoke("detailed-weather.prompty", { city: "Portland" });
 
     console.log(result.city);                  // "Portland"
     console.log(result.current.temperature);   // 58

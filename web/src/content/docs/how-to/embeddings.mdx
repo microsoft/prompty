@@ -60,9 +60,9 @@ template:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
-    vector = execute("embed.prompty", inputs={"text": "Prompty is awesome"})
+    vector = invoke("embed.prompty", inputs={"text": "Prompty is awesome"})
 
     print(type(vector))    # <class 'list'>
     print(len(vector))     # 1536 (for text-embedding-3-small)
@@ -74,16 +74,16 @@ template:
     Async works the same way:
 
     ```python
-    from prompty import execute_async
+    from prompty import invoke_async
 
-    vector = await execute_async("embed.prompty", inputs={"text": "Prompty is awesome"})
+    vector = await invoke_async("embed.prompty", inputs={"text": "Prompty is awesome"})
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
 
-    const vector = await execute("embed.prompty", { text: "Prompty is awesome" });
+    const vector = await invoke("embed.prompty", { text: "Prompty is awesome" });
 
     console.log(Array.isArray(vector));  // true
     console.log(vector.length);          // 1536
@@ -127,7 +127,7 @@ template:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
     texts = [
         "What is machine learning?",
@@ -135,7 +135,7 @@ template:
         "Explain gradient descent",
     ]
 
-    vectors = execute("batch-embed.prompty", inputs={"texts": texts})
+    vectors = invoke("batch-embed.prompty", inputs={"texts": texts})
 
     print(len(vectors))        # 3 (one vector per input text)
     print(len(vectors[0]))     # 1536
@@ -143,7 +143,7 @@ template:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
 
     const texts = [
       "What is machine learning?",
@@ -151,7 +151,7 @@ template:
       "Explain gradient descent",
     ];
 
-    const vectors = await execute("batch-embed.prompty", { texts });
+    const vectors = await invoke("batch-embed.prompty", { texts });
 
     console.log(vectors.length);     // 3
     console.log(vectors[0].length);  // 1536
@@ -192,7 +192,7 @@ template:
 The code is identical — only the `.prompty` file changes:
 
 ```python
-vector = execute("embed-foundry.prompty", inputs={"text": "Hello from Foundry"})
+vector = invoke("embed-foundry.prompty", inputs={"text": "Hello from Foundry"})
 ```
 
 ---
@@ -205,15 +205,15 @@ Generate embeddings for your document corpus, store them in a vector
 database, then embed the user's query and find nearest neighbors:
 
 ```python
-from prompty import execute
+from prompty import invoke
 import numpy as np
 
 # Embed documents (do this once, store the vectors)
 docs = ["Python is a programming language", "Cats are cute animals", "The weather is sunny"]
-doc_vectors = [execute("embed.prompty", inputs={"text": d}) for d in docs]
+doc_vectors = [invoke("embed.prompty", inputs={"text": d}) for d in docs]
 
 # Embed a query
-query_vector = execute("embed.prompty", inputs={"text": "coding languages"})
+query_vector = invoke("embed.prompty", inputs={"text": "coding languages"})
 
 # Cosine similarity
 def cosine_sim(a, b):
@@ -231,18 +231,18 @@ Combine embeddings with a chat prompt — retrieve relevant context, then
 pass it to a chat completion:
 
 ```python
-from prompty import execute
+from prompty import invoke
 
 # 1. Embed the user's question
 query = "How do I install Prompty?"
-query_vector = execute("embed.prompty", inputs={"text": query})
+query_vector = invoke("embed.prompty", inputs={"text": query})
 
 # 2. Search your vector store for relevant docs
 relevant_docs = vector_store.search(query_vector, top_k=3)
 
 # 3. Pass retrieved context to a chat prompt
 context = "\n".join(doc.text for doc in relevant_docs)
-answer = execute("rag-chat.prompty", inputs={"question": query, "context": context})
+answer = invoke("rag-chat.prompty", inputs={"question": query, "context": context})
 ```
 
 <Aside type="tip">

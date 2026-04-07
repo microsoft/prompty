@@ -86,7 +86,7 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
     ```python
     import prompty
 
-    result = prompty.execute(
+    result = prompty.invoke(
         "anthropic-chat.prompty",
         inputs={"topic": "quantum computing"}
     )
@@ -95,10 +95,10 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
     import "@prompty/anthropic"; // registers the provider
 
-    const result = await execute(
+    const result = await invoke(
         "anthropic-chat.prompty",
         { topic: "quantum computing" }
     );

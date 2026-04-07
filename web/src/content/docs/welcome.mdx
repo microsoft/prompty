@@ -48,16 +48,16 @@ Say hello to {{userName}}.
     ```python
     import prompty
 
-    result = prompty.execute("greeting.prompty", inputs={"userName": "Jane"})
+    result = prompty.invoke("greeting.prompty", inputs={"userName": "Jane"})
     print(result)  # "Hello Jane! How can I help you today?"
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
     import "@prompty/openai";
 
-    const result = await execute("greeting.prompty", { userName: "Jane" });
+    const result = await invoke("greeting.prompty", { userName: "Jane" });
     ```
   </TabItem>
 </Tabs>

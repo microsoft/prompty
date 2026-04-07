@@ -63,9 +63,9 @@ template:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
-    result = execute(
+    result = invoke(
         "generate-image.prompty",
         inputs={"description": "A cat astronaut floating in space, digital art"},
     )
@@ -77,9 +77,9 @@ template:
     Async variant:
 
     ```python
-    from prompty import execute_async
+    from prompty import invoke_async
 
-    result = await execute_async(
+    result = await invoke_async(
         "generate-image.prompty",
         inputs={"description": "A sunset over mountains, watercolor style"},
     )
@@ -88,9 +88,9 @@ template:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
 
-    const result = await execute("generate-image.prompty", {
+    const result = await invoke("generate-image.prompty", {
       description: "A cat astronaut floating in space, digital art",
     });
 
@@ -180,9 +180,9 @@ The result is a URL that expires after a period. To save the image locally:
   <TabItem label="Python">
     ```python
     import urllib.request
-    from prompty import execute
+    from prompty import invoke
 
-    url = execute(
+    url = invoke(
         "generate-image.prompty",
         inputs={"description": "A cozy cabin in the woods"},
     )
@@ -194,10 +194,10 @@ The result is a URL that expires after a period. To save the image locally:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "prompty";
+    import { invoke } from "prompty";
     import { writeFile } from "fs/promises";
 
-    const url = await execute("generate-image.prompty", {
+    const url = await invoke("generate-image.prompty", {
       description: "A cozy cabin in the woods",
     });
 
@@ -277,7 +277,7 @@ template:
 ```
 
 ```python title="gallery_app.py"
-from prompty import execute
+from prompty import invoke
 import urllib.request
 
 subjects = [
@@ -287,7 +287,7 @@ subjects = [
 ]
 
 for i, subject in enumerate(subjects):
-    url = execute("gallery.prompty", inputs={"subject": subject, "style": "oil painting"})
+    url = invoke("gallery.prompty", inputs={"subject": subject, "style": "oil painting"})
     urllib.request.urlretrieve(url, f"gallery_{i}.png")
     print(f"Generated: gallery_{i}.png")
 ```

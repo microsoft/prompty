@@ -174,7 +174,7 @@ graph LR
     EX["Executor"] --> PR["Processor"]
   end
 
-  subgraph execute ["execute() — full pipeline: load → render → parse → execute → process → result"]
+  subgraph invoke ["invoke() — full pipeline: load → render → parse → execute → process → result"]
     L["Load"] --> R3["Renderer"] --> P3["Parser"] --> EX2["Executor"] --> PR2["Processor"] --> RES["Result"]
   end
 ```
@@ -184,7 +184,7 @@ graph LR
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, prepare, execute
+    from prompty import load, prepare, invoke
     from prompty.core.pipeline import render, parse, run, process
 
     agent = load("chat.prompty")
@@ -203,12 +203,12 @@ graph LR
     result = run(agent, messages)
 
     # Full pipeline — load + prepare + run
-    result = execute("chat.prompty", inputs=inputs)
+    result = invoke("chat.prompty", inputs=inputs)
     ```
   </TabItem>
   <TabItem label="Python (async)">
     ```python
-    from prompty import load_async, prepare_async, execute_async
+    from prompty import load_async, prepare_async, invoke_async
     from prompty.core.pipeline import render_async, parse_async, run_async
 
     agent = await load_async("chat.prompty")
@@ -218,12 +218,12 @@ graph LR
     messages = await parse_async(agent, rendered)
     messages = await prepare_async(agent, inputs)
     result   = await run_async(agent, messages)
-    result   = await execute_async("chat.prompty", inputs=inputs)
+    result   = await invoke_async("chat.prompty", inputs=inputs)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, prepare, execute } from "@prompty/core";
+    import { load, prepare, invoke } from "@prompty/core";
     import { render, parse, run, process } from "@prompty/core";
     import "@prompty/openai"; // registers provider
 
@@ -243,13 +243,13 @@ graph LR
     const result = await run(agent, prepared);
 
     // Full pipeline — load + prepare + run
-    const output = await execute("chat.prompty", { inputs });
+    const output = await invoke("chat.prompty", { inputs });
     ```
   </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  Most users only need **`execute()`** — it handles the full pipeline from file to
+  Most users only need **`invoke()`** — it handles the full pipeline from file to
   result. Use the granular functions when you need to inspect or modify intermediate
   outputs (e.g., editing messages before sending them to the LLM).
 </Aside>

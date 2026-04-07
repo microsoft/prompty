@@ -57,14 +57,14 @@ v1 used a special `apiType` in the `.prompty` file and smuggled tool functions v
 agent.metadata["tool_functions"] = {
     "get_weather": get_weather
 }
-result = prompty.execute(agent, messages)
+result = prompty.invoke(agent, messages)
 ```
 
-v2 uses explicit `execute_agent()`:
+v2 uses explicit `invoke_agent()`:
 
 ```python
 # v2 — tools passed explicitly
-result = prompty.execute_agent(
+result = prompty.invoke_agent(
     "agent.prompty",
     inputs={...},
     tools={"get_weather": get_weather},
@@ -196,7 +196,7 @@ template:
 ## New Features in v2
 
 - **Connection registry** — `register_connection()`
-- **Agent loop** — `execute_agent()` with error recovery
+- **Agent loop** — `invoke_agent()` with error recovery
 - **Streaming hardening** — tool calls, refusals, empty chunks
 - **Structured output** — `outputSchema` → `response_format`
 - **Thread safety** — renderer nonces use `threading.local()`

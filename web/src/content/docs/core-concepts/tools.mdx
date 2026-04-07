@@ -132,7 +132,7 @@ tools:
 | Field | Description |
 |-------|-------------|
 | `path` | Relative path to the child `.prompty` file (resolved from the parent's location) |
-| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `executeAgent` |
+| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `invokeAgent` |
 | `parameters` | Optional parameter schema. If omitted, the child's `inputs` are used automatically |
 | `bindings` | Map parent inputs → child parameters (the bound parameters are stripped from the wire schema) |
 
@@ -279,7 +279,7 @@ In this example, the tool parameter `query` is bound to the prompt input
 
 Tools defined in the frontmatter are sent to the LLM as part of the API
 request. To actually **execute** the tool calls the model returns, use
-`execute_agent` — which runs the agent loop: call the LLM, execute any
+`invoke_agent` — which runs the agent loop: call the LLM, execute any
 requested tools, feed results back, and repeat until the model produces a final
 response.
 
@@ -291,7 +291,7 @@ response.
     def get_weather(city: str, units: str = "celsius") -> str:
         return f"72°F and sunny in {city}"
 
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         "agent.prompty",
         inputs={"question": "Weather in Seattle?"},
         tools={"get_weather": get_weather},
@@ -300,14 +300,14 @@ response.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { executeAgent } from "@prompty/core";
+    import { invokeAgent } from "@prompty/core";
     import "@prompty/openai";
 
     function getWeather(city: string, units: string = "celsius"): string {
       return `72°F and sunny in ${city}`;
     }
 
-    const result = await executeAgent("agent.prompty", {
+    const result = await invokeAgent("agent.prompty", {
       inputs: { question: "Weather in Seattle?" },
       tools: { get_weather: getWeather },
     });
@@ -318,7 +318,7 @@ response.
 <Tabs>
   <TabItem label="Python">
     ```python
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         "agent.prompty",
         inputs={"question": "Weather in Seattle?"},
         tools={"get_weather": get_weather},
@@ -328,7 +328,7 @@ response.
   </TabItem>
   <TabItem label="Python (async)">
     ```python
-    result = await prompty.execute_agent_async(
+    result = await prompty.invoke_agent_async(
         "agent.prompty",
         inputs={"question": "Weather in Seattle?"},
         tools={"get_weather": get_weather},
@@ -338,7 +338,7 @@ response.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await executeAgent("agent.prompty", {
+    const result = await invokeAgent("agent.prompty", {
       inputs: { question: "Weather in Seattle?" },
       tools: { get_weather: getWeather },
     });
@@ -348,7 +348,7 @@ response.
 </Tabs>
 
 <Aside type="caution">
-  Without `execute_agent`, tools are only **declared** to the model — the
-  runtime won't execute tool calls automatically. Use `execute` or `run` when
+  Without `invoke_agent`, tools are only **declared** to the model — the
+  runtime won't execute tool calls automatically. Use `invoke` or `run` when
   you want to handle tool calls yourself.
 </Aside>

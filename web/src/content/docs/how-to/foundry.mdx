@@ -97,7 +97,7 @@ user:
     ```python
     import prompty
 
-    result = prompty.execute(
+    result = prompty.invoke(
         "foundry-chat.prompty",
         inputs={"question": "What services does Microsoft Foundry offer?"},
     )
@@ -106,9 +106,9 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
 
-    const result = await execute("foundry-chat.prompty", {
+    const result = await invoke("foundry-chat.prompty", {
       inputs: { question: "What services does Microsoft Foundry offer?" },
     });
 
@@ -195,7 +195,7 @@ user:
         },
     )
 
-    result = prompty.execute(
+    result = prompty.invoke(
         "foundry-chat-aad.prompty",
         inputs={"question": "What is Microsoft Foundry?"},
     )
@@ -210,7 +210,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute, registerConnection } from "@prompty/core";
+    import { invoke, registerConnection } from "@prompty/core";
     import { DefaultAzureCredential } from "@azure/identity";
 
     registerConnection("foundry_default", {
@@ -218,7 +218,7 @@ user:
       credential: new DefaultAzureCredential(),
     });
 
-    const result = await execute("foundry-chat-aad.prompty", {
+    const result = await invoke("foundry-chat-aad.prompty", {
       inputs: { question: "What is Microsoft Foundry?" },
     });
 

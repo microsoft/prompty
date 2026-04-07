@@ -113,30 +113,30 @@ user:
 
 ## Usage
 
-The Responses API is transparent to your calling code. The same `execute()` and
-`execute_async()` functions work — the runtime dispatches to `responses.create()`
+The Responses API is transparent to your calling code. The same `invoke()` and
+`invoke_async()` functions work — the runtime dispatches to `responses.create()`
 based on the `apiType` in the `.prompty` file.
 
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import execute, execute_async
+from prompty import invoke, invoke_async
 
 # Sync
-result = execute("my-prompt.prompty", inputs={"question": "Hello!"})
+result = invoke("my-prompt.prompty", inputs={"question": "Hello!"})
 print(result)  # "Hi there! How can I help?"
 
 # Async
-result = await execute_async("my-prompt.prompty", inputs={"question": "Hello!"})
+result = await invoke_async("my-prompt.prompty", inputs={"question": "Hello!"})
 print(result)
 ```
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { execute } from "@prompty/core";
+import { invoke } from "@prompty/core";
 import "@prompty/openai"; // or "@prompty/foundry"
 
-const result = await execute("my-prompt.prompty", { question: "Hello!" });
+const result = await invoke("my-prompt.prompty", { question: "Hello!" });
 console.log(result); // "Hi there! How can I help?"
 ```
 </TabItem>
@@ -204,8 +204,8 @@ Compare with the equivalent Chat Completions request:
 
 ## Tool Calling
 
-Tool calling works with the Responses API through the same `execute_agent()` /
-`executeAgent()` functions used for Chat Completions. The agent loop
+Tool calling works with the Responses API through the same `invoke_agent()` /
+`invokeAgent()` functions used for Chat Completions. The agent loop
 automatically detects the Responses API response format and handles it
 correctly.
 
@@ -263,7 +263,7 @@ def get_weather(city: str) -> str:
     return f"72°F and sunny in {city}"
 
 agent = prompty.load("responses-agent.prompty")
-result = prompty.execute_agent(
+result = prompty.invoke_agent(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
     tools={"get_weather": get_weather},
@@ -274,7 +274,7 @@ print(result)  # "It's currently 72°F and sunny in Seattle!"
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, executeAgent } from "@prompty/core";
+import { load, invokeAgent } from "@prompty/core";
 import "@prompty/openai";
 
 function getWeather(city: string): string {
@@ -282,7 +282,7 @@ function getWeather(city: string): string {
 }
 
 const agent = await load("responses-agent.prompty");
-const result = await executeAgent(agent, {
+const result = await invokeAgent(agent, {
   inputs: { question: "What's the weather in Seattle?" },
   tools: { get_weather: getWeather },
   maxIterations: 10,
@@ -375,9 +375,9 @@ Weather in {{city}}?
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import execute
+from prompty import invoke
 
-result = execute("structured-responses.prompty", inputs={"city": "Seattle"})
+result = invoke("structured-responses.prompty", inputs={"city": "Seattle"})
 
 # result is already a parsed dict
 print(result["city"])         # "Seattle"
@@ -388,10 +388,10 @@ print(type(result))           # <class 'dict'>
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { execute } from "@prompty/core";
+import { invoke } from "@prompty/core";
 import "@prompty/openai";
 
-const result = await execute("structured-responses.prompty", { city: "Seattle" });
+const result = await invoke("structured-responses.prompty", { city: "Seattle" });
 
 // result is already a parsed object
 console.log(result.city);         // "Seattle"
@@ -454,7 +454,7 @@ Not all providers support every API type. Here's what's available:
 
 <Aside type="tip">
   You can switch between `apiType: chat` and `apiType: responses` by changing a
-  single line in your `.prompty` file. Your calling code (`execute()`,
-  `execute_agent()`, etc.) stays exactly the same — the runtime handles the wire
+  single line in your `.prompty` file. Your calling code (`invoke()`,
+  `invoke_agent()`, etc.) stays exactly the same — the runtime handles the wire
   format differences automatically.
 </Aside>

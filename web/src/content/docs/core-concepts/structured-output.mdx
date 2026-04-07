@@ -120,14 +120,14 @@ Under the hood, the executor performs three steps when `outputSchema` is present
 
 ## Usage
 
-With structured output, `execute()` returns a parsed dictionary/object directly:
+With structured output, `invoke()` returns a parsed dictionary/object directly:
 
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import execute
+    from prompty import invoke
 
-    result = execute("weather.prompty", inputs={"city": "Seattle"})
+    result = invoke("weather.prompty", inputs={"city": "Seattle"})
 
     # result is already a dict — no JSON.parse needed
     print(result["city"])         # "Seattle"
@@ -138,17 +138,17 @@ With structured output, `execute()` returns a parsed dictionary/object directly:
   </TabItem>
   <TabItem label="Python (async)">
     ```python
-    from prompty import execute_async
+    from prompty import invoke_async
 
-    result = await execute_async("weather.prompty", inputs={"city": "Seattle"})
+    result = await invoke_async("weather.prompty", inputs={"city": "Seattle"})
     print(result["temperature"])  # 62
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
 
-    const result = await execute("weather.prompty", { city: "Seattle" });
+    const result = await invoke("weather.prompty", { city: "Seattle" });
 
     // result is already a parsed object
     console.log(result.city);         // "Seattle"
@@ -170,7 +170,7 @@ instructions, but there's no schema enforcement or automatic parsing.
   <TabItem label="With outputSchema">
     ```python
     # outputSchema defined → dict returned automatically
-    result = execute("weather.prompty", inputs={"city": "Seattle"})
+    result = invoke("weather.prompty", inputs={"city": "Seattle"})
     print(type(result))  # <class 'dict'>
     print(result["temperature"])  # 62
     ```
@@ -178,7 +178,7 @@ instructions, but there's no schema enforcement or automatic parsing.
   <TabItem label="Without outputSchema">
     ```python
     # No outputSchema → raw string returned
-    result = execute("chat.prompty", inputs={"city": "Seattle"})
+    result = invoke("chat.prompty", inputs={"city": "Seattle"})
     print(type(result))  # <class 'str'>
     # You'd need to parse manually:
     import json
@@ -239,7 +239,7 @@ Weather for {{city}}?
 The result is a nested dictionary:
 
 ```python
-result = execute("detailed-weather.prompty", inputs={"city": "Portland"})
+result = invoke("detailed-weather.prompty", inputs={"city": "Portland"})
 
 print(result["city"])                     # "Portland"
 print(result["current"]["temperature"])   # 58

@@ -119,20 +119,20 @@ Extract clean content from a raw LLM response.
 result = prompty.process(agent, response)
 ```
 
-### `execute(path_or_agent, inputs) → result`
+### `invoke(path_or_agent, inputs) → result`
 
 Top-level orchestrator: load → prepare → run.
 
 <Tabs>
   <TabItem label="Python">
     ```python
-    result = prompty.execute("chat.prompty", inputs={"q": "Hi"})
+    result = prompty.invoke("chat.prompty", inputs={"q": "Hi"})
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
-    const result = await execute("chat.prompty", { q: "Hi" });
+    import { invoke } from "@prompty/core";
+    const result = await invoke("chat.prompty", { q: "Hi" });
     ```
   </TabItem>
 </Tabs>
@@ -158,14 +158,14 @@ Every pipeline function has an async counterpart (Python):
 | `parse()` | `parse_async()` |
 | `prepare()` | `prepare_async()` |
 | `run()` | `run_async()` |
-| `execute()` | `execute_async()` |
+| `invoke()` | `invoke_async()` |
 | `process()` | `process_async()` |
 
 TypeScript functions are async by default (return `Promise`).
 
 ## Agent Mode
 
-### `execute_agent(path_or_agent, inputs, tools, ...)`
+### `invoke_agent(path_or_agent, inputs, tools, ...)`
 
 Run a prompt with an automatic tool-calling loop.
 
@@ -175,7 +175,7 @@ Run a prompt with an automatic tool-calling loop.
     def get_weather(location: str) -> str:
         return f"72°F and sunny in {location}"
 
-    result = prompty.execute_agent(
+    result = prompty.invoke_agent(
         "agent.prompty",
         inputs={"question": "Weather in Seattle?"},
         tools={"get_weather": get_weather},
@@ -185,13 +185,13 @@ Run a prompt with an automatic tool-calling loop.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { executeAgent } from "@prompty/core";
+    import { invokeAgent } from "@prompty/core";
 
     function getWeather(location: string): string {
       return `72°F and sunny in ${location}`;
     }
 
-    const result = await executeAgent(
+    const result = await invokeAgent(
       "agent.prompty",
       { question: "Weather in Seattle?" },
       { get_weather: getWeather },
@@ -217,7 +217,7 @@ Run a prompt with an automatic tool-calling loop.
 - Missing tool → error message, no crash
 - Max iterations exceeded → `ValueError`
 
-### `execute_agent_async(...)`
+### `invoke_agent_async(...)`
 
 Async variant. Async tool functions are properly awaited.
 

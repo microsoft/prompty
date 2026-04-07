@@ -105,7 +105,7 @@ Say hello to {{userName}} and ask how their day is going.
     import prompty
 
     # All-in-one: load → render → parse → execute → process
-    result = prompty.execute(
+    result = prompty.invoke(
         "greeting.prompty",
         inputs={"userName": "Jane"},
     )
@@ -115,10 +115,10 @@ Say hello to {{userName}} and ask how their day is going.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { execute } from "@prompty/core";
+    import { invoke } from "@prompty/core";
     import "@prompty/openai";
 
-    const result = await execute("greeting.prompty", {
+    const result = await invoke("greeting.prompty", {
       userName: "Jane",
     });
     console.log(result);
