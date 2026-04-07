@@ -2108,25 +2108,11 @@ function invoke_agent(path_or_agent, inputs, tools=null) → result:
 
     // 5d. Check for tool calls
     if result is a list of ToolCall:
-      // Build assistant message preserving tool_calls in metadata
-      assistant_msg = Message(
-        role: "assistant",
-        content: [],
-        metadata: {
-          tool_calls: [
-            {
-              id:       tc.id,
-              type:     "function",
-              function: { name: tc.name, arguments: tc.arguments }
-            }
-            for tc in result
-          ]
-        }
-      )
-      append assistant_msg to messages
+      tool_calls = result
+      tool_results = []
 
       // Execute each tool call
-      for tool_call in result:
+      for tool_call in tool_calls:
         TRACE: emit "execute_tool" span for tool_call.name
 
         // Look up handler — two-layer dispatch (§11.2)
@@ -2154,13 +2140,15 @@ function invoke_agent(path_or_agent, inputs, tools=null) → result:
             )
           tool_result = kind_handler(tool_def, args, agent, inputs)
 
-        // Build tool result message
-        tool_msg = Message(
-          role: "tool",
-          content: [TextPart(value: str(tool_result))],
-          metadata: { tool_call_id: tool_call.id }
-        )
-        append tool_msg to messages
+        tool_results.append({ tool_call_id: tool_call.id, result: str(tool_result) })
+
+      // Delegate message formatting to the executor (§9.4)
+      executor = get_executor(agent.model.provider)
+      text_content = extract_text_content(response)  // may be null
+      tool_messages = executor.FormatToolMessages(
+        response, tool_calls, tool_results, text_content
+      )
+      append tool_messages to messages
 
       iteration += 1
       continue loop
@@ -2201,51 +2189,96 @@ caller. The caller sees a normal `PromptyStream` for the final answer.
 Implementations that cannot distinguish early MAY fall back to fully
 consuming the stream before deciding, but this is not preferred.
 
-### §9.4 Provider-Specific Tool Message Formats
+### §9.4 `FormatToolMessages` — Provider Hook
 
-Each provider has a different wire format for tool-call messages. The agent
-loop MUST produce messages in the correct format for the active provider.
+The agent loop MUST NOT contain provider-specific message-building logic.
+Instead, each executor MUST implement a `FormatToolMessages` method that
+converts raw tool call data and tool results into the provider's wire format.
+This keeps the pipeline fully provider-agnostic.
+
+**Signature:**
+
+```
+executor.FormatToolMessages(
+  raw_response,    // original LLM response (may be null for streaming)
+  tool_calls,      // list of { id, name, arguments }
+  tool_results,    // list of { tool_call_id, result } (same order as tool_calls)
+  text_content      // any text content from the response (may be null/empty)
+) → list<Message>
+```
+
+**Parameters:**
+
+| Parameter      | Type                          | Notes                                                  |
+| -------------- | ----------------------------- | ------------------------------------------------------ |
+| `raw_response` | provider response or null     | Original API response object; needed by Anthropic to preserve content blocks. May be null in streaming path. |
+| `tool_calls`   | list of `{ id, name, arguments }` | Normalized tool call data extracted from the response. `arguments` is a JSON string. |
+| `tool_results` | list of `{ tool_call_id, result }` | Results from executing each tool, in the same order as `tool_calls`. |
+| `text_content` | string or null                | Any text content from the response alongside tool calls (e.g., Anthropic thinking text). |
+
+**Return value:** A `list<Message>` to append to the conversation. The number
+and structure of messages is provider-specific (see §9.5 for examples).
+
+**Contract:**
+
+- Every executor MUST implement `FormatToolMessages`.
+- The pipeline MUST call `FormatToolMessages` after dispatching all tool calls
+  and collecting results — never build tool messages directly.
+- Executors that share a wire format (e.g., Foundry extends OpenAI) MAY
+  inherit the implementation from a base class.
+
+### §9.5 Provider-Specific Tool Message Formats
+
+The following examples show what each executor's `FormatToolMessages` returns.
+These are the provider's wire format — the pipeline treats them as opaque
+`Message` objects.
 
 **OpenAI Chat Completions:**
 
-```
-// Assistant message with tool calls
-{
-  role: "assistant",
-  tool_calls: [
-    {
-      id: "call_123",
-      type: "function",
-      function: { name: "get_weather", arguments: "{\"city\":\"Paris\"}" }
-    }
-  ]
-}
+Returns 1 assistant message + N tool messages (one per tool call):
 
-// Tool result message
-{
-  role: "tool",
-  content: "72°F and sunny",
-  tool_call_id: "call_123"
-}
+```
+[
+  // Assistant message with tool calls
+  {
+    role: "assistant",
+    tool_calls: [
+      {
+        id: "call_123",
+        type: "function",
+        function: { name: "get_weather", arguments: "{\"city\":\"Paris\"}" }
+      }
+    ]
+  },
+  // One tool message per result
+  {
+    role: "tool",
+    content: "72°F and sunny",
+    tool_call_id: "call_123"
+  }
+]
 ```
 
 **Anthropic:**
 
-```
-// Assistant message — MUST preserve ALL content blocks (text + tool_use)
-{
-  role: "assistant",
-  content: [<original content blocks from API response>]
-}
+Returns 1 assistant message + 1 user message (batched tool results):
 
-// Tool results — ALL results in ONE user message
-{
-  role: "user",
-  content: [
-    { type: "tool_result", tool_use_id: "toolu_123", content: "72°F and sunny" },
-    { type: "tool_result", tool_use_id: "toolu_456", content: "Pizza Palace" }
-  ]
-}
+```
+[
+  // Assistant message — MUST preserve ALL content blocks (text + tool_use)
+  {
+    role: "assistant",
+    content: [<original content blocks from API response>]
+  },
+  // ALL tool results in ONE user message
+  {
+    role: "user",
+    content: [
+      { type: "tool_result", tool_use_id: "toolu_123", content: "72°F and sunny" },
+      { type: "tool_result", tool_use_id: "toolu_456", content: "Pizza Palace" }
+    ]
+  }
+]
 ```
 
 Anthropic implementations MUST batch all tool results into a single `user`
@@ -2254,25 +2287,28 @@ will cause API errors.
 
 **OpenAI Responses API:**
 
-```
-// MUST include original function_call item in input
-{
-  type: "function_call",
-  id: "fc_123",
-  call_id: "call_123",
-  name: "get_weather",
-  arguments: "{\"city\":\"Paris\"}"
-}
+Returns N×2 messages (one function_call + one function_call_output per tool):
 
-// Function call output
-{
-  type: "function_call_output",
-  call_id: "call_123",
-  output: "72°F and sunny"
-}
+```
+[
+  // Original function_call item
+  {
+    type: "function_call",
+    id: "fc_123",
+    call_id: "call_123",
+    name: "get_weather",
+    arguments: "{\"city\":\"Paris\"}"
+  },
+  // Function call output
+  {
+    type: "function_call_output",
+    call_id: "call_123",
+    output: "72°F and sunny"
+  }
+]
 ```
 
-### §9.5 Bindings Injection
+### §9.6 Bindings Injection
 
 During tool execution, bound parameters MUST be injected into the arguments
 before calling the handler:
@@ -2293,7 +2329,7 @@ function apply_bindings(tool, args, inputs) → dict:
 Bindings MUST override any value the LLM may have generated for the same
 parameter name.
 
-### §9.6 PromptyTool Execution
+### §9.7 PromptyTool Execution
 
 A `PromptyTool` references another `.prompty` file to be invoked as a tool:
 
@@ -2718,4 +2754,433 @@ appropriate content:
 
 ---
 
-*End of Part 2 (Sections 7–12).*
+## §13 Agent Loop Extensions
+
+The base agent loop (§9) handles the tool-call cycle. This section specifies
+five extensions that make the loop production-ready: events, cancellation,
+context window management, guardrails, and steering. All are opt-in — a
+conforming implementation MUST support the base loop and MAY implement any
+combination of these extensions.
+
+### §13.1 Agent Events
+
+The agent loop MUST support an optional event callback that receives
+structured events during execution. This enables real-time UIs, logging,
+and coordination without coupling the loop to any particular output mechanism.
+
+**Event Types:**
+
+| Event Type          | Payload                                          | When Emitted                              |
+| ------------------- | ------------------------------------------------ | ----------------------------------------- |
+| `token`             | `{ token: string }`                              | Each content chunk during streaming       |
+| `thinking`          | `{ token: string }`                              | Each reasoning/chain-of-thought chunk     |
+| `tool_call_start`   | `{ name: string, arguments: string }`            | When a tool call is detected              |
+| `tool_result`       | `{ name: string, result: string }`               | After a tool call completes               |
+| `status`            | `{ message: string }`                            | Human-readable status updates             |
+| `messages_updated`  | `{ messages: Message[] }`                        | After messages list is mutated            |
+| `done`              | `{ response: string, messages: Message[] }`      | Final response produced                   |
+| `error`             | `{ message: string }`                            | Non-fatal error (e.g., tool panic)        |
+| `cancelled`         | `{}`                                             | Loop was cancelled via cancellation token |
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      on_event=null, ...) → result:
+  // on_event is Callable[[event_type: string, data: dict], None]
+  // Called synchronously — MUST NOT throw
+```
+
+**Requirements:**
+
+- Implementations MUST NOT skip `done` — it MUST be the last event emitted
+  on successful completion.
+- `messages_updated` MUST be emitted after every mutation to the message list
+  (tool result appended, steering message injected, context trimmed).
+- `token` events MUST be emitted when streaming is active and the final
+  iteration produces content chunks.
+- `tool_call_start` MUST be emitted before tool execution begins.
+- `tool_result` MUST be emitted after tool execution completes.
+- `error` is for non-fatal conditions — fatal errors MUST raise exceptions.
+- Event callbacks MUST NOT block the loop. If an event callback raises,
+  implementations SHOULD log the error and continue.
+
+### §13.2 Cancellation
+
+The agent loop MUST support cooperative cancellation via a token checked at
+well-defined points during execution.
+
+**CancellationToken:**
+
+```
+CancellationToken:
+  cancelled: bool  // thread-safe, starts false
+
+  cancel():
+    self.cancelled = true
+
+  is_cancelled → bool:
+    return self.cancelled
+```
+
+**Check Points:**
+
+The loop MUST check `cancel.is_cancelled` at these points:
+
+1. **Top of each iteration** — before any work
+2. **Before each LLM call** — after context trim, before HTTP request
+3. **Before each tool execution** — between tool calls within one iteration
+
+When cancellation is detected:
+
+1. Emit `cancelled` event (if event callback is set)
+2. Raise `CancelledError` (or language equivalent)
+3. Do NOT execute any pending tool calls
+4. Do NOT make any further LLM calls
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      cancel=null, ...) → result:
+```
+
+**Language-Specific Notes:**
+
+- **Python:** `CancellationToken` class. Also accept `asyncio.Event` in
+  async variants.
+- **TypeScript:** Accept standard `AbortSignal`. Check `signal.aborted`
+  at each check point. Listen for `abort` event to interrupt in-flight
+  requests when the SDK supports it.
+- **Rust:** Accept Agentive-style `CancellationToken` (AtomicBool).
+
+### §13.3 Context Window Management
+
+Long-running agent loops accumulate messages that may exceed the model's
+context window. Implementations MUST support automatic context trimming
+when a budget is specified.
+
+**Algorithm:**
+
+```
+function trim_to_context_window(messages, budget_chars) → Message[]:
+  1. total = estimate_chars(messages)
+  2. if total <= budget_chars:
+       return messages  // fits — no trimming
+
+  3. Partition messages into:
+     - system_messages: leading contiguous system-role messages
+     - rest: everything after
+
+  4. Reserve summary_budget = min(5000, budget_chars * 0.05)
+
+  5. dropped = []
+     while estimate_chars(system_messages + rest) > (budget_chars - summary_budget)
+           AND len(rest) > 2:
+       dropped.append(rest.pop(0))  // remove oldest non-system message
+
+  6. summary = summarize_dropped(dropped)
+
+  7. Insert summary as user message immediately after system_messages:
+     summary_msg = Message(role: "user",
+       content: [TextPart(value: "[Context summary: " + summary + "]")])
+
+  8. return system_messages + [summary_msg] + rest
+```
+
+**Character Estimation:**
+
+```
+function estimate_chars(messages) → int:
+  total = 0
+  for msg in messages:
+    total += len(msg.role) + 4  // role + delimiters
+    for part in msg.content:
+      if part is TextPart:
+        total += len(part.value)
+      else:
+        total += 200  // fixed estimate for non-text parts
+    if msg.metadata has "tool_calls":
+      total += json_length(msg.metadata.tool_calls)
+  return total
+```
+
+**Summarization:**
+
+```
+function summarize_dropped(messages) → string:
+  lines = []
+  for msg in messages:
+    if msg.role == "user":
+      lines.append("User asked: " + truncate(text_of(msg), 200))
+    elif msg.role == "assistant":
+      text = text_of(msg)
+      if text:
+        lines.append("Assistant: " + truncate(text, 200))
+      if msg has tool_calls:
+        names = [tc.name for tc in msg.tool_calls]
+        lines.append("  Called tools: " + join(names, ", "))
+    // Skip tool-result messages (captured in assistant summary)
+  return join(lines, "\n")  // cap at ~4000 chars
+```
+
+**Optional LLM Compaction:**
+
+Implementations MAY support a `compaction_provider` — a secondary LLM used
+to produce a higher-quality summary of dropped messages. When provided:
+
+1. Build a summarizer prompt with the dropped messages
+2. Call the compaction provider (single-turn, no tools)
+3. If the LLM returns a non-empty response, use it as the summary
+4. If the call fails, fall back to `summarize_dropped()`
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      context_budget=null, ...) → result:
+  // context_budget is int (character count) or null (no trimming)
+```
+
+**Requirements:**
+
+- System messages MUST never be dropped.
+- At least 2 non-system messages MUST be preserved (the most recent user
+  message and the conversation's anchor).
+- Trimming MUST happen before each LLM call, after steering messages
+  are drained (§13.5).
+- When trimming occurs, a `messages_updated` event MUST be emitted.
+- Implementations MUST NOT trim during non-agent `invoke()` calls.
+
+### §13.4 Guardrails
+
+Guardrails are validation hooks at three points in the agent loop: before
+the LLM call (input), after the LLM response (output), and before each
+tool execution (tool). Each hook returns allow or deny.
+
+**GuardrailResult:**
+
+```
+GuardrailResult:
+  allowed: bool
+  reason: string | null  // required when allowed=false
+```
+
+**Guardrails Configuration:**
+
+```
+Guardrails:
+  input:  Callable[[Message[]], GuardrailResult] | null
+  output: Callable[[Message], GuardrailResult] | null
+  tool:   Callable[[string, dict], GuardrailResult] | null
+```
+
+**Semantics:**
+
+| Hook     | Input                      | On Deny                                                   |
+| -------- | -------------------------- | --------------------------------------------------------- |
+| `input`  | Full message list          | Abort loop, raise `GuardrailError`                        |
+| `output` | Assistant response message | Abort loop, raise `GuardrailError`                        |
+| `tool`   | Tool name + parsed args    | Skip tool, inject synthetic result: `"Tool denied: {reason}"` |
+
+**Check Points in Loop:**
+
+```
+loop:
+  // 1. Check input guardrail (full message list)
+  if guardrails.input is not null:
+    result = guardrails.input(messages)
+    if not result.allowed:
+      emit event("error", {message: "Input guardrail denied: " + result.reason})
+      raise GuardrailError(result.reason)
+
+  // 2. Call LLM
+  response = execute_llm(agent, messages)
+  assistant_msg = process(agent, response)
+
+  // 3. Check output guardrail (assistant message)
+  if guardrails.output is not null:
+    result = guardrails.output(assistant_msg)
+    if not result.allowed:
+      emit event("error", {message: "Output guardrail denied: " + result.reason})
+      raise GuardrailError(result.reason)
+
+  // 4. For each tool call, check tool guardrail
+  for tool_call in tool_calls:
+    if guardrails.tool is not null:
+      result = guardrails.tool(tool_call.name, tool_call.arguments)
+      if not result.allowed:
+        tool_result = "Tool denied by guardrail: " + result.reason
+        // Do NOT execute the tool — use synthetic result
+        continue
+    // Execute tool normally
+    tool_result = execute_tool(tool_call)
+```
+
+**Requirements:**
+
+- Guardrail callbacks MUST be called synchronously with respect to the loop.
+- For async loops, guardrail callbacks MAY be async.
+- `GuardrailError` MUST include the deny reason.
+- Tool guardrail denials MUST NOT abort the entire loop — only the
+  individual tool is skipped.
+- Input guardrail receives the full message list including any steering
+  messages and after context trimming.
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      guardrails=null, ...) → result:
+```
+
+### §13.5 Steering
+
+Steering enables external code to inject user messages into a running agent
+loop. This supports interactive scenarios where a user wants to redirect
+the agent mid-execution (e.g., "actually focus on error handling").
+
+**Steering Queue:**
+
+```
+Steering:
+  queue: ThreadSafeQueue<string>
+
+  send(message: string):
+    // Enqueue a message to be injected at the next iteration
+    queue.push(message)
+
+  drain() → string[]:
+    // Atomically remove and return all queued messages
+    items = queue.take_all()
+    return items
+
+  has_pending → bool:
+    return not queue.is_empty
+```
+
+**Integration with Agent Loop:**
+
+```
+loop:
+  // Drain steering at the TOP of each iteration
+  if steering is not null:
+    pending = steering.drain()
+    for msg_text in pending:
+      user_msg = Message(role: "user",
+        content: [TextPart(value: msg_text)])
+      append user_msg to messages
+    if len(pending) > 0:
+      emit event("messages_updated", {messages})
+      emit event("status", {message: "Injected " + len(pending) + " steering message(s)"})
+
+  // Then: context trim, guardrails, LLM call, etc.
+```
+
+**Requirements:**
+
+- Steering messages MUST be drained before context trimming (so they are
+  visible to the input guardrail and may be trimmed if budget is tight).
+- Steering messages MUST be appended as `role: "user"` messages.
+- `send()` MUST be safe to call from any thread or async task.
+- `drain()` MUST be atomic — no message is lost or duplicated.
+- If no steering object is provided, the loop behaves as before.
+
+**Thread Safety:**
+
+- **Python:** Use `threading.Lock` or `asyncio.Queue`.
+- **TypeScript:** Single-threaded — use a simple array with
+  splice-and-return for drain.
+- **Rust:** Use `Arc<Mutex<Vec<String>>>` (as in Agentive).
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      steering=null, ...) → result:
+```
+
+### §13.6 Parallel Tool Execution
+
+When the LLM returns multiple tool calls in a single response,
+implementations MAY execute them concurrently instead of sequentially.
+
+**API:**
+
+```
+function invoke_agent(path_or_agent, inputs, tools=null,
+                      parallel_tool_calls=false, ...) → result:
+```
+
+**Algorithm:**
+
+```
+if parallel_tool_calls AND len(tool_calls) > 1:
+  // Execute all tools concurrently
+  results = parallel_map(tool_calls, execute_tool)
+  // Results are ordered to match tool_calls
+else:
+  // Sequential execution (default)
+  results = [execute_tool(tc) for tc in tool_calls]
+```
+
+**Requirements:**
+
+- Parallel execution MUST preserve result ordering — tool results MUST
+  be appended to messages in the same order as the original tool calls.
+- Each parallel tool execution MUST have its own trace span.
+- If any tool raises an exception, other in-flight tools SHOULD be
+  allowed to complete (do not cancel siblings).
+- Tool guardrails (§13.4) MUST still be checked for each tool — denied
+  tools receive synthetic results while other tools execute normally.
+- `tool_call_start` and `tool_result` events MUST be emitted for each
+  tool regardless of parallel or sequential execution.
+
+**Language-Specific Notes:**
+
+- **Python (sync):** Use `concurrent.futures.ThreadPoolExecutor`.
+- **Python (async):** Use `asyncio.gather(*tasks)`.
+- **TypeScript:** Use `Promise.all()`.
+- **Rust:** Use `tokio::join!` or `futures::join_all`.
+
+### §13.7 Unified Signature
+
+The full `invoke_agent` signature with all extensions:
+
+```
+function invoke_agent(
+  path_or_agent,            // string path or loaded agent
+  inputs = null,            // input dictionary
+  tools = null,             // tool handlers
+  *,                        // keyword-only below
+  max_iterations = 10,      // iteration cap
+  on_event = null,          // event callback
+  cancel = null,            // cancellation token
+  context_budget = null,    // character budget for context window
+  guardrails = null,        // validation hooks
+  steering = null,          // mid-loop message injection
+  parallel_tool_calls = false,  // concurrent tool execution
+  raw = false,              // return raw response (no processing)
+) → result
+```
+
+**Execution Order Within Each Iteration:**
+
+```
+  1. Check cancellation
+  2. Drain steering messages
+  3. Trim context window (if budget set)
+  4. Check input guardrail
+  5. Call LLM
+  6. Check output guardrail
+  7. If tool calls:
+     a. Check tool guardrails (per tool)
+     b. Execute tools (parallel or sequential)
+     c. Emit messages_updated
+     d. Continue loop
+  8. Emit done, return result
+```
+
+---
+
+*End of Specification (Sections 1–13).*
