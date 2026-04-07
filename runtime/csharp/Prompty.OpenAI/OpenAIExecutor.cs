@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.ClientModel;
+using System.Runtime.CompilerServices;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
@@ -21,9 +22,11 @@ public class OpenAIExecutor : IExecutor
         var apiType = agent.Model?.ApiType ?? "chat";
         var model = agent.Model?.Id ?? "gpt-4";
         var client = CreateClient(agent);
+        var streaming = agent.Metadata?.TryGetValue("stream", out var streamVal) == true && streamVal is true;
 
         return apiType switch
         {
+            "chat" when streaming => ExecuteChatStreamAsync(client, model, agent, messages),
             "chat" => await ExecuteChatAsync(client, model, agent, messages),
             "embedding" => await ExecuteEmbeddingAsync(client, model, messages),
             "image" => await ExecuteImageAsync(client, model, messages),
@@ -57,6 +60,26 @@ public class OpenAIExecutor : IExecutor
 
         var result = await chatClient.CompleteChatAsync(chatMessages, options);
         return result.Value;
+    }
+
+    private static PromptyStream ExecuteChatStreamAsync(
+        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+    {
+        var chatClient = client.GetChatClient(model);
+        var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
+        var options = WireFormat.BuildOptions(agent);
+
+        // Wrap the SDK streaming response as an IAsyncEnumerable
+        async IAsyncEnumerable<object> StreamChunks([EnumeratorCancellation] CancellationToken ct = default)
+        {
+            var stream = chatClient.CompleteChatStreamingAsync(chatMessages, options, ct);
+            await foreach (var update in stream)
+            {
+                yield return update;
+            }
+        }
+
+        return new PromptyStream(StreamChunks());
     }
 
     private static async Task<object> ExecuteEmbeddingAsync(

@@ -13,6 +13,9 @@ public class AnthropicProcessor : IProcessor
 {
     public Task<object> ProcessAsync(Core.Prompty agent, object response)
     {
+        if (response is PromptyStream stream)
+            return Task.FromResult<object>(new AnthropicProcessedStream(stream));
+
         if (response is not JsonElement json)
             return Task.FromResult(response);
 
@@ -101,5 +104,37 @@ public class AnthropicProcessor : IProcessor
             Content = textContent,
             ToolCalls = toolCalls,
         };
+    }
+}
+
+/// <summary>
+/// Wraps a PromptyStream to extract delta text from Anthropic SSE events.
+/// </summary>
+public class AnthropicProcessedStream : IAsyncEnumerable<string>
+{
+    private readonly PromptyStream _inner;
+
+    public AnthropicProcessedStream(PromptyStream inner) => _inner = inner;
+
+    public async IAsyncEnumerator<string> GetAsyncEnumerator(
+        CancellationToken cancellationToken = default)
+    {
+        await foreach (var chunk in _inner.WithCancellation(cancellationToken))
+        {
+            if (chunk is JsonElement evt)
+            {
+                var type = evt.TryGetProperty("type", out var t) ? t.GetString() : null;
+                if (type == "content_block_delta")
+                {
+                    if (evt.TryGetProperty("delta", out var delta) &&
+                        delta.TryGetProperty("text", out var text))
+                    {
+                        var txt = text.GetString();
+                        if (!string.IsNullOrEmpty(txt))
+                            yield return txt;
+                    }
+                }
+            }
+        }
     }
 }

@@ -21,6 +21,7 @@ public class OpenAIProcessor : IProcessor
             ChatCompletion chat => ProcessChat(chat, agent),
             OpenAIEmbeddingCollection embeddings => ProcessEmbeddings(embeddings),
             GeneratedImage image => ProcessImage(image),
+            PromptyStream stream => ProcessStream(stream, agent),
             _ => response,
         };
 
@@ -69,6 +70,14 @@ public class OpenAIProcessor : IProcessor
         return text;
     }
 
+    /// <summary>
+    /// Wraps a PromptyStream with delta extraction per spec §10.2.
+    /// </summary>
+    private static object ProcessStream(PromptyStream stream, Core.Prompty agent)
+    {
+        return new ProcessedStream(stream);
+    }
+
     private static object ProcessEmbeddings(OpenAIEmbeddingCollection embeddings)
     {
         if (embeddings.Count == 1)
@@ -86,5 +95,31 @@ public class OpenAIProcessor : IProcessor
             return Convert.ToBase64String(image.ImageBytes.ToArray());
 
         return "";
+    }
+}
+
+/// <summary>
+/// Wraps a PromptyStream to extract delta content from streaming chunks.
+/// </summary>
+public class ProcessedStream : IAsyncEnumerable<string>
+{
+    private readonly PromptyStream _inner;
+
+    public ProcessedStream(PromptyStream inner) => _inner = inner;
+
+    public async IAsyncEnumerator<string> GetAsyncEnumerator(
+        CancellationToken cancellationToken = default)
+    {
+        await foreach (var chunk in _inner.WithCancellation(cancellationToken))
+        {
+            if (chunk is StreamingChatCompletionUpdate update)
+            {
+                foreach (var part in update.ContentUpdate)
+                {
+                    if (!string.IsNullOrEmpty(part.Text))
+                        yield return part.Text;
+                }
+            }
+        }
     }
 }

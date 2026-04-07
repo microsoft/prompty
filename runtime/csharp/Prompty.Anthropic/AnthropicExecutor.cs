@@ -21,11 +21,62 @@ public class AnthropicExecutor : IExecutor
 
     public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
     {
+        var streaming = agent.Metadata?.TryGetValue("stream", out var streamVal) == true && streamVal is true;
+
+        if (streaming)
+            return ExecuteStreamAsync(agent, messages);
+
+        return await ExecuteNonStreamAsync(agent, messages);
+    }
+
+    private async Task<object> ExecuteNonStreamAsync(Core.Prompty agent, List<Message> messages)
+    {
+        var body = BuildRequestBody(agent, messages, stream: false);
         var (endpoint, apiKey) = GetConnectionInfo(agent);
+
+        var request = CreateRequest(endpoint, apiKey, body);
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return json;
+    }
+
+    private PromptyStream ExecuteStreamAsync(Core.Prompty agent, List<Message> messages)
+    {
+        var body = BuildRequestBody(agent, messages, stream: true);
+        var (endpoint, apiKey) = GetConnectionInfo(agent);
+
+        async IAsyncEnumerable<object> StreamEvents([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+        {
+            var request = CreateRequest(endpoint, apiKey, body);
+            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync(ct);
+                if (string.IsNullOrEmpty(line)) continue;
+                if (!line.StartsWith("data: ")) continue;
+                var data = line["data: ".Length..];
+                if (data == "[DONE]") break;
+
+                var evt = JsonSerializer.Deserialize<JsonElement>(data);
+                yield return evt;
+            }
+        }
+
+        return new PromptyStream(StreamEvents());
+    }
+
+    private Dictionary<string, object?> BuildRequestBody(Core.Prompty agent, List<Message> messages, bool stream)
+    {
         var model = agent.Model?.Id ?? "claude-sonnet-4-20250514";
         var maxTokens = agent.Model?.Options?.MaxOutputTokens ?? DefaultMaxTokens;
 
-        // Separate system messages from conversation messages
         var systemParts = new List<string>();
         var conversationMessages = new List<Dictionary<string, object?>>();
 
@@ -51,23 +102,23 @@ public class AnthropicExecutor : IExecutor
         if (systemParts.Count > 0)
             body["system"] = string.Join("\n\n", systemParts);
 
-        // Options
+        if (stream)
+            body["stream"] = true;
+
         var opts = agent.Model?.Options;
         if (opts?.Temperature is not null) body["temperature"] = opts.Temperature;
         if (opts?.TopP is not null) body["top_p"] = opts.TopP;
         if (opts?.TopK is not null) body["top_k"] = opts.TopK;
         if (opts?.StopSequences is not null) body["stop_sequences"] = opts.StopSequences;
 
-        // Tools
         var tools = ToolsToWire(agent);
         if (tools is not null) body["tools"] = tools;
 
-        // Structured output
-        if (agent.Outputs is not null && agent.Outputs.Count > 0)
-        {
-            // not yet supported by Anthropic in the same way — skip for now
-        }
+        return body;
+    }
 
+    private static HttpRequestMessage CreateRequest(string endpoint, string apiKey, Dictionary<string, object?> body)
+    {
         var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/v1/messages")
         {
             Content = JsonContent.Create(body, options: new JsonSerializerOptions
@@ -77,12 +128,7 @@ public class AnthropicExecutor : IExecutor
         };
         request.Headers.Add("x-api-key", apiKey);
         request.Headers.Add("anthropic-version", ApiVersion);
-
-        var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        return json;
+        return request;
     }
 
     private static Dictionary<string, object?> MessageToWire(Message msg)
