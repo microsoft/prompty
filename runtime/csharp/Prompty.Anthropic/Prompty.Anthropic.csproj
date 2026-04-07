@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
+    <InternalsVisibleTo Include="Prompty.Providers.Tests" />
   </ItemGroup>
 
 </Project>

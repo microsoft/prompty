@@ -66,5 +66,36 @@ public class AnthropicExecutorTests
 
         Assert.Equal("claude-sonnet-4-20250514", agent.Model?.Id ?? "claude-sonnet-4-20250514");
     }
+
+    [Fact]
+    public void OutputSchemaToWire_WithOutputs_ReturnsOutputConfig()
+    {
+        var agent = TestHelpers.CreateAgent(
+            provider: "anthropic",
+            outputs:
+            [
+                new Property { Name = "name", Kind = "string" },
+                new Property { Name = "age", Kind = "integer" },
+            ]);
+
+        var config = Anthropic.AnthropicExecutor.OutputSchemaToWire(agent);
+
+        Assert.NotNull(config);
+        Assert.True(config.ContainsKey("format"));
+        var format = config["format"] as Dictionary<string, object?>;
+        Assert.NotNull(format);
+        Assert.Equal("json_schema", format["type"]);
+        Assert.True(format.ContainsKey("schema"));
+    }
+
+    [Fact]
+    public void OutputSchemaToWire_NoOutputs_ReturnsNull()
+    {
+        var agent = TestHelpers.CreateAgent(provider: "anthropic");
+
+        var config = Anthropic.AnthropicExecutor.OutputSchemaToWire(agent);
+
+        Assert.Null(config);
+    }
 }
 

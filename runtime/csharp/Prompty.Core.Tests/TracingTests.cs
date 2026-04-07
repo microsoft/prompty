@@ -586,4 +586,49 @@ public class TracingTests : IDisposable
         public Task<object> ProcessAsync(Prompty agent, object response)
             => Task.FromResult(response);
     }
+
+    // -----------------------------------------------------------------------
+    // OTelTracer
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void OTelTracer_Register_AddsToRegistry()
+    {
+        OTelTracer.Register();
+        Assert.True(Tracer.HasListeners);
+    }
+
+    [Fact]
+    public void OTelTracer_CreateSpan_DoesNotThrow()
+    {
+        OTelTracer.Register("otel-test");
+
+        using var emitter = Tracer.Start("TestSpan");
+        emitter.Emit("signature", "test");
+        emitter.Emit("inputs", new Dictionary<string, object?> { ["x"] = 42 });
+        emitter.Emit("result", "done");
+    }
+
+    [Fact]
+    public void OTelTracer_ErrorEmit_DoesNotThrow()
+    {
+        OTelTracer.Register("otel-error-test");
+
+        using var emitter = Tracer.Start("ErrorSpan");
+        emitter.Emit("error", new InvalidOperationException("test error"));
+    }
+
+    [Fact]
+    public async Task OTelTracer_TraceAsync_Works()
+    {
+        OTelTracer.Register("otel-trace-test");
+
+        var result = await Trace.TraceAsync<string>("OTelTest", async (emit) =>
+        {
+            emit("inputs", new Dictionary<string, object?> { ["q"] = "hello" });
+            return "world";
+        });
+
+        Assert.Equal("world", result);
+    }
 }

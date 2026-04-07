@@ -96,6 +96,8 @@ public static class ToolDispatch
     {
         RegisterToolHandler("function", FunctionToolHandler);
         RegisterToolHandler("prompty", PromptyToolHandler);
+        RegisterToolHandler("mcp", McpToolHandler);
+        RegisterToolHandler("openapi", OpenApiToolHandler);
     }
 
     /// <summary>
@@ -130,6 +132,28 @@ public static class ToolDispatch
         // Execute as single-shot by default
         var result = await Pipeline.InvokeAsync(childAgent, arguments);
         return result?.ToString() ?? "";
+    }
+
+    /// <summary>
+    /// Built-in handler for kind="mcp".
+    /// MCP tool execution requires an external MCP server connection, which is not yet implemented.
+    /// </summary>
+    private static Task<string> McpToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    {
+        throw new ToolHandlerError(
+            $"MCP tool '{tool.Name}' cannot be executed in-process. " +
+            "MCP tool execution requires an external MCP server connection, which is not yet implemented.");
+    }
+
+    /// <summary>
+    /// Built-in handler for kind="openapi".
+    /// OpenAPI tool execution requires parsing an OpenAPI specification and making HTTP calls, which is not yet implemented.
+    /// </summary>
+    private static Task<string> OpenApiToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    {
+        throw new ToolHandlerError(
+            $"OpenAPI tool '{tool.Name}' cannot be executed in-process. " +
+            "OpenAPI tool execution requires parsing the specification and making HTTP calls, which is not yet implemented.");
     }
 
     // -----------------------------------------------------------------------

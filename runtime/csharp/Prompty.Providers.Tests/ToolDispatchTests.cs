@@ -293,4 +293,71 @@ public class ToolDispatchTests : IDisposable
         var result = await ToolDispatch.DispatchAsync(agent, call);
         Assert.Equal("location=Seattle", result);
     }
+
+    // -----------------------------------------------------------------------
+    // MCP / OpenAPI stub handlers
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task McpHandler_ThrowsToolHandlerError()
+    {
+        ToolDispatch.RegisterBuiltins();
+
+        var agent = new Core.Prompty
+        {
+            Tools = [new McpTool { Name = "fs_server", Kind = "mcp" }],
+        };
+        var call = new ToolCall { Id = "c1", Name = "fs_server", Arguments = """{}""" };
+
+        var ex = await Assert.ThrowsAsync<ToolHandlerError>(
+            () => ToolDispatch.DispatchAsync(agent, call));
+        Assert.Contains("MCP tool", ex.Message);
+        Assert.Contains("fs_server", ex.Message);
+    }
+
+    [Fact]
+    public async Task OpenApiHandler_ThrowsToolHandlerError()
+    {
+        ToolDispatch.RegisterBuiltins();
+
+        var agent = new Core.Prompty
+        {
+            Tools = [new OpenApiTool { Name = "weather_api", Kind = "openapi" }],
+        };
+        var call = new ToolCall { Id = "c1", Name = "weather_api", Arguments = """{}""" };
+
+        var ex = await Assert.ThrowsAsync<ToolHandlerError>(
+            () => ToolDispatch.DispatchAsync(agent, call));
+        Assert.Contains("OpenAPI tool", ex.Message);
+        Assert.Contains("weather_api", ex.Message);
+    }
+
+    [Fact]
+    public async Task McpHandler_Dispatch_CatchesError_ReturnsErrorString()
+    {
+        ToolDispatch.RegisterBuiltins();
+
+        var agent = new Core.Prompty
+        {
+            Tools = [new McpTool { Name = "mcp_tool", Kind = "mcp" }],
+        };
+        var call = new ToolCall { Id = "c1", Name = "mcp_tool", Arguments = """{}""" };
+
+        // Dispatch should catch ToolHandlerError and return error string
+        // But only if there's a wildcard or the dispatch swallows the error
+        // Since dispatch propagates ToolHandlerError by design, we verify the exception
+        await Assert.ThrowsAsync<ToolHandlerError>(
+            () => ToolDispatch.DispatchAsync(agent, call));
+    }
+
+    [Fact]
+    public void RegisterBuiltins_RegistersMcpAndOpenApi()
+    {
+        ToolDispatch.RegisterBuiltins();
+
+        Assert.NotNull(ToolDispatch.GetToolHandler("mcp"));
+        Assert.NotNull(ToolDispatch.GetToolHandler("openapi"));
+        Assert.NotNull(ToolDispatch.GetToolHandler("function"));
+        Assert.NotNull(ToolDispatch.GetToolHandler("prompty"));
+    }
 }

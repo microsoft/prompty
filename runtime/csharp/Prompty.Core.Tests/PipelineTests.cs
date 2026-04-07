@@ -415,6 +415,135 @@ public class PipelineTests : IDisposable
             () => Pipeline.InvokeAgentAsync(agent));
     }
 
+    // --- Thread Expansion ---
+
+    [Fact]
+    public void ExpandThreadMarkers_SplicesThreadMessages()
+    {
+        var threadMessages = new List<Message>
+        {
+            new() { Role = Roles.User, Parts = [new TextPart { Value = "Hi" }] },
+            new() { Role = Roles.Assistant, Parts = [new TextPart { Value = "Hello!" }] },
+        };
+
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.System, Parts = [new TextPart { Value = "You are helpful.\n__PROMPTY_THREAD_abcd1234_conversation__" }] },
+            new() { Role = Roles.User, Parts = [new TextPart { Value = "Final question" }] },
+        };
+
+        var inputs = new Dictionary<string, object?> { ["conversation"] = threadMessages };
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        // System text before nonce + 2 thread messages + user message = 4
+        Assert.Equal(4, result.Count);
+        Assert.Equal(Roles.System, result[0].Role);
+        Assert.Equal("You are helpful.", result[0].Text);
+        Assert.Equal(Roles.User, result[1].Role);
+        Assert.Equal("Hi", result[1].Text);
+        Assert.Equal(Roles.Assistant, result[2].Role);
+        Assert.Equal("Hello!", result[2].Text);
+        Assert.Equal(Roles.User, result[3].Role);
+        Assert.Equal("Final question", result[3].Text);
+    }
+
+    [Fact]
+    public void ExpandThreadMarkers_PreservesTextAfterNonce()
+    {
+        var threadMessages = new List<Message>
+        {
+            new() { Role = Roles.User, Parts = [new TextPart { Value = "Prior turn" }] },
+        };
+
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.System, Parts = [new TextPart { Value = "Before\n__PROMPTY_THREAD_abcd1234_history__\nAfter" }] },
+        };
+
+        var inputs = new Dictionary<string, object?> { ["history"] = threadMessages };
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        // Before text + 1 thread message + After text = 3
+        Assert.Equal(3, result.Count);
+        Assert.Equal("Before", result[0].Text);
+        Assert.Equal("Prior turn", result[1].Text);
+        Assert.Equal("After", result[2].Text);
+    }
+
+    [Fact]
+    public void ExpandThreadMarkers_NoThread_PassesThrough()
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.System, Parts = [new TextPart { Value = "Hello world" }] },
+            new() { Role = Roles.User, Parts = [new TextPart { Value = "Question" }] },
+        };
+
+        var inputs = new Dictionary<string, object?>();
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        Assert.Equal(2, result.Count);
+        Assert.Same(messages[0], result[0]); // Unmodified messages are same references
+        Assert.Same(messages[1], result[1]);
+    }
+
+    [Fact]
+    public void ExpandThreadMarkers_MissingInput_KeepsNonce()
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_missing__" }] },
+        };
+
+        var inputs = new Dictionary<string, object?>();
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        Assert.Single(result);
+        Assert.Contains("__PROMPTY_THREAD_", result[0].Text);
+    }
+
+    [Fact]
+    public void ExpandThreadMarkers_WrongType_KeepsNonce()
+    {
+        var messages = new List<Message>
+        {
+            new() { Role = Roles.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_data__" }] },
+        };
+
+        // Input exists but is a string, not IList<Message>
+        var inputs = new Dictionary<string, object?> { ["data"] = "not a thread" };
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        Assert.Single(result);
+        Assert.Contains("__PROMPTY_THREAD_", result[0].Text);
+    }
+
+    [Fact]
+    public void ExpandThreadMarkers_CopiesMetadata()
+    {
+        var threadMessages = new List<Message>
+        {
+            new() { Role = Roles.User, Parts = [new TextPart { Value = "Turn1" }] },
+        };
+
+        var messages = new List<Message>
+        {
+            new()
+            {
+                Role = Roles.System,
+                Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__" }],
+                Metadata = new Dictionary<string, object?> { ["source"] = "test" },
+            },
+        };
+
+        var inputs = new Dictionary<string, object?> { ["conv"] = threadMessages };
+        var result = Pipeline.ExpandThreadMarkers(messages, inputs);
+
+        // The "before" fragment should carry the original message's metadata
+        Assert.Equal(2, result.Count);
+        Assert.Equal("test", result[0].Metadata["source"]);
+    }
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------

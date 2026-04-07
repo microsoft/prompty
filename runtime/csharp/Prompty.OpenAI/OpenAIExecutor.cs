@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+#pragma warning disable OPENAI001 // Responses API is in preview
+
 using System.ClientModel;
 using System.Runtime.CompilerServices;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
 using OpenAI.Images;
+using OpenAI.Responses;
 using Prompty.Core;
 
 namespace Prompty.OpenAI;
 
 /// <summary>
 /// Executes LLM calls against the OpenAI API.
-/// Dispatches on apiType: chat (default), embedding, image.
+/// Dispatches on apiType: chat (default), responses, embedding, image.
 /// Registered under key "openai".
 /// </summary>
 public class OpenAIExecutor : IExecutor
@@ -28,6 +31,8 @@ public class OpenAIExecutor : IExecutor
         {
             "chat" when streaming => ExecuteChatStreamAsync(client, model, agent, messages),
             "chat" => await ExecuteChatAsync(client, model, agent, messages),
+            "responses" when streaming => ExecuteResponsesStreamAsync(client, model, agent, messages),
+            "responses" => await ExecuteResponsesAsync(client, model, agent, messages),
             "embedding" => await ExecuteEmbeddingAsync(client, model, messages),
             "image" => await ExecuteImageAsync(client, model, messages),
             _ => throw new InvalidOperationException($"Unsupported API type: {apiType}"),
@@ -69,7 +74,6 @@ public class OpenAIExecutor : IExecutor
         var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
         var options = WireFormat.BuildOptions(agent);
 
-        // Wrap the SDK streaming response as an IAsyncEnumerable
         async IAsyncEnumerable<object> StreamChunks([EnumeratorCancellation] CancellationToken ct = default)
         {
             var stream = chatClient.CompleteChatStreamingAsync(chatMessages, options, ct);
@@ -81,6 +85,41 @@ public class OpenAIExecutor : IExecutor
 
         return new PromptyStream(StreamChunks());
     }
+
+    // -----------------------------------------------------------------------
+    // Responses API
+    // -----------------------------------------------------------------------
+
+    private static async Task<object> ExecuteResponsesAsync(
+        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+    {
+        var responsesClient = client.GetResponsesClient();
+        var options = WireFormat.BuildResponsesOptions(model, agent, messages);
+        var result = await responsesClient.CreateResponseAsync(options);
+        return result.Value;
+    }
+
+    private static PromptyStream ExecuteResponsesStreamAsync(
+        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+    {
+        var responsesClient = client.GetResponsesClient();
+        var options = WireFormat.BuildResponsesOptions(model, agent, messages);
+
+        async IAsyncEnumerable<object> StreamChunks([EnumeratorCancellation] CancellationToken ct = default)
+        {
+            var stream = responsesClient.CreateResponseStreamingAsync(options, ct);
+            await foreach (var update in stream)
+            {
+                yield return update;
+            }
+        }
+
+        return new PromptyStream(StreamChunks());
+    }
+
+    // -----------------------------------------------------------------------
+    // Embedding / Image
+    // -----------------------------------------------------------------------
 
     private static async Task<object> ExecuteEmbeddingAsync(
         OpenAIClient client, string model, List<Message> messages)

@@ -226,6 +226,15 @@ public static class Pipeline
             for (var i = 0; i < maxIterations; i++)
             {
                 var response = await ExecuteAsync(agent, messages);
+
+                // If response is a stream, consume it fully before processing.
+                // This ensures tool calls from streaming responses are gathered.
+                if (response is PromptyStream stream)
+                {
+                    await foreach (var _ in stream) { }
+                    response = stream;
+                }
+
                 var result = raw ? response : await ProcessAsync(agent, response);
 
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)

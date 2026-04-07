@@ -114,6 +114,10 @@ public class AnthropicExecutor : IExecutor
         var tools = ToolsToWire(agent);
         if (tools is not null) body["tools"] = tools;
 
+        // Structured output → output_config.format.json_schema
+        var outputConfig = OutputSchemaToWire(agent);
+        if (outputConfig is not null) body["output_config"] = outputConfig;
+
         return body;
     }
 
@@ -245,5 +249,26 @@ public class AnthropicExecutor : IExecutor
                 "Anthropic API key is required. Set model.connection.apiKey or ${env:ANTHROPIC_API_KEY}.");
 
         return (endpoint ?? DefaultEndpoint, apiKey);
+    }
+
+    /// <summary>
+    /// Convert outputSchema to Anthropic output_config format.
+    /// Anthropic format: { format: { type: "json_schema", schema: { ... } } }
+    /// </summary>
+    internal static Dictionary<string, object?>? OutputSchemaToWire(Core.Prompty agent)
+    {
+        if (agent.Outputs is null || agent.Outputs.Count == 0)
+            return null;
+
+        var schema = SchemaHelpers.PropertiesToJsonSchema(agent.Outputs, strict: true);
+
+        return new Dictionary<string, object?>
+        {
+            ["format"] = new Dictionary<string, object?>
+            {
+                ["type"] = "json_schema",
+                ["schema"] = schema,
+            },
+        };
     }
 }
