@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.pipeline import execute, execute_agent, process
+from prompty.core.pipeline import invoke, invoke_agent, process
 from prompty.core.types import AsyncPromptyStream, PromptyStream
 
 from .conftest import make_direct_openai_agent, skip_direct_openai
@@ -46,7 +46,7 @@ class TestDirectOpenAIChat:
         agent.instructions = (
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
         )
-        result = execute(agent)
+        result = invoke(agent)
         assert isinstance(result, str)
         assert len(result) > 0
 
@@ -57,13 +57,13 @@ class TestDirectOpenAIChat:
         agent.instructions = (
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
         )
-        result = execute(agent)
+        result = invoke(agent)
         assert isinstance(result, str)
         assert len(result) > 0
 
     @pytest.mark.asyncio(loop_scope="function")
     async def test_async_chat(self) -> None:
-        from prompty.core.pipeline import execute_async
+        from prompty.core.pipeline import invoke_async
 
         agent = make_direct_openai_agent(
             options={"temperature": 0, "maxOutputTokens": 200},
@@ -71,7 +71,7 @@ class TestDirectOpenAIChat:
         agent.instructions = (
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
         )
-        result = await execute_async(agent)
+        result = await invoke_async(agent)
         assert isinstance(result, str)
         assert len(result) > 0
 
@@ -128,7 +128,7 @@ class TestDirectOpenAIStructured:
             },
         )
         agent.instructions = "system:\nYou are a data assistant. Respond with valid JSON matching the schema.\nuser:\nGive me info about Tokyo."
-        result = execute(agent)
+        result = invoke(agent)
         assert isinstance(result, dict)
         assert "city" in result
         assert "country" in result
@@ -144,7 +144,7 @@ class TestDirectOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = execute_agent(agent, tools={"get_weather": _weather_fn})
+        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
@@ -159,20 +159,20 @@ class TestDirectOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = execute_agent(agent, tools={"get_weather": _weather_fn})
+        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
     @pytest.mark.asyncio(loop_scope="function")
     async def test_async_tool_call_loop(self) -> None:
-        from prompty.core.pipeline import execute_agent_async
+        from prompty.core.pipeline import invoke_agent_async
 
         agent = make_direct_openai_agent(
             options={"temperature": 0, "maxOutputTokens": 300},
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = await execute_agent_async(agent, tools={"get_weather": _weather_fn})
+        result = await invoke_agent_async(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
@@ -189,7 +189,7 @@ class TestDirectOpenAIResponses:
         agent.instructions = (
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\nSay hello in exactly 3 words."
         )
-        result = execute(agent)
+        result = invoke(agent)
         assert isinstance(result, str)
         assert len(result) > 0
 
@@ -200,6 +200,6 @@ class TestDirectOpenAIResponses:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = execute_agent(agent, tools={"get_weather": _weather_fn})
+        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))

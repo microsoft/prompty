@@ -4,7 +4,7 @@ All implementations have moved to focused modules:
 
 - :mod:`prompty.protocols` — ``RendererProtocol``, ``ParserProtocol``, etc.
 - :mod:`prompty.discovery` — ``InvokerError``, ``get_renderer``, ``clear_cache``, etc.
-- :mod:`prompty.pipeline`  — ``prepare``, ``execute``, ``process``, ``run``, etc.
+- :mod:`prompty.pipeline`  — ``prepare``, ``invoke``, ``process``, ``run``, etc.
 
 Import from those modules directly for new code. This file re-exports
 everything so that ``from prompty.invoker import X`` continues to work.
@@ -31,6 +31,10 @@ from .core.pipeline import (
     execute_agent,
     execute_agent_async,
     execute_async,
+    invoke,
+    invoke_agent,
+    invoke_agent_async,
+    invoke_async,
     parse,
     parse_async,
     prepare,
@@ -84,11 +88,15 @@ __all__ = [
     "run",
     "run_async",
     # Top-level orchestrators
+    "invoke",
+    "invoke_async",
+    "invoke_agent",
+    "invoke_agent_async",
+    # Backward-compat aliases
     "execute",
     "execute_async",
     "execute_agent",
     "execute_agent_async",
-    # Backward-compat aliases
     "run_agent",
     "run_agent_async",
     # Validation

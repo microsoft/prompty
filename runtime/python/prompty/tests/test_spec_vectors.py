@@ -989,17 +989,17 @@ AGENT_IDS = [v["name"] for v in AGENT_VECTORS]
 
 @pytest.mark.parametrize("vec", AGENT_VECTORS, ids=AGENT_IDS)
 def test_agent_vector(vec: dict):
-    """Test agent vectors via the REAL execute_agent() pipeline.
+    """Test agent vectors via the REAL invoke_agent() pipeline.
 
     Registers a mock executor that replays canned LLM responses from the
-    vector sequence, then calls the production execute_agent(). This
+    vector sequence, then calls the production invoke_agent(). This
     validates the full agent loop including binding injection, tool result
     message construction, and iteration control.
     """
     from unittest.mock import patch
 
     from prompty.core.discovery import _cache, clear_cache
-    from prompty.core.pipeline import execute_agent
+    from prompty.core.pipeline import invoke_agent
 
     name = vec["name"]
     inp = vec["input"]
@@ -1099,7 +1099,7 @@ def test_agent_vector(vec: dict):
             if "error" in expected:
                 _test_agent_error_real(name, agent, inp, expected, tool_functions)
             else:
-                result = execute_agent(
+                result = invoke_agent(
                     agent,
                     inputs=inp.get("parent_inputs"),
                     tools=tool_functions,
@@ -1134,14 +1134,14 @@ def _test_agent_error_real(
     expected: dict,
     tool_functions: dict[str, Any],
 ):
-    """Test that execute_agent raises on error vectors."""
-    from prompty.core.pipeline import execute_agent
+    """Test that invoke_agent raises on error vectors."""
+    from prompty.core.pipeline import invoke_agent
 
     error_msg = expected.get("error", "")
 
     if "max_iterations" in name.lower() or "exceeded" in error_msg.lower():
         with pytest.raises(ValueError, match="max_iterations"):
-            execute_agent(
+            invoke_agent(
                 agent,
                 inputs=inp.get("parent_inputs"),
                 tools=tool_functions,
@@ -1149,10 +1149,10 @@ def _test_agent_error_real(
     elif "not registered" in error_msg.lower() or "unknown_tool" in name:
         # The tool_not_registered vector expects the loop to handle missing tools
         # gracefully (not crash), returning an error message to the LLM.
-        # Our execute_agent handles this by returning an error string as tool result.
+        # Our invoke_agent handles this by returning an error string as tool result.
         # The vector just validates the loop doesn't crash — so run it.
         try:
-            execute_agent(
+            invoke_agent(
                 agent,
                 inputs=inp.get("parent_inputs"),
                 tools=tool_functions,

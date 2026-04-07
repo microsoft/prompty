@@ -6,7 +6,7 @@ Covers:
 - Input validation
 - prepare() pipeline (with mock renderer/parser)
 - run() executor+process dispatch
-- execute() end-to-end with mocks
+- invoke() end-to-end with mocks
 - Thread marker expansion
 - Rich input kinds
 - Error cases
@@ -38,11 +38,11 @@ from prompty.core.types import (
 from prompty.invoker import (
     InvokerError,
     clear_cache,
-    execute,
     get_executor,
     get_parser,
     get_processor,
     get_renderer,
+    invoke,
     prepare,
     process,
     validate_inputs,
@@ -761,11 +761,11 @@ class TestProcess:
 
 
 # ---------------------------------------------------------------------------
-# Tests: execute() — top-level orchestrator (load + prepare + run)
+# Tests: invoke() — top-level orchestrator (load + prepare + run)
 # ---------------------------------------------------------------------------
 
 
-class TestExecute:
+class TestInvoke:
     def _patch_all(self):
         return _patch_entry_points(
             renderers=[("jinja2", MockRenderer)],
@@ -774,26 +774,26 @@ class TestExecute:
             processors=[("openai", MockProcessor)],
         )
 
-    def test_execute_with_agent(self):
+    def test_invoke_with_agent(self):
         agent = _make_agent(
             instructions="system:\nHello\n\nuser:\n{{q}}",
             provider="openai",
         )
 
         with self._patch_all():
-            result = execute(agent, {"q": "Hi"})
+            result = invoke(agent, {"q": "Hi"})
 
         assert isinstance(result, str)
         assert "Response to:" in result
 
-    def test_execute_raw(self):
+    def test_invoke_raw(self):
         agent = _make_agent(
             instructions="system:\nHello",
             provider="openai",
         )
 
         with self._patch_all():
-            result = execute(agent, {}, raw=True)
+            result = invoke(agent, {}, raw=True)
 
         assert isinstance(result, dict)
         assert "choices" in result

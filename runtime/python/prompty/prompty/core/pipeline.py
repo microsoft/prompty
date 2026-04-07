@@ -2,7 +2,7 @@
 
 Four-step pipeline with traced boundaries::
 
-    execute()             →  top-level: load + prepare + run
+    invoke()              →  top-level: load + prepare + run
       ├── prepare()       →  render + parse + thread expansion  →  list[Message]
       │   ├── render()    →  template + inputs  →  rendered string
       │   └── parse()     →  rendered string    →  list[Message]
@@ -10,7 +10,7 @@ Four-step pipeline with traced boundaries::
           ├── executor    →  messages → raw LLM response
           └── process()   →  response → clean result
 
-    execute_agent()       →  like execute(), but with a tool-call loop in run()
+    invoke_agent()        →  like invoke(), but with a tool-call loop in run()
 
 Each step is independently traced.  Users can bring their own
 Renderer, Parser, Executor, and Processor implementations via the
@@ -51,11 +51,15 @@ __all__ = [
     "run",
     "run_async",
     # Top-level orchestrators
+    "invoke",
+    "invoke_async",
+    "invoke_agent",
+    "invoke_agent_async",
+    # Backward-compat aliases
     "execute",
     "execute_async",
     "execute_agent",
     "execute_agent_async",
-    # Backward-compat aliases
     "run_agent",
     "run_agent_async",
     # Helpers (used by tests)
@@ -689,12 +693,12 @@ async def run_async(
 
 
 # ---------------------------------------------------------------------------
-# Top-level orchestrator: execute() — load + prepare + run
+# Top-level orchestrator: invoke() — load + prepare + run
 # ---------------------------------------------------------------------------
 
 
 @trace
-def execute(
+def invoke(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
@@ -702,9 +706,8 @@ def execute(
 ) -> Any:
     """Full pipeline: load → prepare → run.
 
-    This is the top-level orchestrator matching the v1 ``execute()``
-    signature.  It loads the prompt (if a path), prepares messages,
-    then runs them through the LLM and processor.
+    This is the top-level orchestrator.  It loads the prompt (if a path),
+    prepares messages, then runs them through the LLM and processor.
 
     Parameters
     ----------
@@ -728,13 +731,13 @@ def execute(
 
 
 @trace
-async def execute_async(
+async def invoke_async(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
 ) -> Any:
-    """Async variant of :func:`execute`."""
+    """Async variant of :func:`invoke`."""
     from .loader import load_async
 
     if isinstance(prompt, str):
@@ -1446,7 +1449,7 @@ async def _build_tool_messages_from_calls_async(
 
 
 @trace
-def execute_agent(
+def invoke_agent(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
@@ -1456,7 +1459,7 @@ def execute_agent(
 ) -> Any:
     """Run a prompt with automatic tool-call execution loop.
 
-    Similar to :func:`execute`, but when the LLM returns tool calls, the
+    Similar to :func:`invoke`, but when the LLM returns tool calls, the
     specified tool functions are executed and their results are sent back
     to the model. This repeats until the model returns a normal response
     or *max_iterations* is reached.
@@ -1557,7 +1560,7 @@ def execute_agent(
 
 
 @trace
-async def execute_agent_async(
+async def invoke_agent_async(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
     *,
@@ -1565,7 +1568,7 @@ async def execute_agent_async(
     max_iterations: int = _DEFAULT_MAX_ITERATIONS,
     raw: bool = False,
 ) -> Any:
-    """Async variant of :func:`execute_agent`."""
+    """Async variant of :func:`invoke_agent`."""
     from ..tracing.tracer import Tracer
     from .loader import load_async
 
@@ -1636,5 +1639,9 @@ async def execute_agent_async(
 
 
 # Backward-compatibility aliases
-run_agent = execute_agent
-run_agent_async = execute_agent_async
+execute = invoke
+execute_async = invoke_async
+execute_agent = invoke_agent
+execute_agent_async = invoke_agent_async
+run_agent = invoke_agent
+run_agent_async = invoke_agent_async

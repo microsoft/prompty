@@ -21,8 +21,8 @@ from prompty.core.pipeline import (
     _build_openai_tool_result_messages,
     _build_tool_messages_from_calls,
     _resolve_bindings,
-    execute_agent,
-    execute_agent_async,
+    invoke_agent,
+    invoke_agent_async,
 )
 from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
@@ -313,18 +313,18 @@ class TestStreamingPathBindings:
 
 
 # ---------------------------------------------------------------------------
-# Tests: execute_agent end-to-end with bindings
+# Tests: invoke_agent end-to-end with bindings
 # ---------------------------------------------------------------------------
 
 
-class TestExecuteAgentBindings:
-    """Full execute_agent pipeline should thread inputs through for binding injection."""
+class TestInvokeAgentBindings:
+    """Full invoke_agent pipeline should thread inputs through for binding injection."""
 
     @patch("prompty.core.pipeline.process")
     @patch("prompty.core.pipeline._invoke_executor")
     @patch("prompty.core.pipeline.prepare")
     def test_bindings_injected_e2e(self, mock_prepare, mock_execute, mock_process):
-        """execute_agent injects bound values into tool calls."""
+        """invoke_agent injects bound values into tool calls."""
         agent = _make_bound_agent(bindings={"unit": "preferred_unit"})
         messages = [Message(role="user", parts=[TextPart(value="Weather in Paris?")])]
         mock_prepare.return_value = messages
@@ -342,7 +342,7 @@ class TestExecuteAgentBindings:
             received_args["unit"] = unit
             return "22°C sunny"
 
-        result = execute_agent(
+        result = invoke_agent(
             agent,
             inputs={"preferred_unit": "celsius"},
             tools={"get_weather": get_weather},
@@ -357,7 +357,7 @@ class TestExecuteAgentBindings:
     @patch("prompty.core.pipeline._invoke_executor_async")
     @patch("prompty.core.pipeline.prepare_async")
     async def test_bindings_injected_async(self, mock_prepare, mock_execute, mock_process):
-        """Async execute_agent also injects bound values."""
+        """Async invoke_agent also injects bound values."""
         agent = _make_bound_agent(bindings={"unit": "preferred_unit"})
         messages = [Message(role="user", parts=[TextPart(value="Weather?")])]
         mock_prepare.return_value = messages
@@ -374,7 +374,7 @@ class TestExecuteAgentBindings:
             received_args["unit"] = unit
             return "15°C rainy"
 
-        await execute_agent_async(
+        await invoke_agent_async(
             agent,
             inputs={"preferred_unit": "celsius"},
             tools={"get_weather": get_weather},

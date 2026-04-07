@@ -234,7 +234,7 @@ class TestFoundryEmbeddingTracing:
 class TestFoundryAgentTracing:
     def test_agent_loop_trace(self, tmp_path):
         """Agent loop with tool calls produces a trace with the AgentLoop frame."""
-        from prompty.core.pipeline import execute_agent
+        from prompty.core.pipeline import invoke_agent
 
         def get_weather(city: str) -> str:
             return f"72°F and sunny in {city}"
@@ -263,7 +263,7 @@ class TestFoundryAgentTracing:
             agent.instructions = (
                 "system:\nYou are a helpful assistant. Use tools when needed.\nuser:\nWhat is the weather in Seattle?"
             )
-            result = execute_agent(
+            result = invoke_agent(
                 agent,
                 tools={"get_weather": get_weather},
             )
@@ -275,7 +275,7 @@ class TestFoundryAgentTracing:
         root = _assert_trace_envelope(data)
         _assert_timing(root)
 
-        # The root should be 'execute', with an AgentLoop child frame
+        # The root should be 'invoke', with an AgentLoop child frame
         assert "__frames" in root
         frames = root["__frames"]
         agent_frame = _find_frame(frames, "AgentLoop")
