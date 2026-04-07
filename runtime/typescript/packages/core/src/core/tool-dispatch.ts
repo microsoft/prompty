@@ -183,8 +183,21 @@ class PromptyToolHandler implements ToolHandler {
 
     const childPath = resolve(dirname(parentPath), tool.path as string);
 
+    // Circular reference detection
+    const stack = ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ?? [];
+    const normalizedChild = resolve(childPath);
+    const visited = new Set([...stack.map((p) => resolve(p)), resolve(parentPath)]);
+    if (visited.has(normalizedChild)) {
+      const chain = [...stack, parentPath, childPath].join(" → ");
+      return `Error executing PromptyTool '${tool.name}': circular reference detected: ${chain}`;
+    }
+
     try {
       const child = load(childPath);
+      // Propagate visited-path stack to the child
+      if (!child.metadata) child.metadata = {};
+      child.metadata.__prompty_tool_stack = [...stack, parentPath];
+
       const mode = (tool.mode as string) ?? "single";
 
       if (mode === "agentic") {

@@ -196,6 +196,9 @@ class PromptyToolHandler:
     Resolves a child ``.prompty`` file relative to the parent agent's
     ``__source_path`` metadata, loads it, and runs it in either
     ``"single"`` or ``"agentic"`` mode.
+
+    Tracks loaded paths via ``__prompty_tool_stack`` metadata to detect
+    and prevent circular references (A → B → A).
     """
 
     def execute_tool(
@@ -212,7 +215,15 @@ class PromptyToolHandler:
 
         try:
             child_path = self._resolve_child_path(tool, agent)
+            self._check_circular(child_path, agent)
             child = load(child_path)
+            # Propagate the visited-path stack to the child
+            stack = list((agent.metadata or {}).get("__prompty_tool_stack", []))
+            stack.append(child_path)
+            if not child.metadata:
+                child.metadata = {}
+            child.metadata["__prompty_tool_stack"] = stack
+
             mode = getattr(tool, "mode", "single")
             if mode == "agentic":
                 result = execute_agent(child, args)
@@ -237,7 +248,15 @@ class PromptyToolHandler:
 
         try:
             child_path = self._resolve_child_path(tool, agent)
+            self._check_circular(child_path, agent)
             child = load(child_path)
+            # Propagate the visited-path stack to the child
+            stack = list((agent.metadata or {}).get("__prompty_tool_stack", []))
+            stack.append(child_path)
+            if not child.metadata:
+                child.metadata = {}
+            child.metadata["__prompty_tool_stack"] = stack
+
             mode = getattr(tool, "mode", "single")
             if mode == "agentic":
                 result = await execute_agent_async(child, args)
@@ -257,6 +276,24 @@ class PromptyToolHandler:
         if not parent_path:
             raise FileNotFoundError(f"Cannot resolve PromptyTool '{tool.name}': parent agent has no __source_path")
         return str(Path(parent_path).parent / tool.path)
+
+    @staticmethod
+    def _check_circular(child_path: str, agent: Any) -> None:
+        """Raise if the child path is already in the call stack."""
+        metadata = agent.metadata if agent and getattr(agent, "metadata", None) else {}
+        stack: list[str] = metadata.get("__prompty_tool_stack", [])
+        # Normalize for comparison
+        normalized = str(Path(child_path).resolve())
+        parent_source = metadata.get("__source_path", "")
+        normalized_parent = str(Path(parent_source).resolve()) if parent_source else ""
+        visited = {str(Path(p).resolve()) for p in stack}
+        if normalized_parent:
+            visited.add(normalized_parent)
+        if normalized in visited:
+            chain = (
+                " → ".join([*stack, parent_source, child_path]) if parent_source else " → ".join([*stack, child_path])
+            )
+            raise RecursionError(f"Circular PromptyTool reference detected: {chain}")
 
 
 class McpToolHandler:

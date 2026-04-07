@@ -143,21 +143,26 @@ def _project_prompty_tool(tool: Any, parent: Prompty) -> dict[str, Any]:
 
     from ...core.loader import load
 
+    # Validate tool.path
+    tool_path = getattr(tool, "path", None)
+    if not tool_path:
+        raise ValueError(f"PromptyTool '{tool.name}' has no path")
+
     # Resolve child path relative to the parent .prompty file
     parent_path = (parent.metadata or {}).get("__source_path", "")
     if not parent_path:
         raise ValueError(f"Cannot resolve PromptyTool '{tool.name}': parent agent has no __source_path in metadata")
-    child_path = Path(parent_path).parent / tool.path
+    child_path = Path(parent_path).parent / tool_path
     child = load(str(child_path))
 
     func_def: dict[str, Any] = {"name": tool.name}
     func_def["description"] = tool.description or child.description or ""
 
     # Use child's inputs as parameters, stripping bound params
-    if child.inputs:
-        bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
-        params = [p for p in child.inputs if p.name not in bound_names]
-        func_def["parameters"] = _schema_to_wire(params)
+    bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
+    child_inputs = child.inputs or []
+    params = [p for p in child_inputs if p.name not in bound_names]
+    func_def["parameters"] = _schema_to_wire(params)
 
     if hasattr(tool, "strict") and tool.strict:
         func_def["strict"] = True

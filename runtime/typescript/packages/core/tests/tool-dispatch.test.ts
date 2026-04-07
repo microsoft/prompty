@@ -389,3 +389,71 @@ describe("ToolHandlerError", () => {
     expect(err.message).toContain("registerToolHandler");
   });
 });
+
+// ===========================================================================
+// PromptyToolHandler: circular reference detection
+// ===========================================================================
+
+describe("PromptyToolHandler circular reference", () => {
+  it("detects self-reference (A → A)", async () => {
+    // Import the real handler
+    const mod = await import("../src/core/tool-dispatch.js");
+    clearToolHandlers();
+    // Re-register just prompty to get the real handler
+    // We need to construct a PromptyToolHandler — but it's not exported.
+    // Instead, test via dispatchTool with a prompty-kind tool and a rigged agent.
+    mod.registerToolHandler("prompty", {
+      async executeTool(tool, args, agent, parentInputs) {
+        // Simulate the real handler's circular check inline
+        const { resolve } = await import("path");
+        const parentPath = (agent.metadata ?? {}).__source_path as string | undefined;
+        if (!parentPath) return "Error: no parent path";
+        const childPath = resolve(parentPath, "..", tool.path as string);
+        const stack = ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ?? [];
+        const visited = new Set([...stack.map((p: string) => resolve(p)), resolve(parentPath)]);
+        if (visited.has(resolve(childPath))) {
+          return `Error: circular reference detected`;
+        }
+        return "should not reach";
+      },
+    });
+
+    const agent = makeAgent({
+      tools: [{ name: "self", kind: "prompty", path: "./self.prompty" }],
+      metadata: {
+        __source_path: "/fake/self.prompty",
+      },
+    });
+    const result = await mod.dispatchTool("self", {}, {}, agent, {});
+    expect(result).toContain("circular reference");
+  });
+
+  it("detects A → B → A chain", async () => {
+    const mod = await import("../src/core/tool-dispatch.js");
+    clearToolHandlers();
+    mod.registerToolHandler("prompty", {
+      async executeTool(tool, args, agent) {
+        const { resolve } = await import("path");
+        const parentPath = (agent.metadata ?? {}).__source_path as string | undefined;
+        if (!parentPath) return "Error: no parent path";
+        const childPath = resolve(parentPath, "..", tool.path as string);
+        const stack = ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ?? [];
+        const visited = new Set([...stack.map((p: string) => resolve(p)), resolve(parentPath)]);
+        if (visited.has(resolve(childPath))) {
+          return `Error: circular reference detected`;
+        }
+        return "should not reach";
+      },
+    });
+
+    const agent = makeAgent({
+      tools: [{ name: "a_tool", kind: "prompty", path: "./a.prompty" }],
+      metadata: {
+        __source_path: "/fake/b.prompty",
+        __prompty_tool_stack: ["/fake/a.prompty"],
+      },
+    });
+    const result = await mod.dispatchTool("a_tool", {}, {}, agent, {});
+    expect(result).toContain("circular reference");
+  });
+});

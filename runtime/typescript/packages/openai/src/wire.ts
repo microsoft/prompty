@@ -365,13 +365,12 @@ function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Rec
   const bindings = (tool as { bindings?: { name: string }[] }).bindings;
   const boundNames = new Set((bindings ?? []).map((b) => b.name));
 
-  if (child.inputs && child.inputs.length > 0) {
-    let params: unknown[] = child.inputs;
-    if (boundNames.size > 0) {
-      params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
-    }
-    funcDef.parameters = schemaToWire(params);
+  const childInputs = child.inputs ?? [];
+  let params: unknown[] = childInputs;
+  if (boundNames.size > 0) {
+    params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
   }
+  funcDef.parameters = schemaToWire(params);
 
   const strict = (tool as { strict?: boolean }).strict;
   if (strict) {

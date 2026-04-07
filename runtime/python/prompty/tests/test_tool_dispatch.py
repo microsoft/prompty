@@ -364,18 +364,24 @@ class TestPromptyToolHandler:
         with pytest.raises(FileNotFoundError, match="no __source_path"):
             handler._resolve_child_path(tool, agent)
 
-    def test_execute_tool_mocked(self):
+    def test_execute_tool_loads_and_runs(self):
         """PromptyToolHandler.execute_tool loads child and runs prepare+run."""
         handler = PromptyToolHandler()
         tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty", mode="single")
         agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
 
+        mock_child = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "summarize_child.prompty")})
         with (
-            patch("prompty.core.tool_dispatch.PromptyToolHandler.execute_tool") as mock_exec,
+            patch("prompty.core.loader.load", return_value=mock_child) as mock_load,
+            patch("prompty.core.pipeline.prepare", return_value=[{"role": "user", "content": "hello"}]) as mock_prepare,
+            patch("prompty.core.pipeline.run", return_value="Summary of the text") as mock_run,
         ):
-            mock_exec.return_value = "Summary of the text"
             result = handler.execute_tool(tool, {"text": "hello world"}, agent, {})
+
         assert result == "Summary of the text"
+        mock_load.assert_called_once()
+        mock_prepare.assert_called_once()
+        mock_run.assert_called_once()
 
     def test_execute_tool_error_returns_string(self):
         """Errors during execution are caught and returned as strings."""
@@ -384,6 +390,31 @@ class TestPromptyToolHandler:
         agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
         result = handler.execute_tool(tool, {}, agent, {})
         assert "Error executing PromptyTool" in result
+
+    def test_circular_reference_detected(self):
+        """Circular A → B → A is caught before infinite recursion."""
+        handler = PromptyToolHandler()
+        parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
+        child_path = str(PROMPTS_DIR / "summarize_child.prompty")
+        tool = _make_tool_def(name="summarize", kind="prompty", path="./tools_prompty.prompty", mode="single")
+        # Simulate agent that's already in a chain: child loaded from parent
+        agent = _make_agent(
+            metadata={
+                "__source_path": child_path,
+                "__prompty_tool_stack": [parent_path],
+            }
+        )
+        result = handler.execute_tool(tool, {}, agent, {})
+        assert "circular reference" in result.lower() or "RecursionError" in result
+
+    def test_circular_self_reference(self):
+        """A .prompty that references itself is caught."""
+        handler = PromptyToolHandler()
+        parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
+        tool = _make_tool_def(name="self_ref", kind="prompty", path="./tools_prompty.prompty", mode="single")
+        agent = _make_agent(metadata={"__source_path": parent_path})
+        result = handler.execute_tool(tool, {}, agent, {})
+        assert "circular reference" in result.lower() or "RecursionError" in result
 
 
 class TestPlaceholderHandlers:
@@ -476,3 +507,39 @@ class TestWireProjection:
 
         with pytest.raises(ValueError, match="no __source_path"):
             _project_prompty_tool(tool, parent)
+
+    def test_missing_tool_path_raises(self):
+        """Wire projection fails when tool has no path."""
+        from prompty.providers.openai.executor import _project_prompty_tool
+
+        tool = _make_tool_def(name="broken", kind="prompty", path="")
+        parent = MagicMock()
+        parent.metadata = {"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")}
+
+        with pytest.raises(ValueError, match="has no path"):
+            _project_prompty_tool(tool, parent)
+
+    def test_child_with_no_inputs_emits_empty_schema(self):
+        """When child has no inputs, parameters should still be an empty object schema."""
+        from prompty.providers.openai.executor import _project_prompty_tool
+
+        parent = MagicMock()
+        parent.metadata = {"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")}
+
+        # Mock the child load to return an agent with no inputs
+        with patch("prompty.core.loader.load") as mock_load:
+            mock_child = MagicMock()
+            mock_child.inputs = []
+            mock_child.description = "empty child"
+            mock_load.return_value = mock_child
+            tool_obj = MagicMock()
+            tool_obj.name = "empty"
+            tool_obj.description = ""
+            tool_obj.path = "./summarize_child.prompty"
+            tool_obj.bindings = []
+            tool_obj.strict = False
+            func_def = _project_prompty_tool(tool_obj, parent)
+
+        assert "parameters" in func_def
+        assert func_def["parameters"]["type"] == "object"
+        assert func_def["parameters"]["properties"] == {}
