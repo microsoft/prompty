@@ -92,12 +92,12 @@ public class Model
 
         if (data.TryGetValue("connection", out var connectionValue) && connectionValue is not null)
         {
-            instance.Connection = Connection.Load(connectionValue.GetDictionary(), context);
+            instance.Connection = Connection.Load(connectionValue.GetDictionary(Connection.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("options", out var optionsValue) && optionsValue is not null)
         {
-            instance.Options = ModelOptions.Load(optionsValue.GetDictionary(), context);
+            instance.Options = ModelOptions.Load(optionsValue.GetDictionary(ModelOptions.ShorthandProperty), context);
         }
 
         if (context is not null)

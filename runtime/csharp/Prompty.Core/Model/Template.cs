@@ -65,12 +65,12 @@ public class Template
 
         if (data.TryGetValue("format", out var formatValue) && formatValue is not null)
         {
-            instance.Format = FormatConfig.Load(formatValue.GetDictionary(), context);
+            instance.Format = FormatConfig.Load(formatValue.GetDictionary(FormatConfig.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("parser", out var parserValue) && parserValue is not null)
         {
-            instance.Parser = ParserConfig.Load(parserValue.GetDictionary(), context);
+            instance.Parser = ParserConfig.Load(parserValue.GetDictionary(ParserConfig.ShorthandProperty), context);
         }
 
         if (context is not null)

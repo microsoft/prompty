@@ -68,7 +68,7 @@ public class OpenApiTool : Tool
 
         if (data.TryGetValue("connection", out var connectionValue) && connectionValue is not null)
         {
-            instance.Connection = Connection.Load(connectionValue.GetDictionary(), context);
+            instance.Connection = Connection.Load(connectionValue.GetDictionary(Connection.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("specification", out var specificationValue) && specificationValue is not null)

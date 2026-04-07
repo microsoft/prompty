@@ -133,7 +133,7 @@ public class Prompty
 
         if (data.TryGetValue("model", out var modelValue) && modelValue is not null)
         {
-            instance.Model = Model.Load(modelValue.GetDictionary(), context);
+            instance.Model = Model.Load(modelValue.GetDictionary(Model.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("tools", out var toolsValue) && toolsValue is not null)
@@ -143,7 +143,7 @@ public class Prompty
 
         if (data.TryGetValue("template", out var templateValue) && templateValue is not null)
         {
-            instance.Template = Template.Load(templateValue.GetDictionary(), context);
+            instance.Template = Template.Load(templateValue.GetDictionary(Template.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("instructions", out var instructionsValue) && instructionsValue is not null)
@@ -171,7 +171,8 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
-                if (kvp.Value is Dictionary<string, object?> itemDict)
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
                 {
                     // Value is an object, add name to it
                     itemDict["name"] = kvp.Key;
@@ -193,7 +194,8 @@ public class Prompty
         {
             foreach (var item in list)
             {
-                if (item is Dictionary<string, object?> itemDict)
+                var itemDict = item.GetDictionary(Property.ShorthandProperty);
+                if (itemDict.Count > 0)
                 {
                     result.Add(Property.Load(itemDict, context));
                 }
@@ -216,7 +218,8 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
-                if (kvp.Value is Dictionary<string, object?> itemDict)
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
                 {
                     // Value is an object, add name to it
                     itemDict["name"] = kvp.Key;
@@ -238,7 +241,8 @@ public class Prompty
         {
             foreach (var item in list)
             {
-                if (item is Dictionary<string, object?> itemDict)
+                var itemDict = item.GetDictionary(Property.ShorthandProperty);
+                if (itemDict.Count > 0)
                 {
                     result.Add(Property.Load(itemDict, context));
                 }
@@ -261,7 +265,8 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
-                if (kvp.Value is Dictionary<string, object?> itemDict)
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
                 {
                     // Value is an object, add name to it
                     itemDict["name"] = kvp.Key;
@@ -283,7 +288,8 @@ public class Prompty
         {
             foreach (var item in list)
             {
-                if (item is Dictionary<string, object?> itemDict)
+                var itemDict = item.GetDictionary(Tool.ShorthandProperty);
+                if (itemDict.Count > 0)
                 {
                     result.Add(Tool.Load(itemDict, context));
                 }

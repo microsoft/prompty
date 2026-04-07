@@ -64,7 +64,7 @@ public class ArrayProperty : Property
 
         if (data.TryGetValue("items", out var itemsValue) && itemsValue is not null)
         {
-            instance.Items = Property.Load(itemsValue.GetDictionary(), context);
+            instance.Items = Property.Load(itemsValue.GetDictionary(Property.ShorthandProperty), context);
         }
 
         if (context is not null)

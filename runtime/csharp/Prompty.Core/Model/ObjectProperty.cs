@@ -87,7 +87,8 @@ public class ObjectProperty : Property
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
-                if (kvp.Value is Dictionary<string, object?> itemDict)
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
                 {
                     // Value is an object, add name to it
                     itemDict["name"] = kvp.Key;
@@ -109,7 +110,8 @@ public class ObjectProperty : Property
         {
             foreach (var item in list)
             {
-                if (item is Dictionary<string, object?> itemDict)
+                var itemDict = item.GetDictionary(Property.ShorthandProperty);
+                if (itemDict.Count > 0)
                 {
                     result.Add(Property.Load(itemDict, context));
                 }

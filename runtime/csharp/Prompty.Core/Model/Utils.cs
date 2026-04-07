@@ -275,6 +275,23 @@ internal static class Utils
     }
 
     /// <summary>
+    /// Retrieves a nested dictionary from any object, with shorthand property support.
+    /// If the object is not a dictionary and a shorthand property is specified,
+    /// wraps the scalar value as { shorthandProperty: value }.
+    /// </summary>
+    /// <param name="obj">The object that should be a dictionary.</param>
+    /// <param name="shorthandProperty">Optional shorthand property name for scalar wrapping.</param>
+    /// <returns>Dictionary if the object is a dictionary; shorthand-wrapped dict for scalars; otherwise, an empty dictionary.</returns>
+    public static Dictionary<string, object?> GetDictionary(this object? obj, string? shorthandProperty)
+    {
+        var dict = obj.GetDictionary();
+        if (dict.Count > 0) return dict;
+        if (shorthandProperty is not null && obj is not null)
+            return new Dictionary<string, object?> { [shorthandProperty] = obj };
+        return dict;
+    }
+
+    /// <summary>
     /// Retrieves a value from the dictionary by key and attempts to convert it to the specified type T.
     /// </summary>
     /// <typeparam name="T">The type to convert the value to.</typeparam>

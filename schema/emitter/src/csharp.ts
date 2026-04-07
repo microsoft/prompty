@@ -459,7 +459,7 @@ const renderLoadProperty = (findType: (typeName: string) => TypeNode | undefined
     }
     return `instance.${propertyName} = Load${propertyName}(${prop.name}Value, context);`;
   } else {
-    return `instance.${propertyName} = ${prop.typeName.name}.Load(${prop.name}Value.GetDictionary(), context);`;
+    return `instance.${propertyName} = ${prop.typeName.name}.Load(${prop.name}Value.GetDictionary(${prop.typeName.name}.ShorthandProperty), context);`;
   }
 };
 

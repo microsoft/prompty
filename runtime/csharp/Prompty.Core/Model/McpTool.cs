@@ -83,7 +83,7 @@ public class McpTool : Tool
 
         if (data.TryGetValue("connection", out var connectionValue) && connectionValue is not null)
         {
-            instance.Connection = Connection.Load(connectionValue.GetDictionary(), context);
+            instance.Connection = Connection.Load(connectionValue.GetDictionary(Connection.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("serverName", out var serverNameValue) && serverNameValue is not null)
@@ -98,7 +98,7 @@ public class McpTool : Tool
 
         if (data.TryGetValue("approvalMode", out var approvalModeValue) && approvalModeValue is not null)
         {
-            instance.ApprovalMode = McpApprovalMode.Load(approvalModeValue.GetDictionary(), context);
+            instance.ApprovalMode = McpApprovalMode.Load(approvalModeValue.GetDictionary(McpApprovalMode.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("allowedTools", out var allowedToolsValue) && allowedToolsValue is not null)
