@@ -657,28 +657,26 @@ export async function invokeAgent(
       // Non-streaming: check raw response for tool calls
       if (!hasToolCalls(response)) {
         // §13.4 — Output guardrail on final response
+        const finalResult = options?.raw ? response : await process(agent, response);
         if (guardrails) {
-          const finalResult = options?.raw ? response : await process(agent, response);
-          if (typeof finalResult === "string") {
-            const assistantMsg = new Message("assistant", [text(finalResult)]);
-            const gr = guardrails.checkOutput(assistantMsg);
-            if (!gr.allowed) {
-              emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-              throw new GuardrailError(gr.reason ?? "Output guardrail denied");
-            }
-            if (gr.rewrite !== undefined) {
-              emit("iterations", iteration);
-              emit("result", gr.rewrite);
-              emitEvent(onEvent, "done", { response: gr.rewrite, messages });
-              return gr.rewrite;
-            }
+          const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
+          const assistantMsg = new Message("assistant", [text(contentStr)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
-          emit("iterations", iteration);
-          emit("result", finalResult);
-          emitEvent(onEvent, "done", { response: finalResult, messages });
-          return finalResult;
+          if (gr.rewrite !== undefined) {
+            emit("iterations", iteration);
+            emit("result", gr.rewrite);
+            emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+            return gr.rewrite;
+          }
         }
-        break;
+        emit("iterations", iteration);
+        emit("result", finalResult);
+        emitEvent(onEvent, "done", { response: finalResult, messages });
+        return finalResult;
       }
 
       // §13.4 — Output guardrail (on tool-call response with text content)

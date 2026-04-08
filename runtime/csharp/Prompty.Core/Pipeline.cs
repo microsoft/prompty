@@ -341,9 +341,11 @@ public static class Pipeline
                                 var toolCheck = guardrails.CheckTool(call.Name, args);
                                 if (!toolCheck.Allowed)
                                 {
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                                        new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
-                                    throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                    var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
+                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
+                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
+                                    tasks.Add(Task.FromResult((capturedIndex, deniedMsg)));
+                                    continue;
                                 }
                                 if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
                                 {
@@ -392,9 +394,11 @@ public static class Pipeline
                                 var toolCheck = guardrails.CheckTool(call.Name, args);
                                 if (!toolCheck.Allowed)
                                 {
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                                        new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
-                                    throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                    var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
+                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
+                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
+                                    toolResults.Add(deniedMsg);
+                                    continue;
                                 }
                                 if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
                                 {
