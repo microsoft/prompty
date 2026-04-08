@@ -152,8 +152,22 @@ AZURE_AI_PROJECT_KEY=abc123...
 
 ## Option B: Microsoft Entra ID Authentication
 
-For production workloads, use Microsoft Entra ID with `DefaultAzureCredential`
-— no API keys to manage or rotate.
+For production workloads, use Microsoft Entra ID — no API keys to manage or
+rotate. This section covers two approaches:
+
+- **`DefaultAzureCredential`** — convenient for local development; automatically
+  discovers your Azure CLI, VS Code, or managed identity credentials.
+- **`ManagedIdentityCredential`** — **recommended for deployed services**
+  (App Service, Container Apps, AKS, Functions). Explicit, no fallback chain,
+  no risk of accidentally using developer credentials in production.
+
+<Aside type="tip" title="Which credential should I use?">
+  Use `DefaultAzureCredential` during **development** — it finds your Azure CLI
+  or VS Code login automatically. For **production deployments**, switch to
+  `ManagedIdentityCredential` to avoid ambiguous credential chains. See
+  [Microsoft's authentication best practices](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/best-practices)
+  for details.
+</Aside>
 
 ### 1. Write the `.prompty` File
 
@@ -196,7 +210,10 @@ user:
   runtime. This keeps credentials out of the `.prompty` file entirely.
 </Aside>
 
-### 2. Register the Connection and Run
+### 2. Register the Connection and Run (Local Development)
+
+During development, `DefaultAzureCredential` automatically finds your Azure CLI
+or VS Code login:
 
 <Tabs>
   <TabItem label="Python">
@@ -220,12 +237,6 @@ user:
     )
     print(result)
     ```
-
-    <Aside type="note">
-      `DefaultAzureCredential` automatically tries managed identity, Azure CLI,
-      VS Code, and other credential sources. No code changes needed between
-      local dev and production.
-    </Aside>
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
@@ -250,8 +261,7 @@ user:
     using Azure.Identity;
     using Prompty.Core;
 
-    // Entra ID auth is handled automatically by Prompty.Foundry
-    // when connection kind is "reference" — uses DefaultAzureCredential
+    // DefaultAzureCredential finds your Azure CLI / VS Code login
     var result = await Pipeline.InvokeAsync(
         "foundry-chat-aad.prompty",
         new() { ["question"] = "What is Microsoft Foundry?" }
@@ -268,28 +278,136 @@ user:
   </TabItem>
 </Tabs>
 
-### 3. Required Azure RBAC
+### 3. Production Deployment: Use Managed Identity
 
-The identity used by `DefaultAzureCredential` needs the
-**Cognitive Services OpenAI User** role on the resource:
+<Aside type="caution" title="Don't use DefaultAzureCredential in production">
+  `DefaultAzureCredential` tries multiple credential sources in order. In a
+  deployed environment, this can cause silent fallbacks to unexpected credentials
+  (e.g., developer tools left on a VM). Use `ManagedIdentityCredential` directly
+  for production services. See
+  [Microsoft's authentication best practices](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/best-practices).
+</Aside>
+
+**Step 1: Enable Managed Identity** on your Azure hosting resource:
+
+```bash
+# App Service
+az webapp identity assign --name <app-name> --resource-group <rg>
+
+# Container Apps
+az containerapp identity assign --name <app-name> --resource-group <rg> --system-assigned
+
+# Azure Kubernetes Service (pod identity)
+az aks update --name <cluster> --resource-group <rg> --enable-oidc-issuer --enable-workload-identity
+```
+
+**Step 2: Assign the RBAC role** — grant only what's needed (principle of least privilege):
 
 ```bash
 az role assignment create \
-  --assignee <your-identity-object-id> \
+  --assignee <managed-identity-object-id> \
   --role "Cognitive Services OpenAI User" \
   --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<resource>
 ```
 
+<Aside type="note">
+  Use the narrowest scope possible. Assigning the role at the **resource** level
+  (not subscription or resource group) follows the principle of least privilege.
+</Aside>
+
+**Step 3: Use `ManagedIdentityCredential` in your code:**
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os
+    from azure.identity import ManagedIdentityCredential
+    import prompty
+
+    prompty.register_connection(
+        "foundry_default",
+        {
+            "endpoint": os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+            "credential": ManagedIdentityCredential(),
+        },
+    )
+
+    result = prompty.invoke(
+        "foundry-chat-aad.prompty",
+        inputs={"question": "What is Microsoft Foundry?"},
+    )
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke, registerConnection } from "@prompty/core";
+    import "@prompty/foundry";
+    import { ManagedIdentityCredential } from "@azure/identity";
+
+    registerConnection("foundry_default", {
+      endpoint: process.env.AZURE_AI_PROJECT_ENDPOINT!,
+      credential: new ManagedIdentityCredential(),
+    });
+
+    const result = await invoke("foundry-chat-aad.prompty", {
+      question: "What is Microsoft Foundry?",
+    });
+
+    console.log(result);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Azure.Identity;
+    using Prompty.Core;
+
+    // For production: explicitly use ManagedIdentityCredential
+    Pipeline.RegisterConnection("foundry_default", new Dictionary<string, object>
+    {
+        ["endpoint"] = Environment.GetEnvironmentVariable("AZURE_AI_PROJECT_ENDPOINT")!,
+        ["credential"] = new ManagedIdentityCredential(),
+    });
+
+    var result = await Pipeline.InvokeAsync(
+        "foundry-chat-aad.prompty",
+        new() { ["question"] = "What is Microsoft Foundry?" }
+    );
+
+    Console.WriteLine(result);
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Dev/prod pattern">
+  A common pattern is to switch credentials based on your environment:
+
+  ```python
+  import os
+  from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+
+  credential = (
+      ManagedIdentityCredential()
+      if os.getenv("WEBSITE_INSTANCE_ID")  # Set automatically in App Service
+      else DefaultAzureCredential()
+  )
+  ```
+
+  This gives you seamless local development with Azure CLI **and** explicit
+  managed identity in production — with no code changes at deploy time.
+</Aside>
+
 ---
 
-## Comparing the Two Options
+## Comparing Authentication Options
 
-| | API Key (`kind: key`) | Microsoft Entra ID (`kind: reference`) |
-|---|---|---|
-| **Setup** | Copy key from portal | Assign RBAC role |
-| **Security** | Key in env var — can leak | Token-based — no static secret |
-| **Rotation** | Manual | Automatic |
-| **Best for** | Local dev, prototyping | Production, CI/CD |
+| | API Key (`kind: key`) | Entra ID — `DefaultAzureCredential` | Entra ID — `ManagedIdentityCredential` |
+|---|---|---|---|
+| **Setup** | Copy key from portal | `az login` or VS Code | Enable managed identity + RBAC |
+| **Security** | Key in env var — can leak | Token-based — no static secret | Token-based — no static secret |
+| **Credential source** | Static string | Auto-discovers (CLI, VS Code, MI, …) | Managed identity only — no fallbacks |
+| **Rotation** | Manual | Automatic | Automatic |
+| **Best for** | Quick prototyping | **Local development** | **Production deployments** |
 
 <Aside type="caution">
   Never commit API keys to source control. Always use `${env:...}` references
