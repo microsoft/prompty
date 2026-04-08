@@ -766,7 +766,6 @@ name = "prompty"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
-    { name = "python-dotenv" },
     { name = "pyyaml" },
 ]
 
@@ -792,6 +791,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "python-dotenv" },
     { name = "ruff" },
     { name = "types-aiofiles" },
     { name = "types-pyyaml" },
@@ -836,7 +836,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
-    { name = "python-dotenv", specifier = ">=1.0.1" },
+    { name = "python-dotenv", marker = "extra == 'dev'", specifier = ">=1.0.1" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "types-aiofiles", marker = "extra == 'dev'" },
