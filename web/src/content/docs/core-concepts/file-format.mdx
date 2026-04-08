@@ -27,7 +27,7 @@ Every `.prompty` file follows the same two-part layout:
 ```
 
 The loader splits the file at the `---` delimiters, parses the YAML into
-typed AgentSchema objects, and assigns the markdown body to
+typed Prompty schema objects, and assigns the markdown body to
 `agent.instructions`.
 
 ```mermaid
@@ -73,10 +73,10 @@ flowchart TD
 
 ## Frontmatter Properties
 
-The YAML frontmatter maps directly to
-[AgentSchema](https://microsoft.github.io/AgentSchema/) `PromptAgent`
-fields. Here is a summary — see the **Schema Reference** page for the
-full specification of every property.
+The YAML frontmatter maps directly to the Prompty schema's
+[`Prompty`](/reference/prompty/) type. Here is a summary — see the
+[Schema Reference](/reference/) for the full specification of every
+property.
 
 ### Identity
 

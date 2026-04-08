@@ -10,7 +10,7 @@ sidebar:
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Prompty v2 is a ground-up rebuild focused on multi-runtime support, agent workflows,
-and a cleaner file format backed by [AgentSchema](https://microsoft.github.io/AgentSchema/).
+and a cleaner file format backed by the [Prompty schema](/reference/).
 
 <Aside type="tip">
   Already using v1? See the [Migration Guide](/migration/) for a step-by-step upgrade path.
@@ -27,7 +27,7 @@ and a cleaner file format backed by [AgentSchema](https://microsoft.github.io/Ag
 
 ## New File Format
 
-- YAML frontmatter follows the Prompty schema (derived from AgentSchema)
+- YAML frontmatter follows the [Prompty schema](/reference/) (defined in TypeSpec)
 - `inputs` / `outputs` with typed property lists (`kind`, `default`, `required`)
 - `tools` block for function calling and PromptyTool composition
 - `template.format` and `template.parser` for explicit template configuration
