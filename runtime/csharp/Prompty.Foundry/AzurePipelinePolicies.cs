@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.ClientModel;
 using System.ClientModel.Primitives;
-using Azure.Core;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Prompty.Foundry;
 
@@ -58,22 +60,47 @@ internal sealed class AzureApiKeyAuthPolicy(string apiKey) : PipelinePolicy
 }
 
 /// <summary>
-/// Uses Azure.Identity TokenCredential for Entra ID bearer token authentication.
-/// Replaces the OpenAI SDK's default Authorization header with a fresh bearer token.
+/// Patches Azure.AI.OpenAI's request body to ensure <c>max_completion_tokens</c> is used
+/// instead of the deprecated <c>max_tokens</c>.
+/// The Azure SDK may swap the parameter name; this policy reverses that swap.
 /// </summary>
-internal sealed class AzureBearerTokenPolicy(TokenCredential credential, string[] scopes) : PipelinePolicy
+internal sealed class MaxTokensPatchPolicy : PipelinePolicy
 {
     public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
     {
-        var token = credential.GetToken(new TokenRequestContext(scopes), default);
-        message.Request.Headers.Set("Authorization", $"Bearer {token.Token}");
+        PatchRequestBody(message);
         ProcessNext(message, pipeline, currentIndex);
     }
 
     public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
     {
-        var token = await credential.GetTokenAsync(new TokenRequestContext(scopes), default);
-        message.Request.Headers.Set("Authorization", $"Bearer {token.Token}");
+        PatchRequestBody(message);
         await ProcessNextAsync(message, pipeline, currentIndex);
+    }
+
+    private static void PatchRequestBody(PipelineMessage message)
+    {
+        var content = message.Request.Content;
+        if (content is null) return;
+
+        // Read the request body
+        using var ms = new MemoryStream();
+        content.WriteTo(ms, default);
+        var bytes = ms.ToArray();
+        if (bytes.Length == 0) return;
+
+        var json = JsonNode.Parse(bytes);
+        if (json is not JsonObject obj) return;
+
+        // Swap max_tokens → max_completion_tokens if present
+        if (obj.ContainsKey("max_tokens") && !obj.ContainsKey("max_completion_tokens"))
+        {
+            var value = obj["max_tokens"];
+            obj.Remove("max_tokens");
+            obj["max_completion_tokens"] = value?.DeepClone();
+
+            var patched = obj.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
+            message.Request.Content = BinaryContent.Create(new BinaryData(patched));
+        }
     }
 }

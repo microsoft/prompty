@@ -9,7 +9,7 @@ namespace Prompty.Providers.Tests.Integration;
 
 /// <summary>
 /// Integration tests — Entra ID (Azure AD) authentication against Azure OpenAI via Foundry provider.
-/// Uses DefaultAzureCredential (no API key) to obtain a bearer token.
+/// Uses AzureOpenAIClient with DefaultAzureCredential (no API key).
 /// Requires AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_CHAT_DEPLOYMENT env vars.
 /// Skips gracefully when Azure credentials are not available (run `az login` first).
 /// </summary>
@@ -25,7 +25,7 @@ public class EntraIdTests : IntegrationTestBase
 
     /// <summary>
     /// Build an Azure/Foundry agent that authenticates via Entra ID (DefaultAzureCredential).
-    /// Uses connection kind "foundry" which the FoundryExecutor routes through AzureBearerTokenPolicy.
+    /// Uses connection kind "foundry" which the FoundryExecutor routes through AzureOpenAIClient.
     /// </summary>
     private static Core.Prompty MakeEntraIdAgent(
         string apiType = "chat",
@@ -61,6 +61,27 @@ public class EntraIdTests : IntegrationTestBase
             agent.Model.Options = options;
 
         return agent;
+    }
+
+    [SkippableFact]
+    public async Task Foundry_EntraId_TokenAcquisition()
+    {
+        Skip.If(!HasAzureEndpoint, "AZURE_OPENAI_ENDPOINT not set.");
+
+        var cred = new DefaultAzureCredential();
+        try
+        {
+            var token = await cred.GetTokenAsync(
+                new Azure.Core.TokenRequestContext(["https://cognitiveservices.azure.com/.default"]),
+                default);
+
+            Assert.False(string.IsNullOrEmpty(token.Token), "Token should not be empty");
+            Assert.True(token.ExpiresOn > DateTimeOffset.UtcNow, "Token should not be expired");
+        }
+        catch (AuthenticationFailedException ex)
+        {
+            Skip.If(true, $"DefaultAzureCredential failed — run `az login` first. ({ex.Message})");
+        }
     }
 
     [SkippableFact]
