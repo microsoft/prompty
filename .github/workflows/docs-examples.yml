@@ -1,17 +1,8 @@
 name: Docs Examples
 
 on:
+  workflow_dispatch:
   pull_request:
-    paths:
-      - 'web/docs-examples/**'
-      - 'web/src/content/docs/**'
-      - 'runtime/python/prompty/**'
-      - 'runtime/typescript/packages/**'
-      - 'runtime/csharp/Prompty.Core/**'
-      - 'runtime/csharp/Prompty.OpenAI/**'
-      - 'spec/fixtures/**'
-  push:
-    branches: [main]
     paths:
       - 'web/docs-examples/**'
       - 'web/src/content/docs/**'
@@ -40,7 +31,7 @@ jobs:
 
       - name: Install docs examples deps
         working-directory: ./web/docs-examples/python
-        run: uv pip install --system -e '.[dev]'
+        run: uv pip install --system -r requirements-dev.txt
 
       - name: Run tests
         working-directory: ./web/docs-examples/python
@@ -64,7 +55,7 @@ jobs:
         run: npm ci && npm run build
 
       - name: Install docs examples deps
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         run: npm test

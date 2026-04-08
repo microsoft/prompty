@@ -15,7 +15,3 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
-
-[build-system]
-requires = ["flit_core >=3.11,<4"]
-build-backend = "flit_core.buildapi"
