@@ -44,10 +44,9 @@ model:
     additionalProperties:
       stream: true
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: Tell me a joke
+  - name: question
+    kind: string
+    default: Tell me a joke
 template:
   format:
     kind: jinja2
@@ -241,10 +240,9 @@ model:
     additionalProperties:
       stream: true
 inputs:
-  properties:
-    - name: topic
-      kind: string
-      default: space exploration
+  - name: topic
+    kind: string
+    default: space exploration
 template:
   format:
     kind: jinja2

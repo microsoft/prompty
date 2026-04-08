@@ -77,10 +77,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What can you help me with?
+  - name: question
+    kind: string
+    default: What can you help me with?
 template:
   format:
     kind: jinja2
@@ -244,12 +243,11 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What can you help me with?
-    - name: conversation
-      kind: thread
+  - name: question
+    kind: string
+    default: What can you help me with?
+  - name: conversation
+    kind: thread
 template:
   format:
     kind: jinja2

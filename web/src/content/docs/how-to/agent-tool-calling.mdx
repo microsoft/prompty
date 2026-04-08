@@ -122,25 +122,22 @@ tools:
     kind: function
     description: Get the current weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          description: The city name, e.g. "Seattle"
-          required: true
+      - name: city
+        kind: string
+        description: The city name, e.g. "Seattle"
+        required: true
   - name: get_time
     kind: function
     description: Get the current time in a timezone
     parameters:
-      properties:
-        - name: timezone
-          kind: string
-          description: IANA timezone, e.g. "America/New_York"
-          required: true
+      - name: timezone
+        kind: string
+        description: IANA timezone, e.g. "America/New_York"
+        required: true
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What's the weather in Seattle?
+  - name: question
+    kind: string
+    default: What's the weather in Seattle?
 template:
   format:
     kind: jinja2
@@ -385,44 +382,40 @@ tools:
     kind: function
     description: Search internal documentation
     parameters:
-      properties:
-        - name: query
-          kind: string
-          description: The search query
-          required: true
-        - name: limit
-          kind: integer
-          description: Max number of results (default 5)
+      - name: query
+        kind: string
+        description: The search query
+        required: true
+      - name: limit
+        kind: integer
+        description: Max number of results (default 5)
   - name: get_user
     kind: function
     description: Look up a user by email
     parameters:
-      properties:
-        - name: email
-          kind: string
-          description: The user's email address
-          required: true
+      - name: email
+        kind: string
+        description: The user's email address
+        required: true
   - name: send_email
     kind: function
     description: Send an email to a user
     parameters:
-      properties:
-        - name: to
-          kind: string
-          description: Recipient email
-          required: true
-        - name: subject
-          kind: string
-          description: Email subject
-          required: true
-        - name: body
-          kind: string
-          description: Email body
-          required: true
+      - name: to
+        kind: string
+        description: Recipient email
+        required: true
+      - name: subject
+        kind: string
+        description: Email subject
+        required: true
+      - name: body
+        kind: string
+        description: Email body
+        required: true
 inputs:
-  properties:
-    - name: request
-      kind: string
+  - name: request
+    kind: string
 template:
   format:
     kind: jinja2

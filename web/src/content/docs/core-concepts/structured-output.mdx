@@ -51,16 +51,15 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 outputs:
-  properties:
-    - name: city
-      kind: string
-      description: The city name
-    - name: temperature
-      kind: integer
-      description: Temperature in degrees Fahrenheit
-    - name: conditions
-      kind: string
-      description: Current weather conditions
+  - name: city
+    kind: string
+    description: The city name
+  - name: temperature
+    kind: integer
+    description: Temperature in degrees Fahrenheit
+  - name: conditions
+    kind: string
+    description: Current weather conditions
 ---
 system:
 You are a weather assistant. Return the current weather for the requested city.
@@ -334,12 +333,11 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 outputs:
-  properties:
-    - name: city
-      kind: string
-    - name: current
-      kind: object
-      properties:
+  - name: city
+    kind: string
+  - name: current
+    kind: object
+    properties:
         - name: temperature
           kind: integer
           description: Temperature in °F

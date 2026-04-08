@@ -36,10 +36,9 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 inputs:
-  properties:
-    - name: userName
-      kind: string
-      default: World
+  - name: userName
+    kind: string
+    default: World
 ---
 system:
 You are a friendly assistant.

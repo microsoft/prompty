@@ -262,13 +262,12 @@ tools:
     kind: function
     description: Get orders for a user
     parameters:
-      properties:
-        - name: user_id
-          kind: string
-          required: true
-        - name: limit
-          kind: integer
-          default: 10
+      - name: user_id
+        kind: string
+        required: true
+      - name: limit
+        kind: integer
+        default: 10
     bindings:
       user_id: ${env:CURRENT_USER_ID}
 ```

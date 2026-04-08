@@ -53,10 +53,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What is Prompty?
+  - name: question
+    kind: string
+    default: What is Prompty?
 template:
   format:
     kind: jinja2

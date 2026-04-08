@@ -36,7 +36,7 @@ flowchart TD
         direction LR
         Identity["name, description\nmetadata: authors, tags …"]
         ModelCfg["model:\nid: gpt-4o\nprovider: foundry\nconnection + options"]
-        Inputs["inputs:\nproperties: [...]"]
+        Inputs["inputs: [...]"]
         Tools["tools: [...]"]
         Template["template:\nformat + parser"]
     end
@@ -130,21 +130,19 @@ Define the inputs your template expects and the structure of outputs:
 
 ```yaml
 inputs:
-  properties:
-    - name: question
-      kind: string
-      description: The user's question
-      required: true
-    - name: language
-      kind: string
-      default: English
+  - name: question
+    kind: string
+    description: The user's question
+    required: true
+  - name: language
+    kind: string
+    default: English
 
 outputs:
-  properties:
-    - name: answer
-      kind: string
-    - name: confidence
-      kind: float
+  - name: answer
+    kind: string
+  - name: confidence
+    kind: float
 ```
 
 Each property has a `kind` (`string`, `integer`, `float`, `boolean`,
@@ -163,10 +161,9 @@ A list of tool definitions the model can call:
         kind: function
         description: Get the current weather
         parameters:
-          properties:
-            - name: city
-              kind: string
-              required: true
+          - name: city
+            kind: string
+            required: true
     ```
   </TabItem>
   <TabItem label="MCP Tool">
@@ -411,37 +408,34 @@ model:
     maxOutputTokens: 2000
 
 inputs:
-  properties:
-    - name: customerName
-      kind: string
-      description: Full name of the customer
-      required: true
-    - name: question
-      kind: string
-      description: The customer's question
-      required: true
-    - name: orderHistory
-      kind: array
-      description: Recent orders for context
-      default: []
+  - name: customerName
+    kind: string
+    description: Full name of the customer
+    required: true
+  - name: question
+    kind: string
+    description: The customer's question
+    required: true
+  - name: orderHistory
+    kind: array
+    description: Recent orders for context
+    default: []
 
 outputs:
-  properties:
-    - name: answer
-      kind: string
-    - name: sentiment
-      kind: string
-      enumValues: [positive, neutral, negative]
+  - name: answer
+    kind: string
+  - name: sentiment
+    kind: string
+    enumValues: [positive, neutral, negative]
 
 tools:
   - name: lookup_order
     kind: function
     description: Look up an order by ID
     parameters:
-      properties:
-        - name: orderId
-          kind: string
-          required: true
+      - name: orderId
+        kind: string
+        required: true
 
 template:
   format:

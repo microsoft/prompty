@@ -71,10 +71,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1000
 inputs:
-  properties:
-    question:
-      kind: string
-      default: What is Prompty?
+  question:
+    kind: string
+    default: What is Prompty?
 template:
   format:
     kind: jinja2
@@ -233,20 +232,18 @@ model:
   options:
     temperature: 0
 inputs:
-  properties:
-    question:
-      kind: string
-      default: What's the weather?
+  question:
+    kind: string
+    default: What's the weather?
 tools:
   - name: get_weather
     kind: function
     description: Get the current weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          description: City name
-          required: true
+      - name: city
+        kind: string
+        description: City name
+        required: true
     strict: true
 template:
   format:
@@ -392,16 +389,15 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 outputs:
-  properties:
-    - name: city
-      kind: string
-      description: The city name
-    - name: temperature
-      kind: integer
-      description: Temperature in Fahrenheit
-    - name: conditions
-      kind: string
-      description: Current weather conditions
+  - name: city
+    kind: string
+    description: The city name
+  - name: temperature
+    kind: integer
+    description: Temperature in Fahrenheit
+  - name: conditions
+    kind: string
+    description: Current weather conditions
 template:
   format:
     kind: jinja2

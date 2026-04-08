@@ -72,10 +72,9 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 inputs:
-  properties:
-    - name: text
-      kind: string
-      default: Hello, world!
+  - name: text
+    kind: string
+    default: Hello, world!
 template:
   format:
     kind: jinja2
@@ -285,13 +284,12 @@ model:
     temperature: 0.3
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What is Prompty?
-    - name: context
-      kind: string
-      default: ""
+  - name: question
+    kind: string
+    default: What is Prompty?
+  - name: context
+    kind: string
+    default: ""
 template:
   format:
     kind: jinja2

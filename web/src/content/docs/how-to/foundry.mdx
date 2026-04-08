@@ -74,25 +74,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What is Microsoft Foundry?
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
----
-system:
-You are a helpful assistant. Answer concisely.
-
-user:
-{{question}}
-```
-
-<Aside type="note">
-  `model.id` is the **deployment name**, not the base model
+  - name: question
+    kind: string
+    default: What is Microsoft Foundry?
   name. If your deployment is called `my-gpt4o`, use `id: my-gpt4o`.
 </Aside>
 
@@ -188,21 +172,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: What is Microsoft Foundry?
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
----
-system:
-You are a helpful assistant. Answer concisely.
-
-user:
-{{question}}
+  - name: question
+    kind: string
+    default: What is Microsoft Foundry?
 ```
 
 <Aside type="tip">

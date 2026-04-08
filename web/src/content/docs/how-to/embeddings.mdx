@@ -37,10 +37,9 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 inputs:
-  properties:
-    - name: text
-      kind: string
-      default: Hello, world!
+  - name: text
+    kind: string
+    default: Hello, world!
 template:
   format:
     kind: jinja2
@@ -125,10 +124,9 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 inputs:
-  properties:
-    - name: texts
-      kind: array
-      description: List of texts to embed
+  - name: texts
+    kind: array
+    description: List of texts to embed
 template:
   format:
     kind: jinja2
@@ -209,9 +207,8 @@ model:
     endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
     apiKey: ${env:AZURE_AI_PROJECT_KEY}
 inputs:
-  properties:
-    - name: text
-      kind: string
+  - name: text
+    kind: string
 template:
   format:
     kind: jinja2

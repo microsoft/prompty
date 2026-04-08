@@ -53,10 +53,9 @@ model:
     temperature: 0.7
     maxOutputTokens: 1024
 inputs:
-  properties:
-    - name: topic
-      kind: string
-      default: the history of computing
+  - name: topic
+    kind: string
+    default: the history of computing
 template:
   format:
     kind: jinja2

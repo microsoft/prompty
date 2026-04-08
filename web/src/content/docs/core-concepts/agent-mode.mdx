@@ -195,31 +195,28 @@ model:
   options:
     temperature: 0
 inputs:
-  properties:
-    question:
-      kind: string
-      description: The user's question
-      default: What's the weather?
+  question:
+    kind: string
+    description: The user's question
+    default: What's the weather?
 tools:
   - name: get_weather
     kind: function
     description: Get the current weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          description: City name, e.g. "Seattle"
-          required: true
+      - name: city
+        kind: string
+        description: City name, e.g. "Seattle"
+        required: true
     strict: true
   - name: get_time
     kind: function
     description: Get the current time in a timezone
     parameters:
-      properties:
-        - name: timezone
-          kind: string
-          description: IANA timezone, e.g. "America/Los_Angeles"
-          required: true
+      - name: timezone
+        kind: string
+        description: IANA timezone, e.g. "America/Los_Angeles"
+        required: true
 template:
   format:
     kind: jinja2

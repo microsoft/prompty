@@ -39,21 +39,19 @@ model:
   options:
     temperature: 0.3
 inputs:
-  properties:
-    - name: city
-      kind: string
-      default: Seattle
+  - name: city
+    kind: string
+    default: Seattle
 outputs:
-  properties:
-    - name: city
-      kind: string
-      description: The city name
-    - name: temperature
-      kind: integer
-      description: Temperature in degrees Fahrenheit
-    - name: conditions
-      kind: string
-      description: Current weather conditions (e.g. sunny, cloudy, rain)
+  - name: city
+    kind: string
+    description: The city name
+  - name: temperature
+    kind: integer
+    description: Temperature in degrees Fahrenheit
+  - name: conditions
+    kind: string
+    description: Current weather conditions (e.g. sunny, cloudy, rain)
 template:
   format:
     kind: jinja2
@@ -154,12 +152,11 @@ model:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
 outputs:
-  properties:
-    - name: city
-      kind: string
-    - name: current
-      kind: object
-      properties:
+  - name: city
+    kind: string
+  - name: current
+    kind: object
+    properties:
         - name: temperature
           kind: integer
           description: Temperature in °F

@@ -17,12 +17,11 @@ This gives you a full multi-turn conversation interface directly inside VS Code.
 
 ```yaml title="Frontmatter with thread input"
 inputs:
-  properties:
-    - name: question
-      kind: string
-      default: Hello
-    - name: conversation
-      kind: thread
+  - name: question
+    kind: string
+    default: Hello
+  - name: conversation
+    kind: thread
 ```
 
 The `thread` input tells the extension that this prompt is designed for

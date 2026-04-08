@@ -578,14 +578,13 @@ tools:
     kind: function
     description: Get the current weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          description: City name
-          required: true
-        - name: units
-          kind: string
-          default: celsius
+      - name: city
+        kind: string
+        description: City name
+        required: true
+      - name: units
+        kind: string
+        default: celsius
 ```
 
 Your code then provides the **handler** — the function that actually runs when
@@ -718,22 +717,19 @@ tools:
     kind: function
     description: Get the current weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          required: true
+      - name: city
+        kind: string
+        required: true
   - name: get_time
     kind: function
     description: Get the current time in a timezone
     parameters:
-      properties:
-        - name: timezone
-          kind: string
-          required: true
+      - name: timezone
+        kind: string
+        required: true
 inputs:
-  properties:
-    - name: question
-      kind: string
+  - name: question
+    kind: string
 ---
 system:
 You are a helpful assistant with access to weather and time tools.
