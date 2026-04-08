@@ -78,9 +78,9 @@ public class OpenAIProcessorTests
 
         var result = await _processor.ProcessAsync(agent, completion);
 
-        Assert.IsType<JsonElement>(result);
-        var json = (JsonElement)result;
-        Assert.Equal("42", json.GetProperty("answer").GetString());
+        Assert.IsType<StructuredResult>(result);
+        var sr = (StructuredResult)result;
+        Assert.Equal("42", sr["answer"]?.ToString());
     }
 
     [Fact]

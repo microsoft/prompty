@@ -187,8 +187,8 @@ public class AnthropicProcessorTests
 
         var result = await processor.ProcessAsync(agent, json);
 
-        var jsonElement = Assert.IsType<JsonElement>(result);
-        Assert.Equal("42", jsonElement.GetProperty("answer").GetString());
+        var sr = Assert.IsType<StructuredResult>(result);
+        Assert.Equal("42", sr["answer"]?.ToString());
     }
 
     [Fact]

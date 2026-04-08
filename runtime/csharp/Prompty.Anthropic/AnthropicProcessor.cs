@@ -48,7 +48,7 @@ public class AnthropicProcessor : IProcessor
         {
             try
             {
-                return JsonSerializer.Deserialize<JsonElement>(text);
+                return StructuredResult.FromJson(text);
             }
             catch (JsonException)
             {
@@ -219,7 +219,7 @@ public class AnthropicProcessor : IProcessor
         {
             try
             {
-                return JsonSerializer.Deserialize<JsonElement>(fullText);
+                return StructuredResult.FromJson(fullText);
             }
             catch (JsonException)
             {

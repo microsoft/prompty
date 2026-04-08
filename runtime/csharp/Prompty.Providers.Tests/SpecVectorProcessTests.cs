@@ -286,8 +286,9 @@ public class SpecVectorProcessTests
 
             case JsonValueKind.Object:
                 // Structured output — compare as JSON (semantic equality)
-                Assert.IsType<JsonElement>(result);
-                var actualJson = (JsonElement)result;
+                Assert.IsType<StructuredResult>(result);
+                var sr = (StructuredResult)result;
+                var actualJson = JsonDocument.Parse(sr.RawJson).RootElement;
                 AssertJsonEqual(expected, actualJson, vectorName);
                 break;
 

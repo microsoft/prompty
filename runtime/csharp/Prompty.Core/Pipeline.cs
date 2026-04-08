@@ -479,6 +479,49 @@ public static class Pipeline
     }
 
     // -----------------------------------------------------------------------
+    // Generic (typed) overloads
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Invoke a prompt and cast the result to a typed object.
+    /// </summary>
+    public static async Task<T> InvokeAsync<T>(Prompty agent, Dictionary<string, object?>? inputs = null)
+    {
+        var result = await InvokeAsync(agent, inputs);
+        return PromptyCast.Cast<T>(result);
+    }
+
+    /// <summary>
+    /// Invoke from a .prompty file path and cast the result to a typed object.
+    /// </summary>
+    public static async Task<T> InvokeAsync<T>(string path, Dictionary<string, object?>? inputs = null)
+    {
+        var result = await InvokeAsync(path, inputs);
+        return PromptyCast.Cast<T>(result);
+    }
+
+    /// <summary>
+    /// Run the agent loop and cast the result to a typed object.
+    /// </summary>
+    public static async Task<T> InvokeAgentAsync<T>(
+        Prompty agent,
+        Dictionary<string, object?>? inputs = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
+        int maxIterations = 10,
+        bool raw = false,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
+    {
+        var result = await InvokeAgentAsync(agent, inputs, tools, maxIterations, raw, onEvent,
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+        return PromptyCast.Cast<T>(result);
+    }
+
+    // -----------------------------------------------------------------------
     // Thread Expansion
     // -----------------------------------------------------------------------
 
