@@ -411,8 +411,8 @@ from `StructuredResult` when available — no dict→JSON→T round-trip.
     using Prompty.Core;
 
     record Weather(string City, int Temperature);
-    var weather = PromptyCast.Cast<Weather>(result);
-    // Or: ((StructuredResult)result).Cast<Weather>()
+    var weather = ((StructuredResult)result).Cast<Weather>();
+    // Or: await Pipeline.InvokeAsync<Weather>("weather.prompty", inputs);
     ```
   </TabItem>
 </Tabs>

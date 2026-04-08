@@ -17,9 +17,9 @@ dotnet add package Prompty.OpenAI
 using Prompty.Core;
 using Prompty.OpenAI;
 
-// Register the OpenAI provider
-InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+// One-time setup — registers renderers, parser, and OpenAI provider
+new PromptyBuilder()
+    .AddOpenAI();
 
 // Run a .prompty file (provider: openai in frontmatter)
 var result = await Pipeline.InvokeAsync("chat.prompty", new Dictionary<string, object>

@@ -56,9 +56,9 @@ user:
 using Prompty.Core;
 using Prompty.OpenAI;
 
-// Register the provider
-InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+// One-time setup — registers renderers, parser, and providers
+new PromptyBuilder()
+    .AddOpenAI();
 
 // Load, prepare messages, and execute
 var agent = PromptyLoader.Load("chat.prompty");

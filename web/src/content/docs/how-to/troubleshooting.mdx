@@ -118,10 +118,14 @@ exists at that relative location.
     Register one via InvokerRegistry.RegisterExecutor().
     ```
 
-    **Fix:** Add the provider NuGet package and register it:
+    **Fix:** Add the provider NuGet package and register it at startup:
 
     ```csharp
-    InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
+    using Prompty.Core;
+    using Prompty.OpenAI;
+
+    new PromptyBuilder()
+        .AddOpenAI();
     ```
   </TabItem>
 </Tabs>

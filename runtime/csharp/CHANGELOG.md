@@ -5,7 +5,7 @@ All notable changes to the Prompty C# runtime will be documented here.
 ## [2.0.0-alpha.1] — Unreleased
 
 ### Added
-- §8.8 Structured Result Casting: `StructuredResult` class (Dictionary subclass) with `Cast<T>()` method and `PromptyCast.Cast<T>()` static helper
+- §8.8 Structured Result Casting: `StructuredResult` class (Dictionary subclass) with `Cast<T>()` method
 - Generic `InvokeAsync<T>()` and `InvokeAgentAsync<T>()` pipeline overloads
 - §13 Agent Loop Extensions: events, cancellation, context window management, guardrails, steering, parallel tool execution
 - `[Tool]` attribute and `ToolBinder.BindTools()` validation bridge
@@ -17,6 +17,7 @@ All notable changes to the Prompty C# runtime will be documented here.
 
 ### Changed
 - Complete rewrite from v1 — new architecture with InvokerRegistry and pluggable providers
+- `PromptyBuilder` fluent registration — `new PromptyBuilder().AddOpenAI()` replaces verbose `InvokerRegistry.Register*()` calls
 - `outputs` schema now returns `StructuredResult` instead of `JsonElement` (backward compatible — it's a Dictionary subclass with native .NET types)
 
 ### Fixed

@@ -239,8 +239,27 @@ prepare() → messages → Executor.execute() → raw → Processor.process() �
     ```csharp
     using Prompty.Core;
 
+    // For custom providers, use InvokerRegistry directly
     InvokerRegistry.RegisterExecutor("my-custom", new MyExecutor());
     InvokerRegistry.RegisterProcessor("my-custom", new MyProcessor());
+    ```
+
+    Or create your own builder extension:
+
+    ```csharp
+    public static class MyProviderExtensions
+    {
+        public static PromptyBuilder AddMyProvider(this PromptyBuilder builder)
+        {
+            InvokerRegistry.RegisterExecutor("my-custom", new MyExecutor());
+            InvokerRegistry.RegisterProcessor("my-custom", new MyProcessor());
+            return builder;
+        }
+    }
+
+    // Usage:
+    new PromptyBuilder()
+        .AddMyProvider();
     ```
   </TabItem>
 </Tabs>

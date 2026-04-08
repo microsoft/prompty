@@ -307,7 +307,7 @@ deserializes directly from the raw JSON — no dict→JSON→T round-trip.
     // Option 1: Cast after invoke
     var result = await Pipeline.InvokeAsync("weather.prompty",
         new() { ["city"] = "Seattle" });
-    var report = PromptyCast.Cast<WeatherReport>(result);
+    var report = ((StructuredResult)result).Cast<WeatherReport>();
 
     // Option 2: Generic invoke
     var report2 = await Pipeline.InvokeAsync<WeatherReport>("weather.prompty",

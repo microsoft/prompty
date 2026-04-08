@@ -17,9 +17,9 @@ dotnet add package Prompty.Anthropic
 using Prompty.Core;
 using Prompty.Anthropic;
 
-// Register the Anthropic provider
-InvokerRegistry.RegisterExecutor("anthropic", new AnthropicExecutor());
-InvokerRegistry.RegisterProcessor("anthropic", new AnthropicProcessor());
+// One-time setup — registers renderers, parser, and Anthropic provider
+new PromptyBuilder()
+    .AddAnthropic();
 
 // Run a .prompty file
 var result = await Pipeline.InvokeAsync("chat.prompty", new Dictionary<string, object>

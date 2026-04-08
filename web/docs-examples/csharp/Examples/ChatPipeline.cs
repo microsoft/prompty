@@ -16,9 +16,9 @@ public static class ChatPipeline
     /// </summary>
     public static async Task<object> RunAsync(string promptyPath, Dictionary<string, object?>? inputs = null)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
 
         // Step 1: Load the .prompty file into a typed Prompty instance
         var agent = PromptyLoader.Load(promptyPath);

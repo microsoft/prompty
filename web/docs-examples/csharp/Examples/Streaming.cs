@@ -18,9 +18,9 @@ public static class Streaming
         string promptyPath,
         Dictionary<string, object?>? inputs = null)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
 
         // Load the agent — stream: true is set in the prompty's additionalProperties
         var agent = PromptyLoader.Load(promptyPath);

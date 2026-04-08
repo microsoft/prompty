@@ -20,13 +20,10 @@ dotnet add package Prompty.Foundry
 using Prompty.Core;
 using Prompty.Foundry;
 
-// Register the Foundry provider
-InvokerRegistry.RegisterExecutor("foundry", new FoundryExecutor());
-InvokerRegistry.RegisterProcessor("foundry", new FoundryProcessor());
-
-// Also register the "azure" alias for backward compatibility
-InvokerRegistry.RegisterExecutor("azure", new FoundryExecutor());
-InvokerRegistry.RegisterProcessor("azure", new FoundryProcessor());
+// One-time setup — registers renderers, parser, and Foundry provider
+// (also registers the legacy "azure" alias automatically)
+new PromptyBuilder()
+    .AddFoundry();
 
 // Run a .prompty file
 var result = await Pipeline.InvokeAsync("chat.prompty", new Dictionary<string, object>

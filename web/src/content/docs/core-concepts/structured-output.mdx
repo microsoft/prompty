@@ -293,17 +293,15 @@ round-trip.
     ```csharp
     using Prompty.Core;
 
-    public record Weather(string City, int Temperature, string Conditions);
-
     var result = await Pipeline.InvokeAsync("weather.prompty",
         new() { ["city"] = "Seattle" });
 
     // Option 1: Cast after invoke
-    var weather = PromptyCast.Cast<Weather>(result);
+    var weather = ((StructuredResult)result).Cast<WeatherReport>();
     Console.WriteLine(weather.City);  // "Seattle"
 
     // Option 2: Generic invoke — cast in one step
-    var weather2 = await Pipeline.InvokeAsync<Weather>("weather.prompty",
+    var weather2 = await Pipeline.InvokeAsync<WeatherReport>("weather.prompty",
         new() { ["city"] = "Seattle" });
     ```
   </TabItem>

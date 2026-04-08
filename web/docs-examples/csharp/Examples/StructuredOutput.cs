@@ -19,9 +19,9 @@ public static class StructuredOutput
         string promptyPath,
         Dictionary<string, object?>? inputs = null)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
 
         var result = await Pipeline.InvokeAsync(promptyPath, inputs);
         return result;

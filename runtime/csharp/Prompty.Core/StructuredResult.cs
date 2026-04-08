@@ -59,9 +59,10 @@ public class StructuredResult : Dictionary<string, object?>
 }
 
 /// <summary>
-/// Static helper for casting any result to a typed object.
+/// Internal helper for casting any result to a typed object.
+/// Use <see cref="StructuredResult.Cast{T}"/> or <see cref="Pipeline.InvokeAsync{T}"/> instead.
 /// </summary>
-public static class PromptyCast
+internal static class PromptyCast
 {
     private static readonly JsonSerializerOptions Options = new()
     {

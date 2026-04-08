@@ -15,9 +15,9 @@ public static class ChatBasic
     /// </summary>
     public static async Task<object> RunAsync(string promptyPath, Dictionary<string, object?>? inputs = null)
     {
-        // Register the OpenAI provider (renderer + parser are built-in)
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup — registers renderers, parser, and OpenAI provider
+        new PromptyBuilder()
+            .AddOpenAI();
 
         // Full pipeline: load → prepare → run
         var result = await Pipeline.InvokeAsync(promptyPath, inputs);

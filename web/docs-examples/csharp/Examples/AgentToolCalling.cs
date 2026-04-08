@@ -20,9 +20,9 @@ public static class AgentToolCalling
         Dictionary<string, object?>? inputs = null,
         int maxIterations = 10)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
 
         // Register built-in tool handlers (function, mcp, etc.)
         ToolDispatch.RegisterBuiltins();
@@ -49,9 +49,9 @@ public static class AgentToolCalling
         Dictionary<string, object?>? inputs = null,
         int maxIterations = 10)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
         ToolDispatch.RegisterBuiltins();
 
         // Load and bind tools

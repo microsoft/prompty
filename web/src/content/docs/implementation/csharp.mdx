@@ -164,18 +164,30 @@ Configure the provider in your `.prompty` frontmatter:
 
 ### Invoker Registry
 
-Providers must be registered at startup before calling any pipeline methods:
+Providers must be registered at startup before calling any pipeline methods.
+Use `PromptyBuilder` for idiomatic fluent registration:
 
 ```csharp
 using Prompty.Core;
+using Prompty.OpenAI;
 
-// Register renderers and parsers (built into Prompty.Core)
-InvokerRegistry.RegisterRenderer("jinja2", new Jinja2Renderer());
-InvokerRegistry.RegisterParser("prompty", new PromptyChatParser());
+// Registers renderers, parser, and providers in one fluent call
+new PromptyBuilder()
+    .AddOpenAI();
+```
 
-// Register provider executor + processor
-InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+Multiple providers can be chained:
+
+```csharp
+using Prompty.Core;
+using Prompty.OpenAI;
+using Prompty.Foundry;
+using Prompty.Anthropic;
+
+new PromptyBuilder()
+    .AddOpenAI()
+    .AddFoundry()
+    .AddAnthropic();
 ```
 
 ## Connections

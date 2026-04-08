@@ -99,7 +99,7 @@ public class StructuredResultTests
     {
         var raw = """{"temperature":72.5,"unit":"F","city":"Seattle"}""";
         var sr = StructuredResult.FromJson(raw);
-        var weather = PromptyCast.Cast<WeatherResponse>(sr);
+        var weather = sr.Cast<WeatherResponse>();
         Assert.Equal("Seattle", weather.City);
     }
 
@@ -107,21 +107,18 @@ public class StructuredResultTests
     public void StaticCastFromString()
     {
         var raw = """{"temperature":72.5,"unit":"F","city":"Portland"}""";
-        var weather = PromptyCast.Cast<WeatherResponse>(raw);
+        var sr = StructuredResult.FromJson(raw);
+        var weather = sr.Cast<WeatherResponse>();
         Assert.Equal("Portland", weather.City);
     }
 
     [Fact]
     public void StaticCastFromDict()
     {
-        // Fallback path — dict gets serialized then deserialized
-        var dict = new Dictionary<string, object?>
-        {
-            ["temperature"] = 65.0,
-            ["unit"] = "F",
-            ["city"] = "Denver"
-        };
-        var weather = PromptyCast.Cast<WeatherResponse>(dict);
+        // Instance Cast path from a manually constructed StructuredResult
+        var raw = """{"temperature":65.0,"unit":"F","city":"Denver"}""";
+        var sr = StructuredResult.FromJson(raw);
+        var weather = sr.Cast<WeatherResponse>();
         Assert.Equal("Denver", weather.City);
     }
 
@@ -139,7 +136,8 @@ public class StructuredResultTests
     public void CastHandlesCaseInsensitiveProperties()
     {
         var raw = """{"Temperature":72.5,"Unit":"F","City":"Boston"}""";
-        var weather = PromptyCast.Cast<WeatherResponse>(raw);
+        var sr = StructuredResult.FromJson(raw);
+        var weather = sr.Cast<WeatherResponse>();
         Assert.Equal(72.5, weather.Temperature);
         Assert.Equal("Boston", weather.City);
     }

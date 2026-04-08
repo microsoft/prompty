@@ -18,9 +18,9 @@ public static class Embeddings
         string promptyPath,
         Dictionary<string, object?>? inputs = null)
     {
-        // Register providers
-        InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
-        InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+        // One-time setup
+        new PromptyBuilder()
+            .AddOpenAI();
 
         // Full pipeline — executor dispatches on apiType: embedding
         var result = await Pipeline.InvokeAsync(promptyPath, inputs);
