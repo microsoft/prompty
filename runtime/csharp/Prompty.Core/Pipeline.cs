@@ -314,7 +314,14 @@ public static class Pipeline
                 // This ensures tool calls from streaming responses are gathered.
                 if (response is PromptyStream stream)
                 {
-                    await foreach (var _ in stream) { }
+                    await foreach (var chunk in stream)
+                    {
+                        if (chunk is string tokenText && tokenText.Length > 0)
+                        {
+                            AgentEvents.EmitEvent(onEvent, AgentEventType.Token,
+                                new Dictionary<string, object?> { ["token"] = tokenText });
+                        }
+                    }
                     response = stream;
                 }
 

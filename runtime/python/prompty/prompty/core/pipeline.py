@@ -953,11 +953,16 @@ def _is_stream(response: Any) -> bool:
     return isinstance(response, (PromptyStream, AsyncPromptyStream))
 
 
-def _consume_stream(agent: Prompty, response: Any) -> tuple[list[Any], str]:
+def _consume_stream(
+    agent: Prompty,
+    response: Any,
+    on_event: EventCallback | None = None,
+) -> tuple[list[Any], str]:
     """Consume a streaming response through the processor.
 
     Returns (tool_calls, content) where tool_calls is a list of ToolCall
     objects and content is the accumulated text.
+    Emits ``token`` events for each content chunk when *on_event* is provided.
     """
     from ..providers.openai.processor import ToolCall
 
@@ -972,14 +977,23 @@ def _consume_stream(agent: Prompty, response: Any) -> tuple[list[Any], str]:
                 tool_calls.append(item)
             elif isinstance(item, str):
                 text_parts.append(item)
+                emit_event(on_event, "token", {"token": item})
     elif isinstance(processed, str):
         text_parts.append(processed)
+        emit_event(on_event, "token", {"token": processed})
 
     return tool_calls, "".join(text_parts)
 
 
-async def _consume_stream_async(agent: Prompty, response: Any) -> tuple[list[Any], str]:
-    """Async: consume a streaming response through the processor."""
+async def _consume_stream_async(
+    agent: Prompty,
+    response: Any,
+    on_event: EventCallback | None = None,
+) -> tuple[list[Any], str]:
+    """Async: consume a streaming response through the processor.
+
+    Emits ``token`` events for each content chunk when *on_event* is provided.
+    """
     from ..providers.openai.processor import ToolCall
 
     processed = await process_async(agent, response)
@@ -993,14 +1007,17 @@ async def _consume_stream_async(agent: Prompty, response: Any) -> tuple[list[Any
                 tool_calls.append(item)
             elif isinstance(item, str):
                 text_parts.append(item)
+                emit_event(on_event, "token", {"token": item})
     elif hasattr(processed, "__iter__") and not isinstance(processed, (str, bytes)):
         for item in processed:
             if isinstance(item, ToolCall):
                 tool_calls.append(item)
             elif isinstance(item, str):
                 text_parts.append(item)
+                emit_event(on_event, "token", {"token": item})
     elif isinstance(processed, str):
         text_parts.append(processed)
+        emit_event(on_event, "token", {"token": processed})
 
     return tool_calls, "".join(text_parts)
 
@@ -1168,7 +1185,7 @@ def invoke_agent(
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
-                streamed_tool_calls, content = _consume_stream(agent, response)
+                streamed_tool_calls, content = _consume_stream(agent, response, on_event)
 
                 if not streamed_tool_calls:
                     # §13.4 — Output guardrail on final streaming response
@@ -1338,7 +1355,7 @@ async def invoke_agent_async(
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
-                streamed_tool_calls, content = await _consume_stream_async(agent, response)
+                streamed_tool_calls, content = await _consume_stream_async(agent, response, on_event)
 
                 if not streamed_tool_calls:
                     # §13.4 — Output guardrail on final streaming response

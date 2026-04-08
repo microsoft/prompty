@@ -429,6 +429,7 @@ function isToolCallLike(item: unknown): item is ToolCall {
 async function consumeStream(
   agent: Prompty,
   response: unknown,
+  onEvent?: EventCallback,
 ): Promise<{ toolCalls: ToolCall[]; content: string }> {
   const processed = await process(agent, response);
 
@@ -441,10 +442,12 @@ async function consumeStream(
         toolCalls.push(item);
       } else if (typeof item === "string") {
         textParts.push(item);
+        emitEvent(onEvent, "token", { token: item });
       }
     }
   } else if (typeof processed === "string") {
     textParts.push(processed);
+    emitEvent(onEvent, "token", { token: processed });
   }
 
   return { toolCalls, content: textParts.join("") };
@@ -554,7 +557,7 @@ export async function invokeAgent(
 
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
-        const { toolCalls, content } = await consumeStream(agent, response);
+        const { toolCalls, content } = await consumeStream(agent, response, onEvent);
 
         // §13.4 — Output guardrail (on assistant content, both final and tool-call responses)
         if (guardrails && content) {
