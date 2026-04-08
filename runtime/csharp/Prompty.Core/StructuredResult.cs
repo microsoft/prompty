@@ -60,7 +60,7 @@ public class StructuredResult : Dictionary<string, object?>
 
 /// <summary>
 /// Internal helper for casting any result to a typed object.
-/// Use <see cref="StructuredResult.Cast{T}"/> or <see cref="Pipeline.InvokeAsync{T}"/> instead.
+/// Use <see cref="StructuredResult.Cast{T}"/> or <see cref="Pipeline.InvokeAsync{T}(Core.Prompty, Dictionary{string, object?}?)"/> instead.
 /// </summary>
 internal static class PromptyCast
 {
