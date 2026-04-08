@@ -194,7 +194,6 @@ user:
 ```{{language}}
 {{code}}
 ```
-```
 
 <Tabs>
   <TabItem label="Python">
@@ -332,9 +331,10 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var history = new[] {
-        new Message("user", "What is Python?"),
-        new Message("assistant", "A programming language."),
+    var history = new[]
+    {
+        new Message { Role = "user", Parts = [new TextPart { Value = "What is Python?" }] },
+        new Message { Role = "assistant", Parts = [new TextPart { Value = "A programming language." }] },
     };
     var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
     {

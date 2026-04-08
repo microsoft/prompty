@@ -164,18 +164,6 @@ pass it to `process()` which yields text chunks.
     }
 
     Console.WriteLine();
-
-    // Or use processed streaming for text-only chunks
-    var result = await Pipeline.RunAsync(agent, messages);
-    if (result is ProcessedStream ps)
-    {
-        await foreach (var text in ps)
-        {
-            Console.Write(text);
-        }
-    }
-
-    Console.WriteLine();
     ```
   </TabItem>
 </Tabs>
