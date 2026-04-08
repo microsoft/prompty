@@ -56,8 +56,10 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var agent = PromptyLoader.Load("basic-chat.prompty");
-    var result = await Pipeline.RunAsync(agent, new { question = "What is quantum computing?" });
+    var result = await Pipeline.InvokeAsync("basic-chat.prompty", new Dictionary<string, object>
+    {
+        ["question"] = "What is quantum computing?"
+    });
     ```
   </TabItem>
 </Tabs>
@@ -104,7 +106,10 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.RunAsync(agent, new { text = "The food was cold and bland." });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["text"] = "The food was cold and bland."
+    });
     ```
   </TabItem>
 </Tabs>
@@ -150,7 +155,11 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.RunAsync(agent, new { text = article, length = "medium" });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["text"] = article,
+        ["length"] = "medium"
+    });
     ```
   </TabItem>
 </Tabs>
@@ -200,7 +209,11 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.RunAsync(agent, new { code = myCode, language = "python" });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["code"] = myCode,
+        ["language"] = "python"
+    });
     ```
   </TabItem>
 </Tabs>
@@ -260,7 +273,10 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var data = await Pipeline.RunAsync(agent, new { text = "Jane Doe is a PM at Microsoft in Redmond." });
+    var data = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["text"] = "Jane Doe is a PM at Microsoft in Redmond."
+    });
     ```
   </TabItem>
 </Tabs>
@@ -320,7 +336,11 @@ user:
         new Message("user", "What is Python?"),
         new Message("assistant", "A programming language."),
     };
-    var result = await Pipeline.RunAsync(agent, new { question = "What about Java?", conversation = history });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["question"] = "What about Java?",
+        ["conversation"] = history
+    });
     ```
   </TabItem>
 </Tabs>
@@ -366,7 +386,10 @@ inputs:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var vectors = await Pipeline.RunAsync(agent, new { text = "Embed this sentence." });
+    var vectors = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["text"] = "Embed this sentence."
+    });
     ```
   </TabItem>
 </Tabs>
@@ -487,7 +510,11 @@ Topic: {{topic}}
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.RunAsync(agent, new { topic = "time travel paradox", style = "poem" });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["topic"] = "time travel paradox",
+        ["style"] = "poem"
+    });
     ```
   </TabItem>
 </Tabs>
@@ -540,7 +567,12 @@ user:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.RunAsync(agent, new { text = "Good morning!", sourceLang = "English", targetLang = "Japanese" });
+    var result = await Pipeline.InvokeAsync(agent, new Dictionary<string, object>
+    {
+        ["text"] = "Good morning!",
+        ["sourceLang"] = "English",
+        ["targetLang"] = "Japanese"
+    });
     ```
   </TabItem>
 </Tabs>

@@ -383,9 +383,9 @@ response.
 </Tabs>
 
 <Aside type="tip">
-  `invoke_agent` / `executeAgent` / `InvokeAgentAsync` runs the full agent loop —
+  `invoke_agent` / `invokeAgent` / `InvokeAgentAsync` runs the full agent loop —
   it calls the LLM, executes any returned tool calls, appends the results, and
-  loops until the model returns a final response. Use `invoke` / `run` for
+  loops until the model returns a final response. Use `invoke` for
   single-turn calls where you handle tool responses yourself.
 </Aside>
 
