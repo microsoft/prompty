@@ -14,22 +14,27 @@ The TypeScript runtime is split into focused packages:
 
 | Package | Description | npm |
 |---------|-------------|-----|
-| `@prompty/core` | Core runtime: loader, pipeline, types | [![npm](https://img.shields.io/npm/v/@prompty/core)](https://www.npmjs.com/package/@prompty/core) |
-| `@prompty/openai` | OpenAI provider (chat, responses, embedding, image) | [![npm](https://img.shields.io/npm/v/@prompty/openai)](https://www.npmjs.com/package/@prompty/openai) |
-| `@prompty/foundry` | Microsoft Foundry provider | [![npm](https://img.shields.io/npm/v/@prompty/foundry)](https://www.npmjs.com/package/@prompty/foundry) |
-| `@prompty/anthropic` | Anthropic provider | [![npm](https://img.shields.io/npm/v/@prompty/anthropic)](https://www.npmjs.com/package/@prompty/anthropic) |
+| `@prompty/core` | Core runtime: loader, pipeline, types | [![npm](https://img.shields.io/npm/v/@prompty/core/alpha)](https://www.npmjs.com/package/@prompty/core) |
+| `@prompty/openai` | OpenAI provider (chat, responses, embedding, image) | [![npm](https://img.shields.io/npm/v/@prompty/openai/alpha)](https://www.npmjs.com/package/@prompty/openai) |
+| `@prompty/foundry` | Microsoft Foundry provider | [![npm](https://img.shields.io/npm/v/@prompty/foundry/alpha)](https://www.npmjs.com/package/@prompty/foundry) |
+| `@prompty/anthropic` | Anthropic provider | [![npm](https://img.shields.io/npm/v/@prompty/anthropic/alpha)](https://www.npmjs.com/package/@prompty/anthropic) |
+
+<Aside type="caution">
+  Prompty v2 packages are currently in alpha. Install with the `@alpha` tag:
+  `npm install @prompty/core@alpha @prompty/openai@alpha`
+</Aside>
 
 ## Installation
 
 ```bash
 # Core + OpenAI
-npm install @prompty/core @prompty/openai
+npm install @prompty/core@alpha @prompty/openai@alpha
 
 # Core + Microsoft Foundry
-npm install @prompty/core @prompty/foundry
+npm install @prompty/core@alpha @prompty/foundry@alpha
 
 # Core + Anthropic
-npm install @prompty/core @prompty/anthropic
+npm install @prompty/core@alpha @prompty/anthropic@alpha
 ```
 
 ## Quick Start
