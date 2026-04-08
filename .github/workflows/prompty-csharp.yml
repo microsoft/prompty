@@ -8,33 +8,7 @@ on:
 
 jobs:
   prompty-tests:
-    name: run unit tests on supported .net versions
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        dotnet-version: [ '9.0.x' ]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup dotnet ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-
-      - name: dotnet restore
-        working-directory: ./runtime/csharp
-        run: dotnet restore
-
-      - name: dotnet build
-        working-directory: ./runtime/csharp
-        run: dotnet build --nologo
-
-      - name: dotnet test
-        working-directory: ./runtime/csharp
-        run: dotnet test --nologo --logger "console;verbosity=normal"
+    uses: ./.github/workflows/prompty-csharp-check.yml
 
   nuget-publish:
     name: publish nuget packages
@@ -51,13 +25,13 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: csharp version
+      - name: Determine version from tag
         run: |
-          echo "VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\/csharp\///')" >> "$GITHUB_ENV"
-          echo "Using version: ${{ env.VERSION }}"
+          VERSION="${GITHUB_REF_NAME#csharp/}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Publishing version: $VERSION"
 
       - name: Set package versions
-        id: update
         uses: vers-one/dotnet-project-version-updater@v1.7
         with:
           file: |
@@ -71,14 +45,22 @@ jobs:
         working-directory: ./runtime/csharp
         run: dotnet restore
 
-      - name: dotnet build
+      - name: dotnet pack
         working-directory: ./runtime/csharp
-        run: dotnet build --configuration Release --nologo
+        run: dotnet pack --configuration Release --no-restore --output ./artifacts
 
-      - name: publish nuget packages
+      - name: NuGet login (OIDC trusted publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
         working-directory: ./runtime/csharp
         run: |
-          dotnet nuget push Prompty.Core/bin/Release/Prompty.Core.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-          dotnet nuget push Prompty.OpenAI/bin/Release/Prompty.OpenAI.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-          dotnet nuget push Prompty.Foundry/bin/Release/Prompty.Foundry.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-          dotnet nuget push Prompty.Anthropic/bin/Release/Prompty.Anthropic.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+          for pkg in ./artifacts/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done

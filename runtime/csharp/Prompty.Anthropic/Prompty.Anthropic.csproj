@@ -12,7 +12,12 @@
     <PackageProjectUrl>https://prompty.ai</PackageProjectUrl>
     <RepositoryUrl>https://github.com/microsoft/prompty</RepositoryUrl>
     <PackageTags>prompty;anthropic;claude;llm;ai</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
