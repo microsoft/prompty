@@ -15,9 +15,6 @@ jobs:
       matrix:
         dotnet-version: [ '9.0.x' ]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v5
       - name: Setup dotnet ${{ matrix.dotnet-version }}
