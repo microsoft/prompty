@@ -1,0 +1,38 @@
+---
+name: openai-agent
+description: Agent with tool calling for weather lookups
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0
+    maxOutputTokens: 1024
+inputs:
+  - name: question
+    kind: string
+    default: What's the weather in Seattle?
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        description: City name, e.g. "Seattle, WA"
+        required: true
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant with access to tools.
+Use the get_weather tool when asked about weather.
+
+user:
+{{question}}

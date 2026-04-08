@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from ..model import Prompty
@@ -1123,7 +1124,7 @@ def invoke_agent(
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = _invoke_executor(agent, messages)
+        response = None
         iteration = 0
 
         while True:
@@ -1149,34 +1150,51 @@ def invoke_agent(
 
             # §13.4 — Input guardrail
             if guardrails is not None:
-                result = guardrails.check_input(messages)
-                if not result.allowed:
-                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {result.reason}"})
-                    raise GuardrailError(result.reason or "Input guardrail denied")
+                gr_input = guardrails.check_input(messages)
+                if not gr_input.allowed:
+                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
+                if gr_input.rewrite is not None:
+                    messages = gr_input.rewrite
+                    emit_event(on_event, "messages_updated", {"messages": messages})
 
             # §13.2 — Check cancellation before LLM call
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
                 raise CancelledError()
 
+            # Call LLM
+            response = _invoke_executor(agent, messages)
+
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
                 streamed_tool_calls, content = _consume_stream(agent, response)
 
                 if not streamed_tool_calls:
+                    # §13.4 — Output guardrail on final streaming response
+                    if guardrails is not None and content:
+                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                        gr = guardrails.check_output(assistant_msg)
+                        if not gr.allowed:
+                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            raise GuardrailError(gr.reason or "Output guardrail denied")
+                        if gr.rewrite is not None:
+                            content = gr.rewrite
                     # Final answer — return collected content
                     t("iterations", iteration)
                     t("result", content)
                     emit_event(on_event, "done", {"response": content, "messages": messages})
                     return content
 
-                # §13.4 — Output guardrail (on assistant content)
+                # §13.4 — Output guardrail (on assistant content with tool calls)
                 if guardrails is not None and content:
                     assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
                         raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        content = gr.rewrite
 
                 iteration += 1
                 if iteration > max_iterations:
@@ -1192,7 +1210,6 @@ def invoke_agent(
                 )
                 messages.extend(tool_messages)
                 emit_event(on_event, "messages_updated", {"messages": messages})
-                response = _invoke_executor(agent, messages)
                 continue
 
             # Non-streaming: check raw response for tool calls
@@ -1208,6 +1225,8 @@ def invoke_agent(
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
                         raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        text_content = gr.rewrite
 
             iteration += 1
             if iteration > max_iterations:
@@ -1223,17 +1242,25 @@ def invoke_agent(
             )
             messages.extend(tool_messages)
             emit_event(on_event, "messages_updated", {"messages": messages})
-            response = _invoke_executor(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
 
+    # §13.4 — Output guardrail on final non-streaming response
     if raw:
         emit_event(on_event, "done", {"response": response, "messages": messages})
         return response
-    result = process(agent, response)
-    emit_event(on_event, "done", {"response": result, "messages": messages})
-    return result
+    processed_result = process(agent, response)
+    if guardrails is not None and isinstance(processed_result, str):
+        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
+        gr = guardrails.check_output(assistant_msg)
+        if not gr.allowed:
+            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            raise GuardrailError(gr.reason or "Output guardrail denied")
+        if gr.rewrite is not None:
+            processed_result = gr.rewrite
+    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    return processed_result
 
 
 @trace
@@ -1267,7 +1294,7 @@ async def invoke_agent_async(
         t("type", "agent")
         t("tools", list(tools.keys()))
 
-        response = await _invoke_executor_async(agent, messages)
+        response = None
         iteration = 0
 
         while True:
@@ -1293,33 +1320,50 @@ async def invoke_agent_async(
 
             # §13.4 — Input guardrail
             if guardrails is not None:
-                result = guardrails.check_input(messages)
-                if not result.allowed:
-                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {result.reason}"})
-                    raise GuardrailError(result.reason or "Input guardrail denied")
+                gr_input = guardrails.check_input(messages)
+                if not gr_input.allowed:
+                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
+                if gr_input.rewrite is not None:
+                    messages = gr_input.rewrite
+                    emit_event(on_event, "messages_updated", {"messages": messages})
 
             # §13.2 — Check cancellation before LLM call
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
                 raise CancelledError()
 
+            # Call LLM
+            response = await _invoke_executor_async(agent, messages)
+
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
                 streamed_tool_calls, content = await _consume_stream_async(agent, response)
 
                 if not streamed_tool_calls:
+                    # §13.4 — Output guardrail on final streaming response
+                    if guardrails is not None and content:
+                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                        gr = guardrails.check_output(assistant_msg)
+                        if not gr.allowed:
+                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            raise GuardrailError(gr.reason or "Output guardrail denied")
+                        if gr.rewrite is not None:
+                            content = gr.rewrite
                     t("iterations", iteration)
                     t("result", content)
                     emit_event(on_event, "done", {"response": content, "messages": messages})
                     return content
 
-                # §13.4 — Output guardrail
+                # §13.4 — Output guardrail (on assistant content with tool calls)
                 if guardrails is not None and content:
                     assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
                         raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        content = gr.rewrite
 
                 iteration += 1
                 if iteration > max_iterations:
@@ -1335,7 +1379,6 @@ async def invoke_agent_async(
                 )
                 messages.extend(tool_messages)
                 emit_event(on_event, "messages_updated", {"messages": messages})
-                response = await _invoke_executor_async(agent, messages)
                 continue
 
             # Non-streaming: check raw response
@@ -1351,6 +1394,8 @@ async def invoke_agent_async(
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
                         raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        text_content = gr.rewrite
 
             iteration += 1
             if iteration > max_iterations:
@@ -1366,17 +1411,25 @@ async def invoke_agent_async(
             )
             messages.extend(tool_messages)
             emit_event(on_event, "messages_updated", {"messages": messages})
-            response = await _invoke_executor_async(agent, messages)
 
         t("iterations", iteration)
         t("result", response)
 
+    # §13.4 — Output guardrail on final non-streaming response
     if raw:
         emit_event(on_event, "done", {"response": response, "messages": messages})
         return response
-    result = await process_async(agent, response)
-    emit_event(on_event, "done", {"response": result, "messages": messages})
-    return result
+    processed_result = await process_async(agent, response)
+    if guardrails is not None and isinstance(processed_result, str):
+        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
+        gr = guardrails.check_output(assistant_msg)
+        if not gr.allowed:
+            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            raise GuardrailError(gr.reason or "Output guardrail denied")
+        if gr.rewrite is not None:
+            processed_result = gr.rewrite
+    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    return processed_result
 
 
 # ---------------------------------------------------------------------------
@@ -1499,9 +1552,8 @@ def _dispatch_tools_with_extensions(
     parallel: bool = False,
 ) -> list[str]:
     """Dispatch tool calls with events, cancellation, guardrails, and optional parallelism."""
-    results: list[str] = []
 
-    for tc in tool_calls:
+    def _dispatch_one(tc: Any) -> str:
         name = getattr(tc, "name", "")
         arguments = getattr(tc, "arguments", "{}")
 
@@ -1520,17 +1572,24 @@ def _dispatch_tools_with_extensions(
             if not gr.allowed:
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
-                results.append(denied_msg)
-                continue
+                return denied_msg
+            if gr.rewrite is not None:
+                arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
         # Execute tool
         result = dispatch_tool(name, arguments, tools, agent, parent_inputs)
 
         # §13.1 — Emit tool_result
         emit_event(on_event, "tool_result", {"name": name, "result": result})
-        results.append(result)
+        return result
 
-    return results
+    # §13.6 — Parallel tool execution
+    if parallel and len(tool_calls) > 1:
+        with ThreadPoolExecutor() as pool:
+            futures = [pool.submit(_dispatch_one, tc) for tc in tool_calls]
+            return [f.result() for f in futures]
+    else:
+        return [_dispatch_one(tc) for tc in tool_calls]
 
 
 async def _dispatch_tools_with_extensions_async(
@@ -1566,6 +1625,8 @@ async def _dispatch_tools_with_extensions_async(
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
                 return denied_msg
+            if gr.rewrite is not None:
+                arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
         # Execute tool
         result = await dispatch_tool_async(name, arguments, tools, agent, parent_inputs)

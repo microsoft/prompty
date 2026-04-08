@@ -551,12 +551,12 @@ export async function invokeAgent(
     emit("description", "Invoke a prompty with tool calling");
     emit("inputs", { prompt: serializeAgent(agent), tools: Object.keys(tools), inputs: inputs ?? {} });
 
-    const messages = await prepare(agent, inputs);
+    let messages = await prepare(agent, inputs);
     const parentInputs = inputs ?? {};
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
 
-    let response = await executor.execute(agent, messages);
+    let response: unknown = null;
     let iteration = 0;
 
     while (true) {
@@ -594,6 +594,7 @@ export async function invokeAgent(
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
+        if (result.rewrite) messages = result.rewrite;
       }
 
       // §13.2 — Check cancellation before LLM call
@@ -604,19 +605,14 @@ export async function invokeAgent(
         throw err;
       }
 
+      // Call LLM
+      response = await executor.execute(agent, messages);
+
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
         const { toolCalls, content } = await consumeStream(agent, response);
 
-        if (toolCalls.length === 0) {
-          // Final answer — return collected content
-          emit("iterations", iteration);
-          emit("result", content);
-          emitEvent(onEvent, "done", { response: content, messages });
-          return content;
-        }
-
-        // §13.4 — Output guardrail (on assistant content)
+        // §13.4 — Output guardrail (on assistant content, both final and tool-call responses)
         if (guardrails && content) {
           const assistantMsg = new Message("assistant", [text(content)]);
           const gr = guardrails.checkOutput(assistantMsg);
@@ -624,6 +620,14 @@ export async function invokeAgent(
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
+        }
+
+        if (toolCalls.length === 0) {
+          // Final answer — return collected content
+          emit("iterations", iteration);
+          emit("result", content);
+          emitEvent(onEvent, "done", { response: content, messages });
+          return content;
         }
 
         iteration++;
@@ -647,14 +651,37 @@ export async function invokeAgent(
 
         messages.push(...toolMessages);
         emitEvent(onEvent, "messages_updated", { messages });
-        response = await executor.execute(agent, messages);
         continue;
       }
 
       // Non-streaming: check raw response for tool calls
-      if (!hasToolCalls(response)) break;
+      if (!hasToolCalls(response)) {
+        // §13.4 — Output guardrail on final response
+        if (guardrails) {
+          const finalResult = options?.raw ? response : await process(agent, response);
+          if (typeof finalResult === "string") {
+            const assistantMsg = new Message("assistant", [text(finalResult)]);
+            const gr = guardrails.checkOutput(assistantMsg);
+            if (!gr.allowed) {
+              emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+              throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+            }
+            if (gr.rewrite !== undefined) {
+              emit("iterations", iteration);
+              emit("result", gr.rewrite);
+              emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+              return gr.rewrite;
+            }
+          }
+          emit("iterations", iteration);
+          emit("result", finalResult);
+          emitEvent(onEvent, "done", { response: finalResult, messages });
+          return finalResult;
+        }
+        break;
+      }
 
-      // §13.4 — Output guardrail
+      // §13.4 — Output guardrail (on tool-call response with text content)
       if (guardrails) {
         const { textContent } = extractToolInfo(response);
         if (textContent) {
@@ -688,7 +715,6 @@ export async function invokeAgent(
 
       messages.push(...toolMessages);
       emitEvent(onEvent, "messages_updated", { messages });
-      response = await executor.execute(agent, messages);
     }
 
     emit("iterations", iteration);
@@ -996,6 +1022,9 @@ async function dispatchOneToolWithExtensions(
       const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
       emitEvent(onEvent, "tool_result", { name: tc.name, result: deniedMsg });
       return deniedMsg;
+    }
+    if (gr.rewrite !== undefined) {
+      tc = { ...tc, arguments: typeof gr.rewrite === "string" ? gr.rewrite : JSON.stringify(gr.rewrite) };
     }
   }
 

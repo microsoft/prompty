@@ -1,0 +1,40 @@
+---
+name: weather-structured
+description: Structured output with JSON schema
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0
+outputs:
+  - name: city
+    kind: string
+    description: The city name
+    required: true
+  - name: temperature
+    kind: integer
+    description: Temperature in Fahrenheit
+    required: true
+  - name: conditions
+    kind: string
+    description: Weather conditions summary
+    required: true
+inputs:
+  - name: city
+    kind: string
+    default: Seattle
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a weather assistant. Return structured weather data.
+
+user:
+What's the weather in {{city}}?

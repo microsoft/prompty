@@ -9,6 +9,7 @@ import { Message } from "./types.js";
 export interface GuardrailResult {
   allowed: boolean;
   reason?: string;
+  rewrite?: any;
 }
 
 /** Error thrown when a guardrail denies the operation. */

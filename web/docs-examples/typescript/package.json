@@ -1,0 +1,19 @@
+{
+  "name": "prompty-docs-examples",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tested code examples for Prompty documentation",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@prompty/core": "workspace:*",
+    "@prompty/openai": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "typescript": "^5.8.3"
+  }
+}

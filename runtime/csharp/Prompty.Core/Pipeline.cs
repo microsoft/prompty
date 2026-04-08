@@ -231,8 +231,17 @@ public static class Pipeline
             var messages = await PrepareAsync(agent, inputs);
             var executor = InvokerRegistry.GetExecutor(agent.Model?.Provider ?? "openai");
 
-            for (var i = 0; i < maxIterations; i++)
+            object? response = null;
+            int iteration = 0;
+
+            while (true)
             {
+                if (iteration >= maxIterations)
+                {
+                    throw new InvalidOperationException(
+                        $"Agent loop exceeded maximum iterations ({maxIterations}).");
+                }
+
                 // §13.2 Cancellation check at loop start
                 try
                 {
@@ -241,7 +250,7 @@ public static class Pipeline
                 catch (OperationCanceledException)
                 {
                     AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
-                        new Dictionary<string, object?> { ["iteration"] = i, ["reason"] = "cancellation_requested" });
+                        new Dictionary<string, object?> { ["iteration"] = iteration, ["reason"] = "cancellation_requested" });
                     throw;
                 }
 
@@ -278,6 +287,10 @@ public static class Pipeline
                             new Dictionary<string, object?> { ["guardrail"] = "input", ["reason"] = inputCheck.Reason });
                         throw new GuardrailError(inputCheck.Reason ?? "Input guardrail denied");
                     }
+                    if (inputCheck.Rewrite is List<Message> rewrittenMessages)
+                    {
+                        messages = rewrittenMessages;
+                    }
                 }
 
                 // §13.2 Cancellation check before LLM call
@@ -288,14 +301,14 @@ public static class Pipeline
                 catch (OperationCanceledException)
                 {
                     AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
-                        new Dictionary<string, object?> { ["iteration"] = i, ["reason"] = "cancelled_before_llm" });
+                        new Dictionary<string, object?> { ["iteration"] = iteration, ["reason"] = "cancelled_before_llm" });
                     throw;
                 }
 
                 AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
-                    new Dictionary<string, object?> { ["iteration"] = i, ["phase"] = "executing" });
+                    new Dictionary<string, object?> { ["iteration"] = iteration, ["phase"] = "executing" });
 
-                var response = await ExecuteAsync(agent, messages);
+                response = await ExecuteAsync(agent, messages);
 
                 // If response is a stream, consume it fully before processing.
                 // This ensures tool calls from streaming responses are gathered.
@@ -305,7 +318,7 @@ public static class Pipeline
                     response = stream;
                 }
 
-                var result = raw ? response : await ProcessAsync(agent, response);
+                var result = raw ? response! : await ProcessAsync(agent, response!);
 
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
@@ -321,7 +334,7 @@ public static class Pipeline
                             var call = toolResult.ToolCalls[ti];
                             var capturedIndex = ti;
 
-                            // §13.4 Tool guardrail
+                            // §13.4 Tool guardrail (with rewrite support)
                             if (guardrails is not null)
                             {
                                 var args = ToolDispatch.ParseArguments(call.Arguments);
@@ -331,6 +344,10 @@ public static class Pipeline
                                     AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
                                         new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
                                     throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                }
+                                if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
+                                {
+                                    call.Arguments = System.Text.Json.JsonSerializer.Serialize(rewrittenArgs);
                                 }
                             }
 
@@ -368,7 +385,7 @@ public static class Pipeline
                         // Sequential dispatch
                         foreach (var call in toolResult.ToolCalls)
                         {
-                            // §13.4 Tool guardrail
+                            // §13.4 Tool guardrail (with rewrite support)
                             if (guardrails is not null)
                             {
                                 var args = ToolDispatch.ParseArguments(call.Arguments);
@@ -378,6 +395,10 @@ public static class Pipeline
                                     AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
                                         new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
                                     throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                }
+                                if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
+                                {
+                                    call.Arguments = System.Text.Json.JsonSerializer.Serialize(rewrittenArgs);
                                 }
                             }
 
@@ -404,16 +425,26 @@ public static class Pipeline
                     AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
                         new Dictionary<string, object?> { ["source"] = "tool_results", ["count"] = toolMessages.Count });
 
+                    iteration++;
                     continue;
                 }
 
-                // §13.4 Output guardrail
-                if (guardrails is not null && result is string resultText)
+                // §13.4 Output guardrail on final response
+                if (guardrails is not null)
                 {
-                    var outputMsg = new Message
+                    var outputMsg = result switch
                     {
-                        Role = "assistant",
-                        Parts = [new TextPart { Value = resultText }]
+                        string resultText => new Message
+                        {
+                            Role = Roles.Assistant,
+                            Parts = [new TextPart { Value = resultText }]
+                        },
+                        Message msg => msg,
+                        _ => new Message
+                        {
+                            Role = Roles.Assistant,
+                            Parts = [new TextPart { Value = result?.ToString() ?? "" }]
+                        },
                     };
                     var outputCheck = guardrails.CheckOutput(outputMsg);
                     if (!outputCheck.Allowed)
@@ -422,16 +453,17 @@ public static class Pipeline
                             new Dictionary<string, object?> { ["guardrail"] = "output", ["reason"] = outputCheck.Reason });
                         throw new GuardrailError(outputCheck.Reason ?? "Output guardrail denied");
                     }
+                    if (outputCheck.Rewrite is not null)
+                    {
+                        result = outputCheck.Rewrite;
+                    }
                 }
 
                 AgentEvents.EmitEvent(onEvent, AgentEventType.Done,
-                    new Dictionary<string, object?> { ["iterations"] = i + 1 });
+                    new Dictionary<string, object?> { ["iterations"] = iteration + 1 });
 
-                return result;
+                return result!;
             }
-
-            throw new InvalidOperationException(
-                $"Agent loop exceeded maximum iterations ({maxIterations}).");
         });
     }
 

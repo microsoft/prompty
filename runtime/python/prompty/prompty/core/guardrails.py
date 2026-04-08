@@ -42,10 +42,16 @@ class GuardrailResult:
         Whether the operation is allowed.
     reason:
         Required when ``allowed`` is ``False`` — explains the denial.
+    rewrite:
+        Optional rewritten content when ``allowed`` is ``True``.
+        For input guardrails: replacement message list.
+        For output guardrails: replacement assistant content.
+        For tool guardrails: replacement tool arguments dict.
     """
 
     allowed: bool
     reason: str | None = None
+    rewrite: Any | None = None
 
 
 # Callback signatures for the three guardrail hooks

@@ -1,0 +1,21 @@
+[project]
+name = "prompty-docs-examples"
+version = "0.1.0"
+description = "Tested code examples for Prompty documentation"
+requires-python = ">=3.11"
+dependencies = [
+    "prompty[all]",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+
+[build-system]
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"

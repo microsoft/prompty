@@ -1,0 +1,16 @@
+---
+name: openai-embedding
+description: Generate text embeddings with OpenAI
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  - name: text
+    kind: string
+    default: Prompty is a prompt asset format
+---
+{{text}}

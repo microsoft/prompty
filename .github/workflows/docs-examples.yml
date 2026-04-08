@@ -1,0 +1,104 @@
+name: Docs Examples
+
+on:
+  pull_request:
+    paths:
+      - 'web/docs-examples/**'
+      - 'web/src/content/docs/**'
+      - 'runtime/python/prompty/**'
+      - 'runtime/typescript/packages/**'
+      - 'runtime/csharp/Prompty.Core/**'
+      - 'runtime/csharp/Prompty.OpenAI/**'
+      - 'spec/fixtures/**'
+  push:
+    branches: [main]
+    paths:
+      - 'web/docs-examples/**'
+      - 'web/src/content/docs/**'
+
+permissions:
+  contents: read
+
+jobs:
+  python-examples:
+    name: Python examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install Python runtime
+        working-directory: ./runtime/python/prompty
+        run: uv pip install --system -e '.[dev,all]'
+
+      - name: Install docs examples deps
+        working-directory: ./web/docs-examples/python
+        run: uv pip install --system -e '.[dev]'
+
+      - name: Run tests
+        working-directory: ./web/docs-examples/python
+        run: python -m pytest tests/ -q
+
+  typescript-examples:
+    name: TypeScript examples
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/docs-examples/typescript
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Build TypeScript runtime
+        working-directory: runtime/typescript
+        run: npm ci && npm run build
+
+      - name: Install docs examples deps
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  csharp-examples:
+    name: C# examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup dotnet 9.0
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run tests
+        working-directory: ./web/docs-examples/csharp
+        run: dotnet test --nologo --logger "console;verbosity=normal"
+
+  docs-build:
+    name: Docs site build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build docs site
+        run: npm run build

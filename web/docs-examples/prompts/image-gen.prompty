@@ -1,0 +1,20 @@
+---
+name: openai-image
+description: Generate images with DALL-E
+model:
+  id: dall-e-3
+  provider: openai
+  apiType: image
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    additionalProperties:
+      size: "1024x1024"
+      quality: standard
+inputs:
+  - name: prompt
+    kind: string
+    default: A serene mountain landscape at sunset
+---
+{{prompt}}
