@@ -35,6 +35,11 @@ import { getLastNonces, clearLastNonces } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
 import { dispatchTool } from "./tool-dispatch.js";
+import { type EventCallback, emitEvent } from "./agent-events.js";
+import { CancelledError, checkCancellation } from "./cancellation.js";
+import { trimToContextWindow } from "./context.js";
+import { type GuardrailResult, GuardrailError, Guardrails } from "./guardrails.js";
+import { Steering } from "./steering.js";
 
 // ---------------------------------------------------------------------------
 // Defaults
@@ -503,6 +508,9 @@ async function buildToolMessagesFromCalls(
 
 /**
  * Run a prompt with automatic tool-call execution loop.
+ *
+ * Supports §13 extensions: events, cancellation, context window
+ * management, guardrails, steering, and parallel tool calls.
  */
 export async function invokeAgent(
   prompt: string | Prompty,
@@ -511,6 +519,12 @@ export async function invokeAgent(
     tools?: Record<string, (...args: unknown[]) => unknown>;
     maxIterations?: number;
     raw?: boolean;
+    onEvent?: EventCallback;
+    signal?: AbortSignal;
+    contextBudget?: number;
+    guardrails?: Guardrails;
+    steering?: Steering;
+    parallelToolCalls?: boolean;
   },
 ): Promise<unknown> {
   return traceSpan("invokeAgent", async (emit) => {
@@ -526,6 +540,12 @@ export async function invokeAgent(
       : prompt;
     const tools = options?.tools ?? {};
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+    const onEvent = options?.onEvent;
+    const signal = options?.signal;
+    const contextBudget = options?.contextBudget;
+    const guardrails = options?.guardrails;
+    const steering = options?.steering;
+    const parallelToolCalls = options?.parallelToolCalls ?? false;
 
     emit("signature", "prompty.invokeAgent");
     emit("description", "Invoke a prompty with tool calling");
@@ -540,6 +560,50 @@ export async function invokeAgent(
     let iteration = 0;
 
     while (true) {
+      // §13.2 — Check cancellation at top of iteration
+      try {
+        checkCancellation(signal);
+      } catch (err) {
+        emitEvent(onEvent, "cancelled", {});
+        throw err;
+      }
+
+      // §13.5 — Drain steering messages
+      if (steering) {
+        const pending = steering.drain();
+        if (pending.length > 0) {
+          messages.push(...pending);
+          emitEvent(onEvent, "messages_updated", { messages });
+          emitEvent(onEvent, "status", { message: `Injected ${pending.length} steering message(s)` });
+        }
+      }
+
+      // §13.3 — Trim context window
+      if (contextBudget !== undefined) {
+        const [droppedCount] = trimToContextWindow(messages, contextBudget);
+        if (droppedCount > 0) {
+          emitEvent(onEvent, "messages_updated", { messages });
+          emitEvent(onEvent, "status", { message: `Trimmed ${droppedCount} messages for context budget` });
+        }
+      }
+
+      // §13.4 — Input guardrail
+      if (guardrails) {
+        const result = guardrails.checkInput(messages);
+        if (!result.allowed) {
+          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
+          throw new GuardrailError(result.reason ?? "Input guardrail denied");
+        }
+      }
+
+      // §13.2 — Check cancellation before LLM call
+      try {
+        checkCancellation(signal);
+      } catch (err) {
+        emitEvent(onEvent, "cancelled", {});
+        throw err;
+      }
+
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
         const { toolCalls, content } = await consumeStream(agent, response);
@@ -548,7 +612,18 @@ export async function invokeAgent(
           // Final answer — return collected content
           emit("iterations", iteration);
           emit("result", content);
+          emitEvent(onEvent, "done", { response: content, messages });
           return content;
+        }
+
+        // §13.4 — Output guardrail (on assistant content)
+        if (guardrails && content) {
+          const assistantMsg = new Message("assistant", [text(content)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+          }
         }
 
         iteration++;
@@ -562,18 +637,35 @@ export async function invokeAgent(
         const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
           toolEmit("signature", "prompty.invokeAgent.toolCalls");
           toolEmit("description", `Tool call round ${iteration}`);
-          const result = await buildToolMessagesFromCalls(toolCalls, content, tools, agent, parentInputs, toolEmit);
+          const result = await buildToolMessagesFromCallsWithExtensions(
+            toolCalls, content, tools, agent, parentInputs, toolEmit,
+            { onEvent, signal, guardrails, parallel: parallelToolCalls },
+          );
           toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
           return result;
         });
 
         messages.push(...toolMessages);
+        emitEvent(onEvent, "messages_updated", { messages });
         response = await executor.execute(agent, messages);
         continue;
       }
 
       // Non-streaming: check raw response for tool calls
       if (!hasToolCalls(response)) break;
+
+      // §13.4 — Output guardrail
+      if (guardrails) {
+        const { textContent } = extractToolInfo(response);
+        if (textContent) {
+          const assistantMsg = new Message("assistant", [text(textContent)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+          }
+        }
+      }
 
       iteration++;
       if (iteration > maxIterations) {
@@ -586,12 +678,16 @@ export async function invokeAgent(
       const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
         toolEmit("signature", "prompty.invokeAgent.toolCalls");
         toolEmit("description", `Tool call round ${iteration}`);
-        const result = await buildToolResultMessages(response, tools, agent, parentInputs, toolEmit);
+        const result = await buildToolResultMessagesWithExtensions(
+          response, tools, agent, parentInputs, toolEmit,
+          { onEvent, signal, guardrails, parallel: parallelToolCalls },
+        );
         toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
         return result;
       });
 
       messages.push(...toolMessages);
+      emitEvent(onEvent, "messages_updated", { messages });
       response = await executor.execute(agent, messages);
     }
 
@@ -599,10 +695,12 @@ export async function invokeAgent(
 
     if (options?.raw) {
       emit("result", response);
+      emitEvent(onEvent, "done", { response, messages });
       return response;
     }
     const result = await process(agent, response);
     emit("result", result);
+    emitEvent(onEvent, "done", { response: result, messages });
     return result;
   });
 }
@@ -845,4 +943,163 @@ async function buildToolResultMessages(
   const provider = resolveProvider(agent ?? ({} as Prompty));
   const executor = getExecutor(provider);
   return executor.formatToolMessages(response, toolCalls, toolResults, textContent);
+}
+
+// ---------------------------------------------------------------------------
+// Extension-aware tool dispatch helpers (§13)
+// ---------------------------------------------------------------------------
+
+/** Options for extension-aware tool dispatch. */
+interface ToolExtensionOptions {
+  onEvent?: EventCallback;
+  signal?: AbortSignal;
+  guardrails?: Guardrails;
+  parallel?: boolean;
+}
+
+/**
+ * Dispatch a single tool call with §13 extensions (events, cancellation, guardrails).
+ */
+async function dispatchOneToolWithExtensions(
+  tc: { id: string; name: string; arguments: string; [key: string]: string },
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  agent: Prompty,
+  parentInputs: Record<string, unknown>,
+  ext: ToolExtensionOptions,
+): Promise<string> {
+  const { onEvent, signal, guardrails } = ext;
+
+  // §13.2 — Check cancellation before each tool
+  try {
+    checkCancellation(signal);
+  } catch (err) {
+    emitEvent(onEvent, "cancelled", {});
+    throw err;
+  }
+
+  // §13.1 — Emit tool_call_start
+  emitEvent(onEvent, "tool_call_start", { name: tc.name, arguments: tc.arguments });
+
+  // §13.4 — Tool guardrail
+  if (guardrails) {
+    let parsedArgs: Record<string, unknown> = {};
+    try {
+      const parsed = JSON.parse(tc.arguments);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        parsedArgs = parsed as Record<string, unknown>;
+      }
+    } catch {
+      // ignore parse errors for guardrail check
+    }
+    const gr = guardrails.checkTool(tc.name, parsedArgs);
+    if (!gr.allowed) {
+      const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
+      emitEvent(onEvent, "tool_result", { name: tc.name, result: deniedMsg });
+      return deniedMsg;
+    }
+  }
+
+  // Execute tool
+  let result: string;
+  let parsedArgs: unknown;
+  try {
+    parsedArgs = JSON.parse(tc.arguments);
+    if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
+      parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
+    }
+    result = await traceSpan(tc.name, async (toolEmit) => {
+      toolEmit("signature", `prompty.tool.${tc.name}`);
+      toolEmit("description", `Execute tool: ${tc.name}`);
+      toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
+      const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs);
+      toolEmit("result", r);
+      return r;
+    }) as string;
+  } catch (err) {
+    // Re-throw cancellation errors
+    if (err instanceof CancelledError) throw err;
+    result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+
+  // §13.1 — Emit tool_result
+  emitEvent(onEvent, "tool_result", { name: tc.name, result });
+  return result;
+}
+
+/**
+ * Dispatch tool calls with §13 extensions, supporting parallel execution.
+ */
+async function dispatchToolsWithExtensions(
+  toolCalls: { id: string; name: string; arguments: string; [key: string]: string }[],
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  agent: Prompty,
+  parentInputs: Record<string, unknown>,
+  ext: ToolExtensionOptions,
+): Promise<string[]> {
+  if (ext.parallel && toolCalls.length > 1) {
+    // §13.6 — Parallel tool execution via Promise.all
+    return Promise.all(
+      toolCalls.map((tc) => dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext)),
+    );
+  }
+
+  // Sequential execution
+  const results: string[] = [];
+  for (const tc of toolCalls) {
+    results.push(await dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext));
+  }
+  return results;
+}
+
+/**
+ * Build tool result messages from a raw LLM response with §13 extensions.
+ */
+async function buildToolResultMessagesWithExtensions(
+  response: unknown,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  agent: Prompty,
+  parentInputs: Record<string, unknown>,
+  parentEmit: ((key: string, value: unknown) => void) | undefined,
+  ext: ToolExtensionOptions,
+): Promise<Message[]> {
+  const { toolCalls, textContent } = extractToolInfo(response);
+
+  const toolResults = await dispatchToolsWithExtensions(toolCalls, tools, agent, parentInputs, ext);
+
+  if (parentEmit) {
+    parentEmit("inputs", {
+      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+    });
+  }
+
+  const provider = resolveProvider(agent);
+  const executor = getExecutor(provider);
+  return executor.formatToolMessages(response, toolCalls, toolResults, textContent);
+}
+
+/**
+ * Build tool result messages from streaming-extracted ToolCall objects with §13 extensions.
+ */
+async function buildToolMessagesFromCallsWithExtensions(
+  toolCalls: ToolCall[],
+  textContent: string,
+  tools: Record<string, (...args: unknown[]) => unknown>,
+  agent: Prompty,
+  parentInputs: Record<string, unknown>,
+  parentEmit: ((key: string, value: unknown) => void) | undefined,
+  ext: ToolExtensionOptions,
+): Promise<Message[]> {
+  const normalizedCalls = toolCalls.map((tc) => ({ id: tc.id, name: tc.name, arguments: tc.arguments }));
+
+  const toolResults = await dispatchToolsWithExtensions(normalizedCalls, tools, agent, parentInputs, ext);
+
+  if (parentEmit) {
+    parentEmit("inputs", {
+      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+    });
+  }
+
+  const provider = resolveProvider(agent);
+  const executor = getExecutor(provider);
+  return executor.formatToolMessages(null, normalizedCalls, toolResults, textContent);
 }

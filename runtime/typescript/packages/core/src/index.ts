@@ -68,6 +68,30 @@ export {
   invoke,
   invokeAgent,
   resolveBindings,
+
+  // Agent loop extensions (§13)
+  type AgentEventType,
+  type EventCallback,
+  emitEvent,
+  CancelledError,
+  checkCancellation,
+  estimateChars,
+  summarizeDropped,
+  trimToContextWindow,
+  type GuardrailResult,
+  GuardrailError,
+  type InputGuardrail,
+  type OutputGuardrail,
+  type ToolGuardrail,
+  type GuardrailsOptions,
+  Guardrails,
+  Steering,
+
+  // Tool decorator (§11.2)
+  tool,
+  type ToolOptions,
+  type ToolParameter,
+  type ToolFunction,
 } from "./core/index.js";
 
 // ---------------------------------------------------------------------------

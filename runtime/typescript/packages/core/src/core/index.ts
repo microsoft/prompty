@@ -25,3 +25,17 @@ export {
   clearToolHandlers,
   dispatchTool,
 } from "./tool-dispatch.js";
+export { type AgentEventType, type EventCallback, emitEvent } from "./agent-events.js";
+export { CancelledError, checkCancellation } from "./cancellation.js";
+export { estimateChars, summarizeDropped, trimToContextWindow } from "./context.js";
+export {
+  type GuardrailResult,
+  GuardrailError,
+  type InputGuardrail,
+  type OutputGuardrail,
+  type ToolGuardrail,
+  type GuardrailsOptions,
+  Guardrails,
+} from "./guardrails.js";
+export { Steering } from "./steering.js";
+export { tool, type ToolOptions, type ToolParameter, type ToolFunction } from "./tool-decorator.js";
