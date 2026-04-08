@@ -40,6 +40,7 @@ from .discovery import (
 )
 from .guardrails import GuardrailError, Guardrails
 from .steering import Steering
+from .structured import StructuredResult, cast
 from .tool_dispatch import dispatch_tool, dispatch_tool_async
 from .types import RICH_KINDS, ContentPart, Message, TextPart, ThreadMarker
 
@@ -703,6 +704,7 @@ def invoke(
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
+    target_type: type | None = None,
 ) -> Any:
     """Full pipeline: load → prepare → run.
 
@@ -717,6 +719,8 @@ def invoke(
         Input values for template rendering.
     raw:
         If ``True``, skip processing and return the raw LLM response.
+    target_type:
+        If provided, cast the result to this type via :func:`cast`.
 
     Returns
     -------
@@ -727,7 +731,10 @@ def invoke(
 
     agent = load(prompt) if isinstance(prompt, str) else prompt
     messages = prepare(agent, inputs)
-    return run(agent, messages, raw=raw)
+    result = run(agent, messages, raw=raw)
+    if target_type is not None:
+        return cast(result, target_type)
+    return result
 
 
 @trace
@@ -736,6 +743,7 @@ async def invoke_async(
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
+    target_type: type | None = None,
 ) -> Any:
     """Async variant of :func:`invoke`."""
     from .loader import load_async
@@ -745,7 +753,10 @@ async def invoke_async(
     else:
         agent = prompt
     messages = await prepare_async(agent, inputs)
-    return await run_async(agent, messages, raw=raw)
+    result = await run_async(agent, messages, raw=raw)
+    if target_type is not None:
+        return cast(result, target_type)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1083,6 +1094,7 @@ def invoke_agent(
     guardrails: Guardrails | None = None,
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
+    target_type: type | None = None,
 ) -> Any:
     """Run a prompt with automatic tool-call execution loop.
 
@@ -1114,6 +1126,8 @@ def invoke_agent(
         Optional handle for injecting messages mid-loop.
     parallel_tool_calls:
         If ``True``, execute multiple tool calls concurrently.
+    target_type:
+        If provided, cast the final result to this type via :func:`cast`.
 
     Returns
     -------
@@ -1277,6 +1291,8 @@ def invoke_agent(
         if gr.rewrite is not None:
             processed_result = gr.rewrite
     emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    if target_type is not None:
+        return cast(processed_result, target_type)
     return processed_result
 
 
@@ -1294,6 +1310,7 @@ async def invoke_agent_async(
     guardrails: Guardrails | None = None,
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
+    target_type: type | None = None,
 ) -> Any:
     """Async variant of :func:`invoke_agent` with all §13 extensions."""
     from ..tracing.tracer import Tracer
@@ -1446,6 +1463,8 @@ async def invoke_agent_async(
         if gr.rewrite is not None:
             processed_result = gr.rewrite
     emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    if target_type is not None:
+        return cast(processed_result, target_type)
     return processed_result
 
 

@@ -68,6 +68,7 @@ export {
   invoke,
   invokeAgent,
   resolveBindings,
+  type InvokeAgentOptions,
 
   // Agent loop extensions (§13)
   type AgentEventType,
@@ -93,6 +94,13 @@ export {
   type ToolOptions,
   type ToolParameter,
   type ToolFunction,
+
+  // Structured result casting (§8.8)
+  type StructuredResult,
+  StructuredResultSymbol,
+  createStructuredResult,
+  isStructuredResult,
+  cast,
 } from "./core/index.js";
 
 // ---------------------------------------------------------------------------

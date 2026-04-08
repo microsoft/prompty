@@ -13,6 +13,7 @@ from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from typing import Any
 
+from ...core.structured import StructuredResult
 from ...model import Prompty
 from ...tracing.tracer import trace
 
@@ -94,7 +95,7 @@ def _process_response(response: Any, agent: Prompty | None = None) -> Any:
         # JSON-parse structured output when outputs is defined
         if agent is not None and agent.outputs and isinstance(result, str):
             try:
-                result = json.loads(result)
+                result = StructuredResult(json.loads(result), result)
             except json.JSONDecodeError:
                 pass  # Fall back to raw string
         return result
@@ -205,7 +206,7 @@ def _process_responses_api(response: Any, agent: Prompty | None = None) -> Any:
     if output_text is not None:
         if agent is not None and agent.outputs and isinstance(output_text, str):
             try:
-                return json.loads(output_text)
+                return StructuredResult(json.loads(output_text), output_text)
             except json.JSONDecodeError:
                 pass
         return output_text
@@ -225,7 +226,7 @@ def _process_responses_api(response: Any, agent: Prompty | None = None) -> Any:
         text = "".join(texts)
         if agent is not None and agent.outputs and isinstance(text, str):
             try:
-                return json.loads(text)
+                return StructuredResult(json.loads(text), text)
             except json.JSONDecodeError:
                 pass
         return text

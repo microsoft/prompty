@@ -36,6 +36,7 @@ from .protocols import (
     RendererProtocol,
 )
 from .steering import Steering
+from .structured import StructuredResult, cast
 from .tool_decorator import bind_tools, tool
 from .tool_dispatch import (
     ToolHandler,

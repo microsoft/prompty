@@ -52,6 +52,9 @@ from .core.protocols import (
     RendererProtocol,
 )
 
+# --- Structured result casting (§8.8) ---
+from .core.structured import StructuredResult, cast
+
 __all__ = [
     # Connections
     "register_connection",
@@ -88,4 +91,7 @@ __all__ = [
     "invoke_agent_async",
     # Validation
     "validate_inputs",
+    # Structured result casting (§8.8)
+    "StructuredResult",
+    "cast",
 ]

@@ -127,7 +127,10 @@ variant (e.g., `load_async`). Each function SHOULD have a sync variant.
 | `prepare`          | `(agent, inputs) → Message[]`                | Message list     | §5 + §6      |
 | `run`              | `(agent, messages) → result`                 | Processed result | §7 + §8      |
 | `invoke`           | `(path, inputs) → result`                    | Processed result | §4–§8        |
+| `invoke<T>`        | `(path, inputs, target_type?) → T`           | Typed result     | §4–§8 + §8.8 |
 | `invoke_agent`     | `(path, inputs, tools?) → result`            | Processed result | §4–§8 + loop |
+| `invoke_agent<T>`  | `(path, inputs, tools?, target_type?) → T`   | Typed result     | §4–§8 + §8.8 |
+| `cast`             | `(result, target_type) → T`                  | Typed result     | §8.8         |
 | `process`          | `(agent, response) → result`                 | Extracted result | §8           |
 | `validate_inputs`  | `(agent, inputs) → validated_inputs`         | Validated dict   | §12          |
 
@@ -2047,6 +2050,85 @@ ToolCall:
 
 The `arguments` field MUST always be a JSON string, regardless of provider.
 Callers MUST `json_parse(tool_call.arguments)` to obtain the argument dict.
+
+### §8.8 Structured Result Casting
+
+When `outputs` (outputSchema) is defined on an agent, the processor returns structured
+JSON from the LLM. Implementations MUST provide an optimal path from raw JSON to typed
+objects without an unnecessary intermediate dict round-trip.
+
+#### §8.8.1 StructuredResult
+
+When `outputs` is defined and the processor successfully parses the response as JSON,
+the result MUST be returned as a **StructuredResult** — a wrapper that:
+
+1. **Behaves as a native dict/object** — `result["key"]`, `result.key`, iteration, etc.
+   all work identically to a plain dict/object. Existing non-generic code MUST NOT break.
+2. **Carries the raw JSON string** — accessible as `result._raw_json` (Python),
+   `result[StructuredResultSymbol]` (TypeScript), or `result.RawJson` (C#).
+
+Implementations MUST subclass or extend the language's native dict/object type so that
+`StructuredResult` passes `isinstance(result, dict)` (Python), `typeof result === "object"`
+(TypeScript), or `result is IDictionary<string, object?>` (C#) checks.
+
+If JSON parsing fails, the processor MUST fall back to returning the raw string as before.
+
+#### §8.8.2 cast
+
+Implementations MUST provide a standalone `cast` function:
+
+```
+function cast<T>(result, target_type) → T:
+  1. If result is a StructuredResult:
+       json_str ← result._raw_json
+     Else if result is a string:
+       json_str ← result
+     Else:
+       json_str ← json_serialize(result)
+  2. RETURN deserialize<T>(json_str, target_type)
+```
+
+The function MUST deserialize directly from the raw JSON string to the target type.
+It MUST NOT go through an intermediate dict when the raw JSON is available.
+
+**Language-specific target types:**
+
+- **Python**: `dataclasses.dataclass`, `TypedDict`, Pydantic `BaseModel` (if installed).
+  For Pydantic models, implementations SHOULD use `model_validate_json()` for optimal
+  deserialization. For dataclasses, implementations SHOULD use `json.loads()` + constructor.
+- **TypeScript**: Type parameter `T` with optional runtime validator function
+  `(data: unknown) => T` (e.g., Zod `.parse`). Without a validator, returns `JSON.parse()`
+  with the type assertion `as T`.
+- **C#**: Generic type parameter `T`. Uses `JsonSerializer.Deserialize<T>()` from
+  `System.Text.Json`.
+
+#### §8.8.3 Generic Overloads
+
+Implementations MUST provide generic/typed overloads for `invoke` and `invoke_agent`:
+
+```
+function invoke<T>(path, inputs, target_type) → T:
+  result ← invoke(path, inputs)
+  RETURN cast<T>(result, target_type)
+
+function invoke_agent<T>(path, inputs, tools, target_type) → T:
+  result ← invoke_agent(path, inputs, tools)
+  RETURN cast<T>(result, target_type)
+```
+
+These overloads SHOULD bypass the intermediate dict when possible — if the processor
+provides a `StructuredResult`, the raw JSON flows directly to `cast<T>()`.
+
+**Language-specific signatures:**
+
+- **Python**: `invoke(..., target_type=WeatherResponse)` — keyword argument.
+  Async variant: `invoke_async(..., target_type=WeatherResponse)`.
+- **TypeScript**: `invoke<WeatherResponse>(..., { validator? })` — generic type
+  parameter with optional runtime validator.
+- **C#**: `InvokeAsync<WeatherResponse>(...)` — generic method overload.
+  Agent variant: `InvokeAgentAsync<WeatherResponse>(...)`.
+
+The non-generic versions MUST remain unchanged for backward compatibility.
 
 ---
 

@@ -13,6 +13,7 @@ export {
   invoke,
   invokeAgent,
   resolveBindings,
+  type InvokeAgentOptions,
 } from "./pipeline.js";
 export {
   type ToolHandler,
@@ -39,3 +40,10 @@ export {
 } from "./guardrails.js";
 export { Steering } from "./steering.js";
 export { tool, bindTools, type ToolOptions, type ToolParameter, type ToolFunction } from "./tool-decorator.js";
+export {
+  type StructuredResult,
+  StructuredResultSymbol,
+  createStructuredResult,
+  isStructuredResult,
+  cast,
+} from "./structured.js";

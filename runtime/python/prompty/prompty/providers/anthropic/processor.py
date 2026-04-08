@@ -15,6 +15,7 @@ import json
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
+from ...core.structured import StructuredResult
 from ...tracing.tracer import trace
 
 __all__ = ["AnthropicProcessor"]
@@ -108,7 +109,7 @@ def _process_messages(agent: Any, content: list[Any], stop_reason: str | None) -
     outputs = getattr(agent, "outputs", None)
     if outputs:
         try:
-            return json.loads(text)
+            return StructuredResult(json.loads(text), text)
         except (json.JSONDecodeError, ValueError):
             return text
 

@@ -35,6 +35,7 @@ import { CancelledError, checkCancellation } from "./cancellation.js";
 import { trimToContextWindow } from "./context.js";
 import { GuardrailError, Guardrails } from "./guardrails.js";
 import { Steering } from "./steering.js";
+import { cast } from "./structured.js";
 
 // ---------------------------------------------------------------------------
 // Defaults
@@ -344,12 +345,34 @@ export async function run(
 
 /**
  * Full pipeline: load → prepare → run.
+ *
+ * @overload Untyped — returns `unknown`.
  */
 export async function invoke(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
   options?: { raw?: boolean },
-): Promise<unknown> {
+): Promise<unknown>;
+/**
+ * Full pipeline with typed result: load → prepare → run → cast.
+ *
+ * When a `validator` is provided the raw result is deserialized from JSON
+ * and passed through the validator (e.g. a Zod `.parse` function), giving
+ * you a fully typed return value.
+ *
+ * @overload Typed — returns `Promise<T>`.
+ */
+export async function invoke<T>(
+  prompt: string | Prompty,
+  inputs: Record<string, unknown> | undefined,
+  options: { raw?: boolean; validator: (data: unknown) => T },
+): Promise<T>;
+// Implementation
+export async function invoke<T = unknown>(
+  prompt: string | Prompty,
+  inputs?: Record<string, unknown>,
+  options?: { raw?: boolean; validator?: (data: unknown) => T },
+): Promise<T> {
   return traceSpan("invoke", async (emit) => {
     const agent = typeof prompt === "string"
       ? await traceSpan("load", async (loadEmit) => {
@@ -368,7 +391,10 @@ export async function invoke(
     const messages = await prepare(agent, inputs);
     const result = await run(agent, messages, options);
     emit("result", result);
-    return result;
+    if (options?.validator) {
+      return cast<T>(result, options.validator);
+    }
+    return result as T;
   });
 }
 
@@ -453,28 +479,52 @@ async function consumeStream(
   return { toolCalls, content: textParts.join("") };
 }
 
+/** Options for {@link invokeAgent}. */
+export interface InvokeAgentOptions {
+  tools?: Record<string, (...args: unknown[]) => unknown>;
+  maxIterations?: number;
+  raw?: boolean;
+  onEvent?: EventCallback;
+  signal?: AbortSignal;
+  contextBudget?: number;
+  guardrails?: Guardrails;
+  steering?: Steering;
+  parallelToolCalls?: boolean;
+}
+
 /**
  * Run a prompt with automatic tool-call execution loop.
  *
  * Supports §13 extensions: events, cancellation, context window
  * management, guardrails, steering, and parallel tool calls.
+ *
+ * @overload Untyped — returns `unknown`.
  */
 export async function invokeAgent(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
-  options?: {
-    tools?: Record<string, (...args: unknown[]) => unknown>;
-    maxIterations?: number;
-    raw?: boolean;
-    onEvent?: EventCallback;
-    signal?: AbortSignal;
-    contextBudget?: number;
-    guardrails?: Guardrails;
-    steering?: Steering;
-    parallelToolCalls?: boolean;
-  },
-): Promise<unknown> {
-  return traceSpan("invokeAgent", async (emit) => {
+  options?: InvokeAgentOptions,
+): Promise<unknown>;
+/**
+ * Run a prompt with automatic tool-call execution loop, returning a typed result.
+ *
+ * When a `validator` is provided in the options the final result is
+ * deserialized from JSON and passed through the validator.
+ *
+ * @overload Typed — returns `Promise<T>`.
+ */
+export async function invokeAgent<T>(
+  prompt: string | Prompty,
+  inputs: Record<string, unknown> | undefined,
+  options: InvokeAgentOptions & { validator: (data: unknown) => T },
+): Promise<T>;
+// Implementation
+export async function invokeAgent<T = unknown>(
+  prompt: string | Prompty,
+  inputs?: Record<string, unknown>,
+  options?: InvokeAgentOptions & { validator?: (data: unknown) => T },
+): Promise<T> {
+  const rawResult = await traceSpan("invokeAgent", async (emit) => {
     const agent = typeof prompt === "string"
       ? await traceSpan("load", async (loadEmit) => {
           loadEmit("signature", "prompty.load");
@@ -674,6 +724,10 @@ export async function invokeAgent(
     emitEvent(onEvent, "done", { response: result, messages });
     return result;
   });
+  if (options?.validator) {
+    return cast<T>(rawResult, options.validator);
+  }
+  return rawResult as T;
 }
 
 // ---------------------------------------------------------------------------

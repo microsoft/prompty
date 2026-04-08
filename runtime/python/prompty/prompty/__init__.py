@@ -108,6 +108,7 @@ from .core.cancellation import CancellationToken, CancelledError
 from .core.context import estimate_chars, summarize_dropped, trim_to_context_window
 from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
 from .core.steering import Steering
+from .core.structured import StructuredResult, cast
 from .core.tool_decorator import bind_tools, tool
 
 # Backward-compat aliases (will be removed in a future version)

@@ -14,6 +14,7 @@ import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
+import { createStructuredResult } from "@prompty/core";
 
 export class AnthropicProcessor implements Processor {
   async process(agent: Prompty, response: unknown): Promise<unknown> {
@@ -179,7 +180,7 @@ function processMessages(
   // Structured output — JSON parse when outputs schema exists
   if (agent.outputs && agent.outputs.length > 0) {
     try {
-      return JSON.parse(text);
+      return createStructuredResult(JSON.parse(text) as Record<string, unknown>, text);
     } catch {
       return text;
     }
