@@ -2757,10 +2757,16 @@ appropriate content:
 ## §13 Agent Loop Extensions
 
 The base agent loop (§9) handles the tool-call cycle. This section specifies
-five extensions that make the loop production-ready: events, cancellation,
-context window management, guardrails, and steering. All are opt-in — a
-conforming implementation MUST support the base loop and MAY implement any
-combination of these extensions.
+six extensions that make the loop production-ready: events, cancellation,
+context window management, guardrails, steering, and parallel tool execution.
+
+These extensions integrate with the existing §9.2 algorithm — specifically,
+they wrap and extend the tool dispatch loop and the `FormatToolMessages`
+hook (§9.4). Tool guardrail denials produce synthetic results that flow
+through `FormatToolMessages` like any other tool result.
+
+All extensions are opt-in — a conforming implementation MUST support the
+base loop and MAY implement any combination of these extensions.
 
 ### §13.1 Agent Events
 
@@ -2845,14 +2851,11 @@ function invoke_agent(path_or_agent, inputs, tools=null,
                       cancel=null, ...) → result:
 ```
 
-**Language-Specific Notes:**
+**Language Mapping:**
 
-- **Python:** `CancellationToken` class. Also accept `asyncio.Event` in
-  async variants.
-- **TypeScript:** Accept standard `AbortSignal`. Check `signal.aborted`
-  at each check point. Listen for `abort` event to interrupt in-flight
-  requests when the SDK supports it.
-- **Rust:** Accept Agentive-style `CancellationToken` (AtomicBool).
+Implementations SHOULD use the language's native cancellation mechanism
+where one exists (e.g., standard library cancellation tokens, abort signals).
+Where no native mechanism exists, a simple thread-safe boolean flag suffices.
 
 ### §13.3 Context Window Management
 
@@ -3015,6 +3018,14 @@ loop:
         continue
     // Execute tool normally
     tool_result = execute_tool(tool_call)
+
+  // 5. Format tool messages via executor (§9.4)
+  //    Denied tools produce synthetic results that flow through
+  //    FormatToolMessages like any other tool result.
+  tool_messages = executor.FormatToolMessages(
+    response, tool_calls, tool_results, text_content
+  )
+  append tool_messages to messages
 ```
 
 **Requirements:**
@@ -3088,10 +3099,9 @@ loop:
 
 **Thread Safety:**
 
-- **Python:** Use `threading.Lock` or `asyncio.Queue`.
-- **TypeScript:** Single-threaded — use a simple array with
-  splice-and-return for drain.
-- **Rust:** Use `Arc<Mutex<Vec<String>>>` (as in Agentive).
+`send()` MUST be safe to call from any thread or async task. `drain()` MUST
+be atomic — no message is lost or duplicated. Implementations SHOULD use
+the language's idiomatic concurrent queue or equivalent.
 
 **API:**
 
@@ -3135,13 +3145,9 @@ else:
   tools receive synthetic results while other tools execute normally.
 - `tool_call_start` and `tool_result` events MUST be emitted for each
   tool regardless of parallel or sequential execution.
-
-**Language-Specific Notes:**
-
-- **Python (sync):** Use `concurrent.futures.ThreadPoolExecutor`.
-- **Python (async):** Use `asyncio.gather(*tasks)`.
-- **TypeScript:** Use `Promise.all()`.
-- **Rust:** Use `tokio::join!` or `futures::join_all`.
+- Implementations SHOULD use the language's idiomatic concurrency
+  primitive for parallel execution (e.g., task groups, promise
+  combinators, thread pools).
 
 ### §13.7 Unified Signature
 
@@ -3171,14 +3177,16 @@ function invoke_agent(
   2. Drain steering messages
   3. Trim context window (if budget set)
   4. Check input guardrail
-  5. Call LLM
-  6. Check output guardrail
-  7. If tool calls:
+  5. Call LLM (§9.2 step 5b)
+  6. Process response (§9.2 step 5c)
+  7. Check output guardrail
+  8. If tool calls:
      a. Check tool guardrails (per tool)
-     b. Execute tools (parallel or sequential)
-     c. Emit messages_updated
-     d. Continue loop
-  8. Emit done, return result
+     b. Execute tools (parallel or sequential), applying bindings (§9.6)
+     c. Format tool messages via executor.FormatToolMessages (§9.4)
+     d. Append to messages, emit messages_updated
+     e. Continue loop
+  9. Emit done, return result
 ```
 
 ---
