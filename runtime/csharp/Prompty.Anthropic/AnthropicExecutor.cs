@@ -72,7 +72,7 @@ public class AnthropicExecutor : IExecutor
         return new PromptyStream(StreamEvents());
     }
 
-    private Dictionary<string, object?> BuildRequestBody(Core.Prompty agent, List<Message> messages, bool stream)
+    internal Dictionary<string, object?> BuildRequestBody(Core.Prompty agent, List<Message> messages, bool stream)
     {
         var model = agent.Model?.Id ?? "claude-sonnet-4-20250514";
         var maxTokens = agent.Model?.Options?.MaxOutputTokens ?? DefaultMaxTokens;
