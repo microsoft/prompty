@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <NoWarn>OPENAI001;CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>2.0.0-alpha.1</Version>
+    <Version>2.0.0-alpha.6</Version>
     <PackageId>Prompty.Foundry</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Microsoft Foundry (Azure OpenAI) provider for Prompty — executor and processor for Azure-hosted models.</Description>

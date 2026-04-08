@@ -1,6 +1,6 @@
 {
   "name": "@prompty/core",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "Prompty core runtime — load, render, parse, and trace .prompty files",
   "type": "module",
   "main": "./dist/index.cjs",
