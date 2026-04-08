@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\runtime\csharp\Prompty.Core\Prompty.Core.csproj" />
-    <ProjectReference Include="..\..\runtime\csharp\Prompty.OpenAI\Prompty.OpenAI.csproj" />
+    <ProjectReference Include="..\..\..\runtime\csharp\Prompty.Core\Prompty.Core.csproj" />
+    <ProjectReference Include="..\..\..\runtime\csharp\Prompty.OpenAI\Prompty.OpenAI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

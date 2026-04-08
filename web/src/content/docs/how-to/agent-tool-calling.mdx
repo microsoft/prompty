@@ -7,7 +7,10 @@ sidebar:
   order: 5
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import pythonAgent from '../../../../docs-examples/python/examples/agent_tool_calling.py?raw';
+import tsAgent from '../../../../docs-examples/typescript/examples/agent-tool-calling.ts?raw';
+import csAgent from '../../../../docs-examples/csharp/Examples/AgentToolCalling.cs?raw';
 
 ## Overview
 
@@ -651,3 +654,21 @@ user:
   For Microsoft Foundry, just change `provider: openai` to `provider: foundry` and
   update the connection — the agent loop works identically with all providers.
 </Aside>
+
+---
+
+## Complete Tested Example
+
+A full, tested example you can copy and run:
+
+<Tabs>
+  <TabItem label="Python">
+    <Code code={pythonAgent} lang="python" title="agent_tool_calling.py" />
+  </TabItem>
+  <TabItem label="TypeScript">
+    <Code code={tsAgent} lang="typescript" title="agent-tool-calling.ts" />
+  </TabItem>
+  <TabItem label="C#">
+    <Code code={csAgent} lang="csharp" title="AgentToolCalling.cs" />
+  </TabItem>
+</Tabs>

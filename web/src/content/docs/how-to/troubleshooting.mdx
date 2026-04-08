@@ -1,0 +1,336 @@
+---
+title: Troubleshooting
+description: >
+  Solutions to common errors and issues when working with Prompty.
+sidebar:
+  order: 20
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+When something goes wrong, this page will help you diagnose and fix it fast.
+Errors are grouped by category — jump to the section that matches your symptom.
+
+---
+
+## Installation Issues
+
+| Error | Cause | Fix |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'openai'` | Missing optional dependency | `pip install prompty[openai]` |
+| `ModuleNotFoundError: No module named 'jinja2'` | Missing renderer dependency | `pip install prompty[jinja2]` |
+| `ModuleNotFoundError: No module named 'chevron'` | Missing Mustache renderer | `pip install prompty[mustache]` |
+| `ModuleNotFoundError: No module named 'azure.identity'` | Missing Azure dependency | `pip install prompty[azure]` |
+| `Cannot find module '@prompty/openai'` | Missing npm package | `npm install @prompty/openai` |
+
+<Aside type="tip">
+Install everything at once with `pip install prompty[all]` to avoid missing-dependency errors entirely.
+</Aside>
+
+---
+
+## Loading Errors
+
+### File Not Found
+
+```
+FileNotFoundError: Prompty file not found: path/to/chat.prompty
+```
+
+**Cause:** The path passed to `load()` doesn't resolve to an existing file.
+
+**Fix:** Verify the file exists and use an absolute path or check your working directory:
+
+```python
+from pathlib import Path
+print(Path("chat.prompty").resolve())  # see what Prompty will look for
+```
+
+### Missing Environment Variable
+
+```
+ValueError: Environment variable 'OPENAI_API_KEY' not set for key 'apiKey'
+```
+
+**Cause:** Your `.prompty` file uses `${env:VAR}` but the variable isn't defined.
+
+**Fix:** Set it in your shell or add it to a `.env` file in your project root:
+
+```bash title=".env"
+OPENAI_API_KEY=sk-...
+AZURE_OPENAI_ENDPOINT=https://myresource.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123
+```
+
+<Aside type="tip">
+Use `${env:VAR:default_value}` to provide a fallback so loading doesn't fail during development.
+</Aside>
+
+### Invalid YAML Frontmatter
+
+```
+ValueError: Invalid Markdown format: Missing or malformed frontmatter.
+```
+
+**Cause:** The YAML block between `---` delimiters has a syntax error.
+
+**Common mistakes:**
+- Using **tabs** instead of spaces for indentation
+- Unclosed quotes: `description: "This is broken`
+- Missing the closing `---` delimiter
+- Colons in unquoted strings: `description: Use key: value` (wrap in quotes)
+
+### Referenced File Not Found
+
+```
+FileNotFoundError: Referenced file 'shared_config.json' not found for key 'connection'
+```
+
+**Cause:** A `${file:path}` reference points to a file that doesn't exist.
+
+**Fix:** The path is resolved relative to the `.prompty` file's directory. Verify the file
+exists at that relative location.
+
+---
+
+## Runtime Errors
+
+### Missing Renderer or Executor
+
+<Tabs>
+  <TabItem label="Python">
+    ```
+    InvokerError: No renderer found for 'jinja2'.
+    Install the required extra: uv pip install prompty[jinja2]
+    ```
+
+    ```
+    InvokerError: No executor found for 'openai'.
+    Install the required extra: uv pip install prompty[openai]
+    ```
+
+    **Fix:** Install the corresponding extra. After installing, if you're in a notebook
+    or long-running process, restart the Python kernel so entry points are re-discovered.
+  </TabItem>
+  <TabItem label="C#">
+    ```
+    InvokerError: No executor registered for 'openai'.
+    Register one via InvokerRegistry.RegisterExecutor().
+    ```
+
+    **Fix:** Add the provider NuGet package and register it:
+
+    ```csharp
+    InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
+    ```
+  </TabItem>
+</Tabs>
+
+### Authentication Errors
+
+```
+openai.AuthenticationError: Error code: 401 - Incorrect API key provided
+```
+
+**Cause:** The API key is invalid, expired, or not set.
+
+**Checklist:**
+1. Verify the env var is set: `echo $OPENAI_API_KEY` (or `$env:OPENAI_API_KEY` on PowerShell)
+2. Check for trailing whitespace or newlines in your `.env` file
+3. For Azure, ensure `endpoint` includes the full URL with `https://`
+4. Confirm the key hasn't been rotated or revoked
+
+### Rate Limit Errors
+
+```
+openai.RateLimitError: Error code: 429 - Rate limit reached
+```
+
+**Fix:** Add retry logic with exponential backoff, or reduce request frequency.
+For production workloads, consider increasing your API tier or using multiple keys.
+
+### Unsupported API Type
+
+```
+ValueError: Unsupported apiType: completion
+```
+
+**Cause:** The `model.apiType` value isn't one of the supported types.
+
+**Supported values:** `chat`, `embedding`, `image`, `agent`
+
+### Connection Not Found
+
+```
+ValueError: No connection registered with name 'my-conn'.
+Currently registered: ['default']
+```
+
+**Cause:** A `kind: reference` connection references a name that hasn't been registered.
+
+**Fix:** Register the connection before loading, or switch to `kind: key` with inline credentials.
+
+---
+
+## Agent & Tool Calling Issues
+
+### Agent Loop Exceeds Max Iterations
+
+```
+ValueError: Agent loop exceeded max_iterations (10)
+```
+
+**Cause:** The model keeps requesting tool calls without producing a final response.
+
+**Fix:**
+- Increase the limit if your workflow genuinely needs more iterations
+- Improve your system prompt to guide the model toward a final answer
+- Verify your tools return useful results — vague responses cause the model to retry
+
+### Tool Not Found
+
+```
+ValueError: No tool handler registered for kind 'function' tool 'get_weather'
+```
+
+**Cause:** The tool is declared in frontmatter but no handler function is registered.
+
+**Fix:** Register the handler using the `@tool` decorator or pass it via metadata:
+
+```python
+from prompty import tool
+
+@tool
+def get_weather(city: str) -> str:
+    return f"72°F in {city}"
+```
+
+### Tool Schema Mismatch
+
+If the model sends arguments that don't match your tool's parameters, verify that
+the `parameters` schema in your `.prompty` file matches the function signature exactly.
+
+<Aside type="caution">
+When using `strict: true` on function tools, every parameter must be listed in the
+schema with `required: true`, and `additionalProperties` is automatically set to `false`.
+</Aside>
+
+---
+
+## Streaming Issues
+
+### No Output From Streaming
+
+**Symptom:** `run()` returns an object but nothing prints.
+
+**Cause:** Streaming responses return an iterator — you must consume it:
+
+```python
+result = run("chat.prompty", inputs={"question": "Hello"})
+for chunk in result:
+    print(chunk, end="", flush=True)
+```
+
+### Model Refused Response
+
+```
+ValueError: Model refused: <refusal reason>
+```
+
+**Cause:** The model's content filter rejected the request or response.
+
+**Fix:** Review your prompt for content that may trigger safety filters.
+Rephrase the system prompt or user input.
+
+---
+
+## Structured Output Issues
+
+### JSON Parse Error
+
+**Symptom:** You defined `outputSchema` but the response isn't valid JSON.
+
+**Checklist:**
+1. Ensure you're using a model that supports structured output (e.g., `gpt-4o-mini`)
+2. Verify your `outputSchema` is well-formed with valid `kind` values
+3. Use `strict: true` in the output schema for deterministic JSON
+
+### Empty Embedding or Image Response
+
+```
+ValueError: Empty embedding response
+ValueError: Empty image response
+```
+
+**Cause:** The API returned an empty result, usually due to invalid input or a model issue.
+
+**Fix:** Verify your input text (for embeddings) or prompt (for images) is non-empty
+and within the model's constraints.
+
+---
+
+## Debugging Tips
+
+### Enable Console Tracing
+
+See exactly what Prompty sends to the LLM and what comes back:
+
+```python
+from prompty import Tracer, console_tracer
+
+Tracer.add("console", console_tracer)
+result = run("chat.prompty", inputs={"question": "Hello"})
+```
+
+### Use `prepare()` to Inspect Messages
+
+Debug your template rendering and parsing without making an API call:
+
+```python
+from prompty import load, prepare
+
+messages = prepare("chat.prompty", inputs={"name": "Jane"})
+for msg in messages:
+    print(f"[{msg.role}] {msg.content}")
+```
+
+### Verify With a Minimal Example
+
+When debugging, strip your `.prompty` file down to the bare minimum:
+
+```yaml title="debug.prompty"
+---
+name: debug
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+---
+system:
+Say hello.
+```
+
+If this works, add your customizations back one at a time to isolate the issue.
+
+<Aside type="tip">
+Most connection issues come from environment variables. Run
+`python -c "import os; print(os.environ.get('OPENAI_API_KEY', 'NOT SET'))"` to
+quickly verify your key is available to Python.
+</Aside>
+
+### Check Your `.env` File Location
+
+Prompty uses `python-dotenv` to load `.env` files. The file must be in your
+**current working directory** or a parent directory. If you're running from a
+subdirectory, the `.env` in your project root may not be found automatically.
+
+---
+
+## Still Stuck?
+
+- Search [existing issues](https://github.com/microsoft/prompty/issues) on GitHub
+- Open a new issue with: the error message, your `.prompty` file (redact keys), and `pip list | grep prompty` output
+- Check the [API Reference](/api-reference/) for correct property names and types

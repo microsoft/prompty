@@ -1,0 +1,479 @@
+---
+title: "Tutorial: Build a RAG Pipeline"
+description: >
+  Build a retrieval-augmented generation pipeline — embed documents,
+  retrieve relevant context, and answer questions with grounding.
+sidebar:
+  order: 3
+  badge:
+    text: New
+    variant: tip
+---
+
+import { Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+## What you'll build
+
+A Q&A system that **retrieves relevant documents before answering**:
+
+1. Embed a small document corpus with `apiType: embedding`
+2. Embed the user's question with the same model
+3. Find the most relevant documents using cosine similarity
+4. Inject those documents as `{{context}}` into a chat prompt
+5. The LLM answers **grounded in real data** instead of hallucinating
+
+By the end (~20 min) you'll understand how to wire embeddings and chat
+completions together into a retrieval-augmented generation (RAG) pipeline.
+
+---
+
+## Step 1: Install Prompty
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    pip install prompty[jinja2,openai]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @prompty/core @prompty/openai
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```bash
+    dotnet add package Prompty.Core --prerelease
+    dotnet add package Prompty.OpenAI --prerelease
+    ```
+  </TabItem>
+</Tabs>
+
+Create a **`.env`** file with your OpenAI key:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+---
+
+## Step 2: Create an embedding `.prompty` file
+
+Create **`embed.prompty`** — this generates vector embeddings from text:
+
+```yaml
+---
+name: text-embedder
+description: Generate embeddings for text input
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  properties:
+    - name: text
+      kind: string
+      default: Hello, world!
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+{{text}}
+```
+
+<Aside type="note">
+  For embeddings, the template body is raw text — no role markers (`system:`,
+  `user:`) needed. The parser produces a single message whose content is sent
+  to the embeddings API.
+</Aside>
+
+---
+
+## Step 3: Generate embeddings for your documents
+
+Embed a small set of documents. In production you'd do this once and store
+the vectors in a database — here we keep everything in memory:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import invoke
+
+    documents = [
+        "Prompty is a markdown file format for LLM prompts with YAML frontmatter.",
+        "The pipeline has four stages: render, parse, execute, and process.",
+        "Use apiType: embedding to generate vector embeddings from text.",
+        "Thread inputs with kind: thread enable multi-turn conversations.",
+        "Tool calling lets the model invoke your functions automatically.",
+    ]
+
+    # Embed each document
+    doc_vectors = []
+    for doc in documents:
+        vector = invoke("embed.prompty", inputs={"text": doc})
+        doc_vectors.append(vector)
+
+    print(f"Embedded {len(doc_vectors)} documents")
+    print(f"Vector dimensions: {len(doc_vectors[0])}")  # 1536
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai";
+
+    const documents = [
+      "Prompty is a markdown file format for LLM prompts with YAML frontmatter.",
+      "The pipeline has four stages: render, parse, execute, and process.",
+      "Use apiType: embedding to generate vector embeddings from text.",
+      "Thread inputs with kind: thread enable multi-turn conversations.",
+      "Tool calling lets the model invoke your functions automatically.",
+    ];
+
+    // Embed each document
+    const docVectors: number[][] = [];
+    for (const doc of documents) {
+      const vector = await invoke("embed.prompty", { text: doc }) as number[];
+      docVectors.push(vector);
+    }
+
+    console.log(`Embedded ${docVectors.length} documents`);
+    console.log(`Vector dimensions: ${docVectors[0].length}`); // 1536
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var documents = new[]
+    {
+        "Prompty is a markdown file format for LLM prompts with YAML frontmatter.",
+        "The pipeline has four stages: render, parse, execute, and process.",
+        "Use apiType: embedding to generate vector embeddings from text.",
+        "Thread inputs with kind: thread enable multi-turn conversations.",
+        "Tool calling lets the model invoke your functions automatically.",
+    };
+
+    // Embed each document
+    var docVectors = new List<List<float>>();
+    foreach (var doc in documents)
+    {
+        var vector = await Pipeline.InvokeAsync(
+            "embed.prompty", new() { ["text"] = doc }
+        ) as List<float>;
+        docVectors.Add(vector!);
+    }
+
+    Console.WriteLine($"Embedded {docVectors.Count} documents");
+    Console.WriteLine($"Vector dimensions: {docVectors[0].Count}"); // 1536
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  For larger corpora, use batch embeddings — pass a list of texts in a single
+  API call. See the [Embeddings how-to](/how-to/embeddings/) for the batch
+  pattern.
+</Aside>
+
+---
+
+## Step 4: Build a simple retriever
+
+Write a retriever that finds the most relevant documents using **cosine
+similarity**. No vector database needed — this works in memory for small
+datasets:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import math
+
+    def cosine_similarity(a: list[float], b: list[float]) -> float:
+        dot = sum(x * y for x, y in zip(a, b))
+        norm_a = math.sqrt(sum(x * x for x in a))
+        norm_b = math.sqrt(sum(x * x for x in b))
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+        return dot / (norm_a * norm_b)
+
+    def retrieve(query_vector: list[float], top_k: int = 2) -> list[str]:
+        """Find the top_k most similar documents."""
+        scored = [
+            (cosine_similarity(query_vector, dv), doc)
+            for dv, doc in zip(doc_vectors, documents)
+        ]
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [doc for _, doc in scored[:top_k]]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    function cosineSimilarity(a: number[], b: number[]): number {
+      let dot = 0, normA = 0, normB = 0;
+      for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        normA += a[i] * a[i];
+        normB += b[i] * b[i];
+      }
+      if (normA === 0 || normB === 0) return 0;
+      return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+
+    function retrieve(queryVector: number[], topK = 2): string[] {
+      const scored = docVectors.map((dv, i) => ({
+        score: cosineSimilarity(queryVector, dv),
+        doc: documents[i],
+      }));
+      scored.sort((a, b) => b.score - a.score);
+      return scored.slice(0, topK).map((s) => s.doc);
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    static double CosineSimilarity(List<float> a, List<float> b)
+    {
+        double dot = 0, normA = 0, normB = 0;
+        for (int i = 0; i < a.Count; i++)
+        {
+            dot += a[i] * b[i];
+            normA += a[i] * a[i];
+            normB += b[i] * b[i];
+        }
+        if (normA == 0 || normB == 0) return 0;
+        return dot / (Math.Sqrt(normA) * Math.Sqrt(normB));
+    }
+
+    static List<string> Retrieve(
+        List<float> queryVector, List<List<float>> docVectors,
+        string[] documents, int topK = 2)
+    {
+        return docVectors
+            .Select((dv, i) => (Score: CosineSimilarity(queryVector, dv), Doc: documents[i]))
+            .OrderByDescending(x => x.Score)
+            .Take(topK)
+            .Select(x => x.Doc)
+            .ToList();
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Step 5: Create the Q&A `.prompty` file
+
+Create **`rag-qa.prompty`** — a chat prompt that receives retrieved context:
+
+```yaml
+---
+name: rag-qa
+description: Answer questions using retrieved context
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.3
+    maxOutputTokens: 1024
+inputs:
+  properties:
+    - name: question
+      kind: string
+      default: What is Prompty?
+    - name: context
+      kind: string
+      default: ""
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant. Answer the user's question using ONLY the
+provided context. If the context doesn't contain enough information,
+say "I don't have enough information to answer that."
+
+Context:
+{{context}}
+
+user:
+{{question}}
+```
+
+The system prompt instructs the model to **only use the provided context** —
+this is what makes RAG effective at reducing hallucination.
+
+---
+
+## Step 6: Wire it together
+
+Now connect all the pieces: embed the query → retrieve → inject context → answer:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import invoke
+
+    def ask(question: str) -> str:
+        # 1. Embed the question
+        query_vector = invoke("embed.prompty", inputs={"text": question})
+
+        # 2. Retrieve relevant documents
+        relevant_docs = retrieve(query_vector, top_k=2)
+        context = "\n\n".join(f"- {doc}" for doc in relevant_docs)
+
+        # 3. Answer with grounded context
+        answer = invoke("rag-qa.prompty", inputs={
+            "question": question,
+            "context": context,
+        })
+        return answer
+
+    # Try it out
+    print(ask("How does the Prompty pipeline work?"))
+    # → "The pipeline has four stages: render, parse, execute, and process..."
+
+    print(ask("What are thread inputs?"))
+    # → "Thread inputs with kind: thread enable multi-turn conversations..."
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai";
+
+    async function ask(question: string): Promise<string> {
+      // 1. Embed the question
+      const queryVector = await invoke("embed.prompty", { text: question }) as number[];
+
+      // 2. Retrieve relevant documents
+      const relevantDocs = retrieve(queryVector, 2);
+      const context = relevantDocs.map((doc) => `- ${doc}`).join("\n\n");
+
+      // 3. Answer with grounded context
+      const answer = await invoke("rag-qa.prompty", {
+        question,
+        context,
+      });
+      return String(answer);
+    }
+
+    // Try it out
+    console.log(await ask("How does the Prompty pipeline work?"));
+    // → "The pipeline has four stages: render, parse, execute, and process..."
+
+    console.log(await ask("What are thread inputs?"));
+    // → "Thread inputs with kind: thread enable multi-turn conversations..."
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    async Task<string> Ask(string question)
+    {
+        // 1. Embed the question
+        var queryVector = await Pipeline.InvokeAsync(
+            "embed.prompty", new() { ["text"] = question }
+        ) as List<float>;
+
+        // 2. Retrieve relevant documents
+        var relevantDocs = Retrieve(queryVector!, docVectors, documents, topK: 2);
+        var context = string.Join("\n\n", relevantDocs.Select(d => $"- {d}"));
+
+        // 3. Answer with grounded context
+        var answer = await Pipeline.InvokeAsync("rag-qa.prompty", new()
+        {
+            ["question"] = question,
+            ["context"] = context,
+        });
+        return answer!.ToString()!;
+    }
+
+    // Try it out
+    Console.WriteLine(await Ask("How does the Prompty pipeline work?"));
+    // → "The pipeline has four stages: render, parse, execute, and process..."
+
+    Console.WriteLine(await Ask("What are thread inputs?"));
+    // → "Thread inputs with kind: thread enable multi-turn conversations..."
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  The in-memory retriever works for tutorials and small datasets. For
+  production, store vectors in a dedicated vector database (Qdrant, Pinecone,
+  Azure AI Search, pgvector) — the embedding and Q&A `.prompty` files stay
+  the same.
+</Aside>
+
+---
+
+## How the pipeline flows
+
+```text
+User question: "How does the pipeline work?"
+     │
+     ▼
+embed.prompty         → [0.012, -0.045, 0.078, ...]  (query vector)
+     │
+     ▼
+retrieve()            → "The pipeline has four stages..."
+                        "Use apiType: embedding to..."
+     │
+     ▼
+rag-qa.prompty        → system: "Answer using ONLY the context..."
+                        context: (retrieved docs)
+                        user: "How does the pipeline work?"
+     │
+     ▼
+LLM response          → "The pipeline has four stages: render, parse,
+                          execute, and process."
+```
+
+---
+
+## What you learned
+
+✅ Creating an **embedding prompt** with `apiType: embedding`  
+✅ Generating **vector embeddings** from text with `invoke()`  
+✅ Building a **cosine similarity retriever** from scratch  
+✅ Injecting **retrieved context** into a chat prompt via `{{context}}`  
+✅ Wiring the full **RAG pipeline**: embed → retrieve → answer  
+
+---
+
+## Next steps
+
+<CardGrid>
+  <LinkCard
+    title="Embeddings Reference"
+    description="Batch embeddings, model options, and Azure configuration."
+    href="/how-to/embeddings/"
+  />
+  <LinkCard
+    title="Build a Tool-Calling Agent"
+    description="Give your assistant the ability to call functions."
+    href="/tutorials/tool-calling-agent/"
+  />
+  <LinkCard
+    title="Structured Output"
+    description="Return typed JSON from your prompts with outputSchema."
+    href="/how-to/structured-output/"
+  />
+  <LinkCard
+    title="Use with Azure OpenAI"
+    description="Switch your RAG pipeline to Azure OpenAI."
+    href="/how-to/azure-openai/"
+  />
+</CardGrid>

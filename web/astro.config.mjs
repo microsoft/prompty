@@ -50,6 +50,9 @@ export default defineConfig({
           attrs: { name: "twitter:image", content: "https://prompty.ai/og-image.png" },
         },
       ],
+      editLink: {
+        baseUrl: 'https://github.com/microsoft/prompty/edit/main/web/',
+      },
       social: [
         {
           icon: "github",
@@ -75,6 +78,10 @@ export default defineConfig({
         {
           label: "Getting Started",
           autogenerate: { directory: "getting-started" },
+        },
+        {
+          label: "Tutorials",
+          autogenerate: { directory: "tutorials" },
         },
         {
           label: "Core Concepts",

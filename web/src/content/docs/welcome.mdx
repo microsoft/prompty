@@ -8,14 +8,23 @@ sidebar:
   order: 1
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## What is Prompty?
+**Prompty** is a file format (`.prompty`) for LLM prompts. Write your prompt
+once — model config, inputs, tools, and template in a single markdown file —
+then run it from Python, TypeScript, or C#. Treat prompts as code: version
+them in git, test them in CI, share them across teams, and deploy with
+confidence.
 
-**Prompty** is an asset class and format for LLM prompts designed to enhance
-observability, understandability, and portability for developers. A `.prompty`
-file combines structured YAML frontmatter with a markdown prompt body — making
-prompts versionable, testable, and executable across languages.
+## Choose Your Path
+
+<CardGrid>
+  <LinkCard title="🚀 I'm New to Prompty" description="Start from scratch — install, write your first prompt, and run it in under 5 minutes." href="/getting-started/" />
+  <LinkCard title="🔄 I'm Migrating from v1" description="What changed, what's new, and how to update your existing .prompty files." href="/migration/" />
+  <LinkCard title="⚡ I Know the Basics" description="Jump to how-to guides, tool calling, streaming, structured output, and more." href="/how-to/" />
+</CardGrid>
+
+## Quick Example
 
 ```yaml
 ---
@@ -26,15 +35,11 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-inputs:
-  - name: userName
-    kind: string
-    default: World
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+inputSchema:
+  properties:
+    - name: userName
+      kind: string
+      default: World
 ---
 system:
 You are a friendly assistant.
@@ -47,50 +52,47 @@ Say hello to {{userName}}.
   <TabItem label="Python">
     ```python
     import prompty
-
-    result = prompty.invoke("greeting.prompty", inputs={"userName": "Jane"})
-    print(result)  # "Hello Jane! How can I help you today?"
+    result = prompty.run("greeting.prompty", inputs={"userName": "Jane"})
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invoke } from "@prompty/core";
-    import "@prompty/openai";
-
-    const result = await invoke("greeting.prompty", { userName: "Jane" });
+    import { run } from "@prompty/core";
+    const result = await run("greeting.prompty", { userName: "Jane" });
     ```
   </TabItem>
   <TabItem label="C#">
     ```csharp
     using Prompty.Core;
-
-    var result = await Pipeline.InvokeAsync("greeting.prompty", new() { ["userName"] = "Jane" });
-    Console.WriteLine(result);
+    var result = await Prompty.RunAsync("greeting.prompty", new() { ["userName"] = "Jane" });
     ```
   </TabItem>
 </Tabs>
 
+## What Can You Build?
+
+- **Chat assistants** — [Getting Started](/getting-started/)
+- **RAG pipelines** — [How-To: Embeddings](/how-to/embeddings/)
+- **Tool-calling agents** — [How-To: Agent Tool Calling](/how-to/agent-tool-calling/)
+- **Structured data extraction** — [How-To: Structured Output](/how-to/structured-output/)
+- **Image generation** — [How-To: Image Generation](/how-to/image-generation/)
+
 ## Key Features
 
-- **One file, complete prompt** — model config, inputs, tools, and instructions in a single `.prompty` file
-- **Multi-language runtimes** — Python, TypeScript, and C# (alpha)
+- **Three runtimes** — Python, TypeScript, and C#
 - **Pipeline architecture** — render → parse → execute → process, each stage swappable
-- **Agent mode** — built-in tool-calling loop with error recovery
-- **Structured output** — define output schemas, get typed JSON back
-- **Streaming** — chunk-by-chunk delivery with full tracing support
-- **Pluggable tracing** — console, JSON file, or OpenTelemetry backends
-- **VS Code extension** — syntax highlighting, autocomplete, run & debug, trace viewer
+- **Built-in tracing** — console, JSON file, and OpenTelemetry backends
+- **Provider support** — OpenAI, Azure / Foundry, and Anthropic
+- **VS Code extension** — syntax highlighting, autocomplete, live preview, and trace viewer
 
-## Quick Links
+## Learn More
 
-| | |
-|---|---|
-| 🚀 **[Getting Started](/getting-started/)** | Install, write your first prompt, run it |
-| 📖 **[Core Concepts](/core-concepts/)** | File format, pipeline, connections, tools, tracing |
-| 📋 **[Schema Reference](/reference/)** | All frontmatter properties (auto-generated) |
-| 🔧 **[How-To Guides](/how-to/)** | Practical recipes for common tasks |
-| 🐍 **[Python](/implementation/python/)** | Python runtime guide |
-| 📘 **[TypeScript](/implementation/typescript/)** | TypeScript runtime guide |
+<CardGrid>
+  <LinkCard title="📖 Core Concepts" description="File format, pipeline, connections, tools, and tracing." href="/core-concepts/" />
+  <LinkCard title="📋 Schema Reference" description="Every frontmatter property documented." href="/reference/" />
+  <LinkCard title="🐍 Python Runtime" description="Installation, API reference, and provider guides." href="/implementation/python/" />
+  <LinkCard title="📘 TypeScript Runtime" description="Installation, API reference, and provider guides." href="/implementation/typescript/" />
+</CardGrid>
 
 ## Contributing
 

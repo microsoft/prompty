@@ -1,29 +1,22 @@
 ---
 title: Image Generation
 description: >
-  Generate images from text prompts using DALL-E — set apiType to image in
-  your .prompty file and get back image URLs.
+  Generate images with DALL-E using Prompty — create a .prompty file
+  with apiType: image and invoke it.
 sidebar:
-  order: 9
+  order: 11
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-## What You'll Build
+## Create the `.prompty` File
 
-A `.prompty` file that generates **images from text descriptions** using
-DALL-E. Set `apiType: image` and the runtime calls the Images API instead
-of Chat Completions, returning image URLs.
+Set `apiType: image` and pick a DALL-E model. Image options go in
+`model.options.additionalProperties`:
 
+```yaml title="image-gen.prompty"
 ---
-
-## Step 1: Create an Image Prompt
-
-Set `apiType: image` and use a DALL-E model (`dall-e-3` or `dall-e-2`):
-
-```yaml title="generate-image.prompty"
----
-name: image-generator
+name: image-gen
 description: Generate images from text descriptions
 model:
   id: dall-e-3
@@ -36,292 +29,118 @@ model:
     additionalProperties:
       size: "1024x1024"
       quality: standard
+      style: vivid
 inputs:
-  properties:
-    - name: description
-      kind: string
-      default: A friendly robot painting a landscape
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+  - name: prompt
+    kind: string
+    default: A serene mountain landscape at sunset
 ---
-{{description}}
+{{prompt}}
 ```
 
 <Aside type="note">
-  For image generation, the template body is the image description — no role
-  markers are needed. The entire rendered text is sent as the prompt to the
-  Images API.
+  No role markers needed — the rendered text is sent directly as the
+  image prompt.
 </Aside>
 
 ---
 
-## Step 2: Generate an Image
+## Generate an Image
+
+`invoke()` returns the generated image URL:
 
 <Tabs>
   <TabItem label="Python">
     ```python
     from prompty import invoke
 
-    result = invoke(
-        "generate-image.prompty",
-        inputs={"description": "A cat astronaut floating in space, digital art"},
-    )
-
-    # result is the image URL (or list of URLs)
-    print(result)  # "https://oaidalleapiprodscus.blob.core.windows.net/..."
-    ```
-
-    Async variant:
-
-    ```python
-    from prompty import invoke_async
-
-    result = await invoke_async(
-        "generate-image.prompty",
-        inputs={"description": "A sunset over mountains, watercolor style"},
-    )
-    print(result)
+    url = invoke("image-gen.prompty", inputs={
+        "prompt": "A cat astronaut floating in space, digital art"
+    })
+    print(url)  # https://oaidalleapiprodscus.blob.core.windows.net/...
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
     import { invoke } from "@prompty/core";
-    import "@prompty/openai"; // registers provider
+    import "@prompty/openai";
 
-    const result = await invoke("generate-image.prompty", {
-      description: "A cat astronaut floating in space, digital art",
+    const url = await invoke("image-gen.prompty", {
+      prompt: "A cat astronaut floating in space, digital art",
     });
-
-    console.log(result);  // "https://oaidalleapiprodscus.blob.core.windows.net/..."
+    console.log(url);
     ```
   </TabItem>
   <TabItem label="C#">
     ```csharp
     using Prompty.Core;
 
-    var result = await Pipeline.InvokeAsync(
-        "generate-image.prompty",
-        new() { ["description"] = "A cat astronaut floating in space, digital art" }
-    );
-
-    // result contains the generated image URL
-    Console.WriteLine(result);
-    ```
-  </TabItem>
-</Tabs>
-
----
-
-## Model Options
-
-Control image output through `options.additionalProperties`:
-
-```yaml title="custom-image.prompty"
----
-name: custom-image
-model:
-  id: dall-e-3
-  provider: openai
-  apiType: image
-  connection:
-    kind: key
-    apiKey: ${env:OPENAI_API_KEY}
-  options:
-    additionalProperties:
-      size: "1792x1024"
-      quality: hd
-      style: natural
-inputs:
-  properties:
-    - name: description
-      kind: string
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
----
-{{description}}
-```
-
-### Available Options
-
-| Option | Values | Default | Notes |
-|---|---|---|---|
-| `size` | `1024x1024`, `1792x1024`, `1024x1792` | `1024x1024` | DALL-E 3 sizes |
-| `quality` | `standard`, `hd` | `standard` | `hd` costs more tokens |
-| `style` | `vivid`, `natural` | `vivid` | DALL-E 3 only |
-| `n` | `1` | `1` | DALL-E 3 only supports `n=1` |
-
-<Aside type="tip">
-  For cost-conscious development and testing, use `dall-e-2` with
-  `size: "256x256"` — it's significantly cheaper and faster for iteration.
-</Aside>
-
-### DALL-E 2 Options
-
-DALL-E 2 supports different sizes and multiple images per request:
-
-```yaml
-model:
-  id: dall-e-2
-  provider: openai
-  apiType: image
-  connection:
-    kind: key
-    apiKey: ${env:OPENAI_API_KEY}
-  options:
-    additionalProperties:
-      size: "256x256"
-      n: 3
-```
-
-| Option | Values | Notes |
-|---|---|---|
-| `size` | `256x256`, `512x512`, `1024x1024` | Smaller = cheaper |
-| `n` | `1`–`10` | Number of images to generate |
-
----
-
-## Downloading the Image
-
-The result is a URL that expires after a period. To save the image locally:
-
-<Tabs>
-  <TabItem label="Python">
-    ```python
-    import urllib.request
-    from prompty import invoke
-
-    url = invoke(
-        "generate-image.prompty",
-        inputs={"description": "A cozy cabin in the woods"},
-    )
-
-    # Download and save
-    urllib.request.urlretrieve(url, "cabin.png")
-    print("Saved to cabin.png")
-    ```
-  </TabItem>
-  <TabItem label="TypeScript">
-    ```typescript
-    import { invoke } from "@prompty/core";
-    import "@prompty/openai"; // registers provider
-    import { writeFile } from "fs/promises";
-
-    const url = await invoke("generate-image.prompty", {
-      description: "A cozy cabin in the woods",
-    });
-
-    // Download and save
-    const response = await fetch(url as string);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    await writeFile("cabin.png", buffer);
-    console.log("Saved to cabin.png");
-    ```
-  </TabItem>
-  <TabItem label="C#">
-    ```csharp
-    using Prompty.Core;
-
-    var url = await Pipeline.InvokeAsync(
-        "generate-image.prompty",
-        new() { ["description"] = "A cozy cabin in the woods" }
-    );
-
-    // Download and save
-    using var httpClient = new HttpClient();
-    var imageBytes = await httpClient.GetByteArrayAsync(url?.ToString());
-    await File.WriteAllBytesAsync("cabin.png", imageBytes);
-    Console.WriteLine("Saved to cabin.png");
+    var url = await Pipeline.InvokeAsync("image-gen.prompty",
+        new() { ["prompt"] = "A cat astronaut floating in space, digital art" });
+    Console.WriteLine(url);
     ```
   </TabItem>
 </Tabs>
 
 <Aside type="caution">
-  DALL-E image URLs are **temporary** — they expire after approximately one
-  hour. Always download and store images you want to keep.
+  Image URLs are **temporary** (≈ 1 hour). Download anything you want to keep.
 </Aside>
 
 ---
 
-## Provider Support
+## Configuration Options
 
-<Aside type="note">
-  Image generation is currently supported with **OpenAI only**. Microsoft Foundry
-  DALL-E support depends on deployment availability in your Azure region.
-  Check the [Azure AI models page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)
-  for current DALL-E deployment options.
+All options live under `model.options.additionalProperties`:
+
+### DALL-E 3
+
+| Option    | Values                                    | Default     |
+|-----------|-------------------------------------------|-------------|
+| `size`    | `1024x1024`, `1792x1024`, `1024x1792`    | `1024x1024` |
+| `quality` | `standard`, `hd`                          | `standard`  |
+| `style`   | `vivid`, `natural`                        | `vivid`     |
+
+### DALL-E 2
+
+| Option | Values                                 | Default     |
+|--------|----------------------------------------|-------------|
+| `size` | `256x256`, `512x512`, `1024x1024`      | `1024x1024` |
+| `n`    | `1`–`10`                               | `1`         |
+
+<Aside type="tip">
+  Use `dall-e-2` with `size: "256x256"` during development — much cheaper
+  and faster for iteration.
 </Aside>
 
-### Microsoft Foundry (if available)
+---
 
-If your Foundry resource has a DALL-E deployment, use the Foundry provider:
+## Azure OpenAI
 
-```yaml
+Same pattern — switch `provider` and `connection`:
+
+```yaml title="image-gen-azure.prompty"
+---
+name: azure-image-gen
 model:
   id: ${env:AZURE_OPENAI_IMAGE_DEPLOYMENT}
-  provider: foundry
+  provider: azure
   apiType: image
   connection:
     kind: key
-    endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
-    apiKey: ${env:AZURE_AI_PROJECT_KEY}
-```
-
----
-
-## Complete Example: Image Gallery Generator
-
-```yaml title="gallery.prompty"
----
-name: gallery
-description: Generate themed images for a gallery
-model:
-  id: dall-e-3
-  provider: openai
-  apiType: image
-  connection:
-    kind: key
-    apiKey: ${env:OPENAI_API_KEY}
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
   options:
     additionalProperties:
       size: "1024x1024"
       quality: standard
 inputs:
-  properties:
-    - name: subject
-      kind: string
-    - name: style
-      kind: string
-      default: digital art
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+  - name: prompt
+    kind: string
 ---
-{{subject}}, {{style}}, high detail, professional quality
+{{prompt}}
 ```
 
-```python title="gallery_app.py"
-from prompty import invoke
-import urllib.request
-
-subjects = [
-    "A mountain lake at sunrise",
-    "A bustling Tokyo street at night",
-    "An ancient library filled with magical books",
-]
-
-for i, subject in enumerate(subjects):
-    url = invoke("gallery.prompty", inputs={"subject": subject, "style": "oil painting"})
-    urllib.request.urlretrieve(url, f"gallery_{i}.png")
-    print(f"Generated: gallery_{i}.png")
-```
+The calling code is identical — only the `.prompty` file changes.
 
 ---
 

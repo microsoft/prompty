@@ -5,6 +5,15 @@ import { estimateChars, summarizeDropped, trimToContextWindow } from "../src/cor
 import { Guardrails, GuardrailError } from "../src/core/guardrails.js";
 import { Steering } from "../src/core/steering.js";
 import { Message, text } from "../src/core/types.js";
+import { invokeAgent } from "../src/core/pipeline.js";
+import {
+  registerRenderer,
+  registerParser,
+  registerExecutor,
+  registerProcessor,
+} from "../src/core/registry.js";
+import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
+import { Prompty } from "../src/model/prompty.js";
 
 // ===========================================================================
 // §13.1 Agent Events
@@ -288,5 +297,338 @@ describe("Steering", () => {
     expect(drained[0].text).toBe("first");
     expect(drained[1].text).toBe("second");
     expect(drained[2].text).toBe("third");
+  });
+});
+
+// ===========================================================================
+// invokeAgent integration — §13 extension hooks in the agent loop
+// ===========================================================================
+
+// --- Mock implementations for integration tests ---
+
+class StubRenderer implements Renderer {
+  async render(_agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string> {
+    let result = template;
+    for (const [key, val] of Object.entries(inputs)) {
+      result = result.replace(`{{${key}}}`, String(val));
+    }
+    return result;
+  }
+}
+
+class StubParser implements Parser {
+  async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
+    return [new Message("user", [text(rendered)])];
+  }
+}
+
+/** Processor that extracts content from a standard OpenAI chat response shape. */
+class StubProcessor implements Processor {
+  async process(_agent: Prompty, response: unknown): Promise<unknown> {
+    const r = response as Record<string, unknown>;
+    const choices = r.choices as Record<string, unknown>[];
+    const msg = choices[0].message as Record<string, unknown>;
+    return msg.content;
+  }
+}
+
+/** Helper to build a minimal mock executor with configurable execute(). */
+function makeStubExecutor(executeFn: (agent: Prompty, messages: Message[]) => Promise<unknown>): Executor {
+  return {
+    execute: executeFn,
+    formatToolMessages(
+      _rawResponse: unknown,
+      toolCalls: { id: string; name: string; arguments: string }[],
+      toolResults: string[],
+      textContent = "",
+    ): Message[] {
+      const messages: Message[] = [];
+      const rawToolCalls = toolCalls.map((tc) => ({
+        id: tc.id,
+        type: "function",
+        function: { name: tc.name, arguments: tc.arguments },
+      }));
+      messages.push(
+        new Message("assistant", textContent ? [text(textContent)] : [], {
+          tool_calls: rawToolCalls,
+        }),
+      );
+      for (let i = 0; i < toolCalls.length; i++) {
+        messages.push(
+          new Message("tool", [text(toolResults[i])], {
+            tool_call_id: toolCalls[i].id,
+            name: toolCalls[i].name,
+          }),
+        );
+      }
+      return messages;
+    },
+  };
+}
+
+/** Build a final (no tool calls) response. */
+function makeFinalResponse(content: string) {
+  return {
+    choices: [{
+      finish_reason: "stop",
+      message: { role: "assistant", content, tool_calls: null },
+    }],
+  };
+}
+
+/** Build a tool-call response. */
+function makeToolCallResponse(calls: { id: string; name: string; args: string }[], content: string | null = null) {
+  return {
+    choices: [{
+      finish_reason: "tool_calls",
+      message: {
+        role: "assistant",
+        content,
+        tool_calls: calls.map((c) => ({
+          id: c.id,
+          type: "function",
+          function: { name: c.name, arguments: c.args },
+        })),
+      },
+    }],
+  };
+}
+
+function makeTestAgent(): Prompty {
+  const agent = new Prompty({
+    name: "ext-test",
+    instructions: "Hello {{name}}",
+  });
+  agent.template = { format: { kind: "ext-stub" }, parser: { kind: "ext-stub" } } as any;
+  (agent as any).model = { provider: "ext-stub" };
+  return agent;
+}
+
+describe("invokeAgent integration", () => {
+  /** Messages captured by the executor during execute(). */
+  let capturedMessages: Message[];
+  /** How many times execute() was called. */
+  let executeCallCount: number;
+
+  beforeEach(() => {
+    capturedMessages = [];
+    executeCallCount = 0;
+
+    registerRenderer("ext-stub", new StubRenderer());
+    registerParser("ext-stub", new StubParser());
+    registerProcessor("ext-stub", new StubProcessor());
+    // Default executor: returns a final response and captures messages
+    registerExecutor(
+      "ext-stub",
+      makeStubExecutor(async (_agent, messages) => {
+        executeCallCount++;
+        capturedMessages = [...messages];
+        return makeFinalResponse("The answer is 42");
+      }),
+    );
+  });
+
+  // ---- §13.4 Input guardrail: first-turn denial ----
+  it("input guardrail denial prevents executor call", async () => {
+    const guardrails = new Guardrails({
+      input: () => ({ allowed: false, reason: "policy violation" }),
+    });
+
+    const agent = makeTestAgent();
+    await expect(
+      invokeAgent(agent, { name: "Alice" }, { guardrails }),
+    ).rejects.toThrow(GuardrailError);
+
+    expect(executeCallCount).toBe(0);
+  });
+
+  // ---- §13.5 Steering on first turn ----
+  it("steering messages appear in first LLM call", async () => {
+    const steering = new Steering();
+    steering.send("Extra context from steering");
+
+    const agent = makeTestAgent();
+    await invokeAgent(agent, { name: "Bob" }, { steering });
+
+    // The prepared message is "Hello Bob" from template, then steering appends
+    expect(capturedMessages.length).toBeGreaterThanOrEqual(2);
+    const allText = capturedMessages.map((m) => m.text).join(" | ");
+    expect(allText).toContain("Extra context from steering");
+  });
+
+  // ---- §13.3 Context trim before first call ----
+  it("trims long messages before calling executor", async () => {
+    // Use an executor that captures messages
+    registerExecutor(
+      "ext-stub",
+      makeStubExecutor(async (_agent, messages) => {
+        executeCallCount++;
+        capturedMessages = [...messages];
+        return makeFinalResponse("ok");
+      }),
+    );
+
+    // Parser returns very long messages to trigger trimming
+    const longParser: Parser = {
+      async parse(_agent: Prompty, _rendered: string): Promise<Message[]> {
+        return [
+          new Message("system", [text("System prompt")]),
+          new Message("user", [text("A".repeat(2000))]),
+          new Message("assistant", [text("B".repeat(2000))]),
+          new Message("user", [text("C".repeat(2000))]),
+          new Message("assistant", [text("D".repeat(2000))]),
+          new Message("user", [text("Final question")]),
+        ];
+      },
+    };
+    registerParser("ext-stub", longParser);
+
+    const agent = makeTestAgent();
+    await invokeAgent(agent, { name: "X" }, { contextBudget: 500 });
+
+    // Some messages should have been dropped; system should remain
+    expect(capturedMessages[0].role).toBe("system");
+    // Total characters should be reduced
+    const totalChars = capturedMessages.reduce(
+      (sum, m) => sum + m.text.length,
+      0,
+    );
+    expect(totalChars).toBeLessThan(8000 + 14);
+  });
+
+  // ---- §13.4 Input guardrail rewrite ----
+  it("input guardrail rewrite replaces messages sent to executor", async () => {
+    const replacement = [new Message("user", [text("Rewritten input")])];
+    const guardrails = new Guardrails({
+      input: () => ({ allowed: true, rewrite: replacement }),
+    });
+
+    const agent = makeTestAgent();
+    await invokeAgent(agent, { name: "Carol" }, { guardrails });
+
+    expect(capturedMessages).toHaveLength(1);
+    expect(capturedMessages[0].text).toBe("Rewritten input");
+  });
+
+  // ---- §13.4 Output guardrail: denial on final response ----
+  it("output guardrail denies final response", async () => {
+    const guardrails = new Guardrails({
+      output: (msg) => {
+        if (msg.text.includes("42")) {
+          return { allowed: false, reason: "forbidden number" };
+        }
+        return { allowed: true };
+      },
+    });
+
+    const agent = makeTestAgent();
+    await expect(
+      invokeAgent(agent, { name: "Eve" }, { guardrails }),
+    ).rejects.toThrow(GuardrailError);
+  });
+
+  // ---- §13.4 Output guardrail: rewrite on final response ----
+  it("output guardrail rewrites final response", async () => {
+    const guardrails = new Guardrails({
+      output: () => ({ allowed: true, rewrite: "Redacted answer" }),
+    });
+
+    const agent = makeTestAgent();
+    const result = await invokeAgent(agent, { name: "Frank" }, { guardrails });
+    expect(result).toBe("Redacted answer");
+  });
+
+  // ---- §13.4 Tool guardrail rewrite ----
+  it("tool guardrail rewrites arguments before tool execution", async () => {
+    let receivedArgs: Record<string, unknown> = {};
+    let callNum = 0;
+
+    registerExecutor(
+      "ext-stub",
+      makeStubExecutor(async (_agent, messages) => {
+        callNum++;
+        capturedMessages = [...messages];
+        if (callNum === 1) {
+          return makeToolCallResponse([
+            { id: "c1", name: "get_weather", args: '{"city":"Seattle"}' },
+          ]);
+        }
+        return makeFinalResponse("Done");
+      }),
+    );
+
+    const guardrails = new Guardrails({
+      tool: (name, args) => {
+        if (name === "get_weather") {
+          return { allowed: true, rewrite: { city: "Portland" } };
+        }
+        return { allowed: true };
+      },
+    });
+
+    const tools = {
+      get_weather: (args: Record<string, unknown>) => {
+        receivedArgs = args;
+        return `72°F in ${args.city}`;
+      },
+    };
+
+    const agent = makeTestAgent();
+    await invokeAgent(agent, { name: "G" }, { tools: tools as any, guardrails });
+
+    expect(receivedArgs.city).toBe("Portland");
+  });
+
+  // ---- §13.2 Cancellation mid-loop ----
+  it("cancellation aborts the loop", async () => {
+    const controller = new AbortController();
+    let callNum = 0;
+
+    registerExecutor(
+      "ext-stub",
+      makeStubExecutor(async (_agent, _messages) => {
+        callNum++;
+        if (callNum === 1) {
+          // After first LLM call returns tool calls, abort before next iteration
+          controller.abort();
+          return makeToolCallResponse([
+            { id: "c1", name: "noop", args: "{}" },
+          ]);
+        }
+        return makeFinalResponse("should not reach");
+      }),
+    );
+
+    const tools = { noop: () => "ok" };
+    const agent = makeTestAgent();
+
+    await expect(
+      invokeAgent(agent, { name: "H" }, {
+        tools: tools as any,
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow(CancelledError);
+
+    expect(callNum).toBe(1);
+  });
+
+  // ---- §13 Max iterations exceeded ----
+  it("throws when maxIterations exceeded", async () => {
+    registerExecutor(
+      "ext-stub",
+      makeStubExecutor(async () =>
+        makeToolCallResponse([{ id: "cx", name: "loop_tool", args: "{}" }]),
+      ),
+    );
+
+    const tools = { loop_tool: () => "looping" };
+    const agent = makeTestAgent();
+
+    await expect(
+      invokeAgent(agent, { name: "I" }, {
+        tools: tools as any,
+        maxIterations: 2,
+      }),
+    ).rejects.toThrow("maxIterations");
   });
 });

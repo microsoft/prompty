@@ -442,3 +442,288 @@ class TestCombinedExtensions:
         )
         assert result == "result"
         assert len(events) > 0
+
+
+# =========================================================================
+# §13 — Agent Loop Extension Integration Tests
+# =========================================================================
+
+
+class TestAgentLoopExtensions:
+    """Integration tests for §13 agent loop extensions within invoke_agent."""
+
+    # ----- 1. First-turn guardrail denial (no LLM call) --------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    def test_first_turn_guardrail_denial(self, mock_prepare, mock_exec):
+        """Input guardrail denying on the FIRST turn raises GuardrailError
+        before the executor is ever called."""
+        agent = _make_agent()
+        g = Guardrails(input=lambda msgs: GuardrailResult(allowed=False, reason="first-turn block"))
+
+        with pytest.raises(GuardrailError, match="first-turn block"):
+            invoke_agent(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
+
+        mock_exec.assert_not_called()
+
+    # ----- 2. Steering on first turn ---------------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_steering_on_first_turn(self, mock_process, mock_prepare, mock_exec):
+        """Messages injected via steering.send() before calling invoke_agent
+        appear in the messages sent to the very first LLM call."""
+        mock_exec.return_value = _mock_final_response("done")
+        agent = _make_agent()
+        steering = Steering()
+        steering.send("Extra context for first turn")
+
+        captured_messages: list[list[Message]] = []
+
+        def capturing_executor(a, msgs):
+            captured_messages.append(list(msgs))
+            return _mock_final_response("done")
+
+        mock_exec.side_effect = capturing_executor
+
+        invoke_agent(agent, {}, tools={}, steering=steering)
+
+        assert len(captured_messages) == 1
+        all_text = " ".join(
+            p.value for m in captured_messages[0] for p in m.parts if isinstance(p, TextPart)
+        )
+        assert "Extra context for first turn" in all_text
+
+    # ----- 3. Context trim before first call -------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_context_trim_before_first_call(self, mock_process, mock_exec):
+        """With context_budget set, messages are trimmed before the first LLM call.
+        A large system prompt + many user messages should result in fewer messages
+        reaching the executor."""
+        large_system = Message(role="system", parts=[TextPart(value="S" * 200)])
+        # 20 user messages of ~500 chars each → ~10 000 chars total
+        num_user = 20
+        user_msgs = [Message(role="user", parts=[TextPart(value=f"msg-{i} " + "X" * 500)]) for i in range(num_user)]
+        original_count = 1 + num_user  # system + user messages
+
+        captured: list[list[Message]] = []
+
+        def capturing_executor(a, msgs):
+            captured.append(list(msgs))
+            return _mock_final_response("ok")
+
+        mock_exec.side_effect = capturing_executor
+
+        all_msgs = [large_system] + user_msgs
+        with patch(f"{_PIPELINE}.prepare", return_value=all_msgs):
+            agent = _make_agent()
+            # Budget of 2000 chars forces heavy trimming
+            invoke_agent(agent, {}, tools={}, context_budget=2000)
+
+        assert len(captured) == 1
+        # The trimmed message list must be strictly smaller than the original
+        assert len(captured[0]) < original_count, (
+            f"Expected trimming: got {len(captured[0])} messages, original had {original_count}"
+        )
+        # System message is always preserved
+        assert captured[0][0].role == "system"
+
+    # ----- 4. Input guardrail rewrite -------------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="original")])])
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_input_guardrail_rewrite(self, mock_process, mock_prepare, mock_exec):
+        """Input guardrail returning a rewrite causes the executor to receive
+        the rewritten messages, not the originals."""
+        rewritten = [Message(role="user", parts=[TextPart(value="rewritten by guardrail")])]
+
+        captured: list[list[Message]] = []
+
+        def capturing_executor(a, msgs):
+            captured.append(list(msgs))
+            return _mock_final_response("ok")
+
+        mock_exec.side_effect = capturing_executor
+
+        g = Guardrails(input=lambda msgs: GuardrailResult(allowed=True, rewrite=rewritten))
+        agent = _make_agent()
+
+        invoke_agent(agent, {}, tools={}, guardrails=g)
+
+        assert len(captured) == 1
+        texts = [p.value for m in captured[0] for p in m.parts if isinstance(p, TextPart)]
+        assert "rewritten by guardrail" in texts
+        assert "original" not in texts
+
+    # ----- 5. Output guardrail on final response (non-streaming) -----------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="bad output")
+    def test_output_guardrail_denies_final_response(self, mock_process, mock_prepare, mock_exec):
+        """Output guardrail that denies the final (non-tool-call) response
+        raises GuardrailError."""
+        mock_exec.return_value = _mock_final_response("bad output")
+        agent = _make_agent()
+        g = Guardrails(output=lambda msg: GuardrailResult(allowed=False, reason="toxic content"))
+
+        with pytest.raises(GuardrailError, match="toxic content"):
+            invoke_agent(agent, {}, tools={}, guardrails=g)
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="original response")
+    def test_output_guardrail_rewrites_final_response(self, mock_process, mock_prepare, mock_exec):
+        """Output guardrail returning a rewrite causes the rewritten value
+        to be returned instead of the original."""
+        mock_exec.return_value = _mock_final_response("original response")
+        agent = _make_agent()
+        g = Guardrails(
+            output=lambda msg: GuardrailResult(allowed=True, rewrite="sanitized response")
+        )
+
+        result = invoke_agent(agent, {}, tools={}, guardrails=g)
+        assert result == "sanitized response"
+
+    # ----- 6. Tool guardrail rewrite ---------------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_tool_guardrail_rewrites_args(self, mock_process, mock_prepare, mock_exec):
+        """A tool guardrail can rewrite tool call arguments before the tool
+        function is invoked."""
+        mock_exec.side_effect = [_mock_tool_call_response("get_weather", '{"location":"NYC"}'), _mock_final_response()]
+        agent = _make_agent()
+
+        received_args: list[dict[str, Any]] = []
+
+        def tracking_tool(**kwargs: Any) -> str:
+            received_args.append(kwargs)
+            return "Sunny"
+
+        g = Guardrails(
+            tool=lambda name, args: GuardrailResult(
+                allowed=True,
+                rewrite={"location": "REWRITTEN_CITY"},
+            )
+        )
+
+        invoke_agent(
+            agent, {},
+            tools={"get_weather": tracking_tool},
+            guardrails=g,
+        )
+
+        assert len(received_args) == 1
+        assert received_args[0]["location"] == "REWRITTEN_CITY"
+
+    # ----- 7. Parallel tool execution (sync) -------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_parallel_tool_calls_sync(self, mock_process, mock_prepare, mock_exec):
+        """With parallel_tool_calls=True and multiple tool calls, tools run
+        concurrently. Total time should be less than sequential."""
+        import time
+
+        tc1 = MagicMock()
+        tc1.id = "call_1"
+        tc1.name = "get_weather"
+        tc1.arguments = '{"location":"NYC"}'
+        tc1.function.name = "get_weather"
+        tc1.function.arguments = '{"location":"NYC"}'
+        tc1.model_dump.return_value = {"id": "call_1", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"NYC"}'}}
+
+        tc2 = MagicMock()
+        tc2.id = "call_2"
+        tc2.name = "get_weather"
+        tc2.arguments = '{"location":"LA"}'
+        tc2.function.name = "get_weather"
+        tc2.function.arguments = '{"location":"LA"}'
+        tc2.model_dump.return_value = {"id": "call_2", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"LA"}'}}
+
+        multi_tool_resp = MagicMock()
+        multi_tool_resp.choices = [MagicMock()]
+        multi_tool_resp.choices[0].finish_reason = "tool_calls"
+        multi_tool_resp.choices[0].message.tool_calls = [tc1, tc2]
+
+        mock_exec.side_effect = [multi_tool_resp, _mock_final_response()]
+
+        agent = _make_agent()
+        sleep_seconds = 0.3
+
+        def slow_tool(**kwargs: Any) -> str:
+            time.sleep(sleep_seconds)
+            return f"Result for {kwargs.get('location', '?')}"
+
+        start = time.monotonic()
+        result = invoke_agent(
+            agent, {},
+            tools={"get_weather": slow_tool},
+            parallel_tool_calls=True,
+        )
+        elapsed = time.monotonic() - start
+
+        assert result == "result"
+        # Two tools each sleeping 0.3s: sequential = ≥0.6s, parallel < 0.6s
+        assert elapsed < sleep_seconds * 2, f"Expected parallel execution, but elapsed={elapsed:.2f}s"
+
+    # ----- 8. Max iterations exceeded --------------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    def test_max_iterations_exceeded(self, mock_prepare, mock_exec):
+        """When the executor always returns tool calls, the loop stops after
+        max_iterations and raises ValueError."""
+        mock_exec.return_value = _mock_tool_call_response()
+        agent = _make_agent()
+
+        with pytest.raises(ValueError, match="max_iterations"):
+            invoke_agent(
+                agent, {},
+                tools={"get_weather": lambda **kw: "sunny"},
+                max_iterations=2,
+            )
+
+        # Executor should be called exactly 3 times:
+        # initial call + 2 iterations (each iteration does 1 call then checks limit)
+        assert mock_exec.call_count == 3
+
+    # ----- 9. Cancellation mid-loop ----------------------------------------
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    def test_cancellation_mid_loop(self, mock_prepare, mock_exec):
+        """Cancelling mid-loop (cancel after first iteration) stops the loop
+        and raises CancelledError."""
+        agent = _make_agent()
+        token = CancellationToken()
+        iteration_count = 0
+
+        def executor_with_cancel(a, msgs):
+            nonlocal iteration_count
+            iteration_count += 1
+            if iteration_count >= 2:
+                # Cancel after the first tool-call iteration completes
+                token.cancel()
+            return _mock_tool_call_response()
+
+        mock_exec.side_effect = executor_with_cancel
+
+        with pytest.raises(CancelledError):
+            invoke_agent(
+                agent, {},
+                tools={"get_weather": lambda **kw: "sunny"},
+                cancel=token,
+                max_iterations=10,
+            )
+
+        # Should have made at least 2 executor calls before cancellation
+        assert iteration_count >= 2

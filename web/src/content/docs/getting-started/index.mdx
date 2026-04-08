@@ -7,7 +7,10 @@ sidebar:
   order: 1
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import pythonBasic from '../../../../docs-examples/python/examples/chat_basic.py?raw';
+import tsBasic from '../../../../docs-examples/typescript/examples/chat-basic.ts?raw';
+import csBasic from '../../../../docs-examples/csharp/Examples/ChatBasic.cs?raw';
 
 ## What is Prompty?
 
@@ -198,6 +201,22 @@ OPENAI_API_KEY=sk-your-key-here
 ```
 
 Prompty automatically loads `.env` files.
+
+## Complete Example
+
+Here's a full, tested example you can copy and run:
+
+<Tabs>
+  <TabItem label="Python">
+    <Code code={pythonBasic} lang="python" title="chat_basic.py" />
+  </TabItem>
+  <TabItem label="TypeScript">
+    <Code code={tsBasic} lang="typescript" title="chat-basic.ts" />
+  </TabItem>
+  <TabItem label="C#">
+    <Code code={csBasic} lang="csharp" title="ChatBasic.cs" />
+  </TabItem>
+</Tabs>
 
 ## Next Steps
 

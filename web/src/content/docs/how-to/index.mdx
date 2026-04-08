@@ -7,15 +7,10 @@ sidebar:
   order: 1
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
-## Overview
+import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 These guides are **recipe-style** — each one shows a complete `.prompty` file and
 the code to run it. Copy, paste, fill in your API keys, and go.
-
-Prompty supports multiple LLM providers out of the box — **OpenAI**, **Microsoft Foundry**,
-and **Anthropic** — and its plugin architecture makes it easy to add more.
 
 <Aside type="tip">
   New to Prompty? Start with the [Getting Started guide](/getting-started/)
@@ -24,39 +19,41 @@ and **Anthropic** — and its plugin architecture makes it easy to add more.
 
 ---
 
-## Guides
+### Providers
 
-| Guide | What you'll build |
-|---|---|
-| [Use with Anthropic](./anthropic) | Chat completion using Anthropic Claude with API key auth |
-| [Use with OpenAI](./openai) | Chat completion using the OpenAI API with API key auth |
-| [Use with Microsoft Foundry](./foundry) | Chat completion using Microsoft Foundry — API key and Azure AD options |
-| [Agent with Tool Calling](./agent-tool-calling) | An agent that calls your Python/TypeScript functions in a loop |
-| [Structured Output](../core-concepts/structured-output) | Get typed JSON responses matching a schema |
-| [Streaming Responses](../core-concepts/streaming) | Stream tokens as they arrive |
-| [Embeddings](../core-concepts/pipeline) | Generate text embeddings with `apiType: embedding` |
-| [Image Generation](../core-concepts/pipeline) | Generate images with DALL-E via `apiType: image` |
-| [Custom Providers](../implementation/python) | Write your own executor and processor |
-| [VS Code Extension](../getting-started/) | Author and test `.prompty` files in VS Code |
-
-<Aside type="note">
-  All three providers follow the same patterns — install the corresponding extra,
-  set the `provider` in your frontmatter, and configure the connection.
-  See the [Python implementation docs](../implementation/python) for details on
-  adding custom providers.
-</Aside>
+<CardGrid>
+  <LinkCard title="Use with OpenAI" href="/how-to/openai/" description="Chat completions with the OpenAI API and API key auth." />
+  <LinkCard title="Use with Microsoft Foundry" href="/how-to/foundry/" description="Foundry project endpoints with API key and Azure AD auth." />
+  <LinkCard title="Use with Anthropic" href="/how-to/anthropic/" description="Chat completions using Anthropic Claude." />
+  <LinkCard title="Custom Providers" href="/how-to/custom-providers/" description="Build your own executor and processor for any LLM." />
+</CardGrid>
 
 ---
 
-## Common Pattern
+### Features
 
-Every guide follows the same three-step pattern:
+<CardGrid>
+  <LinkCard title="Agent with Tool Calling" href="/how-to/agent-tool-calling/" description="Define tools, register handlers, and let the agent loop call them." />
+  <LinkCard title="Multi-Prompt Composition" href="/how-to/prompt-composition/" description="Chain .prompty files — one prompt calls another via PromptyTool." />
+  <LinkCard title="Streaming Responses" href="/how-to/streaming/" description="Stream tokens in real time with PromptyStream and tracing." />
+  <LinkCard title="Structured Output" href="/how-to/structured-output/" description="Get typed JSON back matching an output schema you define." />
+  <LinkCard title="Embeddings" href="/how-to/embeddings/" description="Generate text embeddings with apiType: embedding." />
+  <LinkCard title="Image Generation" href="/how-to/image-generation/" description="Generate images with DALL-E via apiType: image." />
+</CardGrid>
 
-```text
-1. Write a .prompty file     →  declarative prompt + model config
-2. Call prompty.invoke()     →  load → render → parse → call LLM → process
-3. Use the result             →  string, JSON, embeddings, or stream
-```
+---
 
-The runtime handles template rendering, role-marker parsing, provider dispatch,
-and response processing automatically — your code stays minimal.
+### Development
+
+<CardGrid>
+  <LinkCard title="Testing Your Prompts" href="/how-to/testing-prompts/" description="Unit test .prompty files without calling the LLM." />
+  <LinkCard title="Troubleshooting" href="/how-to/troubleshooting/" description="Solutions to common errors and issues." />
+</CardGrid>
+
+---
+
+### Reference
+
+<CardGrid>
+  <LinkCard title="Cookbook" href="/how-to/cookbook/" description="Ready-to-use .prompty examples — copy, customize, and run." />
+</CardGrid>

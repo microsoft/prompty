@@ -7,7 +7,10 @@ sidebar:
   order: 7
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import pythonStreaming from '../../../../docs-examples/python/examples/streaming.py?raw';
+import tsStreaming from '../../../../docs-examples/typescript/examples/streaming.ts?raw';
+import csStreaming from '../../../../docs-examples/csharp/Examples/Streaming.cs?raw';
 
 ## What You'll Build
 
@@ -275,6 +278,22 @@ print("\n--- Done ---")
 ```
 
 ---
+
+## Complete Tested Example
+
+A full, tested example you can copy and run:
+
+<Tabs>
+  <TabItem label="Python">
+    <Code code={pythonStreaming} lang="python" title="streaming.py" />
+  </TabItem>
+  <TabItem label="TypeScript">
+    <Code code={tsStreaming} lang="typescript" title="streaming.ts" />
+  </TabItem>
+  <TabItem label="C#">
+    <Code code={csStreaming} lang="csharp" title="Streaming.cs" />
+  </TabItem>
+</Tabs>
 
 ## Further Reading
 

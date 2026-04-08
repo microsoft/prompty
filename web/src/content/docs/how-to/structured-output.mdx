@@ -7,7 +7,10 @@ sidebar:
   order: 6
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import pythonStructured from '../../../../docs-examples/python/examples/structured_output.py?raw';
+import tsStructured from '../../../../docs-examples/typescript/examples/structured-output.ts?raw';
+import csStructured from '../../../../docs-examples/csharp/Examples/StructuredOutput.cs?raw';
 
 ## What You'll Build
 
@@ -270,6 +273,22 @@ All properties are marked `required` and `additionalProperties` is set to
 `false` — the model returns exactly the fields you specified, nothing more.
 
 ---
+
+## Complete Tested Example
+
+A full, tested example you can copy and run:
+
+<Tabs>
+  <TabItem label="Python">
+    <Code code={pythonStructured} lang="python" title="structured_output.py" />
+  </TabItem>
+  <TabItem label="TypeScript">
+    <Code code={tsStructured} lang="typescript" title="structured-output.ts" />
+  </TabItem>
+  <TabItem label="C#">
+    <Code code={csStructured} lang="csharp" title="StructuredOutput.cs" />
+  </TabItem>
+</Tabs>
 
 ## Further Reading
 

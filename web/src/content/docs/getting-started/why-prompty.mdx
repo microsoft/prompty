@@ -1,0 +1,134 @@
+---
+title: Why Prompty?
+description: >
+  Understand the philosophy behind Prompty — why a dedicated prompt format
+  exists and when it's the right choice for your project.
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## The Problem
+
+Most LLM-powered applications today embed prompts as **string literals** scattered
+across application code. This creates real problems as projects grow:
+
+- **No standard format.** Every team invents its own way to store prompts — YAML
+  files, JSON configs, raw strings, template engines — making it impossible to
+  share or port prompts between projects.
+- **Configuration is tangled with text.** Model name, temperature, endpoint URL,
+  and the actual prompt content all live in the same function call. Changing one
+  means touching the other.
+- **Testing is painful.** To test a prompt you have to mock the entire LLM client,
+  because there's no clean boundary between "what we send" and "how we send it."
+- **Version control is noisy.** Prompt changes are buried inside code diffs.
+  Reviewing a temperature tweak means reading through business logic.
+
+The net effect: prompt engineering and application development are welded together
+when they should be separate disciplines.
+
+## The Prompty Approach
+
+Prompty introduces a dedicated **file format** — `.prompty` — that makes prompts
+first-class assets in your project, just like configuration files or database
+migrations.
+
+### One file, everything declared
+
+A `.prompty` file is plain markdown with YAML frontmatter. The frontmatter
+declares model configuration, input/output schemas, and tool definitions. The
+markdown body is the prompt itself, written with template syntax.
+
+```yaml
+---
+name: customer-support
+model:
+  id: gpt-4o
+  provider: azure
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+  options:
+    temperature: 0.3
+inputSchema:
+  properties:
+    - name: issue
+      kind: string
+---
+system:
+You are a support agent. Be concise and helpful.
+
+user:
+{{issue}}
+```
+
+### Pluggable pipeline
+
+Every `.prompty` file flows through four stages — **render → parse → execute →
+process** — and each stage is independently swappable. Use Jinja2 or Mustache
+for rendering. Parse role markers into structured messages. Execute against
+OpenAI, Azure, or any provider. Process the response into your desired format.
+
+```text
+.prompty file → Renderer → Parser → Executor → Processor → Result
+                (Jinja2)   (roles)   (OpenAI)   (extract)
+```
+
+### One file, any language
+
+The same `.prompty` file works across **Python**, **TypeScript**, and **C#**
+runtimes. Your prompt engineers write once; your application teams consume in
+whatever language their service uses.
+
+## How Prompty Compares
+
+|                    | Raw SDK              | LangChain / Semantic Kernel | Prompty                              |
+| ------------------ | -------------------- | --------------------------- | ------------------------------------ |
+| **Prompt format**  | Strings in code      | Templates in code           | Dedicated `.prompty` file            |
+| **Model config**   | Constructor args     | Chain config                | YAML frontmatter                     |
+| **Portability**    | Single language      | Single language             | Python, TypeScript, C#               |
+| **Testability**    | Mock entire client   | Mock chain                  | Mock at any pipeline stage           |
+| **Version control**| Diff code changes    | Diff code changes           | Diff prompt files directly           |
+| **IDE support**    | Code editor          | Code editor                 | VS Code extension with live preview  |
+
+<Aside type="tip">
+  Prompty is **not** a competing framework — it's a file format and runtime.
+  You can use `.prompty` files inside LangChain, Semantic Kernel, or any other
+  orchestration layer as a building block.
+</Aside>
+
+## When to Use Prompty
+
+**Prompty is a good fit when:**
+
+- ✅ You want prompts treated as **first-class assets** — versioned, reviewed, and tested independently
+- ✅ Your team works across **Python, TypeScript, and C#** and needs a shared format
+- ✅ You want to **test prompts in isolation** without mocking entire LLM clients
+- ✅ You need **built-in tracing and observability** across the prompt lifecycle
+- ✅ You want a **standard your team can adopt** without committing to a full framework
+
+**Consider alternatives when:**
+
+- ❌ You need a **full orchestration framework** with chains, memory, and retrieval
+  built in — use LangChain or Semantic Kernel (but Prompty can still be your prompt
+  layer inside them)
+
+## Key Design Principles
+
+- **Prompts as code** — store in version control, review in pull requests, test
+  in CI. Prompts deserve the same engineering rigor as application code.
+- **Separation of concerns** — prompt text, model configuration, and application
+  logic each live in the right place. Change one without touching the others.
+- **Pluggable pipeline** — swap renderers, parsers, executors, or processors
+  without modifying your `.prompty` files. Add a new provider by registering an
+  entry point.
+- **Provider agnostic** — the same `.prompty` file works with OpenAI, Azure
+  OpenAI, Anthropic, or any provider you implement. Your prompts aren't locked
+  to a vendor.
+
+## Next Steps
+
+Ready to try it? Head to the [Getting Started guide](/getting-started/) to
+install the runtime, write your first `.prompty` file, and run it.

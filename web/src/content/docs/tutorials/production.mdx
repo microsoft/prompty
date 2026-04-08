@@ -1,0 +1,547 @@
+---
+title: "Tutorial: Prompts in Production"
+description: >
+  Best practices for deploying Prompty in production — environment config,
+  tracing, error handling, and testing strategies.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What you'll learn
+
+How to take a `.prompty` file from local development to production-ready:
+environment configuration, connection management, tracing, error handling,
+testing, versioning, and performance optimization.
+
+---
+
+## 1. Environment Configuration
+
+Never hardcode secrets. Use `${env:VAR}` references in your `.prompty` file and
+resolve them from the environment at load time.
+
+```yaml title="chat.prompty"
+---
+name: production-chat
+model:
+  id: gpt-4o
+  provider: openai
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+---
+```
+
+For **local development**, create a `.env` file (add it to `.gitignore`):
+
+```bash title=".env"
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_ENDPOINT=https://api.openai.com/v1
+```
+
+For **CI/CD**, set environment variables in your pipeline configuration:
+
+```yaml title=".github/workflows/deploy.yml"
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  OPENAI_ENDPOINT: ${{ secrets.OPENAI_ENDPOINT }}
+```
+
+<Aside type="tip">
+  Use `${env:VAR:default}` syntax to provide fallback values for optional
+  settings like endpoints — this way prompts work out of the box locally
+  while production overrides via environment variables.
+</Aside>
+
+---
+
+## 2. Connection Management
+
+Use different connection strategies for development vs production. In dev, use
+`kind: key` with environment variables. In production, use `kind: reference`
+with a pre-configured SDK client that supports managed identity.
+
+### Development — API Key
+
+```yaml title="chat.prompty"
+model:
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+```
+
+### Production — Reference Connection
+
+```yaml title="chat.prompty"
+model:
+  connection:
+    kind: reference
+    name: prod-client
+```
+
+Register the client at application startup:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os
+    import prompty
+    from openai import AzureOpenAI
+    from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+    client = AzureOpenAI(
+        azure_endpoint=os.environ["AZURE_ENDPOINT"],
+        azure_ad_token_provider=get_bearer_token_provider(
+            DefaultAzureCredential(),
+            "https://cognitiveservices.azure.com/.default",
+        ),
+    )
+    prompty.register_connection("prod-client", client=client)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { AzureOpenAI } from "openai";
+    import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+    import { registerConnection } from "@prompty/core";
+
+    const credential = new DefaultAzureCredential();
+    const client = new AzureOpenAI({
+      endpoint: process.env.AZURE_ENDPOINT!,
+      azureADTokenProvider: getBearerTokenProvider(
+        credential, "https://cognitiveservices.azure.com/.default"
+      ),
+    });
+    registerConnection("prod-client", client);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Azure.Identity;
+    using Prompty.Core;
+
+    var client = new AzureOpenAI(
+        new Uri(Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!),
+        new DefaultAzureCredential()
+    );
+    ConnectionRegistry.Register("prod-client", client);
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+  The same `.prompty` file works in both environments — only the connection
+  `kind` changes. Keep one version in source control and configure the
+  connection per deployment.
+</Aside>
+
+---
+
+## 3. Enable Tracing
+
+### Development — Console Tracer
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer
+    from prompty.tracing.tracer import console_tracer
+
+    Tracer.add("console", console_tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, consoleTracer } from "@prompty/core";
+
+    Tracer.add("console", consoleTracer);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    Tracer.Add("console", ConsoleTracer.Factory);
+    ```
+  </TabItem>
+</Tabs>
+
+### Production — OpenTelemetry
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer
+    from prompty.tracing.otel import otel_tracer
+
+    # Sends spans to your OTel collector (Jaeger, Azure Monitor, etc.)
+    Tracer.add("otel", otel_tracer())
+    ```
+
+    Install the dependency:
+    ```bash
+    pip install prompty[otel]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer } from "@prompty/core";
+    import { otelTracer } from "@prompty/core/tracing/otel";
+
+    Tracer.add("otel", otelTracer());
+    ```
+
+    Install the dependency:
+    ```bash
+    npm install @opentelemetry/api
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    OTelTracer.Register();
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Tracing is zero-overhead until you register a backend. Register once at
+  startup — every pipeline call is then traced automatically.
+</Aside>
+
+---
+
+## 4. Error Handling
+
+Wrap `invoke()` calls to handle common production failures: rate limits,
+timeouts, and authentication errors.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+    from openai import RateLimitError, APITimeoutError, AuthenticationError
+
+    def safe_invoke(path: str, inputs: dict) -> str | None:
+        try:
+            return prompty.invoke(path, inputs=inputs)
+        except AuthenticationError:
+            print("Check your API key or connection config")
+            return None
+        except RateLimitError:
+            print("Rate limited — retry with backoff")
+            return None
+        except APITimeoutError:
+            print("Request timed out — retry or increase timeout")
+            return None
+        except FileNotFoundError:
+            print(f"Prompt file not found: {path}")
+            return None
+        except ValueError as e:
+            print(f"Invalid prompt configuration: {e}")
+            return None
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+
+    async function safeInvoke(path: string, inputs: Record<string, unknown>) {
+      try {
+        return await invoke(path, inputs);
+      } catch (err: any) {
+        if (err?.status === 429) {
+          console.error("Rate limited — retry with backoff");
+        } else if (err?.status === 401) {
+          console.error("Check your API key or connection config");
+        } else if (err?.code === "ETIMEDOUT") {
+          console.error("Request timed out — retry or increase timeout");
+        } else {
+          console.error("Prompt error:", err.message);
+        }
+        return null;
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    async Task<string?> SafeInvokeAsync(string path, Dictionary<string, object?> inputs)
+    {
+        try
+        {
+            var result = await Pipeline.InvokeAsync(path, inputs);
+            return result?.ToString();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            Console.Error.WriteLine("Rate limited — retry with backoff");
+            return null;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Console.Error.WriteLine("Check your API key or connection config");
+            return null;
+        }
+        catch (TaskCanceledException)
+        {
+            Console.Error.WriteLine("Request timed out");
+            return null;
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 5. Testing Strategy
+
+### Unit Tests — Mock the LLM
+
+Test loading, rendering, and parsing without making API calls:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, prepare
+
+    def test_prompt_loads():
+        agent = load("prompts/chat.prompty")
+        assert agent.name == "production-chat"
+        assert agent.model.id == "gpt-4o"
+
+    def test_messages_prepared():
+        messages = prepare("prompts/chat.prompty", inputs={"question": "Hello"})
+        assert messages[0].role == "system"
+        assert "Hello" in messages[-1].text
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, prepare } from "@prompty/core";
+
+    test("prompt loads correctly", async () => {
+      const agent = await load("prompts/chat.prompty");
+      expect(agent.name).toBe("production-chat");
+      expect(agent.model.id).toBe("gpt-4o");
+    });
+
+    test("messages are prepared", async () => {
+      const messages = await prepare("prompts/chat.prompty", { question: "Hello" });
+      expect(messages[0].role).toBe("system");
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Xunit;
+
+    public class PromptTests
+    {
+        [Fact]
+        public async Task PromptLoadsCorrectly()
+        {
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+            Assert.Equal("production-chat", agent.Name);
+        }
+
+        [Fact]
+        public async Task MessagesPrepared()
+        {
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+            var msgs = await Pipeline.PrepareAsync(agent, new() { ["question"] = "Hello" });
+            Assert.Equal("system", msgs[0].Role);
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Integration Tests — Gated by Environment
+
+Only run when API keys are available:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os, pytest
+    from prompty import invoke
+
+    skip_no_key = pytest.mark.skipif(
+        not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
+    )
+
+    @skip_no_key
+    def test_live_chat():
+        result = invoke("prompts/chat.prompty", inputs={"question": "Say hi"})
+        assert isinstance(result, str) and len(result) > 0
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+
+    const hasKey = !!process.env.OPENAI_API_KEY;
+
+    describe.skipIf(!hasKey)("Integration", () => {
+      it("returns a live response", async () => {
+        const result = await invoke("prompts/chat.prompty", { question: "Say hi" });
+        expect(typeof result).toBe("string");
+      });
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Xunit;
+
+    public class IntegrationTests
+    {
+        [SkippableFact]
+        public async Task LiveChatCompletion()
+        {
+            Skip.IfNot(!string.IsNullOrEmpty(
+                Environment.GetEnvironmentVariable("OPENAI_API_KEY")), "No API key");
+            var result = await Pipeline.InvokeAsync("Prompts/chat.prompty",
+                new() { ["question"] = "Say hi" });
+            Assert.NotNull(result);
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Use `addopts = "-m 'not integration'"` in `pyproject.toml` to skip
+  integration tests by default. Run them explicitly with `pytest -m integration`.
+</Aside>
+
+---
+
+## 6. Versioning Prompts
+
+Treat `.prompty` files as first-class source artifacts:
+
+- **Store in git** alongside your application code
+- **Use meaningful commit messages** — "Tighten system prompt to reduce hallucination"
+  is better than "update prompt"
+- **Review prompt changes in PRs** — template wording affects behavior as much as code
+- **Tag releases** that include prompt changes so you can roll back
+
+```bash
+git add prompts/chat.prompty
+git commit -m "feat(prompts): add citation requirement to system prompt
+
+Instructs the model to always cite sources when answering
+factual questions. Reduces hallucination rate in eval suite."
+```
+
+<Aside type="note">
+  Because `.prompty` files are plain text with YAML frontmatter, standard
+  `git diff` shows exactly what changed — model config, template wording,
+  and input schemas are all visible in the diff.
+</Aside>
+
+---
+
+## 7. Performance
+
+### Streaming for Long Responses
+
+Stream tokens to the client as they arrive instead of waiting for the full response:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, run, process
+
+    agent = load("chat.prompty")
+    agent.model.options.additionalProperties["stream"] = True
+
+    stream = run(agent, inputs={"question": "Write a summary"}, raw=True)
+    for chunk in process(agent, stream):
+        print(chunk, end="", flush=True)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, run, process as processResponse } from "@prompty/core";
+
+    const agent = await load("chat.prompty");
+    agent.model.options.additionalProperties.stream = true;
+
+    const stream = await run(agent, { question: "Write a summary" }, { raw: true });
+    for await (const chunk of processResponse(agent, stream)) {
+      process.stdout.write(chunk);
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+    var messages = await Pipeline.PrepareAsync(agent, new() { ["question"] = "Write a summary" });
+    var raw = await Pipeline.RunAsync(agent, messages, raw: true);
+    if (raw is PromptyStream stream)
+    {
+        await foreach (var chunk in stream)
+            Console.Write(chunk);
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Caching Strategies
+
+- **Cache prepared messages** — if the same inputs are used repeatedly, cache the
+  output of `prepare()` and call `run()` directly
+- **Cache LLM responses** — for deterministic prompts (`temperature: 0`), cache the
+  full response keyed by the rendered messages
+- **Use `seed`** in model options for reproducible outputs when caching
+
+```yaml title="Deterministic config for caching"
+model:
+  options:
+    temperature: 0
+    seed: 42
+```
+
+---
+
+## Next steps
+
+<CardGrid>
+  <LinkCard
+    title="Connections"
+    description="Deep dive into all connection types and the registry pattern."
+    href="/core-concepts/connections/"
+  />
+  <LinkCard
+    title="Tracing & Observability"
+    description="Full tracing architecture and OpenTelemetry integration."
+    href="/core-concepts/tracing/"
+  />
+  <LinkCard
+    title="Testing Prompts"
+    description="Comprehensive guide to unit tests, mocking, and integration tests."
+    href="/how-to/testing-prompts/"
+  />
+  <LinkCard
+    title="Streaming Responses"
+    description="Stream LLM output with PromptyStream and full tracing support."
+    href="/how-to/streaming/"
+  />
+</CardGrid>

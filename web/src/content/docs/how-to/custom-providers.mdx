@@ -1,0 +1,318 @@
+---
+title: Custom Providers
+description: >
+  Build a custom executor and processor to connect Prompty to any LLM
+  provider — complete worked example with registration.
+sidebar:
+  order: 16
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## When You Need a Custom Provider
+
+The built-in providers cover OpenAI, Azure OpenAI, and Anthropic. Build your own
+when you need to hit a different API — a self-hosted model, a custom gateway, or
+a provider with a proprietary SDK.
+
+---
+
+## Architecture Overview
+
+The pipeline looks up two components by the `model.provider` value in the
+`.prompty` file:
+
+| Component     | Responsibility                                      | Keyed by             |
+| ------------- | --------------------------------------------------- | -------------------- |
+| **Executor**  | Sends messages to the LLM and returns the raw response | `model.provider`     |
+| **Processor** | Extracts the final result from the raw response     | `model.provider`     |
+
+```
+prepare() → messages → Executor.execute() → raw → Processor.process() → result
+```
+
+---
+
+## Implement the Executor
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    # my_provider/executor.py
+    from __future__ import annotations
+    from typing import Any
+    from prompty.model import Prompty
+    from prompty.core.types import Message
+
+    class MyExecutor:
+        """Executor for the 'my-custom' provider."""
+
+        def execute(self, agent: Prompty, messages: list[Message]) -> Any:
+            import httpx
+
+            conn = agent.model.connection
+            payload = {
+                "model": agent.model.id,
+                "messages": [{"role": m.role, "content": m.text} for m in messages],
+            }
+            resp = httpx.post(
+                f"{conn.endpoint}/v1/completions",
+                json=payload,
+                headers={"Authorization": f"Bearer {conn.apiKey}"},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+        async def execute_async(self, agent: Prompty, messages: list[Message]) -> Any:
+            import httpx
+
+            conn = agent.model.connection
+            payload = {
+                "model": agent.model.id,
+                "messages": [{"role": m.role, "content": m.text} for m in messages],
+            }
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{conn.endpoint}/v1/completions",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {conn.apiKey}"},
+                )
+                resp.raise_for_status()
+                return resp.json()
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    // my-provider/executor.ts
+    import type { Executor } from "@prompty/core";
+    import type { Prompty, Message } from "@prompty/core";
+
+    export const myExecutor: Executor = {
+      async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+        const conn = agent.model.connection;
+        const resp = await fetch(`${conn.endpoint}/v1/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${conn.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: agent.model.id,
+            messages: messages.map((m) => ({ role: m.role, content: m.text })),
+          }),
+        });
+        return resp.json();
+      },
+      formatToolMessages() { return []; },
+    };
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    // MyProvider/MyExecutor.cs
+    using System.Net.Http.Json;
+    using Prompty.Core;
+
+    public class MyExecutor : IExecutor
+    {
+        private static readonly HttpClient _http = new();
+
+        public async Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+        {
+            var conn = agent.Model.Connection;
+            var payload = new
+            {
+                model = agent.Model.Id,
+                messages = messages.Select(m => new { role = m.Role, content = m.Text }),
+            };
+
+            _http.DefaultRequestHeaders.Authorization =
+                new("Bearer", conn.ApiKey);
+
+            var resp = await _http.PostAsJsonAsync($"{conn.Endpoint}/v1/completions", payload);
+            resp.EnsureSuccessStatusCode();
+            return (await resp.Content.ReadAsStringAsync())!;
+        }
+
+        public List<Message> FormatToolMessages(
+            object raw, List<ToolCall> tc, List<string> tr, string? text) => [];
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Implement the Processor
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    # my_provider/processor.py
+    from __future__ import annotations
+    from typing import Any
+    from prompty.model import Prompty
+
+    class MyProcessor:
+        """Extracts text content from the custom provider response."""
+
+        def process(self, agent: Prompty, response: Any) -> Any:
+            return response["choices"][0]["message"]["content"]
+
+        async def process_async(self, agent: Prompty, response: Any) -> Any:
+            return self.process(agent, response)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    // my-provider/processor.ts
+    import type { Processor, Prompty } from "@prompty/core";
+
+    export const myProcessor: Processor = {
+      async process(_agent: Prompty, response: unknown): Promise<unknown> {
+        const r = response as any;
+        return r.choices[0].message.content;
+      },
+    };
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    // MyProvider/MyProcessor.cs
+    using System.Text.Json;
+    using Prompty.Core;
+
+    public class MyProcessor : IProcessor
+    {
+        public Task<object> ProcessAsync(Prompty agent, object response)
+        {
+            var doc = JsonDocument.Parse((string)response);
+            var content = doc.RootElement
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
+            return Task.FromResult<object>(content!);
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Register Your Provider
+
+<Tabs>
+  <TabItem label="Python">
+    Register via entry points in **`pyproject.toml`**:
+
+    ```toml
+    [project.entry-points."prompty.executors"]
+    my-custom = "my_provider.executor:MyExecutor"
+
+    [project.entry-points."prompty.processors"]
+    my-custom = "my_provider.processor:MyProcessor"
+    ```
+
+    Reinstall after changing entry points:
+
+    ```bash
+    uv pip install -e .
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    Call the registry functions at startup:
+
+    ```typescript
+    import { registerExecutor, registerProcessor } from "@prompty/core";
+    import { myExecutor } from "./my-provider/executor.js";
+    import { myProcessor } from "./my-provider/processor.js";
+
+    registerExecutor("my-custom", myExecutor);
+    registerProcessor("my-custom", myProcessor);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    Register in your application startup:
+
+    ```csharp
+    using Prompty.Core;
+
+    InvokerRegistry.RegisterExecutor("my-custom", new MyExecutor());
+    InvokerRegistry.RegisterProcessor("my-custom", new MyProcessor());
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Use It
+
+### 1. Write the `.prompty` File
+
+Set `provider: my-custom` in the model block:
+
+```yaml title="custom-llm.prompty"
+---
+name: custom-llm-chat
+model:
+  id: my-model-name
+  provider: my-custom
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:MY_LLM_ENDPOINT}
+    apiKey: ${env:MY_LLM_API_KEY}
+  options:
+    temperature: 0.7
+inputSchema:
+  properties:
+    - name: question
+      kind: string
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}
+```
+
+### 2. Run It
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import invoke
+
+    result = invoke("custom-llm.prompty", inputs={"question": "Hello!"})
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+
+    const result = await invoke("custom-llm.prompty", { question: "Hello!" });
+    console.log(result);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var agent = await PromptyLoader.LoadAsync("custom-llm.prompty");
+    var inputs = new Dictionary<string, object?> { ["question"] = "Hello!" };
+    var result = await Pipeline.InvokeAsync(agent, inputs);
+    Console.WriteLine(result);
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  The pipeline discovers your executor and processor by matching `provider: my-custom`
+  to the key you registered. No other configuration is needed.
+</Aside>

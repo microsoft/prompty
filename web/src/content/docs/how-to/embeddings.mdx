@@ -7,7 +7,10 @@ sidebar:
   order: 8
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import pythonEmbeddings from '../../../../docs-examples/python/examples/embeddings.py?raw';
+import tsEmbeddings from '../../../../docs-examples/typescript/examples/embeddings.ts?raw';
+import csEmbeddings from '../../../../docs-examples/csharp/Examples/Embeddings.cs?raw';
 
 ## What You'll Build
 
@@ -294,6 +297,22 @@ Set the model in `model.id` in your `.prompty` file. For Azure, use your
 deployment name as the `model.id`.
 
 ---
+
+## Complete Tested Example
+
+A full, tested example you can copy and run:
+
+<Tabs>
+  <TabItem label="Python">
+    <Code code={pythonEmbeddings} lang="python" title="embeddings.py" />
+  </TabItem>
+  <TabItem label="TypeScript">
+    <Code code={tsEmbeddings} lang="typescript" title="embeddings.ts" />
+  </TabItem>
+  <TabItem label="C#">
+    <Code code={csEmbeddings} lang="csharp" title="Embeddings.cs" />
+  </TabItem>
+</Tabs>
 
 ## Further Reading
 

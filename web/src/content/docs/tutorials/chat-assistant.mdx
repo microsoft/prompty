@@ -1,0 +1,439 @@
+---
+title: "Tutorial: Build a Chat Assistant"
+description: >
+  Build a working chat assistant from scratch — write a .prompty file,
+  run it from Python, TypeScript, or C#, and add conversation history.
+sidebar:
+  order: 1
+  badge:
+    text: New
+    variant: tip
+---
+
+import { Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+## What you'll build
+
+A chat assistant that:
+1. **Answers questions** using OpenAI (gpt-4o-mini)
+2. **Maintains conversation history** across multiple turns
+3. Has a **configurable system prompt** you can tweak without changing code
+
+By the end (~15 min) you'll understand the `.prompty` file format, the
+load → prepare → run pipeline, and how thread inputs work.
+
+---
+
+## Step 1: Install Prompty
+
+<Tabs>
+  <TabItem label="Python">
+    ```bash
+    pip install prompty[jinja2,openai]
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```bash
+    npm install @prompty/core @prompty/openai
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```bash
+    dotnet add package Prompty.Core --prerelease
+    dotnet add package Prompty.OpenAI --prerelease
+    ```
+  </TabItem>
+</Tabs>
+
+Create a **`.env`** file in your project root with your OpenAI key:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+<Aside type="tip">
+  Prompty loads `.env` automatically — your key never appears in prompt files.
+  Make sure `.env` is in your `.gitignore`.
+</Aside>
+
+---
+
+## Step 2: Create your `.prompty` file
+
+Create a file called **`assistant.prompty`**:
+
+```yaml
+---
+name: chat-assistant
+description: A friendly chat assistant
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputs:
+  properties:
+    - name: question
+      kind: string
+      default: What can you help me with?
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a friendly, helpful assistant. Keep answers concise — two or three
+sentences at most — unless the user asks for more detail.
+
+user:
+{{question}}
+```
+
+Let's break down each section:
+
+| Section | What it does |
+|---|---|
+| `name` / `description` | Identity — shows up in traces and tooling |
+| `model` | Which LLM to call, how to authenticate, and generation options |
+| `model.connection` | `${env:OPENAI_API_KEY}` is resolved at load time from your `.env` |
+| `inputs` | Declares the variables your template expects (with defaults) |
+| `template` | Use Jinja2 for rendering and the built-in Prompty parser for role markers |
+| **Body** (below `---`) | The actual prompt — `system:` and `user:` are role markers |
+
+---
+
+## Step 3: Run it
+
+The quickest way — one function call that handles everything:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    result = prompty.invoke(
+        "assistant.prompty",
+        inputs={"question": "What is Prompty?"},
+    )
+    print(result)
+    # → "Prompty is a markdown file format for LLM prompts..."
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai";
+
+    const result = await invoke("assistant.prompty", {
+      question: "What is Prompty?",
+    });
+    console.log(result);
+    // → "Prompty is a markdown file format for LLM prompts..."
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "assistant.prompty",
+        new() { ["question"] = "What is Prompty?" }
+    );
+    Console.WriteLine(result);
+    // → "Prompty is a markdown file format for LLM prompts..."
+    ```
+  </TabItem>
+</Tabs>
+
+`invoke()` handles the full pipeline: **load** the file → **render** the
+template → **parse** role markers → **call the LLM** → **process** the response.
+
+---
+
+## Step 4: Understand the pipeline
+
+For more control, break the pipeline into individual steps:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    # 1. Load — parse the .prompty file into a typed PromptAgent
+    agent = prompty.load("assistant.prompty")
+
+    # 2. Prepare — render the template + parse role markers → messages
+    messages = prompty.prepare(agent, inputs={"question": "Explain async/await"})
+    print(messages)
+    # [
+    #   Message(role="system", content="You are a friendly, helpful assistant..."),
+    #   Message(role="user",   content="Explain async/await"),
+    # ]
+
+    # 3. Run — call the LLM + process the response → clean string
+    result = prompty.run(agent, messages)
+    print(result)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, prepare, run } from "@prompty/core";
+    import "@prompty/openai";
+
+    // 1. Load — parse the .prompty file into a typed PromptAgent
+    const agent = await load("assistant.prompty");
+
+    // 2. Prepare — render the template + parse role markers → messages
+    const messages = await prepare(agent, { question: "Explain async/await" });
+    console.log(messages);
+
+    // 3. Run — call the LLM + process the response → clean string
+    const result = await run(agent, messages);
+    console.log(result);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // 1. Load — parse the .prompty file into a PromptAgent
+    var agent = PromptyLoader.Load("assistant.prompty");
+
+    // 2. Prepare — render the template + parse role markers → messages
+    var messages = await Pipeline.PrepareAsync(
+        agent, new() { ["question"] = "Explain async/await" }
+    );
+
+    // 3. Run — call the LLM + process the response → clean string
+    var result = await Pipeline.RunAsync(agent, messages);
+    Console.WriteLine(result);
+    ```
+  </TabItem>
+</Tabs>
+
+This is useful when you need to inspect or modify the messages before sending
+them to the LLM — for example, injecting extra context from a database.
+
+---
+
+## Step 5: Add conversation history
+
+Right now each call is stateless. To build a real chat assistant you need
+**multi-turn conversation**. Prompty handles this with `kind: thread` inputs.
+
+Update **`assistant.prompty`** to add a `conversation` input:
+
+```yaml {4-6,14-15}
+---
+name: chat-assistant
+description: A friendly chat assistant with conversation history
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+  options:
+    temperature: 0.7
+    maxOutputTokens: 1024
+inputs:
+  properties:
+    - name: question
+      kind: string
+      default: What can you help me with?
+    - name: conversation
+      kind: thread
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a friendly, helpful assistant. Keep answers concise — two or three
+sentences at most — unless the user asks for more detail.
+
+{{conversation}}
+user:
+{{question}}
+```
+
+The key changes: a new `conversation` input with `kind: thread`, and
+`{{conversation}}` placed in the body where previous messages should appear.
+
+Now accumulate messages across turns:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    history = []
+
+    while True:
+        question = input("You: ")
+        if question.lower() in ("quit", "exit"):
+            break
+
+        result = prompty.invoke(
+            "assistant.prompty",
+            inputs={"question": question, "conversation": history},
+        )
+        print(f"Assistant: {result}\n")
+
+        # Append this turn to history for the next call
+        history.append({"role": "user", "content": question})
+        history.append({"role": "assistant", "content": result})
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai";
+    import * as readline from "readline";
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const history: { role: string; content: string }[] = [];
+
+    function ask(prompt: string): Promise<string> {
+      return new Promise((resolve) => rl.question(prompt, resolve));
+    }
+
+    while (true) {
+      const question = await ask("You: ");
+      if (question === "quit" || question === "exit") break;
+
+      const result = await invoke("assistant.prompty", {
+        question,
+        conversation: history,
+      });
+      console.log(`Assistant: ${result}\n`);
+
+      history.push({ role: "user", content: question });
+      history.push({ role: "assistant", content: String(result) });
+    }
+
+    rl.close();
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var history = new List<Dictionary<string, string>>();
+
+    while (true)
+    {
+        Console.Write("You: ");
+        var question = Console.ReadLine();
+        if (question is "quit" or "exit") break;
+
+        var result = await Pipeline.InvokeAsync("assistant.prompty", new()
+        {
+            ["question"] = question!,
+            ["conversation"] = history,
+        });
+        Console.WriteLine($"Assistant: {result}\n");
+
+        history.Add(new() { ["role"] = "user", ["content"] = question! });
+        history.Add(new() { ["role"] = "assistant", ["content"] = result!.ToString()! });
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+Each call now includes the full conversation history. The pipeline injects
+the `conversation` thread messages between the system prompt and the new
+user message, so the LLM sees the entire context.
+
+---
+
+## Step 6: Add tracing
+
+Want to see what Prompty sends to the LLM? Register the **console tracer**
+at the top of your script:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer
+    from prompty.tracing.tracer import console_tracer
+
+    Tracer.add("console", console_tracer)
+
+    # Now every invoke() call prints trace details to stdout
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, consoleTracer } from "@prompty/core";
+
+    Tracer.add("console", consoleTracer);
+
+    // Now every invoke() call prints trace details to stdout
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    Tracer.Add("console", ConsoleTracer.Factory);
+
+    // Now every InvokeAsync() call prints trace details to stdout
+    ```
+  </TabItem>
+</Tabs>
+
+The console tracer logs each pipeline stage — you'll see the rendered prompt,
+the parsed messages, the raw LLM response, and the processed result. It's
+invaluable for debugging unexpected outputs.
+
+<Aside type="note">
+  Tracing is zero-overhead until you register a backend. In production, swap
+  the console tracer for the
+  [OpenTelemetry backend](/core-concepts/tracing/) to send traces to your
+  observability platform.
+</Aside>
+
+---
+
+## What you learned
+
+✅ The `.prompty` **file format** — YAML frontmatter + markdown body  
+✅ The **invoke()** one-liner and the **load → prepare → run** pipeline  
+✅ **Thread inputs** (`kind: thread`) for multi-turn conversation  
+✅ **Console tracing** for debugging  
+
+---
+
+## Next steps
+
+<CardGrid>
+  <LinkCard
+    title="Pipeline Architecture"
+    description="Deep dive into the four pipeline stages and how to customize them."
+    href="/core-concepts/pipeline/"
+  />
+  <LinkCard
+    title="Agent with Tool Calling"
+    description="Give your assistant the ability to call functions and use tools."
+    href="/how-to/agent-tool-calling/"
+  />
+  <LinkCard
+    title="Tracing & Observability"
+    description="Set up OpenTelemetry tracing for production monitoring."
+    href="/core-concepts/tracing/"
+  />
+  <LinkCard
+    title="Use with Azure OpenAI"
+    description="Switch your assistant to Azure OpenAI with a connection change."
+    href="/how-to/azure-openai/"
+  />
+</CardGrid>

@@ -33,17 +33,28 @@ class TestChatBasicExample:
 
     def test_invoke_with_mock(self) -> None:
         """invoke() calls OpenAI and returns the response content."""
+        from openai.types.chat import ChatCompletion, ChatCompletionMessage
+        from openai.types.chat.chat_completion import Choice
+
         agent = load(str(PROMPTS_DIR / "chat-basic.prompty"))
 
-        mock_response = mock.MagicMock()
-        choice = mock.MagicMock()
-        choice.finish_reason = "stop"
-        choice.message.role = "assistant"
-        choice.message.content = "Prompty is a prompt asset format."
-        choice.message.tool_calls = None
-        mock_response.choices = [choice]
-        mock_response.model = "gpt-4o-mini"
-        mock_response.usage = mock.MagicMock(prompt_tokens=10, completion_tokens=20, total_tokens=30)
+        mock_response = ChatCompletion(
+            id="chatcmpl-test",
+            model="gpt-4o-mini",
+            object="chat.completion",
+            created=0,
+            choices=[
+                Choice(
+                    index=0,
+                    finish_reason="stop",
+                    message=ChatCompletionMessage(
+                        role="assistant",
+                        content="Prompty is a prompt asset format.",
+                    ),
+                )
+            ],
+            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},  # type: ignore[arg-type]
+        )
 
         with mock.patch("openai.OpenAI") as MockClient:
             MockClient.return_value.chat.completions.create.return_value = mock_response

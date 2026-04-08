@@ -1,0 +1,334 @@
+---
+title: Testing Your Prompts
+description: >
+  Unit test .prompty files without calling the LLM — mock executors,
+  snapshot test messages, and run integration tests gated by environment.
+sidebar:
+  order: 15
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Why Test Prompts?
+
+Every `.prompty` file is a structured asset — model config, input schemas, template
+logic. You can validate **all of that** without burning a single API token. Save
+integration tests for final verification and keep your CI fast and free.
+
+---
+
+## Unit Test: Validate Loading
+
+Load a `.prompty` file and assert its properties. No LLM call is made.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load
+
+    def test_load_prompt():
+        agent = load("prompts/chat.prompty")
+
+        assert agent.name == "openai-chat"
+        assert agent.model.id == "gpt-4o-mini"
+        assert agent.model.provider == "openai"
+        assert agent.model.apiType == "chat"
+        # Verify inputs were declared
+        props = agent.inputs.properties
+        assert any(p.name == "question" for p in props)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { describe, it, expect } from "vitest";
+    import { load } from "@prompty/core";
+    import path from "path";
+
+    describe("load", () => {
+      it("parses prompt metadata", async () => {
+        const agent = await load(path.resolve("prompts/chat.prompty"));
+
+        expect(agent.name).toBe("openai-chat");
+        expect(agent.model.id).toBe("gpt-4o-mini");
+        expect(agent.model.provider).toBe("openai");
+      });
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Xunit;
+
+    public class LoaderTests
+    {
+        [Fact]
+        public async Task LoadsPromptMetadata()
+        {
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+
+            Assert.Equal("openai-chat", agent.Name);
+            Assert.Equal("gpt-4o-mini", agent.Model.Id);
+            Assert.Equal("openai", agent.Model.Provider);
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Unit Test: Validate Prepared Messages
+
+Use `prepare()` to render the template and parse it into messages — **without
+calling the LLM**. Assert on message count, roles, and interpolated content.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import prepare
+
+    def test_prepare_messages():
+        messages = prepare(
+            "prompts/chat.prompty",
+            inputs={"question": "What is Prompty?"},
+        )
+
+        assert len(messages) >= 2
+        assert messages[0].role == "system"
+        assert messages[-1].role == "user"
+        assert "What is Prompty?" in messages[-1].text
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { prepare } from "@prompty/core";
+
+    it("renders and parses messages", async () => {
+      const messages = await prepare("prompts/chat.prompty", {
+        question: "What is Prompty?",
+      });
+
+      expect(messages.length).toBeGreaterThanOrEqual(2);
+      expect(messages[0].role).toBe("system");
+      expect(messages.at(-1)!.text).toContain("What is Prompty?");
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Xunit;
+
+    public class PrepareTests
+    {
+        [Fact]
+        public async Task PreparesMessages()
+        {
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+            var inputs = new Dictionary<string, object?> { ["question"] = "What is Prompty?" };
+
+            var messages = await Pipeline.PrepareAsync(agent, inputs);
+
+            Assert.True(messages.Count >= 2);
+            Assert.Equal("system", messages[0].Role);
+            Assert.Contains("What is Prompty?", messages[^1].Text);
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Mock the LLM for Full Pipeline Tests
+
+Test the entire pipeline (load → render → parse → execute → process) by
+mocking the LLM SDK client so no real API call is made.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from unittest.mock import patch, MagicMock
+    from prompty import invoke
+
+    def test_invoke_with_mock():
+        # Build a fake OpenAI chat response
+        mock_choice = MagicMock()
+        mock_choice.message.content = "Mocked answer"
+        mock_choice.message.tool_calls = None
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+
+        with patch("openai.OpenAI") as MockClient:
+            client = MockClient.return_value
+            client.chat.completions.create.return_value = mock_response
+
+            result = invoke("prompts/chat.prompty", inputs={"question": "test"})
+            assert result == "Mocked answer"
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { describe, it, expect, beforeEach } from "vitest";
+    import {
+      registerExecutor,
+      registerProcessor,
+      clearCache,
+      invoke,
+    } from "@prompty/core";
+
+    // Register mock executor + processor before each test
+    beforeEach(() => {
+      clearCache();
+      registerExecutor("openai", {
+        async execute(_agent, _messages) {
+          return { choices: [{ message: { content: "Mocked answer" } }] };
+        },
+        formatToolMessages: () => [],
+      });
+      registerProcessor("openai", {
+        async process(_agent, response: any) {
+          return response.choices[0].message.content;
+        },
+      });
+    });
+
+    it("invokes with mocked provider", async () => {
+      const result = await invoke("prompts/chat.prompty", {
+        question: "test",
+      });
+      expect(result).toBe("Mocked answer");
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Xunit;
+
+    public class MockedPipelineTests : IDisposable
+    {
+        public MockedPipelineTests()
+        {
+            InvokerRegistry.Clear();
+            InvokerRegistry.RegisterRenderer("jinja2", new Jinja2Renderer());
+            InvokerRegistry.RegisterParser("prompty", new PromptyChatParser());
+            InvokerRegistry.RegisterExecutor("openai", new FakeExecutor());
+            InvokerRegistry.RegisterProcessor("openai", new FakeProcessor());
+        }
+
+        public void Dispose() => InvokerRegistry.Clear();
+
+        [Fact]
+        public async Task InvokesWithMockedProvider()
+        {
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+            var inputs = new Dictionary<string, object?> { ["question"] = "test" };
+
+            var result = await Pipeline.InvokeAsync(agent, inputs);
+            Assert.Equal("Mocked answer", result);
+        }
+
+        // Minimal fakes
+        private class FakeExecutor : IExecutor
+        {
+            public Task<object> ExecuteAsync(Prompty a, List<Message> m)
+                => Task.FromResult<object>("raw-response");
+            public List<Message> FormatToolMessages(
+                object r, List<ToolCall> tc, List<string> tr, string? t) => [];
+        }
+
+        private class FakeProcessor : IProcessor
+        {
+            public Task<object> ProcessAsync(Prompty a, object r)
+                => Task.FromResult<object>("Mocked answer");
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Integration Tests with Real APIs
+
+Gate integration tests behind environment variables so they only run when
+API keys are available. This keeps `CI` fast by default and lets you opt-in
+to live tests locally.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import os
+    import pytest
+    from prompty import invoke
+
+    skip_openai = pytest.mark.skipif(
+        not os.environ.get("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set",
+    )
+
+    @skip_openai
+    def test_live_chat():
+        result = invoke(
+            "prompts/chat.prompty",
+            inputs={"question": "Say hello in one word."},
+        )
+        assert isinstance(result, str) and len(result) > 0
+    ```
+
+    <Aside type="tip">
+      Use `addopts = "-m 'not integration'"` in `pyproject.toml` to skip
+      integration tests by default: `pytest -m integration` opts in.
+    </Aside>
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { describe, it, expect } from "vitest";
+    import { invoke } from "@prompty/core";
+
+    const hasKey = !!process.env.OPENAI_API_KEY;
+
+    describe.skipIf(!hasKey)("Integration: OpenAI", () => {
+      it("returns a live chat response", async () => {
+        const result = await invoke("prompts/chat.prompty", {
+          question: "Say hello in one word.",
+        });
+        expect(typeof result).toBe("string");
+        expect((result as string).length).toBeGreaterThan(0);
+      });
+    });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Xunit;
+
+    public class IntegrationTests
+    {
+        private static bool HasKey =>
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        [SkippableFact]
+        public async Task LiveChatCompletion()
+        {
+            Skip.IfNot(HasKey, "OPENAI_API_KEY not set");
+
+            // Register real OpenAI provider
+            Prompty.OpenAI.OpenAIProvider.Register();
+
+            var agent = await PromptyLoader.LoadAsync("Prompts/chat.prompty");
+            var inputs = new Dictionary<string, object?> { ["question"] = "Say hi" };
+
+            var result = await Pipeline.InvokeAsync(agent, inputs);
+            Assert.NotNull(result);
+        }
+    }
+    ```
+
+    <Aside type="note">
+      [`Xunit.SkippableFact`](https://www.nuget.org/packages/Xunit.SkippableFact) provides `Skip.IfNot()`.
+    </Aside>
+  </TabItem>
+</Tabs>

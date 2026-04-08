@@ -1,0 +1,544 @@
+---
+title: Cookbook
+description: >
+  Ready-to-use .prompty examples — copy, customize, and run.
+sidebar:
+  order: 25
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Copy-paste these `.prompty` files into your project, update the `model` block for
+your provider, and run. Each example is self-contained.
+
+---
+
+## 1. Basic Chat
+
+The simplest chat completion — a system message and a user question.
+
+```yaml
+---
+name: basic-chat
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+inputs:
+  - name: question
+    kind: string
+    default: What is the capital of France?
+---
+system:
+You are a helpful assistant.
+
+user:
+{{question}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, prepare, run
+    agent = load("basic-chat.prompty")
+    result = run(agent, prepare(agent, {"question": "What is quantum computing?"}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, run } from "@prompty/core";
+    const result = await run("basic-chat.prompty", { question: "What is quantum computing?" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var agent = PromptyLoader.Load("basic-chat.prompty");
+    var result = await Pipeline.RunAsync(agent, new { question = "What is quantum computing?" });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 2. Few-Shot Prompting
+
+Embed examples directly in the instructions to guide the model's output format.
+
+```yaml
+---
+name: few-shot
+model:
+  id: gpt-4o-mini
+  apiType: chat
+inputs:
+  - name: text
+    kind: string
+    default: The movie was absolutely fantastic and I loved every minute.
+---
+system:
+Classify the sentiment of the text as positive, negative, or neutral.
+
+Examples:
+- "I love this product!" → positive
+- "Terrible experience, never again." → negative
+- "It was okay, nothing special." → neutral
+
+user:
+{{text}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = run(agent, prepare(agent, {"text": "The food was cold and bland."}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await run("few-shot.prompty", { text: "The food was cold and bland." });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, new { text = "The food was cold and bland." });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 3. Summarization
+
+Configurable summary length via an input parameter.
+
+```yaml
+---
+name: summarize
+model:
+  id: gpt-4o-mini
+  apiType: chat
+  options:
+    maxOutputTokens: 300
+inputs:
+  - name: text
+    kind: string
+  - name: length
+    kind: string
+    default: short
+---
+system:
+Summarize the following text. Length: {{length}} (short = 1-2 sentences, medium = paragraph, long = detailed).
+
+user:
+{{text}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = run(agent, prepare(agent, {"text": article, "length": "medium"}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await run("summarize.prompty", { text: article, length: "medium" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, new { text = article, length = "medium" });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 4. Code Review
+
+Analyze code and provide structured feedback.
+
+```yaml
+---
+name: code-review
+model:
+  id: gpt-4o
+  apiType: chat
+  options:
+    temperature: 0.3
+inputs:
+  - name: code
+    kind: string
+  - name: language
+    kind: string
+    default: python
+---
+system:
+You are a senior software engineer. Review the {{language}} code below.
+Provide feedback on: bugs, performance, readability, and security.
+Be concise — bullet points only.
+
+user:
+```{{language}}
+{{code}}
+```
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = run(agent, prepare(agent, {"code": my_code, "language": "python"}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await run("code-review.prompty", { code: myCode, language: "python" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, new { code = myCode, language = "python" });
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## 5. Data Extraction (Structured Output)
+
+Uses `outputs` to constrain the LLM to return JSON matching a schema.
+
+```yaml
+---
+name: extract-entities
+model:
+  id: gpt-4o-mini
+  apiType: chat
+inputs:
+  - name: text
+    kind: string
+    default: "John Smith works at Contoso in Seattle as a software engineer."
+outputs:
+  - name: name
+    kind: string
+    description: Person's full name
+    required: true
+  - name: company
+    kind: string
+    description: Company name
+    required: true
+  - name: location
+    kind: string
+    description: City or location
+    required: true
+  - name: role
+    kind: string
+    description: Job title
+    required: true
+---
+system:
+Extract entities from the text. Return structured JSON.
+
+user:
+{{text}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    data = run(agent, prepare(agent, {"text": "Jane Doe is a PM at Microsoft in Redmond."}))
+    # data is a parsed dict: {"name": "Jane Doe", "company": "Microsoft", ...}
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const data = await run("extract-entities.prompty", { text: "Jane Doe is a PM at Microsoft in Redmond." });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var data = await Pipeline.RunAsync(agent, new { text = "Jane Doe is a PM at Microsoft in Redmond." });
+    ```
+  </TabItem>
+</Tabs>
+
+The `outputs` block generates an OpenAI `response_format` constraint — the model must return valid JSON matching the schema.
+
+---
+
+## 6. Multi-Turn Conversation
+
+Use `kind: thread` to inject conversation history between system and user messages.
+
+```yaml
+---
+name: multi-turn
+model:
+  id: gpt-4o-mini
+  apiType: chat
+inputs:
+  - name: question
+    kind: string
+    default: Hello
+  - name: conversation
+    kind: thread
+---
+system:
+You are a helpful assistant. Be concise.
+
+{{conversation}}
+
+user:
+{{question}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    history = [
+        {"role": "user", "content": "What is Python?"},
+        {"role": "assistant", "content": "A programming language."},
+    ]
+    result = run(agent, prepare(agent, {"question": "What about Java?", "conversation": history}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const history = [
+      { role: "user", content: "What is Python?" },
+      { role: "assistant", content: "A programming language." },
+    ];
+    const result = await run("multi-turn.prompty", { question: "What about Java?", conversation: history });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var history = new[] {
+        new Message("user", "What is Python?"),
+        new Message("assistant", "A programming language."),
+    };
+    var result = await Pipeline.RunAsync(agent, new { question = "What about Java?", conversation = history });
+    ```
+  </TabItem>
+</Tabs>
+
+The `kind: thread` input is expanded into message objects at its position in the template — enabling stateless multi-turn conversations.
+
+---
+
+## 7. Embedding Generation
+
+Use `apiType: embedding` to generate vector embeddings instead of chat completions.
+
+```yaml
+---
+name: embed
+model:
+  id: text-embedding-3-small
+  provider: openai
+  apiType: embedding
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_ENDPOINT:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+inputs:
+  - name: text
+    kind: string
+    default: Hello world
+---
+{{text}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    vectors = run(agent, prepare(agent, {"text": "Embed this sentence."}))
+    # vectors is a list of floats
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const vectors = await run("embed.prompty", { text: "Embed this sentence." });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var vectors = await Pipeline.RunAsync(agent, new { text = "Embed this sentence." });
+    ```
+  </TabItem>
+</Tabs>
+
+No role markers needed — the body is the raw text to embed.
+
+---
+
+## 8. Tool-Calling Agent
+
+An agent with `kind: function` tools. The runtime loops until the model produces a final answer.
+
+```yaml
+---
+name: weather-agent
+model:
+  id: gpt-4o-mini
+  apiType: chat
+tools:
+  - name: get_weather
+    kind: function
+    description: Get current weather for a city
+    parameters:
+      - name: city
+        kind: string
+        description: City name
+        required: true
+inputs:
+  - name: question
+    kind: string
+    default: What's the weather in Tokyo?
+---
+system:
+You are a helpful assistant with access to weather tools.
+
+user:
+{{question}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, invoke_agent, tool, bind_tools
+
+    @tool
+    def get_weather(city: str) -> str:
+        return f"72°F and sunny in {city}"
+
+    agent = load("weather-agent.prompty")
+    tools = bind_tools(agent, [get_weather])
+    result = invoke_agent(agent, {"question": "Weather in Tokyo?"}, tools=tools)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    const getWeather = tool((city: string) => `72°F and sunny in ${city}`, {
+      name: "get_weather", description: "Get current weather", parameters: [{ name: "city", kind: "string", required: true }],
+    });
+    const agent = await load("weather-agent.prompty");
+    const result = await invokeAgent(agent, { question: "Weather in Tokyo?" }, { tools: bindTools(agent, [getWeather]) });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    [Tool(Name = "get_weather", Description = "Get current weather")]
+    public string GetWeather(string city) => $"72°F and sunny in {city}";
+    var tools = ToolAttribute.BindTools(agent, new WeatherService());
+    var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+    ```
+  </TabItem>
+</Tabs>
+
+The agent loop calls `get_weather`, appends the result, and re-queries the model for a natural language answer.
+
+---
+
+## 9. Creative Writing
+
+Higher `temperature` and `topP` for more creative, varied output.
+
+```yaml
+---
+name: creative-writer
+model:
+  id: gpt-4o
+  apiType: chat
+  options:
+    temperature: 1.2
+    topP: 0.95
+    maxOutputTokens: 500
+inputs:
+  - name: topic
+    kind: string
+    default: a robot discovering art for the first time
+  - name: style
+    kind: string
+    default: short story
+---
+system:
+You are a creative writer. Write a {{style}} about the given topic.
+Be vivid, imaginative, and original.
+
+user:
+Topic: {{topic}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = run(agent, prepare(agent, {"topic": "time travel paradox", "style": "poem"}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await run("creative-writer.prompty", { topic: "time travel paradox", style: "poem" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, new { topic = "time travel paradox", style = "poem" });
+    ```
+  </TabItem>
+</Tabs>
+
+Tuning `temperature` above 1.0 and `topP` near 1.0 gives the model more freedom for creative tasks.
+
+---
+
+## 10. Translation
+
+Language pair controlled via inputs — one prompt handles any translation direction.
+
+```yaml
+---
+name: translator
+model:
+  id: gpt-4o-mini
+  apiType: chat
+  options:
+    temperature: 0.3
+inputs:
+  - name: text
+    kind: string
+    default: Hello, how are you?
+  - name: sourceLang
+    kind: string
+    default: English
+  - name: targetLang
+    kind: string
+    default: Spanish
+---
+system:
+You are a professional translator. Translate the text from {{sourceLang}} to {{targetLang}}.
+Preserve tone, meaning, and formatting. Output only the translation.
+
+user:
+{{text}}
+```
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = run(agent, prepare(agent, {"text": "Good morning!", "sourceLang": "English", "targetLang": "Japanese"}))
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await run("translator.prompty", { text: "Good morning!", sourceLang: "English", targetLang: "Japanese" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, new { text = "Good morning!", sourceLang = "English", targetLang = "Japanese" });
+    ```
+  </TabItem>
+</Tabs>
+
+Low temperature (0.3) keeps translations faithful. Parameterizing the languages makes this a single reusable prompt for any language pair.

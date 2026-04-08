@@ -1,0 +1,30 @@
+---
+title: Tutorials
+description: Guided, hands-on tutorials to build real projects with Prompty.
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Tutorials walk you through building complete projects step by step.
+Each one takes **10–15 minutes** and assumes no prior Prompty experience —
+just follow along and you'll have a working result at the end.
+
+<CardGrid>
+  <LinkCard
+    title="Build a Chat Assistant"
+    description="Write a .prompty file, run it from code, and add conversation history."
+    href="/tutorials/chat-assistant/"
+  />
+  <LinkCard
+    title="Prompts in Production"
+    description="Environment config, tracing, error handling, testing, and performance for production deployments."
+    href="/tutorials/production/"
+  />
+  <LinkCard
+    title="Build a RAG Pipeline"
+    description="Coming soon — retrieve context from documents and feed it to your prompt."
+    href="#"
+  />
+</CardGrid>
