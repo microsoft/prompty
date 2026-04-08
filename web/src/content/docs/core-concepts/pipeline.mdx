@@ -13,10 +13,10 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 ## Overview
 
 Prompty processes `.prompty` files through a **four-stage pipeline**. Each stage
-is defined by a protocol — concrete implementations are discovered at runtime via
-Python entry points (or TypeScript imports). This design means you can swap any
-stage without touching the others: use a different template engine, a custom
-parser, or your own LLM provider.
+is defined by a protocol/interface — concrete implementations are discovered at
+runtime via a registry. This design means you can swap any stage without touching
+the others: use a different template engine, a custom parser, or your own LLM
+provider.
 
 ```mermaid
 graph LR
@@ -299,48 +299,115 @@ graph LR
 
 ---
 
-## Entry-Point Discovery
+## Invoker Registration
 
-The Python runtime discovers stage implementations using **Python entry points** —
-the same mechanism that powers CLI tools and pytest plugins. Each implementation
-registers itself under a group name in `pyproject.toml`.
+Each runtime discovers stage implementations through a **registry**. The mechanism
+varies by language, but the concept is the same: register implementations by key,
+and the pipeline looks them up at runtime.
+
+### How each runtime registers invokers
+
+<Tabs>
+  <TabItem label="Python">
+    Python uses **entry points** — the same mechanism that powers CLI tools and
+    pytest plugins. Each implementation registers itself under a group name in
+    `pyproject.toml`. The discovery module caches lookups so entry points are
+    resolved once per key.
+
+    ```toml
+    # pyproject.toml
+    [project.entry-points."prompty.renderers"]
+    jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
+    mustache = "prompty.renderers.mustache:MustacheRenderer"
+
+    [project.entry-points."prompty.parsers"]
+    prompty = "prompty.parsers.prompty:PromptyChatParser"
+
+    [project.entry-points."prompty.executors"]
+    openai = "prompty.providers.openai.executor:OpenAIExecutor"
+    foundry = "prompty.providers.foundry.executor:FoundryExecutor"
+    azure = "prompty.providers.foundry.executor:FoundryExecutor"
+    anthropic = "prompty.providers.anthropic.executor:AnthropicExecutor"
+
+    [project.entry-points."prompty.processors"]
+    openai = "prompty.providers.openai.processor:OpenAIProcessor"
+    foundry = "prompty.providers.foundry.processor:FoundryProcessor"
+    azure = "prompty.providers.foundry.processor:FoundryProcessor"
+    anthropic = "prompty.providers.anthropic.processor:AnthropicProcessor"
+    ```
+
+    <Aside type="caution">
+      After changing entry points in `pyproject.toml`, reinstall the package
+      for the new registrations to take effect: `uv pip install -e ".[dev,all]"`
+    </Aside>
+  </TabItem>
+  <TabItem label="TypeScript">
+    TypeScript uses **explicit registration** via function calls. Built-in
+    renderers and parsers auto-register when `@prompty/core` is imported.
+    Provider packages register their executors and processors at import time.
+
+    ```typescript
+    // @prompty/core auto-registers at import:
+    // registerRenderer("jinja2", new NunjucksRenderer())
+    // registerRenderer("mustache", new MustacheRenderer())
+    // registerParser("prompty", new PromptyChatParser())
+
+    // Provider packages register on import:
+    import "@prompty/openai";
+    // → registerExecutor("openai", new OpenAIExecutor())
+    // → registerProcessor("openai", new OpenAIProcessor())
+
+    // Manual registration for custom implementations:
+    import { registerExecutor, registerProcessor } from "@prompty/core";
+    registerExecutor("my-provider", new MyExecutor());
+    registerProcessor("my-provider", new MyProcessor());
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    C# uses a **fluent builder pattern** inspired by ASP.NET's service
+    registration. `PromptyBuilder` auto-registers the built-in renderers
+    and parser. Provider packages add extension methods.
+
+    ```csharp
+    using Prompty.Core;
+    using Prompty.OpenAI;     // AddOpenAI() extension
+    using Prompty.Foundry;    // AddFoundry() extension
+    using Prompty.Anthropic;  // AddAnthropic() extension
+
+    // Register everything with the fluent builder
+    new PromptyBuilder()
+        .AddOpenAI()
+        .AddFoundry()
+        .AddAnthropic();
+
+    // What the builder does under the hood:
+    // PromptyBuilder() registers:
+    //   InvokerRegistry.RegisterRenderer("jinja2", new Jinja2Renderer())
+    //   InvokerRegistry.RegisterRenderer("mustache", new MustacheRenderer())
+    //   InvokerRegistry.RegisterParser("prompty", new PromptyChatParser())
+    //
+    // .AddOpenAI() registers:
+    //   InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor())
+    //   InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor())
+    ```
+
+    You can also register custom implementations directly:
+
+    ```csharp
+    InvokerRegistry.RegisterExecutor("my-provider", new MyExecutor());
+    InvokerRegistry.RegisterProcessor("my-provider", new MyProcessor());
+    ```
+  </TabItem>
+</Tabs>
 
 ### Registration groups
 
 | Group | Resolved from | Example keys |
 |---|---|---|
-| `prompty.renderers` | `agent.template.format.kind` | `jinja2`, `mustache` |
-| `prompty.parsers` | `agent.template.parser.kind` | `prompty` |
-| `prompty.executors` | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
-| `prompty.processors` | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
-
-### Built-in entry points
-
-These are registered in Prompty's own `pyproject.toml`:
-
-```toml
-[project.entry-points."prompty.renderers"]
-jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
-mustache = "prompty.renderers.mustache:MustacheRenderer"
-
-[project.entry-points."prompty.parsers"]
-prompty = "prompty.parsers.prompty:PromptyChatParser"
-
-[project.entry-points."prompty.executors"]
-openai = "prompty.providers.openai.executor:OpenAIExecutor"
-foundry = "prompty.providers.foundry.executor:FoundryExecutor"
-azure = "prompty.providers.foundry.executor:FoundryExecutor"  # backward-compat alias
-anthropic = "prompty.providers.anthropic.executor:AnthropicExecutor"
-
-[project.entry-points."prompty.processors"]
-openai = "prompty.providers.openai.processor:OpenAIProcessor"
-foundry = "prompty.providers.foundry.processor:FoundryProcessor"
-azure = "prompty.providers.foundry.processor:FoundryProcessor"  # backward-compat alias
-anthropic = "prompty.providers.anthropic.processor:AnthropicProcessor"
-```
-
-The discovery module (`core/discovery.py`) caches lookups, so entry points are only
-resolved once per key. Call `clear_cache()` if you need to reset after dynamic registration.
+| Renderers | `agent.template.format.kind` | `jinja2`, `mustache` |
+| Parsers | `agent.template.parser.kind` | `prompty` |
+| Executors | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
+| Processors | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
 
 ---
 
@@ -419,18 +486,54 @@ Each protocol defines `sync` and `async` methods. Here's an example custom execu
   </TabItem>
 </Tabs>
 
-### 2. Register the entry point
+### 2. Register the implementation
 
-In your package's `pyproject.toml`:
+<Tabs>
+  <TabItem label="Python">
+    In your package's `pyproject.toml`:
 
-```toml
-[project.entry-points."prompty.executors"]
-anthropic = "my_package.executor:AnthropicExecutor"
-```
+    ```toml
+    [project.entry-points."prompty.executors"]
+    anthropic = "my_package.executor:AnthropicExecutor"
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    Register at module load time:
+
+    ```typescript
+    import { registerExecutor } from "@prompty/core";
+    import { AnthropicExecutor } from "./executor.js";
+
+    registerExecutor("anthropic", new AnthropicExecutor());
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    Add an extension method on `PromptyBuilder`:
+
+    ```csharp
+    public static class PromptyBuilderExtensions
+    {
+        public static PromptyBuilder AddAnthropic(this PromptyBuilder builder)
+        {
+            InvokerRegistry.RegisterExecutor("anthropic", new AnthropicExecutor());
+            InvokerRegistry.RegisterProcessor("anthropic", new AnthropicProcessor());
+            return builder;
+        }
+    }
+    ```
+
+    Then use it:
+
+    ```csharp
+    new PromptyBuilder()
+        .AddAnthropic();
+    ```
+  </TabItem>
+</Tabs>
 
 ### 3. Use it
 
-After installing the package, any `.prompty` file with `model.provider: "anthropic"` will
+After installing/registering the provider, any `.prompty` file with `model.provider: "anthropic"` will
 automatically route to your executor.
 
 ```yaml
@@ -442,10 +545,34 @@ model:
     apiKey: ${env:ANTHROPIC_API_KEY}
 ```
 
-<Aside type="caution">
-  After changing entry points in `pyproject.toml`, you must reinstall the package
-  for the new registrations to take effect: `uv pip install -e ".[dev,all]"`
-</Aside>
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import invoke
+
+    result = invoke("claude-chat.prompty", inputs={"question": "Hello!"})
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke } from "@prompty/core";
+    import "@my-package/anthropic"; // registers executor + processor
+
+    const result = await invoke("claude-chat.prompty", { inputs: { question: "Hello!" } });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using MyPackage.Anthropic; // provides .AddAnthropic()
+
+    new PromptyBuilder().AddAnthropic();
+
+    var result = await Pipeline.InvokeAsync("claude-chat.prompty",
+        new() { ["question"] = "Hello!" });
+    ```
+  </TabItem>
+</Tabs>
 
 ## Next Steps
 

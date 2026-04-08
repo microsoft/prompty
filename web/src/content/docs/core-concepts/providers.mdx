@@ -86,8 +86,8 @@ model:
 
 ### Notes
 
-- Uses the official `openai` Python package
-- Supports streaming via `PromptyStream` / `AsyncPromptyStream`
+- **SDKs:** Python — `openai` package · TypeScript — `openai` npm package · C# — `OpenAI` NuGet package
+- Supports streaming via `PromptyStream` / `AsyncPromptyStream` (Python), async iterables (TypeScript), and `IAsyncEnumerable` (C#)
 - Structured output is supported via `outputs` → `response_format`
 - [Agent mode](../agent-mode/) is available via `invoke_agent()` — it uses `apiType: chat` with an automatic tool-calling loop
 
@@ -178,8 +178,7 @@ model:
 
 ### Notes
 
-- Uses the `openai` Python package with Azure-specific configuration
-- Requires the `azure-identity` package for Microsoft Entra ID authentication
+- **SDKs:** Python — `openai` + `azure-identity` packages · TypeScript — `openai` + `@azure/identity` npm packages · C# — `OpenAI` + `Azure.Identity` NuGet packages
 - Supports both API key and Microsoft Entra ID (managed identity / `DefaultAzureCredential`)
 - Supports the same features as the OpenAI provider (streaming, structured output,
   agent mode)
@@ -215,7 +214,7 @@ model:
 
 ### Notes
 
-- Uses the `anthropic` Python package
+- **SDKs:** Python — `anthropic` package · TypeScript — `@anthropic-ai/sdk` npm package · C# — `Anthropic` NuGet package
 - The `endpoint` defaults to `https://api.anthropic.com` and can typically be
   omitted
 - Tool calling is supported through Anthropic's native tool use API
@@ -240,11 +239,13 @@ model:
 ## Custom Providers
 
 The provider system is **extensible**. You can create your own provider by
-implementing the executor and processor protocols, then registering them as
-Python entry points.
+implementing the executor and processor interfaces, then registering them
+with the runtime.
 
 ### 1. Implement the Protocols
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from prompty.core.protocols import ExecutorProtocol, ProcessorProtocol
 from prompty.core.types import Message
@@ -266,9 +267,53 @@ class MyProcessor:
     async def process_async(self, agent, response, **kwargs):
         ...
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { ExecutorProtocol, ProcessorProtocol, Message } from "@prompty/core";
 
-### 2. Register Entry Points
+export class MyExecutor implements ExecutorProtocol {
+  async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+    // Call your LLM API here
+  }
+}
 
+export class MyProcessor implements ProcessorProtocol {
+  async process(agent: Prompty, response: unknown): Promise<string> {
+    // Extract content from the API response
+  }
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+public class MyExecutor : IExecutor
+{
+    public async Task<object> ExecuteAsync(
+        Prompty agent, IList<Message> messages)
+    {
+        // Call your LLM API here
+    }
+}
+
+public class MyProcessor : IProcessor
+{
+    public async Task<string> ProcessAsync(
+        Prompty agent, object response)
+    {
+        // Extract content from the API response
+    }
+}
+```
+</TabItem>
+</Tabs>
+
+### 2. Register Your Provider
+
+<Tabs>
+<TabItem label="Python">
 In your package's `pyproject.toml`:
 
 ```toml
@@ -278,6 +323,37 @@ myprovider = "my_package.executor:MyExecutor"
 [project.entry-points."prompty.processors"]
 myprovider = "my_package.processor:MyProcessor"
 ```
+
+After installing your package, the runtime discovers your provider
+automatically via the entry point system.
+</TabItem>
+<TabItem label="TypeScript">
+Register the provider at startup:
+
+```typescript
+import { InvokerRegistry } from "@prompty/core";
+import { MyExecutor, MyProcessor } from "./my-provider.js";
+
+InvokerRegistry.registerExecutor("myprovider", new MyExecutor());
+InvokerRegistry.registerProcessor("myprovider", new MyProcessor());
+```
+</TabItem>
+<TabItem label="C#">
+Register via the fluent builder or directly:
+
+```csharp
+using Prompty.Core;
+
+// Fluent builder
+new PromptyBuilder()
+    .AddProvider("myprovider", new MyExecutor(), new MyProcessor());
+
+// Or register directly
+InvokerRegistry.RegisterExecutor("myprovider", new MyExecutor());
+InvokerRegistry.RegisterProcessor("myprovider", new MyProcessor());
+```
+</TabItem>
+</Tabs>
 
 ### 3. Use in `.prompty` Files
 
@@ -291,9 +367,8 @@ model:
     apiKey: ${env:MY_API_KEY}
 ```
 
-After installing your package, the Prompty runtime discovers your provider
-automatically via the entry point system — no changes to the Prompty codebase
-are needed.
+No changes to the Prompty codebase are needed — the `.prompty` file format is
+the same regardless of which runtime you use.
 
 <Aside type="tip">
   See the [pipeline documentation](/core-concepts/pipeline/) for details on

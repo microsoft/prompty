@@ -13,7 +13,7 @@ index: 2
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-These guidelines cover coding conventions for both the **Python** and **TypeScript** Prompty runtimes.
+These guidelines cover coding conventions for the **Python**, **TypeScript**, and **C#** Prompty runtimes.
 Following them keeps the codebase consistent and makes PRs easier to review.
 
 ## Repository Layout
@@ -23,12 +23,18 @@ runtime/
 ├── python/prompty/       # Python runtime (pip: prompty)
 │   ├── prompty/          # Package source
 │   └── tests/            # Unit + integration tests
-└── typescript/           # TypeScript monorepo
-    └── packages/
-        ├── core/         # @prompty/core
-        ├── openai/       # @prompty/openai
-        ├── foundry/      # @prompty/foundry
-        └── anthropic/    # @prompty/anthropic
+├── typescript/           # TypeScript monorepo
+│   └── packages/
+│       ├── core/         # @prompty/core
+│       ├── openai/       # @prompty/openai
+│       ├── foundry/      # @prompty/foundry
+│       └── anthropic/    # @prompty/anthropic
+└── csharp/               # C# solution
+    ├── Prompty.Core/     # Core runtime
+    ├── Prompty.OpenAI/   # OpenAI provider
+    ├── Prompty.Foundry/  # Foundry provider
+    ├── Prompty.Anthropic/ # Anthropic provider
+    └── Prompty.*.Tests/  # Test projects
 ```
 
 ---
@@ -226,6 +232,91 @@ export default class MyParser { ... }
 
 ---
 
+## C# Runtime
+
+### Environment Setup
+
+- **.NET 9** — use the latest SDK features and C# 13 syntax.
+- Solution file at `runtime/csharp/prompty.sln`.
+
+```bash
+cd runtime/csharp
+dotnet build
+dotnet test
+```
+
+### Project Structure
+
+| Project | Description |
+|---|---|
+| `Prompty.Core` | Core runtime — loader, pipeline, protocols, types |
+| `Prompty.OpenAI` | OpenAI provider (executor + processor) |
+| `Prompty.Foundry` | Azure AI Foundry provider |
+| `Prompty.Anthropic` | Anthropic Claude provider |
+| `Prompty.Core.Tests` | Core unit tests (xUnit) |
+| `Prompty.Providers.Tests` | Provider integration tests (xUnit) |
+
+### Building & Formatting
+
+```bash
+# Build the solution
+dotnet build
+
+# Run all tests
+dotnet test
+
+# Check formatting (CI uses --verify-no-changes)
+dotnet format --verify-no-changes
+
+# Auto-format
+dotnet format
+```
+
+<Aside type="caution">
+  CI runs `dotnet format --verify-no-changes` which **fails** on unformatted files.
+  Always run `dotnet format` before pushing.
+</Aside>
+
+### Code Style
+
+- **Fluent builder pattern** for provider registration: `new PromptyBuilder().AddOpenAI()`.
+- **Extension methods** for provider registration — each provider package exposes `AddXxx()` extensions on `PromptyBuilder`.
+- **Nullable reference types** enabled — annotate all public APIs.
+- **`IAsyncEnumerable<T>`** for streaming responses.
+- **File-scoped namespaces** — one namespace per file, no extra nesting.
+
+```csharp
+// ✅ Fluent builder registration
+var builder = new PromptyBuilder()
+    .AddOpenAI()
+    .AddFoundry();
+
+// ✅ Extension method pattern
+public static class OpenAIExtensions
+{
+    public static PromptyBuilder AddOpenAI(this PromptyBuilder builder)
+    {
+        builder.RegisterExecutor("openai", new OpenAIExecutor());
+        builder.RegisterProcessor("openai", new OpenAIProcessor());
+        return builder;
+    }
+}
+```
+
+### Testing
+
+- **Framework:** xUnit + `FluentAssertions`
+- **Run tests:** `dotnet test`
+- Tests use xUnit's `[Fact]` and `[Theory]` attributes.
+- Mock external services with `NSubstitute` — never make real API calls in unit tests.
+- Integration tests use the `[Trait("Category", "Integration")]` attribute and are excluded by default.
+
+### NuGet Packages
+
+NuGet packages are published via CI. Version numbers follow the solution-level `Directory.Build.props`.
+
+---
+
 ## General Guidelines
 
 ### Commit Messages
@@ -240,8 +331,10 @@ export default class MyParser { ... }
 - Update documentation if your change affects user-facing behavior.
 - Add tests for new functionality.
 
-### Adding a New Provider (Python)
+### Adding a New Provider
 
+<Tabs>
+<TabItem label="Python">
 1. Create `prompty/providers/<name>/` with `__init__.py`, `executor.py`, `processor.py`.
 2. Implement the `ExecutorProtocol` and `ProcessorProtocol` interfaces.
 3. Register entry points in `pyproject.toml`:
@@ -256,6 +349,40 @@ my_provider = "prompty.providers.my_provider.processor:MyProcessor"
 
 4. Add optional dependency: `my_provider = ["my-provider-sdk"]`
 5. Reinstall: `uv pip install -e ".[dev,all]"`
+</TabItem>
+<TabItem label="TypeScript">
+1. Create `packages/<provider>/` following the existing package structure.
+2. Add `src/index.ts` with named exports for your executor and processor.
+3. Add a `tsup.config.ts` and `vitest.config.ts` matching the existing packages.
+4. Register the package in the root `package.json` workspaces array.
+
+```typescript
+// packages/my-provider/src/index.ts
+export { MyExecutor } from "./executor.js";
+export { MyProcessor } from "./processor.js";
+```
+</TabItem>
+<TabItem label="C#">
+1. Create a new project `Prompty.MyProvider` in the solution.
+2. Implement `IExecutor` and `IProcessor` interfaces.
+3. Add a `PromptyBuilder` extension method for registration:
+
+```csharp
+public static class MyProviderExtensions
+{
+    public static PromptyBuilder AddMyProvider(this PromptyBuilder builder)
+    {
+        builder.RegisterExecutor("myprovider", new MyExecutor());
+        builder.RegisterProcessor("myprovider", new MyProcessor());
+        return builder;
+    }
+}
+```
+
+4. Add a NuGet package spec in the project file.
+5. Add a test project `Prompty.MyProvider.Tests`.
+</TabItem>
+</Tabs>
 
 ---
 

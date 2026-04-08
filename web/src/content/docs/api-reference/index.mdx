@@ -150,9 +150,24 @@ Composite: call the LLM executor then process the response.
 
 Extract clean content from a raw LLM response.
 
-```python
-result = prompty.process(agent, response)
-```
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = prompty.process(agent, response)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { process } from "@prompty/core";
+    const result = await process(agent, response);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.ProcessAsync(agent, response);
+    ```
+  </TabItem>
+</Tabs>
 
 ### `invoke(path_or_agent, inputs) → result`
 
@@ -180,28 +195,67 @@ Top-level orchestrator: load → prepare → run.
 ### `validate_inputs(agent, inputs)`
 
 Check that all required inputs (those without defaults) are
-provided. Raises `ValueError` if any are missing.
+provided. Raises an error if any are missing.
 
-```python
-prompty.validate_inputs(agent, {"name": "Jane"})
-# Raises ValueError if 'name' isn't in the schema or required fields are missing
-```
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    prompty.validate_inputs(agent, {"name": "Jane"})
+    # Raises ValueError if required fields are missing
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { validateInputs } from "@prompty/core";
+    validateInputs(agent, { name: "Jane" });
+    // Throws Error if required fields are missing
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    Pipeline.ValidateInputs(agent, new() { ["name"] = "Jane" });
+    // Throws ArgumentException if required fields are missing
+    ```
+  </TabItem>
+</Tabs>
 
 ## Async Variants
 
-Every pipeline function has an async counterpart (Python):
+<Tabs>
+  <TabItem label="Python">
+    Every pipeline function has an `_async` counterpart:
 
-| Sync | Async |
-|------|-------|
-| `load()` | `load_async()` |
-| `render()` | `render_async()` |
-| `parse()` | `parse_async()` |
-| `prepare()` | `prepare_async()` |
-| `run()` | `run_async()` |
-| `invoke()` | `invoke_async()` |
-| `process()` | `process_async()` |
+    | Sync | Async |
+    |------|-------|
+    | `load()` | `load_async()` |
+    | `render()` | `render_async()` |
+    | `parse()` | `parse_async()` |
+    | `prepare()` | `prepare_async()` |
+    | `run()` | `run_async()` |
+    | `invoke()` | `invoke_async()` |
+    | `process()` | `process_async()` |
+    | `invoke_agent()` | `invoke_agent_async()` |
+  </TabItem>
+  <TabItem label="TypeScript">
+    All functions are async by default — they return `Promise<T>`.
+    Use `await` on every call:
 
-TypeScript functions are async by default (return `Promise`).
+    ```typescript
+    const agent = load("chat.prompty");      // sync (file I/O only)
+    const messages = await prepare(agent, inputs);  // async
+    const result = await run(agent, messages);       // async
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    All pipeline methods are async by convention — suffixed with `Async`:
+
+    ```csharp
+    var agent = PromptyLoader.Load("chat.prompty");           // sync
+    var messages = await Pipeline.PrepareAsync(agent, inputs); // async
+    var result = await Pipeline.RunAsync(agent, messages);     // async
+    ```
+  </TabItem>
+</Tabs>
 
 ## Agent Mode
 
@@ -259,44 +313,80 @@ Run a prompt with an automatic tool-calling loop.
 
 **Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `prompt` | `str \| Prompty` | Path or loaded agent |
-| `inputs` | `dict` | Template inputs |
-| `tools` | `dict[str, Callable]` | Tool function implementations |
-| `max_iterations` | `int` | Loop limit (default 10) |
-| `raw` | `bool` | Skip processing |
+| Parameter | Description |
+|-----------|-------------|
+| `prompt` | Path to `.prompty` file or loaded `Prompty` object |
+| `inputs` | Template inputs dictionary |
+| `tools` | Tool function implementations (name → callable) |
+| `max_iterations` | Loop limit (default 10) |
+| `raw` | Skip processing, return raw response |
 
 **Error handling:**
 
 - Bad JSON in tool args → error sent to model for retry
 - Tool exception → error string sent to model
 - Missing tool → error message, no crash
-- Max iterations exceeded → `ValueError`
-
-### `invoke_agent_async(...)`
-
-Async variant. Async tool functions are properly awaited.
+- Max iterations exceeded → error raised
 
 ## Connection Registry
 
-### `register_connection(name, client=...)`
+Register pre-configured SDK clients by name so `.prompty` files
+can reference them via `connection.kind: reference`.
 
-Register a pre-configured SDK client by name:
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from openai import AzureOpenAI
+    from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+    import prompty
 
-```python
-from openai import AzureOpenAI
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+    client = AzureOpenAI(
+        azure_endpoint=os.environ["AZURE_ENDPOINT"],
+        azure_ad_token_provider=get_bearer_token_provider(
+            DefaultAzureCredential(),
+            "https://cognitiveservices.azure.com/.default",
+        ),
+    )
+    prompty.register_connection("my-foundry", client=client)
 
-client = AzureOpenAI(
-    azure_endpoint=os.environ["AZURE_ENDPOINT"],
-    azure_ad_token_provider=get_bearer_token_provider(
-        DefaultAzureCredential(),
-        "https://cognitiveservices.azure.com/.default",
-    ),
-)
-prompty.register_connection("my-foundry", client=client)
-```
+    # Lookup and clear
+    client = prompty.get_connection("my-foundry")
+    prompty.clear_connections()  # useful in tests
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { registerConnection, getConnection, clearConnections } from "@prompty/core";
+    import AzureOpenAI from "openai";
+
+    const client = new AzureOpenAI({
+      endpoint: process.env.AZURE_ENDPOINT,
+      apiKey: process.env.AZURE_API_KEY,
+    });
+    registerConnection("my-foundry", client);
+
+    // Lookup and clear
+    const conn = getConnection("my-foundry");
+    clearConnections(); // useful in tests
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using OpenAI;
+
+    var client = new AzureOpenAIClient(
+        new Uri(Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!),
+        new ApiKeyCredential(Environment.GetEnvironmentVariable("AZURE_API_KEY")!));
+
+    ConnectionRegistry.Register("my-foundry", client);
+
+    // Lookup and clear
+    var conn = ConnectionRegistry.Get("my-foundry");
+    ConnectionRegistry.Clear(); // useful in tests
+    ```
+  </TabItem>
+</Tabs>
 
 Then in your `.prompty` file:
 
@@ -308,14 +398,6 @@ model:
     kind: reference
     name: my-foundry
 ```
-
-### `get_connection(name) → client`
-
-Look up a registered connection. Raises `ValueError` if not found.
-
-### `clear_connections()`
-
-Remove all registered connections. Useful in tests.
 
 ## Streaming
 
@@ -448,22 +530,62 @@ Cast the final result in one step:
 
 ## Tracing
 
-```python
-from prompty import Tracer, PromptyTracer, trace
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import Tracer, PromptyTracer, trace
 
-Tracer.add("json", PromptyTracer("./traces").tracer)
+    # JSON file tracer
+    Tracer.add("json", PromptyTracer("./traces").tracer)
 
-@trace
-def my_function():
-    ...
-```
+    # OpenTelemetry
+    from prompty.tracing.otel import otel_tracer
+    Tracer.add("otel", otel_tracer())
 
-OpenTelemetry:
+    # Decorate your own functions
+    @trace
+    def my_function():
+        ...
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, trace, consoleTracer } from "@prompty/core";
 
-```python
-from prompty.tracing.otel import otel_tracer
-Tracer.add("otel", otel_tracer())
-```
+    // Console tracer
+    Tracer.add("console", consoleTracer);
+
+    // OpenTelemetry
+    import { otelTracer } from "@prompty/core";
+    Tracer.add("otel", otelTracer());
+
+    // Decorate your own functions
+    const myFunction = trace(async () => {
+      // ...
+    }, "myFunction");
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Prompty.Core.Tracing;
+
+    // Console tracer
+    Tracer.Add("console", name => new ConsoleTracer(name));
+
+    // OpenTelemetry
+    Tracer.Add("otel", name => new OTelTracer(name));
+
+    // Trace your own methods
+    var result = await Trace.TraceAsync("my-operation", async emitter =>
+    {
+        emitter.Add("input", data);
+        var output = await DoWork();
+        return output;
+    });
+    ```
+  </TabItem>
+</Tabs>
 
 ## Key Types
 

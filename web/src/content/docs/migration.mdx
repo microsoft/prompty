@@ -7,12 +7,12 @@ sidebar:
   order: 1
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Overview
 
 Prompty v2 is a significant rewrite. Your `.prompty` files will
-mostly work as-is (v2 auto-migrates v1 syntax), but your Python
+mostly work as-is (v2 auto-migrates v1 syntax), but your runtime
 code will need updates.
 
 ## Breaking Changes
@@ -36,8 +36,16 @@ uv pip install prompty[jinja2,openai]
 
 ### Extras Are Required
 
-In v1, all providers were bundled. In v2, install the extras
+In v1, all providers were bundled. In v2, install only the extras
 you need:
+
+| Runtime | Install Command |
+|---------|----------------|
+| **Python** | `uv pip install prompty[jinja2,openai]` |
+| **TypeScript** | `npm install @prompty/core @prompty/openai` |
+| **C#** | `dotnet add package Prompty.OpenAI` |
+
+**Python extras:**
 
 | Extra | What it includes |
 |-------|-----------------|
@@ -52,17 +60,15 @@ you need:
 
 v1 used a special `apiType` in the `.prompty` file and smuggled tool functions via `metadata["tool_functions"]`:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 # v1 — tool functions smuggled via metadata
 agent.metadata["tool_functions"] = {
     "get_weather": get_weather
 }
 result = prompty.invoke(agent, messages)
-```
 
-v2 uses explicit `invoke_agent()`:
-
-```python
 # v2 — tools passed explicitly
 result = prompty.invoke_agent(
     "agent.prompty",
@@ -70,6 +76,36 @@ result = prompty.invoke_agent(
     tools={"get_weather": get_weather},
 )
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+// v1 — no native agent mode in TypeScript v1
+
+// v2 — tools passed explicitly
+import { invokeAgent } from "@prompty/core";
+
+const result = await invokeAgent("agent.prompty", {
+  inputs: { question: "What's the weather?" },
+  tools: { get_weather: getWeather },
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+// v1 — no native agent mode in C# v1
+
+// v2 — tools passed explicitly
+var tools = new Dictionary<string, Delegate>
+{
+    ["get_weather"] = GetWeather
+};
+var result = await Pipeline.InvokeAgentAsync(
+    "agent.prompty",
+    new() { ["question"] = "What's the weather?" },
+    tools: tools);
+```
+</TabItem>
+</Tabs>
 
 ### Azure Credentials
 
@@ -77,6 +113,8 @@ v1 silently fell back to `DefaultAzureCredential` when no
 API key was provided. v2 requires explicit configuration via
 the connection registry:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 # v2 — explicit credential setup
 from openai import AzureOpenAI
@@ -94,6 +132,40 @@ client = AzureOpenAI(
 )
 prompty.register_connection("azure", client=client)
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+// v2 — explicit credential setup
+import { registerConnection } from "@prompty/core";
+import { AzureOpenAI } from "openai";
+import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+
+const credential = new DefaultAzureCredential();
+const client = new AzureOpenAI({
+  azureADTokenProvider: getBearerTokenProvider(
+    credential,
+    "https://cognitiveservices.azure.com/.default"
+  ),
+  endpoint: process.env.AZURE_ENDPOINT!,
+});
+registerConnection("azure", client);
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+// v2 — explicit credential setup
+using Azure.Identity;
+using Prompty.Core;
+
+var credential = new DefaultAzureCredential();
+ConnectionRegistry.Register("azure", new AzureOpenAIConnectionOptions
+{
+    Endpoint = Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!,
+    Credential = credential,
+});
+```
+</TabItem>
+</Tabs>
 
 Then reference it in the `.prompty` file:
 
@@ -188,10 +260,11 @@ template: jinja2
 
 ## New Features in v2
 
-- **Connection registry** — `register_connection()`
-- **Agent loop** — `invoke_agent()` with error recovery
-- **Streaming hardening** — tool calls, refusals, empty chunks
-- **Structured output** — `outputs` → `response_format`
-- **Thread safety** — renderer nonces use `threading.local()`
-- **Entry-point discovery** — third-party implementations
-- **TypeScript runtime** — `@prompty/core`, `@prompty/openai`, `@prompty/foundry`, `@prompty/anthropic`
+- **Connection registry** — register pre-configured clients for reuse across prompts
+- **Agent loop** — `invoke_agent()` with automatic tool-call execution and error recovery
+- **Streaming hardening** — proper handling of tool calls, refusals, and empty chunks
+- **Structured output** — `outputs` → `response_format` for type-safe JSON responses
+- **Thread safety** — renderer nonces use thread-local storage
+- **Entry-point discovery** (Python) — third-party providers register as plugins
+- **Multi-runtime support** — Python (`prompty`), TypeScript (`@prompty/core`), and C# (`Prompty.Core`) all share the same `.prompty` file format
+- **C# runtime** — `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` NuGet packages

@@ -17,14 +17,18 @@ Errors are grouped by category — jump to the section that matches your symptom
 
 | Error | Cause | Fix |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'openai'` | Missing optional dependency | `pip install prompty[openai]` |
-| `ModuleNotFoundError: No module named 'jinja2'` | Missing renderer dependency | `pip install prompty[jinja2]` |
-| `ModuleNotFoundError: No module named 'chevron'` | Missing Mustache renderer | `pip install prompty[mustache]` |
-| `ModuleNotFoundError: No module named 'azure.identity'` | Missing Azure dependency | `pip install prompty[azure]` |
-| `Cannot find module '@prompty/openai'` | Missing npm package | `npm install @prompty/openai` |
+| `ModuleNotFoundError: No module named 'openai'` | Missing optional dependency (Python) | `pip install prompty[openai]` |
+| `ModuleNotFoundError: No module named 'jinja2'` | Missing renderer dependency (Python) | `pip install prompty[jinja2]` |
+| `ModuleNotFoundError: No module named 'chevron'` | Missing Mustache renderer (Python) | `pip install prompty[mustache]` |
+| `ModuleNotFoundError: No module named 'azure.identity'` | Missing Azure dependency (Python) | `pip install prompty[azure]` |
+| `Cannot find module '@prompty/openai'` | Missing npm package (TypeScript) | `npm install @prompty/openai` |
+| `Could not load file or assembly 'Prompty.OpenAI'` | Missing NuGet package (C#) | `dotnet add package Prompty.OpenAI` |
+| `Could not load file or assembly 'Prompty.Foundry'` | Missing NuGet package (C#) | `dotnet add package Prompty.Foundry` |
 
 <Aside type="tip">
-Install everything at once with `pip install prompty[all]` to avoid missing-dependency errors entirely.
+**Python:** Install everything at once with `pip install prompty[all]`.\
+**TypeScript:** `npm install @prompty/core @prompty/openai`.\
+**C#:** `dotnet add package Prompty.OpenAI` (includes core as a transitive dependency).
 </Aside>
 
 ---
@@ -41,10 +45,25 @@ FileNotFoundError: Prompty file not found: path/to/chat.prompty
 
 **Fix:** Verify the file exists and use an absolute path or check your working directory:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from pathlib import Path
 print(Path("chat.prompty").resolve())  # see what Prompty will look for
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { resolve } from "node:path";
+console.log(resolve("chat.prompty"));  // see what Prompty will look for
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+Console.WriteLine(Path.GetFullPath("chat.prompty"));  // see what Prompty will look for
+```
+</TabItem>
+</Tabs>
 
 ### Missing Environment Variable
 
@@ -201,6 +220,8 @@ ValueError: No tool handler registered for kind 'function' tool 'get_weather'
 
 **Fix:** Register the handler using the `@tool` decorator or pass it via metadata:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from prompty import tool
 
@@ -208,6 +229,27 @@ from prompty import tool
 def get_weather(city: str) -> str:
     return f"72°F in {city}"
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { tool } from "@prompty/core";
+
+const getWeather = tool(
+  (city: string) => `72°F in ${city}`,
+  "get_weather",
+  { description: "Get the weather", parameters: { city: { kind: "string" } } }
+);
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+[Tool("get_weather", Description = "Get the weather")]
+static string GetWeather(string city) => $"72°F in {city}";
+```
+</TabItem>
+</Tabs>
 
 ### Tool Schema Mismatch
 
@@ -229,6 +271,8 @@ schema with `required: true`, and `additionalProperties` is automatically set to
 
 **Cause:** Streaming responses return an iterator — you must consume it:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from prompty import load, prepare, run
 
@@ -238,6 +282,33 @@ result = run(agent, messages)
 for chunk in result:
     print(chunk, end="", flush=True)
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { load, prepare, run } from "@prompty/core";
+
+const agent = load("chat.prompty");
+const messages = await prepare(agent, { question: "Hello" });
+const result = await run(agent, messages);
+for await (const chunk of result) {
+  process.stdout.write(chunk);
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("chat.prompty");
+var messages = await Pipeline.PrepareAsync(agent, new() { ["question"] = "Hello" });
+var result = Pipeline.RunStreamingAsync(agent, messages);
+await foreach (var chunk in result)
+{
+    Console.Write(chunk);
+}
+```
+</TabItem>
+</Tabs>
 
 ### Model Refused Response
 
@@ -283,17 +354,39 @@ and within the model's constraints.
 
 See exactly what Prompty sends to the LLM and what comes back:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from prompty import Tracer, console_tracer, invoke
 
 Tracer.add("console", console_tracer)
 result = invoke("chat.prompty", inputs={"question": "Hello"})
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { Tracer, consoleTracer, invoke } from "@prompty/core";
+
+Tracer.add("console", consoleTracer);
+const result = await invoke("chat.prompty", { question: "Hello" });
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+Tracer.Add("console", name => new ConsoleTracer(name));
+var result = await Pipeline.InvokeAsync("chat.prompty", new() { ["question"] = "Hello" });
+```
+</TabItem>
+</Tabs>
 
 ### Use `prepare()` to Inspect Messages
 
 Debug your template rendering and parsing without making an API call:
 
+<Tabs>
+<TabItem label="Python">
 ```python
 from prompty import load, prepare
 
@@ -302,6 +395,31 @@ messages = prepare(agent, inputs={"name": "Jane"})
 for msg in messages:
     print(f"[{msg.role}] {msg.content}")
 ```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { load, prepare } from "@prompty/core";
+
+const agent = load("chat.prompty");
+const messages = await prepare(agent, { name: "Jane" });
+for (const msg of messages) {
+  console.log(`[${msg.role}] ${msg.content}`);
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("chat.prompty");
+var messages = await Pipeline.PrepareAsync(agent, new() { ["name"] = "Jane" });
+foreach (var msg in messages)
+{
+    Console.WriteLine($"[{msg.Role}] {msg.Content}");
+}
+```
+</TabItem>
+</Tabs>
 
 ### Verify With a Minimal Example
 
@@ -341,5 +459,8 @@ subdirectory, the `.env` in your project root may not be found automatically.
 ## Still Stuck?
 
 - Search [existing issues](https://github.com/microsoft/prompty/issues) on GitHub
-- Open a new issue with: the error message, your `.prompty` file (redact keys), and `pip list | grep prompty` output
+- Open a new issue with: the error message, your `.prompty` file (redact keys), and your runtime version info:
+  - **Python:** `pip list | grep prompty`
+  - **TypeScript:** `npm ls @prompty/core`
+  - **C#:** `dotnet list package | findstr Prompty`
 - Check the [API Reference](/api-reference/) for correct property names and types
