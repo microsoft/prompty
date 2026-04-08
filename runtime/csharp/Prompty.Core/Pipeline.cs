@@ -209,14 +209,21 @@ public static class Pipeline
     /// <summary>
     /// Agent mode: runs the LLM in a loop, executing tool calls via the
     /// two-layer dispatch system until the model returns a final response
-    /// or maxIterations is reached.
+    /// or maxIterations is reached. Supports §13 extensions: cancellation,
+    /// steering, context window trimming, guardrails, events, and parallel tool calls.
     /// </summary>
     public static async Task<object> InvokeAgentAsync(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
         Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
-        bool raw = false)
+        bool raw = false,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
     {
         return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.InvokeAgentAsync", async (emit) =>
         {
@@ -226,6 +233,68 @@ public static class Pipeline
 
             for (var i = 0; i < maxIterations; i++)
             {
+                // §13.2 Cancellation check at loop start
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                catch (OperationCanceledException)
+                {
+                    AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
+                        new Dictionary<string, object?> { ["iteration"] = i, ["reason"] = "cancellation_requested" });
+                    throw;
+                }
+
+                // §13.5 Drain steering messages
+                if (steering is not null)
+                {
+                    var steered = steering.Drain();
+                    if (steered.Count > 0)
+                    {
+                        messages.AddRange(steered);
+                        AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
+                            new Dictionary<string, object?> { ["source"] = "steering", ["count"] = steered.Count });
+                    }
+                }
+
+                // §13.3 Context window trimming
+                if (contextBudget is not null)
+                {
+                    var (droppedCount, _) = ContextWindow.TrimToContextWindow(messages, contextBudget.Value);
+                    if (droppedCount > 0)
+                    {
+                        AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
+                            new Dictionary<string, object?> { ["source"] = "context_trim", ["dropped"] = droppedCount });
+                    }
+                }
+
+                // §13.4 Input guardrail
+                if (guardrails is not null)
+                {
+                    var inputCheck = guardrails.CheckInput(messages);
+                    if (!inputCheck.Allowed)
+                    {
+                        AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                            new Dictionary<string, object?> { ["guardrail"] = "input", ["reason"] = inputCheck.Reason });
+                        throw new GuardrailError(inputCheck.Reason ?? "Input guardrail denied");
+                    }
+                }
+
+                // §13.2 Cancellation check before LLM call
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                catch (OperationCanceledException)
+                {
+                    AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
+                        new Dictionary<string, object?> { ["iteration"] = i, ["reason"] = "cancelled_before_llm" });
+                    throw;
+                }
+
+                AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
+                    new Dictionary<string, object?> { ["iteration"] = i, ["phase"] = "executing" });
+
                 var response = await ExecuteAsync(agent, messages);
 
                 // If response is a stream, consume it fully before processing.
@@ -240,16 +309,91 @@ public static class Pipeline
 
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
-                    // Dispatch all tool calls
+                    // Dispatch tool calls (parallel or sequential)
                     var toolResults = new List<string>();
-                    foreach (var call in toolResult.ToolCalls)
+
+                    if (parallelToolCalls && toolResult.ToolCalls.Count > 1)
                     {
-                        var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                        // Parallel dispatch via Task.WhenAll
+                        var tasks = new List<Task<(int Index, string Result)>>();
+                        for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
                         {
-                            toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                            return await ToolDispatch.DispatchAsync(agent, call, tools);
-                        });
-                        toolResults.Add(toolResponse);
+                            var call = toolResult.ToolCalls[ti];
+                            var capturedIndex = ti;
+
+                            // §13.4 Tool guardrail
+                            if (guardrails is not null)
+                            {
+                                var args = ToolDispatch.ParseArguments(call.Arguments);
+                                var toolCheck = guardrails.CheckTool(call.Name, args);
+                                if (!toolCheck.Allowed)
+                                {
+                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                                        new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
+                                    throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                }
+                            }
+
+                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
+                                new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+
+                            tasks.Add(Task.Run(async () =>
+                            {
+                                var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                {
+                                    toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+                                    return await ToolDispatch.DispatchAsync(agent, call, tools);
+                                });
+                                return (capturedIndex, toolResponse);
+                            }));
+                        }
+
+                        var completed = await Task.WhenAll(tasks);
+                        // Maintain order
+                        var ordered = new string[toolResult.ToolCalls.Count];
+                        foreach (var (index, res) in completed)
+                        {
+                            ordered[index] = res;
+                        }
+                        toolResults.AddRange(ordered);
+
+                        for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
+                        {
+                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
+                                new Dictionary<string, object?> { ["tool"] = toolResult.ToolCalls[ti].Name, ["result"] = toolResults[ti] });
+                        }
+                    }
+                    else
+                    {
+                        // Sequential dispatch
+                        foreach (var call in toolResult.ToolCalls)
+                        {
+                            // §13.4 Tool guardrail
+                            if (guardrails is not null)
+                            {
+                                var args = ToolDispatch.ParseArguments(call.Arguments);
+                                var toolCheck = guardrails.CheckTool(call.Name, args);
+                                if (!toolCheck.Allowed)
+                                {
+                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                                        new Dictionary<string, object?> { ["guardrail"] = "tool", ["tool"] = call.Name, ["reason"] = toolCheck.Reason });
+                                    throw new GuardrailError(toolCheck.Reason ?? $"Tool guardrail denied: {call.Name}");
+                                }
+                            }
+
+                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
+                                new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+
+                            var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                            {
+                                toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+                                return await ToolDispatch.DispatchAsync(agent, call, tools);
+                            });
+                            toolResults.Add(toolResponse);
+
+                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
+                                new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = toolResponse });
+                        }
                     }
 
                     // Delegate message formatting to the executor (provider-specific)
@@ -257,8 +401,31 @@ public static class Pipeline
                         response, toolResult.ToolCalls, toolResults, toolResult.Content);
                     messages.AddRange(toolMessages);
 
+                    AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
+                        new Dictionary<string, object?> { ["source"] = "tool_results", ["count"] = toolMessages.Count });
+
                     continue;
                 }
+
+                // §13.4 Output guardrail
+                if (guardrails is not null && result is string resultText)
+                {
+                    var outputMsg = new Message
+                    {
+                        Role = "assistant",
+                        Parts = [new TextPart { Value = resultText }]
+                    };
+                    var outputCheck = guardrails.CheckOutput(outputMsg);
+                    if (!outputCheck.Allowed)
+                    {
+                        AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                            new Dictionary<string, object?> { ["guardrail"] = "output", ["reason"] = outputCheck.Reason });
+                        throw new GuardrailError(outputCheck.Reason ?? "Output guardrail denied");
+                    }
+                }
+
+                AgentEvents.EmitEvent(onEvent, AgentEventType.Done,
+                    new Dictionary<string, object?> { ["iterations"] = i + 1 });
 
                 return result;
             }
