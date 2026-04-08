@@ -20,18 +20,34 @@ parser, or your own LLM provider.
 
 ```mermaid
 graph LR
-  A[".prompty File"] -->|"rendered\nstring"| B["🔹 Renderer\n(Stage 1)"]
-  B -->|"rendered\nstring"| C["🔹 Parser\n(Stage 2)"]
-  C -->|"list\n[Message]"| D["🔷 Executor\n(Stage 3)"]
-  D -->|"raw\nresponse"| E["🟢 Processor\n(Stage 4)"]
-  E --> F["✅ Result"]
+    A[".prompty file"] --> B["load()"]
+    B --> C["Prompty"]
+    C --> D["render()"]
+    D --> E["Rendered string"]
+    E --> F["parse()"]
+    F --> G["Message[]"]
+    G --> H["execute()"]
+    H --> I["API Response"]
+    I --> J["process()"]
+    J --> K["Final Result"]
+
+    style A fill:#f9f,stroke:#333
+    style K fill:#9f9,stroke:#333
 ```
+
+| Step | Function | What happens |
+|------|----------|--------------|
+| **Load** | `load()` | Parses the `.prompty` file — splits YAML frontmatter from the markdown body, resolves `${env:}` / `${file:}` references, and returns a typed `Prompty` object. |
+| **Render** | `render()` | Fills in template variables (Jinja2 or Mustache) using the provided inputs. Produces a single string with role markers still embedded. |
+| **Parse** | `parse()` | Splits the rendered string on role markers (`system:`, `user:`, `assistant:`) into a structured `list[Message]`. |
+| **Execute** | `execute()` | Sends the messages to the LLM provider (OpenAI, Azure, Anthropic) via the appropriate SDK. Returns the raw API response. |
+| **Process** | `process()` | Extracts clean output from the raw response — a string for chat, vectors for embeddings, a URL for images, or parsed JSON for structured output. |
 
 ---
 
 ## Stage 1: Renderer
 
-The **Renderer** takes a `PromptAgent` and a dictionary of inputs, then renders the
+The **Renderer** takes a `Prompty` object and a dictionary of inputs, then renders the
 template (the `instructions` field) with those values. The result is a single rendered
 string containing role markers and filled-in variables.
 
@@ -39,7 +55,7 @@ string containing role markers and filled-in variables.
 |---|---|
 | **Registration key** | `agent.template.format.kind` |
 | **Built-in implementations** | `Jinja2Renderer` (`"jinja2"`), `MustacheRenderer` (`"mustache"`) |
-| **Input** | `PromptAgent` + `dict` of inputs |
+| **Input** | `Prompty` + `dict` of inputs |
 | **Output** | `str` — rendered template |
 
 The renderer also handles **thread markers** — when an input has `kind: thread`, the
@@ -107,7 +123,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 |---|---|
 | **Registration key** | `agent.model.provider` |
 | **Built-in implementations** | `OpenAIExecutor` (`"openai"`), `AzureExecutor` (`"azure"`) |
-| **Input** | `list[Message]` + `PromptAgent` (for config) |
+| **Input** | `list[Message]` + `Prompty` (for config) |
 | **Output** | Raw SDK response object |
 
 **API type dispatch:**
@@ -120,7 +136,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 | `"responses"` | `responses.create()` | OpenAI Responses API (latest features) |
 
 <Aside type="note">
-The executor also wires up **structured output** when `agent.outputs` is defined —
+The executor also wires up **structured output** when `agent.outputSchema` is defined —
 converting the schema to OpenAI's `response_format` parameter so the LLM returns JSON
 matching your schema.
 </Aside>
@@ -136,7 +152,7 @@ What "clean" means depends on the response type.
 |---|---|
 | **Registration key** | `agent.model.provider` |
 | **Built-in implementations** | `OpenAIProcessor` (`"openai"`), `AzureProcessor` (`"azure"`) |
-| **Input** | Raw SDK response + `PromptAgent` |
+| **Input** | Raw SDK response + `Prompty` |
 | **Output** | Processed result (string, list, dict, parsed JSON, etc.) |
 
 **Processing by response type:**
@@ -147,7 +163,7 @@ What "clean" means depends on the response type.
 | Embedding | `list[float]` or `list[list[float]]` |
 | Image | `str` — URL or base64 data |
 | Streaming | `PromptyStream` / `AsyncPromptyStream` iterator |
-| Structured output | Parsed `dict` matching `outputs` |
+| Structured output | Parsed `dict` matching `outputSchema` |
 
 ---
 
@@ -383,7 +399,7 @@ Each protocol defines `sync` and `async` methods. Here's an example custom execu
     public class AnthropicExecutor : IExecutor
     {
         public async Task<object> ExecuteAsync(
-            PromptAgent agent, IList<Message> messages)
+            Prompty agent, IList<Message> messages)
         {
             // Use your preferred Anthropic .NET SDK
             var client = new AnthropicClient(agent.Model.Connection.ApiKey);

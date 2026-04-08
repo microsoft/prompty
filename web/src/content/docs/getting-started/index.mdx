@@ -33,13 +33,13 @@ renders, parses, and executes these files.
   <TabItem label="Python">
     ```bash
     # Core + Jinja2 renderer + OpenAI provider
-    uv pip install prompty[jinja2,openai]
+    pip install prompty[jinja2,openai]
 
     # With Microsoft Foundry support
-    uv pip install prompty[jinja2,foundry]
+    pip install prompty[jinja2,foundry]
 
     # Everything
-    uv pip install prompty[all]
+    pip install prompty[all]
     ```
 
     <Aside type="note">
@@ -174,7 +174,7 @@ For more control, use the pipeline stages individually:
     ```csharp
     using Prompty.Core;
 
-    // 1. Load the .prompty file → PromptAgent
+    // 1. Load the .prompty file → Prompty
     var agent = PromptyLoader.Load("greeting.prompty");
 
     // 2. Render template + parse → messages
