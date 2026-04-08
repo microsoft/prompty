@@ -144,7 +144,7 @@ model:
 ## ReferenceConnection — `kind: reference`
 
 References a **pre-registered SDK client** by name. This is the recommended
-pattern for **production** because it supports Azure AD, managed identity,
+pattern for **production** because it supports Microsoft Entra ID, managed identity,
 custom retry policies, and any authentication method the SDK supports.
 
 ```yaml
@@ -333,7 +333,7 @@ and complex auth logic in application code — not in YAML.
     from openai import AzureOpenAI
     from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
-    # Build a client with Azure AD token-based auth
+    # Build a client with Entra ID token-based auth
     client = AzureOpenAI(
         azure_endpoint=os.environ["AZURE_ENDPOINT"],
         azure_ad_token_provider=get_bearer_token_provider(
@@ -353,7 +353,7 @@ and complex auth logic in application code — not in YAML.
     import { registerConnection } from "@prompty/core";
     import "@prompty/foundry";
 
-    // Build a client with Azure AD token-based auth
+    // Build a client with Entra ID token-based auth
     const credential = new DefaultAzureCredential();
     const scope = "https://cognitiveservices.azure.com/.default";
     const azureADTokenProvider = getBearerTokenProvider(credential, scope);
@@ -372,7 +372,7 @@ and complex auth logic in application code — not in YAML.
     using Azure.Identity;
     using Prompty.Core;
 
-    // Build a client with Azure AD token-based auth
+    // Build a client with Entra ID token-based auth
     var credential = new DefaultAzureCredential();
     var client = new AzureOpenAI(
         new Uri(Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!),
@@ -442,7 +442,7 @@ exists alongside the `.prompty` file or in a parent directory.
         apiKey: ${env:OPENAI_API_KEY}
     ```
   </TabItem>
-  <TabItem label="Production (Azure AD)">
+  <TabItem label="Production (Entra ID)">
     Use **`kind: reference`** with the connection registry. Register an
     `AzureOpenAI` client backed by `DefaultAzureCredential` at startup.
 
@@ -500,7 +500,7 @@ exists alongside the `.prompty` file or in a parent directory.
 | ----------------------------- | --------------- | ----------------------------------------- |
 | Local dev with API key        | `key`           | Simplest setup, env-var-based secrets     |
 | Anthropic (Claude)            | `key`           | API key auth with `provider: anthropic`   |
-| Production with Azure AD      | `reference`     | Full SDK control, managed identity        |
+| Production with Microsoft Entra ID | `reference`     | Full SDK control, managed identity        |
 | Microsoft Foundry deployments  | `foundry`       | Native Foundry service integration        || Self-hosted (Ollama, vLLM)    | `anonymous`     | No auth needed for local endpoints        |
 | OAuth 2.0 services            | `oauth`         | Client credentials token flow             |
 | Remote gateway / proxy        | `remote`        | Named endpoint reference                  |

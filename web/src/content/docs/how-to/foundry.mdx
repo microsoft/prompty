@@ -2,7 +2,7 @@
 title: Use with Microsoft Foundry
 description: >
   Connect Prompty to Microsoft Foundry — Foundry project endpoints and classic
-  Azure OpenAI endpoints, API key and Azure AD authentication,
+  Azure OpenAI endpoints, API key and Microsoft Entra ID authentication,
   complete .prompty files, and Python/TypeScript code.
 sidebar:
   order: 4
@@ -16,7 +16,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 - The resource **endpoint**:
   - **Foundry project endpoint** (recommended): `https://<resource>.services.ai.azure.com/api/projects/<project>`
   - **Classic Azure OpenAI endpoint** (legacy): `https://<resource>.openai.azure.com/`
-- Either an **API key** or **Azure AD credentials**
+- Either an **API key** or **Microsoft Entra ID credentials**
 
 <Tabs>
   <TabItem label="Python">
@@ -24,7 +24,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     # API key auth
     pip install prompty[jinja2,foundry]
 
-    # Azure AD auth (adds azure-identity)
+    # Entra ID auth (adds azure-identity)
     pip install prompty[jinja2,foundry] azure-identity
     ```
   </TabItem>
@@ -150,9 +150,9 @@ AZURE_AI_PROJECT_KEY=abc123...
 
 ---
 
-## Option B: Azure AD Authentication
+## Option B: Microsoft Entra ID Authentication
 
-For production workloads, use Azure AD (Entra ID) with `DefaultAzureCredential`
+For production workloads, use Microsoft Entra ID with `DefaultAzureCredential`
 — no API keys to manage or rotate.
 
 ### 1. Write the `.prompty` File
@@ -162,7 +162,7 @@ Create **`foundry-chat-aad.prompty`**:
 ```yaml
 ---
 name: foundry-chat-aad
-description: Chat completion with Microsoft Foundry (Azure AD)
+description: Chat completion with Microsoft Foundry (Microsoft Entra ID)
 model:
   id: gpt-4o-mini
   provider: foundry
@@ -250,7 +250,7 @@ user:
     using Azure.Identity;
     using Prompty.Core;
 
-    // Azure AD auth is handled automatically by Prompty.Foundry
+    // Entra ID auth is handled automatically by Prompty.Foundry
     // when connection kind is "reference" — uses DefaultAzureCredential
     var result = await Pipeline.InvokeAsync(
         "foundry-chat-aad.prompty",
@@ -284,7 +284,7 @@ az role assignment create \
 
 ## Comparing the Two Options
 
-| | API Key (`kind: key`) | Azure AD (`kind: reference`) |
+| | API Key (`kind: key`) | Microsoft Entra ID (`kind: reference`) |
 |---|---|---|
 | **Setup** | Copy key from portal | Assign RBAC role |
 | **Security** | Key in env var — can leak | Token-based — no static secret |

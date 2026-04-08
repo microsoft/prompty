@@ -22,7 +22,7 @@ The extension ships with built-in support for three providers:
 |---|---|---|
 | **OpenAI** | API key | ✅ Lists available models via the OpenAI API |
 | **Anthropic** | API key | ✅ Lists available models via the Anthropic API |
-| **Microsoft Foundry** | Azure AD / API key | ✅ Lists deployed models from your Foundry project |
+| **Microsoft Foundry** | Microsoft Entra ID / API key | ✅ Lists deployed models from your Foundry project |
 
 You can configure multiple connections per provider and mark one as the
 **default** — the extension uses that default whenever a `.prompty` file doesn't
@@ -79,7 +79,7 @@ walks you through a four-step wizard:
 
 1. **Pick a provider** — OpenAI, Anthropic, or Microsoft Foundry
 2. **Enter a name** — a short label for this connection (e.g. `openai-dev`)
-3. **Provide credentials** — endpoint URL and API key (or Azure AD for Foundry)
+3. **Provide credentials** — endpoint URL and API key (or Microsoft Entra ID for Foundry)
 4. **Test (optional)** — the wizard offers to test the connection before saving
 
 After the wizard completes, the connection appears in the sidebar and is ready
@@ -135,7 +135,7 @@ to use.
 
 ### Microsoft Foundry
 
-Microsoft Foundry connections use **Azure AD authentication** instead of API
+Microsoft Foundry connections use **Microsoft Entra ID authentication** instead of API
 keys. The extension obtains a bearer token via `DefaultAzureCredential`, so you
 must be logged in to Azure (e.g., via the Azure CLI or the VS Code Azure Account
 extension).
@@ -179,7 +179,7 @@ for each provider:
 |---|---|---|
 | **OpenAI** | Calls `models.list()` | Reports latency |
 | **Anthropic** | Sends a minimal `messages` request | Reports HTTP 200 |
-| **Foundry** | Authenticates with Azure AD, calls deployments endpoint | Reports deployment count and credential source |
+| **Foundry** | Authenticates with Microsoft Entra ID, calls deployments endpoint | Reports deployment count and credential source |
 
 After the test, the connection's status icon updates in the sidebar:
 
@@ -306,7 +306,7 @@ connections from disk and re-authenticate with each provider.
 This is useful when:
 
 - You edited `.prompty/connections.json` outside of VS Code
-- An API key or Azure AD token has expired and needs re-acquisition
+- An API key or Entra ID token has expired and needs re-acquisition
 - You switched Azure accounts and want to pick up the new credentials
 - Another workspace tool modified the connections file
 
