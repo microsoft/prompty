@@ -23,9 +23,9 @@ public class OpenAIProviderTests
     }
 
     [Fact]
-    public async Task Executor_NullApiKey_Throws()
+    public async Task Executor_UnsupportedConnectionKind_Throws()
     {
-        // Create an agent where connection has no api key at all
+        // Create an agent where connection kind is not supported by OpenAI executor
         var data = new Dictionary<string, object?>
         {
             ["name"] = "test",
@@ -44,7 +44,7 @@ public class OpenAIProviderTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
 
-        Assert.Contains("API key", ex.Message);
+        Assert.Contains("not supported", ex.Message);
     }
 
     [Fact]
@@ -90,6 +90,32 @@ public class OpenAIProviderTests
         var result = await processor.ProcessAsync(agent, 42);
 
         Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public async Task Executor_ReferenceConnection_NotRegistered_Throws()
+    {
+        var data = new Dictionary<string, object?>
+        {
+            ["name"] = "test",
+            ["model"] = new Dictionary<string, object?>
+            {
+                ["id"] = "gpt-4",
+                ["connection"] = new Dictionary<string, object?>
+                {
+                    ["kind"] = "reference",
+                    ["name"] = "my-openai-client",
+                },
+            },
+        };
+        var agent = Core.Prompty.Load(data, new LoadContext());
+        var executor = new OpenAIExecutor();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+
+        Assert.Contains("not found in ConnectionRegistry", ex.Message);
+        Assert.Contains("my-openai-client", ex.Message);
     }
 
     [Fact]

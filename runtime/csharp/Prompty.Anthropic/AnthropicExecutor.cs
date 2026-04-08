@@ -235,6 +235,17 @@ public class AnthropicExecutor : IExecutor
     private static (string endpoint, string apiKey) GetConnectionInfo(Core.Prompty agent)
     {
         var conn = agent.Model?.Connection;
+
+        // §11.1: ReferenceConnection is NOT supported for Anthropic raw HTTP executor.
+        // Users should register a pre-configured client via ConnectionRegistry and use
+        // the appropriate SDK-based executor instead.
+        if (conn is Core.ReferenceConnection refConn)
+        {
+            throw new InvalidOperationException(
+                $"ReferenceConnection '{refConn.Name}' is not supported by the Anthropic raw HTTP executor. " +
+                "Use 'key' connection with apiKey for Anthropic.");
+        }
+
         string? apiKey = null;
         string? endpoint = null;
 
@@ -242,6 +253,13 @@ public class AnthropicExecutor : IExecutor
         {
             apiKey = keyConn.ApiKey;
             endpoint = keyConn.Endpoint;
+        }
+        else
+        {
+            var kind = conn?.Kind ?? "unknown";
+            throw new InvalidOperationException(
+                $"Connection kind '{kind}' is not supported by the Anthropic executor. " +
+                "Use 'key' (with apiKey) for Anthropic.");
         }
 
         if (string.IsNullOrEmpty(apiKey))

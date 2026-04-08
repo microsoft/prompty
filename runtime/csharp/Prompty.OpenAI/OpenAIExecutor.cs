@@ -42,6 +42,17 @@ public class OpenAIExecutor : IExecutor
     protected virtual OpenAIClient CreateClient(Core.Prompty agent)
     {
         var conn = agent.Model?.Connection;
+
+        // §11.1: ReferenceConnection → look up pre-configured client from registry
+        if (conn is Core.ReferenceConnection refConn)
+        {
+            var client = Core.ConnectionRegistry.Get(refConn.Name!)
+                ?? throw new InvalidOperationException(
+                    $"Connection '{refConn.Name}' not found in ConnectionRegistry. " +
+                    $"Call ConnectionRegistry.Register(\"{refConn.Name}\", client) first.");
+            return (OpenAIClient)client;
+        }
+
         string? apiKey = null;
         string? endpoint = null;
 
@@ -49,6 +60,13 @@ public class OpenAIExecutor : IExecutor
         {
             apiKey = keyConn.ApiKey;
             endpoint = keyConn.Endpoint;
+        }
+        else
+        {
+            var kind = conn?.Kind ?? "unknown";
+            throw new InvalidOperationException(
+                $"Connection kind '{kind}' is not supported by the OpenAI executor. " +
+                "Use 'key' (with apiKey) or 'reference' (with ConnectionRegistry).");
         }
 
         if (string.IsNullOrEmpty(apiKey))

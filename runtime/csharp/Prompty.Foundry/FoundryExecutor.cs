@@ -25,6 +25,17 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
     protected override OpenAIClient CreateClient(Core.Prompty agent)
     {
         var conn = agent.Model?.Connection;
+
+        // §11.1: ReferenceConnection → look up pre-configured client from registry
+        if (conn is ReferenceConnection refConn)
+        {
+            var client = ConnectionRegistry.Get(refConn.Name!)
+                ?? throw new InvalidOperationException(
+                    $"Connection '{refConn.Name}' not found in ConnectionRegistry. " +
+                    $"Call ConnectionRegistry.Register(\"{refConn.Name}\", client) first.");
+            return (OpenAIClient)client;
+        }
+
         string? endpoint = null;
         string? apiKey = null;
 
@@ -37,6 +48,14 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
         {
             endpoint = foundryConn.Endpoint;
             // FoundryConnection uses Entra ID auth — no API key
+        }
+        else
+        {
+            var kind = conn?.Kind ?? "unknown";
+            throw new InvalidOperationException(
+                $"Connection kind '{kind}' is not supported by the Foundry executor. " +
+                "Use 'foundry' (with endpoint + DefaultAzureCredential), " +
+                "'key' (with apiKey), or 'reference' (with ConnectionRegistry).");
         }
 
         if (string.IsNullOrEmpty(endpoint))
@@ -90,20 +109,9 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
             new MaxTokensPatchPolicy(),
             PipelinePosition.BeforeTransport);
 
-        // Use DefaultAzureCredential with AzureCliCredential prioritized.
-        // In dev environments, VisualStudioCredential may resolve first to a
-        // different identity that lacks RBAC roles on the Azure OpenAI resource.
-        var credential = new DefaultAzureCredential(
-            new DefaultAzureCredentialOptions
-            {
-                ExcludeSharedTokenCacheCredential = true,
-                ExcludeVisualStudioCredential = true,
-                ExcludeVisualStudioCodeCredential = true,
-            });
-
         return new AzureOpenAIClient(
             new Uri(endpoint.TrimEnd('/')),
-            credential,
+            new DefaultAzureCredential(),
             options);
     }
 }
