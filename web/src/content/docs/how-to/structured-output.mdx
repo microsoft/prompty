@@ -82,11 +82,11 @@ valid JSON with exactly those fields.
 
     result = invoke("weather.prompty", inputs={"city": "Seattle"})
 
-    # result is already a dict — no JSON.parse needed
+    # result is a StructuredResult (dict subclass) — no JSON.parse needed
     print(result["city"])         # "Seattle"
     print(result["temperature"])  # 62
     print(result["conditions"])   # "Partly cloudy"
-    print(type(result))           # <class 'dict'>
+    print(type(result))           # <class 'StructuredResult'>
     ```
 
     The async variant works identically:
@@ -105,7 +105,7 @@ valid JSON with exactly those fields.
 
     const result = await invoke("weather.prompty", { city: "Seattle" });
 
-    // result is already a parsed object
+    // result is a StructuredResult — use like a normal object
     console.log(result.city);         // "Seattle"
     console.log(result.temperature);  // 62
     console.log(result.conditions);   // "Partly cloudy"
@@ -113,7 +113,6 @@ valid JSON with exactly those fields.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    using System.Text.Json;
     using Prompty.Core;
 
     var result = await Pipeline.InvokeAsync(
@@ -121,12 +120,12 @@ valid JSON with exactly those fields.
         new() { ["city"] = "Seattle" }
     );
 
-    // When outputs is defined, result is auto-parsed JSON (JsonElement)
-    if (result is JsonElement json)
+    // When outputs is defined, result is a StructuredResult (Dictionary subclass)
+    if (result is StructuredResult sr)
     {
-        Console.WriteLine(json.GetProperty("city"));         // "Seattle"
-        Console.WriteLine(json.GetProperty("temperature"));  // 62
-        Console.WriteLine(json.GetProperty("conditions"));   // "Partly cloudy"
+        Console.WriteLine(sr["city"]);         // "Seattle"
+        Console.WriteLine(sr["temperature"]);  // 62
+        Console.WriteLine(sr["conditions"]);   // "Partly cloudy"
     }
     ```
   </TabItem>
@@ -134,7 +133,8 @@ valid JSON with exactly those fields.
 
 <Aside type="tip">
   Without `outputs`, `invoke()` returns a raw string. With it, you get
-  a parsed `dict` (Python) or object (TypeScript) automatically.
+  a `StructuredResult` — a dict (Python) / object (TypeScript) / Dictionary (C#)
+  that also carries the raw JSON for efficient casting.
 </Aside>
 
 ---
@@ -212,7 +212,6 @@ Weather for {{city}}?
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    using System.Text.Json;
     using Prompty.Core;
 
     var result = await Pipeline.InvokeAsync(
@@ -220,12 +219,13 @@ Weather for {{city}}?
         new() { ["city"] = "Portland" }
     );
 
-    if (result is JsonElement json)
+    if (result is StructuredResult sr)
     {
-        Console.WriteLine(json.GetProperty("city"));                                  // "Portland"
-        Console.WriteLine(json.GetProperty("current").GetProperty("temperature"));   // 58
-        Console.WriteLine(json.GetProperty("current").GetProperty("humidity"));      // 72
-        Console.WriteLine(json.GetProperty("forecast"));                              // [{...}, ...]
+        Console.WriteLine(sr["city"]);                                            // "Portland"
+        var current = (Dictionary<string, object?>)sr["current"]!;
+        Console.WriteLine(current["temperature"]);                                // 58
+        Console.WriteLine(current["humidity"]);                                   // 72
+        Console.WriteLine(sr["forecast"]);                                        // [{...}, ...]
     }
     ```
   </TabItem>
@@ -236,6 +236,88 @@ Weather for {{city}}?
   token usage and can slow down constrained generation. Use nesting only when
   the data genuinely has hierarchical structure.
 </Aside>
+
+---
+
+## Step 3: Cast to Typed Objects (Optional)
+
+When you need a **typed object** instead of a dictionary, use `cast()`. It
+deserializes directly from the raw JSON — no dict→JSON→T round-trip.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from dataclasses import dataclass
+    from prompty import invoke, cast
+
+    @dataclass
+    class WeatherReport:
+        city: str
+        temperature: int
+        conditions: str
+
+    result = invoke("weather.prompty", inputs={"city": "Seattle"})
+    report = cast(result, WeatherReport)
+    print(report.city)   # "Seattle"
+    print(type(report))  # <class 'WeatherReport'>
+
+    # Or as a one-liner with target_type:
+    report = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=WeatherReport)
+    ```
+
+    Works with Pydantic too (uses `model_validate_json` for optimal performance):
+
+    ```python
+    from pydantic import BaseModel
+
+    class WeatherReport(BaseModel):
+        city: str
+        temperature: int
+        conditions: str
+
+    report = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=WeatherReport)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke, cast } from "@prompty/core";
+    import { z } from "zod";
+
+    const WeatherSchema = z.object({
+      city: z.string(),
+      temperature: z.number(),
+      conditions: z.string(),
+    });
+
+    // Option 1: Cast after invoke
+    const result = await invoke("weather.prompty", { city: "Seattle" });
+    const report = cast(result, WeatherSchema.parse);
+
+    // Option 2: Typed invoke with validator
+    const report2 = await invoke(
+      "weather.prompty",
+      { city: "Seattle" },
+      { validator: WeatherSchema.parse }
+    );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    public record WeatherReport(string City, int Temperature, string Conditions);
+
+    // Option 1: Cast after invoke
+    var result = await Pipeline.InvokeAsync("weather.prompty",
+        new() { ["city"] = "Seattle" });
+    var report = PromptyCast.Cast<WeatherReport>(result);
+
+    // Option 2: Generic invoke
+    var report2 = await Pipeline.InvokeAsync<WeatherReport>("weather.prompty",
+        new() { ["city"] = "Seattle" });
+    ```
+  </TabItem>
+</Tabs>
 
 ---
 

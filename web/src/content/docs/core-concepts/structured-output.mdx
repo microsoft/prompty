@@ -120,7 +120,9 @@ Under the hood, the executor performs three steps when `outputs` is present:
 
 ## Usage
 
-With structured output, `invoke()` returns a parsed dictionary/object directly:
+With structured output, `invoke()` returns a `StructuredResult` — a dict/object
+subclass that you can use just like a regular dictionary, but that also carries
+the raw JSON for efficient type casting.
 
 <Tabs>
   <TabItem label="Python">
@@ -129,11 +131,12 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
 
     result = invoke("weather.prompty", inputs={"city": "Seattle"})
 
-    # result is already a dict — no JSON.parse needed
+    # result is a StructuredResult (dict subclass) — use like a dict
     print(result["city"])         # "Seattle"
     print(result["temperature"])  # 62
     print(result["conditions"])   # "Partly cloudy"
-    print(type(result))           # <class 'dict'>
+    print(type(result))           # <class 'StructuredResult'>
+    isinstance(result, dict)      # True — fully backward compatible
     ```
   </TabItem>
   <TabItem label="Python (async)">
@@ -150,7 +153,7 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
 
     const result = await invoke("weather.prompty", { city: "Seattle" });
 
-    // result is already a parsed object
+    // result is a StructuredResult — use like a normal object
     console.log(result.city);         // "Seattle"
     console.log(result.temperature);  // 62
     console.log(result.conditions);   // "Partly cloudy"
@@ -163,10 +166,13 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
     var result = await Pipeline.InvokeAsync("weather.prompty",
         new() { ["city"] = "Seattle" });
 
-    // result is a parsed JsonElement when outputs is present
-    Console.WriteLine(result.GetProperty("city"));         // "Seattle"
-    Console.WriteLine(result.GetProperty("temperature"));  // 62
-    Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"
+    // result is a StructuredResult (Dictionary<string, object?> subclass)
+    if (result is StructuredResult sr)
+    {
+        Console.WriteLine(sr["city"]);         // "Seattle"
+        Console.WriteLine(sr["temperature"]);  // 62
+        Console.WriteLine(sr["conditions"]);   // "Partly cloudy"
+    }
     ```
   </TabItem>
 </Tabs>
@@ -204,6 +210,110 @@ instructions, but there's no schema enforcement or automatic parsing.
   Without `outputs`, the LLM may return malformed JSON, add extra commentary
   around the JSON block, or omit fields. Always prefer defining a schema when you
   need structured data.
+</Aside>
+
+---
+
+## Casting to Typed Objects
+
+`StructuredResult` is backward-compatible with dict/object usage, but when you
+need a **typed object** (dataclass, Pydantic model, class, Zod schema), use `cast()`.
+It deserializes directly from the raw JSON string — no intermediate dict→JSON→T
+round-trip.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from dataclasses import dataclass
+    from prompty import invoke, cast
+
+    @dataclass
+    class Weather:
+        city: str
+        temperature: int
+        conditions: str
+
+    result = invoke("weather.prompty", inputs={"city": "Seattle"})
+    weather = cast(result, Weather)
+
+    print(weather.city)         # "Seattle"
+    print(weather.temperature)  # 62
+    print(type(weather))        # <class 'Weather'>
+    ```
+
+    Pydantic models use the optimal `model_validate_json()` path:
+
+    ```python
+    from pydantic import BaseModel
+    from prompty import invoke, cast
+
+    class Weather(BaseModel):
+        city: str
+        temperature: int
+        conditions: str
+
+    weather = cast(invoke("weather.prompty", inputs={"city": "Seattle"}), Weather)
+    ```
+
+    Or use the `target_type` shorthand on `invoke` / `invoke_agent`:
+
+    ```python
+    weather = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=Weather)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { invoke, cast } from "@prompty/core";
+    import { z } from "zod";
+
+    const WeatherSchema = z.object({
+      city: z.string(),
+      temperature: z.number(),
+      conditions: z.string(),
+    });
+    type Weather = z.infer<typeof WeatherSchema>;
+
+    const result = await invoke("weather.prompty", { city: "Seattle" });
+    const weather = cast<Weather>(result, WeatherSchema.parse);
+
+    console.log(weather.city);  // "Seattle"
+    ```
+
+    Or use the typed `invoke` overload with a validator:
+
+    ```typescript
+    const weather = await invoke(
+      "weather.prompty",
+      { city: "Seattle" },
+      { validator: WeatherSchema.parse }
+    );
+    // weather is typed as Weather
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    public record Weather(string City, int Temperature, string Conditions);
+
+    var result = await Pipeline.InvokeAsync("weather.prompty",
+        new() { ["city"] = "Seattle" });
+
+    // Option 1: Cast after invoke
+    var weather = PromptyCast.Cast<Weather>(result);
+    Console.WriteLine(weather.City);  // "Seattle"
+
+    // Option 2: Generic invoke — cast in one step
+    var weather2 = await Pipeline.InvokeAsync<Weather>("weather.prompty",
+        new() { ["city"] = "Seattle" });
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+  `cast()` uses the raw JSON string stored inside `StructuredResult` — it does
+  **not** serialize back to JSON from the dict and then re-parse. This is the
+  fastest possible path from LLM response to your typed object.
 </Aside>
 
 ---

@@ -360,7 +360,8 @@ Set `stream: true` in model options:
 
 ## Structured Output
 
-Define `outputs` to get JSON-parsed results:
+Define `outputs` to get `StructuredResult` — a dict/object subclass
+that carries the raw JSON for efficient type casting:
 
 ```yaml
 outputs:
@@ -370,8 +371,80 @@ outputs:
     kind: integer
 ```
 
-The processor automatically JSON-parses the response when
-`outputs` is present.
+### `StructuredResult`
+
+Returned by the processor when `outputs` is defined. Behaves like a
+dict (Python), object (TypeScript), or `Dictionary<string, object?>` (C#) —
+fully backward compatible — but also stores the raw JSON string internally.
+
+### `cast(result, target) → T`
+
+Deserialize a result directly to a typed object. Uses the raw JSON
+from `StructuredResult` when available — no dict→JSON→T round-trip.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import cast
+    from dataclasses import dataclass
+
+    @dataclass
+    class Weather:
+        city: str
+        temperature: int
+
+    weather = cast(result, Weather)
+    # Supports: dataclass, Pydantic BaseModel, TypedDict, dict, list, primitives
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { cast } from "@prompty/core";
+    import { z } from "zod";
+
+    const Schema = z.object({ city: z.string(), temperature: z.number() });
+    const weather = cast<z.infer<typeof Schema>>(result, Schema.parse);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    record Weather(string City, int Temperature);
+    var weather = PromptyCast.Cast<Weather>(result);
+    // Or: ((StructuredResult)result).Cast<Weather>()
+    ```
+  </TabItem>
+</Tabs>
+
+### Generic `invoke<T>` / `invoke_agent<T>`
+
+Cast the final result in one step:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    weather = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=Weather)
+    weather = invoke_agent("agent.prompty", inputs={...}, tools=tools, target_type=Weather)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const weather = await invoke("weather.prompty", { city: "Seattle" },
+      { validator: WeatherSchema.parse });
+    const weather2 = await invokeAgent("agent.prompty", { ... }, tools,
+      { validator: WeatherSchema.parse });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var weather = await Pipeline.InvokeAsync<Weather>("weather.prompty",
+        new() { ["city"] = "Seattle" });
+    var weather2 = await Pipeline.InvokeAgentAsync<Weather>("agent.prompty",
+        new() { ["question"] = "..." }, tools: tools);
+    ```
+  </TabItem>
+</Tabs>
 
 ## Tracing
 
@@ -404,6 +477,7 @@ Tracer.add("otel", otel_tracer())
 | `Tool` | Tool definition (FunctionTool, McpTool, OpenApiTool, PromptyTool, CustomTool) |
 | `Template` | Template engine config (format + parser) |
 | `Message` | Chat message with role and content parts |
+| `StructuredResult` | Dict/object subclass with raw JSON — returned when `outputs` is defined |
 | `PromptyStream` | Streaming wrapper with tracing support (sync) |
 | `AsyncPromptyStream` | Streaming wrapper with tracing support (async) |
 | `ToolCall` | Parsed tool call from LLM response |
