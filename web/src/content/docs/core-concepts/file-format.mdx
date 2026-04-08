@@ -126,7 +126,13 @@ inherited from defaults or environment.
 
 ### Input &amp; Output Schema
 
-Define the inputs your template expects and the structure of outputs:
+Define the inputs your template expects and the structure of outputs.
+Both `inputs` and `outputs` accept a **list of properties** or a
+**name-keyed dictionary** — three equivalent forms are supported.
+
+#### Form 1: Named List (recommended)
+
+Each property is an object with an explicit `name` field:
 
 ```yaml
 inputs:
@@ -137,7 +143,61 @@ inputs:
   - name: language
     kind: string
     default: English
+```
 
+This is the most explicit form and the one used throughout these docs.
+
+#### Form 2: Dictionary
+
+Property names are the YAML keys; no `name` field needed:
+
+```yaml
+inputs:
+  question:
+    kind: string
+    description: The user's question
+    required: true
+  language:
+    kind: string
+    default: English
+```
+
+#### Form 3: Scalar Shorthand
+
+When a property is just a default value, you can write the value directly.
+The loader infers `kind` from the scalar type:
+
+```yaml
+inputs:
+  question: What is the meaning of life?   # → kind: string, default: "What is..."
+  maxResults: 10                            # → kind: integer, default: 10
+  temperature: 0.7                          # → kind: float, default: 0.7
+  verbose: false                            # → kind: boolean, default: false
+```
+
+**Kind inference rules:**
+
+| Scalar Type | Inferred `kind` |
+|-------------|-----------------|
+| String      | `string`        |
+| Integer     | `integer`       |
+| Float       | `float`         |
+| Boolean     | `boolean`       |
+| List        | `array`         |
+| Dict/Map    | `object`        |
+
+<Aside type="tip">
+  All three forms produce the same `list[Property]` after loading. Mix-and-match
+  is not supported within a single `inputs` block — pick one form per file.
+</Aside>
+
+#### Outputs
+
+`outputs` follows the same syntax. Define outputs when you want
+[structured output](/core-concepts/structured-output/) (the executor
+converts them to `response_format`):
+
+```yaml
 outputs:
   - name: answer
     kind: string
@@ -145,9 +205,23 @@ outputs:
     kind: float
 ```
 
-Each property has a `kind` (`string`, `integer`, `float`, `boolean`,
-`array`, `object`, `thread`), optional `description`, `default`,
-`required`, and `enumValues` fields.
+#### Property Fields
+
+| Field        | Type      | Default  | Description                              |
+|--------------|-----------|----------|------------------------------------------|
+| `name`       | `string`  | —        | Property name (required in list form)     |
+| `kind`       | `string`  | —        | Type: `string`, `integer`, `float`, `boolean`, `array`, `object`, `thread`, `image`, `file`, `audio` |
+| `description`| `string`  | —        | Human-readable description                |
+| `required`   | `boolean` | `false`  | Whether the input must be provided        |
+| `default`    | `any`     | —        | Default value when input is not provided  |
+| `example`    | `any`     | —        | Example value (documentation/tooling only — **never** used at runtime) |
+| `enumValues` | `any[]`   | —        | Allowed values (enum constraint)          |
+
+<Aside type="caution">
+  `example` is for documentation and tooling only. The runtime **never** uses
+  `example` as a fallback — if you want a value used when the input is omitted,
+  set `default`.
+</Aside>
 
 ### Tools
 
@@ -348,9 +422,15 @@ connection: ${file:shared/azure-connection.json}
   inject empty values.
 </Aside>
 
-## Shorthand Syntax
+## Shorthand Syntax Reference
 
-Prompty supports a compact shorthand for the `model` property:
+Prompty supports compact shorthands across several properties. Every shorthand
+expands to the full structured form during loading — the two are always
+equivalent.
+
+### Model Shorthand
+
+A plain string becomes `Model(id: <string>)`:
 
 ```yaml
 # Shorthand — just the model name
@@ -361,25 +441,76 @@ model:
   id: gpt-4o
 ```
 
-<Aside type="caution" title="template shorthand is deprecated">
-  The `template` property accepts a string shorthand for backward compatibility,
-  but it emits a `DeprecationWarning` and will be removed in a future version.
-  Prefer the structured object form:
+### Input Shorthand (Scalar → Property)
 
-  ```yaml
-  # ⚠ Deprecated (still works, emits warning)
-  template: jinja2
+A scalar value under `inputs` (dict form) becomes a typed `Property` with
+`default` set and `kind` inferred:
 
-  # ✓ Recommended
-  template:
-    format:
-      kind: jinja2
-    parser:
-      kind: prompty
-  ```
+```yaml
+# Shorthand
+inputs:
+  firstName: Jane
+  maxResults: 10
+  verbose: true
 
-  The loader auto-migrates old v1 files that use the string form.
+# Equivalent full form
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: maxResults
+    kind: integer
+    default: 10
+  - name: verbose
+    kind: boolean
+    default: true
+```
+
+### Tool Parameters
+
+FunctionTool `parameters` follow the same `Property` list or dict syntax as
+`inputs` — there is no extra `properties:` wrapper:
+
+```yaml
+# List form
+tools:
+  - name: get_weather
+    kind: function
+    parameters:
+      - name: city
+        kind: string
+        required: true
+
+# Dict form (also valid)
+tools:
+  - name: get_weather
+    kind: function
+    parameters:
+      city:
+        kind: string
+        required: true
+```
+
+### Template Shorthand
+
+<Aside type="caution" title="Deprecated">
+  The `template` string shorthand emits a `DeprecationWarning` and will be
+  removed in a future version. Use the structured object form instead.
 </Aside>
+
+```yaml
+# ⚠ Deprecated (still works, emits warning)
+template: jinja2
+
+# ✓ Recommended
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+```
+
+The loader auto-migrates old v1 files that use the string form.
 
 ## Complete Example
 
