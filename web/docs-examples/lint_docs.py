@@ -126,7 +126,7 @@ class Diagnostic:
         if self.line is not None:
             loc += f":{self.line}"
         kind = "legacy property" if self.is_legacy else "unknown property"
-        return f"\u2717 {loc} \u2014 {kind} {self.message}"
+        return f"[FAIL] {loc} -- {kind} {self.message}"
 
 
 # ---------------------------------------------------------------------------
@@ -563,10 +563,10 @@ def main() -> int:
             elif args.verbose and block_count > 0:
                 rel_path = str(mdx_file.relative_to(repo_root)).replace("\\", "/")
                 block_word = "block" if block_count == 1 else "blocks"
-                print(f"\u2713 {rel_path} \u2014 {block_count} code {block_word}, all valid")
+                print(f"[OK] {rel_path} -- {block_count} code {block_word}, all valid")
             elif args.verbose:
                 rel_path = str(mdx_file.relative_to(repo_root)).replace("\\", "/")
-                print(f"\u2713 {rel_path} \u2014 no prompty code blocks")
+                print(f"[OK] {rel_path} -- no prompty code blocks")
     else:
         print(f"WARNING: docs directory not found: {docs_dir}", file=sys.stderr)
 
@@ -581,7 +581,7 @@ def main() -> int:
                 total_errors += len(diagnostics)
             elif args.verbose:
                 rel_path = str(prompty_file.relative_to(repo_root)).replace("\\", "/")
-                print(f"\u2713 {rel_path} \u2014 valid")
+                print(f"[OK] {rel_path} -- valid")
     else:
         print(f"WARNING: prompts directory not found: {prompts_dir}", file=sys.stderr)
 
@@ -592,11 +592,11 @@ def main() -> int:
     # --- Summary ---
     print()
     if total_errors == 0:
-        print(f"\u2713 All {total_files} files passed validation.")
+        print(f"[OK] All {total_files} files passed validation.")
         return 0
     else:
         error_word = "error" if total_errors == 1 else "errors"
-        print(f"\u2717 {total_errors} {error_word} found across {total_files} files.")
+        print(f"[FAIL] {total_errors} {error_word} found across {total_files} files.")
         return 1
 
 
