@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class TemplateConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -59,10 +59,10 @@ parser:
 
         var original = Template.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = Template.FromJson(json);
         Assert.NotNull(reloaded);
     }
@@ -81,10 +81,10 @@ parser:
 
         var original = Template.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = Template.FromYaml(yaml);
         Assert.NotNull(reloaded);
     }
@@ -105,7 +105,7 @@ parser:
 
         var instance = Template.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -124,7 +124,7 @@ parser:
 
         var instance = Template.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

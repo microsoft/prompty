@@ -33,6 +33,10 @@ jobs:
         working-directory: ./runtime/csharp
         run: dotnet build --nologo
 
+      - name: dotnet format check
+        working-directory: ./runtime/csharp
+        run: dotnet format --verify-no-changes --verbosity minimal
+
       - name: dotnet test
         working-directory: ./runtime/csharp
         run: dotnet test --nologo --logger "console;verbosity=normal"

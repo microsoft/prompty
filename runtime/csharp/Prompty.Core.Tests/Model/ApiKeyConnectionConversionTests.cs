@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class ApiKeyConnectionConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -58,10 +58,10 @@ apiKey: your-api-key
 
         var original = ApiKeyConnection.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = ApiKeyConnection.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("key", reloaded.Kind);
@@ -82,10 +82,10 @@ apiKey: your-api-key
 
         var original = ApiKeyConnection.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = ApiKeyConnection.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("key", reloaded.Kind);
@@ -106,7 +106,7 @@ apiKey: your-api-key
 
         var instance = ApiKeyConnection.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -124,7 +124,7 @@ apiKey: your-api-key
 
         var instance = ApiKeyConnection.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class FormatConfigConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -61,10 +61,10 @@ options:
 
         var original = FormatConfig.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = FormatConfig.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("mustache", reloaded.Kind);
@@ -85,10 +85,10 @@ options:
 
         var original = FormatConfig.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = FormatConfig.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("mustache", reloaded.Kind);
@@ -110,7 +110,7 @@ options:
 
         var instance = FormatConfig.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -129,7 +129,7 @@ options:
 
         var instance = FormatConfig.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -155,5 +155,5 @@ options:
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }
-    
+
 }

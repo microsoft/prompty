@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class ObjectPropertyConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -64,10 +64,10 @@ properties:
 
         var original = ObjectProperty.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = ObjectProperty.FromJson(json);
         Assert.NotNull(reloaded);
     }
@@ -87,10 +87,10 @@ properties:
 
         var original = ObjectProperty.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = ObjectProperty.FromYaml(yaml);
         Assert.NotNull(reloaded);
     }
@@ -113,7 +113,7 @@ properties:
 
         var instance = ObjectProperty.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -133,7 +133,7 @@ properties:
 
         var instance = ObjectProperty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
