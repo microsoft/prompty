@@ -5,7 +5,7 @@ Microsoft Foundry provider for Prompty — executor and processor for Azure AI F
 ## Installation
 
 ```bash
-npm install @prompty/core @prompty/foundry openai @azure/identity
+npm install @prompty/core @prompty/openai @prompty/foundry openai @azure/identity
 ```
 
 ## Usage

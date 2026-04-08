@@ -20,7 +20,6 @@ classifiers = [
 ]
 dependencies = [
   "pyyaml>=6.0.1",
-  "python-dotenv>=1.0.1",
   "aiofiles>=24.1.0",
 ]
 
@@ -51,6 +50,7 @@ dev = [
   "pytest",
   "pytest-cov",
   "pytest-asyncio",
+  "python-dotenv>=1.0.1",
   "ruff",
   "types-PyYAML",
   "types-aiofiles",
