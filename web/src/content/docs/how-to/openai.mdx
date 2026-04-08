@@ -123,11 +123,11 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invoke } from "@prompty/core";
-    import { OpenAIExecutor } from "@prompty/openai";
+    import { invoke } from "@prompty/core";
+    import "@prompty/openai";
 
     const result = await invoke("chat.prompty", {
-      inputs: { question: "What is Prompty?" },
+      question: "What is Prompty?",
     });
 
     console.log(result);

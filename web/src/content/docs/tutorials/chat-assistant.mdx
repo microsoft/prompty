@@ -165,7 +165,7 @@ For more control, break the pipeline into individual steps:
     ```python
     import prompty
 
-    # 1. Load — parse the .prompty file into a typed PromptAgent
+    # 1. Load — parse the .prompty file into a typed Prompty
     agent = prompty.load("assistant.prompty")
 
     # 2. Prepare — render the template + parse role markers → messages
@@ -186,7 +186,7 @@ For more control, break the pipeline into individual steps:
     import { load, prepare, run } from "@prompty/core";
     import "@prompty/openai";
 
-    // 1. Load — parse the .prompty file into a typed PromptAgent
+    // 1. Load — parse the .prompty file into a typed Prompty
     const agent = await load("assistant.prompty");
 
     // 2. Prepare — render the template + parse role markers → messages
@@ -202,7 +202,7 @@ For more control, break the pipeline into individual steps:
     ```csharp
     using Prompty.Core;
 
-    // 1. Load — parse the .prompty file into a PromptAgent
+    // 1. Load — parse the .prompty file into a Prompty
     var agent = PromptyLoader.Load("assistant.prompty");
 
     // 2. Prepare — render the template + parse role markers → messages
@@ -432,8 +432,8 @@ invaluable for debugging unexpected outputs.
     href="/core-concepts/tracing/"
   />
   <LinkCard
-    title="Use with Azure OpenAI"
-    description="Switch your assistant to Azure OpenAI with a connection change."
-    href="/how-to/azure-openai/"
+    title="Use with Microsoft Foundry"
+    description="Switch your assistant to Microsoft Foundry with a connection change."
+    href="/how-to/foundry/"
   />
 </CardGrid>

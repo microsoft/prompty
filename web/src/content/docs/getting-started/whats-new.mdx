@@ -28,7 +28,7 @@ and a cleaner file format backed by [AgentSchema](https://microsoft.github.io/Ag
 ## New File Format
 
 - YAML frontmatter follows the Prompty schema (derived from AgentSchema)
-- `inputSchema` / `outputSchema` with typed property lists (`kind`, `default`, `required`)
+- `inputs` / `outputs` with typed property lists (`kind`, `default`, `required`)
 - `tools` block for function calling and PromptyTool composition
 - `template.format` and `template.parser` for explicit template configuration
 - `${env:VAR}` and `${file:path}` reference resolution in frontmatter values
@@ -55,7 +55,7 @@ and a cleaner file format backed by [AgentSchema](https://microsoft.github.io/Ag
 
 ## Structured Output
 
-- Define `outputSchema` in frontmatter → automatic `response_format` for OpenAI
+- Define `outputs` in frontmatter → automatic `response_format` for OpenAI
 - Responses are JSON-parsed when a schema is defined
 - Supports strict mode for guaranteed schema conformance
 

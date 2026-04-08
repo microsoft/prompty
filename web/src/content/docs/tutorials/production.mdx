@@ -465,24 +465,26 @@ Stream tokens to the client as they arrive instead of waiting for the full respo
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, run, process
+    from prompty import load, prepare, run, process
 
     agent = load("chat.prompty")
     agent.model.options.additionalProperties["stream"] = True
 
-    stream = run(agent, inputs={"question": "Write a summary"}, raw=True)
+    messages = prepare(agent, inputs={"question": "Write a summary"})
+    stream = run(agent, messages, raw=True)
     for chunk in process(agent, stream):
         print(chunk, end="", flush=True)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, run, process as processResponse } from "@prompty/core";
+    import { load, prepare, run, process as processResponse } from "@prompty/core";
 
     const agent = await load("chat.prompty");
     agent.model.options.additionalProperties.stream = true;
 
-    const stream = await run(agent, { question: "Write a summary" }, { raw: true });
+    const messages = await prepare(agent, { question: "Write a summary" });
+    const stream = await run(agent, messages, { raw: true });
     for await (const chunk of processResponse(agent, stream)) {
       process.stdout.write(chunk);
     }

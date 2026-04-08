@@ -52,19 +52,19 @@ Say hello to {{userName}}.
   <TabItem label="Python">
     ```python
     import prompty
-    result = prompty.run("greeting.prompty", inputs={"userName": "Jane"})
+    result = prompty.invoke("greeting.prompty", inputs={"userName": "Jane"})
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { run } from "@prompty/core";
-    const result = await run("greeting.prompty", { userName: "Jane" });
+    import { invoke } from "@prompty/core";
+    const result = await invoke("greeting.prompty", { userName: "Jane" });
     ```
   </TabItem>
   <TabItem label="C#">
     ```csharp
     using Prompty.Core;
-    var result = await Prompty.RunAsync("greeting.prompty", new() { ["userName"] = "Jane" });
+    var result = await Pipeline.InvokeAsync("greeting.prompty", new() { ["userName"] = "Jane" });
     ```
   </TabItem>
 </Tabs>

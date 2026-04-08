@@ -113,9 +113,10 @@ user:
   <TabItem label="TypeScript">
     ```typescript
     import { invoke } from "@prompty/core";
+    import "@prompty/foundry";
 
     const result = await invoke("foundry-chat.prompty", {
-      inputs: { question: "What services does Microsoft Foundry offer?" },
+      question: "What services does Microsoft Foundry offer?",
     });
 
     console.log(result);
@@ -229,6 +230,7 @@ user:
   <TabItem label="TypeScript">
     ```typescript
     import { invoke, registerConnection } from "@prompty/core";
+    import "@prompty/foundry";
     import { DefaultAzureCredential } from "@azure/identity";
 
     registerConnection("foundry_default", {
@@ -237,7 +239,7 @@ user:
     });
 
     const result = await invoke("foundry-chat-aad.prompty", {
-      inputs: { question: "What is Microsoft Foundry?" },
+      question: "What is Microsoft Foundry?",
     });
 
     console.log(result);

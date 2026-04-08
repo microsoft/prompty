@@ -6,10 +6,14 @@ sidebar:
   order: 25
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 Copy-paste these `.prompty` files into your project, update the `model` block for
 your provider, and run. Each example is self-contained.
+
+<Aside type="tip">
+These recipes show the `.prompty` file and a one-line invocation. You'll need to configure a connection — see [OpenAI](/how-to/openai/) or [Foundry](/how-to/foundry/) for setup.
+</Aside>
 
 ---
 
@@ -46,8 +50,8 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, run } from "@prompty/core";
-    const result = await run("basic-chat.prompty", { question: "What is quantum computing?" });
+    import { invoke } from "@prompty/core";
+    const result = await invoke("basic-chat.prompty", { question: "What is quantum computing?" });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -95,7 +99,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await run("few-shot.prompty", { text: "The food was cold and bland." });
+    const result = await invoke("few-shot.prompty", { text: "The food was cold and bland." });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -141,7 +145,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await run("summarize.prompty", { text: article, length: "medium" });
+    const result = await invoke("summarize.prompty", { text: article, length: "medium" });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -191,7 +195,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await run("code-review.prompty", { code: myCode, language: "python" });
+    const result = await invoke("code-review.prompty", { code: myCode, language: "python" });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -251,7 +255,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const data = await run("extract-entities.prompty", { text: "Jane Doe is a PM at Microsoft in Redmond." });
+    const data = await invoke("extract-entities.prompty", { text: "Jane Doe is a PM at Microsoft in Redmond." });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -307,7 +311,7 @@ user:
       { role: "user", content: "What is Python?" },
       { role: "assistant", content: "A programming language." },
     ];
-    const result = await run("multi-turn.prompty", { question: "What about Java?", conversation: history });
+    const result = await invoke("multi-turn.prompty", { question: "What about Java?", conversation: history });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -357,7 +361,7 @@ inputs:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const vectors = await run("embed.prompty", { text: "Embed this sentence." });
+    const vectors = await invoke("embed.prompty", { text: "Embed this sentence." });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -478,7 +482,7 @@ Topic: {{topic}}
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await run("creative-writer.prompty", { topic: "time travel paradox", style: "poem" });
+    const result = await invoke("creative-writer.prompty", { topic: "time travel paradox", style: "poem" });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -531,7 +535,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await run("translator.prompty", { text: "Good morning!", sourceLang: "English", targetLang: "Japanese" });
+    const result = await invoke("translator.prompty", { text: "Good morning!", sourceLang: "English", targetLang: "Japanese" });
     ```
   </TabItem>
   <TabItem label="C#">

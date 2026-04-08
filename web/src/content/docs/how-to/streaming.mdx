@@ -88,13 +88,16 @@ pass it to `process()` which yields text chunks.
 <Tabs>
   <TabItem label="Python (sync)">
     ```python
-    from prompty import load, run, process
+    from prompty import load, prepare, run, process
 
     agent = load("chat.prompty")
     agent.model.options.additionalProperties["stream"] = True
 
+    # prepare() renders the template and parses into messages
+    messages = prepare(agent, inputs={"question": "Tell me a joke"})
+
     # run() with raw=True returns the PromptyStream
-    stream = run(agent, inputs={"question": "Tell me a joke"}, raw=True)
+    stream = run(agent, messages, raw=True)
 
     # process() yields text chunks
     for chunk in process(agent, stream):
@@ -105,15 +108,16 @@ pass it to `process()` which yields text chunks.
   <TabItem label="Python (async)">
     ```python
     import asyncio
-    from prompty import load_async, run_async, process_async
+    from prompty import load_async, prepare_async, run_async, process_async
 
     async def main():
         agent = await load_async("chat.prompty")
         agent.model.options.additionalProperties["stream"] = True
 
-        stream = await run_async(
-            agent, inputs={"question": "Tell me a joke"}, raw=True
+        messages = await prepare_async(
+            agent, inputs={"question": "Tell me a joke"}
         )
+        stream = await run_async(agent, messages, raw=True)
 
         async for chunk in process_async(agent, stream):
             print(chunk, end="", flush=True)
@@ -124,13 +128,14 @@ pass it to `process()` which yields text chunks.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, run, process as processResponse } from "@prompty/core";
+    import { load, prepare, run, process as processResponse } from "@prompty/core";
     import "@prompty/openai"; // registers provider
 
     const agent = await load("chat.prompty");
     agent.model.options.additionalProperties.stream = true;
 
-    const stream = await run(agent, { question: "Tell me a joke" }, { raw: true });
+    const messages = await prepare(agent, { question: "Tell me a joke" });
+    const stream = await run(agent, messages, { raw: true });
 
     for await (const chunk of processResponse(agent, stream)) {
       process.stdout.write(chunk);
@@ -266,10 +271,11 @@ Write a short story about {{topic}}.
 ```
 
 ```python title="stream_app.py"
-from prompty import load, run, process
+from prompty import load, prepare, run, process
 
 agent = load("stream-demo.prompty")
-stream = run(agent, inputs={"topic": "a robot learning to paint"}, raw=True)
+messages = prepare(agent, inputs={"topic": "a robot learning to paint"})
+stream = run(agent, messages, raw=True)
 
 print("Story: ", end="")
 for chunk in process(agent, stream):

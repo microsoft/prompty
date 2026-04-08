@@ -13,7 +13,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 A `.prompty` file is a plain-text asset that pairs **configuration** with
 **prompt instructions** in a single, portable file. The top half is YAML
 frontmatter; the bottom half is a markdown body that becomes the
-`instructions` property on the loaded `PromptAgent`.
+`instructions` property on the loaded `Prompty`.
 
 ## File Structure Overview
 
@@ -51,12 +51,12 @@ flowchart TD
 
     FM -- "--- delimiter ---" --> Body
 
-    Identity -- maps to --> PA1["PromptAgent.name\n.description\n.metadata"]
-    ModelCfg -- maps to --> PA2["PromptAgent.model"]
+    Identity -- maps to --> PA1["Prompty.name\n.description\n.metadata"]
+    ModelCfg -- maps to --> PA2["Prompty.model"]
     Inputs -- maps to --> PA3["Prompty.inputs"]
-    Tools -- maps to --> PA4["PromptAgent.tools"]
-    Template -- maps to --> PA5["PromptAgent.template"]
-    Body -- maps to --> PA6["PromptAgent.instructions"]
+    Tools -- maps to --> PA4["Prompty.tools"]
+    Template -- maps to --> PA5["Prompty.template"]
+    Body -- maps to --> PA6["Prompty.instructions"]
 
     style FM fill:#eff6ff,stroke:#3b82f6,color:#1e293b
     style Body fill:#ecfdf5,stroke:#10b981,color:#1e293b

@@ -226,7 +226,11 @@ schema with `required: true`, and `additionalProperties` is automatically set to
 **Cause:** Streaming responses return an iterator — you must consume it:
 
 ```python
-result = run("chat.prompty", inputs={"question": "Hello"})
+from prompty import load, prepare, run
+
+agent = load("chat.prompty")
+messages = prepare(agent, inputs={"question": "Hello"})
+result = run(agent, messages)
 for chunk in result:
     print(chunk, end="", flush=True)
 ```
@@ -248,11 +252,11 @@ Rephrase the system prompt or user input.
 
 ### JSON Parse Error
 
-**Symptom:** You defined `outputSchema` but the response isn't valid JSON.
+**Symptom:** You defined `outputs` but the response isn't valid JSON.
 
 **Checklist:**
 1. Ensure you're using a model that supports structured output (e.g., `gpt-4o-mini`)
-2. Verify your `outputSchema` is well-formed with valid `kind` values
+2. Verify your `outputs` is well-formed with valid `kind` values
 3. Use `strict: true` in the output schema for deterministic JSON
 
 ### Empty Embedding or Image Response
@@ -276,10 +280,10 @@ and within the model's constraints.
 See exactly what Prompty sends to the LLM and what comes back:
 
 ```python
-from prompty import Tracer, console_tracer
+from prompty import Tracer, console_tracer, invoke
 
 Tracer.add("console", console_tracer)
-result = run("chat.prompty", inputs={"question": "Hello"})
+result = invoke("chat.prompty", inputs={"question": "Hello"})
 ```
 
 ### Use `prepare()` to Inspect Messages
@@ -289,7 +293,8 @@ Debug your template rendering and parsing without making an API call:
 ```python
 from prompty import load, prepare
 
-messages = prepare("chat.prompty", inputs={"name": "Jane"})
+agent = load("chat.prompty")
+messages = prepare(agent, inputs={"name": "Jane"})
 for msg in messages:
     print(f"[{msg.role}] {msg.content}")
 ```

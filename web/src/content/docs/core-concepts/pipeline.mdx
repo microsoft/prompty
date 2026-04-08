@@ -122,7 +122,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 | Property | Value |
 |---|---|
 | **Registration key** | `agent.model.provider` |
-| **Built-in implementations** | `OpenAIExecutor` (`"openai"`), `AzureExecutor` (`"azure"`) |
+| **Built-in implementations** | `OpenAIExecutor` (`"openai"`), `FoundryExecutor` (`"foundry"`, aliased as `"azure"`) |
 | **Input** | `list[Message]` + `Prompty` (for config) |
 | **Output** | Raw SDK response object |
 
@@ -136,7 +136,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 | `"responses"` | `responses.create()` | OpenAI Responses API (latest features) |
 
 <Aside type="note">
-The executor also wires up **structured output** when `agent.outputSchema` is defined —
+The executor also wires up **structured output** when `agent.outputs` is defined —
 converting the schema to OpenAI's `response_format` parameter so the LLM returns JSON
 matching your schema.
 </Aside>
@@ -151,7 +151,7 @@ What "clean" means depends on the response type.
 | Property | Value |
 |---|---|
 | **Registration key** | `agent.model.provider` |
-| **Built-in implementations** | `OpenAIProcessor` (`"openai"`), `AzureProcessor` (`"azure"`) |
+| **Built-in implementations** | `OpenAIProcessor` (`"openai"`), `FoundryProcessor` (`"foundry"`, aliased as `"azure"`) |
 | **Input** | Raw SDK response + `Prompty` |
 | **Output** | Processed result (string, list, dict, parsed JSON, etc.) |
 
@@ -163,7 +163,7 @@ What "clean" means depends on the response type.
 | Embedding | `list[float]` or `list[list[float]]` |
 | Image | `str` — URL or base64 data |
 | Streaming | `PromptyStream` / `AsyncPromptyStream` iterator |
-| Structured output | Parsed `dict` matching `outputSchema` |
+| Structured output | Parsed `dict` matching `outputs` |
 
 ---
 
@@ -311,8 +311,8 @@ registers itself under a group name in `pyproject.toml`.
 |---|---|---|
 | `prompty.renderers` | `agent.template.format.kind` | `jinja2`, `mustache` |
 | `prompty.parsers` | `agent.template.parser.kind` | `prompty` |
-| `prompty.executors` | `agent.model.provider` | `openai`, `azure` |
-| `prompty.processors` | `agent.model.provider` | `openai`, `azure` |
+| `prompty.executors` | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
+| `prompty.processors` | `agent.model.provider` | `openai`, `foundry`, `azure`, `anthropic` |
 
 ### Built-in entry points
 
@@ -328,11 +328,15 @@ prompty = "prompty.parsers.prompty:PromptyChatParser"
 
 [project.entry-points."prompty.executors"]
 openai = "prompty.providers.openai.executor:OpenAIExecutor"
-azure = "prompty.providers.azure.executor:AzureExecutor"
+foundry = "prompty.providers.foundry.executor:FoundryExecutor"
+azure = "prompty.providers.foundry.executor:FoundryExecutor"  # backward-compat alias
+anthropic = "prompty.providers.anthropic.executor:AnthropicExecutor"
 
 [project.entry-points."prompty.processors"]
 openai = "prompty.providers.openai.processor:OpenAIProcessor"
-azure = "prompty.providers.azure.processor:AzureProcessor"
+foundry = "prompty.providers.foundry.processor:FoundryProcessor"
+azure = "prompty.providers.foundry.processor:FoundryProcessor"  # backward-compat alias
+anthropic = "prompty.providers.anthropic.processor:AnthropicProcessor"
 ```
 
 The discovery module (`core/discovery.py`) caches lookups, so entry points are only
