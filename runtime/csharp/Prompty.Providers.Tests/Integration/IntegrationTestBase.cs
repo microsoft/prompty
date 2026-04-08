@@ -47,6 +47,7 @@ public abstract class IntegrationTestBase
     protected static string? OpenAIBaseUrl => Environment.GetEnvironmentVariable("OPENAI_BASE_URL");
     protected static string OpenAIModel => Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? "gpt-4o-mini";
     protected static string OpenAIEmbeddingModel => Environment.GetEnvironmentVariable("OPENAI_EMBEDDING_MODEL") ?? "text-embedding-3-small";
+    protected static string? OpenAIImageModel => Environment.GetEnvironmentVariable("OPENAI_IMAGE_MODEL");
 
     protected static string? AzureOpenAIEndpoint => Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
     protected static string? AzureOpenAIApiKey => Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
