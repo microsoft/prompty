@@ -1,7 +1,7 @@
 ---
 title: Structured Output
 description: >
-  Get typed JSON back from your LLM — define an outputSchema in your .prompty
+  Get typed JSON back from your LLM — define an outputs in your .prompty
   frontmatter and receive parsed dicts or objects automatically.
 sidebar:
   order: 6
@@ -19,7 +19,7 @@ the fields you specify, and the Prompty processor auto-parses the result.
 
 ## Step 1: Define the Output Schema
 
-Add an `outputSchema` block to your `.prompty` frontmatter. Each property
+Add an `outputs` block to your `.prompty` frontmatter. Each property
 needs a `name`, `kind` (type), and optional `description`:
 
 ```yaml title="weather.prompty"
@@ -35,12 +35,12 @@ model:
     apiKey: ${env:OPENAI_API_KEY}
   options:
     temperature: 0.3
-inputSchema:
+inputs:
   properties:
     - name: city
       kind: string
       default: Seattle
-outputSchema:
+outputs:
   properties:
     - name: city
       kind: string
@@ -64,7 +64,7 @@ user:
 What's the weather in {{city}}?
 ```
 
-Prompty converts `outputSchema` into OpenAI's `response_format` with
+Prompty converts `outputs` into OpenAI's `response_format` with
 `type: "json_schema"` and **strict mode** enabled — the model must return
 valid JSON with exactly those fields.
 
@@ -118,7 +118,7 @@ valid JSON with exactly those fields.
         new() { ["city"] = "Seattle" }
     );
 
-    // When outputSchema is defined, result is auto-parsed JSON (JsonElement)
+    // When outputs is defined, result is auto-parsed JSON (JsonElement)
     if (result is JsonElement json)
     {
         Console.WriteLine(json.GetProperty("city"));         // "Seattle"
@@ -130,7 +130,7 @@ valid JSON with exactly those fields.
 </Tabs>
 
 <Aside type="tip">
-  Without `outputSchema`, `invoke()` returns a raw string. With it, you get
+  Without `outputs`, `invoke()` returns a raw string. With it, you get
   a parsed `dict` (Python) or object (TypeScript) automatically.
 </Aside>
 
@@ -150,7 +150,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-outputSchema:
+outputs:
   properties:
     - name: city
       kind: string
@@ -240,7 +240,7 @@ Weather for {{city}}?
 
 <Aside type="note">
   Structured output works with both **OpenAI** and **Microsoft Foundry** — the
-  runtime converts `outputSchema` to the same `response_format` parameter
+  runtime converts `outputs` to the same `response_format` parameter
   used by both providers. No changes needed when switching providers.
 </Aside>
 
@@ -275,4 +275,4 @@ All properties are marked `required` and `additionalProperties` is set to
 
 - [Structured Output concept](/core-concepts/structured-output/) — how the
   conversion pipeline works under the hood
-- [Output Schema reference](/core-concepts/file-format/) — full `outputSchema` syntax
+- [Output Schema reference](/core-concepts/file-format/) — full `outputs` syntax

@@ -560,37 +560,85 @@ var result = await Pipeline.InvokeAgentAsync(
 
 ## Typed Tool Functions
 
-Each runtime provides a decorator or attribute to turn a regular function into a
-registered tool with auto-generated parameter schemas.
+The `.prompty` file is the single source of truth — tools are **declared in
+frontmatter** so the file is a complete, portable exchange format. The runtime
+needs a handler function for each declared tool. Each runtime provides a
+decorator or attribute that makes writing these handlers clean: you get typed
+parameters instead of raw JSON, and the boilerplate disappears.
+
+### The `.prompty` File Declares, Your Code Implements
+
+Tools are always declared in the `.prompty` frontmatter — this is what gets
+sent to the LLM so it knows what tools are available:
+
+```yaml
+# agent.prompty (frontmatter excerpt)
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      properties:
+        - name: city
+          kind: string
+          description: City name
+          required: true
+        - name: units
+          kind: string
+          default: celsius
+```
+
+Your code then provides the **handler** — the function that actually runs when
+the LLM calls `get_weather`. This is where `@tool` / `tool()` / `[Tool]` helps.
+
+### Before and After
 
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import tool
+# ❌ Without @tool — manual dict, raw JSON parsing
+import json
+
+def get_weather(args_json):
+    args = json.loads(args_json)
+    city = args["city"]
+    units = args.get("units", "celsius")
+    return f"72°F in {city}"
+
+tools = {"get_weather": get_weather}
+
+result = invoke_agent(agent, inputs, tools=tools)
+```
+```python
+# ✅ With @tool — typed parameters, no JSON parsing
+from prompty import tool, invoke_agent
 
 @tool
 def get_weather(city: str, units: str = "celsius") -> str:
     """Get the current weather for a city."""
     return f"72°F in {city}"
 
-# The decorator:
-# 1. Introspects the signature (name, types, defaults)
-# 2. Builds a FunctionTool definition
-# 3. Registers it in the global tool name registry
-# 4. Attaches it as get_weather.__tool__
-
-# You can also customize:
-@tool(name="weather_lookup", description="Look up weather data")
-def get_weather_v2(city: str) -> str:
-    return f"72°F in {city}"
+# Pass decorated functions as handlers — names must match the
+# tool declarations in your .prompty frontmatter.
+result = invoke_agent(agent, inputs, tools={"get_weather": get_weather})
 ```
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { tool } from "@prompty/core";
+// ❌ Without tool() — manual dict, untyped args
+const tools = {
+  get_weather: (args: Record<string, unknown>) => {
+    const city = args.city as string;
+    return `72°F in ${city}`;
+  },
+};
 
-// TypeScript can't introspect types at runtime,
-// so parameters must be declared explicitly
+const result = await invokeAgent(agent, inputs, { tools });
+```
+```typescript
+// ✅ With tool() — typed, structured handler
+import { tool, invokeAgent } from "@prompty/core";
+
 const getWeather = tool(
   (city: string, units?: string) => `72°F in ${city}`,
   {
@@ -603,12 +651,29 @@ const getWeather = tool(
   },
 );
 
-getWeather("NYC");           // "72°F in NYC" — still callable
-getWeather.__tool__;          // FunctionTool instance
+const result = await invokeAgent(agent, inputs, {
+  tools: { get_weather: getWeather },
+});
 ```
 </TabItem>
 <TabItem label="C#">
 ```csharp
+// ❌ Without [Tool] — manual dict, manual JSON parsing
+var tools = new Dictionary<string, Func<string, Task<string>>>
+{
+    ["get_weather"] = async (argsJson) =>
+    {
+        var args = JsonSerializer.Deserialize<Dictionary<string, object?>>(argsJson)!;
+        var city = args["city"]?.ToString() ?? "unknown";
+        var units = args.GetValueOrDefault("units")?.ToString() ?? "celsius";
+        return $"72°F in {city}";
+    },
+};
+
+var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+```
+```csharp
+// ✅ With [Tool] — typed parameters, no JSON parsing
 using Prompty.Core;
 
 public class WeatherService
@@ -620,19 +685,213 @@ public class WeatherService
     }
 }
 
-// Discover and register all [Tool] methods on an instance
+// DiscoverTools builds typed handlers from [Tool] methods.
+// Pass the resulting dict to invoke_agent as tool handlers.
 var service = new WeatherService();
 var tools = ToolAttribute.DiscoverTools(service);
 
-// tools["get_weather"] is now a Func<string, Task<string>>
-// registered in the global ToolDispatch registry
+var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+```
+</TabItem>
+</Tabs>
+
+<Aside type="tip">
+  The `.prompty` file declares **what** tools exist (name, parameters, description)
+  — this is sent to the LLM. Your code provides **how** they run. The
+  decorator/attribute handles JSON deserialization so your function receives
+  real typed parameters (`string`, `int`, `bool`) instead of raw JSON.
+</Aside>
+
+### End-to-End Example
+
+A complete agent with the `.prompty` file and matching handlers:
+
+```yaml
+# agent.prompty
+---
+name: assistant
+model:
+  id: gpt-4o
+  provider: openai
+  apiType: agent
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather for a city
+    parameters:
+      properties:
+        - name: city
+          kind: string
+          required: true
+  - name: get_time
+    kind: function
+    description: Get the current time in a timezone
+    parameters:
+      properties:
+        - name: timezone
+          kind: string
+          required: true
+inputs:
+  properties:
+    - name: question
+      kind: string
+---
+system:
+You are a helpful assistant with access to weather and time tools.
+
+user:
+{{question}}
+```
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import load, invoke_agent, tool
+
+@tool
+def get_weather(city: str) -> str:
+    """Get the current weather for a city."""
+    return f"72°F and sunny in {city}"
+
+@tool
+def get_time(timezone: str) -> str:
+    """Get the current time in a timezone."""
+    return f"3:42 PM in {timezone}"
+
+agent = load("agent.prompty")
+result = invoke_agent(
+    agent,
+    inputs={"question": "What's the weather in Tokyo?"},
+    tools={"get_weather": get_weather, "get_time": get_time},
+)
+print(result)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { load, invokeAgent, tool } from "@prompty/core";
+
+const getWeather = tool(
+  (city: string) => `72°F and sunny in ${city}`,
+  {
+    name: "get_weather",
+    description: "Get the current weather for a city",
+    parameters: [{ name: "city", kind: "string", required: true }],
+  },
+);
+
+const getTime = tool(
+  (timezone: string) => `3:42 PM in ${timezone}`,
+  {
+    name: "get_time",
+    description: "Get the current time in a timezone",
+    parameters: [{ name: "timezone", kind: "string", required: true }],
+  },
+);
+
+const agent = await load("agent.prompty");
+const result = await invokeAgent(agent, { question: "Weather in Tokyo?" }, {
+  tools: { get_weather: getWeather, get_time: getTime },
+});
+console.log(result);
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+public class AssistantTools
+{
+    [Tool(Name = "get_weather", Description = "Get the current weather")]
+    public string GetWeather(string city)
+    {
+        return $"72°F and sunny in {city}";
+    }
+
+    [Tool(Name = "get_time", Description = "Get the current time")]
+    public string GetTime(string timezone)
+    {
+        return $"3:42 PM in {timezone}";
+    }
+}
+
+var service = new AssistantTools();
+var tools = ToolAttribute.DiscoverTools(service);
+
+var agent = PromptyLoader.Load("agent.prompty");
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "What's the weather in Tokyo?" },
+    tools: tools
+);
+Console.WriteLine(result);
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  Tool **names must match** between the `.prompty` frontmatter and your handler
+  dictionary. The frontmatter is the declaration the LLM sees; the handler dict
+  is the implementation the runtime calls.
+</Aside>
+
+### Customization Options
+
+<Tabs>
+<TabItem label="Python">
+```python
+# Bare decorator — uses function name and docstring
+@tool
+def my_func(x: str) -> str:
+    """This becomes the description."""
+    return x
+
+# With overrides
+@tool(name="custom_name", description="Custom description")
+def my_func_v2(x: str) -> str:
+    return x
+
+# Access the generated FunctionTool definition
+print(my_func.__tool__.name)        # "my_func"
+print(my_func.__tool__.description)  # "This becomes the description."
+print(my_func.__tool__.parameters)   # [Property(name="x", kind="string", ...)]
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+const helper = tool(fn, {
+  name: "helper",
+  parameters: [...],
+});
+
+// Access the generated FunctionTool
+console.log(helper.__tool__.name);  // "helper"
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+// [Tool] with no arguments — uses method name as-is
+[Tool]
+public string MyMethod(string x) => x;
+// Tool name = "MyMethod"
+
+// [Tool] with overrides
+[Tool(Name = "custom_name", Description = "Custom description")]
+public string MyMethod2(string x) => x;
+// Tool name = "custom_name"
+
+// Build a FunctionTool definition without registering
+var method = typeof(MyClass).GetMethod("MyMethod")!;
+var toolDef = ToolAttribute.BuildFromMethod(method);
+Console.WriteLine(toolDef.Name);        // "MyMethod"
+Console.WriteLine(toolDef.Parameters);  // [Property { Name = "x", Kind = "string" }]
 ```
 </TabItem>
 </Tabs>
 
 ### Type Mappings
 
-The tool decorator/attribute maps language types to schema kinds:
+The decorator/attribute maps language types to schema kinds automatically:
 
 | Python | TypeScript | C# | Schema Kind |
 |---|---|---|---|
@@ -642,3 +901,9 @@ The tool decorator/attribute maps language types to schema kinds:
 | `bool` | `"boolean"` | `bool` | `boolean` |
 | `list` | `"array"` | `List<T>`, arrays | `array` |
 | `dict` | `"object"` | `Dictionary<,>` | `object` |
+
+<Aside type="note">
+  TypeScript cannot introspect types at runtime, so parameters must be
+  declared explicitly in the `tool()` options. Python and C# derive the schema
+  from the function signature automatically.
+</Aside>

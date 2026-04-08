@@ -33,7 +33,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-inputSchema:
+inputs:
   properties:
     - name: text
       kind: string
@@ -121,7 +121,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-inputSchema:
+inputs:
   properties:
     - name: texts
       kind: array
@@ -205,7 +205,7 @@ model:
     kind: key
     endpoint: ${env:AZURE_AI_PROJECT_ENDPOINT}
     apiKey: ${env:AZURE_AI_PROJECT_KEY}
-inputSchema:
+inputs:
   properties:
     - name: text
       kind: string

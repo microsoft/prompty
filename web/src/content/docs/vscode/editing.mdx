@@ -47,10 +47,10 @@ IntelliSense triggers in both the frontmatter and the body:
 
 | Context | What you get |
 |---|---|
-| Frontmatter properties | `name`, `description`, `model`, `inputSchema`, `outputSchema`, `tools`, `template`, `metadata` |
+| Frontmatter properties | `name`, `description`, `model`, `inputs`, `outputs`, `tools`, `template`, `metadata` |
 | Enum values | `provider` → `openai`, `azure`, `foundry`; `apiType` → `chat`, `responses`, `embedding`, `image` |
 | Model IDs | Models discovered from configured connections |
-| Body variables | `{{ … }}` references matched against `inputSchema` properties |
+| Body variables | `{{ … }}` references matched against `inputs` properties |
 | Snippet blocks | Expand `model`, `inputs`, `template`, `tools`, `metadata` into full YAML scaffolds |
 
 <Aside type="tip">
@@ -64,7 +64,7 @@ IntelliSense triggers in both the frontmatter and the body:
 Hover over a frontmatter property or a `{{ variable }}` reference to see:
 
 - **Variable types and defaults** — the `kind`, `default`, and `description`
-  from the corresponding `inputSchema` property
+  from the corresponding `inputs` property
 - **Enum documentation** — allowed values for properties like `apiType` or
   `connection.kind`
 
@@ -83,7 +83,7 @@ server decorates tokens beyond what the TextMate grammar provides:
 
 The **Outline** panel (`Ctrl+Shift+O`) shows a structured view of the file:
 
-- Each frontmatter section (`model`, `inputSchema`, `tools`, …) appears as a
+- Each frontmatter section (`model`, `inputs`, `tools`, …) appears as a
   symbol
 - Each role block (`system:`, `user:`, `assistant:`) appears as a child symbol
 
@@ -128,7 +128,7 @@ model:
   options:
     temperature: 0.7
     maxOutputTokens: 256
-inputSchema:
+inputs:
   properties:
     firstName:
       kind: string
@@ -173,7 +173,7 @@ For a full property reference, see the
 
 <Aside type="tip">
   `{{ variable }}` references in the body get autocomplete suggestions drawn
-  from your `inputSchema` properties — keep your schema up to date so
+  from your `inputs` properties — keep your schema up to date so
   completions stay accurate.
 </Aside>
 

@@ -77,7 +77,7 @@ Console.WriteLine(agent.Instructions);  // the markdown body
 ### Individual Stages
 
 ```csharp
-// Validate inputs against the agent's inputSchema
+// Validate inputs against the agent's inputs
 var inputs = Pipeline.ValidateInputs(agent, rawInputs);
 
 // Render template with inputs → string
@@ -273,12 +273,12 @@ Console.WriteLine(result);
 
 ## Structured Output
 
-When `outputSchema` is defined in the `.prompty` frontmatter, the executor
+When `outputs` is defined in the `.prompty` frontmatter, the executor
 automatically adds `response_format` to the API call and the processor
 JSON-parses the response.
 
 ```yaml
-outputSchema:
+outputs:
   strict: true
   properties:
     - name: city

@@ -36,7 +36,7 @@ flowchart TD
         direction LR
         Identity["name, description\nmetadata: authors, tags …"]
         ModelCfg["model:\nid: gpt-4o\nprovider: foundry\nconnection + options"]
-        Inputs["inputSchema:\nproperties: [...]"]
+        Inputs["inputs:\nproperties: [...]"]
         Tools["tools: [...]"]
         Template["template:\nformat + parser"]
     end
@@ -53,7 +53,7 @@ flowchart TD
 
     Identity -- maps to --> PA1["PromptAgent.name\n.description\n.metadata"]
     ModelCfg -- maps to --> PA2["PromptAgent.model"]
-    Inputs -- maps to --> PA3["PromptAgent.inputSchema"]
+    Inputs -- maps to --> PA3["Prompty.inputs"]
     Tools -- maps to --> PA4["PromptAgent.tools"]
     Template -- maps to --> PA5["PromptAgent.template"]
     Body -- maps to --> PA6["PromptAgent.instructions"]
@@ -129,7 +129,7 @@ inherited from defaults or environment.
 Define the inputs your template expects and the structure of outputs:
 
 ```yaml
-inputSchema:
+inputs:
   properties:
     - name: question
       kind: string
@@ -139,7 +139,7 @@ inputSchema:
       kind: string
       default: English
 
-outputSchema:
+outputs:
   properties:
     - name: answer
       kind: string
@@ -410,7 +410,7 @@ model:
     temperature: 0.3
     maxOutputTokens: 2000
 
-inputSchema:
+inputs:
   properties:
     - name: customerName
       kind: string
@@ -425,7 +425,7 @@ inputSchema:
       description: Recent orders for context
       default: []
 
-outputSchema:
+outputs:
   properties:
     - name: answer
       kind: string

@@ -70,7 +70,7 @@ model:
   options:
     temperature: 0.7
     maxOutputTokens: 1000
-inputSchema:
+inputs:
   properties:
     question:
       kind: string
@@ -232,7 +232,7 @@ model:
     apiKey: ${env:OPENAI_API_KEY}
   options:
     temperature: 0
-inputSchema:
+inputs:
   properties:
     question:
       kind: string
@@ -367,7 +367,7 @@ The wire format for tool interactions differs from Chat Completions:
 
 ## Structured Output
 
-When `outputSchema` is defined, the runtime converts it to the Responses API's
+When `outputs` is defined, the runtime converts it to the Responses API's
 `text.format` parameter (instead of Chat Completions' `response_format`). The
 processor automatically parses the JSON response.
 
@@ -381,7 +381,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-outputSchema:
+outputs:
   properties:
     - name: city
       kind: string
@@ -439,7 +439,7 @@ using Prompty.Core;
 var result = await Pipeline.InvokeAsync("structured-responses.prompty",
     new() { ["city"] = "Seattle" });
 
-// result is a parsed JsonElement when outputSchema is present
+// result is a parsed JsonElement when outputs is present
 Console.WriteLine(result.GetProperty("city"));         // "Seattle"
 Console.WriteLine(result.GetProperty("temperature"));  // 62
 Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"

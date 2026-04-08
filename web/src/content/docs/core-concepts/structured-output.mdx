@@ -11,7 +11,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Overview
 
-By default, an LLM returns free-form text. When you define an **`outputSchema`**
+By default, an LLM returns free-form text. When you define an **`outputs`**
 in your `.prompty` frontmatter, the runtime converts it to the provider's
 `response_format` parameter so the model is **constrained to return valid JSON**
 matching your schema. The processor then automatically parses the JSON string into
@@ -19,7 +19,7 @@ a Python `dict` or JavaScript object — no manual `JSON.parse()` needed.
 
 ```mermaid
 flowchart LR
-    A["outputSchema\n(YAML)"] --> B["_output_schema\n_to_wire()\nconversion"]
+    A["outputs\n(YAML)"] --> B["_output_schema\n_to_wire()\nconversion"]
     B --> C["response_format\njson_schema\n→ sent to LLM"]
     C --> D["LLM response\nvalid JSON"]
     D --> E["Processor\nJSON.parse"]
@@ -37,7 +37,7 @@ flowchart LR
 
 ## Defining Output Schema
 
-Add an `outputSchema` block to your frontmatter with the properties you expect in
+Add an `outputs` block to your frontmatter with the properties you expect in
 the response. Each property has a `kind` (type) and optional `description`.
 
 ```yaml title="weather.prompty"
@@ -50,7 +50,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-outputSchema:
+outputs:
   properties:
     - name: city
       kind: string
@@ -77,7 +77,7 @@ those three fields.
 
 ## How It Works
 
-Under the hood, the executor performs three steps when `outputSchema` is present:
+Under the hood, the executor performs three steps when `outputs` is present:
 
 1. **Schema conversion** — `_output_schema_to_wire()` translates each `Property`
    (with `kind`, `description`, `required`) into a standard JSON Schema object.
@@ -106,7 +106,7 @@ Under the hood, the executor performs three steps when `outputSchema` is present
 2. **LLM constrained generation** — the model is forced to return valid JSON matching
    the schema. No malformed output, no missing fields.
 
-3. **Processor auto-parse** — the processor detects that `outputSchema` is defined and
+3. **Processor auto-parse** — the processor detects that `outputs` is defined and
    calls `json.loads()` on the response content, returning a native `dict` (Python) or
    object (JavaScript) instead of a raw string.
 
@@ -163,7 +163,7 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
     var result = await Pipeline.InvokeAsync("weather.prompty",
         new() { ["city"] = "Seattle" });
 
-    // result is a parsed JsonElement when outputSchema is present
+    // result is a parsed JsonElement when outputs is present
     Console.WriteLine(result.GetProperty("city"));         // "Seattle"
     Console.WriteLine(result.GetProperty("temperature"));  // 62
     Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"
@@ -175,22 +175,22 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
 
 ## Without Output Schema
 
-If you **don't** define `outputSchema`, the processor returns the raw text content
+If you **don't** define `outputs`, the processor returns the raw text content
 from the LLM response. You can still ask the model to return JSON in your prompt
 instructions, but there's no schema enforcement or automatic parsing.
 
 <Tabs>
-  <TabItem label="With outputSchema">
+  <TabItem label="With outputs">
     ```python
-    # outputSchema defined → dict returned automatically
+    # outputs defined → dict returned automatically
     result = invoke("weather.prompty", inputs={"city": "Seattle"})
     print(type(result))  # <class 'dict'>
     print(result["temperature"])  # 62
     ```
   </TabItem>
-  <TabItem label="Without outputSchema">
+  <TabItem label="Without outputs">
     ```python
-    # No outputSchema → raw string returned
+    # No outputs → raw string returned
     result = invoke("chat.prompty", inputs={"city": "Seattle"})
     print(type(result))  # <class 'str'>
     # You'd need to parse manually:
@@ -201,7 +201,7 @@ instructions, but there's no schema enforcement or automatic parsing.
 </Tabs>
 
 <Aside type="caution">
-  Without `outputSchema`, the LLM may return malformed JSON, add extra commentary
+  Without `outputs`, the LLM may return malformed JSON, add extra commentary
   around the JSON block, or omit fields. Always prefer defining a schema when you
   need structured data.
 </Aside>
@@ -223,7 +223,7 @@ model:
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
-outputSchema:
+outputs:
   properties:
     - name: city
       kind: string

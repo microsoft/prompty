@@ -120,7 +120,7 @@ The **Executor** takes the list of messages and calls the LLM provider. It handl
 | `"responses"` | `responses.create()` | OpenAI Responses API (latest features) |
 
 <Aside type="note">
-The executor also wires up **structured output** when `agent.outputSchema` is defined —
+The executor also wires up **structured output** when `agent.outputs` is defined —
 converting the schema to OpenAI's `response_format` parameter so the LLM returns JSON
 matching your schema.
 </Aside>
@@ -147,7 +147,7 @@ What "clean" means depends on the response type.
 | Embedding | `list[float]` or `list[list[float]]` |
 | Image | `str` — URL or base64 data |
 | Streaming | `PromptyStream` / `AsyncPromptyStream` iterator |
-| Structured output | Parsed `dict` matching `outputSchema` |
+| Structured output | Parsed `dict` matching `outputs` |
 
 ---
 
