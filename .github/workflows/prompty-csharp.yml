@@ -32,14 +32,11 @@ jobs:
           echo "Publishing version: $VERSION"
 
       - name: Set package versions
-        uses: vers-one/dotnet-project-version-updater@v1.7
-        with:
-          file: |
-            ./runtime/csharp/Prompty.Core/Prompty.Core.csproj
-            ./runtime/csharp/Prompty.OpenAI/Prompty.OpenAI.csproj
-            ./runtime/csharp/Prompty.Foundry/Prompty.Foundry.csproj
-            ./runtime/csharp/Prompty.Anthropic/Prompty.Anthropic.csproj
-          version: ${{ env.VERSION }}
+        working-directory: ./runtime/csharp
+        run: |
+          echo "Setting version to $VERSION"
+          find . -name '*.csproj' -path '*/Prompty.*/Prompty.*.csproj' \
+            -exec sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|g" {} +
 
       - name: dotnet restore
         working-directory: ./runtime/csharp
