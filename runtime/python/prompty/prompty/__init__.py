@@ -102,6 +102,16 @@ from .tracing.tracer import (
     verbose_trace,
 )
 
+# Agent loop extensions (§13)
+from .core.agent_events import AgentEvent, EventCallback, emit_event
+from .core.cancellation import CancellationToken, CancelledError
+from .core.context import estimate_chars, summarize_dropped, trim_to_context_window
+from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
+from .core.steering import Steering
+
+# Tool decorator (§11.2)
+from .core.tool_decorator import tool
+
 # Backward-compat aliases (will be removed in a future version)
 AzureExecutor = FoundryExecutor
 AzureProcessor = FoundryProcessor
