@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import dataclasses
 import json
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
 from prompty.core.structured import StructuredResult, cast
-
 
 # --- StructuredResult tests ---
 

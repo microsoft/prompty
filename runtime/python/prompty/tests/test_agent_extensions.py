@@ -6,14 +6,12 @@ steering, and parallel tool execution — all integrated into invoke_agent.
 
 from __future__ import annotations
 
-import asyncio
-import json
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from prompty.core.agent_events import AgentEvent, emit_event
+from prompty.core.agent_events import emit_event
 from prompty.core.cancellation import CancellationToken, CancelledError
 from prompty.core.context import estimate_chars, summarize_dropped, trim_to_context_window
 from prompty.core.guardrails import GuardrailError, GuardrailResult, Guardrails
@@ -21,7 +19,6 @@ from prompty.core.pipeline import invoke_agent, invoke_agent_async
 from prompty.core.steering import Steering
 from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
-
 
 # ---------------------------------------------------------------------------
 # Shared helpers (same pattern as test_run_agent.py)
@@ -299,7 +296,7 @@ class TestGuardrails:
 
         g = Guardrails(tool=lambda name, args: GuardrailResult(allowed=False, reason="disallowed"))
 
-        result = invoke_agent(
+        invoke_agent(
             agent, {},
             tools={"get_weather": lambda **kw: "sunny"},
             guardrails=g,

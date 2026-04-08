@@ -122,10 +122,18 @@ __all__ = [
 
 # Re-export generated model types
 # Connection registry
+# Agent loop extensions (§13)
+from .core.agent_events import AgentEvent, EventCallback, emit_event
+from .core.cancellation import CancellationToken, CancelledError
 from .core.connections import clear_connections, get_connection, register_connection
+from .core.context import estimate_chars, summarize_dropped, trim_to_context_window
+from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
 
 # Loader
 from .core.loader import load, load_async
+from .core.steering import Steering
+from .core.structured import StructuredResult, cast
+from .core.tool_decorator import bind_tools, tool
 
 # Abstract message types
 from .core.types import (
@@ -217,15 +225,6 @@ from .tracing.tracer import (
     trace_span,
     verbose_trace,
 )
-
-# Agent loop extensions (§13)
-from .core.agent_events import AgentEvent, EventCallback, emit_event
-from .core.cancellation import CancellationToken, CancelledError
-from .core.context import estimate_chars, summarize_dropped, trim_to_context_window
-from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
-from .core.steering import Steering
-from .core.structured import StructuredResult, cast
-from .core.tool_decorator import bind_tools, tool
 
 # Backward-compat aliases (will be removed in a future version)
 AzureExecutor = FoundryExecutor

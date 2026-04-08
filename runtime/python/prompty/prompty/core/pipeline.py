@@ -40,7 +40,7 @@ from .discovery import (
 )
 from .guardrails import GuardrailError, Guardrails
 from .steering import Steering
-from .structured import StructuredResult, cast
+from .structured import cast
 from .tool_dispatch import dispatch_tool, dispatch_tool_async
 from .types import RICH_KINDS, ContentPart, Message, TextPart, ThreadMarker
 

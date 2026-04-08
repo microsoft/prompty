@@ -61,7 +61,7 @@ class TestBareDecorator:
             i: int,
             f: float,
             b: bool,
-            l: list,
+            items: list,
             d: dict,
         ) -> str:
             return "ok"
@@ -72,7 +72,7 @@ class TestBareDecorator:
             "i": "integer",
             "f": "float",
             "b": "boolean",
-            "l": "array",
+            "items": "array",
             "d": "object",
         }
 
