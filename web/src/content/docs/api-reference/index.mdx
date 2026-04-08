@@ -391,3 +391,28 @@ OpenTelemetry:
 from prompty.tracing.otel import otel_tracer
 Tracer.add("otel", otel_tracer())
 ```
+
+## Key Types
+
+| Type | Description |
+|------|-------------|
+| `Prompty` | Root object — a loaded `.prompty` file |
+| `Model` | Model configuration (id, provider, connection, options) |
+| `ModelOptions` | LLM parameters (temperature, maxOutputTokens, etc.) |
+| `Connection` | Auth/endpoint config (ApiKey, Reference, Remote, Anonymous, Foundry, OAuth) |
+| `Property` | Input/output property definition (kind, default, required) |
+| `Tool` | Tool definition (FunctionTool, McpTool, OpenApiTool, PromptyTool, CustomTool) |
+| `Template` | Template engine config (format + parser) |
+| `Message` | Chat message with role and content parts |
+| `PromptyStream` | Streaming wrapper with tracing support (sync) |
+| `AsyncPromptyStream` | Streaming wrapper with tracing support (async) |
+| `ToolCall` | Parsed tool call from LLM response |
+
+For full type definitions, see the [Schema Reference](/reference/).
+
+## Further Reading
+
+- [Schema Reference](/reference/) — all `.prompty` frontmatter types and properties
+- [Getting Started](/getting-started/) — install and run your first prompt
+- [Pipeline Architecture](/core-concepts/pipeline/) — how the execution pipeline works
+- [How-To Guides](/how-to/) — practical recipes for common tasks

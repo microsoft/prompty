@@ -84,6 +84,35 @@ bindings:
 | description | string | A short description of the tool for metadata purposes |
 | bindings | [Binding[]](../binding/) | Tool argument bindings to input properties |
 
+## .prompty Examples
+
+### FunctionTool
+
+```yaml
+tools:
+  - name: get_weather
+    kind: function
+    description: Get the current weather
+    parameters:
+      - name: location
+        kind: string
+        description: City and state
+        required: true
+```
+
+### PromptyTool
+
+```yaml
+tools:
+  - name: summarize
+    kind: prompty
+    path: ./summarize.prompty
+    mode: single
+    bindings:
+      - name: text
+        input: document
+```
+
 ## Child Types
 
 The following types extend `Tool`:

@@ -83,6 +83,27 @@ usageDescription: This will allow the agent to respond to an email on your behal
 | authenticationMode | string | The authority level for the connection, indicating under whose authority the connection is made (e.g., &#39;user&#39;, &#39;agent&#39;, &#39;system&#39;) |
 | usageDescription | string | The usage description for the connection, providing context on how this connection will be used |
 
+## .prompty Examples
+
+### ApiKeyConnection
+
+```yaml
+model:
+  connection:
+    kind: key
+    endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    apiKey: ${env:AZURE_OPENAI_API_KEY}
+```
+
+### ReferenceConnection
+
+```yaml
+model:
+  connection:
+    kind: reference
+    name: my-foundry
+```
+
 ## Child Types
 
 The following types extend `Connection`:

@@ -53,6 +53,23 @@ additionalProperties:
   anotherProperty: anotherValue
 ```
 
+## .prompty Example
+
+```yaml
+---
+name: creative-writer
+model:
+  id: gpt-4o
+  options:
+    temperature: 0.9
+    maxOutputTokens: 2048
+    topP: 0.95
+    frequencyPenalty: 0.3
+    stopSequences:
+      - "###"
+---
+```
+
 ## Properties
 
 | Name | Type | Description |
