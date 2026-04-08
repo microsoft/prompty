@@ -19,20 +19,44 @@ the others: use a different template engine, a custom parser, or your own LLM
 provider.
 
 ```mermaid
-graph LR
-    A[".prompty file"] --> B["load()"]
-    B --> C["Prompty"]
-    C --> D["render()"]
-    D --> E["Rendered string"]
-    E --> F["parse()"]
-    F --> G["Message[]"]
-    G --> H["execute()"]
-    H --> I["API Response"]
-    I --> J["process()"]
-    J --> K["Final Result"]
+flowchart TD
+    File[".prompty file"]
+    File --> Load
 
-    style A fill:#f9f,stroke:#333
-    style K fill:#9f9,stroke:#333
+    subgraph Pipeline["Four-Stage Pipeline"]
+        direction TB
+        Load["load()
+        Parse frontmatter + body
+        Resolve references"]
+        Render["render()
+        Fill template variables
+        (Jinja2 / Mustache)"]
+        Parse["parse()
+        Split on role markers
+        → Message list"]
+        Execute["execute()
+        Call LLM provider
+        (OpenAI / Azure / Anthropic)"]
+        Process["process()
+        Extract content from
+        API response"]
+
+        Load --> Render
+        Render --> Parse
+        Parse --> Execute
+        Execute --> Process
+    end
+
+    Process --> Result["Final Result"]
+
+    style File fill:#eff6ff,stroke:#3b82f6,color:#1d4ed8
+    style Load fill:#f0fdf4,stroke:#10b981,color:#065f46
+    style Render fill:#fffbeb,stroke:#f59e0b,color:#92400e
+    style Parse fill:#fffbeb,stroke:#f59e0b,color:#92400e
+    style Execute fill:#fef2f2,stroke:#ef4444,color:#991b1b
+    style Process fill:#fef2f2,stroke:#ef4444,color:#991b1b
+    style Result fill:#f0fdf4,stroke:#10b981,color:#065f46
+    style Pipeline fill:none,stroke:#94a3b8,stroke-dasharray:5 5
 ```
 
 | Step | Function | What happens |
@@ -173,27 +197,29 @@ You don't always need the full pipeline. Prompty provides convenience functions
 that map to specific stage groupings:
 
 ```mermaid
-graph LR
-  subgraph render ["render()"]
-    R["Renderer"]
-  end
+flowchart LR
+    subgraph invoke ["invoke() — full pipeline"]
+        direction LR
+        L["Load"] --> R["Render"] --> P["Parse"] --> E["Execute"] --> PR["Process"]
+    end
 
-  subgraph parse ["parse()"]
-    P["Parser"]
-  end
-
-  subgraph prepare ["prepare() — render + parse + thread expansion"]
-    R2["Renderer"] --> P2["Parser"]
-  end
-
-  subgraph run ["run() — execute + process"]
-    EX["Executor"] --> PR["Processor"]
-  end
-
-  subgraph invoke ["invoke() — full pipeline: load → render → parse → execute → process → result"]
-    L["Load"] --> R3["Renderer"] --> P3["Parser"] --> EX2["Executor"] --> PR2["Processor"] --> RES["Result"]
-  end
+    style invoke fill:#eff6ff,stroke:#3b82f6
+    style L fill:#f0fdf4,stroke:#10b981,color:#065f46
+    style R fill:#fffbeb,stroke:#f59e0b,color:#92400e
+    style P fill:#fffbeb,stroke:#f59e0b,color:#92400e
+    style E fill:#fef2f2,stroke:#ef4444,color:#991b1b
+    style PR fill:#fef2f2,stroke:#ef4444,color:#991b1b
 ```
+
+The individual functions map to subsets of this pipeline:
+
+| Function | Stages | Description |
+|---|---|---|
+| `render()` | Renderer only | Fill template variables → rendered string |
+| `parse()` | Parser only | Split role markers → `Message[]` |
+| `prepare()` | Render + Parse | Render, parse, and expand thread markers |
+| `run()` | Execute + Process | Send to LLM and extract result |
+| `invoke()` | All five stages | Load → Render → Parse → Execute → Process |
 
 ### Using the convenience functions
 

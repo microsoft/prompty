@@ -323,6 +323,249 @@ production monitoring and console output for local debugging:
 
 ---
 
+## Building a Custom Tracer
+
+The built-in backends cover the most common cases, but you can build your own
+tracer to send spans anywhere — a database, a webhook, a custom dashboard, or
+a cost-tracking service.
+
+A tracer backend is a **factory function** that receives a span name and returns
+a callback. The callback receives `(key, value)` pairs as the span executes.
+When the span ends, the backend should flush or finalize.
+
+### The Factory Interface
+
+<Tabs>
+  <TabItem label="Python">
+    In Python, a tracer factory is a **context manager** that yields an
+    `add(key, value)` callback. Use `@contextlib.contextmanager` for the
+    simplest approach:
+
+    ```python
+    import contextlib
+    from collections.abc import Callable, Iterator
+    from typing import Any
+
+    @contextlib.contextmanager
+    def my_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
+        # Called when a span starts — set up resources
+        span_data: dict[str, Any] = {"name": name}
+
+        def add(key: str, value: Any) -> None:
+            # Called for each (key, value) emission
+            span_data[key] = value
+
+        try:
+            yield add
+        finally:
+            # Called when the span ends — flush / finalize
+            print(f"Span complete: {span_data}")
+    ```
+
+    Register it:
+
+    ```python
+    from prompty import Tracer
+
+    Tracer.add("my_backend", my_tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    In TypeScript, a tracer factory is a function that receives a span name
+    and returns a `(key, value)` callback (or `null` to skip the span):
+
+    ```typescript
+    import { Tracer, type TracerFactory } from "@prompty/core";
+
+    const myTracer: TracerFactory = (signature: string) => {
+      // Called when a span starts — set up resources
+      const spanData: Record<string, unknown> = { name: signature };
+
+      // Return the (key, value) callback
+      return (key: string, value: unknown) => {
+        if (key === "__end__") {
+          // Span is ending — flush / finalize
+          console.log("Span complete:", spanData);
+          return;
+        }
+        // Called for each (key, value) emission
+        spanData[key] = value;
+      };
+    };
+
+    Tracer.add("my_backend", myTracer);
+    ```
+
+    Return `null` from the factory to skip tracing for a particular span.
+  </TabItem>
+  <TabItem label="C#">
+    In C#, implement `ITracerSpan` and provide a `TracerFactory` delegate:
+
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    public class MyTracerSpan : ITracerSpan
+    {
+        private readonly string _name;
+        private readonly Dictionary<string, object?> _data = new();
+
+        public MyTracerSpan(string name)
+        {
+            _name = name;
+        }
+
+        public void Emit(string key, object? value)
+        {
+            // Called for each (key, value) emission
+            _data[key] = value;
+        }
+
+        public void Dispose()
+        {
+            // Called when the span ends — flush / finalize
+            Console.WriteLine($"Span complete: {_name} ({_data.Count} entries)");
+        }
+    }
+
+    // Register it
+    Tracer.Add("my_backend", spanName => new MyTracerSpan(spanName));
+    ```
+  </TabItem>
+</Tabs>
+
+### Standard Keys
+
+Every traced span emits a set of standard keys. Your backend will receive these
+automatically for every pipeline call:
+
+| Key | Type | Description |
+|---|---|---|
+| `signature` | `string` | Fully-qualified function name (e.g. `prompty.core.pipeline.run`) |
+| `inputs` | `object` | Serialized input parameters (already sanitized) |
+| `result` | `any` | Serialized return value, or exception details on error |
+
+Executors and processors emit additional keys like token `usage` objects. Your
+backend can inspect these to build cost dashboards or usage reports.
+
+### Example: HTTP Webhook Tracer
+
+A practical example — post completed spans to an HTTP endpoint:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import contextlib
+    import json
+    from collections.abc import Callable, Iterator
+    from datetime import datetime
+    from typing import Any
+    from urllib.request import Request, urlopen
+
+    @contextlib.contextmanager
+    def webhook_tracer(name: str) -> Iterator[Callable[[str, Any], None]]:
+        span: dict[str, Any] = {"name": name, "started_at": datetime.utcnow().isoformat()}
+
+        def add(key: str, value: Any) -> None:
+            span[key] = value
+
+        try:
+            yield add
+        finally:
+            span["ended_at"] = datetime.utcnow().isoformat()
+            try:
+                req = Request(
+                    "https://example.com/traces",
+                    data=json.dumps(span, default=str).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                urlopen(req, timeout=5)
+            except Exception:
+                pass  # Never block the pipeline
+
+    Tracer.add("webhook", webhook_tracer)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, type TracerFactory } from "@prompty/core";
+
+    const webhookTracer: TracerFactory = (signature: string) => {
+      const span: Record<string, unknown> = {
+        name: signature,
+        startedAt: new Date().toISOString(),
+      };
+
+      return (key: string, value: unknown) => {
+        if (key === "__end__") {
+          span.endedAt = new Date().toISOString();
+          fetch("https://example.com/traces", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(span),
+          }).catch(() => {}); // Never block the pipeline
+          return;
+        }
+        span[key] = value;
+      };
+    };
+
+    Tracer.add("webhook", webhookTracer);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using System.Text;
+    using System.Text.Json;
+    using Prompty.Core.Tracing;
+
+    public class WebhookTracerSpan : ITracerSpan
+    {
+        private readonly Dictionary<string, object?> _data;
+
+        public WebhookTracerSpan(string name)
+        {
+            _data = new()
+            {
+                ["name"] = name,
+                ["startedAt"] = DateTime.UtcNow.ToString("o"),
+            };
+        }
+
+        public void Emit(string key, object? value) => _data[key] = value;
+
+        public void Dispose()
+        {
+            _data["endedAt"] = DateTime.UtcNow.ToString("o");
+            try
+            {
+                using var client = new HttpClient();
+                var json = JsonSerializer.Serialize(_data);
+                client.PostAsync("https://example.com/traces",
+                    new StringContent(json, Encoding.UTF8, "application/json"))
+                    .GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // Never block the pipeline
+            }
+        }
+    }
+
+    Tracer.Add("webhook", name => new WebhookTracerSpan(name));
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Backends **must not block the pipeline**. If your backend does I/O (HTTP,
+  database, file writes), catch all exceptions and consider buffering or
+  flushing asynchronously. A failing backend must never cause the pipeline to
+  fail.
+</Aside>
+
+---
+
 ## What Gets Traced
 
 Prompty **automatically traces every pipeline stage**. You don't need to add

@@ -31,45 +31,31 @@ typed Prompty schema objects, and assigns the markdown body to
 `agent.instructions`.
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 400}} }%%
 flowchart TD
-    subgraph FM["FRONTMATTER (YAML between --- delimiters)"]
-        direction LR
-        Identity["name, description\nmetadata: authors, tags …"]
-        ModelCfg["model:\nid: gpt-4o\nprovider: foundry\nconnection + options"]
-        Inputs["inputs: [...]"]
-        Tools["tools: [...]"]
-        Template["template:\nformat + parser"]
-    end
-
-    subgraph Body["BODY → instructions (Markdown below closing ---)"]
-        direction TB
-        System["system:\nYou are a helpful assistant."]
-        User["user:\n｛｛question｝｝ — template variable"]
-        Assistant["assistant:\nLet me help with that."]
-        System --> User --> Assistant
-    end
+    FM["FRONTMATTER
+    name, model, inputs, tools, template"]
+    Body["BODY
+    system: / user: / assistant:"]
 
     FM -- "--- delimiter ---" --> Body
 
-    Identity -- maps to --> PA1["Prompty.name\n.description\n.metadata"]
-    ModelCfg -- maps to --> PA2["Prompty.model"]
-    Inputs -- maps to --> PA3["Prompty.inputs"]
-    Tools -- maps to --> PA4["Prompty.tools"]
-    Template -- maps to --> PA5["Prompty.template"]
-    Body -- maps to --> PA6["Prompty.instructions"]
-
-    style FM fill:#eff6ff,stroke:#3b82f6,color:#1e293b
-    style Body fill:#ecfdf5,stroke:#10b981,color:#1e293b
-    style System fill:#d1fae5,stroke:#10b981,color:#1d4ed8
-    style User fill:#d1fae5,stroke:#10b981,color:#1d4ed8
-    style Assistant fill:#d1fae5,stroke:#10b981,color:#1d4ed8
-    style PA1 fill:#fefce8,stroke:#f59e0b,color:#92400e
-    style PA2 fill:#fefce8,stroke:#f59e0b,color:#92400e
-    style PA3 fill:#fefce8,stroke:#f59e0b,color:#92400e
-    style PA4 fill:#fefce8,stroke:#f59e0b,color:#92400e
-    style PA5 fill:#fefce8,stroke:#f59e0b,color:#92400e
-    style PA6 fill:#fefce8,stroke:#f59e0b,color:#92400e
+    style FM fill:#dbeafe,stroke:#3b82f6,color:#1e293b
+    style Body fill:#d1fae5,stroke:#10b981,color:#065f46
 ```
+
+After loading, each section maps to a typed property on the `Prompty` object:
+
+| File Section | Prompty Property | Description |
+|---|---|---|
+| `name`, `description` | `.name`, `.description` | Identity fields |
+| `metadata` | `.metadata` | Authors, tags, version, etc. |
+| `model` | `.model` | Model ID, provider, connection, options |
+| `inputs` | `.inputs` | Input property definitions |
+| `outputs` | `.outputs` | Output schema for structured output |
+| `tools` | `.tools` | Tool definitions (function, MCP, OpenAPI) |
+| `template` | `.template` | Renderer format + parser config |
+| Markdown body | `.instructions` | The prompt text with role markers |
 
 ## Frontmatter Properties
 
