@@ -62,7 +62,9 @@ public class SpecVectorAgentTests : IDisposable
 
     [Theory]
     [MemberData(nameof(SuccessVectors))]
-    public async Task AgentLoop_SuccessVectors(string name, JsonElement input, JsonElement[] sequence, JsonElement expected)
+#pragma warning disable xUnit1026 // Theory method parameter is used for test display name
+    public async Task AgentLoop_SuccessVectors(string _name, JsonElement input, JsonElement[] sequence, JsonElement expected)
+#pragma warning restore xUnit1026
     {
         // Build pre-processed responses from the sequence
         var responses = new List<object>();

@@ -13,8 +13,9 @@ jobs:
     - uses: actions/checkout@v5
     - name: Create tag
       run: |
-        echo "TAG=v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)" >> "$GITHUB_ENV"
-        echo "Using tag: ${TAG}"
+        TAG="v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)"
+        echo "TAG=$TAG" >> "$GITHUB_ENV"
+        echo "Using tag: $TAG"
 
     - name: Log in to Azure
       uses: azure/login@v3

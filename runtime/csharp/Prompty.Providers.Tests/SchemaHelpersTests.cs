@@ -131,7 +131,7 @@ public class SchemaHelpersTests
     {
         var props = new List<Property>
         {
-            new() { Name = null, Kind = "string" },
+            new() { Name = null!, Kind = "string" },
             new() { Name = "valid", Kind = "string" },
         };
 

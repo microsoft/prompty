@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   prompty-tests:
     name: run unit tests on supported .net versions
@@ -18,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Setup dotnet ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 

@@ -108,7 +108,7 @@ public class StreamingTests : IDisposable
 
         // The processor should wrap it in a ProcessedStream
         var agent = TestHelpers.CreateAgent();
-        agent.Metadata = new Dictionary<string, object?> { ["stream"] = true };
+        agent.Metadata = new Dictionary<string, object> { ["stream"] = true };
 
         var result = await processor.ProcessAsync(agent, rawStream);
         Assert.IsType<OpenAI.ProcessedStream>(result);
@@ -195,7 +195,7 @@ public class StreamingTests : IDisposable
     public void StreamMetadata_EnablesStreaming()
     {
         var agent = TestHelpers.CreateAgent();
-        agent.Metadata = new Dictionary<string, object?> { ["stream"] = true };
+        agent.Metadata = new Dictionary<string, object> { ["stream"] = true };
 
         var streamVal = agent.Metadata.TryGetValue("stream", out var val) && val is true;
         Assert.True(streamVal);

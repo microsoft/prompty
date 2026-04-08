@@ -270,7 +270,7 @@ public class SpecVectorTests
                     skipped.Add($"{name} (no fixture or frontmatter)");
                 }
             }
-            catch (Exception ex) when (expected.TryGetProperty("error", out _))
+            catch (Exception) when (expected.TryGetProperty("error", out _))
             {
                 // Expected error — ok
             }

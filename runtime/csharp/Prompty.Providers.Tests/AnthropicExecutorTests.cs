@@ -18,7 +18,7 @@ public class AnthropicExecutorTests
             Model = new Model
             {
                 Id = "claude-sonnet-4-20250514",
-                Connection = new ApiKeyConnection { ApiKey = null },
+                Connection = new ApiKeyConnection { ApiKey = null! },
             },
         };
 
@@ -61,7 +61,7 @@ public class AnthropicExecutorTests
     {
         var agent = new Core.Prompty
         {
-            Model = new Model { Id = null },
+            Model = new Model { Id = null! },
         };
 
         Assert.Equal("claude-sonnet-4-20250514", agent.Model?.Id ?? "claude-sonnet-4-20250514");

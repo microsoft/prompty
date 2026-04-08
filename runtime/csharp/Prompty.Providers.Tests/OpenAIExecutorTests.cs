@@ -19,7 +19,7 @@ public class OpenAIExecutorTests
             Model = new Model
             {
                 Id = "gpt-4",
-                Connection = new ApiKeyConnection { ApiKey = null },
+                Connection = new ApiKeyConnection { ApiKey = null! },
             },
         };
 
@@ -93,7 +93,7 @@ public class OpenAIExecutorTests
     {
         var agent = new Core.Prompty
         {
-            Model = new Model { Id = null },
+            Model = new Model { Id = null! },
         };
 
         Assert.Equal("gpt-4", agent.Model?.Id ?? "gpt-4");

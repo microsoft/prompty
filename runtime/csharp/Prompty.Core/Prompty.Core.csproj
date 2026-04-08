@@ -13,10 +13,12 @@
     <RepositoryUrl>https://github.com/microsoft/prompty</RepositoryUrl>
     <PackageTags>prompty;llm;ai;prompt;template;openai;azure</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,6 +14,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   extension-build:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./vscode/prompty
-        run: npm install
+        run: npm ci
 
       - name: Compile
         working-directory: ./vscode/prompty

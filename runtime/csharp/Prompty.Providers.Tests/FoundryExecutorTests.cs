@@ -18,7 +18,7 @@ public class FoundryExecutorTests
             Model = new Model
             {
                 Id = "gpt-4",
-                Connection = new ApiKeyConnection { Endpoint = null, ApiKey = "test-key" },
+                Connection = new ApiKeyConnection { Endpoint = null!, ApiKey = "test-key" },
             },
         };
 

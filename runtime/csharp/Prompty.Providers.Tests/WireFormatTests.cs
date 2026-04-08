@@ -260,7 +260,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_NullModelOptions_ReturnsDefaults()
     {
-        var agent = new Core.Prompty { Model = null };
+        var agent = new Core.Prompty { Model = null! };
 
         var result = WireFormat.BuildOptions(agent);
 

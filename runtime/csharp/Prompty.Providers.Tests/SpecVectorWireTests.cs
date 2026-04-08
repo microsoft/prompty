@@ -165,7 +165,9 @@ public class SpecVectorWireTests
 
     [Theory]
     [MemberData(nameof(OpenAIEmbeddingVectors))]
-    public void OpenAI_Embedding_WireFormat(string name, JsonElement input, JsonElement expectedBody)
+#pragma warning disable xUnit1026 // Theory method parameter is used for test display name
+    public void OpenAI_Embedding_WireFormat(string _name, JsonElement input, JsonElement expectedBody)
+#pragma warning restore xUnit1026
     {
         var messages = BuildMessages(input);
 
@@ -222,7 +224,9 @@ public class SpecVectorWireTests
 
     [Theory]
     [MemberData(nameof(OpenAIImageVectors))]
-    public void OpenAI_Image_WireFormat(string name, JsonElement input, JsonElement expectedBody)
+#pragma warning disable xUnit1026 // Theory method parameter is used for test display name
+    public void OpenAI_Image_WireFormat(string _name, JsonElement input, JsonElement expectedBody)
+#pragma warning restore xUnit1026
     {
         var messages = BuildMessages(input);
 
