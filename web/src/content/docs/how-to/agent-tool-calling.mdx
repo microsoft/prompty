@@ -138,11 +138,6 @@ inputs:
   - name: question
     kind: string
     default: What's the weather in Seattle?
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 You are a helpful assistant with access to weather and time tools.
@@ -416,14 +411,9 @@ tools:
 inputs:
   - name: request
     kind: string
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
-You are an office assistant. You can search docs, look up users, and send emails.
+You are an office assistant.You can search docs, look up users, and send emails.
 Always confirm before sending emails.
 
 user:

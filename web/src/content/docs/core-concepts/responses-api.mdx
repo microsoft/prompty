@@ -74,11 +74,6 @@ inputs:
   question:
     kind: string
     default: What is Prompty?
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 You are a helpful assistant.
@@ -245,11 +240,6 @@ tools:
         description: City name
         required: true
     strict: true
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 You are a helpful assistant with access to weather tools.
@@ -398,14 +388,9 @@ outputs:
   - name: conditions
     kind: string
     description: Current weather conditions
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
-Return the current weather for the requested city.
+Return the current weatherfor the requested city.
 
 user:
 Weather in {{city}}?

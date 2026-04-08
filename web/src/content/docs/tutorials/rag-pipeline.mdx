@@ -75,11 +75,6 @@ inputs:
   - name: text
     kind: string
     default: Hello, world!
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 {{text}}
 ```
@@ -290,11 +285,6 @@ inputs:
   - name: context
     kind: string
     default: ""
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 You are a helpful assistant. Answer the user's question using ONLY the

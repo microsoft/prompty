@@ -52,11 +52,6 @@ outputs:
   - name: conditions
     kind: string
     description: Current weather conditions (e.g. sunny, cloudy, rain)
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 You are a weather data API. Return the current weather for the requested city.
@@ -168,11 +163,6 @@ outputs:
     - name: forecast
       kind: array
       description: Next 3 days forecast
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 system:
 Return current weather and a 3-day forecast for the requested city.

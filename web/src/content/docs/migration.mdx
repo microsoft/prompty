@@ -162,17 +162,10 @@ inputs:
 # v1
 template: jinja2
 
-# v2 (shorthand)
-template:
-  format: jinja2
-  parser: prompty
-
-# v2 (full form)
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+# v2 (jinja2 + prompty are defaults — omit entirely)
+# For non-default templates, use shorthand:
+# template:
+#   format: mustache
 ```
 
 ## Key Renames

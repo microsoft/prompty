@@ -279,29 +279,39 @@ A list of tool definitions the model can call:
 
 Configures the rendering engine and the message parser.
 
-**Shorthand (recommended)** — string values work at every level.
-`format: jinja2` expands to `format: { kind: jinja2 }`, and
-`parser: prompty` expands to `parser: { kind: prompty }`:
+Since Jinja2 and the Prompty chat parser are the defaults, you can often
+**omit `template` entirely**. When you do need to set it, string values
+work at every level — `format: jinja2` expands to `format: { kind: jinja2 }`:
 
 ```yaml
+# Minimal — only needed when changing away from defaults
 template:
-  format: jinja2
-  parser: prompty
+  format: mustache            # string shorthand for { kind: mustache }
 ```
 
-**Full form** — use if you prefer explicit nesting:
+```yaml
+# parser defaults to prompty — only specify it to override
+template:
+  format: jinja2
+  parser: prompty             # already the default, can be omitted
+```
 
 ```yaml
+# Full explicit form — use when you need extra options
 template:
   format:
-    kind: jinja2     # or "mustache"
+    kind: jinja2
+    strict: true
   parser:
-    kind: prompty    # role-marker parser
+    kind: prompty
+    options:
+      trimWhitespace: true
 ```
 
 <Aside type="note" title="Template defaults">
-  If `template` is omitted entirely, the runtime defaults to Jinja2 rendering
-  with the Prompty chat parser (`format: jinja2`, `parser: prompty`).
+  When `template` is omitted entirely, the runtime defaults to
+  `format: jinja2` + `parser: prompty`. You only need a `template`
+  block if you want Mustache or non-default parser options.
 </Aside>
 
 ## The Markdown Body
@@ -493,22 +503,27 @@ tools:
 
 ### Template Shorthand
 
-<Aside type="caution" title="Deprecated">
-  The `template` string shorthand emits a `DeprecationWarning` and will be
-  removed in a future version. Use the structured object form instead.
-</Aside>
+String values work at every level inside `template`:
 
 ```yaml
-# ⚠ Deprecated (still works, emits warning)
-template: jinja2
-
-# ✓ Recommended
+# String shorthand — format and parser accept plain strings
 template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+  format: jinja2              # → { kind: jinja2 }
+  parser: prompty             # → { kind: prompty }  (the default — can be omitted)
 ```
+
+Since parser defaults to `prompty`, the shortest explicit form is:
+
+```yaml
+template:
+  format: mustache            # only needed to change away from jinja2
+```
+
+<Aside type="caution" title="Deprecated: template as string">
+  The v1 form `template: jinja2` (a bare string for the entire property)
+  emits a `DeprecationWarning` and will be removed in a future version.
+  Use the structured object form shown above instead.
+</Aside>
 
 The loader auto-migrates old v1 files that use the string form.
 
@@ -569,10 +584,7 @@ tools:
         required: true
 
 template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
+  format: jinja2
 ---
 system:
 You are a customer support agent for Contoso. Be helpful, concise,

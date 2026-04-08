@@ -40,11 +40,6 @@ inputs:
   - name: text
     kind: string
     default: Hello, world!
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 {{text}}
 ```
@@ -127,11 +122,6 @@ inputs:
   - name: texts
     kind: array
     description: List of texts to embed
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 {{texts}}
 ```
@@ -209,16 +199,11 @@ model:
 inputs:
   - name: text
     kind: string
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
 ---
 {{text}}
 ```
 
-The code is identical — only the `.prompty` file changes:
+The code is identical— only the `.prompty` file changes:
 
 ```python
 vector = invoke("embed-foundry.prompty", inputs={"text": "Hello from Foundry"})
