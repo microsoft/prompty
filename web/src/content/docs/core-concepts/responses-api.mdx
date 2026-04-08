@@ -140,6 +140,15 @@ const result = await invoke("my-prompt.prompty", { question: "Hello!" });
 console.log(result); // "Hi there! How can I help?"
 ```
 </TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var result = await Pipeline.InvokeAsync("my-prompt.prompty",
+    new() { ["question"] = "Hello!" });
+Console.WriteLine(result); // "Hi there! How can I help?"
+```
+</TabItem>
 </Tabs>
 
 ---
@@ -290,6 +299,30 @@ const result = await invokeAgent(agent, {
 console.log(result);
 ```
 </TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var tools = new Dictionary<string, Func<string, Task<string>>>
+{
+    ["get_weather"] = async (args) =>
+    {
+        var parsed = ToolDispatch.ParseArguments(args);
+        var city = parsed["city"]?.ToString() ?? "unknown";
+        return $"72°F and sunny in {city}";
+    }
+};
+
+var agent = PromptyLoader.Load("responses-agent.prompty");
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "What's the weather in Seattle?" },
+    tools: tools,
+    maxIterations: 10
+);
+Console.WriteLine(result); // "It's currently 72°F and sunny in Seattle!"
+```
+</TabItem>
 </Tabs>
 
 ### How Tool Calls Work with the Responses API
@@ -397,6 +430,19 @@ const result = await invoke("structured-responses.prompty", { city: "Seattle" })
 console.log(result.city);         // "Seattle"
 console.log(result.temperature);  // 62
 console.log(result.conditions);   // "Partly cloudy"
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var result = await Pipeline.InvokeAsync("structured-responses.prompty",
+    new() { ["city"] = "Seattle" });
+
+// result is a parsed JsonElement when outputSchema is present
+Console.WriteLine(result.GetProperty("city"));         // "Seattle"
+Console.WriteLine(result.GetProperty("temperature"));  // 62
+Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"
 ```
 </TabItem>
 </Tabs>

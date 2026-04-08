@@ -22,6 +22,12 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     npm install @prompty/core @prompty/anthropic
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```bash
+    dotnet add package Prompty.Core --prerelease
+    dotnet add package Prompty.Anthropic --prerelease
+    ```
+  </TabItem>
 </Tabs>
 
 You also need an [Anthropic API key](https://console.anthropic.com/settings/keys).
@@ -106,6 +112,17 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
     console.log(result);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "anthropic-chat.prompty",
+        new() { ["topic"] = "quantum computing" }
+    );
+    Console.WriteLine(result);
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -142,6 +159,21 @@ If you need more control, use the individual pipeline stages:
 
     const result = await run(agent, messages);
     console.log(result);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // Load the prompt
+    var agent = PromptyLoader.Load("anthropic-chat.prompty");
+
+    // Render + parse → message list (no LLM call)
+    var messages = await Pipeline.PrepareAsync(agent, new() { ["topic"] = "quantum computing" });
+
+    // Execute + process → final result
+    var result = await Pipeline.RunAsync(agent, messages);
+    Console.WriteLine(result);
     ```
   </TabItem>
 </Tabs>

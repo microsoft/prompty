@@ -501,4 +501,21 @@ Run it with the Prompty runtime:
     });
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // Load + render + parse + execute + process in one call
+    var result = await Pipeline.InvokeAsync("customer-support.prompty", new()
+    {
+        ["customerName"] = "Jane Doe",
+        ["question"] = "Where is my order #12345?",
+        ["orderHistory"] = new[]
+        {
+            new { id = "12345", status = "shipped", date = "2025-01-15" },
+            new { id = "12300", status = "delivered", date = "2025-01-02" },
+        },
+    });
+    ```
+  </TabItem>
 </Tabs>

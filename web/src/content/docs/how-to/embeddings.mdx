@@ -91,6 +91,16 @@ template:
     console.log(vector.slice(0, 5));     // [0.0123, -0.0456, 0.0789, ...]
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var vector = await Pipeline.InvokeAsync("embed.prompty", new() { ["text"] = "Prompty is awesome" });
+
+    // vector is List<float> with 1536 dimensions (for text-embedding-3-small)
+    Console.WriteLine(vector);
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -157,6 +167,23 @@ template:
 
     console.log(vectors.length);     // 3
     console.log(vectors[0].length);  // 1536
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var texts = new[]
+    {
+        "What is machine learning?",
+        "How do neural networks work?",
+        "Explain gradient descent",
+    };
+
+    var vectors = await Pipeline.InvokeAsync("batch-embed.prompty", new() { ["texts"] = texts });
+
+    // vectors is List<List<float>> — one vector per input text
+    Console.WriteLine(vectors);
     ```
   </TabItem>
 </Tabs>

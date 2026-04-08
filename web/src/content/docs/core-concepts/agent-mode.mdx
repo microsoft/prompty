@@ -86,6 +86,41 @@ result = prompty.invoke_agent(
 print(result)  # "It's currently 72°F and sunny in Seattle!"
 ```
 </TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+// 1. Define tool functions
+var tools = new Dictionary<string, Func<string, Task<string>>>
+{
+    ["get_weather"] = async (args) =>
+    {
+        var parsed = ToolDispatch.ParseArguments(args);
+        var city = parsed["city"]?.ToString() ?? "unknown";
+        return $"72°F and sunny in {city}";
+    },
+    ["get_time"] = async (args) =>
+    {
+        var parsed = ToolDispatch.ParseArguments(args);
+        var tz = parsed["timezone"]?.ToString() ?? "UTC";
+        return $"3:42 PM in {tz}";
+    }
+};
+
+// 2. Load the agent prompt
+var agent = PromptyLoader.Load("agent.prompty");
+
+// 3. Run the agent loop
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "What's the weather in Seattle?" },
+    tools: tools,
+    maxIterations: 10
+);
+
+Console.WriteLine(result); // "It's currently 72°F and sunny in Seattle!"
+```
+</TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -269,6 +304,26 @@ const result = await invokeAgent(agent, {
 });
 
 console.log(result);
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var tools = new Dictionary<string, Func<string, Task<string>>>
+{
+    ["get_weather"] = args => Task.FromResult("72°F and sunny")
+};
+
+var agent = PromptyLoader.Load("agent.prompty");
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "What's the weather in London?" },
+    tools: tools,
+    maxIterations: 10
+);
+
+Console.WriteLine(result);
 ```
 </TabItem>
 </Tabs>

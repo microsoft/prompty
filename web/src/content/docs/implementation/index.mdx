@@ -13,7 +13,7 @@ same pipeline architecture but uses language-native patterns and package manager
 |----------|--------|---------|
 | [**Python**](/implementation/python/) | ✅ Stable (alpha) | `prompty` on PyPI |
 | [**TypeScript**](/implementation/typescript/) | ✅ Stable (alpha) | `@prompty/core` on npm |
-| [**C#**](/implementation/csharp/) | 🚧 In Progress | — |
+| [**C#**](/implementation/csharp/) | ✅ Alpha | `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` on NuGet |
 
 ## Choosing a Runtime
 
@@ -37,6 +37,7 @@ and available providers.
 
 ### C#
 
-- Type system generated from TypeSpec schema
-- Runtime pipeline in development
-- Will follow the same four-stage architecture
+- Alpha packages available on NuGet: `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic`
+- Static `Pipeline` API with async-first design
+- Same four-stage render → parse → execute → process architecture
+- Install: `dotnet add package Prompty.Core --prerelease`

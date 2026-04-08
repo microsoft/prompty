@@ -60,8 +60,13 @@ renders, parses, and executes these files.
     ```
   </TabItem>
   <TabItem label="C#">
-    <Aside type="tip">
-      C# support is coming soon. See the [Implementation](/implementation/csharp/) page for status.
+    ```bash
+    dotnet add package Prompty.Core --prerelease
+    dotnet add package Prompty.OpenAI --prerelease  # or Prompty.Foundry, Prompty.Anthropic
+    ```
+
+    <Aside type="note">
+      C# packages are in **alpha preview**. Install with `--prerelease` to get the latest version.
     </Aside>
   </TabItem>
 </Tabs>
@@ -125,6 +130,15 @@ Say hello to {{userName}} and ask how their day is going.
     // "Hello Jane! 👋 How's your day going so far?"
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync("greeting.prompty", new() { ["userName"] = "Jane" });
+    Console.WriteLine(result);
+    // "Hello Jane! 👋 How's your day going so far?"
+    ```
+  </TabItem>
 </Tabs>
 
 ## Step-by-Step Pipeline
@@ -154,6 +168,22 @@ For more control, use the pipeline stages individually:
     const agent = await load("greeting.prompty");
     const messages = await prepare(agent, { userName: "Jane" });
     const result = await run(agent, messages);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // 1. Load the .prompty file → PromptAgent
+    var agent = PromptyLoader.Load("greeting.prompty");
+
+    // 2. Render template + parse → messages
+    var rendered = await Pipeline.RenderAsync(agent, new() { ["userName"] = "Jane" });
+    var messages = await Pipeline.ParseAsync(agent, rendered);
+
+    // 3. Call the LLM + process → clean result
+    var response = await Pipeline.ExecuteAsync(agent, messages);
+    var result = await Pipeline.ProcessAsync(agent, response);
     ```
   </TabItem>
 </Tabs>

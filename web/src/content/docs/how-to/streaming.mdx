@@ -135,6 +135,41 @@ pass it to `process()` which yields text chunks.
     console.log();
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+    var messages = await Pipeline.PrepareAsync(
+        agent,
+        new() { ["question"] = "Tell me a joke" }
+    );
+
+    // raw: true returns a PromptyStream (IAsyncEnumerable<object>)
+    var raw = await Pipeline.RunAsync(agent, messages, raw: true);
+    if (raw is PromptyStream stream)
+    {
+        await foreach (var chunk in stream)
+        {
+            Console.Write(chunk);
+        }
+    }
+
+    Console.WriteLine();
+
+    // Or use processed streaming for text-only chunks
+    var result = await Pipeline.RunAsync(agent, messages);
+    if (result is ProcessedStream ps)
+    {
+        await foreach (var text in ps)
+        {
+            Console.Write(text);
+        }
+    }
+
+    Console.WriteLine();
+    ```
+  </TabItem>
 </Tabs>
 
 Each `chunk` is a **string** — the processor extracts `delta.content` from

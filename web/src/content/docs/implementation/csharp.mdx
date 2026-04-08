@@ -6,44 +6,445 @@ sidebar:
   order: 3
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-<Aside type="tip" title="Coming Soon">
-  The C# runtime for Prompty v2 is under development. The type system
-  is already generated from the TypeSpec schema — runtime implementation
-  is the next step.
+## Overview
+
+The C# runtime for Prompty v2 provides first-class .NET support for loading,
+rendering, and executing `.prompty` files. It targets **.NET 9+** and is
+distributed as four NuGet packages — a core library plus one package per LLM
+provider.
+
+The runtime follows the same four-stage pipeline as the Python and TypeScript
+implementations: **Renderer → Parser → Executor → Processor**.
+
+## Installation
+
+All packages are available on NuGet at version **2.0.0-alpha.2**.
+
+```bash
+# Core — required
+dotnet add package Prompty.Core --prerelease
+
+# Pick one or more providers
+dotnet add package Prompty.OpenAI --prerelease
+dotnet add package Prompty.Foundry --prerelease
+dotnet add package Prompty.Anthropic --prerelease
+```
+
+| Package | Description |
+|---------|-------------|
+| `Prompty.Core` | Core pipeline, loader, tracing, types |
+| `Prompty.OpenAI` | OpenAI provider (executor + processor) |
+| `Prompty.Foundry` | Azure OpenAI / Microsoft Foundry provider |
+| `Prompty.Anthropic` | Anthropic provider |
+
+## Quick Start
+
+```csharp
+using Prompty.Core;
+
+// All-in-one execution
+var result = await Pipeline.InvokeAsync("greeting.prompty",
+    new Dictionary<string, object?> { ["name"] = "Jane" });
+
+Console.WriteLine(result);
+```
+
+<Aside type="note">
+  You must register providers before calling `Pipeline.InvokeAsync`. Reference the
+  provider NuGet package and register its executor and processor at startup.
 </Aside>
 
-## Current Status
+## Pipeline API
 
-The Prompty TypeSpec schema emitter generates C# model classes at
-`runtime/csharp/Prompty.Core/Model/`. These provide the typed data model
-for `.prompty` files but the runtime pipeline (loader, renderer, parser,
-executor, processor) is not yet implemented.
+All pipeline methods are static on the `Pipeline` class in the `Prompty.Core`
+namespace.
 
-## What's Generated
+### Loading
 
-The emitter produces C# classes for all schema types:
+```csharp
+using Prompty.Core;
 
-- `Prompty` — root type
-- `Model`, `ModelOptions` — model configuration
-- `Connection` and subtypes (`ApiKeyConnection`, `ReferenceConnection`, etc.)
-- `Property`, `ArrayProperty`, `ObjectProperty` — input/output schemas
-- `Tool` and subtypes (`FunctionTool`, `McpTool`, `OpenApiTool`, `CustomTool`)
-- `Template`, `Format`, `Parser` — template configuration
+// Load a .prompty file into a typed Prompty object
+var agent = PromptyLoader.Load("chat.prompty");
 
-## Planned Architecture
+Console.WriteLine(agent.Name);          // "chat"
+Console.WriteLine(agent.Model.Id);      // "gpt-4o"
+Console.WriteLine(agent.Instructions);  // the markdown body
+```
 
-The C# runtime will follow the same four-stage pipeline as Python and TypeScript:
+### Individual Stages
 
-1. **Renderer** — Jinja2-compatible template rendering (Scriban or DotLiquid)
-2. **Parser** — Role marker parsing → message list
-3. **Executor** — Microsoft Foundry SDK / OpenAI SDK integration
-4. **Processor** — Response extraction and structured output
+```csharp
+// Validate inputs against the agent's inputSchema
+var inputs = Pipeline.ValidateInputs(agent, rawInputs);
 
-## Contributing
+// Render template with inputs → string
+var rendered = await Pipeline.RenderAsync(agent, inputs);
 
-If you're interested in helping build the C# runtime, see the
-[Contributing](/contributing/) guide and check the
-[GitHub issues](https://github.com/microsoft/prompty/issues) for
-C#-related tasks.
+// Parse rendered string → List<Message>
+var messages = await Pipeline.ParseAsync(agent, rendered);
+
+// Execute LLM call → raw response
+var response = await Pipeline.ExecuteAsync(agent, messages);
+
+// Process raw response → clean result
+var result = await Pipeline.ProcessAsync(agent, response);
+```
+
+### Compound Operations
+
+```csharp
+// Render + parse → List<Message>
+var messages = await Pipeline.PrepareAsync(agent, inputs);
+
+// Execute + process → final result
+var result = await Pipeline.RunAsync(agent, messages);
+
+// Execute only (raw response, no processing)
+var raw = await Pipeline.RunAsync(agent, messages, raw: true);
+```
+
+### Top-Level Invocation
+
+```csharp
+// Full pipeline: load + prepare + run
+var result = await Pipeline.InvokeAsync("chat.prompty", inputs);
+
+// Or pass a pre-loaded agent
+var result = await Pipeline.InvokeAsync(agent, inputs);
+```
+
+## Providers
+
+Each provider ships as a separate NuGet package with an executor and processor.
+
+| Package | Provider Key | SDK | Connection |
+|---------|-------------|-----|------------|
+| `Prompty.OpenAI` | `openai` | OpenAI .NET SDK | `ApiKeyConnection` |
+| `Prompty.Foundry` | `foundry` | Azure OpenAI / Foundry SDK | `FoundryConnection`, `ApiKeyConnection` |
+| `Prompty.Anthropic` | `anthropic` | Anthropic .NET SDK | `ApiKeyConnection` |
+
+Configure the provider in your `.prompty` frontmatter:
+
+<Tabs>
+  <TabItem label="OpenAI">
+    ```yaml
+    model:
+      id: gpt-4o
+      provider: openai
+      connection:
+        kind: key
+        apiKey: ${env:OPENAI_API_KEY}
+    ```
+  </TabItem>
+  <TabItem label="Foundry (Azure)">
+    ```yaml
+    model:
+      id: gpt-4o
+      provider: foundry
+      connection:
+        kind: key
+        endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+        apiKey: ${env:AZURE_OPENAI_API_KEY}
+    ```
+  </TabItem>
+  <TabItem label="Anthropic">
+    ```yaml
+    model:
+      id: claude-sonnet-4-20250514
+      provider: anthropic
+      connection:
+        kind: key
+        apiKey: ${env:ANTHROPIC_API_KEY}
+    ```
+  </TabItem>
+</Tabs>
+
+### Invoker Registry
+
+Providers must be registered at startup before calling any pipeline methods:
+
+```csharp
+using Prompty.Core;
+
+// Register renderers and parsers (built into Prompty.Core)
+InvokerRegistry.RegisterRenderer("jinja2", new Jinja2Renderer());
+InvokerRegistry.RegisterParser("prompty", new PromptyChatParser());
+
+// Register provider executor + processor
+InvokerRegistry.RegisterExecutor("openai", new OpenAIExecutor());
+InvokerRegistry.RegisterProcessor("openai", new OpenAIProcessor());
+```
+
+## Connections
+
+Use the `ConnectionRegistry` to pre-configure SDK clients for production use
+(e.g., with managed identity or custom HTTP pipelines).
+
+```csharp
+using Prompty.Core;
+
+// Register a pre-configured client
+ConnectionRegistry.Register("my-openai", openAIClient);
+
+// Retrieve it later (e.g., inside an executor)
+var client = ConnectionRegistry.Get("my-openai");
+
+// Cleanup
+ConnectionRegistry.Remove("my-openai");
+ConnectionRegistry.Clear();
+```
+
+Connection types available in the model:
+
+| Type | `kind` | Fields |
+|------|--------|--------|
+| `ApiKeyConnection` | `key` | `endpoint`, `apiKey` |
+| `ReferenceConnection` | `reference` | `name` |
+| `RemoteConnection` | `remote` | `target`, `authenticationMode` |
+| `AnonymousConnection` | `anonymous` | — |
+| `FoundryConnection` | `foundry` | `endpoint`, credential-based |
+| `OAuthConnection` | `oauth` | OAuth-based auth |
+
+## Streaming
+
+Streaming uses the standard `IAsyncEnumerable<T>` pattern. The runtime provides
+two stream types:
+
+| Type | Description |
+|------|-------------|
+| `PromptyStream` | `IAsyncEnumerable<object>` — raw SDK chunks |
+| `ProcessedStream` | `IAsyncEnumerable<string>` — extracted text content |
+
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("chat.prompty");
+var messages = await Pipeline.PrepareAsync(agent, inputs);
+
+// Get the raw streaming response
+var raw = await Pipeline.RunAsync(agent, messages, raw: true);
+
+if (raw is PromptyStream stream)
+{
+    await foreach (var chunk in stream)
+    {
+        Console.Write(chunk);
+    }
+}
+```
+
+## Agent Mode
+
+Use `InvokeAgentAsync` to run the agent loop — the runtime calls the LLM,
+executes any requested tool functions, feeds results back, and repeats until
+the model produces a final response.
+
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("agent.prompty");
+var inputs = new Dictionary<string, object?> { ["question"] = "Weather in Seattle?" };
+
+var tools = new Dictionary<string, Func<string, Task<string>>>
+{
+    ["get_weather"] = async (args) =>
+    {
+        var parsed = ToolDispatch.ParseArguments(args);
+        var city = parsed["city"]?.ToString() ?? "unknown";
+        return $"72°F and sunny in {city}";
+    }
+};
+
+var result = await Pipeline.InvokeAgentAsync(
+    agent, inputs, tools: tools, maxIterations: 10);
+
+Console.WriteLine(result);
+```
+
+<Aside type="tip">
+  `InvokeAgentAsync` runs the full agent loop — it calls the LLM, executes any
+  tool calls via the `tools` dictionary, appends the results, and loops until the
+  model returns a final response. Use `InvokeAsync` or `RunAsync` for single-turn
+  calls where you handle tool responses yourself.
+</Aside>
+
+## Structured Output
+
+When `outputSchema` is defined in the `.prompty` frontmatter, the executor
+automatically adds `response_format` to the API call and the processor
+JSON-parses the response.
+
+```yaml
+outputSchema:
+  strict: true
+  properties:
+    - name: city
+      kind: string
+    - name: temperature
+      kind: integer
+```
+
+```csharp
+var result = await Pipeline.InvokeAsync("weather.prompty", inputs);
+// result is a parsed JSON object matching the schema
+```
+
+## Tool Dispatch
+
+Prompty uses a **two-layer registry** for extensible tool support.
+
+### Layer 1: Name-Based (Specific Tools)
+
+Register individual tool functions by name:
+
+```csharp
+using Prompty.Core;
+
+ToolDispatch.RegisterTool("calculator", async (args) => "42");
+```
+
+### Layer 2: Kind-Based (Tool Handlers)
+
+Register a handler for an entire tool `kind`:
+
+```csharp
+ToolDispatch.RegisterToolHandler("mcp", new McpToolHandler());
+```
+
+### Dispatch Order
+
+When the agent loop needs to execute a tool call, dispatch follows this order:
+
+1. `userTools` dictionary (passed to `InvokeAgentAsync`)
+2. Name-based registry (`RegisterTool`)
+3. Kind-based handler (`RegisterToolHandler`)
+4. Wildcard `"*"` handler (if registered)
+5. Error — tool not found
+
+```csharp
+// Parse tool arguments from the JSON string the LLM returns
+var args = ToolDispatch.ParseArguments(jsonArgs);
+
+// Dispatch a tool call (follows the order above)
+var result = await ToolDispatch.DispatchAsync(agent, toolCall, userTools);
+```
+
+### Tool Types
+
+| Type | `kind` | Key Fields |
+|------|--------|------------|
+| `FunctionTool` | `function` | `Parameters` (PropertySchema), `Strict` |
+| `McpTool` | `mcp` | `Connection`, `ServerName`, `ApprovalMode` |
+| `OpenApiTool` | `openapi` | `Connection`, `Specification` |
+| `PromptyTool` | `prompty` | References another `.prompty` file |
+| `CustomTool` | `*` | `Connection`, `Options` — wildcard catch-all |
+
+## Tracing
+
+Register tracer backends to capture pipeline execution data.
+
+```csharp
+using Prompty.Core.Tracing;
+
+// Console output
+Tracer.Add("console", ConsoleTracer.Factory);
+
+// OpenTelemetry spans
+OTelTracer.Register();
+
+// JSON file traces
+new PromptyTracer(outputDir: "./traces").Register();
+```
+
+### Manual Spans
+
+```csharp
+var result = await Trace.TraceAsync("operation-name", async (attr) =>
+{
+    attr("input", data);
+    var output = await DoWork();
+    attr("output", output);
+    return output;
+});
+```
+
+### Wrapping Functions
+
+```csharp
+var wrappedFn = Trace.Wrap<string, string>("my-fn", async (input) =>
+{
+    return await Process(input);
+});
+
+var result = await wrappedFn("hello");
+```
+
+## Interfaces
+
+The core interfaces for implementing custom invokers:
+
+```csharp
+using Prompty.Core;
+
+public interface IRenderer
+{
+    Task<string> RenderAsync(
+        Prompty agent, string template, Dictionary<string, object?> inputs);
+}
+
+public interface IParser
+{
+    Task<List<Message>> ParseAsync(Prompty agent, string rendered);
+}
+
+public interface IExecutor
+{
+    Task<object> ExecuteAsync(Prompty agent, List<Message> messages);
+    List<Message> FormatToolMessages(
+        object rawResponse, List<ToolCall> toolCalls,
+        List<string> toolResults, string? textContent = null);
+}
+
+public interface IProcessor
+{
+    Task<object> ProcessAsync(Prompty agent, object response);
+}
+
+// Optional: pre-render hook for custom template preprocessing
+public interface IPreRenderable
+{
+    (string template, Dictionary<string, object?> context) PreRender(string template);
+}
+```
+
+## Namespaces
+
+| Namespace | Contents |
+|-----------|----------|
+| `Prompty.Core` | `Pipeline`, `PromptyLoader`, `ConnectionRegistry`, `ToolDispatch`, `InvokerRegistry`, types |
+| `Prompty.Core.Tracing` | `Tracer`, `Trace`, `OTelTracer`, `PromptyTracer`, `ConsoleTracer` |
+| `Prompty.OpenAI` | `OpenAIExecutor`, `OpenAIProcessor`, `WireFormat` |
+| `Prompty.Foundry` | `FoundryExecutor` |
+| `Prompty.Anthropic` | `AnthropicExecutor` |
+
+## Environment Variables
+
+The `${env:VAR}` syntax in `.prompty` files works the same way as in Python and
+TypeScript. Set environment variables or use a `.env` file in your project root:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+AZURE_OPENAI_ENDPOINT=https://myresource.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+FOUNDRY_ENDPOINT=https://your-project.services.ai.azure.com
+```
+
+## Further Reading
+
+- [Core Concepts](/core-concepts/) — architecture deep-dives
+- [How-To Guides](/how-to/openai/) — practical recipes
+- [API Reference](/api-reference/) — pipeline functions and signatures

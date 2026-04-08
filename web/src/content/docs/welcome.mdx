@@ -60,12 +60,20 @@ Say hello to {{userName}}.
     const result = await invoke("greeting.prompty", { userName: "Jane" });
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync("greeting.prompty", new() { ["userName"] = "Jane" });
+    Console.WriteLine(result);
+    ```
+  </TabItem>
 </Tabs>
 
 ## Key Features
 
 - **One file, complete prompt** — model config, inputs, tools, and instructions in a single `.prompty` file
-- **Multi-language runtimes** — Python and TypeScript today, C# coming soon
+- **Multi-language runtimes** — Python, TypeScript, and C# (alpha)
 - **Pipeline architecture** — render → parse → execute → process, each stage swappable
 - **Agent mode** — built-in tool-calling loop with error recovery
 - **Structured output** — define output schemas, get typed JSON back

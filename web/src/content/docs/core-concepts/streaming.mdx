@@ -88,6 +88,16 @@ user:
     agent.model.options!.additionalProperties!.stream = true;
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+
+    // Enable streaming by mutating options before execution
+    agent.Model.Options.AdditionalProperties["stream"] = true;
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -153,6 +163,38 @@ user:
       process.stdout.write(String(chunk));
     }
     console.log();
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+    agent.Model.Options.AdditionalProperties["stream"] = true;
+
+    var messages = await Pipeline.PrepareAsync(agent,
+        new() { ["question"] = "Tell me a joke" });
+
+    // RunAsync with raw: true returns the PromptyStream
+    var response = await Pipeline.RunAsync(agent, messages, raw: true);
+    if (response is PromptyStream stream)
+    {
+        await foreach (var chunk in stream)
+        {
+            Console.Write(chunk);
+        }
+    }
+
+    // Or via the processor — returns ProcessedStream (IAsyncEnumerable<string>)
+    var processed = await Pipeline.RunAsync(agent, messages);
+    if (processed is ProcessedStream ps)
+    {
+        await foreach (var text in ps)
+        {
+            Console.Write(text);
+        }
+    }
+    Console.WriteLine();
     ```
   </TabItem>
 </Tabs>

@@ -98,6 +98,19 @@ template:
     console.log(result);  // "https://oaidalleapiprodscus.blob.core.windows.net/..."
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "generate-image.prompty",
+        new() { ["description"] = "A cat astronaut floating in space, digital art" }
+    );
+
+    // result contains the generated image URL
+    Console.WriteLine(result);
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -208,6 +221,22 @@ The result is a URL that expires after a period. To save the image locally:
     const buffer = Buffer.from(await response.arrayBuffer());
     await writeFile("cabin.png", buffer);
     console.log("Saved to cabin.png");
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var url = await Pipeline.InvokeAsync(
+        "generate-image.prompty",
+        new() { ["description"] = "A cozy cabin in the woods" }
+    );
+
+    // Download and save
+    using var httpClient = new HttpClient();
+    var imageBytes = await httpClient.GetByteArrayAsync(url?.ToString());
+    await File.WriteAllBytesAsync("cabin.png", imageBytes);
+    Console.WriteLine("Saved to cabin.png");
     ```
   </TabItem>
 </Tabs>

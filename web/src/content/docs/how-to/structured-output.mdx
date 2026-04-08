@@ -108,6 +108,25 @@ valid JSON with exactly those fields.
     console.log(result.conditions);   // "Partly cloudy"
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using System.Text.Json;
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "weather.prompty",
+        new() { ["city"] = "Seattle" }
+    );
+
+    // When outputSchema is defined, result is auto-parsed JSON (JsonElement)
+    if (result is JsonElement json)
+    {
+        Console.WriteLine(json.GetProperty("city"));         // "Seattle"
+        Console.WriteLine(json.GetProperty("temperature"));  // 62
+        Console.WriteLine(json.GetProperty("conditions"));   // "Partly cloudy"
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -186,6 +205,25 @@ Weather for {{city}}?
     console.log(result.current.temperature);   // 58
     console.log(result.current.humidity);      // 72
     console.log(result.forecast);              // [{day: "Mon", ...}, ...]
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using System.Text.Json;
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "detailed-weather.prompty",
+        new() { ["city"] = "Portland" }
+    );
+
+    if (result is JsonElement json)
+    {
+        Console.WriteLine(json.GetProperty("city"));                                  // "Portland"
+        Console.WriteLine(json.GetProperty("current").GetProperty("temperature"));   // 58
+        Console.WriteLine(json.GetProperty("current").GetProperty("humidity"));      // 72
+        Console.WriteLine(json.GetProperty("forecast"));                              // [{...}, ...]
+    }
     ```
   </TabItem>
 </Tabs>

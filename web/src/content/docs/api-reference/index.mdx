@@ -29,6 +29,15 @@ Parse a `.prompty` file into a typed `Prompty` object.
     const agent = await load("chat.prompty");
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+    Console.WriteLine(agent.Name);     // "chat"
+    Console.WriteLine(agent.Model.Id); // "gpt-4o"
+    ```
+  </TabItem>
 </Tabs>
 
 ### `render(agent, inputs) → str`
@@ -47,6 +56,12 @@ before parsing into messages.
     ```typescript
     import { render } from "@prompty/core";
     const rendered = await render(agent, { q: "Hi" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var rendered = await Pipeline.RenderAsync(agent, new() { ["q"] = "Hi" });
+    // "system:\nYou are helpful.\n\nuser:\nHi"
     ```
   </TabItem>
 </Tabs>
@@ -68,6 +83,12 @@ Parse a rendered string into structured messages.
     const messages = await parse(agent, rendered);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var messages = await Pipeline.ParseAsync(agent, rendered);
+    // List<Message> with system and user messages
+    ```
+  </TabItem>
 </Tabs>
 
 ### `prepare(agent, inputs) → list[Message]`
@@ -85,6 +106,11 @@ wire-ready messages.
     ```typescript
     import { prepare } from "@prompty/core";
     const messages = await prepare(agent, { q: "Hi" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var messages = await Pipeline.PrepareAsync(agent, new() { ["q"] = "Hi" });
     ```
   </TabItem>
 </Tabs>
@@ -107,6 +133,15 @@ Composite: call the LLM executor then process the response.
     ```typescript
     import { run } from "@prompty/core";
     const result = await run(agent, messages);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.RunAsync(agent, messages);
+    // "Hello! How can I help you?"
+
+    // Pass raw: true to get the raw SDK response
+    var response = await Pipeline.RunAsync(agent, messages, raw: true);
     ```
   </TabItem>
 </Tabs>
@@ -133,6 +168,11 @@ Top-level orchestrator: load → prepare → run.
     ```typescript
     import { invoke } from "@prompty/core";
     const result = await invoke("chat.prompty", { q: "Hi" });
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.InvokeAsync("chat.prompty", new() { ["q"] = "Hi" });
     ```
   </TabItem>
 </Tabs>
@@ -195,6 +235,23 @@ Run a prompt with an automatic tool-calling loop.
       "agent.prompty",
       { question: "Weather in Seattle?" },
       { get_weather: getWeather },
+    );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = args => Task.FromResult("72°F and sunny")
+    };
+
+    var result = await Pipeline.InvokeAgentAsync(
+        "agent.prompty",
+        new() { ["question"] = "Weather in Seattle?" },
+        tools: tools,
+        maxIterations: 10
     );
     ```
   </TabItem>
@@ -282,6 +339,20 @@ Set `stream: true` in model options:
     const response = await run(agent, messages, { raw: true });
     for await (const chunk of processResponse(agent, response)) {
       process.stdout.write(chunk);
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    agent.Model.Options.AdditionalProperties["stream"] = true;
+
+    var response = await Pipeline.RunAsync(agent, messages, raw: true);
+    if (response is PromptyStream stream)
+    {
+        await foreach (var chunk in stream)
+        {
+            Console.Write(chunk);
+        }
     }
     ```
   </TabItem>

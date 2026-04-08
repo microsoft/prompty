@@ -85,10 +85,21 @@ like — every trace event is dispatched to **all** registered backends.
     Tracer.add("console", consoleTracer);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    // Console tracer — prints to stdout
+    Tracer.Add("console", ConsoleTracer.Factory);
+
+    // JSON file tracer — writes .tracy files to disk
+    new PromptyTracer().Register();
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  Register backends **once** at startup (e.g. in your `main()` or app factory).
+  Register backends **once** at startup(e.g. in your `main()` or app factory).
   Every subsequent pipeline call will automatically dispatch to all registered
   backends.
 </Aside>
@@ -122,6 +133,21 @@ other traced functions (including Prompty's built-in pipeline), they appear as
     }
 
     const tracedLogic = trace(myBusinessLogic, "myBusinessLogic");
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+    using Prompty.Core.Tracing;
+
+    var result = await Trace.TraceAsync("myBusinessLogic", async (attr) =>
+    {
+        attr("query", query);
+        var output = await Pipeline.InvokeAsync("search.prompty",
+            new() { ["q"] = query });
+        attr("output", output);
+        return output;
+    });
     ```
   </TabItem>
 </Tabs>
@@ -165,6 +191,14 @@ one `.tracy` file per top-level trace to the specified output directory.
     Tracer.add("json", tracer.tracer);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    // JSON file tracer — writes .tracy files to disk
+    new PromptyTracer().Register();
+    ```
+  </TabItem>
 </Tabs>
 
 Each `.tracy` file contains structured JSON with the full trace tree — every
@@ -202,6 +236,14 @@ and more.
     Tracer.add("otel", otelTracer());
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    // Register OpenTelemetry backend
+    OTelTracer.Register();
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="caution">
@@ -215,6 +257,12 @@ and more.
     <TabItem label="TypeScript">
       ```bash
       npm install @opentelemetry/api
+      ```
+    </TabItem>
+    <TabItem label="C#">
+      ```bash
+      dotnet add package Prompty.Core --prerelease
+      # OTel support is built into Prompty.Core
       ```
     </TabItem>
   </Tabs>
@@ -255,6 +303,20 @@ production monitoring and console output for local debugging:
 
     // Debugging: also write .tracy files
     Tracer.add("json", new PromptyTracer("./traces").tracer);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    // Production: send to OTel collector
+    OTelTracer.Register();
+
+    // Development: also log to console
+    Tracer.Add("console", ConsoleTracer.Factory);
+
+    // Debugging: also write .tracy files
+    new PromptyTracer().Register();
     ```
   </TabItem>
 </Tabs>
@@ -326,6 +388,17 @@ default state is already off.
 
     const agent = load("my-prompt.prompty");
     const result = await run(agent, [{ role: "user", content: "hello" }]);
+    // No traces produced — zero overhead
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    // No Tracer.Add() calls → tracing is a no-op
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("my-prompt.prompty");
+    var result = await Pipeline.InvokeAsync(agent,
+        new() { ["query"] = "hello" });
     // No traces produced — zero overhead
     ```
   </TabItem>

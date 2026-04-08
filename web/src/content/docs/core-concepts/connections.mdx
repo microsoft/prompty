@@ -182,6 +182,16 @@ Register the client at application startup:
     }));
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    ConnectionRegistry.Register("my-foundry-client", new AzureOpenAI(
+        new Uri("https://my-resource.services.ai.azure.com/api/projects/my-project"),
+        new ApiKeyCredential("...")
+    ));
+    ```
+  </TabItem>
 </Tabs>
 
 The executor looks up `"my-azure-client"` in the connection registry and uses
@@ -355,6 +365,22 @@ and complex auth logic in application code — not in YAML.
 
     // Register it by name — .prompty files reference this name
     registerConnection("foundry-prod", client);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Azure.Identity;
+    using Prompty.Core;
+
+    // Build a client with Azure AD token-based auth
+    var credential = new DefaultAzureCredential();
+    var client = new AzureOpenAI(
+        new Uri(Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!),
+        credential
+    );
+
+    // Register it by name — .prompty files reference this name
+    ConnectionRegistry.Register("foundry-prod", client);
     ```
   </TabItem>
 </Tabs>

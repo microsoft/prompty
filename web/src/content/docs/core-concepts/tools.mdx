@@ -313,6 +313,27 @@ response.
     });
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("agent.prompty");
+    var inputs = new Dictionary<string, object?> { ["question"] = "Weather in Seattle?" };
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var city = parsed["city"]?.ToString() ?? "unknown";
+            var units = parsed["units"]?.ToString() ?? "celsius";
+            return $"72°F and sunny in {city}";
+        }
+    };
+
+    var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+    ```
+  </TabItem>
 </Tabs>
 
 <Tabs>
@@ -345,12 +366,21 @@ response.
     console.log(result);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.InvokeAgentAsync(
+        agent, inputs, tools: tools, maxIterations: 10);
+
+    Console.WriteLine(result);
+    ```
+  </TabItem>
 </Tabs>
 
-<Aside type="caution">
-  Without `invoke_agent`, tools are only **declared** to the model — the
-  runtime won't execute tool calls automatically. Use `invoke` or `run` when
-  you want to handle tool calls yourself.
+<Aside type="tip">
+  `invoke_agent` / `executeAgent` / `InvokeAgentAsync` runs the full agent loop —
+  it calls the LLM, executes any returned tool calls, appends the results, and
+  loops until the model returns a final response. Use `invoke` / `run` for
+  single-turn calls where you handle tool responses yourself.
 </Aside>
 
 ---
@@ -410,6 +440,23 @@ into the wire format the LLM expects (typically an OpenAI-style function definit
     registerTool("my_provider", myToolProjector);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // Register a name-based tool function
+    ToolDispatch.RegisterTool("calculator", async (args) =>
+    {
+        var parsed = ToolDispatch.ParseArguments(args);
+        var expression = parsed["expression"]?.ToString() ?? "";
+        return Evaluate(expression).ToString();
+    });
+
+    // Register a kind-based tool handler for a custom provider
+    // Handles ALL tools with kind: "my_provider"
+    ToolDispatch.RegisterToolHandler("my_provider", new MyToolHandler());
+    ```
+  </TabItem>
 </Tabs>
 
 When the executor sends tools to the LLM, it calls each tool's registered
@@ -447,6 +494,25 @@ returns the result string.
     }
 
     registerToolHandler("my_provider", myToolHandler);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    // Kind-based handler: implement a class for the custom tool kind
+    ToolDispatch.RegisterToolHandler("my_provider", new MyToolHandler());
+
+    // Dispatch follows this order:
+    // 1. userTools dict (passed to InvokeAgentAsync)
+    // 2. Name registry (RegisterTool)
+    // 3. Kind handler (RegisterToolHandler)
+    // 4. Wildcard "*" handler
+    // 5. Error — tool not found
+
+    // Parse LLM-returned JSON arguments into a dictionary
+    var args = ToolDispatch.ParseArguments(jsonArgs);
+    var city = args["city"]?.ToString() ?? "unknown";
     ```
   </TabItem>
 </Tabs>

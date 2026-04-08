@@ -246,6 +246,33 @@ graph LR
     const output = await invoke("chat.prompty", { inputs });
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var agent = PromptyLoader.Load("chat.prompty");
+    var inputs = new Dictionary<string, object>
+    {
+        ["firstName"] = "Jane",
+        ["question"] = "What is AI?"
+    };
+
+    // Stage 1 only — render the template
+    var rendered = await Pipeline.RenderAsync(agent, inputs);
+
+    // Stage 2 only — parse rendered string into messages
+    var messages = await Pipeline.ParseAsync(agent, rendered);
+
+    // Stages 1 + 2 — render, parse, and expand threads
+    var prepared = await Pipeline.PrepareAsync(agent, inputs);
+
+    // Stages 3 + 4 — execute LLM call and process response
+    var result = await Pipeline.RunAsync(agent, prepared);
+
+    // Full pipeline — load + prepare + run
+    var output = await Pipeline.InvokeAsync("chat.prompty", inputs);
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -346,6 +373,27 @@ Each protocol defines `sync` and `async` methods. Here's an example custom execu
           messages: messages.map(m => ({ role: m.role, content: m.content })),
         });
       }
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    public class AnthropicExecutor : IExecutor
+    {
+        public async Task<object> ExecuteAsync(
+            PromptAgent agent, IList<Message> messages)
+        {
+            // Use your preferred Anthropic .NET SDK
+            var client = new AnthropicClient(agent.Model.Connection.ApiKey);
+            return await client.Messages.CreateAsync(new()
+            {
+                Model = agent.Model.Id,
+                Messages = messages.Select(m =>
+                    new { Role = m.Role, Content = m.Content }).ToList(),
+            });
+        }
     }
     ```
   </TabItem>

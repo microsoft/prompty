@@ -156,6 +156,19 @@ With structured output, `invoke()` returns a parsed dictionary/object directly:
     console.log(result.conditions);   // "Partly cloudy"
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync("weather.prompty",
+        new() { ["city"] = "Seattle" });
+
+    // result is a parsed JsonElement when outputSchema is present
+    Console.WriteLine(result.GetProperty("city"));         // "Seattle"
+    Console.WriteLine(result.GetProperty("temperature"));  // 62
+    Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"
+    ```
+  </TabItem>
 </Tabs>
 
 ---

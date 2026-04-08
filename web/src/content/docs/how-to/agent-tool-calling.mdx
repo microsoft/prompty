@@ -59,6 +59,25 @@ User message
     }
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var city = parsed["city"]?.ToString() ?? "unknown";
+            // In production, call a real weather API
+            return $"72°F and sunny in {city}";
+        },
+        ["get_time"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            return DateTime.UtcNow.ToString("o");
+        }
+    };
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -199,6 +218,49 @@ user:
     console.log(result);
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var city = parsed["city"]?.ToString() ?? "unknown";
+            return $"72°F and sunny in {city}";
+        },
+        ["get_time"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            return DateTime.UtcNow.ToString("o");
+        }
+    };
+
+    // One-shot invocation with agent loop
+    var result = await Pipeline.InvokeAgentAsync(
+        "agent.prompty",
+        new() { ["question"] = "What's the weather in Seattle and the time in Tokyo?" },
+        tools: tools
+    );
+
+    Console.WriteLine(result);
+
+    // Step-by-step variant
+    var agent = PromptyLoader.Load("agent.prompty");
+    var messages = await Pipeline.PrepareAsync(
+        agent,
+        new() { ["question"] = "Weather in NYC?" }
+    );
+    var stepResult = await Pipeline.InvokeAgentAsync(
+        agent,
+        new() { ["question"] = "Weather in NYC?" },
+        tools: tools
+    );
+
+    Console.WriteLine(stepResult);
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -249,6 +311,34 @@ If your tools call external APIs, use async functions to avoid blocking:
       tools: { get_weather: getWeather },
     });
     ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var city = parsed["city"]?.ToString() ?? "unknown";
+            using var client = new HttpClient();
+            var resp = await client.GetStringAsync($"https://api.weather.com/v1/{city}");
+            return resp;
+        }
+    };
+
+    var result = await Pipeline.InvokeAgentAsync(
+        "agent.prompty",
+        new() { ["question"] = "Weather in London?" },
+        tools: tools
+    );
+    ```
+
+    <Aside type="tip">
+      In C#, all tool functions are inherently async (`Func&lt;string, Task&lt;string&gt;&gt;`),
+      so there's no separate sync/async distinction.
+    </Aside>
   </TabItem>
 </Tabs>
 
@@ -374,6 +464,40 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["search_docs"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var query = parsed["query"]?.ToString() ?? "";
+            var limit = parsed.ContainsKey("limit") ? parsed["limit"]?.ToString() : "5";
+            return $"Found {limit} results for '{query}'";
+        },
+        ["get_user"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var email = parsed["email"]?.ToString() ?? "";
+            return $$"""{"name": "Jane Doe", "email": "{{email}}", "role": "Engineer"}""";
+        },
+        ["send_email"] = async (args) =>
+        {
+            var parsed = ToolDispatch.ParseArguments(args);
+            var to = parsed["to"]?.ToString() ?? "";
+            return $"Email sent to {to}";
+        }
+    };
+
+    var result = await Pipeline.InvokeAgentAsync(
+        "research-agent.prompty",
+        new() { ["request"] = "Find docs about onboarding and email a summary to jane@example.com" },
+        tools: tools
+    );
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -416,6 +540,37 @@ user:
       });
     } catch (error) {
       console.error("Agent error:", error);
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    try
+    {
+        var result = await Pipeline.InvokeAgentAsync(
+            "agent.prompty",
+            new() { ["question"] = "What's the weather?" },
+            tools: new Dictionary<string, Func<string, Task<string>>>
+            {
+                ["get_weather"] = async (args) =>
+                {
+                    var parsed = ToolDispatch.ParseArguments(args);
+                    var city = parsed["city"]?.ToString() ?? "unknown";
+                    return $"72°F and sunny in {city}";
+                }
+                // Missing get_time — will throw if the LLM calls it!
+            }
+        );
+    }
+    catch (KeyNotFoundException ex)
+    {
+        Console.WriteLine($"Tool error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Execution error: {ex.Message}");
     }
     ```
   </TabItem>

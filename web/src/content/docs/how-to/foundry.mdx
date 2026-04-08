@@ -33,6 +33,12 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     npm install @prompty/core @prompty/foundry
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```bash
+    dotnet add package Prompty.Core --prerelease
+    dotnet add package Prompty.Foundry --prerelease
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip" title="Migrating from Azure OpenAI?">
@@ -113,6 +119,18 @@ user:
     });
 
     console.log(result);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var result = await Pipeline.InvokeAsync(
+        "foundry-chat.prompty",
+        new() { ["question"] = "What services does Microsoft Foundry offer?" }
+    );
+
+    Console.WriteLine(result);
     ```
   </TabItem>
 </Tabs>
@@ -224,6 +242,27 @@ user:
 
     console.log(result);
     ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Azure.Identity;
+    using Prompty.Core;
+
+    // Azure AD auth is handled automatically by Prompty.Foundry
+    // when connection kind is "reference" — uses DefaultAzureCredential
+    var result = await Pipeline.InvokeAsync(
+        "foundry-chat-aad.prompty",
+        new() { ["question"] = "What is Microsoft Foundry?" }
+    );
+
+    Console.WriteLine(result);
+    ```
+
+    <Aside type="note">
+      The `Prompty.Foundry` package uses `Azure.Identity.DefaultAzureCredential`
+      under the hood when the connection kind is `reference`. No manual
+      credential registration is needed in C#.
+    </Aside>
   </TabItem>
 </Tabs>
 
