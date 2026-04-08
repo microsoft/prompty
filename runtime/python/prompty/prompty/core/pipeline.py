@@ -1235,8 +1235,14 @@ def invoke_agent(
                     )
 
                 tool_messages = _build_tool_messages_from_calls_with_extensions(
-                    streamed_tool_calls, content, tools, agent, parent_inputs,
-                    on_event=on_event, cancel=cancel, guardrails=guardrails,
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
                     parallel=parallel_tool_calls,
                 )
                 messages.extend(tool_messages)
@@ -1267,8 +1273,13 @@ def invoke_agent(
                 )
 
             tool_messages, _ = _build_tool_result_messages_with_extensions(
-                response, tools, agent, parent_inputs,
-                on_event=on_event, cancel=cancel, guardrails=guardrails,
+                response,
+                tools,
+                agent,
+                parent_inputs,
+                on_event=on_event,
+                cancel=cancel,
+                guardrails=guardrails,
                 parallel=parallel_tool_calls,
             )
             messages.extend(tool_messages)
@@ -1407,8 +1418,14 @@ async def invoke_agent_async(
                     )
 
                 tool_messages = await _build_tool_messages_from_calls_with_extensions_async(
-                    streamed_tool_calls, content, tools, agent, parent_inputs,
-                    on_event=on_event, cancel=cancel, guardrails=guardrails,
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
                     parallel=parallel_tool_calls,
                 )
                 messages.extend(tool_messages)
@@ -1439,8 +1456,13 @@ async def invoke_agent_async(
                 )
 
             tool_messages = await _build_tool_result_messages_with_extensions_async(
-                response, tools, agent, parent_inputs,
-                on_event=on_event, cancel=cancel, guardrails=guardrails,
+                response,
+                tools,
+                agent,
+                parent_inputs,
+                on_event=on_event,
+                cancel=cancel,
+                guardrails=guardrails,
                 parallel=parallel_tool_calls,
             )
             messages.extend(tool_messages)
@@ -1490,8 +1512,14 @@ def _build_tool_result_messages_with_extensions(
     tool_calls, text_content = _extract_tool_info(response)
 
     tool_results = _dispatch_tools_with_extensions(
-        tool_calls, tools, agent, parent_inputs or {},
-        on_event=on_event, cancel=cancel, guardrails=guardrails, parallel=parallel,
+        tool_calls,
+        tools,
+        agent,
+        parent_inputs or {},
+        on_event=on_event,
+        cancel=cancel,
+        guardrails=guardrails,
+        parallel=parallel,
     )
 
     provider = agent.model.provider or ""
@@ -1517,8 +1545,14 @@ async def _build_tool_result_messages_with_extensions_async(
     tool_calls, text_content = _extract_tool_info(response)
 
     tool_results = await _dispatch_tools_with_extensions_async(
-        tool_calls, tools, agent, parent_inputs or {},
-        on_event=on_event, cancel=cancel, guardrails=guardrails, parallel=parallel,
+        tool_calls,
+        tools,
+        agent,
+        parent_inputs or {},
+        on_event=on_event,
+        cancel=cancel,
+        guardrails=guardrails,
+        parallel=parallel,
     )
 
     provider = agent.model.provider or ""
@@ -1542,8 +1576,14 @@ def _build_tool_messages_from_calls_with_extensions(
     from .discovery import get_executor
 
     tool_results = _dispatch_tools_with_extensions(
-        tool_calls, tools, agent, parent_inputs or {},
-        on_event=on_event, cancel=cancel, guardrails=guardrails, parallel=parallel,
+        tool_calls,
+        tools,
+        agent,
+        parent_inputs or {},
+        on_event=on_event,
+        cancel=cancel,
+        guardrails=guardrails,
+        parallel=parallel,
     )
 
     provider = agent.model.provider or ""
@@ -1567,8 +1607,14 @@ async def _build_tool_messages_from_calls_with_extensions_async(
     from .discovery import get_executor
 
     tool_results = await _dispatch_tools_with_extensions_async(
-        tool_calls, tools, agent, parent_inputs or {},
-        on_event=on_event, cancel=cancel, guardrails=guardrails, parallel=parallel,
+        tool_calls,
+        tools,
+        agent,
+        parent_inputs or {},
+        on_event=on_event,
+        cancel=cancel,
+        guardrails=guardrails,
+        parallel=parallel,
     )
 
     provider = agent.model.provider or ""

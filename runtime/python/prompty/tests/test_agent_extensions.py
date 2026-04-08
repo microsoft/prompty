@@ -48,7 +48,9 @@ def _make_agent() -> Prompty:
     return Prompty.load(data)
 
 
-def _mock_tool_call_response(fn_name: str = "get_weather", fn_args: str = '{"location":"NYC"}', call_id: str = "call_1") -> MagicMock:
+def _mock_tool_call_response(
+    fn_name: str = "get_weather", fn_args: str = '{"location":"NYC"}', call_id: str = "call_1"
+) -> MagicMock:
     tc = MagicMock()
     tc.id = call_id
     tc.name = fn_name
@@ -109,6 +111,7 @@ class TestEvents:
 
     def test_emit_event_swallows_errors(self):
         """Event callbacks must not break the loop."""
+
         def bad_callback(event_type: str, data: Any) -> None:
             raise RuntimeError("boom")
 
@@ -173,7 +176,8 @@ class TestCancellation:
         # So first iteration completes tools, then cancel fires on second iteration entry
         with pytest.raises(CancelledError):
             invoke_agent(
-                agent, {},
+                agent,
+                {},
                 tools={"get_weather": cancelling_tool},
                 cancel=token,
                 max_iterations=5,
@@ -227,7 +231,8 @@ class TestContextWindow:
         events: list[tuple[str, Any]] = []
 
         result = invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": lambda **kw: "sunny"},
             context_budget=50,
             on_event=lambda t, d: events.append((t, d)),
@@ -297,7 +302,8 @@ class TestGuardrails:
         g = Guardrails(tool=lambda name, args: GuardrailResult(allowed=False, reason="disallowed"))
 
         invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": lambda **kw: "sunny"},
             guardrails=g,
             on_event=lambda t, d: events.append((t, d)),
@@ -355,7 +361,8 @@ class TestSteering:
                 steering.send("Please also check humidity")
 
         result = invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": lambda **kw: "sunny"},
             steering=steering,
             on_event=on_event,
@@ -384,7 +391,11 @@ class TestParallelTools:
         tc1.arguments = '{"location":"NYC"}'
         tc1.function.name = "get_weather"
         tc1.function.arguments = '{"location":"NYC"}'
-        tc1.model_dump.return_value = {"id": "call_1", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"NYC"}'}}
+        tc1.model_dump.return_value = {
+            "id": "call_1",
+            "type": "function",
+            "function": {"name": "get_weather", "arguments": '{"location":"NYC"}'},
+        }
 
         tc2 = MagicMock()
         tc2.id = "call_2"
@@ -392,7 +403,11 @@ class TestParallelTools:
         tc2.arguments = '{"location":"LA"}'
         tc2.function.name = "get_weather"
         tc2.function.arguments = '{"location":"LA"}'
-        tc2.model_dump.return_value = {"id": "call_2", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"LA"}'}}
+        tc2.model_dump.return_value = {
+            "id": "call_2",
+            "type": "function",
+            "function": {"name": "get_weather", "arguments": '{"location":"LA"}'},
+        }
 
         tool_resp = MagicMock()
         tool_resp.choices = [MagicMock()]
@@ -403,7 +418,8 @@ class TestParallelTools:
 
         agent = _make_agent()
         result = await invoke_agent_async(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": lambda **kw: f"Sunny in {kw.get('location', '?')}"},
             parallel_tool_calls=True,
         )
@@ -430,7 +446,8 @@ class TestCombinedExtensions:
         guardrails = Guardrails()  # all allow
 
         result = invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": lambda **kw: "sunny"},
             on_event=lambda t, d: events.append((t, d)),
             context_budget=100000,
@@ -488,9 +505,7 @@ class TestAgentLoopExtensions:
         invoke_agent(agent, {}, tools={}, steering=steering)
 
         assert len(captured_messages) == 1
-        all_text = " ".join(
-            p.value for m in captured_messages[0] for p in m.parts if isinstance(p, TextPart)
-        )
+        all_text = " ".join(p.value for m in captured_messages[0] for p in m.parts if isinstance(p, TextPart))
         assert "Extra context for first turn" in all_text
 
     # ----- 3. Context trim before first call -------------------------------
@@ -580,9 +595,7 @@ class TestAgentLoopExtensions:
         to be returned instead of the original."""
         mock_exec.return_value = _mock_final_response("original response")
         agent = _make_agent()
-        g = Guardrails(
-            output=lambda msg: GuardrailResult(allowed=True, rewrite="sanitized response")
-        )
+        g = Guardrails(output=lambda msg: GuardrailResult(allowed=True, rewrite="sanitized response"))
 
         result = invoke_agent(agent, {}, tools={}, guardrails=g)
         assert result == "sanitized response"
@@ -612,7 +625,8 @@ class TestAgentLoopExtensions:
         )
 
         invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": tracking_tool},
             guardrails=g,
         )
@@ -636,7 +650,11 @@ class TestAgentLoopExtensions:
         tc1.arguments = '{"location":"NYC"}'
         tc1.function.name = "get_weather"
         tc1.function.arguments = '{"location":"NYC"}'
-        tc1.model_dump.return_value = {"id": "call_1", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"NYC"}'}}
+        tc1.model_dump.return_value = {
+            "id": "call_1",
+            "type": "function",
+            "function": {"name": "get_weather", "arguments": '{"location":"NYC"}'},
+        }
 
         tc2 = MagicMock()
         tc2.id = "call_2"
@@ -644,7 +662,11 @@ class TestAgentLoopExtensions:
         tc2.arguments = '{"location":"LA"}'
         tc2.function.name = "get_weather"
         tc2.function.arguments = '{"location":"LA"}'
-        tc2.model_dump.return_value = {"id": "call_2", "type": "function", "function": {"name": "get_weather", "arguments": '{"location":"LA"}'}}
+        tc2.model_dump.return_value = {
+            "id": "call_2",
+            "type": "function",
+            "function": {"name": "get_weather", "arguments": '{"location":"LA"}'},
+        }
 
         multi_tool_resp = MagicMock()
         multi_tool_resp.choices = [MagicMock()]
@@ -662,7 +684,8 @@ class TestAgentLoopExtensions:
 
         start = time.monotonic()
         result = invoke_agent(
-            agent, {},
+            agent,
+            {},
             tools={"get_weather": slow_tool},
             parallel_tool_calls=True,
         )
@@ -684,7 +707,8 @@ class TestAgentLoopExtensions:
 
         with pytest.raises(ValueError, match="max_iterations"):
             invoke_agent(
-                agent, {},
+                agent,
+                {},
                 tools={"get_weather": lambda **kw: "sunny"},
                 max_iterations=2,
             )
@@ -716,7 +740,8 @@ class TestAgentLoopExtensions:
 
         with pytest.raises(CancelledError):
             invoke_agent(
-                agent, {},
+                agent,
+                {},
                 tools={"get_weather": lambda **kw: "sunny"},
                 cancel=token,
                 max_iterations=10,

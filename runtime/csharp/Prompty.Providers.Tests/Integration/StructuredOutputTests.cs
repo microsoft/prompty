@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using System.Text.Json;
 using Prompty.Core;
 using Prompty.OpenAI;
 using Prompty.Foundry;
@@ -30,14 +29,12 @@ public class StructuredOutputTests : IntegrationTestBase
         var response = await executor.ExecuteAsync(agent, StructuredMessages());
         var result = await processor.ProcessAsync(agent, response);
 
-        Assert.IsType<JsonElement>(result);
-        var json = (JsonElement)result;
-        Assert.True(json.TryGetProperty("city", out var city));
-        Assert.Equal(JsonValueKind.String, city.ValueKind);
-        Assert.True(json.TryGetProperty("population", out var population));
-        Assert.Equal(JsonValueKind.Number, population.ValueKind);
-        Assert.True(json.TryGetProperty("country", out var country));
-        Assert.Equal(JsonValueKind.String, country.ValueKind);
+        Assert.IsType<StructuredResult>(result);
+        var sr = (StructuredResult)result;
+        Assert.True(sr.ContainsKey("city"));
+        Assert.True(sr.ContainsKey("population"));
+        Assert.True(sr.ContainsKey("country"));
+        Assert.IsType<string>(sr["city"]);
     }
 
     // -----------------------------------------------------------------------
@@ -56,11 +53,11 @@ public class StructuredOutputTests : IntegrationTestBase
         var response = await executor.ExecuteAsync(agent, StructuredMessages());
         var result = await processor.ProcessAsync(agent, response);
 
-        Assert.IsType<JsonElement>(result);
-        var json = (JsonElement)result;
-        Assert.True(json.TryGetProperty("city", out _));
-        Assert.True(json.TryGetProperty("population", out _));
-        Assert.True(json.TryGetProperty("country", out _));
+        Assert.IsType<StructuredResult>(result);
+        var sr = (StructuredResult)result;
+        Assert.True(sr.ContainsKey("city"));
+        Assert.True(sr.ContainsKey("population"));
+        Assert.True(sr.ContainsKey("country"));
     }
 
     // -----------------------------------------------------------------------
@@ -79,10 +76,10 @@ public class StructuredOutputTests : IntegrationTestBase
         var response = await executor.ExecuteAsync(agent, StructuredMessages());
         var result = await processor.ProcessAsync(agent, response);
 
-        Assert.IsType<JsonElement>(result);
-        var json = (JsonElement)result;
-        Assert.True(json.TryGetProperty("city", out _));
-        Assert.True(json.TryGetProperty("population", out _));
-        Assert.True(json.TryGetProperty("country", out _));
+        Assert.IsType<StructuredResult>(result);
+        var sr = (StructuredResult)result;
+        Assert.True(sr.ContainsKey("city"));
+        Assert.True(sr.ContainsKey("population"));
+        Assert.True(sr.ContainsKey("country"));
     }
 }

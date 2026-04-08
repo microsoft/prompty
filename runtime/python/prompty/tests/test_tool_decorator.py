@@ -228,6 +228,7 @@ class TestBindTools:
 
     def test_bind_tools_basic(self):
         """Decorated functions matching declarations produce a valid dict."""
+
         @tool(register=False)
         def get_weather(city: str) -> str:
             return f"72°F in {city}"
@@ -239,6 +240,7 @@ class TestBindTools:
 
     def test_bind_tools_multiple(self):
         """Multiple handlers all validated."""
+
         @tool(register=False)
         def get_weather(city: str) -> str:
             return ""
@@ -253,6 +255,7 @@ class TestBindTools:
 
     def test_bind_tools_handler_not_declared(self):
         """Handler with no matching declaration raises ValueError."""
+
         @tool(register=False)
         def unknown_tool(x: str) -> str:
             return x
@@ -263,6 +266,7 @@ class TestBindTools:
 
     def test_bind_tools_missing_handler_warns(self):
         """Declared function tool with no handler emits warning."""
+
         @tool(register=False)
         def get_weather(city: str) -> str:
             return ""
@@ -275,6 +279,7 @@ class TestBindTools:
 
     def test_bind_tools_not_decorated(self):
         """Non-decorated function raises ValueError."""
+
         def plain_fn(x: str) -> str:
             return x
 
@@ -284,6 +289,7 @@ class TestBindTools:
 
     def test_bind_tools_duplicate_handler(self):
         """Two handlers with the same name raises ValueError."""
+
         @tool(name="get_weather", register=False)
         def weather_v1(city: str) -> str:
             return ""

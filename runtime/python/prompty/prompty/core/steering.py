@@ -45,10 +45,7 @@ class Steering:
         with self._lock:
             items = self._queue.copy()
             self._queue.clear()
-        return [
-            Message(role="user", parts=[TextPart(value=text)])
-            for text in items
-        ]
+        return [Message(role="user", parts=[TextPart(value=text)]) for text in items]
 
     @property
     def has_pending(self) -> bool:
