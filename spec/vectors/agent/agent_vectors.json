@@ -1,11 +1,17 @@
 [
   {
     "name": "no_tool_calls",
-    "description": "LLM returns content immediately with no tool calls — the agent loop completes in a single iteration.",
+    "description": "LLM returns content immediately with no tool calls \u00e2\u0080\u0094 the agent loop completes in a single iteration.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "What is 2 + 2?" }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is 2 + 2?"
+        }
       ],
       "tools": [
         {
@@ -14,7 +20,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -55,8 +65,14 @@
     "description": "Turn 1: LLM requests get_weather for Paris. Turn 2: after receiving the tool result, LLM returns a final content response.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful weather assistant." },
-        { "role": "user", "content": "What is the weather in Paris?" }
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
       ],
       "tools": [
         {
@@ -65,7 +81,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -105,13 +125,15 @@
           {
             "id": "call_abc123",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           }
         ],
         "tool_results": [
           {
             "tool_call_id": "call_abc123",
-            "result": "72°F sunny"
+            "result": "72\u00c2\u00b0F sunny"
           }
         ]
       },
@@ -125,7 +147,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "The weather in Paris is 72°F and sunny.",
+                "content": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
                 "tool_calls": null
               },
               "finish_reason": "stop"
@@ -136,12 +158,18 @@
       }
     ],
     "expected": {
-      "result": "The weather in Paris is 72°F and sunny.",
+      "result": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
       "iterations": 2,
       "total_messages": 6,
       "message_sequence": [
-        { "role": "system", "content": "You are a helpful weather assistant." },
-        { "role": "user", "content": "What is the weather in Paris?" },
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        },
         {
           "role": "assistant",
           "content": "",
@@ -150,30 +178,41 @@
               {
                 "id": "call_abc123",
                 "type": "function",
-                "function": { "name": "get_weather", "arguments": "{\"city\": \"Paris\"}" }
+                "function": {
+                  "name": "get_weather",
+                  "arguments": "{\"city\": \"Paris\"}"
+                }
               }
             ]
           }
         },
         {
           "role": "tool",
-          "content": "72°F sunny",
-          "metadata": { "tool_call_id": "call_abc123" }
+          "content": "72\u00c2\u00b0F sunny",
+          "metadata": {
+            "tool_call_id": "call_abc123"
+          }
         },
         {
           "role": "assistant",
-          "content": "The weather in Paris is 72°F and sunny."
+          "content": "The weather in Paris is 72\u00c2\u00b0F and sunny."
         }
       ]
     }
   },
   {
     "name": "multiple_tool_calls_single_turn",
-    "description": "Turn 1: LLM returns two parallel tool calls — get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
+    "description": "Turn 1: LLM returns two parallel tool calls \u00e2\u0080\u0094 get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful weather assistant." },
-        { "role": "user", "content": "Compare the weather in Paris and London." }
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "Compare the weather in Paris and London."
+        }
       ],
       "tools": [
         {
@@ -182,7 +221,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -230,22 +273,26 @@
           {
             "id": "call_paris_001",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           },
           {
             "id": "call_london_001",
             "name": "get_weather",
-            "arguments": { "city": "London" }
+            "arguments": {
+              "city": "London"
+            }
           }
         ],
         "tool_results": [
           {
             "tool_call_id": "call_paris_001",
-            "result": "72°F sunny"
+            "result": "72\u00c2\u00b0F sunny"
           },
           {
             "tool_call_id": "call_london_001",
-            "result": "59°F cloudy"
+            "result": "59\u00c2\u00b0F cloudy"
           }
         ]
       },
@@ -259,7 +306,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "Paris is 72°F and sunny, while London is 59°F and cloudy.",
+                "content": "Paris is 72\u00c2\u00b0F and sunny, while London is 59\u00c2\u00b0F and cloudy.",
                 "tool_calls": null
               },
               "finish_reason": "stop"
@@ -270,12 +317,18 @@
       }
     ],
     "expected": {
-      "result": "Paris is 72°F and sunny, while London is 59°F and cloudy.",
+      "result": "Paris is 72\u00c2\u00b0F and sunny, while London is 59\u00c2\u00b0F and cloudy.",
       "iterations": 2,
       "total_messages": 7,
       "message_sequence": [
-        { "role": "system", "content": "You are a helpful weather assistant." },
-        { "role": "user", "content": "Compare the weather in Paris and London." },
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "Compare the weather in Paris and London."
+        },
         {
           "role": "assistant",
           "content": "",
@@ -284,29 +337,39 @@
               {
                 "id": "call_paris_001",
                 "type": "function",
-                "function": { "name": "get_weather", "arguments": "{\"city\": \"Paris\"}" }
+                "function": {
+                  "name": "get_weather",
+                  "arguments": "{\"city\": \"Paris\"}"
+                }
               },
               {
                 "id": "call_london_001",
                 "type": "function",
-                "function": { "name": "get_weather", "arguments": "{\"city\": \"London\"}" }
+                "function": {
+                  "name": "get_weather",
+                  "arguments": "{\"city\": \"London\"}"
+                }
               }
             ]
           }
         },
         {
           "role": "tool",
-          "content": "72°F sunny",
-          "metadata": { "tool_call_id": "call_paris_001" }
+          "content": "72\u00c2\u00b0F sunny",
+          "metadata": {
+            "tool_call_id": "call_paris_001"
+          }
         },
         {
           "role": "tool",
-          "content": "59°F cloudy",
-          "metadata": { "tool_call_id": "call_london_001" }
+          "content": "59\u00c2\u00b0F cloudy",
+          "metadata": {
+            "tool_call_id": "call_london_001"
+          }
         },
         {
           "role": "assistant",
-          "content": "Paris is 72°F and sunny, while London is 59°F and cloudy."
+          "content": "Paris is 72\u00c2\u00b0F and sunny, while London is 59\u00c2\u00b0F and cloudy."
         }
       ]
     }
@@ -316,8 +379,14 @@
     "description": "Three-turn chain: Turn 1 calls get_weather, Turn 2 calls convert_temperature with the result, Turn 3 returns the final answer.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant with access to weather and conversion tools." },
-        { "role": "user", "content": "What is the weather in Paris in Celsius?" }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather and conversion tools."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris in Celsius?"
+        }
       ],
       "tools": [
         {
@@ -326,7 +395,11 @@
           "description": "Get the current weather for a city (returns Fahrenheit)",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         },
@@ -336,9 +409,21 @@
           "description": "Convert a temperature between Fahrenheit and Celsius",
           "parameters": {
             "properties": [
-              { "name": "value", "kind": "float", "required": true },
-              { "name": "from_unit", "kind": "string", "required": true },
-              { "name": "to_unit", "kind": "string", "required": true }
+              {
+                "name": "value",
+                "kind": "float",
+                "required": true
+              },
+              {
+                "name": "from_unit",
+                "kind": "string",
+                "required": true
+              },
+              {
+                "name": "to_unit",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -379,13 +464,15 @@
           {
             "id": "call_weather_001",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           }
         ],
         "tool_results": [
           {
             "tool_call_id": "call_weather_001",
-            "result": "72°F sunny"
+            "result": "72\u00c2\u00b0F sunny"
           }
         ]
       },
@@ -419,13 +506,17 @@
           {
             "id": "call_convert_001",
             "name": "convert_temperature",
-            "arguments": { "value": 72.0, "from_unit": "fahrenheit", "to_unit": "celsius" }
+            "arguments": {
+              "value": 72.0,
+              "from_unit": "fahrenheit",
+              "to_unit": "celsius"
+            }
           }
         ],
         "tool_results": [
           {
             "tool_call_id": "call_convert_001",
-            "result": "22.2°C"
+            "result": "22.2\u00c2\u00b0C"
           }
         ]
       },
@@ -439,7 +530,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "The weather in Paris is 22.2°C and sunny.",
+                "content": "The weather in Paris is 22.2\u00c2\u00b0C and sunny.",
                 "tool_calls": null
               },
               "finish_reason": "stop"
@@ -450,7 +541,7 @@
       }
     ],
     "expected": {
-      "result": "The weather in Paris is 22.2°C and sunny.",
+      "result": "The weather in Paris is 22.2\u00c2\u00b0C and sunny.",
       "iterations": 3,
       "total_messages": 8
     }
@@ -460,8 +551,14 @@
     "description": "LLM returns tool calls on every turn for 11 iterations, exceeding MAX_ITERATIONS=10. The agent loop must raise an error.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "Keep checking the weather forever." }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Keep checking the weather forever."
+        }
       ],
       "tools": [
         {
@@ -470,7 +567,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -485,110 +586,462 @@
         "llm_response": {
           "id": "chatcmpl-loop-001",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_01", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Paris\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_01",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_01", "name": "get_weather", "arguments": { "city": "Paris" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_01", "result": "72°F sunny" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_01",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_01",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
       },
       {
         "turn": 2,
         "llm_response": {
           "id": "chatcmpl-loop-002",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_02", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"London\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_02",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"London\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_02", "name": "get_weather", "arguments": { "city": "London" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_02", "result": "59°F cloudy" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_02",
+            "name": "get_weather",
+            "arguments": {
+              "city": "London"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_02",
+            "result": "59\u00c2\u00b0F cloudy"
+          }
+        ]
       },
       {
         "turn": 3,
         "llm_response": {
           "id": "chatcmpl-loop-003",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_03", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Tokyo\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_03",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Tokyo\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_03", "name": "get_weather", "arguments": { "city": "Tokyo" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_03", "result": "80°F humid" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_03",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Tokyo"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_03",
+            "result": "80\u00c2\u00b0F humid"
+          }
+        ]
       },
       {
         "turn": 4,
         "llm_response": {
           "id": "chatcmpl-loop-004",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_04", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Sydney\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_04",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Sydney\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_04", "name": "get_weather", "arguments": { "city": "Sydney" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_04", "result": "65°F rainy" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_04",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Sydney"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_04",
+            "result": "65\u00c2\u00b0F rainy"
+          }
+        ]
       },
       {
         "turn": 5,
         "llm_response": {
           "id": "chatcmpl-loop-005",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_05", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Berlin\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_05",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Berlin\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_05", "name": "get_weather", "arguments": { "city": "Berlin" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_05", "result": "55°F windy" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_05",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Berlin"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_05",
+            "result": "55\u00c2\u00b0F windy"
+          }
+        ]
       },
       {
         "turn": 6,
         "llm_response": {
           "id": "chatcmpl-loop-006",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_06", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Cairo\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_06",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Cairo\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_06", "name": "get_weather", "arguments": { "city": "Cairo" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_06", "result": "95°F dry" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_06",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Cairo"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_06",
+            "result": "95\u00c2\u00b0F dry"
+          }
+        ]
       },
       {
         "turn": 7,
         "llm_response": {
           "id": "chatcmpl-loop-007",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_07", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Mumbai\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_07",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Mumbai\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_07", "name": "get_weather", "arguments": { "city": "Mumbai" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_07", "result": "88°F humid" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_07",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Mumbai"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_07",
+            "result": "88\u00c2\u00b0F humid"
+          }
+        ]
       },
       {
         "turn": 8,
         "llm_response": {
           "id": "chatcmpl-loop-008",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_08", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Moscow\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_08",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Moscow\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_08", "name": "get_weather", "arguments": { "city": "Moscow" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_08", "result": "30°F snowy" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_08",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Moscow"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_08",
+            "result": "30\u00c2\u00b0F snowy"
+          }
+        ]
       },
       {
         "turn": 9,
         "llm_response": {
           "id": "chatcmpl-loop-009",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_09", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Rio\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_09",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Rio\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_09", "name": "get_weather", "arguments": { "city": "Rio" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_09", "result": "85°F tropical" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_09",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Rio"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_09",
+            "result": "85\u00c2\u00b0F tropical"
+          }
+        ]
       },
       {
         "turn": 10,
         "llm_response": {
           "id": "chatcmpl-loop-010",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_10", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Seoul\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_10",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Seoul\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_10", "name": "get_weather", "arguments": { "city": "Seoul" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_10", "result": "68°F clear" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_10",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Seoul"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_10",
+            "result": "68\u00c2\u00b0F clear"
+          }
+        ]
       },
       {
         "turn": 11,
         "llm_response": {
           "id": "chatcmpl-loop-011",
           "object": "chat.completion",
-          "choices": [{ "index": 0, "message": { "role": "assistant", "content": null, "tool_calls": [{ "id": "call_loop_11", "type": "function", "function": { "name": "get_weather", "arguments": "{\"city\": \"Toronto\"}" } }] }, "finish_reason": "tool_calls" }]
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_loop_11",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Toronto\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
         },
-        "expected_tool_calls": [{ "id": "call_loop_11", "name": "get_weather", "arguments": { "city": "Toronto" } }],
-        "tool_results": [{ "tool_call_id": "call_loop_11", "result": "40°F foggy" }]
+        "expected_tool_calls": [
+          {
+            "id": "call_loop_11",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Toronto"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_loop_11",
+            "result": "40\u00c2\u00b0F foggy"
+          }
+        ]
       }
     ],
     "expected": {
@@ -601,8 +1054,14 @@
     "description": "Tool has a binding {unit: {input: 'preferred_unit'}}. The LLM omits the bound parameter. At execution time, the binding injects the value from the parent inputs, so the tool receives the merged arguments.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful weather assistant." },
-        { "role": "user", "content": "What is the weather in Paris?" }
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
       ],
       "parent_inputs": {
         "preferred_unit": "celsius"
@@ -614,12 +1073,22 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true },
-              { "name": "unit", "kind": "string", "required": false }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              },
+              {
+                "name": "unit",
+                "kind": "string",
+                "required": false
+              }
             ]
           },
           "bindings": {
-            "unit": { "input": "preferred_unit" }
+            "unit": {
+              "input": "preferred_unit"
+            }
           }
         }
       ],
@@ -658,16 +1127,21 @@
           {
             "id": "call_bind_001",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           }
         ],
         "expected_execution_args": {
-          "get_weather": { "city": "Paris", "unit": "celsius" }
+          "get_weather": {
+            "city": "Paris",
+            "unit": "celsius"
+          }
         },
         "tool_results": [
           {
             "tool_call_id": "call_bind_001",
-            "result": "22°C sunny"
+            "result": "22\u00c2\u00b0C sunny"
           }
         ]
       },
@@ -681,7 +1155,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "The weather in Paris is 22°C and sunny.",
+                "content": "The weather in Paris is 22\u00c2\u00b0C and sunny.",
                 "tool_calls": null
               },
               "finish_reason": "stop"
@@ -692,7 +1166,7 @@
       }
     ],
     "expected": {
-      "result": "The weather in Paris is 22°C and sunny.",
+      "result": "The weather in Paris is 22\u00c2\u00b0C and sunny.",
       "iterations": 2,
       "total_messages": 6,
       "notes": "The binding {unit: {input: 'preferred_unit'}} resolves 'preferred_unit' from parent_inputs to 'celsius' and injects it into the tool call arguments before execution, overriding any LLM-provided value."
@@ -703,8 +1177,14 @@
     "description": "LLM calls a tool named 'unknown_tool' that has no registered handler in tool_functions. The agent loop must raise a ValueError.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "Do something with an unknown tool." }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Do something with an unknown tool."
+        }
       ],
       "tools": [
         {
@@ -713,7 +1193,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -753,7 +1237,9 @@
           {
             "id": "call_unknown_001",
             "name": "unknown_tool",
-            "arguments": { "query": "test" }
+            "arguments": {
+              "query": "test"
+            }
           }
         ]
       }
@@ -768,8 +1254,14 @@
     "description": "After executing a tool, the tool result message appended to the conversation must have role='tool', content as a TextPart with the stringified result, and metadata.tool_call_id matching the original call id.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "What is the weather?" }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather?"
+        }
       ],
       "tools": [
         {
@@ -778,7 +1270,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -818,13 +1314,15 @@
           {
             "id": "call_fmt_001",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           }
         ],
         "tool_results": [
           {
             "tool_call_id": "call_fmt_001",
-            "result": "72°F sunny"
+            "result": "72\u00c2\u00b0F sunny"
           }
         ]
       },
@@ -838,7 +1336,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "It is 72°F and sunny.",
+                "content": "It is 72\u00c2\u00b0F and sunny.",
                 "tool_calls": null
               },
               "finish_reason": "stop"
@@ -849,12 +1347,15 @@
       }
     ],
     "expected": {
-      "result": "It is 72°F and sunny.",
+      "result": "It is 72\u00c2\u00b0F and sunny.",
       "iterations": 2,
       "tool_result_message": {
         "role": "tool",
         "content": [
-          { "type": "text", "text": "72°F sunny" }
+          {
+            "type": "text",
+            "text": "72\u00c2\u00b0F sunny"
+          }
         ],
         "metadata": {
           "tool_call_id": "call_fmt_001"
@@ -867,8 +1368,14 @@
     "description": "When the LLM returns tool calls, the assistant message appended to the conversation must have role='assistant', empty content, and metadata.tool_calls containing the full tool_calls array with id/type/function for each call.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "Compare weather in two cities." }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Compare weather in two cities."
+        }
       ],
       "tools": [
         {
@@ -877,7 +1384,11 @@
           "description": "Get the current weather for a city",
           "parameters": {
             "properties": [
-              { "name": "city", "kind": "string", "required": true }
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -925,17 +1436,27 @@
           {
             "id": "call_meta_paris",
             "name": "get_weather",
-            "arguments": { "city": "Paris" }
+            "arguments": {
+              "city": "Paris"
+            }
           },
           {
             "id": "call_meta_london",
             "name": "get_weather",
-            "arguments": { "city": "London" }
+            "arguments": {
+              "city": "London"
+            }
           }
         ],
         "tool_results": [
-          { "tool_call_id": "call_meta_paris", "result": "72°F sunny" },
-          { "tool_call_id": "call_meta_london", "result": "59°F cloudy" }
+          {
+            "tool_call_id": "call_meta_paris",
+            "result": "72\u00c2\u00b0F sunny"
+          },
+          {
+            "tool_call_id": "call_meta_london",
+            "result": "59\u00c2\u00b0F cloudy"
+          }
         ]
       },
       {
@@ -989,11 +1510,17 @@
   },
   {
     "name": "empty_tool_result",
-    "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content — it must not be skipped or filtered out.",
+    "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content \u00e2\u0080\u0094 it must not be skipped or filtered out.",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are a helpful assistant." },
-        { "role": "user", "content": "Clear the cache." }
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Clear the cache."
+        }
       ],
       "tools": [
         {
@@ -1077,7 +1604,10 @@
       "tool_result_message": {
         "role": "tool",
         "content": [
-          { "type": "text", "text": "" }
+          {
+            "type": "text",
+            "text": ""
+          }
         ],
         "metadata": {
           "tool_call_id": "call_empty_001"
@@ -1091,8 +1621,14 @@
     "description": "Agent loop correctly handles async tool functions",
     "input": {
       "messages": [
-        { "role": "system", "content": "You are helpful." },
-        { "role": "user", "content": "Look up the data" }
+        {
+          "role": "system",
+          "content": "You are helpful."
+        },
+        {
+          "role": "user",
+          "content": "Look up the data"
+        }
       ],
       "tools": [
         {
@@ -1101,7 +1637,11 @@
           "description": "Look up data",
           "parameters": {
             "properties": [
-              { "name": "query", "kind": "string", "required": true }
+              {
+                "name": "query",
+                "kind": "string",
+                "required": true
+              }
             ]
           }
         }
@@ -1141,7 +1681,9 @@
           {
             "id": "call_async1",
             "name": "lookup",
-            "arguments": { "query": "test" }
+            "arguments": {
+              "query": "test"
+            }
           }
         ],
         "tool_results": [
@@ -1175,6 +1717,2066 @@
       "result": "I found: test data",
       "iterations": 2,
       "total_messages": 6
+    }
+  },
+  {
+    "name": "events_basic_tool_loop",
+    "description": "\u00c2\u00a713.1 Events \u00e2\u0080\u0094 A 2-turn tool-call loop emits the full event lifecycle: status \u00e2\u0086\u0092 tool_call_start \u00e2\u0086\u0092 tool_result \u00e2\u0086\u0092 messages_updated \u00e2\u0086\u0092 done.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-evt-basic-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_evt_w001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_evt_w001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_evt_w001",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-evt-basic-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+      "iterations": 2,
+      "total_messages": 6,
+      "events": [
+        {
+          "type": "status",
+          "data": {
+            "message": "Starting agent loop"
+          }
+        },
+        {
+          "type": "tool_call_start",
+          "data": {
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "type": "tool_result",
+          "data": {
+            "name": "get_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        },
+        {
+          "type": "messages_updated",
+          "data": {
+            "message_count": 5
+          }
+        },
+        {
+          "type": "done",
+          "data": {
+            "response": "The weather in Paris is 72\u00c2\u00b0F and sunny."
+          }
+        }
+      ],
+      "notes": "Events must be emitted in this exact order. tool_call_start fires before tool execution; tool_result fires after. messages_updated fires when tool result messages are appended. done is always the last event."
+    }
+  },
+  {
+    "name": "events_no_tools",
+    "description": "\u00c2\u00a713.1 Events \u00e2\u0080\u0094 Single-turn completion with no tool calls. Only the done event is emitted.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is 2 + 2?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns a weather string"
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-evt-notool-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "2 + 2 equals 4.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "2 + 2 equals 4.",
+      "iterations": 1,
+      "total_messages": 3,
+      "events": [
+        {
+          "type": "done",
+          "data": {
+            "response": "2 + 2 equals 4."
+          }
+        }
+      ],
+      "notes": "When the LLM returns content without tool calls, no tool_call_start/tool_result/messages_updated events fire. Only the done event is emitted."
+    }
+  },
+  {
+    "name": "events_error_logged",
+    "description": "\u00a713.1 Events \u0097 A tool function raises an exception during execution. The exception is caught and returned as an error string to the LLM. The loop continues normally.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "raises RuntimeError"
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-evt-err-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_evt_err001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_evt_err001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_evt_err001",
+            "result": "Error calling 'get_weather': RuntimeError: Weather service unavailable"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-evt-err-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Sorry, the weather service is currently unavailable.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "Sorry, the weather service is currently unavailable.",
+      "iterations": 2,
+      "total_messages": 6,
+      "events": [
+        {
+          "type": "tool_call_start"
+        },
+        {
+          "type": "tool_result"
+        },
+        {
+          "type": "messages_updated"
+        },
+        {
+          "type": "done"
+        }
+      ],
+      "notes": "Tool exceptions are caught by the dispatcher and returned as error strings. The loop continues \u0097 this is a success path. Events verify type sequence only (payloads vary by runtime)."
+    }
+  },
+  {
+    "name": "cancellation_before_llm",
+    "description": "\u00c2\u00a713.2 Cancellation \u00e2\u0080\u0094 Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string"
+      },
+      "cancel": {
+        "cancelled_at": "before_iteration"
+      },
+      "on_event": true
+    },
+    "sequence": [],
+    "expected": {
+      "error": "CancelledError",
+      "iterations": 0,
+      "total_messages": 2,
+      "events": [
+        {
+          "type": "cancelled",
+          "data": {
+            "reason": "Cancellation requested before first iteration"
+          }
+        }
+      ],
+      "notes": "No LLM calls are made. The cancel token is checked at the top of each iteration. Since it is already cancelled, the loop exits immediately with CancelledError."
+    }
+  },
+  {
+    "name": "cancellation_between_tools",
+    "description": "\u00c2\u00a713.2 Cancellation \u00e2\u0080\u0094 LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Compare weather in Paris and London."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "cancel": {
+        "cancelled_at": "after_tool_0"
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-cancel-tools-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_cancel_paris",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  },
+                  {
+                    "id": "call_cancel_london",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"London\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_cancel_paris",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          },
+          {
+            "id": "call_cancel_london",
+            "name": "get_weather",
+            "arguments": {
+              "city": "London"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_cancel_paris",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "error": "CancelledError",
+      "iterations": 1,
+      "tools_executed": 1,
+      "events": [
+        {
+          "type": "status",
+          "data": {
+            "message": "Starting agent loop"
+          }
+        },
+        {
+          "type": "tool_call_start",
+          "data": {
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "type": "tool_result",
+          "data": {
+            "name": "get_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        },
+        {
+          "type": "cancelled",
+          "data": {
+            "reason": "Cancellation requested after tool execution"
+          }
+        }
+      ],
+      "notes": "Cancel is checked between tool executions. The first tool (Paris) completes, then the cancel token fires. The second tool (London) must NOT be executed. Only one tool_result event is emitted."
+    }
+  },
+  {
+    "name": "cancellation_between_iterations",
+    "description": "\u00c2\u00a713.2 Cancellation \u00e2\u0080\u0094 Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "cancel": {
+        "cancelled_at": "before_iteration_2"
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-cancel-iter-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_cancel_iter001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_cancel_iter001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_cancel_iter001",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "error": "CancelledError",
+      "iterations": 1,
+      "total_messages": 5,
+      "events": [
+        {
+          "type": "status",
+          "data": {
+            "message": "Starting agent loop"
+          }
+        },
+        {
+          "type": "tool_call_start",
+          "data": {
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "type": "tool_result",
+          "data": {
+            "name": "get_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        },
+        {
+          "type": "messages_updated",
+          "data": {
+            "message_count": 5
+          }
+        },
+        {
+          "type": "cancelled",
+          "data": {
+            "reason": "Cancellation requested before iteration 2"
+          }
+        }
+      ],
+      "notes": "Iteration 1 runs to completion (LLM call + tool execution + message append). The cancel token is checked at the top of iteration 2, causing CancelledError. The 5 messages are: system, user, assistant(tool_calls), tool(result), but the second LLM call never happens."
+    }
+  },
+  {
+    "name": "context_trim_basic",
+    "description": "\u00c2\u00a713.3 Context Window \u00e2\u0080\u0094 Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Tell me about the history of Rome. I want a very detailed answer covering all major periods."
+        },
+        {
+          "role": "assistant",
+          "content": "Rome was founded in 753 BC. The Roman Kingdom lasted until 509 BC when the Republic was established. The Republic expanded through the Punic Wars and conquered the Mediterranean. Julius Caesar rose to power and was assassinated in 44 BC. Augustus became the first Emperor in 27 BC, beginning the Roman Empire."
+        },
+        {
+          "role": "user",
+          "content": "Now tell me about the fall of Rome. Again, very detailed with all the key events and dates."
+        },
+        {
+          "role": "assistant",
+          "content": "The decline of Rome began in the 3rd century with the Crisis of the Third Century. Diocletian split the empire in 285 AD. Constantine founded Constantinople in 330 AD. The Western Empire fell in 476 AD when Odoacer deposed Romulus Augustulus. The Eastern Empire continued as the Byzantine Empire until 1453."
+        },
+        {
+          "role": "user",
+          "content": "Tell me about medieval Europe after Rome fell. Cover the major kingdoms and events."
+        },
+        {
+          "role": "assistant",
+          "content": "After Rome fell, Europe entered the Early Middle Ages. The Franks under Clovis established a kingdom in Gaul. Charlemagne united much of Western Europe and was crowned Emperor in 800 AD. The Viking Age began in 793 AD. The feudal system developed across Europe. The High Middle Ages saw the Crusades beginning in 1095."
+        },
+        {
+          "role": "user",
+          "content": "Now tell me about the Renaissance period."
+        },
+        {
+          "role": "assistant",
+          "content": "The Renaissance began in Italy in the 14th century. Florence was the center under the Medici family. Key figures included Leonardo da Vinci, Michelangelo, and Raphael. The printing press was invented by Gutenberg around 1440. The Renaissance spread north to France, England, and the Low Countries. It marked a transition from medieval to modern thinking."
+        },
+        {
+          "role": "user",
+          "content": "Finally, what is the weather in Paris today?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string"
+      },
+      "context_budget": 500
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-ctx-trim-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_ctx_w001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_ctx_w001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_ctx_w001",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-ctx-trim-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+      "iterations": 2,
+      "trimmed_messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "system",
+          "content": "[Summary of earlier conversation] User asked about the history of Rome, the fall of Rome, medieval Europe, and the Renaissance period."
+        },
+        {
+          "role": "user",
+          "content": "Finally, what is the weather in Paris today?"
+        }
+      ],
+      "summary_contains": "User asked",
+      "notes": "Context trimming drops oldest user/assistant pairs to fit within the 500-character budget. The system message is always preserved. A summary message (role=system) is injected after the original system message. The most recent user message is always kept."
+    }
+  },
+  {
+    "name": "context_no_trim_when_fits",
+    "description": "\u00c2\u00a713.3 Context Window \u00e2\u0080\u0094 Messages fit within the context budget. No trimming occurs and all messages are preserved.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is 2 + 2?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns a weather string"
+      },
+      "context_budget": 10000
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-ctx-nofit-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "2 + 2 equals 4.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "2 + 2 equals 4.",
+      "iterations": 1,
+      "total_messages": 3,
+      "trimmed_messages": null,
+      "notes": "When messages fit within the context_budget (10000 characters), no trimming occurs. The trimmed_messages field is null to indicate no modification was needed."
+    }
+  },
+  {
+    "name": "context_preserves_system_messages",
+    "description": "\u00c2\u00a713.3 Context Window \u00e2\u0080\u0094 Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "system",
+          "content": "Always respond in a formal tone."
+        },
+        {
+          "role": "user",
+          "content": "Tell me about ancient Egypt and all the pharaohs and their dynasties in great detail."
+        },
+        {
+          "role": "assistant",
+          "content": "Ancient Egypt's history spans over 3000 years. The Old Kingdom saw the building of the Great Pyramids at Giza under pharaohs Khufu, Khafre, and Menkaure. The Middle Kingdom was a period of reunification. The New Kingdom included famous rulers like Hatshepsut, Thutmose III, Akhenaten, and Tutankhamun."
+        },
+        {
+          "role": "user",
+          "content": "Now tell me about Greek philosophy covering all major philosophers and their contributions."
+        },
+        {
+          "role": "assistant",
+          "content": "Greek philosophy began with the Pre-Socratics. Socrates developed the Socratic method. Plato founded the Academy and wrote The Republic. Aristotle studied under Plato and founded the Lyceum, contributing to logic, metaphysics, ethics, and natural sciences. The Stoics and Epicureans followed in the Hellenistic period."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather today?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string"
+      },
+      "context_budget": 300
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-ctx-sys-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "I would need to know your city to provide the weather.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "I would need to know your city to provide the weather.",
+      "iterations": 1,
+      "trimmed_messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "system",
+          "content": "Always respond in a formal tone."
+        },
+        {
+          "role": "system",
+          "content": "[Summary of earlier conversation] User asked about ancient Egypt and pharaohs, then about Greek philosophy and major philosophers."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather today?"
+        }
+      ],
+      "notes": "ALL system messages are preserved during context trimming \u00e2\u0080\u0094 they are never dropped regardless of budget. A summary is inserted after the last system message. The most recent user message is always kept."
+    }
+  },
+  {
+    "name": "guardrail_input_deny",
+    "description": "\u00c2\u00a713.4 Guardrails \u00e2\u0080\u0094 Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "My SSN is 123-45-6789, can you look that up?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns a weather string"
+      },
+      "guardrails": {
+        "input": {
+          "action": "deny",
+          "reason": "Contains PII"
+        }
+      }
+    },
+    "sequence": [],
+    "expected": {
+      "error": "GuardrailError",
+      "error_reason": "Contains PII",
+      "iterations": 0,
+      "total_messages": 2,
+      "notes": "Input guardrail runs before the first LLM call. When it returns action=deny, the loop immediately raises GuardrailError with the provided reason. No LLM calls or tool executions occur."
+    }
+  },
+  {
+    "name": "guardrail_output_deny",
+    "description": "\u00c2\u00a713.4 Guardrails \u00e2\u0080\u0094 Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Tell me something."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns a weather string"
+      },
+      "guardrails": {
+        "input": {
+          "action": "allow"
+        },
+        "output": {
+          "action": "deny",
+          "reason": "Response contains harmful content"
+        }
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-guard-out-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Here is some problematic content that the guardrail catches.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "error": "GuardrailError",
+      "error_reason": "Response contains harmful content",
+      "iterations": 1,
+      "notes": "The input guardrail passes (action=allow). The LLM returns a response. The output guardrail runs on the response and returns action=deny, causing GuardrailError. The LLM was called once but the result is not returned to the user."
+    }
+  },
+  {
+    "name": "guardrail_tool_deny",
+    "description": "\u00c2\u00a713.4 Guardrails \u00e2\u0080\u0094 LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Get the weather and also run the dangerous operation."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "dangerous_tool",
+          "kind": "function",
+          "description": "A dangerous operation that should be guarded",
+          "parameters": {
+            "properties": [
+              {
+                "name": "target",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string",
+        "dangerous_tool": "returns sensitive data"
+      },
+      "guardrails": {
+        "tool": {
+          "deny_tools": [
+            "dangerous_tool"
+          ],
+          "reason": "Tool not authorized"
+        }
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-guard-tool-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_guard_weather",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  },
+                  {
+                    "id": "call_guard_danger",
+                    "type": "function",
+                    "function": {
+                      "name": "dangerous_tool",
+                      "arguments": "{\"target\": \"secret_db\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_guard_weather",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          },
+          {
+            "id": "call_guard_danger",
+            "name": "dangerous_tool",
+            "arguments": {
+              "target": "secret_db"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_guard_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          },
+          {
+            "tool_call_id": "call_guard_danger",
+            "result": "Tool denied by guardrail: Tool not authorized"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-guard-tool-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "The weather in Paris is 72\u00c2\u00b0F and sunny. I was unable to run the dangerous operation as it was not authorized.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "The weather in Paris is 72\u00c2\u00b0F and sunny. I was unable to run the dangerous operation as it was not authorized.",
+      "iterations": 2,
+      "total_messages": 7,
+      "denied_tools": [
+        "dangerous_tool"
+      ],
+      "notes": "The tool guardrail intercepts tool calls before execution. get_weather is allowed and executes normally. dangerous_tool is denied \u00e2\u0080\u0094 its tool result message contains a synthetic denial string instead of actual execution output. Both results are sent to the LLM so it can respond appropriately."
+    }
+  },
+  {
+    "name": "guardrail_all_pass",
+    "description": "\u00c2\u00a713.4 Guardrails \u00e2\u0080\u0094 All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "guardrails": {
+        "input": {
+          "action": "allow"
+        },
+        "output": {
+          "action": "allow"
+        },
+        "tool": {
+          "deny_tools": []
+        }
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-guard-pass-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_guard_pass001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_guard_pass001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_guard_pass001",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-guard-pass-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "The weather in Paris is 72\u00c2\u00b0F and sunny.",
+      "iterations": 2,
+      "total_messages": 6,
+      "denied_tools": [],
+      "notes": "All three guardrail types are configured but none deny. Input guardrail allows, tool guardrail has an empty deny list, and output guardrail allows. The agent loop completes as if no guardrails were present."
+    }
+  },
+  {
+    "name": "steering_inject_message",
+    "description": "\u00c2\u00a713.5 Steering \u00e2\u0080\u0094 After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "steering": {
+        "messages": [
+          {
+            "inject_before_iteration": 2,
+            "role": "user",
+            "text": "Actually, focus on the temperature in Celsius."
+          }
+        ]
+      },
+      "on_event": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-steer-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_steer_w001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_steer_w001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_steer_w001",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-steer-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "The temperature in Paris is approximately 22\u00c2\u00b0C and it is sunny.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "The temperature in Paris is approximately 22\u00c2\u00b0C and it is sunny.",
+      "iterations": 2,
+      "total_messages": 7,
+      "events": [
+        {
+          "type": "status",
+          "data": {
+            "message": "Starting agent loop"
+          }
+        },
+        {
+          "type": "tool_call_start",
+          "data": {
+            "name": "get_weather",
+            "arguments": "{\"city\": \"Paris\"}"
+          }
+        },
+        {
+          "type": "tool_result",
+          "data": {
+            "name": "get_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          }
+        },
+        {
+          "type": "messages_updated",
+          "data": {
+            "message_count": 5
+          }
+        },
+        {
+          "type": "status",
+          "data": {
+            "message": "Injecting steering message"
+          }
+        },
+        {
+          "type": "messages_updated",
+          "data": {
+            "message_count": 6
+          }
+        },
+        {
+          "type": "done",
+          "data": {
+            "response": "The temperature in Paris is approximately 22\u00c2\u00b0C and it is sunny."
+          }
+        }
+      ],
+      "message_sequence": [
+        {
+          "role": "system",
+          "content": "You are a helpful weather assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "metadata": {
+            "tool_calls": [
+              {
+                "id": "call_steer_w001",
+                "type": "function",
+                "function": {
+                  "name": "get_weather",
+                  "arguments": "{\"city\": \"Paris\"}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "role": "tool",
+          "content": "72\u00c2\u00b0F sunny",
+          "metadata": {
+            "tool_call_id": "call_steer_w001"
+          }
+        },
+        {
+          "role": "user",
+          "content": "Actually, focus on the temperature in Celsius."
+        },
+        {
+          "role": "assistant",
+          "content": "The temperature in Paris is approximately 22\u00c2\u00b0C and it is sunny."
+        }
+      ],
+      "notes": "The steering message is injected as a user message before iteration 2's LLM call. total_messages is 7 (system + user + assistant_tool + tool_result + steering_user + assistant_final = 6 shown, but 7 when including the final assistant). The steering message appears between the tool result and the final LLM call."
+    }
+  },
+  {
+    "name": "steering_multiple_messages",
+    "description": "\u00c2\u00a713.5 Steering \u00e2\u0080\u0094 Two steering messages are queued and both injected before iteration 2. Tests atomic drain \u00e2\u0080\u0094 both appear in order.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string for the requested city"
+      },
+      "steering": {
+        "messages": [
+          {
+            "inject_before_iteration": 2,
+            "role": "user",
+            "text": "Please respond in French."
+          },
+          {
+            "inject_before_iteration": 2,
+            "role": "user",
+            "text": "Also include the humidity percentage."
+          }
+        ]
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-steer-multi-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_steer_m001",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_steer_m001",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_steer_m001",
+            "result": "72\u00c2\u00b0F sunny, 45% humidity"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-steer-multi-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Le temps \u00c3\u00a0 Paris est de 22\u00c2\u00b0C et ensoleill\u00c3\u00a9 avec une humidit\u00c3\u00a9 de 45%.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "Le temps \u00c3\u00a0 Paris est de 22\u00c2\u00b0C et ensoleill\u00c3\u00a9 avec une humidit\u00c3\u00a9 de 45%.",
+      "iterations": 2,
+      "total_messages": 8,
+      "message_sequence": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Paris?"
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "metadata": {
+            "tool_calls": [
+              {
+                "id": "call_steer_m001",
+                "type": "function",
+                "function": {
+                  "name": "get_weather",
+                  "arguments": "{\"city\": \"Paris\"}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "role": "tool",
+          "content": "72\u00c2\u00b0F sunny, 45% humidity",
+          "metadata": {
+            "tool_call_id": "call_steer_m001"
+          }
+        },
+        {
+          "role": "user",
+          "content": "Please respond in French."
+        },
+        {
+          "role": "user",
+          "content": "Also include the humidity percentage."
+        },
+        {
+          "role": "assistant",
+          "content": "Le temps \u00c3\u00a0 Paris est de 22\u00c2\u00b0C et ensoleill\u00c3\u00a9 avec une humidit\u00c3\u00a9 de 45%."
+        }
+      ],
+      "notes": "Both steering messages are drained atomically and inserted in order before iteration 2's LLM call. They appear as consecutive user messages between the tool result and the final assistant response. total_messages is 8 (system + user + assistant_tool + tool_result + steer1 + steer2 + assistant_final = 7 content messages, but counting from 1-indexed gives 8 including all roles)."
+    }
+  },
+  {
+    "name": "parallel_tools_basic",
+    "description": "\u00c2\u00a713.6 Parallel Tools \u00e2\u0080\u0094 LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant with access to weather, time, and news tools."
+        },
+        {
+          "role": "user",
+          "content": "Give me the weather in Paris, the current time in Tokyo, and the latest news."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "get_time",
+          "kind": "function",
+          "description": "Get the current time in a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "get_news",
+          "kind": "function",
+          "description": "Get the latest news headlines",
+          "parameters": {
+            "properties": []
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string",
+        "get_time": "returns current time string",
+        "get_news": "returns news headlines"
+      },
+      "parallel_tool_calls": true
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-parallel-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_par_weather",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  },
+                  {
+                    "id": "call_par_time",
+                    "type": "function",
+                    "function": {
+                      "name": "get_time",
+                      "arguments": "{\"city\": \"Tokyo\"}"
+                    }
+                  },
+                  {
+                    "id": "call_par_news",
+                    "type": "function",
+                    "function": {
+                      "name": "get_news",
+                      "arguments": "{}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_par_weather",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          },
+          {
+            "id": "call_par_time",
+            "name": "get_time",
+            "arguments": {
+              "city": "Tokyo"
+            }
+          },
+          {
+            "id": "call_par_news",
+            "name": "get_news",
+            "arguments": {}
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_par_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          },
+          {
+            "tool_call_id": "call_par_time",
+            "result": "3:45 PM JST"
+          },
+          {
+            "tool_call_id": "call_par_news",
+            "result": "Tech stocks rise 5%. New climate accord signed. Mars rover discovers ice."
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-parallel-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Here's your update: Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "Here's your update: Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
+      "iterations": 2,
+      "total_messages": 8,
+      "tool_execution_order": [
+        "get_weather",
+        "get_time",
+        "get_news"
+      ],
+      "notes": "With parallel_tool_calls=true, all 3 tool calls may execute concurrently. Regardless of execution order, tool result messages must be appended in the same order as the original tool_calls array. The total is 8 messages: system + user + assistant(3 tool_calls) + 3 tool results + final assistant."
+    }
+  },
+  {
+    "name": "parallel_tools_with_guardrail_deny",
+    "description": "\u00c2\u00a713.6 Parallel Tools + \u00c2\u00a713.4 Guardrails \u00e2\u0080\u0094 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "user",
+          "content": "Get weather, time, and run the dangerous operation."
+        }
+      ],
+      "tools": [
+        {
+          "name": "get_weather",
+          "kind": "function",
+          "description": "Get the current weather for a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "get_time",
+          "kind": "function",
+          "description": "Get the current time in a city",
+          "parameters": {
+            "properties": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "name": "dangerous_tool",
+          "kind": "function",
+          "description": "A dangerous operation",
+          "parameters": {
+            "properties": [
+              {
+                "name": "target",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "tool_functions": {
+        "get_weather": "returns weather string",
+        "get_time": "returns current time string",
+        "dangerous_tool": "returns sensitive data"
+      },
+      "parallel_tool_calls": true,
+      "guardrails": {
+        "tool": {
+          "deny_tools": [
+            "dangerous_tool"
+          ],
+          "reason": "Not authorized"
+        }
+      }
+    },
+    "sequence": [
+      {
+        "turn": 1,
+        "llm_response": {
+          "id": "chatcmpl-par-guard-001",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [
+                  {
+                    "id": "call_pg_weather",
+                    "type": "function",
+                    "function": {
+                      "name": "get_weather",
+                      "arguments": "{\"city\": \"Paris\"}"
+                    }
+                  },
+                  {
+                    "id": "call_pg_danger",
+                    "type": "function",
+                    "function": {
+                      "name": "dangerous_tool",
+                      "arguments": "{\"target\": \"secret_db\"}"
+                    }
+                  },
+                  {
+                    "id": "call_pg_time",
+                    "type": "function",
+                    "function": {
+                      "name": "get_time",
+                      "arguments": "{\"city\": \"Tokyo\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        },
+        "expected_tool_calls": [
+          {
+            "id": "call_pg_weather",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          },
+          {
+            "id": "call_pg_danger",
+            "name": "dangerous_tool",
+            "arguments": {
+              "target": "secret_db"
+            }
+          },
+          {
+            "id": "call_pg_time",
+            "name": "get_time",
+            "arguments": {
+              "city": "Tokyo"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool_call_id": "call_pg_weather",
+            "result": "72\u00c2\u00b0F sunny"
+          },
+          {
+            "tool_call_id": "call_pg_danger",
+            "result": "Tool denied by guardrail: Not authorized"
+          },
+          {
+            "tool_call_id": "call_pg_time",
+            "result": "3:45 PM JST"
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "llm_response": {
+          "id": "chatcmpl-par-guard-002",
+          "object": "chat.completion",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
+                "tool_calls": null
+              },
+              "finish_reason": "stop"
+            }
+          ]
+        },
+        "expected_tool_calls": null
+      }
+    ],
+    "expected": {
+      "result": "Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
+      "iterations": 2,
+      "total_messages": 8,
+      "denied_tools": [
+        "dangerous_tool"
+      ],
+      "tool_execution_order": [
+        "get_weather",
+        "get_time"
+      ],
+      "notes": "The tool guardrail filters dangerous_tool before execution. get_weather and get_time execute (potentially in parallel). dangerous_tool receives a synthetic denial result. All 3 tool result messages are appended in the original tool_calls order. The denied tool is never actually called but its result slot is filled with the denial message."
     }
   }
 ]

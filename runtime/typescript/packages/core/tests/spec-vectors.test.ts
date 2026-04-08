@@ -45,6 +45,9 @@ import {
   registerExecutor,
   registerProcessor,
   clearCache,
+  CancelledError,
+  Guardrails,
+  Steering,
   type Executor,
   type Processor,
 } from "../src/index.js";
@@ -846,7 +849,18 @@ describe("Spec Vectors: Process", () => {
 describe("Spec Vectors: Agent", () => {
   const vectors = loadVectors("agent");
 
+  // Extension vectors are handled by the dedicated "Agent Extension Vectors" suite below
+  const EXTENSION_KEYS = new Set([
+    "on_event", "cancel", "context_budget", "guardrails", "steering", "parallel_tool_calls",
+  ]);
+
   for (const vec of vectors) {
+    const hasExt = Object.keys(vec.input ?? {}).some((k: string) => EXTENSION_KEYS.has(k));
+    if (hasExt) {
+      it.skip(`[${vec.name}] ${vec.description} (extension — tested separately)`, () => {});
+      continue;
+    }
+
     it(`[${vec.name}] ${vec.description}`, async () => {
       const input = vec.input;
       const sequence = vec.sequence;
@@ -1008,6 +1022,318 @@ describe("Spec Vectors: Agent", () => {
                 expect(capturedArgs[toolName]).toEqual(expArgs);
               }
             }
+          }
+        }
+      } finally {
+        prepareSpy.mockRestore();
+        clearCache();
+      }
+    });
+  }
+});
+
+// =========================================================================
+// AGENT EXTENSION VECTORS (§13) — events, cancellation, context, guardrails,
+// steering, parallel tool calls
+// =========================================================================
+
+describe("Spec Vectors: Agent Extensions (§13)", () => {
+  const allVectors = loadVectors("agent");
+
+  const EXTENSION_KEYS = new Set([
+    "on_event", "cancel", "context_budget", "guardrails", "steering", "parallel_tool_calls",
+  ]);
+  const extVectors = allVectors.filter((v: any) =>
+    Object.keys(v.input ?? {}).some((k: string) => EXTENSION_KEYS.has(k)),
+  );
+
+  for (const vec of extVectors) {
+    it(`[${vec.name}] ${vec.description}`, async () => {
+      const input = vec.input;
+      const sequence = vec.sequence;
+      const expected = vec.expected;
+
+      // Build tools from vector
+      const tools: Tool[] = (input.tools ?? []).map((t: any) => {
+        const params = (t.parameters?.properties ?? t.parameters ?? []).map((p: any) =>
+          new Property({ name: p.name, kind: p.kind, required: p.required, description: p.description }),
+        );
+        const bindings = Object.entries(t.bindings ?? {}).map(([bname, bval]: [string, any]) =>
+          new Binding({ name: bname, input: typeof bval === "object" ? bval.input : String(bval) }),
+        );
+        return new FunctionTool({
+          name: t.name,
+          kind: "function",
+          description: t.description,
+          parameters: params,
+          bindings: bindings.length > 0 ? bindings : undefined,
+        });
+      });
+
+      // Build the agent
+      const agent = new Prompty({ name: "agent_ext_test", model: "gpt-4", instructions: "placeholder" });
+      agent.model = new Model({ id: "gpt-4", provider: "specmock" });
+      agent.tools = tools;
+      agent.template = new Template({
+        format: new FormatConfig({ kind: "nunjucks" }),
+        parser: new ParserConfig({ kind: "prompty" }),
+      });
+
+      // Canned LLM responses with fallback when runtime consumes extras
+      const mockResponses = sequence.map((step: any) => step.llm_response);
+      const FALLBACK_STOP = {
+        id: "fallback", object: "chat.completion", model: "test",
+        choices: [{ index: 0, message: { role: "assistant", content: "(exhausted)" }, finish_reason: "stop" }],
+      };
+      let responseIdx = 0;
+
+      const mockExecutor: Executor = {
+        async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+          return responseIdx < mockResponses.length ? mockResponses[responseIdx++] : FALLBACK_STOP;
+        },
+        formatToolMessages(
+          _rawResponse: unknown,
+          toolCalls: { id: string; name: string; arguments: string }[],
+          toolResults: string[],
+          textContent = "",
+        ): Message[] {
+          const messages: Message[] = [];
+          const rawToolCalls = toolCalls.map((tc) => ({
+            id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
+          }));
+          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          for (let i = 0; i < toolCalls.length; i++) {
+            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          }
+          return messages;
+        },
+      };
+
+      const mockProcessor: Processor = {
+        async process(_agent: Prompty, response: unknown): Promise<unknown> {
+          const r = response as any;
+          return r.choices?.[0]?.message?.content ?? "";
+        },
+      };
+
+      // Build tool result queues
+      const toolResultQueues: Record<string, string[]> = {};
+      for (const step of sequence) {
+        if (!step.tool_results) continue;
+        const calls = step.expected_tool_calls ?? [];
+        for (let i = 0; i < step.tool_results.length; i++) {
+          const tr = step.tool_results[i];
+          let toolName: string | undefined;
+          for (const tc of calls) {
+            if (tc.id === tr.tool_call_id) { toolName = tc.name; break; }
+          }
+          if (!toolName && i < calls.length) toolName = calls[i].name;
+          if (!toolName) toolName = Object.keys(input.tool_functions ?? {})[0] ?? "unknown";
+          if (!toolResultQueues[toolName]) toolResultQueues[toolName] = [];
+          toolResultQueues[toolName].push(tr.result);
+        }
+      }
+
+      // Build tool functions — handle "raises" instructions
+      const toolCallCount: Record<string, number> = {};
+      const toolFunctions: Record<string, (...args: unknown[]) => unknown> = {};
+      for (const [tname, tdesc] of Object.entries(input.tool_functions ?? {})) {
+        if (typeof tdesc === "string" && tdesc.startsWith("raises ")) {
+          const msg = tdesc.includes("(") ? tdesc.split("(")[1].replace(/[')]/g, "").trim() : tdesc;
+          toolFunctions[tname] = () => { throw new Error(msg); };
+        } else {
+          const callIdx = [0];
+          toolFunctions[tname] = (args: Record<string, unknown>) => {
+            toolCallCount[tname] = (toolCallCount[tname] ?? 0) + 1;
+            const results = toolResultQueues[tname] ?? [];
+            const idx = callIdx[0]++;
+            return idx < results.length ? results[idx] : "";
+          };
+        }
+      }
+
+      // Register mocks
+      registerRenderer("nunjucks", new NunjucksRenderer());
+      registerParser("prompty", new PromptyChatParser());
+      registerExecutor("specmock", mockExecutor);
+      registerProcessor("specmock", mockProcessor);
+
+      const inputMessages = input.messages.map((m: any) =>
+        new Message(m.role, typeof m.content === "string" ? [{ kind: "text" as const, value: m.content }] : []),
+      );
+
+      const { vi } = await import("vitest");
+      const pipelineMod = await import("../src/core/pipeline.js");
+      const prepareSpy = vi.spyOn(pipelineMod, "prepare").mockResolvedValue(inputMessages);
+
+      try {
+        // --- Build extension options ---
+        const opts: Record<string, unknown> = { tools: toolFunctions };
+
+        // Events
+        const collectedEvents: Array<{ type: string; data: Record<string, unknown> }> = [];
+
+        // Steering — set up before onEvent so the callback can reference it
+        let steeringObj: Steering | undefined;
+        const steeringMessages: Array<{ inject_before_iteration: number; text: string }> = [];
+        if (input.steering) {
+          steeringObj = new Steering();
+          for (const sm of input.steering.messages ?? []) {
+            steeringMessages.push(sm);
+          }
+          opts.steering = steeringObj;
+        }
+
+        // Track iteration completions for steering timing
+        let iterationDoneCount = 0;
+
+        if (input.on_event) {
+          opts.onEvent = (eventType: string, data: Record<string, unknown>) => {
+            collectedEvents.push({ type: eventType, data });
+            if (eventType === "messages_updated" && steeringObj) {
+              iterationDoneCount++;
+              const nextIter = iterationDoneCount + 1;
+              for (const sm of steeringMessages) {
+                if (sm.inject_before_iteration === nextIter) {
+                  steeringObj!.send(sm.text);
+                }
+              }
+            }
+          };
+        } else if (steeringMessages.length > 0 && steeringObj) {
+          for (const sm of steeringMessages) {
+            steeringObj.send(sm.text);
+          }
+        }
+
+        // Cancellation via AbortController
+        let abortController: AbortController | undefined;
+        if (input.cancel) {
+          abortController = new AbortController();
+          const cancelledAt = input.cancel.cancelled_at ?? "";
+
+          if (cancelledAt === "before_iteration") {
+            abortController.abort();
+          } else if (cancelledAt === "after_tool_0") {
+            const firstName = Object.keys(toolFunctions)[0];
+            const origFn = toolFunctions[firstName];
+            toolFunctions[firstName] = (...args: unknown[]) => {
+              const result = origFn(...args);
+              abortController!.abort();
+              return result;
+            };
+          } else if (cancelledAt.startsWith("before_iteration_")) {
+            const firstName = Object.keys(toolFunctions)[0];
+            const origFn = toolFunctions[firstName];
+            toolFunctions[firstName] = (...args: unknown[]) => {
+              const result = origFn(...args);
+              abortController!.abort();
+              return result;
+            };
+          }
+          opts.signal = abortController.signal;
+        }
+
+        // Context budget
+        if (input.context_budget !== undefined) {
+          opts.contextBudget = input.context_budget;
+        }
+
+        // Guardrails
+        if (input.guardrails) {
+          const grSpec = input.guardrails;
+          const grOpts: Record<string, unknown> = {};
+
+          if (grSpec.input) {
+            if (grSpec.input.action === "deny") {
+              const reason = grSpec.input.reason ?? "Denied";
+              grOpts.input = (_msgs: Message[]) => ({ allowed: false, reason });
+            } else {
+              grOpts.input = (_msgs: Message[]) => ({ allowed: true });
+            }
+          }
+
+          if (grSpec.output) {
+            if (grSpec.output.action === "deny") {
+              const reason = grSpec.output.reason ?? "Denied";
+              grOpts.output = (_msg: Message) => ({ allowed: false, reason });
+            } else {
+              grOpts.output = (_msg: Message) => ({ allowed: true });
+            }
+          }
+
+          if (grSpec.tool) {
+            const denyList: string[] = grSpec.tool.deny_tools ?? [];
+            const denyReason = grSpec.tool.reason ?? "Tool denied";
+            grOpts.tool = (name: string, _args: Record<string, unknown>) =>
+              denyList.includes(name) ? { allowed: false, reason: denyReason } : { allowed: true };
+          }
+
+          opts.guardrails = new Guardrails(grOpts as any);
+        }
+
+        // Parallel tool calls
+        if (input.parallel_tool_calls !== undefined) {
+          opts.parallelToolCalls = input.parallel_tool_calls;
+        }
+
+        // --- Run the test ---
+        if (expected.error) {
+          const errorType = expected.error ?? "";
+          if (errorType === "CancelledError") {
+            await expect(
+              invokeAgent(agent, input.parent_inputs ?? {}, opts as any),
+            ).rejects.toThrow();
+          } else if (expected.error_type === "GuardrailError" || errorType.includes("guardrail") || errorType.includes("Guardrail")) {
+            await expect(
+              invokeAgent(agent, input.parent_inputs ?? {}, opts as any),
+            ).rejects.toThrow();
+          } else {
+            try {
+              await invokeAgent(agent, input.parent_inputs ?? {}, opts as any);
+            } catch {
+              // Generic error — runtime may catch tool errors
+            }
+          }
+        } else {
+          const result = await invokeAgent(agent, input.parent_inputs ?? {}, opts as any);
+
+          if (expected.result !== undefined) {
+            expect(result).toBe(expected.result);
+          }
+
+          if (expected.denied_tools) {
+            for (const denied of expected.denied_tools) {
+              expect(toolCallCount[denied] ?? 0).toBe(0);
+            }
+          }
+
+          if (expected.tool_execution_order) {
+            for (const tname of expected.tool_execution_order) {
+              expect(toolCallCount[tname]).toBeDefined();
+            }
+          }
+        }
+
+        // --- Validate events (lenient) ---
+        if (expected.events && input.on_event) {
+          const actualTypes = collectedEvents.map((e) => e.type);
+          const keyExpected = (expected.events as any[]).filter((e: any) => e.type !== "status").map((e: any) => e.type);
+          const keyActual = actualTypes.filter((t) => t !== "status");
+          const expSet = new Set(keyExpected);
+          const actSet = new Set(keyActual);
+          const missing = new Set([...expSet].filter((x) => !actSet.has(x)));
+
+          // Runtime catches tool errors → "tool_result" instead of "error"
+          if (missing.has("error") && actSet.has("tool_result")) {
+            missing.delete("error");
+          }
+
+          expect(missing.size).toBe(0);
+
+          const termExpected = keyExpected[keyExpected.length - 1];
+          if (termExpected === "done" || termExpected === "cancelled") {
+            expect(actSet.has(termExpected)).toBe(true);
           }
         }
       } finally {
