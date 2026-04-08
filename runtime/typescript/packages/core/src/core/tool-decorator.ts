@@ -98,3 +98,66 @@ export function tool<T extends (...args: unknown[]) => unknown>(
 
   return wrapped;
 }
+
+/**
+ * Validate tool handlers against an agent's tool declarations and return a handler record.
+ *
+ * Each function must have a `__tool__` property (set by `tool()`). `bindTools` matches
+ * each handler's name against `kind: "function"` tools declared in `agent.tools`,
+ * raising on mismatches and warning on missing handlers.
+ *
+ * @param agent - A loaded Prompty agent (has `.tools` property)
+ * @param tools - Array of `tool()`-wrapped functions
+ * @returns Handler record suitable for `invokeAgent(..., { tools: result })`
+ * @throws Error if a handler has no `__tool__` property or no matching declaration
+ */
+export function bindTools(
+  agent: { tools?: Array<{ name: string; kind?: string }> },
+  tools: Array<ToolFunction>,
+): Record<string, (...args: unknown[]) => unknown> {
+  const handlers: Record<string, (...args: unknown[]) => unknown> = {};
+
+  for (const fn of tools) {
+    const toolDef = fn.__tool__;
+    if (!toolDef) {
+      throw new Error(
+        `Function '${fn.name || "(anonymous)"}' is not a tool()-wrapped function (missing __tool__ property)`,
+      );
+    }
+    const name = toolDef.name;
+    if (name in handlers) {
+      throw new Error(`Duplicate tool handler: '${name}'`);
+    }
+    handlers[name] = fn as (...args: unknown[]) => unknown;
+  }
+
+  // Get declared function tool names from agent.tools
+  const declaredFunctionTools = new Set<string>();
+  for (const toolDef of agent.tools ?? []) {
+    if (toolDef.kind === "function") {
+      declaredFunctionTools.add(toolDef.name);
+    }
+  }
+
+  // Validate: every handler must match a declaration
+  for (const name of Object.keys(handlers)) {
+    if (!declaredFunctionTools.has(name)) {
+      const declared = [...declaredFunctionTools].sort().join(", ") || "(none)";
+      throw new Error(
+        `Tool handler '${name}' has no matching 'kind: function' declaration in agent.tools. ` +
+          `Declared function tools: ${declared}`,
+      );
+    }
+  }
+
+  // Warn: every function declaration should have a handler
+  for (const name of declaredFunctionTools) {
+    if (!(name in handlers)) {
+      console.warn(
+        `Tool '${name}' is declared in agent.tools but no handler was provided to bindTools()`,
+      );
+    }
+  }
+
+  return handlers;
+}

@@ -53,64 +53,110 @@ flowchart TD
 
 ## Basic Usage
 
-Define one or more Python functions, then pass them to `invoke_agent()` along
+Define one or more tool functions, then pass them to `invoke_agent()` along
 with a loaded agent. The executor calls the LLM, dispatches any tool requests to
 your functions, and loops until the model is done.
 
 <Tabs>
 <TabItem label="Python">
 ```python
-import prompty
+from prompty import load, invoke_agent, tool, bind_tools
 
-# 1. Define tool functions
+# 1. Define tool functions with @tool
+@tool
 def get_weather(city: str) -> str:
     """Get the current weather for a city."""
-    # In reality this would call an API
     return f"72°F and sunny in {city}"
 
+@tool
 def get_time(timezone: str) -> str:
     """Get the current time in a timezone."""
     return f"3:42 PM in {timezone}"
 
 # 2. Load the agent prompt
-agent = prompty.load("agent.prompty")
+agent = load("agent.prompty")
 
-# 3. Run the agent loop
-result = prompty.invoke_agent(
+# 3. Validate handlers against the .prompty declarations
+tools = bind_tools(agent, [get_weather, get_time])
+
+# 4. Run the agent loop
+result = invoke_agent(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
-    tools={"get_weather": get_weather, "get_time": get_time},
+    tools=tools,
     max_iterations=10,
 )
 
 print(result)  # "It's currently 72°F and sunny in Seattle!"
 ```
 </TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+
+// 1. Define tool functions with tool()
+const getWeather = tool(
+  (city: string) => `72°F and sunny in ${city}`,
+  {
+    name: "get_weather",
+    description: "Get the current weather for a city",
+    parameters: [{ name: "city", kind: "string", required: true }],
+  },
+);
+
+const getTime = tool(
+  (timezone: string) => `3:42 PM in ${timezone}`,
+  {
+    name: "get_time",
+    description: "Get the current time in a timezone",
+    parameters: [{ name: "timezone", kind: "string", required: true }],
+  },
+);
+
+// 2. Load the agent prompt
+const agent = await load("agent.prompty");
+
+// 3. Validate handlers against the .prompty declarations
+const tools = bindTools(agent, [getWeather, getTime]);
+
+// 4. Run the agent loop
+const result = await invokeAgent(
+  agent,
+  { question: "What's the weather in Seattle?" },
+  { tools, maxIterations: 10 },
+);
+
+console.log(result); // "It's currently 72°F and sunny in Seattle!"
+```
+</TabItem>
 <TabItem label="C#">
 ```csharp
 using Prompty.Core;
 
-// 1. Define tool functions
-var tools = new Dictionary<string, Func<string, Task<string>>>
+// 1. Define tool functions with [Tool]
+public class AssistantTools
 {
-    ["get_weather"] = async (args) =>
+    [Tool(Name = "get_weather", Description = "Get the current weather")]
+    public string GetWeather(string city)
     {
-        var parsed = ToolDispatch.ParseArguments(args);
-        var city = parsed["city"]?.ToString() ?? "unknown";
         return $"72°F and sunny in {city}";
-    },
-    ["get_time"] = async (args) =>
-    {
-        var parsed = ToolDispatch.ParseArguments(args);
-        var tz = parsed["timezone"]?.ToString() ?? "UTC";
-        return $"3:42 PM in {tz}";
     }
-};
+
+    [Tool(Name = "get_time", Description = "Get the current time")]
+    public string GetTime(string timezone)
+    {
+        return $"3:42 PM in {timezone}";
+    }
+}
 
 // 2. Load the agent prompt
 var agent = PromptyLoader.Load("agent.prompty");
 
-// 3. Run the agent loop
+// 3. Validate [Tool] methods against agent.Tools declarations
+var service = new AssistantTools();
+var tools = ToolAttribute.BindTools(agent, service);
+
+// 4. Run the agent loop
 var result = await Pipeline.InvokeAgentAsync(
     agent,
     new() { ["question"] = "What's the weather in Seattle?" },
@@ -124,9 +170,9 @@ Console.WriteLine(result); // "It's currently 72°F and sunny in Seattle!"
 </Tabs>
 
 <Aside type="tip">
-  The `tools` dict maps **tool names** (matching the `name` field in your
-  `.prompty` frontmatter) to **callable Python functions**. Names must match
-  exactly.
+  `bind_tools` validates that each handler name matches a `kind: "function"` tool
+  declared in the `.prompty` frontmatter. If names don't match, you get an immediate
+  error instead of a silent runtime failure.
 </Aside>
 
 ## The `.prompty` File
@@ -289,19 +335,23 @@ except ValueError as e:
 <Tabs>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent } from "@prompty/core";
-import "@prompty/openai"; // registers provider
+import { load, invokeAgent, tool, bindTools } from "@prompty/core";
 
-function getWeather(city: string): string {
-  return `72°F and sunny in ${city}`;
-}
+const getWeather = tool(
+  (city: string) => `72°F and sunny in ${city}`,
+  {
+    name: "get_weather",
+    description: "Get the current weather",
+    parameters: [{ name: "city", kind: "string", required: true }],
+  },
+);
 
 const agent = await load("agent.prompty");
+const tools = bindTools(agent, [getWeather]);
+
 const result = await invokeAgent(agent, {
-  inputs: { question: "What's the weather in London?" },
-  tools: { get_weather: getWeather },
-  maxIterations: 10,
-});
+  question: "What's the weather in London?",
+}, { tools, maxIterations: 10 });
 
 console.log(result);
 ```
@@ -310,12 +360,16 @@ console.log(result);
 ```csharp
 using Prompty.Core;
 
-var tools = new Dictionary<string, Func<string, Task<string>>>
+public class WeatherTools
 {
-    ["get_weather"] = args => Task.FromResult("72°F and sunny")
-};
+    [Tool(Name = "get_weather", Description = "Get the current weather")]
+    public string GetWeather(string city) => $"72°F and sunny in {city}";
+}
 
 var agent = PromptyLoader.Load("agent.prompty");
+var service = new WeatherTools();
+var tools = ToolAttribute.BindTools(agent, service);
+
 var result = await Pipeline.InvokeAgentAsync(
     agent,
     new() { ["question"] = "What's the weather in London?" },

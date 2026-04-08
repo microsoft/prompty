@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import pytest
 
-from prompty.core.tool_decorator import tool
+from prompty.core.tool_decorator import bind_tools, tool
 from prompty.core.tool_dispatch import clear_tools, get_tool
 
 
@@ -208,3 +209,113 @@ class TestDispatchIntegration:
             return {}
 
         assert func.__tool__.parameters[0].kind == "object"
+
+
+# ---------------------------------------------------------------------------
+# bind_tools
+# ---------------------------------------------------------------------------
+
+
+class TestBindTools:
+    """Tests for bind_tools() validation."""
+
+    def _make_agent_with_tools(self, tool_names: list[str]) -> Any:
+        """Create a minimal agent-like object with function tool declarations."""
+        from prompty.model import FunctionTool, Prompty
+
+        tools = [FunctionTool(name=name, kind="function") for name in tool_names]
+        return Prompty(name="test", tools=tools)
+
+    def test_bind_tools_basic(self):
+        """Decorated functions matching declarations produce a valid dict."""
+        @tool(register=False)
+        def get_weather(city: str) -> str:
+            return f"72°F in {city}"
+
+        agent = self._make_agent_with_tools(["get_weather"])
+        result = bind_tools(agent, [get_weather])
+        assert "get_weather" in result
+        assert result["get_weather"] is get_weather
+
+    def test_bind_tools_multiple(self):
+        """Multiple handlers all validated."""
+        @tool(register=False)
+        def get_weather(city: str) -> str:
+            return ""
+
+        @tool(register=False)
+        def get_time(tz: str) -> str:
+            return ""
+
+        agent = self._make_agent_with_tools(["get_weather", "get_time"])
+        result = bind_tools(agent, [get_weather, get_time])
+        assert len(result) == 2
+
+    def test_bind_tools_handler_not_declared(self):
+        """Handler with no matching declaration raises ValueError."""
+        @tool(register=False)
+        def unknown_tool(x: str) -> str:
+            return x
+
+        agent = self._make_agent_with_tools(["get_weather"])
+        with pytest.raises(ValueError, match="unknown_tool.*no matching"):
+            bind_tools(agent, [unknown_tool])
+
+    def test_bind_tools_missing_handler_warns(self):
+        """Declared function tool with no handler emits warning."""
+        @tool(register=False)
+        def get_weather(city: str) -> str:
+            return ""
+
+        agent = self._make_agent_with_tools(["get_weather", "get_time"])
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            bind_tools(agent, [get_weather])
+            assert any("get_time" in str(x.message) for x in w)
+
+    def test_bind_tools_not_decorated(self):
+        """Non-decorated function raises ValueError."""
+        def plain_fn(x: str) -> str:
+            return x
+
+        agent = self._make_agent_with_tools(["plain_fn"])
+        with pytest.raises(ValueError, match="not a @tool-decorated"):
+            bind_tools(agent, [plain_fn])
+
+    def test_bind_tools_duplicate_handler(self):
+        """Two handlers with the same name raises ValueError."""
+        @tool(name="get_weather", register=False)
+        def weather_v1(city: str) -> str:
+            return ""
+
+        @tool(name="get_weather", register=False)
+        def weather_v2(city: str) -> str:
+            return ""
+
+        agent = self._make_agent_with_tools(["get_weather"])
+        with pytest.raises(ValueError, match="Duplicate tool handler"):
+            bind_tools(agent, [weather_v1, weather_v2])
+
+    def test_bind_tools_ignores_non_function_tools(self):
+        """Non-function tools (MCP, OpenAPI) are not validated."""
+        from prompty.model import FunctionTool, McpTool, Prompty
+
+        mcp = McpTool(name="filesystem", kind="mcp")
+        func_tool = FunctionTool(name="get_weather", kind="function")
+        agent = Prompty(name="test", tools=[func_tool, mcp])
+
+        @tool(register=False)
+        def get_weather(city: str) -> str:
+            return ""
+
+        # Should NOT raise about "filesystem" missing a handler
+        result = bind_tools(agent, [get_weather])
+        assert len(result) == 1
+
+    def test_bind_tools_empty(self):
+        """Empty tools list with no function declarations is valid."""
+        from prompty.model import Prompty
+
+        agent = Prompty(name="test")
+        result = bind_tools(agent, [])
+        assert result == {}

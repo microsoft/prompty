@@ -89,6 +89,7 @@ export {
 
   // Tool decorator (§11.2)
   tool,
+  bindTools,
   type ToolOptions,
   type ToolParameter,
   type ToolFunction,

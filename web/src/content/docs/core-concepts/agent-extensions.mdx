@@ -610,17 +610,17 @@ tools = {"get_weather": get_weather}
 result = invoke_agent(agent, inputs, tools=tools)
 ```
 ```python
-# ✅ With @tool — typed parameters, no JSON parsing
-from prompty import tool, invoke_agent
+# ✅ With @tool + bind_tools — typed, validated, clean
+from prompty import tool, bind_tools, invoke_agent
 
 @tool
 def get_weather(city: str, units: str = "celsius") -> str:
     """Get the current weather for a city."""
     return f"72°F in {city}"
 
-# Pass decorated functions as handlers — names must match the
-# tool declarations in your .prompty frontmatter.
-result = invoke_agent(agent, inputs, tools={"get_weather": get_weather})
+# bind_tools validates names match the .prompty declarations
+tools = bind_tools(agent, [get_weather])
+result = invoke_agent(agent, inputs, tools=tools)
 ```
 </TabItem>
 <TabItem label="TypeScript">
@@ -636,8 +636,8 @@ const tools = {
 const result = await invokeAgent(agent, inputs, { tools });
 ```
 ```typescript
-// ✅ With tool() — typed, structured handler
-import { tool, invokeAgent } from "@prompty/core";
+// ✅ With tool() + bindTools — typed, validated handler
+import { tool, bindTools, invokeAgent } from "@prompty/core";
 
 const getWeather = tool(
   (city: string, units?: string) => `72°F in ${city}`,
@@ -651,9 +651,9 @@ const getWeather = tool(
   },
 );
 
-const result = await invokeAgent(agent, inputs, {
-  tools: { get_weather: getWeather },
-});
+// bindTools validates names match the .prompty declarations
+const tools = bindTools(agent, [getWeather]);
+const result = await invokeAgent(agent, inputs, { tools });
 ```
 </TabItem>
 <TabItem label="C#">
@@ -673,7 +673,7 @@ var tools = new Dictionary<string, Func<string, Task<string>>>
 var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
 ```
 ```csharp
-// ✅ With [Tool] — typed parameters, no JSON parsing
+// ✅ With [Tool] + BindTools — typed parameters, validated, no JSON parsing
 using Prompty.Core;
 
 public class WeatherService
@@ -685,10 +685,9 @@ public class WeatherService
     }
 }
 
-// DiscoverTools builds typed handlers from [Tool] methods.
-// Pass the resulting dict to invoke_agent as tool handlers.
+// BindTools validates [Tool] names match the .prompty declarations
 var service = new WeatherService();
-var tools = ToolAttribute.DiscoverTools(service);
+var tools = ToolAttribute.BindTools(agent, service);
 
 var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
 ```
@@ -746,7 +745,7 @@ user:
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import load, invoke_agent, tool
+from prompty import load, invoke_agent, tool, bind_tools
 
 @tool
 def get_weather(city: str) -> str:
@@ -759,17 +758,22 @@ def get_time(timezone: str) -> str:
     return f"3:42 PM in {timezone}"
 
 agent = load("agent.prompty")
+
+# bind_tools validates that each @tool name matches a declaration
+# in agent.tools, then returns the handler dict
+tools = bind_tools(agent, [get_weather, get_time])
+
 result = invoke_agent(
     agent,
     inputs={"question": "What's the weather in Tokyo?"},
-    tools={"get_weather": get_weather, "get_time": get_time},
+    tools=tools,
 )
 print(result)
 ```
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent, tool } from "@prompty/core";
+import { load, invokeAgent, tool, bindTools } from "@prompty/core";
 
 const getWeather = tool(
   (city: string) => `72°F and sunny in ${city}`,
@@ -790,8 +794,12 @@ const getTime = tool(
 );
 
 const agent = await load("agent.prompty");
+
+// bindTools validates names against agent.tools declarations
+const tools = bindTools(agent, [getWeather, getTime]);
+
 const result = await invokeAgent(agent, { question: "Weather in Tokyo?" }, {
-  tools: { get_weather: getWeather, get_time: getTime },
+  tools,
 });
 console.log(result);
 ```
@@ -815,10 +823,12 @@ public class AssistantTools
     }
 }
 
-var service = new AssistantTools();
-var tools = ToolAttribute.DiscoverTools(service);
-
 var agent = PromptyLoader.Load("agent.prompty");
+var service = new AssistantTools();
+
+// BindTools validates [Tool] methods against agent.Tools declarations
+var tools = ToolAttribute.BindTools(agent, service);
+
 var result = await Pipeline.InvokeAgentAsync(
     agent,
     new() { ["question"] = "What's the weather in Tokyo?" },
@@ -830,9 +840,10 @@ Console.WriteLine(result);
 </Tabs>
 
 <Aside type="note">
-  Tool **names must match** between the `.prompty` frontmatter and your handler
-  dictionary. The frontmatter is the declaration the LLM sees; the handler dict
-  is the implementation the runtime calls.
+  `bind_tools` validates that every handler name matches a `kind: "function"` tool
+  declared in the agent's frontmatter. If you typo a name or forget a declaration,
+  you get an immediate error — not a silent runtime failure when the LLM tries to
+  call the tool.
 </Aside>
 
 ### Customization Options

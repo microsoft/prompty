@@ -115,6 +115,110 @@ public class ToolAttribute : Attribute
         return tools;
     }
 
+    /// <summary>
+    /// Discover [Tool]-decorated methods on an instance, validate them against
+    /// the agent's tool declarations, and return a handler dictionary.
+    /// </summary>
+    /// <param name="agent">A loaded Prompty agent with tool declarations.</param>
+    /// <param name="instance">An object instance with [Tool]-decorated methods.</param>
+    /// <returns>Dictionary of tool name → handler, validated against agent.Tools.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// If a handler has no matching declaration or duplicate handlers exist.
+    /// </exception>
+    public static Dictionary<string, Func<string, Task<string>>> BindTools(
+        Prompty agent,
+        object instance)
+    {
+        var handlers = new Dictionary<string, Func<string, Task<string>>>();
+
+        var methods = instance.GetType()
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(m => m.GetCustomAttribute<ToolAttribute>() is not null);
+
+        foreach (var method in methods)
+        {
+            var toolDef = BuildFromMethod(method);
+            var captured = method;
+
+            Func<string, Task<string>> handler = async (argsJson) =>
+            {
+                var args = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(argsJson)
+                    ?? new Dictionary<string, object?>();
+
+                var methodParams = captured.GetParameters();
+                var invokeArgs = new object?[methodParams.Length];
+
+                for (int i = 0; i < methodParams.Length; i++)
+                {
+                    var paramName = methodParams[i].Name ?? "";
+                    if (args.TryGetValue(paramName, out var val) && val is not null)
+                    {
+                        if (val is System.Text.Json.JsonElement je)
+                            invokeArgs[i] = ConvertJsonElement(je, methodParams[i].ParameterType);
+                        else
+                            invokeArgs[i] = Convert.ChangeType(val, methodParams[i].ParameterType);
+                    }
+                    else if (methodParams[i].HasDefaultValue)
+                    {
+                        invokeArgs[i] = methodParams[i].DefaultValue;
+                    }
+                }
+
+                var result = captured.Invoke(instance, invokeArgs);
+                if (result is Task<string> taskStr)
+                    return await taskStr;
+                if (result is Task task)
+                {
+                    await task;
+                    return "";
+                }
+                return result?.ToString() ?? "";
+            };
+
+            if (handlers.ContainsKey(toolDef.Name))
+                throw new InvalidOperationException($"Duplicate tool handler: '{toolDef.Name}'");
+
+            handlers[toolDef.Name] = handler;
+        }
+
+        // Get declared function tool names from agent.Tools
+        var declaredFunctionTools = new HashSet<string>();
+        if (agent.Tools is not null)
+        {
+            foreach (var tool in agent.Tools)
+            {
+                if (tool.Kind == "function")
+                    declaredFunctionTools.Add(tool.Name);
+            }
+        }
+
+        // Validate: every handler must match a declaration
+        foreach (var name in handlers.Keys)
+        {
+            if (!declaredFunctionTools.Contains(name))
+            {
+                var declared = declaredFunctionTools.Count > 0
+                    ? string.Join(", ", declaredFunctionTools.OrderBy(x => x))
+                    : "(none)";
+                throw new InvalidOperationException(
+                    $"Tool handler '{name}' has no matching 'kind: function' declaration in agent.Tools. " +
+                    $"Declared function tools: {declared}");
+            }
+        }
+
+        // Warn: every function declaration should have a handler
+        foreach (var name in declaredFunctionTools)
+        {
+            if (!handlers.ContainsKey(name))
+            {
+                System.Diagnostics.Trace.TraceWarning(
+                    $"Tool '{name}' is declared in agent.Tools but no handler was provided to BindTools()");
+            }
+        }
+
+        return handlers;
+    }
+
     private static string MapTypeToKind(Type type)
     {
         if (type == typeof(string)) return "string";

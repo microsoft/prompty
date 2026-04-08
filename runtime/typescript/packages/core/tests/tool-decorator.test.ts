@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { tool, type ToolFunction } from "../src/core/tool-decorator.js";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { tool, bindTools, type ToolFunction } from "../src/core/tool-decorator.js";
 import { getTool, clearTools } from "../src/core/tool-dispatch.js";
 import { FunctionTool } from "../src/model/tool.js";
+import { Prompty } from "../src/model/prompty.js";
 
 // ===========================================================================
 // tool() wrapper
@@ -133,5 +134,118 @@ describe("tool() decorator", () => {
     // When default is provided and required is not explicitly set,
     // tool() infers required = false
     expect(param.required).toBe(false);
+  });
+});
+
+// ===========================================================================
+// bindTools()
+// ===========================================================================
+
+describe("bindTools", () => {
+  beforeEach(() => {
+    clearTools();
+  });
+
+  function makeAgent(toolNames: string[]): Prompty {
+    const tools = toolNames.map(
+      (name) => new FunctionTool({ name, kind: "function" }),
+    );
+    return new Prompty({ name: "test", tools });
+  }
+
+  it("returns handler dict for matching tools", () => {
+    const getWeather = tool(
+      (city: string) => `72°F in ${city}`,
+      {
+        name: "get_weather",
+        parameters: [{ name: "city", kind: "string" }],
+        register: false,
+      } as Parameters<typeof tool>[1],
+    );
+
+    const agent = makeAgent(["get_weather"]);
+    const result = bindTools(agent, [getWeather]);
+    expect(result).toHaveProperty("get_weather");
+    expect(result.get_weather).toBe(getWeather);
+  });
+
+  it("handles multiple tools", () => {
+    const fn1 = tool((x: string) => x, {
+      name: "tool_a",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const fn2 = tool((x: string) => x, {
+      name: "tool_b",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const agent = makeAgent(["tool_a", "tool_b"]);
+    const result = bindTools(agent, [fn1, fn2]);
+    expect(Object.keys(result)).toHaveLength(2);
+  });
+
+  it("throws if handler has no matching declaration", () => {
+    const fn = tool((x: string) => x, {
+      name: "unknown_tool",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const agent = makeAgent(["get_weather"]);
+    expect(() => bindTools(agent, [fn])).toThrow(/unknown_tool.*no matching/);
+  });
+
+  it("warns if declared tool has no handler", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fn = tool((x: string) => x, {
+      name: "get_weather",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const agent = makeAgent(["get_weather", "get_time"]);
+    bindTools(agent, [fn]);
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining("get_time"));
+    spy.mockRestore();
+  });
+
+  it("throws if function is not tool()-wrapped", () => {
+    const plainFn = ((x: string) => x) as unknown as ToolFunction;
+    const agent = makeAgent(["plain_fn"]);
+    expect(() => bindTools(agent, [plainFn])).toThrow(/not a tool/);
+  });
+
+  it("throws on duplicate handler names", () => {
+    const fn1 = tool((x: string) => x, {
+      name: "get_weather",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const fn2 = tool((x: string) => x, {
+      name: "get_weather",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const agent = makeAgent(["get_weather"]);
+    expect(() => bindTools(agent, [fn1, fn2])).toThrow(/Duplicate/);
+  });
+
+  it("ignores non-function tools in declarations", () => {
+    const funcTool = new FunctionTool({ name: "get_weather", kind: "function" });
+    const mcpTool = { name: "filesystem", kind: "mcp" } as unknown as FunctionTool;
+    const agent = new Prompty({ name: "test", tools: [funcTool, mcpTool] });
+
+    const fn = tool((x: string) => x, {
+      name: "get_weather",
+      parameters: [{ name: "x" }],
+      register: false,
+    } as Parameters<typeof tool>[1]);
+    const result = bindTools(agent, [fn]);
+    expect(Object.keys(result)).toHaveLength(1);
+  });
+
+  it("returns empty dict for empty inputs", () => {
+    const agent = new Prompty({ name: "test" });
+    const result = bindTools(agent, []);
+    expect(result).toEqual({});
   });
 });

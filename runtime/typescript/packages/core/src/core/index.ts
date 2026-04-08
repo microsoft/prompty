@@ -38,4 +38,4 @@ export {
   Guardrails,
 } from "./guardrails.js";
 export { Steering } from "./steering.js";
-export { tool, type ToolOptions, type ToolParameter, type ToolFunction } from "./tool-decorator.js";
+export { tool, bindTools, type ToolOptions, type ToolParameter, type ToolFunction } from "./tool-decorator.js";

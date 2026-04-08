@@ -286,50 +286,57 @@ response.
 <Tabs>
   <TabItem label="Python">
     ```python
-    import prompty
+    from prompty import load, invoke_agent, tool, bind_tools
 
+    @tool
     def get_weather(city: str, units: str = "celsius") -> str:
+        """Get the current weather for a city."""
         return f"72°F and sunny in {city}"
 
-    result = prompty.invoke_agent(
-        "agent.prompty",
-        inputs={"question": "Weather in Seattle?"},
-        tools={"get_weather": get_weather},
-    )
+    agent = load("agent.prompty")
+    tools = bind_tools(agent, [get_weather])
+
+    result = invoke_agent(agent, inputs={"question": "Weather in Seattle?"}, tools=tools)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invokeAgent } from "@prompty/core";
-    import "@prompty/openai";
+    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
 
-    function getWeather(city: string, units: string = "celsius"): string {
-      return `72°F and sunny in ${city}`;
-    }
+    const getWeather = tool(
+      (city: string, units = "celsius") => `72°F and sunny in ${city}`,
+      {
+        name: "get_weather",
+        description: "Get the current weather for a city",
+        parameters: [
+          { name: "city", kind: "string", required: true },
+          { name: "units", kind: "string", default: "celsius" },
+        ],
+      },
+    );
 
-    const result = await invokeAgent("agent.prompty", {
-      inputs: { question: "Weather in Seattle?" },
-      tools: { get_weather: getWeather },
-    });
+    const agent = await load("agent.prompty");
+    const tools = bindTools(agent, [getWeather]);
+
+    const result = await invokeAgent(agent, { question: "Weather in Seattle?" }, { tools });
     ```
   </TabItem>
   <TabItem label="C#">
     ```csharp
     using Prompty.Core;
 
-    var agent = PromptyLoader.Load("agent.prompty");
-    var inputs = new Dictionary<string, object?> { ["question"] = "Weather in Seattle?" };
-
-    var tools = new Dictionary<string, Func<string, Task<string>>>
+    public class WeatherService
     {
-        ["get_weather"] = async (args) =>
+        [Tool(Name = "get_weather", Description = "Get the current weather")]
+        public string GetWeather(string city, string units = "celsius")
         {
-            var parsed = ToolDispatch.ParseArguments(args);
-            var city = parsed["city"]?.ToString() ?? "unknown";
-            var units = parsed["units"]?.ToString() ?? "celsius";
             return $"72°F and sunny in {city}";
         }
-    };
+    }
+
+    var agent = PromptyLoader.Load("agent.prompty");
+    var service = new WeatherService();
+    var tools = ToolAttribute.BindTools(agent, service);
 
     var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
     ```
@@ -339,30 +346,29 @@ response.
 <Tabs>
   <TabItem label="Python">
     ```python
-    result = prompty.invoke_agent(
-        "agent.prompty",
+    result = invoke_agent(
+        agent,
         inputs={"question": "Weather in Seattle?"},
-        tools={"get_weather": get_weather},
+        tools=tools,
     )
     print(result)
     ```
   </TabItem>
   <TabItem label="Python (async)">
     ```python
-    result = await prompty.invoke_agent_async(
-        "agent.prompty",
+    result = await invoke_agent_async(
+        agent,
         inputs={"question": "Weather in Seattle?"},
-        tools={"get_weather": get_weather},
+        tools=tools,
     )
     print(result)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await invokeAgent("agent.prompty", {
-      inputs: { question: "Weather in Seattle?" },
-      tools: { get_weather: getWeather },
-    });
+    const result = await invokeAgent(agent, {
+      question: "Weather in Seattle?",
+    }, { tools });
     console.log(result);
     ```
   </TabItem>

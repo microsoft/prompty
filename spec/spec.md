@@ -2513,6 +2513,108 @@ Implementations that do not yet support a kind SHOULD register a handler that
 raises `NotImplementedError` with a descriptive message, rather than leaving
 the kind unregistered.
 
+#### Typed Tool Functions (`@tool` / `tool()` / `[Tool]`)
+
+Each language provides a decorator or attribute that turns a regular typed
+function into a tool handler. The decorator:
+
+1. **Introspects the function signature** — parameter names, types, and
+   defaults are mapped to `Property` objects using the type mapping table below.
+2. **Builds a `FunctionTool` definition** — attached as `fn.__tool__` (or
+   equivalent) for later inspection.
+3. **Registers the handler** in the global name registry via
+   `register_tool(name, fn)`.
+
+The `.prompty` file MUST still declare all tools in frontmatter. The decorator
+provides the **implementation** for declared tools — it does not replace the
+declaration. The file is the single source of truth for what the LLM sees.
+
+**Type mapping:**
+
+| Python   | TypeScript  | C#                     | Schema Kind |
+| -------- | ----------- | ---------------------- | ----------- |
+| `str`    | `"string"`  | `string`               | `string`    |
+| `int`    | `"integer"` | `int`, `long`          | `integer`   |
+| `float`  | `"float"`   | `float`, `double`      | `float`     |
+| `bool`   | `"boolean"` | `bool`                 | `boolean`   |
+| `list`   | `"array"`   | `List<T>`, arrays      | `array`     |
+| `dict`   | `"object"`  | `Dictionary<,>`        | `object`    |
+
+TypeScript cannot introspect types at runtime, so parameters MUST be declared
+explicitly in the wrapper options.
+
+#### `bind_tools` — Bridging Declarations and Handlers
+
+`bind_tools` validates that decorated tool functions match the tool
+declarations in an agent's frontmatter, and returns a handler dictionary
+suitable for `invoke_agent`.
+
+**Signature:**
+
+```
+function bind_tools(agent, tools) → dict[str, callable]:
+  agent:  A loaded Prompty agent
+  tools:  A list of @tool-decorated functions (Python/TS) or an object
+          instance with [Tool]-decorated methods (C#)
+```
+
+**Algorithm:**
+
+```
+function bind_tools(agent, tools):
+  // 1. Build a map of provided handler names → functions
+  handlers = {}
+  for fn in tools:
+    name = fn.__tool__.name
+    if name in handlers:
+      raise ValueError("Duplicate tool handler: " + name)
+    handlers[name] = fn
+
+  // 2. Get declared function tool names from agent.tools
+  declared = set()
+  for tool_def in agent.tools:
+    if tool_def.kind == "function":
+      declared.add(tool_def.name)
+
+  // 3. Validate: every handler must match a declaration
+  for name in handlers:
+    if name not in declared:
+      raise ValueError(
+        "Tool handler '" + name + "' has no matching declaration "
+        + "in agent.tools. Declared function tools: " + join(declared))
+
+  // 4. Warn: every function declaration should have a handler
+  for name in declared:
+    if name not in handlers:
+      warn("Tool '" + name + "' is declared in agent.tools but "
+           + "no handler was provided to bind_tools()")
+
+  // 5. Return the validated handler dict
+  return handlers
+```
+
+**Requirements:**
+
+- `bind_tools` MUST only validate against `kind: "function"` tools. Tools with
+  other kinds (mcp, openapi, prompty, custom) are resolved by kind handlers
+  and do not require function handlers.
+- `bind_tools` MUST raise an error if a handler has no matching declaration.
+  This catches typos and stale handlers early.
+- `bind_tools` SHOULD warn (not error) if a declared function tool has no
+  handler, since the tool may be handled by the name registry or kind handler.
+- The returned dictionary MUST be suitable for passing as the `tools` parameter
+  to `invoke_agent`.
+- `bind_tools` MUST NOT mutate `agent.tools` or the global registry. It is a
+  pure validation and extraction step.
+
+**Language adaptations:**
+
+| Language   | Signature                                           | Notes                            |
+| ---------- | --------------------------------------------------- | -------------------------------- |
+| Python     | `bind_tools(agent, [fn1, fn2, ...])` → `dict`      | Functions have `__tool__`        |
+| TypeScript | `bindTools(agent, [fn1, fn2, ...])` → `Record`     | Functions have `__tool__`        |
+| C#         | `ToolAttribute.BindTools(agent, instance)` → `Dictionary` | Reflects over `[Tool]` methods   |
+
 ### §11.3 Invoker Discovery
 
 Renderers, parsers, executors, and processors are pluggable components

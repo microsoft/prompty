@@ -36,7 +36,7 @@ from .protocols import (
     RendererProtocol,
 )
 from .steering import Steering
-from .tool_decorator import tool
+from .tool_decorator import bind_tools, tool
 from .tool_dispatch import (
     ToolHandler,
     ToolHandlerError,

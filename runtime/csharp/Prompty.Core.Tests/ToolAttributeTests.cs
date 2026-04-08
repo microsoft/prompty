@@ -217,4 +217,142 @@ public class ToolAttributeTests : IDisposable
 
         Assert.Equal("array", tool.Parameters[0].Kind);    // List<string> items
     }
+
+    // ─── BindTools ───
+
+    private class EmptyToolService
+    {
+        // No [Tool] methods
+    }
+
+    [Fact]
+    public void BindTools_MatchingDeclarations_ReturnsDictionary()
+    {
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" },
+            Tools = new List<Tool>
+            {
+                new FunctionTool { Name = "get_weather", Kind = "function" },
+                new FunctionTool { Name = "NoArgs", Kind = "function" },
+                new FunctionTool { Name = "add_numbers", Kind = "function" },
+            }
+        };
+
+        var service = new WeatherService();
+        var result = ToolAttribute.BindTools(agent, service);
+
+        Assert.Contains("get_weather", result.Keys);
+        Assert.Contains("NoArgs", result.Keys);
+        Assert.Contains("add_numbers", result.Keys);
+        Assert.Equal(3, result.Count);
+    }
+
+    [Fact]
+    public void BindTools_HandlerNotDeclared_Throws()
+    {
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" },
+            Tools = new List<Tool>()
+        };
+        var service = new WeatherService();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ToolAttribute.BindTools(agent, service));
+        Assert.Contains("get_weather", ex.Message);
+        Assert.Contains("no matching", ex.Message);
+    }
+
+    [Fact]
+    public void BindTools_IgnoresNonFunctionTools()
+    {
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" },
+            Tools = new List<Tool>
+            {
+                new FunctionTool { Name = "get_weather", Kind = "function" },
+                new FunctionTool { Name = "NoArgs", Kind = "function" },
+                new FunctionTool { Name = "add_numbers", Kind = "function" },
+                new CustomTool { Name = "filesystem", Kind = "mcp" }
+            }
+        };
+
+        var service = new WeatherService();
+        var result = ToolAttribute.BindTools(agent, service);
+
+        Assert.Equal(3, result.Count);
+        Assert.DoesNotContain("filesystem", result.Keys);
+    }
+
+    [Fact]
+    public void BindTools_DoesNotRegisterGlobally()
+    {
+        ToolDispatch.ClearTools();
+
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" },
+            Tools = new List<Tool>
+            {
+                new FunctionTool { Name = "get_weather", Kind = "function" },
+                new FunctionTool { Name = "NoArgs", Kind = "function" },
+                new FunctionTool { Name = "add_numbers", Kind = "function" },
+            }
+        };
+
+        var service = new WeatherService();
+        ToolAttribute.BindTools(agent, service);
+
+        Assert.Null(ToolDispatch.GetTool("get_weather"));
+        Assert.Null(ToolDispatch.GetTool("NoArgs"));
+        Assert.Null(ToolDispatch.GetTool("add_numbers"));
+    }
+
+    [Fact]
+    public void BindTools_EmptyTools_ReturnsEmpty()
+    {
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" }
+        };
+        var service = new EmptyToolService();
+        var result = ToolAttribute.BindTools(agent, service);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task BindTools_HandlersAreCallable()
+    {
+        var agent = new Prompty
+        {
+            Name = "test",
+            Model = new Model { Id = "gpt-4" },
+            Tools = new List<Tool>
+            {
+                new FunctionTool { Name = "get_weather", Kind = "function" },
+                new FunctionTool { Name = "NoArgs", Kind = "function" },
+                new FunctionTool { Name = "add_numbers", Kind = "function" },
+            }
+        };
+
+        var service = new WeatherService();
+        var result = ToolAttribute.BindTools(agent, service);
+
+        var weather = await result["get_weather"]("{\"city\": \"Seattle\"}");
+        Assert.Contains("Seattle", weather);
+
+        var noArgs = await result["NoArgs"]("{}");
+        Assert.Equal("no args result", noArgs);
+
+        var sum = await result["add_numbers"]("{\"a\": 3, \"b\": 5}");
+        Assert.Equal("8", sum);
+    }
 }

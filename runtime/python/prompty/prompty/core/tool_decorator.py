@@ -32,7 +32,7 @@ from typing import Any, overload
 
 from .tool_dispatch import register_tool
 
-__all__ = ["tool"]
+__all__ = ["tool", "bind_tools"]
 
 # ---------------------------------------------------------------------------
 # Type-hint → Property kind mapping
@@ -208,3 +208,79 @@ def tool(
 
     # @tool(...) usage — return the decorator
     return _decorate
+
+
+# ---------------------------------------------------------------------------
+# bind_tools — validate handlers against agent declarations
+# ---------------------------------------------------------------------------
+
+
+def bind_tools(
+    agent: Any,
+    tools: list[Any],
+) -> dict[str, Any]:
+    """Validate tool handlers against an agent's tool declarations and return a handler dict.
+
+    Each function in *tools* must have a ``__tool__`` attribute (set by the ``@tool``
+    decorator). ``bind_tools`` matches each handler's name against the ``kind: "function"``
+    tools declared in ``agent.tools``, raising on mismatches and warning on missing handlers.
+
+    Parameters
+    ----------
+    agent:
+        A loaded Prompty agent (has ``.tools`` attribute).
+    tools:
+        List of ``@tool``-decorated functions.
+
+    Returns
+    -------
+    dict[str, callable]
+        Handler dict suitable for ``invoke_agent(..., tools=result)``.
+
+    Raises
+    ------
+    ValueError
+        If a handler has no ``__tool__`` attribute, or if a handler name doesn't
+        match any ``kind: "function"`` tool declared in ``agent.tools``.
+    """
+    import warnings
+
+    handlers: dict[str, Any] = {}
+
+    for fn in tools:
+        tool_def = getattr(fn, "__tool__", None)
+        if tool_def is None:
+            raise ValueError(
+                f"Function '{getattr(fn, '__name__', fn)}' is not a @tool-decorated function "
+                f"(missing __tool__ attribute)"
+            )
+        name = tool_def.name
+        if name in handlers:
+            raise ValueError(f"Duplicate tool handler: '{name}'")
+        handlers[name] = fn
+
+    # Get declared function tool names from agent.tools
+    declared_function_tools: set[str] = set()
+    for tool_decl in getattr(agent, "tools", []) or []:
+        if getattr(tool_decl, "kind", None) == "function":
+            declared_function_tools.add(tool_decl.name)
+
+    # Validate: every handler must match a declaration
+    for name in handlers:
+        if name not in declared_function_tools:
+            declared_str = ", ".join(sorted(declared_function_tools)) if declared_function_tools else "(none)"
+            raise ValueError(
+                f"Tool handler '{name}' has no matching 'kind: function' declaration in agent.tools. "
+                f"Declared function tools: {declared_str}"
+            )
+
+    # Warn: every function declaration should have a handler
+    for name in declared_function_tools:
+        if name not in handlers:
+            warnings.warn(
+                f"Tool '{name}' is declared in agent.tools but no handler was provided to bind_tools()",
+                UserWarning,
+                stacklevel=2,
+            )
+
+    return handlers
