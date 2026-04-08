@@ -1,0 +1,644 @@
+---
+title: Agent Extensions
+description: >
+  Extend the agent loop with events, cancellation, context window management,
+  guardrails, steering, parallel tools, and typed tool functions.
+sidebar:
+  order: 10
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Overview
+
+The Prompty agent loop (see [Agent Mode](/core-concepts/agent-mode/)) supports
+six optional **extensions** that give you fine-grained control over every
+iteration. All extensions are opt-in — pass only the ones you need.
+
+| Extension | Purpose | Parameter |
+|---|---|---|
+| [Events](#events) | Observe loop activity (tool calls, errors, etc.) | `on_event` / `onEvent` |
+| [Cancellation](#cancellation) | Cooperatively abort a running loop | `cancel` / `signal` / `cancellationToken` |
+| [Context Window](#context-window-management) | Auto-trim messages to fit the model's context | `context_budget` / `contextBudget` |
+| [Guardrails](#guardrails) | Validate input, output, and tool calls | `guardrails` |
+| [Steering](#steering) | Inject user messages mid-loop | `steering` |
+| [Parallel Tools](#parallel-tool-execution) | Execute tool calls concurrently | `parallel_tool_calls` / `parallelToolCalls` |
+
+Additionally, each runtime provides a **typed tool decorator/attribute** that
+turns a regular function into a registered tool.
+
+### Execution Order (per iteration)
+
+```
+1. Check cancellation
+2. Drain steering messages
+3. Trim context window
+4. Input guardrail
+5. Check cancellation (again, before LLM call)
+6. Call LLM
+7. Output guardrail
+8. Tool guardrails (per tool)
+9. Execute tools (serial or parallel)
+10. Format tool results → append to messages
+```
+
+---
+
+## Events
+
+Subscribe to structured events emitted during the agent loop. Event callbacks
+**must not block** — exceptions are silently swallowed to keep the loop running.
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import invoke_agent, load
+from prompty.core import AgentEvent, EventCallback
+
+def my_callback(event: AgentEvent) -> None:
+    print(f"[{event.event_type}] {event.data}")
+
+agent = load("agent.prompty")
+result = invoke_agent(
+    agent,
+    inputs={"question": "Hello"},
+    tools={"get_weather": get_weather},
+    on_event=my_callback,
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { load, invokeAgent } from "@prompty/core";
+
+const agent = await load("agent.prompty");
+const result = await invokeAgent(agent, { question: "Hello" }, {
+  tools: { get_weather: getWeather },
+  onEvent: (eventType, data) => {
+    console.log(`[${eventType}]`, data);
+  },
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("agent.prompty");
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "Hello" },
+    tools: tools,
+    onEvent: (eventType, data) =>
+    {
+        Console.WriteLine($"[{eventType}] {string.Join(", ", data)}");
+    }
+);
+```
+</TabItem>
+</Tabs>
+
+### Event Types
+
+| Event | When | Data |
+|---|---|---|
+| `tool_call_start` | Before each tool executes | `name`, `arguments` |
+| `tool_result` | After each tool executes | `name`, `result` |
+| `status` | Informational (e.g., steering injected) | `message` |
+| `messages_updated` | Messages array changed | `messages` |
+| `done` | Loop completed normally | `response`, `messages` |
+| `error` | A guardrail denied or error occurred | `message` |
+| `cancelled` | Loop was cancelled | `iteration` |
+
+---
+
+## Cancellation
+
+Cooperatively cancel a running agent loop. The loop checks for cancellation at
+the top of each iteration and just before the LLM call.
+
+<Tabs>
+<TabItem label="Python">
+```python
+import threading
+from prompty import invoke_agent, load
+from prompty.core import CancellationToken
+
+token = CancellationToken()
+
+# Cancel from another thread after 5 seconds
+threading.Timer(5.0, token.cancel).start()
+
+try:
+    result = invoke_agent(agent, inputs, tools, cancel=token)
+except CancelledError:
+    print("Agent loop was cancelled")
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { invokeAgent, CancelledError } from "@prompty/core";
+
+const controller = new AbortController();
+
+// Cancel after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+try {
+  const result = await invokeAgent(agent, inputs, {
+    tools,
+    signal: controller.signal,
+  });
+} catch (err) {
+  if (err instanceof CancelledError) {
+    console.log("Agent loop was cancelled");
+  }
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var cts = new CancellationTokenSource();
+
+// Cancel after 5 seconds
+cts.CancelAfter(TimeSpan.FromSeconds(5));
+
+try
+{
+    var result = await Pipeline.InvokeAgentAsync(
+        agent, inputs, tools,
+        cancellationToken: cts.Token
+    );
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Agent loop was cancelled");
+}
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  Python uses a custom `CancellationToken` (wrapping `threading.Event`),
+  TypeScript uses the native `AbortSignal`, and C# uses the native
+  `System.Threading.CancellationToken`.
+</Aside>
+
+---
+
+## Context Window Management
+
+Automatically trim messages to fit within a character budget. The trimmer
+preserves system messages and the most recent conversation turns, replacing
+dropped messages with a compact summary.
+
+<Tabs>
+<TabItem label="Python">
+```python
+result = invoke_agent(
+    agent,
+    inputs={"question": "Summarize our conversation"},
+    tools=tools,
+    context_budget=50_000,  # characters
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+const result = await invokeAgent(agent, inputs, {
+  tools,
+  contextBudget: 50_000,
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+var result = await Pipeline.InvokeAgentAsync(
+    agent, inputs, tools,
+    contextBudget: 50_000
+);
+```
+</TabItem>
+</Tabs>
+
+### How Trimming Works
+
+1. **Estimate** the character cost of all messages (role overhead + text + tool call JSON)
+2. **Partition** into leading system messages vs. the rest
+3. **Drop** the oldest non-system messages until within budget (keeping at least 2)
+4. **Summarize** dropped messages into a compact `[Context summary: ...]` block
+5. **Inject** the summary as a user message after the system messages
+
+<Aside type="tip">
+  A good rule of thumb is to set `context_budget` to about 75% of your model's
+  context window size (in characters, not tokens). This leaves room for the
+  model's response.
+</Aside>
+
+---
+
+## Guardrails
+
+Validate messages at three checkpoints in the loop: before the LLM call (input),
+after the LLM responds (output), and before each tool executes (tool). If a
+guardrail denies, a `GuardrailError` is raised.
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty.core import Guardrails, GuardrailResult, GuardrailError
+
+def check_input(messages):
+    """Block prompt injection attempts."""
+    for msg in messages:
+        if "ignore previous instructions" in msg.text.lower():
+            return GuardrailResult(allowed=False, reason="Prompt injection detected")
+    return GuardrailResult(allowed=True)
+
+def check_tool(name, args):
+    """Only allow known-safe tools."""
+    if name == "delete_all_data":
+        return GuardrailResult(allowed=False, reason="Dangerous tool blocked")
+    return GuardrailResult(allowed=True)
+
+guardrails = Guardrails(input=check_input, tool=check_tool)
+
+try:
+    result = invoke_agent(agent, inputs, tools, guardrails=guardrails)
+except GuardrailError as e:
+    print(f"Blocked: {e.reason}")
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { Guardrails, GuardrailError } from "@prompty/core";
+
+const guardrails = new Guardrails({
+  input: (messages) => {
+    for (const msg of messages) {
+      if (msg.text.toLowerCase().includes("ignore previous instructions")) {
+        return { allowed: false, reason: "Prompt injection detected" };
+      }
+    }
+    return { allowed: true };
+  },
+  tool: (name, args) => {
+    if (name === "delete_all_data") {
+      return { allowed: false, reason: "Dangerous tool blocked" };
+    }
+    return { allowed: true };
+  },
+});
+
+try {
+  const result = await invokeAgent(agent, inputs, { tools, guardrails });
+} catch (err) {
+  if (err instanceof GuardrailError) {
+    console.log(`Blocked: ${err.reason}`);
+  }
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var guardrails = new Guardrails(
+    input: (messages) =>
+    {
+        foreach (var msg in messages)
+        {
+            if (msg.Text.Contains("ignore previous instructions", StringComparison.OrdinalIgnoreCase))
+                return new GuardrailResult(false, "Prompt injection detected");
+        }
+        return new GuardrailResult(true);
+    },
+    tool: (name, args) =>
+    {
+        if (name == "delete_all_data")
+            return new GuardrailResult(false, "Dangerous tool blocked");
+        return new GuardrailResult(true);
+    }
+);
+
+try
+{
+    var result = await Pipeline.InvokeAgentAsync(
+        agent, inputs, tools,
+        guardrails: guardrails
+    );
+}
+catch (GuardrailError e)
+{
+    Console.WriteLine($"Blocked: {e.Reason}");
+}
+```
+</TabItem>
+</Tabs>
+
+### Guardrail Checkpoints
+
+| Hook | When | Receives | Typical Use |
+|---|---|---|---|
+| `input` | Before LLM call | Full message list | Prompt injection detection, content policy |
+| `output` | After LLM response | Assistant message | Toxicity filtering, PII detection |
+| `tool` | Before each tool call | Tool name + args | Block dangerous operations, rate limiting |
+
+<Aside type="caution">
+  When a **tool guardrail** denies a call, the denied tool's result is replaced
+  with a synthetic error message (e.g., `"Guardrail denied: reason"`). The loop
+  continues — the LLM sees the denial and can adjust.
+</Aside>
+
+---
+
+## Steering
+
+Inject additional user messages into a running agent loop from outside. This is
+useful for human-in-the-loop scenarios where you want to redirect the agent
+mid-conversation.
+
+<Tabs>
+<TabItem label="Python">
+```python
+import threading
+from prompty.core import Steering
+
+steering = Steering()
+
+def user_input_loop():
+    while True:
+        msg = input("You: ")
+        steering.send(msg)
+
+# Run input loop in background
+threading.Thread(target=user_input_loop, daemon=True).start()
+
+result = invoke_agent(agent, inputs, tools, steering=steering)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { Steering } from "@prompty/core";
+
+const steering = new Steering();
+
+// Inject a message that will be picked up at the next iteration
+steering.send("Actually, check Paris instead of London");
+
+const result = await invokeAgent(agent, inputs, {
+  tools,
+  steering,
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var steering = new Steering();
+
+// From another thread or async context
+steering.Send("Actually, check Paris instead of London");
+
+var result = await Pipeline.InvokeAgentAsync(
+    agent, inputs, tools,
+    steering: steering
+);
+```
+</TabItem>
+</Tabs>
+
+At the top of each iteration, the loop calls `steering.drain()` to collect all
+pending messages and appends them to the conversation. The steering queue is
+thread-safe in all runtimes.
+
+---
+
+## Parallel Tool Execution
+
+When the LLM requests multiple tool calls in a single response, you can execute
+them concurrently instead of sequentially.
+
+<Tabs>
+<TabItem label="Python">
+```python
+# Async mode uses asyncio.gather for true parallelism
+result = await invoke_agent_async(
+    agent, inputs, tools,
+    parallel_tool_calls=True,
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+// Uses Promise.all for concurrent execution
+const result = await invokeAgent(agent, inputs, {
+  tools,
+  parallelToolCalls: true,
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+// Uses Task.WhenAll for concurrent execution
+var result = await Pipeline.InvokeAgentAsync(
+    agent, inputs, tools,
+    parallelToolCalls: true
+);
+```
+</TabItem>
+</Tabs>
+
+<Aside type="note">
+  In Python **sync** mode, `parallel_tool_calls` still executes tools
+  sequentially (Python's GIL limits true parallelism in threads). Use the async
+  variant for actual concurrency.
+</Aside>
+
+---
+
+## Combining Extensions
+
+All extensions compose naturally. Here's a fully-configured agent call:
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import invoke_agent_async, load_async
+from prompty.core import (
+    CancellationToken,
+    Guardrails,
+    GuardrailResult,
+    Steering,
+)
+
+agent = await load_async("agent.prompty")
+token = CancellationToken()
+steering = Steering()
+
+guardrails = Guardrails(
+    input=lambda msgs: GuardrailResult(allowed=True),
+    output=lambda msg: GuardrailResult(allowed=True),
+    tool=lambda name, args: GuardrailResult(allowed=True),
+)
+
+result = await invoke_agent_async(
+    agent,
+    inputs={"question": "Plan my trip"},
+    tools=tools,
+    on_event=lambda e: print(f"[{e.event_type}]"),
+    cancel=token,
+    context_budget=50_000,
+    guardrails=guardrails,
+    steering=steering,
+    parallel_tool_calls=True,
+    max_iterations=20,
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import {
+  load, invokeAgent,
+  Guardrails, Steering, CancelledError,
+} from "@prompty/core";
+
+const agent = await load("agent.prompty");
+const controller = new AbortController();
+const steering = new Steering();
+const guardrails = new Guardrails({
+  input: () => ({ allowed: true }),
+  output: () => ({ allowed: true }),
+  tool: () => ({ allowed: true }),
+});
+
+const result = await invokeAgent(agent, { question: "Plan my trip" }, {
+  tools,
+  onEvent: (type, data) => console.log(`[${type}]`),
+  signal: controller.signal,
+  contextBudget: 50_000,
+  guardrails,
+  steering,
+  parallelToolCalls: true,
+  maxIterations: 20,
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+var agent = PromptyLoader.Load("agent.prompty");
+var cts = new CancellationTokenSource();
+var steering = new Steering();
+var guardrails = new Guardrails(
+    input: _ => new GuardrailResult(true),
+    output: _ => new GuardrailResult(true),
+    tool: (_, _) => new GuardrailResult(true)
+);
+
+var result = await Pipeline.InvokeAgentAsync(
+    agent,
+    new() { ["question"] = "Plan my trip" },
+    tools: tools,
+    maxIterations: 20,
+    onEvent: (type, data) => Console.WriteLine($"[{type}]"),
+    cancellationToken: cts.Token,
+    contextBudget: 50_000,
+    guardrails: guardrails,
+    steering: steering,
+    parallelToolCalls: true
+);
+```
+</TabItem>
+</Tabs>
+
+---
+
+## Typed Tool Functions
+
+Each runtime provides a decorator or attribute to turn a regular function into a
+registered tool with auto-generated parameter schemas.
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import tool
+
+@tool
+def get_weather(city: str, units: str = "celsius") -> str:
+    """Get the current weather for a city."""
+    return f"72°F in {city}"
+
+# The decorator:
+# 1. Introspects the signature (name, types, defaults)
+# 2. Builds a FunctionTool definition
+# 3. Registers it in the global tool name registry
+# 4. Attaches it as get_weather.__tool__
+
+# You can also customize:
+@tool(name="weather_lookup", description="Look up weather data")
+def get_weather_v2(city: str) -> str:
+    return f"72°F in {city}"
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { tool } from "@prompty/core";
+
+// TypeScript can't introspect types at runtime,
+// so parameters must be declared explicitly
+const getWeather = tool(
+  (city: string, units?: string) => `72°F in ${city}`,
+  {
+    name: "get_weather",
+    description: "Get the current weather for a city",
+    parameters: [
+      { name: "city", kind: "string", required: true },
+      { name: "units", kind: "string", default: "celsius" },
+    ],
+  },
+);
+
+getWeather("NYC");           // "72°F in NYC" — still callable
+getWeather.__tool__;          // FunctionTool instance
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+using Prompty.Core;
+
+public class WeatherService
+{
+    [Tool(Name = "get_weather", Description = "Get the current weather")]
+    public string GetWeather(string city, string units = "celsius")
+    {
+        return $"72°F in {city}";
+    }
+}
+
+// Discover and register all [Tool] methods on an instance
+var service = new WeatherService();
+var tools = ToolAttribute.DiscoverTools(service);
+
+// tools["get_weather"] is now a Func<string, Task<string>>
+// registered in the global ToolDispatch registry
+```
+</TabItem>
+</Tabs>
+
+### Type Mappings
+
+The tool decorator/attribute maps language types to schema kinds:
+
+| Python | TypeScript | C# | Schema Kind |
+|---|---|---|---|
+| `str` | `"string"` | `string` | `string` |
+| `int` | `"integer"` | `int`, `long` | `integer` |
+| `float` | `"float"` | `float`, `double` | `float` |
+| `bool` | `"boolean"` | `bool` | `boolean` |
+| `list` | `"array"` | `List<T>`, arrays | `array` |
+| `dict` | `"object"` | `Dictionary<,>` | `object` |
