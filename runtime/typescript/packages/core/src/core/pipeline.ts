@@ -18,14 +18,9 @@
  */
 
 import { Prompty } from "../model/prompty.js";
-import { Model } from "../model/model.js";
-import { ModelOptions } from "../model/model-options.js";
 import {
-  type ContentPart,
   type ToolCall,
-  type Role,
   Message,
-  ThreadMarker,
   RICH_KINDS,
   dictToMessage,
   text,
@@ -38,7 +33,7 @@ import { dispatchTool } from "./tool-dispatch.js";
 import { type EventCallback, emitEvent } from "./agent-events.js";
 import { CancelledError, checkCancellation } from "./cancellation.js";
 import { trimToContextWindow } from "./context.js";
-import { type GuardrailResult, GuardrailError, Guardrails } from "./guardrails.js";
+import { GuardrailError, Guardrails } from "./guardrails.js";
 import { Steering } from "./steering.js";
 
 // ---------------------------------------------------------------------------
@@ -456,57 +451,6 @@ async function consumeStream(
 }
 
 /**
- * Build tool result messages from processed ToolCall objects (streaming path).
- * Dispatches tools, then delegates message formatting to the provider's executor.
- */
-async function buildToolMessagesFromCalls(
-  toolCalls: ToolCall[],
-  textContent: string,
-  tools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
-  parentInputs?: Record<string, unknown>,
-  parentEmit?: (key: string, value: unknown) => void,
-): Promise<Message[]> {
-  const toolResults: string[] = [];
-  const toolInputs: Record<string, unknown>[] = [];
-
-  for (const tc of toolCalls) {
-    let result: string;
-    let parsedArgs: unknown;
-    try {
-      parsedArgs = JSON.parse(tc.arguments);
-      // Resolve bindings: inject values from parentInputs
-      if (parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
-        parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
-      }
-      result = await traceSpan(tc.name, async (toolEmit) => {
-        toolEmit("signature", `prompty.tool.${tc.name}`);
-        toolEmit("description", `Execute tool: ${tc.name}`);
-        toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
-        const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs ?? {});
-        toolEmit("result", r);
-        return r;
-      }) as string;
-    } catch (err) {
-      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
-    }
-
-    toolResults.push(result);
-    toolInputs.push({ name: tc.name, arguments: parsedArgs, id: tc.id, result });
-  }
-
-  if (parentEmit) {
-    parentEmit("inputs", { tool_calls: toolInputs });
-  }
-
-  // Delegate message formatting to executor
-  const provider = resolveProvider(agent);
-  const executor = getExecutor(provider);
-  const normalizedCalls = toolCalls.map((tc) => ({ id: tc.id, name: tc.name, arguments: tc.arguments }));
-  return executor.formatToolMessages(null, normalizedCalls, toolResults, textContent);
-}
-
-/**
  * Run a prompt with automatic tool-call execution loop.
  *
  * Supports §13 extensions: events, cancellation, context window
@@ -736,20 +680,6 @@ export async function invokeAgent(
 /**
  * Get map of `{propertyName: kind}` for inputs with rich kinds.
  */
-function getRichInputNames(agent: Prompty): Record<string, string> {
-  const result: Record<string, string> = {};
-  const props = agent.inputs;
-  if (!props || props.length === 0) return result;
-
-  for (const prop of props) {
-    const kind = prop.kind?.toLowerCase() ?? "";
-    if (RICH_KINDS.has(kind) && prop.name) {
-      result[prop.name] = kind;
-    }
-  }
-  return result;
-}
-
 /**
  * Expand thread markers: replace nonce strings in message text
  * with actual conversation messages from inputs.
@@ -916,57 +846,6 @@ function extractToolInfo(response: unknown): {
   }
 
   return { toolCalls: [], textContent: "" };
-}
-
-/**
- * Build tool result messages from a raw LLM response (non-streaming path).
- * Extracts tool call info, dispatches tools, then delegates message
- * formatting to the provider's executor.
- */
-async function buildToolResultMessages(
-  response: unknown,
-  tools: Record<string, (...args: unknown[]) => unknown>,
-  agent?: Prompty,
-  parentInputs?: Record<string, unknown>,
-  parentEmit?: (key: string, value: unknown) => void,
-): Promise<Message[]> {
-  const { toolCalls, textContent } = extractToolInfo(response);
-  const toolResults: string[] = [];
-  const toolInputs: Record<string, unknown>[] = [];
-
-  for (const tc of toolCalls) {
-    let result: string;
-    let parsedArgs: unknown;
-    try {
-      parsedArgs = JSON.parse(tc.arguments);
-      // Resolve bindings: inject values from parentInputs
-      if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
-        parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
-      }
-      result = await traceSpan(tc.name, async (toolEmit) => {
-        toolEmit("signature", `prompty.tool.${tc.name}`);
-        toolEmit("description", `Execute tool: ${tc.name}`);
-        toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
-        const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent ?? ({} as Prompty), parentInputs ?? {});
-        toolEmit("result", r);
-        return r;
-      }) as string;
-    } catch (err) {
-      result = `Error: ${err instanceof Error ? err.message : String(err)}`;
-    }
-
-    toolResults.push(result);
-    toolInputs.push({ name: tc.name, arguments: parsedArgs, id: tc.id, result });
-  }
-
-  if (parentEmit) {
-    parentEmit("inputs", { tool_calls: toolInputs });
-  }
-
-  // Delegate message formatting to executor
-  const provider = resolveProvider(agent ?? ({} as Prompty));
-  const executor = getExecutor(provider);
-  return executor.formatToolMessages(response, toolCalls, toolResults, textContent);
 }
 
 // ---------------------------------------------------------------------------

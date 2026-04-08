@@ -9,8 +9,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@prompty/core": "workspace:*",
-    "@prompty/openai": "workspace:*"
+    "@prompty/core": "file:../../runtime/typescript/packages/core",
+    "@prompty/openai": "file:../../runtime/typescript/packages/openai"
   },
   "devDependencies": {
     "vitest": "^3.2.1",

@@ -53,5 +53,7 @@ def emit_event(
         return
     try:
         callback(event_type, data or {})
-    except Exception:  # noqa: BLE001 — spec says log and continue
-        pass
+    except Exception as exc:  # noqa: BLE001 — spec says log and continue
+        import logging
+
+        logging.getLogger("prompty.events").debug("Event callback error for %s: %s", event_type, exc)

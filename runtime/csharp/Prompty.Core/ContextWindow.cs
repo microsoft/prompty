@@ -36,7 +36,20 @@ public static class ContextWindow
                 lines.Add($"User asked: {Truncate(msgText)}");
             else if (msg.Role == "assistant")
             {
-                if (msgText.Length > 0)
+                if (msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
+                {
+                    var names = new List<string>();
+                    foreach (var tc in tcList)
+                    {
+                        var nameProp = tc?.GetType().GetProperty("Name")?.GetValue(tc)?.ToString();
+                        if (nameProp is not null) names.Add(nameProp);
+                    }
+                    if (names.Count > 0)
+                        lines.Add($"Assistant called: {string.Join(", ", names)}");
+                    else if (msgText.Length > 0)
+                        lines.Add($"Assistant: {Truncate(msgText)}");
+                }
+                else if (msgText.Length > 0)
                     lines.Add($"Assistant: {Truncate(msgText)}");
             }
         }

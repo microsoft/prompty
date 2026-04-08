@@ -5,6 +5,8 @@ namespace Prompty.Core;
 /// <summary>§13.1 Agent loop event types.</summary>
 public enum AgentEventType
 {
+    Token,
+    Thinking,
     ToolCallStart,
     ToolResult,
     Status,
@@ -31,9 +33,10 @@ public static class AgentEvents
         {
             callback(eventType, data);
         }
-        catch
+        catch (Exception ex)
         {
-            // Swallow — event callbacks must not break the loop
+            // Swallow — event callbacks must not break the loop (§13.1)
+            System.Diagnostics.Debug.WriteLine($"Event callback error for {eventType}: {ex.Message}");
         }
     }
 }

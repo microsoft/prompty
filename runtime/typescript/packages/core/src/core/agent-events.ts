@@ -5,6 +5,8 @@
 
 /** Event types emitted during the agent loop. */
 export type AgentEventType =
+  | "token"
+  | "thinking"
   | "tool_call_start"
   | "tool_result"
   | "status"
@@ -28,7 +30,10 @@ export function emitEvent(
   if (!callback) return;
   try {
     callback(eventType, data);
-  } catch {
-    // Swallow — event callbacks must not break the loop
+  } catch (err) {
+    // Swallow — event callbacks must not break the loop (§13.1)
+    if (typeof globalThis.console?.debug === "function") {
+      globalThis.console.debug(`Event callback error for ${eventType}:`, err);
+    }
   }
 }
