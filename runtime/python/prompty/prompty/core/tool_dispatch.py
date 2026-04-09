@@ -211,7 +211,7 @@ class PromptyToolHandler:
         """Load and execute a child .prompty file synchronously."""
         # Lazy imports to avoid circular dependency with pipeline.py
         from .loader import load
-        from .pipeline import turn, prepare, run
+        from .pipeline import prepare, run, turn
 
         try:
             child_path = self._resolve_child_path(tool, agent)
@@ -244,7 +244,7 @@ class PromptyToolHandler:
     ) -> str:
         """Load and execute a child .prompty file asynchronously."""
         from .loader import load
-        from .pipeline import turn_async, prepare_async, run_async
+        from .pipeline import prepare_async, run_async, turn_async
 
         try:
             child_path = self._resolve_child_path(tool, agent)

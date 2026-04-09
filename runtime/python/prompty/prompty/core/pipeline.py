@@ -858,7 +858,13 @@ def turn(
     messages = prepare(agent, inputs)
 
     # Fast path: no tools and no loop extensions — single executor + process call (not via run)
-    _has_extensions = on_event is not None or cancel is not None or context_budget is not None or guardrails is not None or steering is not None
+    _has_extensions = (
+        on_event is not None
+        or cancel is not None
+        or context_budget is not None
+        or guardrails is not None
+        or steering is not None
+    )
     if not tools and not _has_extensions:
         response = _invoke_executor(agent, messages)
         if raw:
@@ -1045,7 +1051,13 @@ async def turn_async(
     messages = await prepare_async(agent, inputs)
 
     # Fast path: no tools and no loop extensions — single executor + process call (not via run)
-    _has_extensions = on_event is not None or cancel is not None or context_budget is not None or guardrails is not None or steering is not None
+    _has_extensions = (
+        on_event is not None
+        or cancel is not None
+        or context_budget is not None
+        or guardrails is not None
+        or steering is not None
+    )
     if not tools and not _has_extensions:
         response = await _invoke_executor_async(agent, messages)
         if raw:

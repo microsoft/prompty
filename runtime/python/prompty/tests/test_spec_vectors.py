@@ -1315,7 +1315,9 @@ def _setup_agent_ext_common(vec: dict):
             "id": "fallback",
             "object": "chat.completion",
             "model": "test",
-            "choices": [{"index": 0, "message": {"role": "assistant", "content": "(exhausted)"}, "finish_reason": "stop"}],
+            "choices": [
+                {"index": 0, "message": {"role": "assistant", "content": "(exhausted)"}, "finish_reason": "stop"}
+            ],
         }
     )
     response_iter = iter(mock_responses)
@@ -1375,7 +1377,9 @@ def _setup_agent_ext_common(vec: dict):
                 if i < len(calls):
                     tool_name = calls[i]["name"]
                 else:
-                    tool_name = list(inp.get("tool_functions", {}).keys())[0] if inp.get("tool_functions") else "unknown"
+                    tool_name = (
+                        list(inp.get("tool_functions", {}).keys())[0] if inp.get("tool_functions") else "unknown"
+                    )
             tool_result_queue.setdefault(tool_name, []).append(tr["result"])
 
     # Build tool functions — check for "raises" instructions
@@ -1434,9 +1438,7 @@ def test_agent_extension_vector(vec: dict):
     """
     from unittest.mock import patch
 
-    from prompty.core.agent_events import AgentEvent
     from prompty.core.cancellation import CancellationToken, CancelledError
-    from prompty.core.context import trim_to_context_window
     from prompty.core.guardrails import GuardrailError, GuardrailResult, Guardrails
     from prompty.core.pipeline import invoke_agent
     from prompty.core.steering import Steering
@@ -1541,27 +1543,33 @@ def test_agent_extension_vector(vec: dict):
                     ig = gr_spec["input"]
                     if ig.get("action") == "deny":
                         reason = ig.get("reason", "Denied")
-                        input_hook = lambda msgs, _r=reason: GuardrailResult(allowed=False, reason=_r)
+
+                        def input_hook(msgs: Any, _r: str = reason) -> GuardrailResult:
+                            return GuardrailResult(allowed=False, reason=_r)
                     else:
-                        input_hook = lambda msgs: GuardrailResult(allowed=True)
+
+                        def input_hook(msgs: Any) -> GuardrailResult:
+                            return GuardrailResult(allowed=True)
 
                 if "output" in gr_spec:
                     og = gr_spec["output"]
                     if og.get("action") == "deny":
                         reason = og.get("reason", "Denied")
-                        output_hook = lambda msg, _r=reason: GuardrailResult(allowed=False, reason=_r)
+
+                        def output_hook(msg: Any, _r: str = reason) -> GuardrailResult:
+                            return GuardrailResult(allowed=False, reason=_r)
                     else:
-                        output_hook = lambda msg: GuardrailResult(allowed=True)
+
+                        def output_hook(msg: Any) -> GuardrailResult:
+                            return GuardrailResult(allowed=True)
 
                 if "tool" in gr_spec:
                     tg = gr_spec["tool"]
                     deny_list = tg.get("deny_tools", [])
                     deny_reason = tg.get("reason", "Tool denied")
-                    tool_hook = lambda n, a, _dl=deny_list, _dr=deny_reason: (
-                        GuardrailResult(allowed=False, reason=_dr)
-                        if n in _dl
-                        else GuardrailResult(allowed=True)
-                    )
+
+                    def tool_hook(n: str, a: Any, _dl: list = deny_list, _dr: str = deny_reason) -> GuardrailResult:
+                        return GuardrailResult(allowed=False, reason=_dr) if n in _dl else GuardrailResult(allowed=True)
 
                 ext_kwargs["guardrails"] = Guardrails(input=input_hook, output=output_hook, tool=tool_hook)
 
@@ -1598,9 +1606,7 @@ def test_agent_extension_vector(vec: dict):
                 # Validate result
                 if "result" in expected:
                     assert result == expected["result"], (
-                        f"Agent '{name}': result mismatch\n"
-                        f"  actual:   {result!r}\n"
-                        f"  expected: {expected['result']!r}"
+                        f"Agent '{name}': result mismatch\n  actual:   {result!r}\n  expected: {expected['result']!r}"
                     )
 
                 # Validate denied_tools
