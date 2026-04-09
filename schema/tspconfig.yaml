@@ -29,5 +29,6 @@ options:
       - type: Rust
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
+        import-path: "prompty::model"
       - type: markdown
         output-dir: "../web/src/content/docs/reference"

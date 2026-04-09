@@ -288,6 +288,85 @@ Default::default()
 
 
 {#
+  Render save code for a variant field (bound by reference from a match arm).
+  Like saveProperty but uses bare variable names instead of self.field,
+  since variant fields are already references from the match pattern.
+#}
+{% macro saveVariantField(prop, polymorphicTypeNames) -%}
+{%- set propNameRust = prop.name | snakeCase -%}
+{%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
+        if !{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), {{ propNameRust }}.clone());
+        }
+{%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
+{%- if prop.isOptional %}
+        if let Some(items) = {{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
+        }
+{%- else %}
+        if !{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value({{ propNameRust }}).unwrap_or(serde_json::Value::Null));
+        }
+{%- endif %}
+{%- elif prop.isDict %}
+        if !{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), {{ propNameRust }}.clone());
+        }
+{%- elif prop.isScalar %}
+{%- if prop.typeName.name == "string" %}
+{%- if prop.isOptional %}
+        if let Some(val) = {{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::String(val.clone()));
+        }
+{%- else %}
+        if !{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::String({{ propNameRust }}.clone()));
+        }
+{%- endif %}
+{%- elif prop.typeName.name == "boolean" %}
+{%- if prop.isOptional %}
+        if let Some(val) = {{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::Bool(*val));
+        }
+{%- else %}
+        result.insert("{{ prop.name }}".to_string(), serde_json::Value::Bool(*{{ propNameRust }}));
+{%- endif %}
+{%- else %}
+{%- if prop.isOptional %}
+        if let Some(val) = {{ propNameRust }} {
+            result.insert("{{ prop.name }}".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        }
+{%- else %}
+        result.insert("{{ prop.name }}".to_string(), serde_json::to_value({{ propNameRust }}).unwrap_or(serde_json::Value::Null));
+{%- endif %}
+{%- endif %}
+{%- else %}
+{%- if prop.typeName.name in polymorphicTypeNames %}
+        if !{{ propNameRust }}.is_null() {
+            result.insert("{{ prop.name }}".to_string(), {{ propNameRust }}.clone());
+        }
+{%- else %}
+{%- if prop.isOptional %}
+        if let Some(val) = {{ propNameRust }} {
+            let nested = val.to_value();
+            if !nested.is_null() {
+                result.insert("{{ prop.name }}".to_string(), nested);
+            }
+        }
+{%- else %}
+        {
+            let nested = {{ propNameRust }}.to_value();
+            if !nested.is_null() {
+                result.insert("{{ prop.name }}".to_string(), nested);
+            }
+        }
+{%- endif %}
+{%- endif %}
+{%- endif %}
+{%- endmacro %}
+
+
+{#
   Generate a typed accessor method for a non-scalar collection or dict field.
   Non-scalar collection fields are stored as serde_json::Value (can be array OR dict in JSON).
   This accessor parses them into typed Vec<T>.
@@ -311,7 +390,7 @@ Default::default()
                             panic!(
                                 "Invalid '{{ prop.name }}' format: key '{}' has an array value. \
                                 '{{ prop.name }}' must be a flat list of objects or a name-keyed dict — \
-                                not a nested {{ '{' }} {}: [...] {{ '}' }} structure.",
+                                not a nested {{ '{' }}{{ '{' }} {}: [...] {{ '}' }}{{ '}' }} structure.",
                                 name, name
                             );
                         }
@@ -444,9 +523,9 @@ Default::default()
 {{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
 {%- else %}
 {%- if prop.isOptional %}
-{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array()).map({{ prop.typeName.name }}::load_from_value)
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map({{ prop.typeName.name }}::load_from_value)
 {%- else %}
-{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array()).map({{ prop.typeName.name }}::load_from_value).unwrap_or_default()
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map({{ prop.typeName.name }}::load_from_value).unwrap_or_default()
 {%- endif %}
 {%- endif %}
 {%- endif %}

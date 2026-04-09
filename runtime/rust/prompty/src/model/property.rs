@@ -5,13 +5,39 @@
 
 
 
+
+/// Variant-specific data for [`Property`], discriminated by `kind`.
+#[derive(Debug, Clone)]
+pub enum PropertyKind {
+    /// `kind` = `"array"`
+    Array {
+        /// The type of items contained in the array
+        items: serde_json::Value,
+    },
+    /// `kind` = `"object"`
+    Object {
+        /// The properties contained in the object
+        properties: serde_json::Value,
+    },
+    /// Wildcard / catch-all variant for unrecognized `kind` values.
+    Custom {
+        /// The raw `kind` string for this unknown variant.
+        kind_name: String,
+    },
+}
+
+impl Default for PropertyKind {
+    fn default() -> Self {
+        PropertyKind::Custom {
+            kind_name: String::new(),
+        }
+    }
+}
 /// Represents a single property.  - This model defines the structure of properties that can be used in prompts, including their type, description, whether they are required, and other attributes. - It allows for the definition of dynamic inputs that can be filled with data and processed to generate prompts for AI models.
 #[derive(Debug, Clone, Default)]
 pub struct Property {
     /// Name of the property
     pub name: String,
-    /// The data type of the input property
-    pub kind: String,
     /// A short description of the input property
     pub description: Option<String>,
     /// Whether the property is required
@@ -22,6 +48,8 @@ pub struct Property {
     pub example: Option<serde_json::Value>,
     /// Allowed enumeration values for the property
     pub enum_values: Option<Vec<serde_json::Value>>,
+    /// Variant-specific data, discriminated by `kind`.
+    pub kind: PropertyKind,
 }
 
 impl Property {
@@ -61,25 +89,46 @@ impl Property {
             let expansion = serde_json::json!({"kind":"string","example":value});
             return Self::load_from_value(&expansion);
         }
+        let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+        let kind = match kind_str {
+            "array" => PropertyKind::Array {
+                items: value.get("items").cloned().unwrap_or(serde_json::Value::Null),
+            },
+            "object" => PropertyKind::Object {
+                properties: value.get("properties").cloned().unwrap_or(serde_json::Value::Null),
+            },
+            _ => PropertyKind::Custom {
+                kind_name: kind_str.to_string(),
+            },
+        };
         Self {
             name: value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             description: value.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
             required: value.get("required").and_then(|v| v.as_bool()),
             default: value.get("default").cloned(),
             example: value.get("example").cloned(),
             enum_values: value.get("enumValues").and_then(|v| v.as_array()).map(|arr| arr.to_vec()),
+            kind: kind,
+        }
+    }
+
+    /// Returns the `kind` discriminator string for this instance.
+    pub fn kind_str(&self) -> &str {
+        match &self.kind {
+            PropertyKind::Array { .. } => "array",
+            PropertyKind::Object { .. } => "object",
+            PropertyKind::Custom { kind_name, .. } => kind_name.as_str(),
         }
     }
 
     /// Serialize Property to a `serde_json::Value`.
     pub fn to_value(&self) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write the discriminator
+        result.insert("kind".to_string(), serde_json::Value::String(self.kind_str().to_string()));
+        // Write base fields
         if !self.name.is_empty() {
             result.insert("name".to_string(), serde_json::Value::String(self.name.clone()));
-        }
-        if !self.kind.is_empty() {
-            result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
         }
         if let Some(ref val) = self.description {
             result.insert("description".to_string(), serde_json::Value::String(val.clone()));
@@ -96,6 +145,21 @@ impl Property {
         if let Some(ref items) = self.enum_values {
             result.insert("enumValues".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
         }
+        // Write variant-specific fields
+        match &self.kind {
+            PropertyKind::Array { items,  .. } => {
+                if !items.is_null() {
+            result.insert("items".to_string(), items.clone());
+        }
+            }
+            PropertyKind::Object { properties,  .. } => {
+                if !properties.is_null() {
+            result.insert("properties".to_string(), properties.clone());
+        }
+            }
+            PropertyKind::Custom { kind_name: _, .. } => {
+            }
+        }
         serde_json::Value::Object(result)
     }
 
@@ -111,155 +175,7 @@ impl Property {
 }
 
 
-/// Represents an array property. This extends the base Property model to represent an array of items.
-#[derive(Debug, Clone, Default)]
-pub struct ArrayProperty {
-    pub kind: String,
-    /// The type of items contained in the array
-    pub items: serde_json::Value,
-}
-
-impl ArrayProperty {
-    /// Create a new ArrayProperty with default values.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Load ArrayProperty from a JSON string.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        Ok(Self::load_from_value(&value))
-    }
-
-    /// Load ArrayProperty from a YAML string.
-    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
-        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
-        Ok(Self::load_from_value(&value))
-    }
-
-    /// Load ArrayProperty from a `serde_json::Value`.
-    pub fn load_from_value(value: &serde_json::Value) -> Self {
-        Self {
-            kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            items: value.get("items").cloned().unwrap_or(serde_json::Value::Null),
-        }
-    }
-
-    /// Serialize ArrayProperty to a `serde_json::Value`.
-    pub fn to_value(&self) -> serde_json::Value {
-        let mut result = serde_json::Map::new();
-        if !self.kind.is_empty() {
-            result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
-        }
-        if !self.items.is_null() {
-            result.insert("items".to_string(), self.items.clone());
-        }
-        serde_json::Value::Object(result)
-    }
-
-    /// Serialize ArrayProperty to a JSON string.
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self.to_value())
-    }
-
-    /// Serialize ArrayProperty to a YAML string.
-    pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(&self.to_value())
-    }
-}
 
 
-/// Represents an object property. This extends the base Property model to represent a structured object.
-#[derive(Debug, Clone, Default)]
-pub struct ObjectProperty {
-    pub kind: String,
-    /// The properties contained in the object
-    pub properties: serde_json::Value,
-}
-
-impl ObjectProperty {
-    /// Create a new ObjectProperty with default values.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Load ObjectProperty from a JSON string.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        Ok(Self::load_from_value(&value))
-    }
-
-    /// Load ObjectProperty from a YAML string.
-    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml::Error> {
-        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
-        Ok(Self::load_from_value(&value))
-    }
-
-    /// Load ObjectProperty from a `serde_json::Value`.
-    pub fn load_from_value(value: &serde_json::Value) -> Self {
-        Self {
-            kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            properties: value.get("properties").cloned().unwrap_or(serde_json::Value::Null),
-        }
-    }
-
-    /// Serialize ObjectProperty to a `serde_json::Value`.
-    pub fn to_value(&self) -> serde_json::Value {
-        let mut result = serde_json::Map::new();
-        if !self.kind.is_empty() {
-            result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
-        }
-        if !self.properties.is_null() {
-            result.insert("properties".to_string(), self.properties.clone());
-        }
-        serde_json::Value::Object(result)
-    }
-
-    /// Serialize ObjectProperty to a JSON string.
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self.to_value())
-    }
-
-    /// Serialize ObjectProperty to a YAML string.
-    pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(&self.to_value())
-    }
-    /// Returns typed `Vec<Property>` by parsing the stored JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_properties(&self) -> Option<Vec<Property>> {
-        match &self.properties {
-            serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(Property::load_from_value).collect())
-            }
-            serde_json::Value::Object(obj) => {
-                let result: Vec<Property> = obj
-                    .iter()
-                    .map(|(name, value)| {
-                        if value.is_array() {
-                            panic!(
-                                "Invalid 'properties' format: key '{}' has an array value. \
-                                'properties' must be a flat list of objects or a name-keyed dict — \
-                                not a nested { {}: [...] } structure.",
-                                name, name
-                            );
-                        }
-                        let mut v = if value.is_object() {
-                            value.clone()
-                        } else {
-                            serde_json::json!({ "value": value })
-                        };
-                        if let serde_json::Value::Object(ref mut m) = v {
-                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
-                        }
-                        Property::load_from_value(&v)
-                    })
-                    .collect();
-                Some(result)
-            }
-            _ => None,
-        }
-    }
-}
 
 

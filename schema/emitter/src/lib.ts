@@ -57,7 +57,7 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
           "import-path": {
             type: "string",
             nullable: true,
-            description: "Python import path for generated code in tests (e.g., 'prompty.model'). Defaults to the lowercased namespace."
+            description: "Import path for generated code in tests. Python: 'prompty.model', TypeScript: '../../src/model/index', Rust: 'prompty::model'. Defaults vary by language."
           }
         },
         required: ["type"]
