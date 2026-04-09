@@ -104,7 +104,7 @@ const LeafConnector = styled.div.attrs({ className: 'guide' })`
 
 const renderGuides = (ancestorLines: boolean[], isLeaf: boolean) => {
   const len = ancestorLines.length;
-  if (len === 0) return null;
+  if (len === 0) {return null;}
 
   return ancestorLines.map((hasLine, i) => {
     const isConnector = i === len - 1;
@@ -216,7 +216,7 @@ const TraceTree = ({ trace, level, hidden, ancestorLines = [], setTraceItem }: P
 
   const toggleVisibility: MouseEventHandler<HTMLDivElement> = (e) => {
     e.stopPropagation();
-    if (trace.id) toggle(trace.id);
+    if (trace.id) {toggle(trace.id);}
   };
 
   const handleRowClick = () => {

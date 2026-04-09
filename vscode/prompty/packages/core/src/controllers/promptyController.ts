@@ -53,7 +53,7 @@ export class PromptyController implements Disposable {
 			const sampleInputs: Record<string, unknown> = {};
 			if (agent.inputs) {
 				for (const prop of agent.inputs) {
-					if (!prop.name) continue;
+					if (!prop.name) {continue;}
 					if (prop.example !== undefined) {
 						sampleInputs[prop.name] = prop.example;
 					} else if (prop.default !== undefined) {
@@ -162,14 +162,15 @@ export class PromptyController implements Disposable {
 				message = error.message;
 
 				// OpenAI SDK errors carry extra context
-				const status = (error as any).status;
-				const code = (error as any).code;
-				const type = (error as any).type;
+				const errRecord = error as unknown as Record<string, unknown>;
+				const status = errRecord.status;
+				const code = errRecord.code;
+				const type = errRecord.type;
 
 				const parts: string[] = [];
-				if (status) parts.push(`${status}`);
-				if (code) parts.push(code);
-				if (type) parts.push(type);
+				if (status) {parts.push(`${status}`);}
+				if (code) {parts.push(code as string);}
+				if (type) {parts.push(type as string);}
 
 				if (parts.length > 0) {
 					message = `[${parts.join(' · ')}] ${message}`;
@@ -180,12 +181,13 @@ export class PromptyController implements Disposable {
 					const modelId = agent?.model?.id;
 					const conn = agent?.model?.connection;
 					const connName = conn instanceof ReferenceConnection ? conn.name : undefined;
-					const endpoint = (conn as any)?.endpoint
-						?? (error as any)?.response?.url
-						?? (error as any)?.url;
-					if (modelId) message += `\n  Model: ${modelId}`;
-					if (connName) message += `\n  Connection: ${connName}`;
-					if (endpoint) message += `\n  Endpoint: ${endpoint}`;
+					const connRecord = conn as unknown as Record<string, unknown> | undefined;
+					const endpoint = connRecord?.endpoint
+						?? (errRecord as Record<string, unknown> & { response?: { url?: string } })?.response?.url
+						?? errRecord?.url;
+					if (modelId) {message += `\n  Model: ${modelId}`;}
+					if (connName) {message += `\n  Connection: ${connName}`;}
+					if (endpoint) {message += `\n  Endpoint: ${endpoint}`;}
 					message += '\n  Hint: Check that the model/deployment name matches exactly';
 				} else if (status === 401 || status === 403) {
 					message += '\n  Hint: Check your API key or authentication';
@@ -211,14 +213,14 @@ export class PromptyController implements Disposable {
 	 * 3. Nothing — execution will fail at the executor level
 	 */
 	private async applyDefaultConnection(agent: PromptAgent): Promise<void> {
-		if (!this.connectionStore) return;
+		if (!this.connectionStore) {return;}
 
 		const conn = agent.model?.connection;
 
 		// If the frontmatter already specifies a usable connection, respect it
-		if (conn instanceof ReferenceConnection && conn.name) return;
-		if (conn && 'endpoint' in conn && (conn as any).endpoint) return;
-		if (conn && 'apiKey' in conn && (conn as any).apiKey) return;
+		if (conn instanceof ReferenceConnection && conn.name) {return;}
+		if (conn && 'endpoint' in conn && (conn as unknown as Record<string, unknown>).endpoint) {return;}
+		if (conn && 'apiKey' in conn && (conn as unknown as Record<string, unknown>).apiKey) {return;}
 
 		// No usable connection — find the default from the sidebar
 		// First try matching the explicit provider, then fall back to any default
@@ -233,7 +235,7 @@ export class PromptyController implements Disposable {
 			defaultProfile = profiles.find(p => p.isDefault) ?? profiles[0];
 		}
 
-		if (!defaultProfile) return;
+		if (!defaultProfile) {return;}
 
 		if (!agent.model) {
 			agent.model = new Model();
@@ -307,15 +309,15 @@ export class PromptyController implements Disposable {
 			// Foundry connections: inject project endpoint
 			if (profile.providerType === 'foundry' && 'endpoint' in profile) {
 				if (!process.env.AZURE_AI_PROJECT_ENDPOINT) {
-					process.env.AZURE_AI_PROJECT_ENDPOINT = (profile as any).endpoint;
+					process.env.AZURE_AI_PROJECT_ENDPOINT = (profile as unknown as Record<string, unknown>).endpoint as string;
 				}
 				continue;
 			}
 
-			if (profile.authType !== 'key') continue;
+			if (profile.authType !== 'key') {continue;}
 
 			const secret = await this.connectionStore!.getSecret(profile.id);
-			if (!secret) continue;
+			if (!secret) {continue;}
 
 			// Set provider-specific env vars if not already set
 			switch (profile.providerType) {

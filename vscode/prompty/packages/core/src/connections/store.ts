@@ -69,10 +69,10 @@ export class ConnectionStore {
 	/** Delete a connection profile and its secret */
 	async deleteProfile(id: string): Promise<void> {
 		const file = await this.readConnectionsFile();
-		if (!file) return;
+		if (!file) {return;}
 
 		const profile = file.connections.find((c) => c.id === id);
-		if (!profile) return;
+		if (!profile) {return;}
 
 		file.connections = file.connections.filter((c) => c.id !== id);
 		await this.writeConnectionsFile(file);
@@ -84,10 +84,10 @@ export class ConnectionStore {
 	/** Set a connection as the default for its provider type */
 	async setDefault(id: string): Promise<void> {
 		const file = await this.readConnectionsFile();
-		if (!file) return;
+		if (!file) {return;}
 
 		const target = file.connections.find((c) => c.id === id);
-		if (!target) return;
+		if (!target) {return;}
 
 		// Unset other defaults of the same provider type
 		for (const conn of file.connections) {
@@ -136,7 +136,7 @@ export class ConnectionStore {
 
 	private getConnectionsFilePath(): string | undefined {
 		const workspaceFolders = vscode.workspace.workspaceFolders;
-		if (!workspaceFolders || workspaceFolders.length === 0) return undefined;
+		if (!workspaceFolders || workspaceFolders.length === 0) {return undefined;}
 
 		return path.join(
 			workspaceFolders[0].uri.fsPath,
@@ -147,10 +147,10 @@ export class ConnectionStore {
 
 	private async readConnectionsFile(): Promise<ConnectionsFile | null> {
 		const filePath = this.getConnectionsFilePath();
-		if (!filePath) return null;
+		if (!filePath) {return null;}
 
 		try {
-			if (!fs.existsSync(filePath)) return null;
+			if (!fs.existsSync(filePath)) {return null;}
 			const content = fs.readFileSync(filePath, "utf-8");
 			return JSON.parse(content) as ConnectionsFile;
 		} catch {

@@ -53,7 +53,7 @@ export function registerConnectionCommands(
 						})),
 						{ placeHolder: "Select a connection to edit" }
 					);
-					if (!picked) return;
+					if (!picked) {return;}
 					await wizard.editConnection(picked.id);
 				} else {
 					await wizard.editConnection(item.profile.id);
@@ -84,7 +84,7 @@ export function registerConnectionCommands(
 						})),
 						{ placeHolder: "Select a connection to delete" }
 					);
-					if (!picked) return;
+					if (!picked) {return;}
 					profileId = picked.id;
 					profileName = picked.label;
 				}
@@ -126,7 +126,7 @@ export function registerConnectionCommands(
 						})),
 						{ placeHolder: "Select a connection to test" }
 					);
-					if (!picked) return;
+					if (!picked) {return;}
 					profileId = picked.id;
 				}
 
@@ -211,7 +211,7 @@ export function registerConnectionCommands(
 							placeHolder: "Select the default connection",
 						}
 					);
-					if (!picked) return;
+					if (!picked) {return;}
 					profileId = picked.id;
 					profileName = picked.label;
 				}
@@ -230,7 +230,7 @@ export function registerConnectionCommands(
 		vscode.commands.registerCommand(
 			"prompty.refreshModels",
 			async (item?: SectionTreeItem) => {
-				if (!item || item.sectionType !== "models") return;
+				if (!item || item.sectionType !== "models") {return;}
 				await vscode.window.withProgress(
 					{
 						location: vscode.ProgressLocation.Notification,

@@ -1,4 +1,4 @@
-import { ExtensionContext, TextDocument, TextEditor, ViewColumn, WebviewPanel, window, workspace, Disposable, Uri, RelativePattern } from 'vscode';
+import { ExtensionContext, TextEditor, ViewColumn, WebviewPanel, window, workspace, Disposable, RelativePattern } from 'vscode';
 import { load, prepare, Message, text as textPart } from '@prompty/core';
 import type { Prompty } from '@prompty/core';
 import { marked } from 'marked';
@@ -76,7 +76,7 @@ export class PreviewPanel implements Disposable {
 	}
 
 	private scheduleUpdate(): void {
-		if (this.debounceTimer) clearTimeout(this.debounceTimer);
+		if (this.debounceTimer) {clearTimeout(this.debounceTimer);}
 		this.debounceTimer = setTimeout(() => void this.update(), 300);
 	}
 
@@ -88,8 +88,8 @@ export class PreviewPanel implements Disposable {
 			const sampleInputs: Record<string, unknown> = {};
 			if (agent.inputs) {
 				for (const prop of agent.inputs) {
-					if (!prop.name) continue;
-					if (prop.kind === 'thread') continue; // skip thread inputs
+					if (!prop.name) {continue;}
+					if (prop.kind === 'thread') {continue;} // skip thread inputs
 					if (prop.example !== undefined) {
 						sampleInputs[prop.name] = prop.example;
 					} else if (prop.default !== undefined) {
@@ -148,7 +148,7 @@ export class PreviewPanel implements Disposable {
 
 			// Find insertion point: after last non-user message before the first user message
 			let insertIdx = messageCards.findIndex(m => m.role === 'user');
-			if (insertIdx < 0) insertIdx = messageCards.length;
+			if (insertIdx < 0) {insertIdx = messageCards.length;}
 
 			const parts = messageCards.map(m => m.html);
 			parts.splice(insertIdx, 0, placeholder);
@@ -390,7 +390,7 @@ export class PreviewPanel implements Disposable {
 	}
 
 	dispose(): void {
-		if (this.debounceTimer) clearTimeout(this.debounceTimer);
+		if (this.debounceTimer) {clearTimeout(this.debounceTimer);}
 		this.disposables.forEach(d => d.dispose());
 		this.disposables = [];
 	}

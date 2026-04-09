@@ -67,7 +67,7 @@ const NodeIcon = ({ trace, size }: Props) => {
   // Check for LLM / executor / processor traces — show provider icon
   if (trace.type?.toLowerCase() === "llm") {
     const provider = detectProvider(trace.signature);
-    if (provider) return <ProviderBadge provider={provider} size={size} />;
+    if (provider) {return <ProviderBadge provider={provider} size={size} />;}
     return (
       <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-foreground) 12%, transparent)" $color="var(--vscode-foreground)">
         ⚡

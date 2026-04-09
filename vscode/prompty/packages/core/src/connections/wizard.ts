@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { ConnectionStore } from "./store";
 import { ConnectionProviderRegistry } from "./registry";
 import {
@@ -25,14 +26,14 @@ export class ConnectionWizard {
 	async addConnection(): Promise<ConnectionProfile | undefined> {
 		// Step 1: Pick provider
 		const providerChoice = await this.pickProvider();
-		if (!providerChoice) return undefined;
+		if (!providerChoice) {return undefined;}
 
 		const { provider, providerType } = providerChoice;
 		const fields = provider.getConfigurationFields(providerType);
 
 		// Step 2: Collect fields
 		const values = await this.collectFields(fields);
-		if (!values) return undefined;
+		if (!values) {return undefined;}
 
 		// Step 3: Build profile
 		const id = `${providerType}-${Date.now()}`;
@@ -117,7 +118,7 @@ export class ConnectionWizard {
 		}
 
 		const values = await this.collectFields(fields, existingValues);
-		if (!values) return undefined;
+		if (!values) {return undefined;}
 
 		const profile = this.buildProfile(
 			profileId,
@@ -163,8 +164,8 @@ export class ConnectionWizard {
 					description: pt,
 					iconPath: hasCustomIcon
 						? {
-							dark: vscode.Uri.file(require("path").join(this.extensionPath!, "icons", "dark", `${pt}.svg`)),
-							light: vscode.Uri.file(require("path").join(this.extensionPath!, "icons", "light", `${pt}.svg`)),
+							dark: vscode.Uri.file(path.join(this.extensionPath!, "icons", "dark", `${pt}.svg`)),
+							light: vscode.Uri.file(path.join(this.extensionPath!, "icons", "light", `${pt}.svg`)),
 						}
 						: new vscode.ThemeIcon(provider.iconId),
 					provider,
@@ -216,7 +217,7 @@ export class ConnectionWizard {
 				},
 			});
 
-			if (value === undefined) return undefined; // cancelled
+			if (value === undefined) {return undefined;} // cancelled
 
 			if (value.trim()) {
 				values[field.key] = value.trim();

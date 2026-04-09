@@ -84,7 +84,7 @@ export function tokenizeDocument(
 				const prefix = roleMatch[1];
 				const roleName = roleMatch[2];
 				const attrs = roleMatch[3]; // e.g. [name="Alice"]
-				const colon = roleMatch[4];
+				// roleMatch[4] is the colon — not used for token generation
 
 				// Role name
 				const roleStart = prefix.length;

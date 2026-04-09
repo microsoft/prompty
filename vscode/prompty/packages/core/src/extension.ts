@@ -227,19 +227,19 @@ async function sendModelsToServer(
 	store: ConnectionStore,
 	registry: ConnectionProviderRegistry,
 ) {
-	if (!client) return;
+	if (!client) {return;}
 
 	const profiles = await store.getProfiles();
-	const allModels: Array<{ id: string; displayName?: string; provider: string }> = [];
+	const allModels: { id: string; displayName?: string; provider: string }[] = [];
 
 	// Use the default connection per provider, or the first one found
 	const seenProviders = new Set<string>();
 	for (const profile of profiles) {
 		const providerType = profile.providerType;
-		if (seenProviders.has(providerType)) continue;
+		if (seenProviders.has(providerType)) {continue;}
 
 		const provider = registry.getProviderForType(providerType);
-		if (!provider?.listModels) continue;
+		if (!provider?.listModels) {continue;}
 
 		try {
 			const secret = await store.getSecret(profile.id);
@@ -263,7 +263,7 @@ async function sendModelsToServer(
 }
 
 async function sendConnectionsToServer(store: ConnectionStore) {
-	if (!client) return;
+	if (!client) {return;}
 
 	const profiles = await store.getProfiles();
 	const connections = profiles.map(p => ({

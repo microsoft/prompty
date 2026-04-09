@@ -1,6 +1,6 @@
 import { Time, Usage } from "../store";
 import styled from "styled-components";
-import { formatDuration, formatTokens, formatUsageLabel, totalTokens } from "../utilities/format";
+import { formatDuration, formatTokens, formatUsageLabel } from "../utilities/format";
 
 const Frame = styled.div`
   display: flex;

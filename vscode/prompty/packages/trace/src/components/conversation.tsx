@@ -4,14 +4,14 @@ import { TraceItem } from "../store";
 interface ConversationMessage {
   role: string;
   content?: string | null;
-  tool_calls?: Array<{
+  tool_calls?: {
     id: string;
     type: string;
     function: { name: string; arguments: string };
-  }>;
+  }[];
   tool_call_id?: string;
   name?: string;
-  parts?: Array<{ kind: string; value: string }>;
+  parts?: { kind: string; value: string }[];
   metadata?: Record<string, unknown>;
 }
 
@@ -108,9 +108,9 @@ const IterationDivider = styled.div`
 
 /** Extract the text content from a message (handles both flat content and parts[] format) */
 function getContent(msg: ConversationMessage): string {
-  if (typeof msg.content === "string" && msg.content) return msg.content;
+  if (typeof msg.content === "string" && msg.content) {return msg.content;}
   if (Array.isArray(msg.content)) {
-    return (msg.content as Array<{ kind?: string; value?: string; text?: string }>)
+    return (msg.content as { kind?: string; value?: string; text?: string }[])
       .map((p) => p.value ?? p.text ?? "")
       .join("");
   }
@@ -165,7 +165,7 @@ function extractConversation(trace: TraceItem): { messages: ConversationMessage[
 
     // Get the LLM's response from the result
     const result = execFrame.result as Record<string, unknown> | undefined;
-    const choices = result?.choices as Array<{ message: ConversationMessage }> | undefined;
+    const choices = result?.choices as { message: ConversationMessage }[] | undefined;
     if (choices?.[0]?.message) {
       allMessages.push(choices[0].message);
     }
@@ -175,13 +175,13 @@ function extractConversation(trace: TraceItem): { messages: ConversationMessage[
 }
 
 function hasToolCalls(msg: ConversationMessage): boolean {
-  if (msg.tool_calls && msg.tool_calls.length > 0) return true;
-  if (msg.metadata && Array.isArray((msg.metadata as Record<string, unknown>).tool_calls)) return true;
+  if (msg.tool_calls && msg.tool_calls.length > 0) {return true;}
+  if (msg.metadata && Array.isArray((msg.metadata as Record<string, unknown>).tool_calls)) {return true;}
   return false;
 }
 
 function getToolCalls(msg: ConversationMessage): ConversationMessage["tool_calls"] {
-  if (msg.tool_calls) return msg.tool_calls;
+  if (msg.tool_calls) {return msg.tool_calls;}
   if (msg.metadata && Array.isArray((msg.metadata as Record<string, unknown>).tool_calls)) {
     return (msg.metadata as Record<string, unknown>).tool_calls as ConversationMessage["tool_calls"];
   }
@@ -191,8 +191,8 @@ function getToolCalls(msg: ConversationMessage): ConversationMessage["tool_calls
 function sameToolCalls(a: ConversationMessage, b: ConversationMessage): boolean {
   const aCalls = getToolCalls(a);
   const bCalls = getToolCalls(b);
-  if (!aCalls && !bCalls) return true;
-  if (!aCalls || !bCalls) return false;
+  if (!aCalls && !bCalls) {return true;}
+  if (!aCalls || !bCalls) {return false;}
   return JSON.stringify(aCalls) === JSON.stringify(bCalls);
 }
 
@@ -210,9 +210,9 @@ function formatArgs(argsStr: string): string {
  * is at prompt.inputs — an array of {name, kind, ...} objects.
  */
 function agentHasThreadInput(prompt: unknown): boolean {
-  if (!prompt || typeof prompt !== "object") return false;
+  if (!prompt || typeof prompt !== "object") {return false;}
   const inputs = (prompt as Record<string, unknown>).inputs;
-  if (!Array.isArray(inputs)) return false;
+  if (!Array.isArray(inputs)) {return false;}
   return inputs.some(
     (p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).kind === "thread",
   );
@@ -226,12 +226,12 @@ function agentHasThreadInput(prompt: unknown): boolean {
 export function isAgentTrace(trace: TraceItem): boolean {
   // Check the serialized agent on this trace node
   const prompt = (trace.inputs as Record<string, unknown>)?.prompt;
-  if (agentHasThreadInput(prompt)) return true;
+  if (agentHasThreadInput(prompt)) {return true;}
 
   // Check child frames (e.g. prompty.vscode.invoke wraps prompty.invoke/turn)
   for (const frame of trace.__frames ?? []) {
     const childPrompt = (frame.inputs as Record<string, unknown>)?.prompt;
-    if (agentHasThreadInput(childPrompt)) return true;
+    if (agentHasThreadInput(childPrompt)) {return true;}
   }
 
   return false;

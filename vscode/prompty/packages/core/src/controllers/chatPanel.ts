@@ -1,7 +1,6 @@
 import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } from 'vscode';
 import {
-	load, turn,
-	registerConnection, clearConnections,
+	turn,
 	Tracer, PromptyTracer,
 } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
@@ -114,7 +113,7 @@ export class ChatPanel {
 		// Only applies to non-agent mode (turn() consumes streams internally).
 		if (!this.hasTools && this.agent.model?.options) {
 			const opts = this.agent.model.options;
-			if (!opts.additionalProperties) opts.additionalProperties = {};
+			if (!opts.additionalProperties) {opts.additionalProperties = {};}
 			if (opts.additionalProperties.stream === undefined) {
 				opts.additionalProperties.stream = true;
 			}
@@ -315,7 +314,7 @@ export class ChatPanel {
 		const tools: Record<string, (...args: unknown[]) => unknown> = {};
 
 		for (const tool of (this.agent.tools ?? [])) {
-			if (tool.kind !== 'function') continue;
+			if (tool.kind !== 'function') {continue;}
 			const toolName = tool.name;
 			tools[toolName] = async (args: unknown) => {
 				const argsStr = typeof args === 'string' ? args : JSON.stringify(args, null, 2);
@@ -398,7 +397,7 @@ export class ChatPanel {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src https:;">
+		content="default-src 'none'; style-src ${csp} 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src ${csp} https:;">
 	<title>Chat: ${this.fileName}</title>
 	<style nonce="${nonce}">
 		:root {

@@ -113,8 +113,9 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 
 	private getDescription(): string {
 		const parts: string[] = [];
+		const p = this.profile as unknown as Record<string, unknown>;
 		if ("endpoint" in this.profile) {
-			const endpoint = (this.profile as any).endpoint as string;
+			const endpoint = p.endpoint as string;
 			try {
 				parts.push(new URL(endpoint).hostname);
 			} catch {
@@ -122,10 +123,10 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 			}
 		}
 		if ("model" in this.profile) {
-			parts.push((this.profile as any).model as string);
+			parts.push(p.model as string);
 		}
 		if ("deployment" in this.profile) {
-			parts.push((this.profile as any).deployment as string);
+			parts.push(p.deployment as string);
 		}
 		return parts.filter(Boolean).join(" · ");
 	}
@@ -138,7 +139,7 @@ export class ConnectionTreeItem extends vscode.TreeItem {
 
 		if ("endpoint" in this.profile) {
 			md.appendMarkdown(
-				`Endpoint: \`${(this.profile as any).endpoint}\`\n\n`
+				`Endpoint: \`${(this.profile as unknown as Record<string, unknown>).endpoint}\`\n\n`
 			);
 		}
 
@@ -281,7 +282,7 @@ export class ConnectionsTreeDataProvider
 
 		// Fetch from provider
 		const provider = this.registry.getProviderForType(profile.providerType);
-		if (!provider?.listModels) return [];
+		if (!provider?.listModels) {return [];}
 
 		try {
 			const secret = await this.store.getSecret(profile.id);
@@ -414,7 +415,7 @@ export class ConnectionsTreeDataProvider
 	/** Fetch and cache models for a connection (called during tree expansion or after test) */
 	async fetchModels(profile: ConnectionProfile, secret?: string): Promise<void> {
 		const provider = this.registry.getProviderForType(profile.providerType);
-		if (!provider?.listModels) return;
+		if (!provider?.listModels) {return;}
 
 		try {
 			if (!secret) {

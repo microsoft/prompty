@@ -78,8 +78,10 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 
 			// Detect which credential source was used
 			let source = "DefaultAzureCredential";
-			const credType = (credential as any)._selectedCredential?.constructor?.name
-				?? (credential as any).selectedCredential?.constructor?.name;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Azure SDK internals
+			const credAny = credential as Record<string, any>;
+			const credType = credAny._selectedCredential?.constructor?.name
+				?? credAny.selectedCredential?.constructor?.name;
 			if (credType) {
 				source = credType;
 			}

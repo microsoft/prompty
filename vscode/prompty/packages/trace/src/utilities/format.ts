@@ -39,7 +39,7 @@ export const formatUsageLabel = (key: string): string =>
 
 /** Compute total tokens from a usage object — uses total_tokens if present, otherwise sums all values. */
 export const totalTokens = (usage: Usage): number => {
-	if (usage.total_tokens != null) return usage.total_tokens;
+	if (usage.total_tokens != null) {return usage.total_tokens;}
 	return Object.values(usage).reduce((sum, v) => sum + v, 0);
 };
 

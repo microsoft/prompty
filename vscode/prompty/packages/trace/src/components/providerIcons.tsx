@@ -46,11 +46,11 @@ export const AnthropicIcon = ({ size }: Props) => (
  * Returns "openai" | "foundry" | "azure" | "anthropic" | null.
  */
 export function detectProvider(signature?: string): string | null {
-  if (!signature) return null;
+  if (!signature) {return null;}
   const sig = signature.toLowerCase();
-  if (sig.includes("foundry")) return "foundry";
-  if (sig.includes("azure")) return "foundry"; // Azure uses Foundry icon
-  if (sig.includes("openai")) return "openai";
-  if (sig.includes("anthropic")) return "anthropic";
+  if (sig.includes("foundry")) {return "foundry";}
+  if (sig.includes("azure")) {return "foundry";} // Azure uses Foundry icon
+  if (sig.includes("openai")) {return "openai";}
+  if (sig.includes("anthropic")) {return "anthropic";}
   return null;
 }

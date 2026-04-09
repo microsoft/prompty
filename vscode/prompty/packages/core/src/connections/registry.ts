@@ -4,7 +4,6 @@ import {
 	ConnectionProfile,
 	ConnectionProviderType,
 	ProviderRegistration,
-	ConnectionsChangedEvent,
 } from "./types";
 
 /**

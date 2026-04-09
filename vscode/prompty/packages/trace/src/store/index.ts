@@ -6,9 +6,7 @@ export interface Time {
 	duration: number;
 }
 
-export interface Usage {
-	[key: string]: number;
-}
+export type Usage = Record<string, number>;
 
 export interface TraceItem {
 	id?: string;

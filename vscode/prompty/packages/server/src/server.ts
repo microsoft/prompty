@@ -555,8 +555,8 @@ function inferKind(value: unknown): string {
 		case 'number': return Number.isInteger(value) ? 'integer' : 'float';
 		case 'boolean': return 'boolean';
 		default:
-			if (Array.isArray(value)) return 'array';
-			if (value && typeof value === 'object') return 'object';
+			if (Array.isArray(value)) {return 'array';}
+			if (value && typeof value === 'object') {return 'object';}
 			return '';
 	}
 }
@@ -794,7 +794,7 @@ function getModelIdContext(
 	document: TextDocument,
 	metadata: DocumentMetadata,
 	line: number,
-	character: number,
+	_character: number,
 ): { provider: string | undefined; replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
 	const lineText = document.getText({
 		start: { line, character: 0 },
@@ -805,7 +805,7 @@ function getModelIdContext(
 	const idMatch = lineText.match(/^(\s+)id:/);
 	const shorthandMatch = !idMatch ? lineText.match(/^model:/) : null;
 
-	if (!idMatch && !shorthandMatch) return null;
+	if (!idMatch && !shorthandMatch) {return null;}
 
 	const colonPos = shorthandMatch
 		? lineText.indexOf(':')
@@ -825,7 +825,7 @@ function getModelIdContext(
 		{ from: line + 1, to: metadata.frontMatterEnd ?? line, step: 1 },
 	];
 	for (const { from, to, step } of scanRange) {
-		if (provider) break;
+		if (provider) {break;}
 		for (let l = from; step < 0 ? l > to : l < to; l += step) {
 			const prevLine = document.getText({
 				start: { line: l, character: 0 },
@@ -836,7 +836,7 @@ function getModelIdContext(
 				provider = providerMatch[1];
 				break;
 			}
-			if (prevLine.trim() && !prevLine.startsWith(indent)) break;
+			if (prevLine.trim() && !prevLine.startsWith(indent)) {break;}
 		}
 	}
 
@@ -852,8 +852,8 @@ function getProviderContext(
 	metadata: DocumentMetadata,
 	line: number,
 ): { replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
-	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) return null;
-	if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) return null;
+	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {return null;}
+	if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {return null;}
 
 	const lineText = document.getText({
 		start: { line, character: 0 },
@@ -861,7 +861,7 @@ function getProviderContext(
 	}).trimEnd();
 
 	const match = lineText.match(/^(\s+)provider:/);
-	if (!match) return null;
+	if (!match) {return null;}
 
 	const colonPos = lineText.indexOf(':', match[1].length);
 	return {

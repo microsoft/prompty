@@ -121,7 +121,7 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 		profile: ConnectionProfile,
 		secret?: string
 	): Promise<ModelInfo[] | undefined> {
-		if (!secret) return undefined;
+		if (!secret) {return undefined;}
 
 		const p = profile as AnthropicConnectionProfile;
 		const endpoint = p.endpoint ?? "https://api.anthropic.com";
@@ -134,13 +134,13 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 				},
 			});
 
-			if (!response.ok) return undefined;
+			if (!response.ok) {return undefined;}
 
 			const body = await response.json() as {
-				data?: Array<{ id: string; display_name?: string }>;
+				data?: { id: string; display_name?: string }[];
 			};
 
-			if (!body.data) return undefined;
+			if (!body.data) {return undefined;}
 
 			return body.data
 				.map((m) => ({

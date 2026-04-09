@@ -99,7 +99,7 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 		secret?: string
 	): Promise<ModelInfo[] | undefined> {
 		const p = profile as OpenAIConnectionProfile;
-		if (!secret) return undefined;
+		if (!secret) {return undefined;}
 
 		try {
 			const { default: OpenAI } = await import("openai");
