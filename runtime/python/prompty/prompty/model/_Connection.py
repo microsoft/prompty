@@ -82,8 +82,11 @@ class Connection(ABC):
                 return OAuthConnection.load(data, context)
 
             else:
-                raise ValueError(f"Unknown Connection discriminator value: {discriminator_value}")
+                raise ValueError(
+                    f"Unknown Connection discriminator value: {discriminator_value}"
+                )
         else:
+
             raise ValueError("Missing Connection discriminator property: 'kind'")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

@@ -2,7 +2,7 @@
   C# Test Template
   ================
   Renders C# xUnit test file for a type.
-  
+
   Expected context:
     - node: TypeNode
     - namespace: string
@@ -17,7 +17,8 @@ namespace {{ namespace }};
 
 
 public class {{ node.typeName.name }}ConversionTests
-{   {% for sample in examples %}
+{
+{%- for sample in examples %}
     [Fact]
     public void LoadYamlInput{% if not loop.first %}{{loop.index - 1}}{% endif %}()
     {
@@ -30,7 +31,7 @@ public class {{ node.typeName.name }}ConversionTests
         var instance = {{ node.typeName.name }}.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        
+
         {%- for validation in sample.validations %}
         {%- if validation.value == "True" or validation.value == "False" %}
         Assert.{% if validation.value == "False" %}False{% else %}True{% endif %}(instance.{{ validation.key  }});
@@ -76,10 +77,10 @@ public class {{ node.typeName.name }}ConversionTests
 
         var original = {{ node.typeName.name }}.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = {{ node.typeName.name }}.FromJson(json);
         Assert.NotNull(reloaded);
         {%- for validation in sample.validations %}
@@ -105,10 +106,10 @@ public class {{ node.typeName.name }}ConversionTests
 
         var original = {{ node.typeName.name }}.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = {{ node.typeName.name }}.FromYaml(yaml);
         Assert.NotNull(reloaded);
         {%- for validation in sample.validations %}
@@ -133,7 +134,7 @@ public class {{ node.typeName.name }}ConversionTests
 
         var instance = {{ node.typeName.name }}.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -150,7 +151,7 @@ public class {{ node.typeName.name }}ConversionTests
 
         var instance = {{ node.typeName.name }}.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -181,11 +182,10 @@ public class {{ node.typeName.name }}ConversionTests
         Assert.True(instance.{{ item.key }} is float || instance.{{ item.key }} is double || instance.{{ item.key }} is int || instance.{{ item.key }} is long);
         Assert.Equal({{ item.value | safe }}, Convert.ToDouble(instance.{{ item.key }}), 5);
         {%- else %}
-        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});   
+        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});
         {%- endif %}
         {%- endfor %}
     }
-
 
     [Fact]
     public void LoadYamlFrom{{ alt.scalar | title }}()
@@ -198,7 +198,7 @@ public class {{ node.typeName.name }}ConversionTests
         {%- endif %}
         var instance = {{ node.typeName.name }}.FromYaml(data);
         Assert.NotNull(instance);
-        
+
         {%- for item in alt.validations %}
         {%- if item.value == "True" or item.value == "False" %}
         Assert.NotNull(instance.{{ item.key }});
@@ -209,7 +209,7 @@ public class {{ node.typeName.name }}ConversionTests
         Assert.True(instance.{{ item.key }} is float || instance.{{ item.key }} is double || instance.{{ item.key }} is int || instance.{{ item.key }} is long);
         Assert.Equal({{ item.value | safe }}, Convert.ToDouble(instance.{{ item.key }}), 5);
         {%- else %}
-        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});   
+        Assert.Equal({{ item.delimiter | safe }}{{ item.value | safe }}{{ item.delimiter | safe }}, instance.{{ item.key }});
         {%- endif %}
         {%- endfor %}
     }

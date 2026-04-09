@@ -2,7 +2,7 @@
   Python File Template
   ====================
   Renders a complete Python file containing one or more dataclasses.
-  
+
   Expected context (PythonFileContext):
     - containsAbstract: boolean
     - typings: string[]
@@ -61,7 +61,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
             {{ node.typeName.name }}: The loaded {{ node.typeName.name }} instance.
 
         """
-        
+
         if context is not None:
             data = context.process_input(data)
         {% if alternates.length > 0 %}
@@ -92,26 +92,26 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
     @staticmethod
     def load_{{ collection.prop.name }}(data: dict | list, context: Optional[LoadContext]) -> list[{{ collection.prop.typeName.name }}]:
         if isinstance(data, dict):
-            result: list[{{ collection.prop.typeName.name }}] = []
+            # convert simple named {{ collection.prop.name }} to list of {{ collection.prop.typeName.name }}
+            result = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    prop = {{ collection.prop.typeName.name }}.load({"name": k, **v}, context)
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
                 else:
-                    # Scalar — let {{ collection.prop.typeName.name }}.load() infer kind from value
-                    prop = {{ collection.prop.typeName.name }}.load(v, context)
-                    prop.name = k
-                result.append(prop)
-            return result
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "{{collection.type[0]}}": v})
+            data = result
         return [{{ collection.prop.typeName.name }}.load(item, context) for item in data]
 
     @staticmethod
     def save_{{ collection.prop.name }}(items: list[{{ collection.prop.typeName.name }}], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
-        
+
         if context.collection_format == "array":
             return [item.save(context) for item in items]
-        
+
         # Object format: use name as key
         result: dict[str, Any] = {}
         for item in items:
@@ -176,7 +176,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-        
+
 {% if node.base %}
         # Start with parent class properties
         result = super().save(context)

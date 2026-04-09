@@ -1,9 +1,9 @@
 {#
-  TypeScript-Specific Macros for Prompty Emitter
+  TypeScript-Specific Macros for AgentSchema Emitter
   ==================================================
-  
+
   These macros handle TypeScript-specific rendering logic.
-  
+
   Usage in TypeScript templates:
     {% import "_macros.njk" as ts %}
     {{ ts.tsType(prop, typeMapper) }}
@@ -16,7 +16,7 @@
 
 {#
   Convert a property to its TypeScript type annotation.
-  
+
   @param prop - PropertyNode with type information
   @param typeMapper - Record<string, string> mapping TypeSpec types to TypeScript types
 #}
@@ -43,7 +43,7 @@ Record<string, unknown>
 
 {#
   Render the default value assignment for a class property.
-  
+
   @param prop - PropertyNode with type and default value information
   @param typeMapper - Record<string, string> for type lookups
 #}
@@ -63,7 +63,7 @@ Record<string, unknown>
 
 {#
   Render the default initialization value for the constructor.
-  
+
   @param prop - PropertyNode with type and default value information
   @param typeMapper - Record<string, string> for type lookups
 #}
@@ -87,7 +87,7 @@ Record<string, unknown>
 
 {#
   Render the property loading code.
-  
+
   @param prop - PropertyNode
   @param instanceVar - Name of the instance variable
   @param dataVar - Name of the data variable
@@ -123,7 +123,7 @@ Record<string, unknown>
 
 {#
   Render the property saving code.
-  
+
   @param prop - PropertyNode
   @param objVar - Name of the object variable
   @param resultVar - Name of the result variable
@@ -147,7 +147,7 @@ Record<string, unknown>
 
 {#
   Convert a string to PascalCase.
-  
+
   @param str - The string to convert
 #}
 {% macro pascalCase(str) -%}
@@ -157,7 +157,7 @@ Record<string, unknown>
 
 {#
   Convert a string to kebab-case.
-  
+
   @param str - The string to convert
 #}
 {% macro kebabCase(str) -%}

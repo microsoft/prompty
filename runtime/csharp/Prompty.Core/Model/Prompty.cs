@@ -175,7 +175,8 @@ public class Prompty
                 {
                     throw new ArgumentException(
                         $"Invalid 'inputs' format: key '{kvp.Key}' has an array value. " +
-                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                        $"'inputs' must be a flat list of objects or a name-keyed dict — " +
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
@@ -228,7 +229,8 @@ public class Prompty
                 {
                     throw new ArgumentException(
                         $"Invalid 'outputs' format: key '{kvp.Key}' has an array value. " +
-                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                        $"'outputs' must be a flat list of objects or a name-keyed dict — " +
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
@@ -281,7 +283,8 @@ public class Prompty
                 {
                     throw new ArgumentException(
                         $"Invalid 'tools' format: key '{kvp.Key}' has an array value. " +
-                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                        $"'tools' must be a flat list of objects or a name-keyed dict — " +
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)

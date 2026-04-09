@@ -101,7 +101,7 @@ public class FunctionTool : Tool
                     throw new ArgumentException(
                         $"Invalid 'parameters' format: key '{kvp.Key}' has an array value. " +
                         $"'parameters' must be a flat list of objects or a name-keyed dict — " +
-                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)

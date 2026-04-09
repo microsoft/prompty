@@ -107,20 +107,22 @@ class Prompty:
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
-            result: list[Property] = []
+            # convert simple named inputs to list of Property
+            result = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    prop = Property.load({"name": k, **v}, context)
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
                 else:
-                    # Scalar — let Property.load() infer kind from value
-                    prop = Property.load(v, context)
-                    prop.name = k
-                result.append(prop)
-            return result
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "kind": v})
+            data = result
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_inputs(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -136,7 +138,11 @@ class Prompty:
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -150,20 +156,22 @@ class Prompty:
     @staticmethod
     def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
-            result: list[Property] = []
+            # convert simple named outputs to list of Property
+            result = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    prop = Property.load({"name": k, **v}, context)
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
                 else:
-                    # Scalar — let Property.load() infer kind from value
-                    prop = Property.load(v, context)
-                    prop.name = k
-                result.append(prop)
-            return result
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "": v})
+            data = result
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_outputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_outputs(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -179,7 +187,11 @@ class Prompty:
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -193,20 +205,22 @@ class Prompty:
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
         if isinstance(data, dict):
-            result: list[Tool] = []
+            # convert simple named tools to list of Tool
+            result = []
             for k, v in data.items():
                 if isinstance(v, dict):
-                    prop = Tool.load({"name": k, **v}, context)
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
                 else:
-                    # Scalar — let Tool.load() infer kind from value
-                    prop = Tool.load(v, context)
-                    prop.name = k
-                result.append(prop)
-            return result
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "kind": v})
+            data = result
         return [Tool.load(item, context) for item in data]
 
     @staticmethod
-    def save_tools(items: list[Tool], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tools(
+        items: list[Tool], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -222,7 +236,11 @@ class Prompty:
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data

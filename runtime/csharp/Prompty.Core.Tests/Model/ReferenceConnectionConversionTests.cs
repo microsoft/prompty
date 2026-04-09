@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class ReferenceConnectionConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -58,10 +58,10 @@ target: my-target-resource
 
         var original = ReferenceConnection.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = ReferenceConnection.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("reference", reloaded.Kind);
@@ -82,10 +82,10 @@ target: my-target-resource
 
         var original = ReferenceConnection.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = ReferenceConnection.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("reference", reloaded.Kind);
@@ -106,7 +106,7 @@ target: my-target-resource
 
         var instance = ReferenceConnection.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -124,7 +124,7 @@ target: my-target-resource
 
         var instance = ReferenceConnection.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

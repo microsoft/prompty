@@ -1,11 +1,11 @@
 {#
-  Python-Specific Macros for Prompty Emitter
+  Python-Specific Macros for AgentSchema Emitter
   ==============================================
-  
+
   These macros handle Python-specific rendering logic that was previously
   implemented as TypeScript functions passed to templates. By moving this
   logic into macros, templates become self-contained and easier to debug.
-  
+
   Usage in Python templates:
     {% import "_macros.njk" as py %}
     {{ py.pythonType(prop, typeMapper) }}
@@ -21,17 +21,17 @@
 
 {#
   Convert a property to its Python type annotation.
-  
+
   Handles:
   - Scalar types (string -> str, number -> float, etc.)
   - Collections (list[T])
   - Optionals (Optional[T])
   - Dictionaries (dict[str, Any])
   - Optional dictionaries (Optional[dict[str, Any]])
-  
+
   @param prop - PropertyNode with type information
   @param typeMapper - Record<string, string> mapping TypeSpec types to Python types
-  
+
   Usage: {{ pythonType(prop, typeMapper) }}
 #}
 {% macro pythonType(prop, typeMapper) %}
@@ -54,8 +54,8 @@ Optional[{{ baseType }}]
 {#
   Render the Python type for display in docstrings.
   Same as pythonType but uses Optional[] syntax for clarity.
-  
-  @param prop - PropertyNode with type information  
+
+  @param prop - PropertyNode with type information
   @param typeMapper - Record<string, string> mapping TypeSpec types to Python types
 #}
 {% macro pythonTypeDocstring(prop, typeMapper) %}
@@ -78,7 +78,7 @@ list[{{ baseType }}]
 
 {#
   Render the default value assignment for a dataclass field.
-  
+
   Handles:
   - Collections -> field(default_factory=list)
   - Optionals -> None
@@ -86,10 +86,10 @@ list[{{ baseType }}]
   - Strings -> field(default="...")
   - Numbers -> field(default=0.0)
   - Complex types -> field(default_factory=TypeName)
-  
+
   @param prop - PropertyNode with type and default value information
   @param typeMapper - Record<string, string> for type lookups
-  
+
   Usage: {{ defaultValue(prop, typeMapper) }}
 #}
 {% macro defaultValue(prop, typeMapper) -%}
@@ -115,17 +115,17 @@ list[{{ baseType }}]
 
 {#
   Render property assignment statement for loading from dict.
-  
+
   Handles:
   - Scalars and dicts -> direct assignment from dict
   - Collections -> call load_<propname> method
   - Complex types -> call Type.load() method
-  
+
   @param prop - PropertyNode being assigned
   @param varName - Variable name to assign to (e.g., "instance")
   @param dictName - Dict variable name to read from (e.g., "data")
   @param parentTypeName - Name of the parent type (for collection loaders)
-  
+
   Usage: {{ setInstance(prop, "instance", "data", node.typeName.name) }}
 #}
 {% macro setInstance(prop, varName, dictName, parentTypeName) %}
@@ -145,16 +145,16 @@ list[{{ baseType }}]
 
 {#
   Render property serialization statement for saving to dict.
-  
+
   Handles:
   - Scalars and dicts -> direct assignment to dict
   - Collections -> map save() over items
   - Complex types -> call .save() method
-  
+
   @param prop - PropertyNode being serialized
   @param varName - Variable name of the object (e.g., "self")
   @param dictName - Dict variable name to write to (e.g., "result")
-  
+
   Usage: {{ saveProperty(prop, "self", "result") }}
 #}
 {% macro saveProperty(prop, varName, dictName, parentTypeName) %}
@@ -174,9 +174,9 @@ list[{{ baseType }}]
 
 {#
   Render a Python docstring with proper formatting.
-  
+
   @param description - The description text
-  
+
   Usage: {{ docstring(node.description) }}
 #}
 {% macro docstring(description) %}
@@ -191,11 +191,11 @@ list[{{ baseType }}]
 
 {#
   Render a docstring for a class with attributes section.
-  
+
   @param description - Class description
   @param properties - Array of PropertyNode
   @param typeMapper - Type mapper for rendering types
-  
+
   Usage: {{ classDocstring(node.description, node.properties, typeMapper) }}
 #}
 {% macro classDocstring(description, properties, typeMapper) %}
@@ -221,9 +221,9 @@ list[{{ baseType }}]
 
 {#
   Render import statement for a type from its module.
-  
+
   @param typeName - Name of the type to import
-  
+
   Usage: {{ importType(typeName) }}
 #}
 {% macro importType(typeName) %}
@@ -237,9 +237,9 @@ from ._{{ typeName }} import {{ typeName }}
 
 {#
   Render alternate type check in load() method.
-  
+
   @param alt - Alternate object with scalar and alternate properties
-  
+
   Usage: {{ alternateCheck(alt) }}
 #}
 {% macro alternateCheck(alt) %}
@@ -254,13 +254,13 @@ if isinstance(data, {{ alt.scalar }}):
 
 {#
   Render discriminator-based type loading.
-  
+
   @param discriminator - Name of discriminator property
   @param types - Array of {value, instance} for each discriminated type
   @param defaultInstance - Default instance for unknown discriminators
   @param parentTypeName - Name of the parent type
   @param isAbstract - Whether the parent type is abstract
-  
+
   Usage: {{ polymorphicLoader(node.discriminator, polymorphicTypes.types, polymorphicTypes.default, node.typeName.name, node.isAbstract) }}
 #}
 {% macro polymorphicLoader(discriminator, types, defaultInstance, parentTypeName, isAbstract) %}

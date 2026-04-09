@@ -1,10 +1,10 @@
 {#
-  C#-Specific Macros for Prompty Emitter
+  C#-Specific Macros for AgentSchema Emitter
   ==========================================
-  
+
   These macros handle C#-specific rendering logic, making templates
   self-contained and easier to debug.
-  
+
   Usage in C# templates:
     {% import "_macros.njk" as cs %}
     {{ cs.csharpType(prop, typeMapper) }}
@@ -16,7 +16,7 @@
 
 {#
   Convert a property to its C# type.
-  
+
   @param prop - PropertyNode with type information
   @param typeMapper - Record<string, string> mapping TypeSpec types to C# types
 #}
@@ -54,7 +54,7 @@ IList<{{ baseType }}>
 
 {#
   Convert property name to PascalCase for C#.
-  
+
   @param name - The property name (snake_case or camelCase)
 #}
 {% macro pascalCase(name) %}
@@ -68,7 +68,7 @@ IList<{{ baseType }}>
 
 {#
   Render the default value for a C# property.
-  
+
   @param prop - PropertyNode with type and default value information
   @param typeMapper - Type mapper
 #}
@@ -91,7 +91,7 @@ IList<{{ baseType }}>
 
 {#
   Render property assignment in Load() method.
-  
+
   @param prop - PropertyNode being assigned
   @param varName - Variable name to assign to (e.g., "instance")
   @param dictName - Dict variable name to read from (e.g., "data")
@@ -116,7 +116,7 @@ IList<{{ baseType }}>
 
 {#
   Render property serialization in Save() method.
-  
+
   @param prop - PropertyNode being serialized
   @param varName - Variable name of the object (e.g., "obj")
   @param dictName - Dict variable name to write to (e.g., "result")
@@ -139,7 +139,7 @@ IList<{{ baseType }}>
 
 {#
   Render XML summary comment for a property.
-  
+
   @param prop - PropertyNode with description
 #}
 {% macro summary(prop) %}
@@ -150,7 +150,7 @@ IList<{{ baseType }}>
 
 {#
   Render XML summary comment for a class.
-  
+
   @param description - Class description
 #}
 {% macro classSummary(description) %}

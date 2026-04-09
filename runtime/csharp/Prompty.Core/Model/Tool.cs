@@ -111,7 +111,7 @@ public abstract class Tool
                     throw new ArgumentException(
                         $"Invalid 'bindings' format: key '{kvp.Key}' has an array value. " +
                         $"'bindings' must be a flat list of objects or a name-keyed dict — " +
-                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)

@@ -511,21 +511,31 @@ const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type:
  * Runs formatter from the .NET project root (where .csproj or .sln is located).
  */
 function formatCSharpFiles(outputDir: string, testDir?: string): void {
-  // Find the .NET project root by looking for .csproj or .sln
-  const projectRoot = findDotNetProjectRoot(outputDir);
-  if (!projectRoot) {
-    console.warn(`Warning: Could not find .csproj or .sln file. Skipping formatting.`);
-    return;
-  }
+  const dirs = [outputDir, ...(testDir ? [testDir] : [])];
+  const formatted = new Set<string>();
 
-  try {
-    execSync(`dotnet format "${projectRoot}"`, {
-      cwd: dirname(projectRoot),
-      stdio: 'pipe',
-      encoding: 'utf-8'
-    });
-  } catch (error) {
-    console.warn(`Warning: dotnet format failed. You may need to run it manually.`);
+  for (const dir of dirs) {
+    const projectRoot = findDotNetProjectRoot(dir);
+    if (!projectRoot) {
+      console.warn(`Warning: Could not find .csproj or .sln file for ${dir}. Skipping formatting.`);
+      continue;
+    }
+
+    // Avoid formatting the same project twice
+    if (formatted.has(projectRoot)) {
+      continue;
+    }
+    formatted.add(projectRoot);
+
+    try {
+      execSync(`dotnet format "${projectRoot}"`, {
+        cwd: dirname(projectRoot),
+        stdio: 'pipe',
+        encoding: 'utf-8'
+      });
+    } catch (error) {
+      console.warn(`Warning: dotnet format failed for ${projectRoot}. You may need to run it manually.`);
+    }
   }
 }
 

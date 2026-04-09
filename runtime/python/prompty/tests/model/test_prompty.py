@@ -78,10 +78,11 @@ def test_load_json_prompty():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -92,7 +93,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty():
@@ -168,10 +168,11 @@ def test_load_yaml_prompty():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -182,7 +183,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty():
@@ -261,10 +261,11 @@ def test_roundtrip_json_prompty():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -275,7 +276,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty():
@@ -504,10 +504,11 @@ def test_load_json_prompty_1():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -518,7 +519,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_1():
@@ -594,10 +594,11 @@ def test_load_yaml_prompty_1():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -608,7 +609,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_1():
@@ -686,10 +686,11 @@ def test_roundtrip_json_prompty_1():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -700,7 +701,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_1():
@@ -929,10 +929,11 @@ def test_load_json_prompty_2():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -943,7 +944,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_2():
@@ -1019,10 +1019,11 @@ def test_load_yaml_prompty_2():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1033,7 +1034,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_2():
@@ -1113,10 +1113,11 @@ def test_roundtrip_json_prompty_2():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1127,7 +1128,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_2():
@@ -1359,10 +1359,11 @@ def test_load_json_prompty_3():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1373,7 +1374,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_3():
@@ -1449,10 +1449,11 @@ def test_load_yaml_prompty_3():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1463,7 +1464,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_3():
@@ -1542,10 +1542,11 @@ def test_roundtrip_json_prompty_3():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1556,7 +1557,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_3():
@@ -1789,10 +1789,11 @@ def test_load_json_prompty_4():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1803,7 +1804,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_4():
@@ -1879,10 +1879,11 @@ def test_load_yaml_prompty_4():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1893,7 +1894,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_4():
@@ -1975,10 +1975,11 @@ def test_roundtrip_json_prompty_4():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -1989,7 +1990,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_4():
@@ -2227,10 +2227,11 @@ def test_load_json_prompty_5():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2241,7 +2242,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_5():
@@ -2317,10 +2317,11 @@ def test_load_yaml_prompty_5():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2331,7 +2332,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_5():
@@ -2412,10 +2412,11 @@ def test_roundtrip_json_prompty_5():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2426,7 +2427,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_5():
@@ -2664,10 +2664,11 @@ def test_load_json_prompty_6():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2678,7 +2679,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_6():
@@ -2754,10 +2754,11 @@ def test_load_yaml_prompty_6():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2768,7 +2769,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_6():
@@ -2851,10 +2851,11 @@ def test_roundtrip_json_prompty_6():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -2865,7 +2866,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_6():
@@ -3106,10 +3106,11 @@ def test_load_json_prompty_7():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -3120,7 +3121,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_load_yaml_prompty_7():
@@ -3196,10 +3196,11 @@ def test_load_yaml_prompty_7():
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        instance.instructions
-        == """system:
+        instance.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -3210,7 +3211,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_roundtrip_json_prompty_7():
@@ -3292,10 +3292,11 @@ def test_roundtrip_json_prompty_7():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
-        reloaded.instructions
-        == """system:
+        reloaded.description
+        == "A basic prompt that uses the GPT-3 chat API to answer questions"
+    )
+    assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
 and in a personable manner using markdown and even add some 
@@ -3306,7 +3307,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    )
 
 
 def test_to_json_prompty_7():

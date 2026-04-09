@@ -57,11 +57,11 @@ class TestLoadContext:
             return {**result, "_processed": True}
 
         context = LoadContext(pre_process=normalize_keys, post_process=add_metadata)
-        
+
         input_data = {"Key": "value", "UPPER": "case"}
         processed_input = context.process_input(input_data)
         assert processed_input == {"key": "value", "upper": "case"}
-        
+
         final_result = context.process_output(processed_input)
         assert final_result == {"key": "value", "upper": "case", "_processed": True}
 
@@ -135,11 +135,11 @@ class TestSaveContext:
             return {k: v for k, v in data.items() if not k.startswith("_")}
 
         context = SaveContext(pre_save=mark_for_export, post_save=clean_markers)
-        
+
         obj = {"name": "test", "value": 42}
         processed_obj = context.process_object(obj)
         assert processed_obj == {"name": "test", "value": 42, "_exporting": True}
-        
+
         final_dict = context.process_dict(processed_obj)
         assert final_dict == {"name": "test", "value": 42}
 

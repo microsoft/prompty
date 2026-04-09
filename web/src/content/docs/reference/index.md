@@ -1,13 +1,13 @@
 ---
-title: "Schema Reference"
-description: "Auto-generated reference for all Prompty schema types."
+title: "AgentSchema"
+description: "Overview of declarative agent types in AgentSchema."
 slug: "reference/index"
 sidebar:
   order: 1
 ---
 
-The following diagram illustrates the types and their relationships in the Prompty schema.
-The root type is [Prompty](prompty/) — this is what a `.prompty` file becomes when loaded.
+The following diagram illustrates the classes and their relationships for declarative agents.
+The root [object](agentdefinition/) represents the main entry point for the system.
 
 ```mermaid
 ---

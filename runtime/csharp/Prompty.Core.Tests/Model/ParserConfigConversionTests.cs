@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class ParserConfigConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -56,10 +56,10 @@ options:
 
         var original = ParserConfig.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = ParserConfig.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
@@ -78,10 +78,10 @@ options:
 
         var original = ParserConfig.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = ParserConfig.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
@@ -101,7 +101,7 @@ options:
 
         var instance = ParserConfig.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -119,7 +119,7 @@ options:
 
         var instance = ParserConfig.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -135,7 +135,6 @@ options:
         Assert.Equal("example", instance.Kind);
     }
 
-
     [Fact]
     public void LoadYamlFromString()
     {
@@ -145,5 +144,5 @@ options:
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Kind);
     }
-    
+
 }

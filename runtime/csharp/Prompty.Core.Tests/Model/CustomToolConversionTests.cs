@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class CustomToolConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -62,10 +62,10 @@ options:
 
         var original = CustomTool.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = CustomTool.FromJson(json);
         Assert.NotNull(reloaded);
     }
@@ -85,10 +85,10 @@ options:
 
         var original = CustomTool.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = CustomTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
     }
@@ -110,7 +110,7 @@ options:
 
         var instance = CustomTool.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -130,7 +130,7 @@ options:
 
         var instance = CustomTool.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

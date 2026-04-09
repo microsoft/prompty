@@ -1,11 +1,11 @@
 {#
-  Shared Macros for Prompty Emitters
+  Shared Macros for AgentSchema Emitters
   ======================================
-  
+
   These macros provide language-agnostic utilities for property filtering,
   type checking, and common rendering patterns. Language-specific emitters
   should import and use these macros for consistency.
-  
+
   Usage in language templates:
     {% from "macros.njk" import requiredProps, optionalProps %}
 #}
@@ -81,13 +81,13 @@
 
 
 {# ============================================================================
-   Validation/Test Helpers  
+   Validation/Test Helpers
    ============================================================================ #}
 
 {#
   Render a validation assertion based on value type.
   This is a helper for test generation - language templates should customize.
-  
+
   Usage: {{ validationValue(value, delimeter) }}
 #}
 {% macro validationValue(value, delimeter) %}

@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class McpApprovalModeConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -64,10 +64,10 @@ neverRequireApprovalTools:
 
         var original = McpApprovalMode.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = McpApprovalMode.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("never", reloaded.Kind);
@@ -88,10 +88,10 @@ neverRequireApprovalTools:
 
         var original = McpApprovalMode.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = McpApprovalMode.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("never", reloaded.Kind);
@@ -114,7 +114,7 @@ neverRequireApprovalTools:
 
         var instance = McpApprovalMode.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -134,7 +134,7 @@ neverRequireApprovalTools:
 
         var instance = McpApprovalMode.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -150,7 +150,6 @@ neverRequireApprovalTools:
         Assert.Equal("never", instance.Kind);
     }
 
-
     [Fact]
     public void LoadYamlFromString()
     {
@@ -160,5 +159,5 @@ neverRequireApprovalTools:
         Assert.NotNull(instance);
         Assert.Equal("never", instance.Kind);
     }
-    
+
 }

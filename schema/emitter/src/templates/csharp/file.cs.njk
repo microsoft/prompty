@@ -26,7 +26,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     {
     }
     #pragma warning restore CS8618
-    {% for prop in node.properties %}    
+    {% for prop in node.properties %}
     {{ renderSummary(prop) | safe }}
     public {{ renderPropertyModifier(prop) }}{{ renderType(prop) | safe }} {{ renderPropertyName(prop) }} { get; set; }{{ renderDefault(prop) | safe }}
     {% endfor %}
@@ -75,7 +75,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     public static IList<{{ collection.prop.typeName.name }}> Load{{ renderPropertyName(collection.prop) }}(object data, LoadContext? context)
     {
         var result = new List<{{ collection.prop.typeName.name }}>();
-        
+
         if (data is Dictionary<string, object?> dict)
         {
             // Convert named dictionary to list
@@ -86,7 +86,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
                     throw new ArgumentException(
                         $"Invalid '{{ collection.prop.name }}' format: key '{kvp.Key}' has an array value. " +
                         $"'{{ collection.prop.name }}' must be a flat list of objects or a name-keyed dict — " +
-                        $"not a nested {{ '{' }} {kvp.Key}: [...] {{ '}' }} structure.");
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
                 }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
@@ -118,7 +118,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
                 }
             }
         }
-        
+
         return result;
     }
     {% endfor %}
@@ -216,7 +216,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
             if (itemData.TryGetValue("name", out var nameValue) && nameValue is string name)
             {
                 itemData.Remove("name");
-                
+
                 // Check if we can use shorthand
                 if (context.UseShorthand && {{ collection.prop.typeName.name }}.ShorthandProperty is string shorthandProp)
                 {
@@ -275,7 +275,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
-        
+
         {%- if alternates.length > 0 or numericAlternates.length > 0 %}
         // Handle alternate representations
         if (doc.RootElement.ValueKind != JsonValueKind.Object)
@@ -348,7 +348,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
             ?? throw new ArgumentException("Failed to parse JSON as dictionary");
         {%- endif %}
-        
+
         return Load(dict, context);
     }
 
@@ -371,7 +371,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         {
             // Not a dictionary, will be handled as scalar below
         }
-        
+
         Dictionary<string, object?> dict;
         if (dictResult is not null)
         {
@@ -436,7 +436,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         {
             // Not a dictionary, will be handled as scalar below
         }
-        
+
         Dictionary<string, object?> dict;
         if (dictResult is not null)
         {
@@ -454,7 +454,7 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
             ?? throw new ArgumentException("Failed to parse YAML as dictionary");
         {%- endif %}
-        
+
         return Load(dict, context);
     }
 

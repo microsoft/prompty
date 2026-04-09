@@ -1,9 +1,9 @@
 {#
-  Go-Specific Macros for Prompty Emitter
+  Go-Specific Macros for AgentSchema Emitter
   ==========================================
-  
+
   These macros handle Go-specific rendering logic.
-  
+
   Usage in Go templates:
     {% import "_macros.njk" as go %}
     {{ go.goType(prop, typeMapper) }}
@@ -20,9 +20,9 @@
 {#
   Format a multi-line description as Go comment lines.
   Each line is prefixed with "// ".
-  
+
   @param text - Multi-line description text
-  
+
   Usage: {{ goComment("Some description") }}
 #}
 {% macro goComment(text) -%}
@@ -38,10 +38,10 @@
 {#
   Escape a string value for use in Go code.
   Handles quotes, backslashes, newlines, etc.
-  
+
   @param value - String value to escape
   @param delimeter - Quote character (" or empty)
-  
+
   Usage: {{ goEscape(value, '"') }}
 #}
 {% macro goEscape(value, delimeter) -%}
@@ -59,16 +59,16 @@
 
 {#
   Convert a property to its Go type annotation.
-  
+
   Handles:
   - Scalar types (string, int32, float64, bool, etc.)
   - Collections ([]T)
   - Pointers for optionals (*T)
   - Maps (map[string]interface{})
-  
+
   @param prop - PropertyNode with type information
   @param typeMapper - Record<string, string> mapping TypeSpec types to Go types
-  
+
   Usage: {{ goType(prop, typeMapper) }}
 #}
 {% macro goType(prop, typeMapper, polymorphicTypeNames) %}
@@ -97,9 +97,9 @@ interface{}
 {#
   Render property name in PascalCase for exported fields.
   Handles both snake_case and camelCase input.
-  
+
   @param name - Property name (may be camelCase or snake_case)
-  
+
   Usage: {{ propName(prop.name) }}
 #}
 {% macro propName(name) %}{{ name | pascalCase }}{% endmacro %}
@@ -111,9 +111,9 @@ interface{}
 
 {#
   Render struct field tags for JSON and YAML serialization.
-  
+
   @param prop - PropertyNode with name and optional flag
-  
+
   Usage: {{ structTags(prop) }}
 #}
 {% macro structTags(prop) -%}
@@ -127,10 +127,10 @@ interface{}
 
 {#
   Render the default value initialization for a field.
-  
+
   @param prop - PropertyNode with type and default value information
   @param typeMapper - Record<string, string> for type lookups
-  
+
   Usage: {{ defaultValue(prop, typeMapper) }}
 #}
 {% macro defaultValue(prop, typeMapper) -%}
@@ -162,12 +162,12 @@ nil
 
 {#
   Render the property loading code from map[string]interface{}.
-  
+
   @param prop - PropertyNode
   @param varName - Variable name containing the data
   @param typeMapper - Type mapping dictionary
   @param polymorphicTypeNames - Array of type names that are polymorphic (return interface{})
-  
+
   Usage: {{ loadProperty(prop, "data", typeMapper, polymorphicTypeNames) }}
 #}
 {% macro loadProperty(prop, varName, typeMapper, polymorphicTypeNames) -%}
@@ -358,9 +358,9 @@ nil
 
 {#
   Render the property saving code to map[string]interface{}.
-  
+
   @param prop - PropertyNode
-  
+
   Usage: {{ saveProperty(prop) }}
 #}
 {% macro saveProperty(prop, polymorphicTypeNames) -%}

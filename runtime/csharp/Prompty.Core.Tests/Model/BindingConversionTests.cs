@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class BindingConversionTests
-{   
+{
     [Fact]
     public void LoadYamlInput()
     {
@@ -53,10 +53,10 @@ input: input-variable
 
         var original = Binding.FromJson(jsonData);
         Assert.NotNull(original);
-        
+
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-        
+
         var reloaded = Binding.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("my-tool", reloaded.Name);
@@ -75,10 +75,10 @@ input: input-variable
 
         var original = Binding.FromYaml(yamlData);
         Assert.NotNull(original);
-        
+
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-        
+
         var reloaded = Binding.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("my-tool", reloaded.Name);
@@ -97,7 +97,7 @@ input: input-variable
 
         var instance = Binding.FromJson(jsonData);
         var json = instance.ToJson();
-        
+
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -114,7 +114,7 @@ input: input-variable
 
         var instance = Binding.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-        
+
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -130,7 +130,6 @@ input: input-variable
         Assert.Equal("example", instance.Input);
     }
 
-
     [Fact]
     public void LoadYamlFromString()
     {
@@ -140,5 +139,5 @@ input: input-variable
         Assert.NotNull(instance);
         Assert.Equal("example", instance.Input);
     }
-    
+
 }
