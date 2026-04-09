@@ -54,5 +54,5 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: vscode-vsix
+          name: prompty-vsix
           path: ./vscode/prompty/*.vsix
