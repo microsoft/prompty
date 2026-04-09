@@ -106,6 +106,13 @@ public abstract class Tool
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'bindings' format: key '{kvp.Key}' has an array value. " +
+                        $"'bindings' must be a flat list of objects or a name-keyed dict — " +
+                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {

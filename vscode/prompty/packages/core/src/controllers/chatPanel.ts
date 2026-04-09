@@ -1,9 +1,9 @@
 import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } from 'vscode';
 import {
-	load, prepare, invoke, invokeAgent, run, process,
+	load, turn,
 	registerConnection, clearConnections,
 	ReferenceConnection, Model, ModelOptions,
-	Tracer, PromptyTracer, traceSpan,
+	Tracer, PromptyTracer,
 	type ToolCall, Message,
 } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
@@ -113,7 +113,7 @@ export class ChatPanel {
 		this.hasTools = (agent.tools?.length ?? 0) > 0;
 
 		// Enable streaming for the chat panel — better UX for interactive use.
-		// Only applies to non-agent mode (invokeAgent consumes streams internally).
+		// Only applies to non-agent mode (turn() consumes streams internally).
 		if (!this.hasTools && this.agent.model?.options) {
 			const opts = this.agent.model.options;
 			if (!opts.additionalProperties) opts.additionalProperties = {};
@@ -223,12 +223,22 @@ export class ChatPanel {
 				[this.threadInputName]: threadMessages,
 			};
 
+			// Build tool handlers if this agent has tools
+			const tools = this.hasTools ? this.buildToolFunctions() : undefined;
 			if (this.hasTools) {
-				// Agent mode: use invokeAgent (consumes stream internally).
-				// Tool calls appear in real-time via buildToolFunctions callbacks.
-				const toolFns = this.buildToolFunctions();
 				this.postMessage({ command: 'setLoadingText', text: 'Running agent' });
-				const result = await invokeAgent(this.agent, inputs, { tools: toolFns });
+			}
+
+			// One conversational turn: prepare + run (or agent loop with tools)
+			const result = await turn(this.agent, inputs, {
+				tools,
+				turn: this.turnCount,
+			});
+
+			if (isAsyncIterable(result)) {
+				// Streaming path: debounced chunk delivery
+				await this.handleStreamingResponse(result);
+			} else {
 				const assistantContent = typeof result === 'string'
 					? result
 					: JSON.stringify(result, null, 2);
@@ -239,28 +249,6 @@ export class ChatPanel {
 					content: renderMarkdown(assistantContent),
 					isHtml: true,
 				});
-			}else {
-				// Non-agent: prepare + run for streaming support
-				const messages = await prepare(this.agent, inputs);
-				const result = await run(this.agent, messages);
-
-				if (isAsyncIterable(result)) {
-					// Streaming path: debounced chunk delivery
-					await this.handleStreamingResponse(result);
-				} else {
-					// Non-streaming: process and render markdown
-					const processed = await process(this.agent, result);
-					const assistantContent = typeof processed === 'string'
-						? processed
-						: JSON.stringify(processed, null, 2);
-					this.conversation.push({ role: 'assistant', content: assistantContent });
-					this.postMessage({
-						command: 'addMessage',
-						role: 'assistant',
-						content: renderMarkdown(assistantContent),
-						isHtml: true,
-					});
-				}
 			}
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
@@ -294,23 +282,16 @@ export class ChatPanel {
 			});
 		};
 
-		// Process the response through the processor to get text chunks
-		const processed = await process(this.agent, stream);
-
-		if (isAsyncIterable(processed)) {
-			for await (const chunk of processed) {
-				if (typeof chunk === 'string') {
-					accumulated += chunk;
-					needsFlush = true;
-					// Debounce: schedule a flush if one isn't pending
-					if (!flushTimer) {
-						flushTimer = setTimeout(flush, DEBOUNCE_MS);
-					}
+		// run() already processed the stream — iterate text chunks directly
+		for await (const chunk of stream) {
+			if (typeof chunk === 'string') {
+				accumulated += chunk;
+				needsFlush = true;
+				// Debounce: schedule a flush if one isn't pending
+				if (!flushTimer) {
+					flushTimer = setTimeout(flush, DEBOUNCE_MS);
 				}
 			}
-		} else if (typeof processed === 'string') {
-			accumulated = processed;
-			needsFlush = true;
 		}
 
 		// Final flush — clear any pending timer and send the complete content
@@ -658,8 +639,9 @@ export class ChatPanel {
 			<div class="header-sub">Interactive chat</div>
 		</div>
 	</div>
-	<div id="messages"></div>
-	<div id="loading" class="loading">Thinking</div>
+	<div id="messages">
+		<div id="loading" class="loading">Thinking</div>
+	</div>
 	<div id="input-area">
 		<textarea id="user-input" placeholder="Type a message…" rows="4"></textarea>
 		<button id="send-btn" title="Send (Enter)">▶</button>
@@ -737,11 +719,9 @@ export class ChatPanel {
 			}
 			div.appendChild(contentEl);
 
-			messagesEl.appendChild(div);
+			messagesEl.insertBefore(div, loadingEl);
 			scrollToBottom();
 		}
-
-		// Streaming state
 		let streamDiv = null;
 		let streamContentEl = null;
 		let scrollRafId = null;
@@ -759,7 +739,7 @@ export class ChatPanel {
 			streamContentEl.className = 'msg-content';
 			streamDiv.appendChild(streamContentEl);
 
-			messagesEl.appendChild(streamDiv);
+			messagesEl.insertBefore(streamDiv, loadingEl);
 			scrollToBottom();
 		}
 
@@ -836,7 +816,7 @@ export class ChatPanel {
 			});
 			btn.addEventListener('click', submit);
 
-			messagesEl.appendChild(div);
+			messagesEl.insertBefore(div, loadingEl);
 			scrollToBottom();
 			input.focus();
 		}
@@ -852,7 +832,7 @@ export class ChatPanel {
 			contentEl.className = 'msg-content';
 			contentEl.textContent = content;
 			div.appendChild(contentEl);
-			messagesEl.appendChild(div);
+			messagesEl.insertBefore(div, loadingEl);
 			scrollToBottom();
 		}
 
@@ -890,6 +870,7 @@ export class ChatPanel {
 					loadingEl.className = 'loading' + (msg.loading ? ' active' : '');
 					loadingEl.textContent = 'Thinking';
 					sendBtn.disabled = msg.loading;
+					scrollToBottom();
 					if (!msg.loading) inputEl.focus();
 					break;
 				case 'setLoadingText':

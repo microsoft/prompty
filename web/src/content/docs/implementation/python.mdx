@@ -77,7 +77,7 @@ messages = prompty.prepare(agent, inputs={"q": "Hi"})
 # Execute LLM + process response → clean result
 result = prompty.run(agent, messages)
 
-# Full pipeline: load + prepare + run
+# Full pipeline: load + prepare + execute + process
 result = prompty.invoke("chat.prompty", inputs={"q": "Hi"})
 ```
 

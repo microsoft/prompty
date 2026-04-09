@@ -25,19 +25,30 @@ interface ResizerProps {
   size?: number;
 }
 const Sidebar = styled.div.attrs<ResizerProps>((props) => ({
-  style: { width: props.size ? `${props.size}px` : "500px" },
+  style: { width: props.size ? `${props.size}px` : "400px" },
 }))`
+  flex-shrink: 0;
   overflow: auto;
-  border-right: 1px solid var(--vscode-panel-border);
+  border-right: 1px solid var(--trace-border);
   position: relative;
 `;
 
 const SideBarResizer = styled.div.attrs<ResizerProps>((props) => ({
-  style: { width: props.size ? `${props.size}px` : "4px" },
+  style: { width: props.size ? `${props.size}px` : "2px" },
 }))`
   cursor: ew-resize;
-  background-color: var(--vscode-panel-border);
+  background-color: var(--trace-border);
   height: 100%;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+  }
 
   &:hover {
     background-color: var(--vscode-focusBorder);
@@ -50,28 +61,30 @@ const SideBarResizer = styled.div.attrs<ResizerProps>((props) => ({
   }
 `;
 
-const Content = styled.div.attrs<ResizerProps>((props) => ({
-  style: {
-    width: props.size ? `calc(100vw - ${props.size}px)` : `calc(100vw - 500px)`,
-  },
-}))`
+const Content = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   user-select: none;
+  overflow: hidden;
 `;
 
-const CollapserDiv = styled.div`
+const CollapserDiv = styled.div<{ $collapsed?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: absolute;
-  bottom: 6px;
-  right: 6px;
   width: 24px;
   height: 24px;
   border-radius: 4px;
   color: var(--vscode-descriptionForeground);
+  bottom: 6px;
+  left: ${(p) => (p.$collapsed ? "50%" : "auto")};
+  right: ${(p) => (p.$collapsed ? "auto" : "6px")};
+  transform: ${(p) => (p.$collapsed ? "translateX(-50%)" : "none")};
+
   &:hover {
     color: var(--vscode-foreground);
     background: var(--vscode-list-hoverBackground);
@@ -106,7 +119,7 @@ const ensureIds = (trace: TraceItem) => {
 
 function App() {
   const [isDragging, setIsDragging] = useState(false);
-  const [width, setWidth] = useState(500);
+  const [width, setWidth] = useState(400);
   const [treeWidth, setTreeWidth] = useState<number | undefined>(undefined);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -209,12 +222,12 @@ function App() {
 
   useEffect(() => {
     if (collapsed) {
-      setWidth(48);
+      setWidth(32);
       if (sidebarRef.current) {
         sidebarRef.current.style.cursor = "pointer";
       }
     } else {
-      setWidth(treeWidth ? treeWidth + 18 : 500);
+      setWidth(treeWidth ? treeWidth + 18 : 400);
     }
   }, [collapsed]);
 
@@ -250,14 +263,14 @@ function App() {
               />
             )}
           </Tree>
-          <CollapserDiv onClick={() => setCollapsed(!collapsed)}>
+          <CollapserDiv $collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}>
             <Collapser collapsed={collapsed} setCollapsed={setCollapsed} />
           </CollapserDiv>
         </Sidebar>
         {!collapsed && (
-          <SideBarResizer size={4} onMouseDown={handleMouseDown} />
+          <SideBarResizer size={2} onMouseDown={handleMouseDown} />
         )}
-        <Content size={width}>
+        <Content>
           <BodyFrame>
             {traceStore?.trace && traceItemStore?.traceItem && (
               <TraceDetail

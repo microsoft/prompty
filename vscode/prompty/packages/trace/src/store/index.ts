@@ -7,9 +7,7 @@ export interface Time {
 }
 
 export interface Usage {
-	completion_tokens: number;
-	prompt_tokens: number;
-	total_tokens: number;
+	[key: string]: number;
 }
 
 export interface TraceItem {

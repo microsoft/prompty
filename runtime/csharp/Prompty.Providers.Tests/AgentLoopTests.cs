@@ -5,7 +5,7 @@ using Prompty.Core;
 namespace Prompty.Providers.Tests;
 
 /// <summary>
-/// Tests for the agent loop (Pipeline.InvokeAgentAsync) with mock executors/processors.
+/// Tests for the agent loop (Pipeline.TurnAsync) with mock executors/processors.
 /// </summary>
 [Collection("ToolDispatch")]
 public class AgentLoopTests : IDisposable
@@ -30,20 +30,20 @@ public class AgentLoopTests : IDisposable
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_NoToolCalls_ReturnsDirectly()
+    public async Task TurnAsync_NoToolCalls_ReturnsDirectly()
     {
         InvokerRegistry.RegisterExecutor("openai", new MockExecutor("Hello!"));
         InvokerRegistry.RegisterProcessor("openai", new MockProcessor());
 
         var agent = CreateTestAgent();
 
-        var result = await Pipeline.InvokeAgentAsync(agent);
+        var result = await Pipeline.TurnAsync(agent);
 
         Assert.Equal("Hello!", result);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_SingleToolCall_ExecutesAndReturns()
+    public async Task TurnAsync_SingleToolCall_ExecutesAndReturns()
     {
         var callCount = 0;
         var executor = new SequenceExecutor(
@@ -72,14 +72,14 @@ public class AgentLoopTests : IDisposable
             },
         };
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: userTools);
+        var result = await Pipeline.TurnAsync(agent, tools: userTools);
 
         Assert.Equal("The weather in NYC is 72°F and sunny.", result);
         Assert.Equal(1, callCount);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_MultipleToolCalls_ExecutesAll()
+    public async Task TurnAsync_MultipleToolCalls_ExecutesAll()
     {
         var executor = new SequenceExecutor(
         [
@@ -109,13 +109,13 @@ public class AgentLoopTests : IDisposable
             ["get_time"] = _ => Task.FromResult("3:00 PM EST"),
         };
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: userTools);
+        var result = await Pipeline.TurnAsync(agent, tools: userTools);
 
         Assert.Equal("NYC is 72°F at 3:00 PM EST.", result);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_MultipleIterations()
+    public async Task TurnAsync_MultipleIterations()
     {
         var executor = new SequenceExecutor(
         [
@@ -148,14 +148,14 @@ public class AgentLoopTests : IDisposable
             ["step2"] = _ => Task.FromResult("step2-result"),
         };
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: userTools);
+        var result = await Pipeline.TurnAsync(agent, tools: userTools);
 
         Assert.Equal("done", result);
         Assert.Equal(3, executor.CallCount);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_MaxIterations_Throws()
+    public async Task TurnAsync_MaxIterations_Throws()
     {
         // Executor always returns tool calls — infinite loop
         var infiniteExecutor = new InfiniteToolCallExecutor();
@@ -171,13 +171,13 @@ public class AgentLoopTests : IDisposable
         };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => Pipeline.InvokeAgentAsync(agent, tools: userTools, maxIterations: 3));
+            () => Pipeline.TurnAsync(agent, tools: userTools, maxIterations: 3));
 
         Assert.Contains("maximum iterations", ex.Message);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_MissingTool_ThrowsToolHandlerError()
+    public async Task TurnAsync_MissingTool_ThrowsToolHandlerError()
     {
         var executor = new SequenceExecutor(
         [
@@ -195,11 +195,11 @@ public class AgentLoopTests : IDisposable
 
         // No user tools provided — function handler will throw
         await Assert.ThrowsAsync<ToolHandlerError>(
-            () => Pipeline.InvokeAgentAsync(agent));
+            () => Pipeline.TurnAsync(agent));
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_GlobalRegisteredTool_Works()
+    public async Task TurnAsync_GlobalRegisteredTool_Works()
     {
         ToolDispatch.RegisterTool("global_fn", _ => Task.FromResult("global-result"));
 
@@ -218,7 +218,7 @@ public class AgentLoopTests : IDisposable
         var agent = CreateTestAgent(tools:
             [new FunctionTool { Name = "global_fn", Kind = "function" }]);
 
-        var result = await Pipeline.InvokeAgentAsync(agent);
+        var result = await Pipeline.TurnAsync(agent);
 
         Assert.Equal("Final answer using global tool.", result);
     }

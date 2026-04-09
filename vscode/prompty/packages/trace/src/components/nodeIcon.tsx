@@ -86,6 +86,15 @@ const NodeIcon = ({ trace, size }: Props) => {
     (trace.signature && trace.signature.startsWith("prompty")) ||
     trace.name.includes("PromptyStream")
   ) {
+    // Turn spans get a numbered badge matching the other rounded-square icons
+    if (trace.signature === "prompty.turn") {
+      const turnNum = trace.name.match(/turn\s+(\d+)/i)?.[1] ?? "";
+      return (
+        <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-charts-purple) 12%, transparent)" $color="var(--vscode-charts-purple)">
+          {turnNum}
+        </BadgeWrapper>
+      );
+    }
     return (
       <BadgeWrapper $size={size} $bg="color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent)" $color="var(--vscode-textLink-foreground)">
         <PromptyIcon size={Math.round(size * 0.75)} />

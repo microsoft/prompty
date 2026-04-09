@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class FunctionToolConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
@@ -91,10 +91,10 @@ strict: true
 
         var original = FunctionTool.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = FunctionTool.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("function", reloaded.Kind);
@@ -123,10 +123,10 @@ strict: true
 
         var original = FunctionTool.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = FunctionTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("function", reloaded.Kind);
@@ -159,7 +159,7 @@ strict: true
 
         var instance = FunctionTool.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -186,7 +186,7 @@ strict: true
 
         var instance = FunctionTool.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -281,10 +281,10 @@ strict: true
 
         var original = FunctionTool.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = FunctionTool.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("function", reloaded.Kind);
@@ -313,10 +313,10 @@ strict: true
 
         var original = FunctionTool.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = FunctionTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("function", reloaded.Kind);
@@ -352,7 +352,7 @@ strict: true
 
         var instance = FunctionTool.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -379,7 +379,7 @@ strict: true
 
         var instance = FunctionTool.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

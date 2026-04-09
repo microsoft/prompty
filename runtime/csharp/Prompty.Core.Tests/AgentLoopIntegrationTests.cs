@@ -201,7 +201,7 @@ public class AgentLoopIntegrationTests : IDisposable
             input: _ => new GuardrailResult(false, "blocked by policy"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
-            Pipeline.InvokeAgentAsync(agent, guardrails: guardrails));
+            Pipeline.TurnAsync(agent, guardrails: guardrails));
 
         Assert.Equal("blocked by policy", ex.Reason);
         Assert.Empty(executor.Calls); // executor was never called
@@ -221,7 +221,7 @@ public class AgentLoopIntegrationTests : IDisposable
         var steering = new Steering();
         steering.Send("injected guidance");
 
-        var result = await Pipeline.InvokeAgentAsync(agent, steering: steering);
+        var result = await Pipeline.TurnAsync(agent, steering: steering);
 
         Assert.Equal("final answer", result);
         Assert.Single(executor.Calls);
@@ -250,7 +250,7 @@ public class AgentLoopIntegrationTests : IDisposable
         var agent = AgentLoopHelper.CreateAgent("ignored");
 
         // Set a small budget that forces the trimmer to drop some messages
-        var result = await Pipeline.InvokeAgentAsync(agent, contextBudget: 500);
+        var result = await Pipeline.TurnAsync(agent, contextBudget: 500);
 
         Assert.Equal("trimmed answer", result);
         Assert.Single(executor.Calls);
@@ -284,7 +284,7 @@ public class AgentLoopIntegrationTests : IDisposable
         var guardrails = new Guardrails(
             input: _ => new GuardrailResult(true, Rewrite: rewritten));
 
-        var result = await Pipeline.InvokeAgentAsync(agent, guardrails: guardrails);
+        var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
         Assert.Equal("after rewrite", result);
         Assert.Single(executor.Calls);
@@ -310,7 +310,7 @@ public class AgentLoopIntegrationTests : IDisposable
             output: msg => new GuardrailResult(false, "output policy violation"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
-            Pipeline.InvokeAgentAsync(agent, guardrails: guardrails));
+            Pipeline.TurnAsync(agent, guardrails: guardrails));
 
         Assert.Equal("output policy violation", ex.Reason);
     }
@@ -329,7 +329,7 @@ public class AgentLoopIntegrationTests : IDisposable
         var guardrails = new Guardrails(
             output: _ => new GuardrailResult(true, Rewrite: "redacted answer"));
 
-        var result = await Pipeline.InvokeAgentAsync(agent, guardrails: guardrails);
+        var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
         Assert.Equal("redacted answer", result);
     }
@@ -369,7 +369,7 @@ public class AgentLoopIntegrationTests : IDisposable
         var guardrails = new Guardrails(
             tool: (name, args) => new GuardrailResult(true, Rewrite: rewrittenArgs));
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: tools, guardrails: guardrails);
+        var result = await Pipeline.TurnAsync(agent, tools: tools, guardrails: guardrails);
 
         Assert.Equal("sunny in Seattle", result);
         Assert.NotNull(capturedArgs);
@@ -411,7 +411,7 @@ public class AgentLoopIntegrationTests : IDisposable
         };
 
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            Pipeline.InvokeAgentAsync(agent, tools: tools, cancellationToken: cts.Token));
+            Pipeline.TurnAsync(agent, tools: tools, cancellationToken: cts.Token));
 
         // Only the first executor call should have happened
         Assert.Single(executor.Calls);
@@ -446,7 +446,7 @@ public class AgentLoopIntegrationTests : IDisposable
         };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            Pipeline.InvokeAgentAsync(agent, tools: tools, maxIterations: maxIter));
+            Pipeline.TurnAsync(agent, tools: tools, maxIterations: maxIter));
 
         Assert.Contains($"{maxIter}", ex.Message);
     }

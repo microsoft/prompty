@@ -13,7 +13,7 @@
 				"${workspaceRoot}/packages/server/out/**/*.js"
 			],
 			"autoAttachChildProcesses": true,
-			"preLaunchTask": "npm: compile"
+			"preLaunchTask": "compile+bundle"
 		}
 	]
 }

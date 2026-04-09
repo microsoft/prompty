@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class PropertyConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
@@ -87,10 +87,10 @@ enumValues:
 
         var original = Property.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Property.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("my-input", reloaded.Name);
@@ -121,10 +121,10 @@ enumValues:
 
         var original = Property.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Property.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("my-input", reloaded.Name);
@@ -156,7 +156,7 @@ enumValues:
 
         var instance = Property.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -181,7 +181,7 @@ enumValues:
 
         var instance = Property.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -283,5 +283,5 @@ enumValues:
         Assert.Equal("string", instance.Kind);
         Assert.Equal("example", instance.Example);
     }
-
+    
 }

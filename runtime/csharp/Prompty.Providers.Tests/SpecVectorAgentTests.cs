@@ -110,7 +110,7 @@ public class SpecVectorAgentTests : IDisposable
         var toolFunctions = BuildToolFunctions(input, toolResultMap);
 
         // Run
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: toolFunctions);
+        var result = await Pipeline.TurnAsync(agent, tools: toolFunctions);
 
         // Verify result
         if (expected.TryGetProperty("result", out var expectedResult))
@@ -165,7 +165,7 @@ public class SpecVectorAgentTests : IDisposable
         if (errorMsg.Contains("exceeded"))
         {
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => Pipeline.InvokeAgentAsync(agent, tools: toolFunctions, maxIterations: 10));
+                () => Pipeline.TurnAsync(agent, tools: toolFunctions, maxIterations: 10));
         }
         else if (errorMsg.Contains("not registered"))
         {
@@ -173,7 +173,7 @@ public class SpecVectorAgentTests : IDisposable
             // or run out of mock responses
             try
             {
-                await Pipeline.InvokeAgentAsync(agent, tools: toolFunctions);
+                await Pipeline.TurnAsync(agent, tools: toolFunctions);
             }
             catch (InvalidOperationException)
             {
@@ -371,7 +371,7 @@ public class SpecVectorAgentTests : IDisposable
             if (errorMsg == "CancelledError" || errorMsg.Contains("cancelled", StringComparison.OrdinalIgnoreCase))
             {
                 await Assert.ThrowsAsync<OperationCanceledException>(() =>
-                    Pipeline.InvokeAgentAsync(agent, tools: toolFunctions, onEvent: onEvent,
+                    Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
                         cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
                         guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls));
             }
@@ -379,7 +379,7 @@ public class SpecVectorAgentTests : IDisposable
                      || errorMsg.Contains("guardrail", StringComparison.OrdinalIgnoreCase))
             {
                 await Assert.ThrowsAsync<GuardrailError>(() =>
-                    Pipeline.InvokeAgentAsync(agent, tools: toolFunctions, onEvent: onEvent,
+                    Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
                         cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
                         guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls));
             }
@@ -388,7 +388,7 @@ public class SpecVectorAgentTests : IDisposable
                 // Generic error — runtime may catch tool errors and continue
                 try
                 {
-                    await Pipeline.InvokeAgentAsync(agent, tools: toolFunctions, onEvent: onEvent,
+                    await Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
                         cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
                         guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls);
                 }
@@ -400,7 +400,7 @@ public class SpecVectorAgentTests : IDisposable
         }
         else
         {
-            var result = await Pipeline.InvokeAgentAsync(agent, tools: toolFunctions, onEvent: onEvent,
+            var result = await Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
                 cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
                 guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls);
 

@@ -79,31 +79,6 @@ The following types extend `Property`:
 - [ArrayProperty](../arrayproperty/)
 - [ObjectProperty](../objectproperty/)
 
-## .prompty Example
-
-Typed input and output properties in a `.prompty` frontmatter:
-
-```yaml
----
-name: translate
-inputs:
-  - name: text
-    kind: string
-    description: The text to translate
-    required: true
-  - name: targetLang
-    kind: string
-    default: Spanish
-  - name: maxLength
-    kind: integer
-    default: 500
-outputs:
-  - name: translation
-    kind: string
-    description: The translated text
----
-```
-
 ## Alternate Constructions
 
 The following alternate constructions are available for `Property`.

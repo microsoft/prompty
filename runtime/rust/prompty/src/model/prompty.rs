@@ -140,6 +140,14 @@ impl Prompty {
                 let result: Vec<Property> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'inputs' format: key '{}' has an array value. \
+                                'inputs' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
@@ -168,6 +176,14 @@ impl Prompty {
                 let result: Vec<Property> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'outputs' format: key '{}' has an array value. \
+                                'outputs' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
@@ -196,6 +212,14 @@ impl Prompty {
                 let result: Vec<Tool> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'tools' format: key '{}' has an array value. \
+                                'tools' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {

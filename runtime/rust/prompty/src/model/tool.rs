@@ -91,6 +91,14 @@ impl Tool {
                 let result: Vec<Binding> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'bindings' format: key '{}' has an array value. \
+                                'bindings' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
@@ -184,6 +192,14 @@ impl FunctionTool {
                 let result: Vec<Property> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'parameters' format: key '{}' has an array value. \
+                                'parameters' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {

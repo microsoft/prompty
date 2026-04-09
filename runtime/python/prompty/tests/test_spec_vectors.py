@@ -201,7 +201,7 @@ LOAD_IDS = [v["name"] for v in LOAD_VECTORS]
 
 @pytest.mark.parametrize("vec", LOAD_VECTORS, ids=LOAD_IDS)
 def test_load_vector(vec: dict, tmp_path: Path):
-    """Test load vectors — validates .prompty loading, env resolution, migration."""
+    """Test load vectors — validates .prompty loading and env resolution."""
     name = vec["name"]
     inp = vec["input"]
     expected = vec["expected"]
@@ -238,6 +238,16 @@ def test_load_vector(vec: dict, tmp_path: Path):
                 p = tmp_path / "env_error.prompty"
                 _write_prompty_from_frontmatter(p, data)
                 with pytest.raises((ValueError, KeyError)):
+                    load(p)
+                return
+
+            # Generic frontmatter error vectors (e.g. invalid template format)
+            # Skip vectors with error_field — those are validation errors, not load errors
+            if "frontmatter" in inp and "error_field" not in expected:
+                data = inp["frontmatter"]
+                p = tmp_path / "error_test.prompty"
+                _write_prompty_from_frontmatter(p, data)
+                with pytest.raises(Exception):
                     load(p)
                 return
 

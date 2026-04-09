@@ -222,7 +222,8 @@ describe("Foundry E2E Pipeline", () => {
       const frameNames = frames.map((f: TraceFrame) => f.name);
       expect(frameNames).toContain("load");
       expect(frameNames).toContain("prepare");
-      expect(frameNames).toContain("run");
+      // Executor and Processor are now direct children of invoke (no run wrapper)
+      expect(frameNames.some((n: string) => n.includes("Executor"))).toBe(true);
     });
 
     it("trace includes FoundryExecutor signature", async () => {
@@ -463,7 +464,7 @@ describe("Foundry E2E Pipeline", () => {
       );
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("invokeAgent");
+      expect(trace.name).toBe("turn");
       expect(trace.iterations).toBe(1);
     });
   });

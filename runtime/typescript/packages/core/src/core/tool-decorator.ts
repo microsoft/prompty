@@ -108,7 +108,7 @@ export function tool<T extends (...args: unknown[]) => unknown>(
  *
  * @param agent - A loaded Prompty agent (has `.tools` property)
  * @param tools - Array of `tool()`-wrapped functions
- * @returns Handler record suitable for `invokeAgent(..., { tools: result })`
+ * @returns Handler record suitable for `turn(..., { tools: result })`
  * @throws Error if a handler has no `__tool__` property or no matching declaration
  */
 export function bindTools(

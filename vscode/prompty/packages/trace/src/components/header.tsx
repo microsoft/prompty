@@ -34,7 +34,7 @@ const RuntimePill = styled.div`
   align-items: center;
   gap: 6px;
   background: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--trace-border);
   border-radius: 12px;
   padding: 4px 10px;
   font-size: 11px;

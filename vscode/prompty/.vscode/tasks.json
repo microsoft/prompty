@@ -14,6 +14,23 @@
 			]
 		},
 		{
+			"label": "bundle:core",
+			"type": "npm",
+			"script": "bundle:core",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "compile+bundle",
+			"dependsOn": ["npm: compile", "bundle:core"],
+			"dependsOrder": "sequence",
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
 			"type": "npm",
 			"script": "watch",
 			"isBackground": true,

@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class PromptyConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
@@ -261,10 +261,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -357,10 +357,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -452,7 +452,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -531,7 +531,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -788,10 +788,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -884,10 +884,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -978,7 +978,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -1057,7 +1057,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -1318,10 +1318,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -1414,10 +1414,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -1510,7 +1510,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -1589,7 +1589,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -1848,10 +1848,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -1944,10 +1944,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -2039,7 +2039,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -2118,7 +2118,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -2383,10 +2383,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -2479,10 +2479,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -2577,7 +2577,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -2656,7 +2656,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -2919,10 +2919,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -3015,10 +3015,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -3112,7 +3112,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -3191,7 +3191,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -3458,10 +3458,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -3554,10 +3554,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -3653,7 +3653,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -3732,7 +3732,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
@@ -3997,10 +3997,10 @@ user:
 
         var original = Prompty.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = Prompty.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -4093,10 +4093,10 @@ instructions: "system:
 
         var original = Prompty.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = Prompty.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
@@ -4191,7 +4191,7 @@ user:
 
         var instance = Prompty.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -4270,7 +4270,7 @@ instructions: "system:
 
         var instance = Prompty.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

@@ -1,17 +1,31 @@
 /**
- * Four-step execution pipeline.
+ * Execution pipeline — two top-level APIs plus building blocks.
  *
  * ```
- * invoke(prompt, inputs)               → top-level orchestrator
+ * invoke(prompt, inputs)               → one-shot: load + prepare + execute + process
+ *   ├── load(path)                     → file → agent (when path given)
  *   ├── prepare(agent, inputs)         → template → wire format
  *   │     ├── render(agent, inputs)    → template + inputs → rendered string
  *   │     └── parse(agent, rendered)   → rendered string → Message[]
- *   └── run(agent, messages)           → LLM call → clean result
- *         ├── Executor.execute(...)    → messages → raw LLM response
- *         └── process(agent, response) → raw response → clean result
+ *   ├── Executor.execute(...)          → messages → raw LLM response
+ *   └── Processor.process(...)         → raw response → clean result
+ *
+ * turn(agent, inputs, options?)        → conversational round-trip
+ *   ├── prepare(agent, inputs)         → template → wire format
+ *   ├── Executor.execute(...)          → LLM call
+ *   ├── [toolCalls → Executor]*        → agent loop (when tools provided)
+ *   └── Processor.process(...)         → final result extraction
+ *
+ * run(agent, messages, options?)       → standalone: execute + process
+ *   ├── Executor.execute(...)          → messages → raw LLM response
+ *   └── Processor.process(...)         → raw response → clean result
  * ```
  *
- * Each leaf step is independently traced. Users can bring their own
+ * `invoke` = "call this prompty like a function" (one-shot, embeddings, tool JSON).
+ * `turn`   = "one round of a conversation" (thread history, turn numbering, tool loops).
+ * `run`    = standalone building block for advanced users.
+ *
+ * Each step is independently traced. Users can bring their own
  * Renderer, Parser, Executor, Processor via the registry.
  *
  * @module
@@ -340,21 +354,42 @@ export async function run(
 }
 
 // ---------------------------------------------------------------------------
-// Top-level: invoke() = load + prepare + run
+// Top-level: invoke() = load + prepare + execute + process (one-shot)
 // ---------------------------------------------------------------------------
 
+/** Options for {@link invoke}. */
+export interface InvokeOptions {
+  /** Return raw executor response without processing. */
+  raw?: boolean;
+}
+
 /**
- * Full pipeline: load → prepare → run.
+ * One-shot pipeline: load → prepare → execute → process.
+ *
+ * Use `invoke` to call a prompty like a function — give inputs, get output.
+ * No conversation context or turn numbering. Supports file paths or
+ * pre-loaded agents.
+ *
+ * Trace structure (flat):
+ * ```
+ * invoke
+ *   load           (only when path given)
+ *   prepare
+ *     Renderer
+ *     Parser
+ *   Executor
+ *   Processor
+ * ```
  *
  * @overload Untyped — returns `unknown`.
  */
 export async function invoke(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
-  options?: { raw?: boolean },
+  options?: InvokeOptions,
 ): Promise<unknown>;
 /**
- * Full pipeline with typed result: load → prepare → run → cast.
+ * One-shot pipeline with typed result: load → prepare → execute → process → cast.
  *
  * When a `validator` is provided the raw result is deserialized from JSON
  * and passed through the validator (e.g. a Zod `.parse` function), giving
@@ -365,13 +400,13 @@ export async function invoke(
 export async function invoke<T>(
   prompt: string | Prompty,
   inputs: Record<string, unknown> | undefined,
-  options: { raw?: boolean; validator: (data: unknown) => T },
+  options: InvokeOptions & { validator: (data: unknown) => T },
 ): Promise<T>;
 // Implementation
 export async function invoke<T = unknown>(
   prompt: string | Prompty,
   inputs?: Record<string, unknown>,
-  options?: { raw?: boolean; validator?: (data: unknown) => T },
+  options?: InvokeOptions & { validator?: (data: unknown) => T },
 ): Promise<T> {
   return traceSpan("invoke", async (emit) => {
     const agent = typeof prompt === "string"
@@ -388,14 +423,358 @@ export async function invoke<T = unknown>(
     emit("signature", "prompty.invoke");
     emit("description", "Invoke a prompty");
     emit("inputs", { prompt: serializeAgent(agent), inputs: inputs ?? {} });
+
+    // Inline: prepare → executor → process (no run() wrapper)
     const messages = await prepare(agent, inputs);
-    const result = await run(agent, messages, options);
+    const provider = resolveProvider(agent);
+    const executor = getExecutor(provider);
+    const response = await executor.execute(agent, messages);
+
+    if (options?.raw) {
+      emit("result", response);
+      if (options?.validator) {
+        return cast<T>(response, options.validator);
+      }
+      return response as T;
+    }
+    const result = await process(agent, response);
     emit("result", result);
     if (options?.validator) {
       return cast<T>(result, options.validator);
     }
     return result as T;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Turn: one conversational round-trip (§14)
+// ---------------------------------------------------------------------------
+
+/** Options for {@link turn}. */
+export interface TurnOptions {
+  /** Runtime tool handlers. When provided, triggers the agent loop. */
+  tools?: Record<string, (...args: unknown[]) => unknown>;
+  /** Turn number for trace labeling (e.g., "turn 3"). */
+  turn?: number;
+  /** Maximum agent-loop iterations before throwing (default: 10). */
+  maxIterations?: number;
+  /** Return raw executor response without processing. */
+  raw?: boolean;
+  /** Callback for agent loop events (token, tool_call, done, etc.). */
+  onEvent?: EventCallback;
+  /** Abort signal for cancellation (§13.2). */
+  signal?: AbortSignal;
+  /** Max character budget for context window trimming (§13.3). */
+  contextBudget?: number;
+  /** Input/output/tool guardrails (§13.4). */
+  guardrails?: Guardrails;
+  /** Steering queue for injecting messages mid-loop (§13.5). */
+  steering?: Steering;
+  /** Allow parallel tool execution within a single round (§13.6). */
+  parallelToolCalls?: boolean;
+}
+
+/**
+ * One conversational turn: prepare messages from inputs, then either execute a
+ * single LLM call or enter the agent loop (when tools are provided).
+ *
+ * Trace structure (flat — no redundant wrappers):
+ * ```
+ * turn N
+ *   prepare → Renderer → Parser
+ *   Executor                        (each LLM call)
+ *   toolCalls → tool1, tool2        (if tools provided)
+ *   Executor                        (follow-up LLM call)
+ *   Processor                       (final result extraction)
+ * ```
+ *
+ * @overload Untyped — returns `unknown`.
+ */
+export async function turn(
+  prompt: string | Prompty,
+  inputs: Record<string, unknown>,
+  options?: TurnOptions,
+): Promise<unknown>;
+/**
+ * One conversational turn with typed result.
+ *
+ * When a `validator` is provided the final result is deserialized from JSON
+ * and passed through the validator (e.g. a Zod `.parse` function).
+ *
+ * @overload Typed — returns `Promise<T>`.
+ */
+export async function turn<T>(
+  prompt: string | Prompty,
+  inputs: Record<string, unknown>,
+  options: TurnOptions & { validator: (data: unknown) => T },
+): Promise<T>;
+// Implementation
+export async function turn<T = unknown>(
+  prompt: string | Prompty,
+  inputs: Record<string, unknown>,
+  options?: TurnOptions & { validator?: (data: unknown) => T },
+): Promise<T> {
+  const label = options?.turn != null ? `turn ${options.turn}` : "turn";
+  const rawResult = await traceSpan(label, async (emit) => {
+    const agent = typeof prompt === "string"
+      ? await traceSpan("load", async (loadEmit) => {
+          loadEmit("signature", "prompty.load");
+          loadEmit("description", "Load a prompty file.");
+          loadEmit("inputs", { prompty_file: prompt });
+          const loaded = load(prompt);
+          loadEmit("result", serializeAgent(loaded));
+          return loaded;
+        })
+      : prompt;
+
+    emit("signature", "prompty.turn");
+    emit("description", label);
+    emit("inputs", sanitizeValue("inputs", inputs));
+
+    const tools = options?.tools ?? {};
+    const hasTools = Object.keys(tools).length > 0;
+
+    if (!hasTools) {
+      // Simple mode: prepare → [extensions] → executor → [output guard] → process
+      let messages = await prepare(agent, inputs);
+      const onEvent = options?.onEvent;
+
+      // §13.5 — Drain steering messages
+      if (options?.steering) {
+        const pending = options.steering.drain();
+        if (pending.length > 0) {
+          messages.push(...pending);
+          emitEvent(onEvent, "messages_updated", { messages });
+        }
+      }
+
+      // §13.3 — Trim context window
+      if (options?.contextBudget !== undefined) {
+        const [droppedCount] = trimToContextWindow(messages, options.contextBudget);
+        if (droppedCount > 0) {
+          emitEvent(onEvent, "messages_updated", { messages });
+        }
+      }
+
+      // §13.4 — Input guardrail
+      if (options?.guardrails) {
+        const result = options.guardrails.checkInput(messages);
+        if (!result.allowed) {
+          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
+          throw new GuardrailError(result.reason ?? "Input guardrail denied");
+        }
+        if (result.rewrite) messages = result.rewrite;
+      }
+
+      // §13.2 — Check cancellation before LLM call
+      checkCancellation(options?.signal);
+
+      const provider = resolveProvider(agent);
+      const executor = getExecutor(provider);
+      const response = await executor.execute(agent, messages);
+
+      if (options?.raw) {
+        emit("result", response);
+        return response;
+      }
+      const processed = await process(agent, response);
+
+      // §13.4 — Output guardrail on final response
+      if (options?.guardrails) {
+        const contentStr = typeof processed === "string" ? processed : JSON.stringify(processed);
+        const assistantMsg = new Message("assistant", [text(contentStr)]);
+        const gr = options.guardrails.checkOutput(assistantMsg);
+        if (!gr.allowed) {
+          emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+          throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+        }
+        if (gr.rewrite !== undefined) {
+          emit("result", gr.rewrite);
+          emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+          return gr.rewrite;
+        }
+      }
+
+      emit("result", sanitizeValue("result", processed));
+      emitEvent(onEvent, "done", { response: processed, messages });
+      return processed;
+    }
+
+    // Agent mode: prepare → [executor → toolCalls]* → executor → process
+    const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+    const onEvent = options?.onEvent;
+    const signal = options?.signal;
+    const contextBudget = options?.contextBudget;
+    const guardrails = options?.guardrails;
+    const steering = options?.steering;
+    const parallelToolCalls = options?.parallelToolCalls ?? false;
+
+    let messages = await prepare(agent, inputs);
+    const parentInputs = inputs ?? {};
+    const provider = resolveProvider(agent);
+    const executor = getExecutor(provider);
+
+    let response: unknown = null;
+    let iteration = 0;
+
+    while (true) {
+      // §13.2 — Check cancellation at top of iteration
+      try {
+        checkCancellation(signal);
+      } catch (err) {
+        emitEvent(onEvent, "cancelled", {});
+        throw err;
+      }
+
+      // §13.5 — Drain steering messages
+      if (steering) {
+        const pending = steering.drain();
+        if (pending.length > 0) {
+          messages.push(...pending);
+          emitEvent(onEvent, "messages_updated", { messages });
+          emitEvent(onEvent, "status", { message: `Injected ${pending.length} steering message(s)` });
+        }
+      }
+
+      // §13.3 — Trim context window
+      if (contextBudget !== undefined) {
+        const [droppedCount] = trimToContextWindow(messages, contextBudget);
+        if (droppedCount > 0) {
+          emitEvent(onEvent, "messages_updated", { messages });
+          emitEvent(onEvent, "status", { message: `Trimmed ${droppedCount} messages for context budget` });
+        }
+      }
+
+      // §13.4 — Input guardrail
+      if (guardrails) {
+        const result = guardrails.checkInput(messages);
+        if (!result.allowed) {
+          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
+          throw new GuardrailError(result.reason ?? "Input guardrail denied");
+        }
+        if (result.rewrite) messages = result.rewrite;
+      }
+
+      // §13.2 — Check cancellation before LLM call
+      try {
+        checkCancellation(signal);
+      } catch (err) {
+        emitEvent(onEvent, "cancelled", {});
+        throw err;
+      }
+
+      // Call LLM
+      response = await executor.execute(agent, messages);
+
+      // Streaming: consume the stream, extract tool calls from buffered chunks
+      if (isAsyncIterable(response)) {
+        const { toolCalls, content } = await consumeStream(agent, response, onEvent);
+
+        // §13.4 — Output guardrail
+        if (guardrails && content) {
+          const assistantMsg = new Message("assistant", [text(content)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+          }
+        }
+
+        if (toolCalls.length === 0) {
+          emit("iterations", iteration);
+          emit("result", content);
+          emitEvent(onEvent, "done", { response: content, messages });
+          return content;
+        }
+
+        iteration++;
+        if (iteration > maxIterations) {
+          throw new Error(
+            `Agent loop exceeded maxIterations (${maxIterations}). ` +
+            `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+          );
+        }
+
+        const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+          toolEmit("signature", "prompty.turn.toolCalls");
+          toolEmit("description", `Tool call round ${iteration}`);
+          const result = await buildToolMessagesFromCallsWithExtensions(
+            toolCalls, content, tools, agent, parentInputs, toolEmit,
+            { onEvent, signal, guardrails, parallel: parallelToolCalls },
+          );
+          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+          return result;
+        });
+
+        messages.push(...toolMessages);
+        emitEvent(onEvent, "messages_updated", { messages });
+        continue;
+      }
+
+      // Non-streaming: check raw response for tool calls
+      if (!hasToolCalls(response)) {
+        const finalResult = options?.raw ? response : await process(agent, response);
+        if (guardrails) {
+          const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
+          const assistantMsg = new Message("assistant", [text(contentStr)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+          }
+          if (gr.rewrite !== undefined) {
+            emit("iterations", iteration);
+            emit("result", gr.rewrite);
+            emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+            return gr.rewrite;
+          }
+        }
+        emit("iterations", iteration);
+        emit("result", finalResult);
+        emitEvent(onEvent, "done", { response: finalResult, messages });
+        return finalResult;
+      }
+
+      // §13.4 — Output guardrail (on tool-call response with text content)
+      if (guardrails) {
+        const { textContent } = extractToolInfo(response);
+        if (textContent) {
+          const assistantMsg = new Message("assistant", [text(textContent)]);
+          const gr = guardrails.checkOutput(assistantMsg);
+          if (!gr.allowed) {
+            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
+          }
+        }
+      }
+
+      iteration++;
+      if (iteration > maxIterations) {
+        throw new Error(
+          `Agent loop exceeded maxIterations (${maxIterations}). ` +
+          `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+        );
+      }
+
+      const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+        toolEmit("signature", "prompty.turn.toolCalls");
+        toolEmit("description", `Tool call round ${iteration}`);
+        const result = await buildToolResultMessagesWithExtensions(
+          response, tools, agent, parentInputs, toolEmit,
+          { onEvent, signal, guardrails, parallel: parallelToolCalls },
+        );
+        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+        return result;
+      });
+
+      messages.push(...toolMessages);
+      emitEvent(onEvent, "messages_updated", { messages });
+    }
+  });
+  if (options?.validator) {
+    return cast<T>(rawResult, options.validator);
+  }
+  return rawResult as T;
 }
 
 // ---------------------------------------------------------------------------
@@ -479,256 +858,19 @@ async function consumeStream(
   return { toolCalls, content: textParts.join("") };
 }
 
-/** Options for {@link invokeAgent}. */
-export interface InvokeAgentOptions {
-  tools?: Record<string, (...args: unknown[]) => unknown>;
-  maxIterations?: number;
-  raw?: boolean;
-  onEvent?: EventCallback;
-  signal?: AbortSignal;
-  contextBudget?: number;
-  guardrails?: Guardrails;
-  steering?: Steering;
-  parallelToolCalls?: boolean;
-}
+
+// ---------------------------------------------------------------------------
+// Backward compatibility: invokeAgent → turn
+// ---------------------------------------------------------------------------
 
 /**
- * Run a prompt with automatic tool-call execution loop.
- *
- * Supports §13 extensions: events, cancellation, context window
- * management, guardrails, steering, and parallel tool calls.
- *
- * @overload Untyped — returns `unknown`.
+ * @deprecated Use {@link turn} with `tools` option instead.
+ * Kept for backward compatibility — delegates to `turn()`.
  */
-export async function invokeAgent(
-  prompt: string | Prompty,
-  inputs?: Record<string, unknown>,
-  options?: InvokeAgentOptions,
-): Promise<unknown>;
-/**
- * Run a prompt with automatic tool-call execution loop, returning a typed result.
- *
- * When a `validator` is provided in the options the final result is
- * deserialized from JSON and passed through the validator.
- *
- * @overload Typed — returns `Promise<T>`.
- */
-export async function invokeAgent<T>(
-  prompt: string | Prompty,
-  inputs: Record<string, unknown> | undefined,
-  options: InvokeAgentOptions & { validator: (data: unknown) => T },
-): Promise<T>;
-// Implementation
-export async function invokeAgent<T = unknown>(
-  prompt: string | Prompty,
-  inputs?: Record<string, unknown>,
-  options?: InvokeAgentOptions & { validator?: (data: unknown) => T },
-): Promise<T> {
-  const rawResult = await traceSpan("invokeAgent", async (emit) => {
-    const agent = typeof prompt === "string"
-      ? await traceSpan("load", async (loadEmit) => {
-          loadEmit("signature", "prompty.load");
-          loadEmit("description", "Load a prompty file.");
-          loadEmit("inputs", { prompty_file: prompt });
-          const loaded = load(prompt);
-          loadEmit("result", serializeAgent(loaded));
-          return loaded;
-        })
-      : prompt;
-    const tools = options?.tools ?? {};
-    const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
-    const onEvent = options?.onEvent;
-    const signal = options?.signal;
-    const contextBudget = options?.contextBudget;
-    const guardrails = options?.guardrails;
-    const steering = options?.steering;
-    const parallelToolCalls = options?.parallelToolCalls ?? false;
+export const invokeAgent = turn;
 
-    emit("signature", "prompty.invokeAgent");
-    emit("description", "Invoke a prompty with tool calling");
-    emit("inputs", { prompt: serializeAgent(agent), tools: Object.keys(tools), inputs: inputs ?? {} });
-
-    let messages = await prepare(agent, inputs);
-    const parentInputs = inputs ?? {};
-    const provider = resolveProvider(agent);
-    const executor = getExecutor(provider);
-
-    let response: unknown = null;
-    let iteration = 0;
-
-    while (true) {
-      // §13.2 — Check cancellation at top of iteration
-      try {
-        checkCancellation(signal);
-      } catch (err) {
-        emitEvent(onEvent, "cancelled", {});
-        throw err;
-      }
-
-      // §13.5 — Drain steering messages
-      if (steering) {
-        const pending = steering.drain();
-        if (pending.length > 0) {
-          messages.push(...pending);
-          emitEvent(onEvent, "messages_updated", { messages });
-          emitEvent(onEvent, "status", { message: `Injected ${pending.length} steering message(s)` });
-        }
-      }
-
-      // §13.3 — Trim context window
-      if (contextBudget !== undefined) {
-        const [droppedCount] = trimToContextWindow(messages, contextBudget);
-        if (droppedCount > 0) {
-          emitEvent(onEvent, "messages_updated", { messages });
-          emitEvent(onEvent, "status", { message: `Trimmed ${droppedCount} messages for context budget` });
-        }
-      }
-
-      // §13.4 — Input guardrail
-      if (guardrails) {
-        const result = guardrails.checkInput(messages);
-        if (!result.allowed) {
-          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
-          throw new GuardrailError(result.reason ?? "Input guardrail denied");
-        }
-        if (result.rewrite) messages = result.rewrite;
-      }
-
-      // §13.2 — Check cancellation before LLM call
-      try {
-        checkCancellation(signal);
-      } catch (err) {
-        emitEvent(onEvent, "cancelled", {});
-        throw err;
-      }
-
-      // Call LLM
-      response = await executor.execute(agent, messages);
-
-      // Streaming: consume the stream, extract tool calls from buffered chunks
-      if (isAsyncIterable(response)) {
-        const { toolCalls, content } = await consumeStream(agent, response, onEvent);
-
-        // §13.4 — Output guardrail (on assistant content, both final and tool-call responses)
-        if (guardrails && content) {
-          const assistantMsg = new Message("assistant", [text(content)]);
-          const gr = guardrails.checkOutput(assistantMsg);
-          if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
-          }
-        }
-
-        if (toolCalls.length === 0) {
-          // Final answer — return collected content
-          emit("iterations", iteration);
-          emit("result", content);
-          emitEvent(onEvent, "done", { response: content, messages });
-          return content;
-        }
-
-        iteration++;
-        if (iteration > maxIterations) {
-          throw new Error(
-            `Agent loop exceeded maxIterations (${maxIterations}). ` +
-            `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
-          );
-        }
-
-        const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-          toolEmit("signature", "prompty.invokeAgent.toolCalls");
-          toolEmit("description", `Tool call round ${iteration}`);
-          const result = await buildToolMessagesFromCallsWithExtensions(
-            toolCalls, content, tools, agent, parentInputs, toolEmit,
-            { onEvent, signal, guardrails, parallel: parallelToolCalls },
-          );
-          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
-          return result;
-        });
-
-        messages.push(...toolMessages);
-        emitEvent(onEvent, "messages_updated", { messages });
-        continue;
-      }
-
-      // Non-streaming: check raw response for tool calls
-      if (!hasToolCalls(response)) {
-        // §13.4 — Output guardrail on final response
-        const finalResult = options?.raw ? response : await process(agent, response);
-        if (guardrails) {
-          const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
-          const assistantMsg = new Message("assistant", [text(contentStr)]);
-          const gr = guardrails.checkOutput(assistantMsg);
-          if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
-          }
-          if (gr.rewrite !== undefined) {
-            emit("iterations", iteration);
-            emit("result", gr.rewrite);
-            emitEvent(onEvent, "done", { response: gr.rewrite, messages });
-            return gr.rewrite;
-          }
-        }
-        emit("iterations", iteration);
-        emit("result", finalResult);
-        emitEvent(onEvent, "done", { response: finalResult, messages });
-        return finalResult;
-      }
-
-      // §13.4 — Output guardrail (on tool-call response with text content)
-      if (guardrails) {
-        const { textContent } = extractToolInfo(response);
-        if (textContent) {
-          const assistantMsg = new Message("assistant", [text(textContent)]);
-          const gr = guardrails.checkOutput(assistantMsg);
-          if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            throw new GuardrailError(gr.reason ?? "Output guardrail denied");
-          }
-        }
-      }
-
-      iteration++;
-      if (iteration > maxIterations) {
-        throw new Error(
-          `Agent loop exceeded maxIterations (${maxIterations}). ` +
-          `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
-        );
-      }
-
-      const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-        toolEmit("signature", "prompty.invokeAgent.toolCalls");
-        toolEmit("description", `Tool call round ${iteration}`);
-        const result = await buildToolResultMessagesWithExtensions(
-          response, tools, agent, parentInputs, toolEmit,
-          { onEvent, signal, guardrails, parallel: parallelToolCalls },
-        );
-        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
-        return result;
-      });
-
-      messages.push(...toolMessages);
-      emitEvent(onEvent, "messages_updated", { messages });
-    }
-
-    emit("iterations", iteration);
-
-    if (options?.raw) {
-      emit("result", response);
-      emitEvent(onEvent, "done", { response, messages });
-      return response;
-    }
-    const result = await process(agent, response);
-    emit("result", result);
-    emitEvent(onEvent, "done", { response: result, messages });
-    return result;
-  });
-  if (options?.validator) {
-    return cast<T>(rawResult, options.validator);
-  }
-  return rawResult as T;
-}
+/** @deprecated Use {@link TurnOptions} instead. */
+export type InvokeAgentOptions = TurnOptions;
 
 // ---------------------------------------------------------------------------
 // Thread marker helpers

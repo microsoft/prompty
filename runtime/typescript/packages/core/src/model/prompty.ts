@@ -195,7 +195,14 @@ export class Prompty {
       for (const [key, value] of Object.entries(
         data as Record<string, unknown>,
       )) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid 'inputs' format: key '${key}' has an array value. ` +
+              `'inputs' must be a flat list of objects or a name-keyed dict — ` +
+              `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push(Property.load(value as Record<string, unknown>, context));
@@ -231,7 +238,14 @@ export class Prompty {
       for (const [key, value] of Object.entries(
         data as Record<string, unknown>,
       )) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid 'outputs' format: key '${key}' has an array value. ` +
+              `'outputs' must be a flat list of objects or a name-keyed dict — ` +
+              `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push(Property.load(value as Record<string, unknown>, context));
@@ -267,7 +281,14 @@ export class Prompty {
       for (const [key, value] of Object.entries(
         data as Record<string, unknown>,
       )) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid 'tools' format: key '${key}' has an array value. ` +
+              `'tools' must be a flat list of objects or a name-keyed dict — ` +
+              `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push(Tool.load(value as Record<string, unknown>, context));

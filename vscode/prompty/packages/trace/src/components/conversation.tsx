@@ -41,12 +41,12 @@ const Bubble = styled.div<{ $role: string }>`
           : "color-mix(in srgb, var(--vscode-textLink-foreground) 8%, var(--vscode-editor-background))"};
   border: 1px solid ${(p) =>
     p.$role === "system"
-      ? "var(--vscode-panel-border)"
+      ? "var(--trace-border)"
       : p.$role === "assistant"
-        ? "var(--vscode-panel-border)"
+        ? "var(--trace-border)"
         : p.$role === "tool"
-          ? "color-mix(in srgb, var(--vscode-charts-green) 20%, var(--vscode-panel-border))"
-          : "color-mix(in srgb, var(--vscode-textLink-foreground) 20%, var(--vscode-panel-border))"};
+          ? "color-mix(in srgb, var(--vscode-charts-green) 20%, var(--trace-border))"
+          : "color-mix(in srgb, var(--vscode-textLink-foreground) 20%, var(--trace-border))"};
 `;
 
 const RoleTag = styled.span<{ $role: string }>`
@@ -70,7 +70,7 @@ const ToolCallBox = styled.div`
   margin-top: 4px;
   padding: 6px 8px;
   background: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--trace-border);
   border-radius: 4px;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 11px;
@@ -102,7 +102,7 @@ const IterationDivider = styled.div`
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--vscode-panel-border);
+    background: var(--trace-border);
   }
 `;
 
@@ -121,7 +121,7 @@ function getContent(msg: ConversationMessage): string {
 }
 
 /**
- * Extract the full conversation from an invokeAgent trace.
+ * Extract the full conversation from a turn trace.
  *
  * Strategy:
  * 1. Start with the prepare result (initial messages after rendering)
@@ -204,9 +204,37 @@ function formatArgs(argsStr: string): string {
   }
 }
 
-/** Check if this trace should show the Conversation tab */
+/**
+ * Check if a serialized agent definition has any thread-kind inputs.
+ * The agent is stored at trace.inputs.prompt, and its input schema
+ * is at prompt.inputs — an array of {name, kind, ...} objects.
+ */
+function agentHasThreadInput(prompt: unknown): boolean {
+  if (!prompt || typeof prompt !== "object") return false;
+  const inputs = (prompt as Record<string, unknown>).inputs;
+  if (!Array.isArray(inputs)) return false;
+  return inputs.some(
+    (p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).kind === "thread",
+  );
+}
+
+/**
+ * Check if this trace should show the Conversation tab.
+ * Only shows when the prompty has a thread-kind input declared in its schema,
+ * indicating multi-turn conversation history.
+ */
 export function isAgentTrace(trace: TraceItem): boolean {
-  return trace.signature === "prompty.invokeAgent" || trace.signature === "prompty.chatSession";
+  // Check the serialized agent on this trace node
+  const prompt = (trace.inputs as Record<string, unknown>)?.prompt;
+  if (agentHasThreadInput(prompt)) return true;
+
+  // Check child frames (e.g. prompty.vscode.invoke wraps prompty.invoke/turn)
+  for (const frame of trace.__frames ?? []) {
+    const childPrompt = (frame.inputs as Record<string, unknown>)?.prompt;
+    if (agentHasThreadInput(childPrompt)) return true;
+  }
+
+  return false;
 }
 
 interface Props {
@@ -220,13 +248,15 @@ const Conversation = ({ trace }: Props) => {
   return <AgentConversation trace={trace} />;
 };
 
-/** Render a chatSession trace — walks child invokeAgent frames for full detail */
+/** Render a chatSession trace — walks child turn frames for full detail */
 const SessionConversation = ({ trace }: { trace: TraceItem }) => {
   const elements: React.ReactNode[] = [];
   const frames = trace.__frames ?? [];
 
-  // Find all invokeAgent child frames
-  const agentFrames = frames.filter((f) => f.signature === "prompty.invokeAgent");
+  // Find all turn child frames (match both new "prompty.turn" and legacy "prompty.invokeAgent")
+  const agentFrames = frames.filter(
+    (f) => f.signature === "prompty.turn" || f.signature === "prompty.invokeAgent"
+  );
 
   for (let turnIdx = 0; turnIdx < agentFrames.length; turnIdx++) {
     const agentFrame = agentFrames[turnIdx];
@@ -266,7 +296,7 @@ const SessionConversation = ({ trace }: { trace: TraceItem }) => {
   return <Container>{elements}</Container>;
 };
 
-/** Render an invokeAgent trace — single invocation */
+/** Render a turn trace — single invocation */
 const AgentConversation = ({ trace }: { trace: TraceItem }) => {
   const { messages, iterations } = extractConversation(trace);
   let currentIteration = 0;

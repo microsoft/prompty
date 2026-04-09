@@ -20,7 +20,7 @@ const HeaderSection = styled.div`
 const TabBar = styled.div`
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--trace-border);
   padding: 0 14px;
 `;
 
@@ -53,7 +53,7 @@ const TabContent = styled.div`
 
 const RawPre = styled.pre`
   background: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--trace-border);
   border-radius: 6px;
   padding: 16px;
   margin: 0;

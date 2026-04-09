@@ -1517,7 +1517,6 @@ async def _build_tool_messages_from_calls_async(
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
 
-@trace
 def invoke_agent(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,
@@ -1560,7 +1559,6 @@ def invoke_agent(
     )
 
 
-@trace
 async def invoke_agent_async(
     prompt: str | Prompty,
     inputs: dict[str, Any] | None = None,

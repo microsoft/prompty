@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class OpenApiToolConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
@@ -61,10 +61,10 @@ specification: ./openapi.json
 
         var original = OpenApiTool.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = OpenApiTool.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("openapi", reloaded.Kind);
@@ -85,10 +85,10 @@ specification: ./openapi.json
 
         var original = OpenApiTool.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = OpenApiTool.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("openapi", reloaded.Kind);
@@ -110,7 +110,7 @@ specification: ./openapi.json
 
         var instance = OpenApiTool.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -129,7 +129,7 @@ specification: ./openapi.json
 
         var instance = OpenApiTool.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

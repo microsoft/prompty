@@ -236,6 +236,14 @@ impl ObjectProperty {
                 let result: Vec<Property> = obj
                     .iter()
                     .map(|(name, value)| {
+                        if value.is_array() {
+                            panic!(
+                                "Invalid 'properties' format: key '{}' has an array value. \
+                                'properties' must be a flat list of objects or a name-keyed dict — \
+                                not a nested { {}: [...] } structure.",
+                                name, name
+                            );
+                        }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {

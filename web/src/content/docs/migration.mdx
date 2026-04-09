@@ -12,8 +12,8 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 ## Overview
 
 Prompty v2 is a significant rewrite. Your `.prompty` files will
-mostly work as-is (v2 auto-migrates v1 syntax), but your runtime
-code will need updates.
+need to be updated to v2 syntax — v2 does **not** auto-migrate
+v1 property names. This guide shows every change you need to make.
 
 ## Breaking Changes
 
@@ -178,8 +178,8 @@ model:
 
 ## File Format Changes
 
-v2 uses updated property names. v1 names are auto-migrated
-with deprecation warnings.
+v2 uses updated property names. v1 files must be manually updated
+to v2 syntax — the v2 loader does not auto-convert old formats.
 
 ### Model Configuration
 
@@ -234,11 +234,26 @@ inputs:
 # v1
 template: jinja2
 
-# v2 (jinja2 + prompty are defaults — omit entirely)
-# For non-default templates, use shorthand:
-# template:
-#   format: mustache
+# v2 (jinja2 + prompty are defaults — omit entirely, or use structured form)
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+
+# For non-default templates:
+template:
+  format:
+    kind: mustache
+  parser:
+    kind: prompty
 ```
+
+<Aside type="caution" title="String shorthand removed">
+  `template: "jinja2"` (bare string) is not valid in v2.
+  Use the structured form `template: { format: { kind: "jinja2" } }`,
+  or simply omit `template` entirely — jinja2 + prompty are the defaults.
+</Aside>
 
 ## Key Renames
 

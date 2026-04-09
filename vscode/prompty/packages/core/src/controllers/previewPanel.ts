@@ -124,15 +124,38 @@ export class PreviewPanel implements Disposable {
 			? Object.entries(inputs).map(([k, v]) => `<span class="input-tag">${escapeHtml(k)}: ${escapeHtml(truncate(String(v), 40))}</span>`).join(' ')
 			: '<span class="muted">no inputs</span>';
 
-		const messagesHtml = messages.map((msg) => {
+		// Check if agent has a thread input
+		const threadInput = agent.inputs?.find(p => p.kind === 'thread');
+
+		const messageCards = messages.map((msg) => {
 			const role = msg.role ?? 'unknown';
 			const content = msg.text || '(empty)';
 			const rendered = marked.parse(content, { async: false }) as string;
-			return `<div class="message ${escapeHtml(role)}">
+			return { role, html: `<div class="message ${escapeHtml(role)}">
 				<div class="role-label">${escapeHtml(role)}</div>
 				<div class="content">${rendered}</div>
+			</div>` };
+		});
+
+		// Insert thread placeholder between last system/assistant and first user message
+		let messagesHtml: string;
+		if (threadInput) {
+			const threadName = threadInput.name ?? 'thread';
+			const placeholder = `<div class="thread-placeholder">
+				<div class="thread-label">&#x2195; ${escapeHtml(threadName)}</div>
+				<div class="thread-desc">Conversation history will be inserted here at runtime</div>
 			</div>`;
-		}).join('\n');
+
+			// Find insertion point: after last non-user message before the first user message
+			let insertIdx = messageCards.findIndex(m => m.role === 'user');
+			if (insertIdx < 0) insertIdx = messageCards.length;
+
+			const parts = messageCards.map(m => m.html);
+			parts.splice(insertIdx, 0, placeholder);
+			messagesHtml = parts.join('\n');
+		} else {
+			messagesHtml = messageCards.map(m => m.html).join('\n');
+		}
 
 		// Build the wire-format JSON (what gets sent to the API)
 		const wireMessages = messages.map((msg) => ({
@@ -189,23 +212,28 @@ export class PreviewPanel implements Disposable {
 	.view-toggle {
 		display: flex;
 		gap: 0;
+		border-bottom: 1px solid var(--vscode-panel-border);
 		margin-bottom: 12px;
+		padding: 0;
 	}
 	.view-toggle button {
-		padding: 4px 12px;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		color: var(--vscode-descriptionForeground);
 		font-size: 12px;
 		font-family: var(--vscode-font-family);
-		border: 1px solid var(--vscode-button-secondaryBorder, var(--vscode-panel-border));
+		padding: 6px 12px;
 		cursor: pointer;
-		background: var(--vscode-button-secondaryBackground);
-		color: var(--vscode-button-secondaryForeground);
+		font-weight: 400;
 	}
-	.view-toggle button:first-child { border-radius: 3px 0 0 3px; }
-	.view-toggle button:last-child { border-radius: 0 3px 3px 0; border-left: none; }
+	.view-toggle button:hover {
+		color: var(--vscode-foreground);
+	}
 	.view-toggle button.active {
-		background: var(--vscode-button-background);
-		color: var(--vscode-button-foreground);
-		border-color: var(--vscode-button-background);
+		border-bottom-color: var(--vscode-textLink-foreground);
+		color: var(--vscode-textLink-foreground);
+		font-weight: 600;
 	}
 	.message {
 		margin-bottom: 12px;
@@ -236,6 +264,26 @@ export class PreviewPanel implements Disposable {
 		letter-spacing: 0.5px;
 		margin-bottom: 4px;
 		opacity: 0.8;
+	}
+	.thread-placeholder {
+		margin-bottom: 12px;
+		border-radius: 6px;
+		padding: 10px 12px;
+		border: 1px dashed var(--vscode-descriptionForeground);
+		text-align: center;
+		opacity: 0.7;
+	}
+	.thread-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--vscode-descriptionForeground);
+	}
+	.thread-desc {
+		font-size: 11px;
+		color: var(--vscode-descriptionForeground);
+		margin-top: 2px;
 	}
 	.content {
 		line-height: 1.6;
@@ -269,15 +317,20 @@ export class PreviewPanel implements Disposable {
 		padding-left: 10px;
 		opacity: 0.85;
 	}
+	.hidden { display: none; }
 	.raw-json {
-		background: var(--vscode-textCodeBlock-background);
-		padding: 12px;
+		background: var(--vscode-editor-background);
+		border: 1px solid var(--vscode-panel-border);
 		border-radius: 6px;
-		overflow-x: auto;
-		font-family: var(--vscode-editor-font-family);
-		font-size: var(--vscode-editor-font-size);
+		padding: 16px;
+		margin: 0;
+		overflow: auto;
+		font-family: 'Cascadia Code', 'Fira Code', monospace;
+		font-size: 12px;
+		color: var(--vscode-foreground);
 		line-height: 1.4;
-		white-space: pre;
+		white-space: pre-wrap;
+		word-break: break-all;
 		tab-size: 2;
 	}
 </style>
@@ -289,18 +342,20 @@ export class PreviewPanel implements Disposable {
 	</div>
 	<div class="inputs-bar">Inputs: ${inputSummary}</div>
 	<div class="view-toggle">
-		<button id="btn-rendered" class="active" onclick="showView('rendered')">Rendered</button>
-		<button id="btn-raw" onclick="showView('raw')">Raw JSON</button>
+		<button id="btn-rendered" class="active">Rendered</button>
+		<button id="btn-raw">Raw JSON</button>
 	</div>
 	<div id="view-rendered">${messagesHtml}</div>
-	<div id="view-raw" style="display:none"><pre class="raw-json">${rawJson}</pre></div>
+	<div id="view-raw" class="hidden"><pre class="raw-json">${rawJson}</pre></div>
 	<script nonce="${nonce}">
 		function showView(view) {
-			document.getElementById('view-rendered').style.display = view === 'rendered' ? '' : 'none';
-			document.getElementById('view-raw').style.display = view === 'raw' ? '' : 'none';
+			document.getElementById('view-rendered').className = view === 'rendered' ? '' : 'hidden';
+			document.getElementById('view-raw').className = view === 'raw' ? '' : 'hidden';
 			document.getElementById('btn-rendered').className = view === 'rendered' ? 'active' : '';
 			document.getElementById('btn-raw').className = view === 'raw' ? 'active' : '';
 		}
+		document.getElementById('btn-rendered').addEventListener('click', function() { showView('rendered'); });
+		document.getElementById('btn-raw').addEventListener('click', function() { showView('raw'); });
 	</script>
 </body>
 </html>`;

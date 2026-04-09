@@ -30,13 +30,11 @@
           "maxOutputTokens": 1000
         }
       },
-      "inputs": {
-        "properties": [
+      "inputs": [
           { "name": "firstName", "kind": "string", "default": "Jane" },
           { "name": "lastName", "kind": "string", "default": "Doe" },
           { "name": "question", "kind": "string", "default": "What is the meaning of life?" }
-        ]
-      },
+      ],
       "template": {
         "format": { "kind": "jinja2" },
         "parser": { "kind": "prompty" }
@@ -222,12 +220,10 @@
           }
         }
       ],
-      "inputs": {
-        "properties": [
+      "inputs": [
           { "name": "question", "kind": "string", "default": "What's the weather in Paris?" },
           { "name": "preferred_unit", "kind": "string", "default": "celsius" }
-        ]
-      },
+      ],
       "instructions": "system:\nYou are a helpful assistant with access to tools.\n\nuser:\n{{question}}"
     }
   },
@@ -254,11 +250,9 @@
           "apiKey": "sk-test123"
         }
       },
-      "inputs": {
-        "properties": [
+      "inputs": [
           { "name": "text", "kind": "string", "default": "Hello world" }
-        ]
-      },
+      ],
       "instructions": "{{text}}"
     }
   },
@@ -313,11 +307,9 @@
       "frontmatter": {
         "name": "required-input-test",
         "model": "gpt-4",
-        "inputs": {
-          "properties": [
+        "inputs": [
             { "name": "city", "kind": "string", "required": true }
-          ]
-        }
+        ]
       },
       "inputs": {}
     },
@@ -333,11 +325,9 @@
       "frontmatter": {
         "name": "default-fill-test",
         "model": "gpt-4",
-        "inputs": {
-          "properties": [
+        "inputs": [
             { "name": "name", "kind": "string", "default": "world" }
-          ]
-        }
+        ]
       },
       "inputs": {}
     },
@@ -354,11 +344,9 @@
       "frontmatter": {
         "name": "optional-omit-test",
         "model": "gpt-4",
-        "inputs": {
-          "properties": [
+        "inputs": [
             { "name": "nickname", "kind": "string", "required": false }
-          ]
-        }
+        ]
       },
       "inputs": {}
     },
@@ -373,11 +361,9 @@
       "frontmatter": {
         "name": "example-not-used-test",
         "model": "gpt-4",
-        "inputs": {
-          "properties": [
+        "inputs": [
             { "name": "topic", "kind": "string", "required": false, "example": "sample" }
-          ]
-        }
+        ]
       },
       "inputs": {}
     },
@@ -477,8 +463,8 @@
     }
   },
   {
-    "name": "template_string_shorthand",
-    "description": "Template string shorthand 'jinja2' expands to full template config",
+    "name": "template_string_invalid",
+    "description": "Template as a bare string is not valid v2 — must be an object with format/parser",
     "input": {
       "frontmatter": {
         "name": "shorthand-test",
@@ -489,10 +475,7 @@
       }
     },
     "expected": {
-      "template": {
-        "format": { "kind": "jinja2" },
-        "parser": { "kind": "prompty" }
-      }
+      "error": "Invalid template format"
     }
   },
   {
@@ -509,12 +492,10 @@
       }
     },
     "expected": {
-      "inputs": {
-        "properties": [
+      "inputs": [
           { "name": "topic", "kind": "string", "default": "science" },
           { "name": "count", "kind": "integer", "default": 5 }
-        ]
-      }
+      ]
     }
   },
   {

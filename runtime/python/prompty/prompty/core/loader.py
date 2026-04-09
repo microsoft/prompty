@@ -1,9 +1,8 @@
 """Prompty loader — loads .prompty files into typed Prompty objects.
 
 The loader splits frontmatter (YAML) from the markdown body, resolves
-``${protocol:value}`` references (env vars, file includes), migrates legacy
-property names, and finally delegates to ``Prompty.load()`` from the
-generated model package.
+``${protocol:value}`` references (env vars, file includes), and
+delegates to ``Prompty.load()`` from the generated model package.
 """
 
 from __future__ import annotations
@@ -17,7 +16,6 @@ from typing import Any
 import yaml
 
 from ..model import LoadContext, Prompty, SaveContext
-from .migration import migrate
 from .utils import load_prompty, load_prompty_async
 
 __all__ = ["load", "load_async", "default_save_context"]
@@ -97,10 +95,7 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
     if not isinstance(data, dict):
         data = {}
 
-    # 2. Migrate legacy property names (with deprecation warnings)
-    data = migrate(data)
-
-    # 3. Load via Prompty.load() with pre_process for ${protocol:value} expansion
+    # 2. Load via Prompty.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path))
     agent = Prompty.load(data, ctx)
 

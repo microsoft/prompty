@@ -109,7 +109,7 @@ var raw = await Pipeline.RunAsync(agent, messages, raw: true);
 ### Top-Level Invocation
 
 ```csharp
-// Full pipeline: load + prepare + run
+// Full pipeline: load + prepare + execute + process
 var result = await Pipeline.InvokeAsync("chat.prompty", inputs);
 
 // Or pass a pre-loaded agent

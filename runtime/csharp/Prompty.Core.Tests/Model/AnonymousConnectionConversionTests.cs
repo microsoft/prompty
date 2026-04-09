@@ -7,7 +7,7 @@ namespace Prompty.Core;
 
 
 public class AnonymousConnectionConversionTests
-{
+{   
     [Fact]
     public void LoadYamlInput()
     {
@@ -53,10 +53,10 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 
         var original = AnonymousConnection.FromJson(jsonData);
         Assert.NotNull(original);
-
+        
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
-
+        
         var reloaded = AnonymousConnection.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("anonymous", reloaded.Kind);
@@ -75,10 +75,10 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 
         var original = AnonymousConnection.FromYaml(yamlData);
         Assert.NotNull(original);
-
+        
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
-
+        
         var reloaded = AnonymousConnection.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("anonymous", reloaded.Kind);
@@ -97,7 +97,7 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 
         var instance = AnonymousConnection.FromJson(jsonData);
         var json = instance.ToJson();
-
+        
         // Verify it's valid JSON by parsing it
         var parsed = System.Text.Json.JsonDocument.Parse(json);
         Assert.NotNull(parsed);
@@ -114,7 +114,7 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 
         var instance = AnonymousConnection.FromYaml(yamlData);
         var yaml = instance.ToYaml();
-
+        
         // Verify it's valid YAML by parsing it
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);

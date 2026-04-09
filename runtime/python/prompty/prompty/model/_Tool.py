@@ -86,7 +86,9 @@ class Tool(ABC):
         return [Binding.load(item, context) for item in data]
 
     @staticmethod
-    def save_bindings(items: list[Binding], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_bindings(
+        items: list[Binding], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -102,7 +104,11 @@ class Tool(ABC):
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -128,10 +134,12 @@ class Tool(ABC):
                 return PromptyTool.load(data, context)
 
             else:
+
                 # load default instance
                 return CustomTool.load(data, context)
 
         else:
+
             raise ValueError("Missing Tool discriminator property: 'kind'")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -230,7 +238,9 @@ class FunctionTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "parameters" in data:
-            instance.parameters = FunctionTool.load_parameters(data["parameters"], context)
+            instance.parameters = FunctionTool.load_parameters(
+                data["parameters"], context
+            )
         if data is not None and "strict" in data:
             instance.strict = data["strict"]
         if context is not None:
@@ -238,7 +248,9 @@ class FunctionTool(Tool):
         return instance
 
     @staticmethod
-    def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
+    def load_parameters(
+        data: dict | list, context: LoadContext | None
+    ) -> list[Property]:
         if isinstance(data, dict):
             result: list[Property] = []
             for k, v in data.items():
@@ -253,7 +265,9 @@ class FunctionTool(Tool):
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_parameters(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_parameters(
+        items: list[Property], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -269,7 +283,11 @@ class FunctionTool(Tool):
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    if (
+                        shorthand_prop
+                        and len(item_data) == 1
+                        and shorthand_prop in item_data
+                    ):
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data

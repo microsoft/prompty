@@ -7,7 +7,7 @@ import Inspector from "./inspector";
 const Frame = styled.div<{ $fill?: boolean }>`
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--trace-border);
   border-radius: 6px;
   background: var(--vscode-editor-background);
   padding: 8px 10px;

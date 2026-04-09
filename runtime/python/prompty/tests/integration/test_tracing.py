@@ -233,8 +233,8 @@ class TestFoundryEmbeddingTracing:
 @skip_foundry
 class TestFoundryAgentTracing:
     def test_agent_loop_trace(self, tmp_path):
-        """Agent loop with tool calls produces a trace with the AgentLoop frame."""
-        from prompty.core.pipeline import invoke_agent
+        """Agent loop with tool calls produces a trace with the turn frame."""
+        from prompty.core.pipeline import turn
 
         def get_weather(city: str) -> str:
             return f"72°F and sunny in {city}"
@@ -263,7 +263,7 @@ class TestFoundryAgentTracing:
             agent.instructions = (
                 "system:\nYou are a helpful assistant. Use tools when needed.\nuser:\nWhat is the weather in Seattle?"
             )
-            result = invoke_agent(
+            result = turn(
                 agent,
                 tools={"get_weather": get_weather},
             )
@@ -275,14 +275,14 @@ class TestFoundryAgentTracing:
         root = _assert_trace_envelope(data)
         _assert_timing(root)
 
-        # The root should be 'invoke', with an AgentLoop child frame
+        # The root should be 'turn', with sub-frames including the AgentLoop
         assert "__frames" in root
         frames = root["__frames"]
         agent_frame = _find_frame(frames, "AgentLoop")
         assert agent_frame is not None, f"No AgentLoop frame found in {[f['name'] for f in frames]}"
         _assert_timing(agent_frame)
 
-        # Agent loop should have sub-frames (the executor calls) and iteration tracking
+        # AgentLoop frame should have sub-frames (the executor calls) and iteration tracking
         assert "__frames" in agent_frame, f"AgentLoop frame missing __frames: {list(agent_frame.keys())}"
         assert "iterations" in agent_frame, f"AgentLoop frame missing iterations: {list(agent_frame.keys())}"
 

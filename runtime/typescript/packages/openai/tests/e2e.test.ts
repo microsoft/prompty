@@ -198,12 +198,13 @@ describe("E2E Pipeline", () => {
       expect(runtime).toBe("typescript");
       expect(trace.name).toBe("invoke");
 
-      // Should have child frames: load, prepare (with render + parse), run (with executor + processor)
+      // Should have child frames: load, prepare, Executor, Processor (no run wrapper)
       const frames = trace.__frames ?? [];
       const frameNames = frames.map((f: TraceFrame) => f.name);
       expect(frameNames).toContain("load");
       expect(frameNames).toContain("prepare");
-      expect(frameNames).toContain("run");
+      // Executor and Processor are now direct children of invoke (not wrapped in run)
+      expect(frameNames.some((n: string) => n.includes("Executor"))).toBe(true);
     });
   });
 
@@ -317,9 +318,9 @@ describe("E2E Pipeline", () => {
       await invoke(path.resolve(FIXTURES, "embedding.prompty"));
 
       const { trace } = readTrace();
-      // Find the executor frame
-      const runFrame = trace.__frames?.find((f: TraceFrame) => f.name === "run");
-      expect(runFrame).toBeDefined();
+      // Executor frame is now a direct child of invoke (no run wrapper)
+      const executorFrame = trace.__frames?.find((f: TraceFrame) => f.name.includes("Executor"));
+      expect(executorFrame).toBeDefined();
     });
   });
 
@@ -446,7 +447,7 @@ describe("E2E Pipeline", () => {
       );
 
       const { trace } = readTrace();
-      expect(trace.name).toBe("invokeAgent");
+      expect(trace.name).toBe("turn");
 
       // Should record iterations
       expect(trace.iterations).toBe(1);

@@ -81,6 +81,13 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid '{{ collection.prop.name }}' format: key '{kvp.Key}' has an array value. " +
+                        $"'{{ collection.prop.name }}' must be a flat list of objects or a name-keyed dict — " +
+                        $"not a nested {{ '{' }} {kvp.Key}: [...] {{ '}' }} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {

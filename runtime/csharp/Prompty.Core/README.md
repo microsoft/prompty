@@ -128,7 +128,7 @@ var tools = new Dictionary<string, Func<string, Task<string>>>
     ["get_weather"] = async (args) => "72°F and sunny"
 };
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent, inputs, tools, maxIterations: 10);
 ```
 

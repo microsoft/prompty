@@ -377,42 +377,44 @@ public class PipelineTests : IDisposable
         Assert.Equal("processed:mock-response", result);
     }
 
-    // --- Agent Loop ---
+    // --- Turn (Agent Loop) ---
 
     [Fact]
-    public async Task InvokeAgentAsync_NoToolCalls_ReturnsFinalResult()
+    public async Task TurnAsync_NoToolCalls_ReturnsFinalResult()
     {
         var agent = CreateAgent();
-        var result = await Pipeline.InvokeAgentAsync(agent);
+        var result = await Pipeline.TurnAsync(agent);
         Assert.Equal("processed:mock-response", result);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_WithToolCalls_ExecutesTools()
+    public async Task TurnAsync_WithToolCalls_ExecutesTools()
     {
         // Use a special executor that returns tool calls first, then a final answer
         InvokerRegistry.RegisterExecutor("openai", new ToolCallingExecutor());
         InvokerRegistry.RegisterProcessor("openai", new ToolCallingProcessor());
 
         var agent = CreateAgent();
+        agent.Tools = [new FunctionTool { Name = "get_weather", Kind = "function" }];
         var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["get_weather"] = args => Task.FromResult("72°F and sunny")
         };
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: tools);
+        var result = await Pipeline.TurnAsync(agent, tools: tools);
         Assert.Equal("The weather is 72°F and sunny", result);
     }
 
     [Fact]
-    public async Task InvokeAgentAsync_MissingTool_Throws()
+    public async Task TurnAsync_MissingTool_Throws()
     {
         InvokerRegistry.RegisterExecutor("openai", new ToolCallingExecutor());
         InvokerRegistry.RegisterProcessor("openai", new ToolCallingProcessor());
 
         var agent = CreateAgent();
+        agent.Tools = [new FunctionTool { Name = "get_weather", Kind = "function" }];
         await Assert.ThrowsAsync<ToolHandlerError>(
-            () => Pipeline.InvokeAgentAsync(agent));
+            () => Pipeline.TurnAsync(agent));
     }
 
     // --- Thread Expansion ---

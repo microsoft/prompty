@@ -92,8 +92,8 @@ The five pipeline stages compose into higher-level operations:
 | -------------- | ------------------------------------ | -------------------------------------- |
 | `prepare`      | render + parse + thread expansion    | Produce `Message[]` ready for the LLM  |
 | `run`          | execute + process                    | Send messages to LLM, extract result   |
-| `invoke`       | load + prepare + run                 | End-to-end from file path to result    |
-| `turn`         | load + prepare + run in agent loop   | With automatic tool-call handling      |
+| `invoke`       | load + prepare + execute + process   | End-to-end from file path to result    |
+| `turn`         | prepare + execute + process (+ agent loop) | With automatic tool-call handling |
 
 :::note[Naming Note]
 The pipeline stage that calls the LLM is called **execute** (the

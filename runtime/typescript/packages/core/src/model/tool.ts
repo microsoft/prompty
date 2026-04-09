@@ -106,7 +106,14 @@ export abstract class Tool {
       for (const [key, value] of Object.entries(
         data as Record<string, unknown>,
       )) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid 'bindings' format: key '${key}' has an array value. ` +
+              `'bindings' must be a flat list of objects or a name-keyed dict — ` +
+              `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push(Binding.load(value as Record<string, unknown>, context));
@@ -381,7 +388,14 @@ export class FunctionTool extends Tool {
       for (const [key, value] of Object.entries(
         data as Record<string, unknown>,
       )) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid 'parameters' format: key '${key}' has an array value. ` +
+              `'parameters' must be a flat list of objects or a name-keyed dict — ` +
+              `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push(Property.load(value as Record<string, unknown>, context));

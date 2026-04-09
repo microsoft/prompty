@@ -1,11 +1,11 @@
 import { Time, Usage } from "../store";
 import styled from "styled-components";
-import { formatDuration, formatTokens } from "../utilities/format";
+import { formatDuration, formatTokens, formatUsageLabel, totalTokens } from "../utilities/format";
 
 const Frame = styled.div`
   display: flex;
   flex-wrap: wrap;
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--trace-border);
   border-radius: 6px;
   background: var(--vscode-editor-background);
   overflow: hidden;
@@ -15,7 +15,7 @@ const Frame = styled.div`
 const DetailItem = styled.div`
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--vscode-panel-border);
+  border-right: 1px solid var(--trace-border);
   padding: 8px 12px;
   flex: 1 1 0;
   min-width: 100px;
@@ -80,18 +80,11 @@ const Detail = ({ time, usage }: Props) => {
         </DetailValue>
       </DetailItem>
 
-      {usage && (
-        <>
-          <TokenItem title="Prompt Tokens" value={usage.prompt_tokens} />
-          {usage.completion_tokens && (
-            <TokenItem
-              title="Completion Tokens"
-              value={usage.completion_tokens}
-            />
-          )}
-          <TokenItem title="Total Tokens" value={usage.total_tokens} />
-        </>
-      )}
+      {usage && Object.entries(usage)
+        .filter(([, value]) => value > 0)
+        .map(([key, value]) => (
+          <TokenItem key={key} title={formatUsageLabel(key)} value={value} />
+        ))}
     </Frame>
   );
 };

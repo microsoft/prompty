@@ -61,7 +61,7 @@ def _message_to_wire(msg: Message) -> dict[str, Any]:
             {
                 "type": "tool_result",
                 "tool_use_id": r["tool_use_id"],
-                "content": r["result"],
+                "content": r["content"],
             }
             for r in tool_results
         ]

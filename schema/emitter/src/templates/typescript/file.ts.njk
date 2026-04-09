@@ -128,7 +128,14 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
     if (data && typeof data === "object" && !Array.isArray(data)) {
       // Convert named dictionary to array
       for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-        if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+          throw new Error(
+            `Invalid '{{ collection.prop.name }}' format: key '${key}' has an array value. ` +
+            `'{{ collection.prop.name }}' must be a flat list of objects or a name-keyed dict — ` +
+            `not a nested { ${key}: [...] } structure.`,
+          );
+        }
+        if (value && typeof value === "object") {
           // Value is an object, add name to it
           (value as Record<string, unknown>)["name"] = key;
           result.push({{ collection.prop.typeName.name }}.load(value as Record<string, unknown>, context));

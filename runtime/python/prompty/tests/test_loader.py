@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from pathlib import Path
 
 import pytest
@@ -364,124 +363,6 @@ class TestFileSharedConfig:
         agent = load(PROMPTS / "config_cascade.prompty")
         assert agent.model.connection is not None
         assert agent.model.connection.kind == "key"
-
-
-# ---------------------------------------------------------------------------
-# Legacy migration
-# ---------------------------------------------------------------------------
-
-
-class TestLegacyMigration:
-    def _load_legacy(self):
-        """Helper to load legacy_basic.prompty with env vars set."""
-        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://legacy.openai.azure.com/"
-        os.environ["AZURE_OPENAI_API_KEY"] = "legacy-key"
-        try:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                agent = load(PROMPTS / "legacy_basic.prompty")
-                return agent, w
-        finally:
-            del os.environ["AZURE_OPENAI_ENDPOINT"]
-            del os.environ["AZURE_OPENAI_API_KEY"]
-
-    def test_load_legacy_basic(self):
-        """Old-format prompty loads and produces a valid Prompty."""
-        agent, _ = self._load_legacy()
-        assert isinstance(agent, Prompty)
-
-    def test_load_legacy_deprecation_warnings(self):
-        """Legacy loading emits DeprecationWarning."""
-        _, w = self._load_legacy()
-        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
-        assert len(dep_warnings) > 0
-
-    def test_load_legacy_configuration_to_connection(self):
-        """model.configuration → model.connection."""
-        agent, _ = self._load_legacy()
-        conn = agent.model.connection
-        assert isinstance(conn, ApiKeyConnection)
-        assert conn.endpoint == "https://legacy.openai.azure.com/"
-
-    def test_load_legacy_azure_deployment_to_id(self):
-        """model.configuration.azure_deployment → model.id."""
-        agent, _ = self._load_legacy()
-        assert agent.model.id == "gpt-35-turbo"
-
-    def test_load_legacy_provider(self):
-        """type: azure_openai → provider: foundry."""
-        agent, _ = self._load_legacy()
-        assert agent.model.provider == "foundry"
-
-    def test_load_legacy_parameters_to_options(self):
-        """model.parameters → model.options with camelCase renames."""
-        agent, _ = self._load_legacy()
-        opts = agent.model.options
-        assert opts is not None
-        assert opts.temperature == 0.7
-        assert opts.maxOutputTokens == 500
-        assert opts.topP == 0.9
-        assert opts.frequencyPenalty == 0.5
-        assert opts.presencePenalty == 0.3
-        assert opts.stopSequences == ["\n"]
-
-    def test_load_legacy_api_to_apitype(self):
-        """model.api → model.apiType."""
-        agent, _ = self._load_legacy()
-        assert agent.model.apiType == "chat"
-
-    def test_load_legacy_inputs(self):
-        """inputs (dict) → inputs (list)."""
-        agent, _ = self._load_legacy()
-        assert len(agent.inputs) > 0
-        props = agent.inputs
-        names = [p.name for p in props]
-        assert "firstName" in names
-        assert "lastName" in names
-        assert "question" in names
-
-    def test_load_legacy_inputs_type_to_kind(self):
-        """inputs.X.type → inputs.X.kind."""
-        agent, _ = self._load_legacy()
-        assert len(agent.inputs) > 0
-        props = {p.name: p for p in agent.inputs}
-        assert props["firstName"].kind == "string"
-
-    def test_load_legacy_metadata_hoisting(self):
-        """Root authors/tags/version → metadata.*."""
-        agent, _ = self._load_legacy()
-        assert agent.metadata is not None
-        assert "authors" in agent.metadata
-        assert "testauthor" in agent.metadata["authors"]
-        assert "tags" in agent.metadata
-        assert "test" in agent.metadata["tags"]
-        assert agent.metadata["version"] == "1.0"
-
-    def test_load_legacy_template_string(self):
-        """template: jinja2 → template.format.kind: jinja2."""
-        agent, _ = self._load_legacy()
-        assert agent.template is not None
-        assert agent.template.format.kind == "jinja2"
-        assert agent.template.parser.kind == "prompty"
-
-    def test_load_legacy_template_dict(self):
-        """template with format/parser strings → structured."""
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            agent = load(PROMPTS / "legacy_template_dict.prompty")
-        assert agent.template is not None
-        assert agent.template.format.kind == "jinja2"
-        assert agent.template.parser.kind == "prompty"
-
-    def test_load_legacy_tools_hoisted(self):
-        """model.parameters.tools → top-level tools."""
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            agent = load(PROMPTS / "legacy_tools.prompty")
-        assert agent.tools is not None
-        assert len(agent.tools) == 1
-        assert isinstance(agent.tools[0], FunctionTool)
-        assert agent.tools[0].name == "get_weather"
 
 
 # ---------------------------------------------------------------------------

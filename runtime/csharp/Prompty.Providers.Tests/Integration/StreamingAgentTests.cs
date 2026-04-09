@@ -55,7 +55,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;
@@ -77,7 +77,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Call the tool for each city separately.\nuser:\nWhat is the weather in Seattle and Tokyo?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;
@@ -103,7 +103,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;
@@ -125,7 +125,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Call the tool for each city separately.\nuser:\nWhat is the weather in Seattle and Tokyo?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;
@@ -151,7 +151,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;
@@ -173,7 +173,7 @@ public class StreamingAgentTests : IntegrationTestBase
             metadata: StreamingMetadata());
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when asked about weather. Call the tool for each city separately.\nuser:\nWhat is the weather in Seattle and Tokyo?";
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: WeatherToolFunctions());
+        var result = await Pipeline.TurnAsync(agent, tools: WeatherToolFunctions());
 
         Assert.IsType<string>(result);
         var text = (string)result;

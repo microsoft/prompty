@@ -82,30 +82,6 @@ The following types are composed within `Model`:
 - [Connection](../connection/)
 - [ModelOptions](../modeloptions/)
 
-## .prompty Example
-
-A complete model configuration inside a `.prompty` frontmatter:
-
-```yaml
----
-name: customer-chat
-model:
-  id: gpt-4o
-  provider: openai
-  apiType: chat
-  connection:
-    kind: key
-    endpoint: ${env:OPENAI_ENDPOINT}
-    apiKey: ${env:OPENAI_API_KEY}
-  options:
-    temperature: 0.7
-    maxOutputTokens: 1024
-    topP: 0.95
----
-system:
-You are a helpful assistant.
-```
-
 ## Alternate Constructions
 
 The following alternate constructions are available for `Model`.

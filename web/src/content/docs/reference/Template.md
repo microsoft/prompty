@@ -59,38 +59,6 @@ parser:
 | format | [FormatConfig](../formatconfig/) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2) |
 | parser | [ParserConfig](../parserconfig/) | Parser used to process the rendered template into API-compatible format |
 
-## .prompty Examples
-
-### Jinja2 template (default)
-
-```yaml
----
-name: greet
-template:
-  format:
-    kind: jinja2
-  parser:
-    kind: prompty
----
-system:
-Hello {{ name }}, welcome!
-```
-
-### Mustache template
-
-```yaml
----
-name: greet
-template:
-  format:
-    kind: mustache
-  parser:
-    kind: prompty
----
-system:
-Hello {{name}}, welcome!
-```
-
 ## Composed Types
 
 The following types are composed within `Template`:

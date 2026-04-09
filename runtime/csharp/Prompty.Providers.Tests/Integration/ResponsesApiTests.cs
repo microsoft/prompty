@@ -121,7 +121,7 @@ public class ResponsesApiTests : IntegrationTestBase
             ["get_weather"] = GetWeatherAsync,
         };
 
-        var result = await Pipeline.InvokeAgentAsync(agent, tools: toolFunctions);
+        var result = await Pipeline.TurnAsync(agent, tools: toolFunctions);
 
         Assert.IsType<string>(result);
         var text = (string)result;

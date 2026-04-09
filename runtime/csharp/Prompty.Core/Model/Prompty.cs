@@ -171,6 +171,12 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'inputs' format: key '{kvp.Key}' has an array value. " +
+                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {
@@ -218,6 +224,12 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'outputs' format: key '{kvp.Key}' has an array value. " +
+                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {
@@ -265,6 +277,12 @@ public class Prompty
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'tools' format: key '{kvp.Key}' has an array value. " +
+                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {

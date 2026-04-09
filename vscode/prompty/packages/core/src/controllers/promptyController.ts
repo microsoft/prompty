@@ -62,12 +62,10 @@ export class PromptyController implements Disposable {
 				}
 			}
 
-			// Check for thread inputs or tools — if found, open chat mode instead.
-			// Thread inputs need multi-turn conversation; tools need interactive
-			// mock responses, so both require the chat UI.
+			// Check for thread inputs — only thread inputs need the chat UI
+			// for multi-turn conversation history.
 			const threadInput = agent.inputs?.find(p => p.kind === 'thread');
-			const hasTools = (agent.tools?.length ?? 0) > 0;
-			if (threadInput?.name || hasTools) {
+			if (threadInput?.name) {
 				Tracer.remove('prompty-file');
 				const threadName = threadInput?.name ?? '__auto_thread';
 				await ChatPanel.open(

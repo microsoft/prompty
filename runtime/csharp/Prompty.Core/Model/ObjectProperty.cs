@@ -87,6 +87,13 @@ public class ObjectProperty : Property
             // Convert named dictionary to list
             foreach (var kvp in dict)
             {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'properties' format: key '{kvp.Key}' has an array value. " +
+                        $"'properties' must be a flat list of objects or a name-keyed dict — " +
+                        $"not a nested {{{kvp.Key}: [...]}} structure.");
+                }
                 var itemDict = kvp.Value.GetDictionary();
                 if (itemDict.Count > 0)
                 {

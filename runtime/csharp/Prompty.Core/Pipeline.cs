@@ -159,15 +159,21 @@ public static class Pipeline
 
     /// <summary>
     /// Execute + Process: send messages to LLM and post-process the response.
+    /// Standalone building block with its own trace span.
     /// </summary>
     public static async Task<object> RunAsync(
         Prompty agent,
         List<Message> messages,
         bool raw = false)
     {
-        var response = await ExecuteAsync(agent, messages);
-        if (raw) return response;
-        return await ProcessAsync(agent, response);
+        return await Trace.TraceAsync<object>("prompty.run", async (emit) =>
+        {
+            emit("signature", "prompty.run");
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["message_count"] = messages.Count });
+            var response = await ExecuteAsync(agent, messages);
+            if (raw) return response;
+            return await ProcessAsync(agent, response);
+        });
     }
 
     /// <summary>
@@ -187,7 +193,7 @@ public static class Pipeline
     }
 
     /// <summary>
-    /// Full pipeline: Prepare → Run.
+    /// Full pipeline: Prepare → Execute → Process (directly, not via RunAsync).
     /// </summary>
     public static async Task<object> InvokeAsync(
         Prompty agent,
@@ -198,26 +204,28 @@ public static class Pipeline
         {
             emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["inputs"] = inputs });
             var messages = await PrepareAsync(agent, inputs);
-            return await RunAsync(agent, messages, raw);
+            var response = await ExecuteAsync(agent, messages);
+            if (raw) return response;
+            return await ProcessAsync(agent, response);
         });
     }
 
     // -----------------------------------------------------------------------
-    // Agent Loop
+    // Turn — conversational round-trip (prepare + [agent loop with tools] + process)
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// Agent mode: runs the LLM in a loop, executing tool calls via the
-    /// two-layer dispatch system until the model returns a final response
-    /// or maxIterations is reached. Supports §13 extensions: cancellation,
-    /// steering, context window trimming, guardrails, events, and parallel tool calls.
+    /// Conversational round-trip: Prepare → [Execute → check tool_calls → execute tools → loop] → Process.
+    /// If no tools are provided, performs a single Prepare → Execute → Process pass.
+    /// Calls executor and processor directly (not via RunAsync).
     /// </summary>
-    public static async Task<object> InvokeAgentAsync(
+    public static async Task<object> TurnAsync(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
         Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
         bool raw = false,
+        int? turnNumber = null,
         EventCallback? onEvent = null,
         CancellationToken cancellationToken = default,
         int? contextBudget = null,
@@ -225,13 +233,27 @@ public static class Pipeline
         Steering? steering = null,
         bool parallelToolCalls = false)
     {
-        return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.InvokeAgentAsync", async (emit) =>
+        var label = turnNumber.HasValue ? $"turn {turnNumber.Value}" : "turn";
+        return await Trace.TraceAsync<object>($"prompty.turn", async (emit) =>
         {
-            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["maxIterations"] = maxIterations });
+            emit("signature", "prompty.turn");
+            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["label"] = label, ["maxIterations"] = maxIterations });
             var messages = await PrepareAsync(agent, inputs);
-            var executor = InvokerRegistry.GetExecutor(agent.Model?.Provider ?? "openai");
 
-            object? response = null;
+            // Simple path: no tools on agent, no user tools, and no agent-loop features → single execute + process
+            var hasAgentTools = agent.Tools is not null && agent.Tools.Count > 0;
+            var hasUserTools = tools is not null && tools.Count > 0;
+            var hasAgentFeatures = guardrails is not null || steering is not null || contextBudget is not null;
+            if (!hasAgentTools && !hasUserTools && !hasAgentFeatures)
+            {
+                var response = await ExecuteAsync(agent, messages);
+                if (raw) return response;
+                return await ProcessAsync(agent, response);
+            }
+
+            // Agent loop: execute → check tool_calls → dispatch tools → loop
+            var executor = InvokerRegistry.GetExecutor(agent.Model?.Provider ?? "openai");
+            object? response2 = null;
             int iteration = 0;
 
             while (true)
@@ -242,7 +264,7 @@ public static class Pipeline
                         $"Agent loop exceeded maximum iterations ({maxIterations}).");
                 }
 
-                // §13.2 Cancellation check at loop start
+                // Cancellation check at loop start
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -254,7 +276,7 @@ public static class Pipeline
                     throw;
                 }
 
-                // §13.5 Drain steering messages
+                // Drain steering messages
                 if (steering is not null)
                 {
                     var steered = steering.Drain();
@@ -266,7 +288,7 @@ public static class Pipeline
                     }
                 }
 
-                // §13.3 Context window trimming
+                // Context window trimming
                 if (contextBudget is not null)
                 {
                     var (droppedCount, _) = ContextWindow.TrimToContextWindow(messages, contextBudget.Value);
@@ -277,7 +299,7 @@ public static class Pipeline
                     }
                 }
 
-                // §13.4 Input guardrail
+                // Input guardrail
                 if (guardrails is not null)
                 {
                     var inputCheck = guardrails.CheckInput(messages);
@@ -293,7 +315,7 @@ public static class Pipeline
                     }
                 }
 
-                // §13.2 Cancellation check before LLM call
+                // Cancellation check before LLM call
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -308,11 +330,10 @@ public static class Pipeline
                 AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
                     new Dictionary<string, object?> { ["iteration"] = iteration, ["phase"] = "executing" });
 
-                response = await ExecuteAsync(agent, messages);
+                response2 = await ExecuteAsync(agent, messages);
 
                 // If response is a stream, consume it fully before processing.
-                // This ensures tool calls from streaming responses are gathered.
-                if (response is PromptyStream stream)
+                if (response2 is PromptyStream stream)
                 {
                     await foreach (var chunk in stream)
                     {
@@ -322,10 +343,10 @@ public static class Pipeline
                                 new Dictionary<string, object?> { ["token"] = tokenText });
                         }
                     }
-                    response = stream;
+                    response2 = stream;
                 }
 
-                var result = raw ? response! : await ProcessAsync(agent, response!);
+                var result = raw ? response2! : await ProcessAsync(agent, response2!);
 
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
@@ -341,7 +362,7 @@ public static class Pipeline
                             var call = toolResult.ToolCalls[ti];
                             var capturedIndex = ti;
 
-                            // §13.4 Tool guardrail (with rewrite support)
+                            // Tool guardrail (with rewrite support)
                             if (guardrails is not null)
                             {
                                 var args = ToolDispatch.ParseArguments(call.Arguments);
@@ -394,7 +415,7 @@ public static class Pipeline
                         // Sequential dispatch
                         foreach (var call in toolResult.ToolCalls)
                         {
-                            // §13.4 Tool guardrail (with rewrite support)
+                            // Tool guardrail (with rewrite support)
                             if (guardrails is not null)
                             {
                                 var args = ToolDispatch.ParseArguments(call.Arguments);
@@ -430,7 +451,7 @@ public static class Pipeline
 
                     // Delegate message formatting to the executor (provider-specific)
                     var toolMessages = executor.FormatToolMessages(
-                        response, toolResult.ToolCalls, toolResults, toolResult.Content);
+                        response2, toolResult.ToolCalls, toolResults, toolResult.Content);
                     messages.AddRange(toolMessages);
 
                     AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
@@ -440,7 +461,7 @@ public static class Pipeline
                     continue;
                 }
 
-                // §13.4 Output guardrail on final response
+                // Output guardrail on final response
                 if (guardrails is not null)
                 {
                     var outputMsg = result switch
@@ -478,6 +499,56 @@ public static class Pipeline
         });
     }
 
+    /// <summary>
+    /// Conversational round-trip with path-based loading.
+    /// </summary>
+    public static async Task<object> TurnAsync(
+        string path,
+        Dictionary<string, object?>? inputs = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
+        int maxIterations = 10,
+        bool raw = false,
+        int? turnNumber = null,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
+    {
+        var agent = PromptyLoader.Load(path);
+        return await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+    }
+
+    // -----------------------------------------------------------------------
+    // Agent Loop (deprecated — use TurnAsync)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Agent mode: runs the LLM in a loop, executing tool calls via the
+    /// two-layer dispatch system until the model returns a final response
+    /// or maxIterations is reached. Supports §13 extensions: cancellation,
+    /// steering, context window trimming, guardrails, events, and parallel tool calls.
+    /// </summary>
+    [Obsolete("Use TurnAsync with tools parameter instead.")]
+    public static async Task<object> InvokeAgentAsync(
+        Prompty agent,
+        Dictionary<string, object?>? inputs = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
+        int maxIterations = 10,
+        bool raw = false,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
+    {
+        return await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber: null,
+            onEvent, cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+    }
+
     // -----------------------------------------------------------------------
     // Generic (typed) overloads
     // -----------------------------------------------------------------------
@@ -501,8 +572,53 @@ public static class Pipeline
     }
 
     /// <summary>
+    /// Conversational round-trip and cast the result to a typed object.
+    /// </summary>
+    public static async Task<T> TurnAsync<T>(
+        Prompty agent,
+        Dictionary<string, object?>? inputs = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
+        int maxIterations = 10,
+        bool raw = false,
+        int? turnNumber = null,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
+    {
+        var result = await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+        return PromptyCast.Cast<T>(result);
+    }
+
+    /// <summary>
+    /// Conversational round-trip from a .prompty file path and cast the result to a typed object.
+    /// </summary>
+    public static async Task<T> TurnAsync<T>(
+        string path,
+        Dictionary<string, object?>? inputs = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
+        int maxIterations = 10,
+        bool raw = false,
+        int? turnNumber = null,
+        EventCallback? onEvent = null,
+        CancellationToken cancellationToken = default,
+        int? contextBudget = null,
+        Guardrails? guardrails = null,
+        Steering? steering = null,
+        bool parallelToolCalls = false)
+    {
+        var result = await TurnAsync(path, inputs, tools, maxIterations, raw, turnNumber, onEvent,
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+        return PromptyCast.Cast<T>(result);
+    }
+
+    /// <summary>
     /// Run the agent loop and cast the result to a typed object.
     /// </summary>
+    [Obsolete("Use TurnAsync<T> with tools parameter instead.")]
     public static async Task<T> InvokeAgentAsync<T>(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
@@ -516,8 +632,10 @@ public static class Pipeline
         Steering? steering = null,
         bool parallelToolCalls = false)
     {
+#pragma warning disable CS0618
         var result = await InvokeAgentAsync(agent, inputs, tools, maxIterations, raw, onEvent,
             cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+#pragma warning restore CS0618
         return PromptyCast.Cast<T>(result);
     }
 

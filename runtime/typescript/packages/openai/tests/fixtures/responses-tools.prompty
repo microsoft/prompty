@@ -15,11 +15,10 @@ tools:
     kind: function
     description: Get weather for a city
     parameters:
-      properties:
-        - name: city
-          kind: string
-          description: City name
-          required: true
+      - name: city
+        kind: string
+        description: City name
+        required: true
 inputs:
   - name: question
     kind: string

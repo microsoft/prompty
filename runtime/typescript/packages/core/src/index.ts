@@ -65,10 +65,13 @@ export {
   process,
   prepare,
   run,
+  turn,
   invoke,
-  invokeAgent,
+  invokeAgent, // deprecated alias for turn
   resolveBindings,
-  type InvokeAgentOptions,
+  type TurnOptions,
+  type InvokeAgentOptions, // deprecated alias for TurnOptions
+  type InvokeOptions,
 
   // Agent loop extensions (§13)
   type AgentEventType,
