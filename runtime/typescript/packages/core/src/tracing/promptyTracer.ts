@@ -9,7 +9,33 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import type { TracerFactory, TracerBackend } from "./tracer.js";
+
+// Read version from package.json at module load time.
+// Works in both ESM (import.meta.url) and CJS (__dirname) contexts.
+function readPackageVersion(): string {
+  try {
+    // ESM path
+    const thisDir = path.dirname(fileURLToPath(import.meta.url));
+    // Walk up from dist/tracing/ or src/tracing/ to the package root
+    let dir = thisDir;
+    for (let i = 0; i < 5; i++) {
+      const candidate = path.join(dir, "package.json");
+      if (fs.existsSync(candidate)) {
+        const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as { version?: string };
+        if (pkg.version) return pkg.version;
+      }
+      dir = path.dirname(dir);
+    }
+  } catch {
+    // CJS fallback or other error — return default
+  }
+  return "2.0.0";
+}
+
+/** The version of @prompty/core, read from package.json. */
+export const PKG_VERSION: string = readPackageVersion();
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,7 +90,7 @@ export class PromptyTracer {
     this.outputDir = options?.outputDir
       ? path.resolve(options.outputDir)
       : path.resolve(process.cwd(), ".runs");
-    this.version = options?.version ?? "2.0.0";
+    this.version = options?.version ?? PKG_VERSION;
 
     // Ensure output directory exists
     if (!fs.existsSync(this.outputDir)) {

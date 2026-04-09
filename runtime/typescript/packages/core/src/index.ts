@@ -115,8 +115,7 @@ export { PromptyChatParser } from "./parsers/index.js";
 // Tracing
 // ---------------------------------------------------------------------------
 
-export {
-  Tracer,
+export { Tracer,
   trace,
   traceMethod,
   traceSpan,
@@ -125,6 +124,7 @@ export {
   consoleTracer,
   PromptyTracer,
   otelTracer,
+  PKG_VERSION,
   type TracerBackend,
   type TracerFactory,
   type SpanEmitter,

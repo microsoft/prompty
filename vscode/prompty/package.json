@@ -355,9 +355,9 @@
     "lint": "eslint",
     "postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",
     "generate-grammar": "js-yaml ./syntaxes/prompty.tmLanguage.yaml > ./syntaxes/prompty.tmLanguage.json",
-    "package": "vsce package --no-dependencies --allow-missing-repository",
+    "package": "vsce package --no-dependencies --allow-missing-repository --allow-package-secrets sendgrid",
     "publish": "vsce publish",
-    "package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release",
+    "package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release --allow-package-secrets sendgrid",
     "publish-pre": "vsce publish --pre-release"
   },
   "devDependencies": {
