@@ -41,6 +41,8 @@ from .core.pipeline import (
     render_async,
     run,
     run_async,
+    turn,
+    turn_async,
     validate_inputs,
 )
 
@@ -87,6 +89,9 @@ __all__ = [
     # Top-level orchestrators
     "invoke",
     "invoke_async",
+    "turn",
+    "turn_async",
+    # Deprecated aliases
     "invoke_agent",
     "invoke_agent_async",
     # Validation

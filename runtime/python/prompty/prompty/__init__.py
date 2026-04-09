@@ -47,6 +47,8 @@ __all__ = [
     "render_async",
     "run",
     "run_async",
+    "turn",
+    "turn_async",
     "validate_inputs",
     # Model types
     "AnonymousConnection",
@@ -171,6 +173,8 @@ from .invoker import (
     render_async,
     run,
     run_async,
+    turn,
+    turn_async,
     validate_inputs,
 )
 from .model import (

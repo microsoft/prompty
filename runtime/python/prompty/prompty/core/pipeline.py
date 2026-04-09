@@ -2,15 +2,19 @@
 
 Four-step pipeline with traced boundaries::
 
-    invoke()              →  top-level: load + prepare + run
+    invoke()              →  top-level: load + prepare + executor + process
       ├── prepare()       →  render + parse + thread expansion  →  list[Message]
       │   ├── render()    →  template + inputs  →  rendered string
       │   └── parse()     →  rendered string    →  list[Message]
-      └── run()           →  LLM call + result extraction       →  clean result
-          ├── executor    →  messages → raw LLM response
-          └── process()   →  response → clean result
+      ├── executor        →  messages → raw LLM response
+      └── process()       →  response → clean result
 
-    invoke_agent()        →  like invoke(), but with a tool-call loop in run()
+    turn()                →  conversational round-trip with optional tool loop
+      ├── prepare()       →  render + parse + thread expansion
+      ├── [executor + tool dispatch loop]  →  if tools provided
+      └── process()       →  final response extraction
+
+    run()                 →  standalone building block (executor + process)
 
 Each step is independently traced.  Users can bring their own
 Renderer, Parser, Executor, and Processor implementations via the
@@ -21,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import warnings
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -61,6 +66,9 @@ __all__ = [
     # Top-level orchestrators
     "invoke",
     "invoke_async",
+    "turn",
+    "turn_async",
+    # Deprecated aliases
     "invoke_agent",
     "invoke_agent_async",
     # Helpers (used by tests)
@@ -706,10 +714,10 @@ def invoke(
     raw: bool = False,
     target_type: type | None = None,
 ) -> Any:
-    """Full pipeline: load → prepare → run.
+    """Full pipeline: load → prepare → executor → process.
 
     This is the top-level orchestrator.  It loads the prompt (if a path),
-    prepares messages, then runs them through the LLM and processor.
+    prepares messages, then calls the executor and processor directly.
 
     Parameters
     ----------
@@ -731,7 +739,10 @@ def invoke(
 
     agent = load(prompt) if isinstance(prompt, str) else prompt
     messages = prepare(agent, inputs)
-    result = run(agent, messages, raw=raw)
+    response = _invoke_executor(agent, messages)
+    if raw:
+        return response
+    result = process(agent, response)
     if target_type is not None:
         return cast(result, target_type)
     return result
@@ -753,17 +764,443 @@ async def invoke_async(
     else:
         agent = prompt
     messages = await prepare_async(agent, inputs)
-    result = await run_async(agent, messages, raw=raw)
+    response = await _invoke_executor_async(agent, messages)
+    if raw:
+        return response
+    result = await process_async(agent, response)
     if target_type is not None:
         return cast(result, target_type)
     return result
 
 
 # ---------------------------------------------------------------------------
-# Pipeline: run_agent() — agent loop with tool execution
+# Conversational round-trip: turn() — prepare + [agent loop] + process
 # ---------------------------------------------------------------------------
 
 _DEFAULT_MAX_ITERATIONS = 10
+
+
+@trace
+def turn(
+    prompt: str | Prompty,
+    inputs: dict[str, Any] | None = None,
+    *,
+    tools: dict[str, Callable[..., Any]] | None = None,
+    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+    raw: bool = False,
+    on_event: EventCallback | None = None,
+    cancel: CancellationToken | None = None,
+    context_budget: int | None = None,
+    guardrails: Guardrails | None = None,
+    steering: Steering | None = None,
+    parallel_tool_calls: bool = False,
+    target_type: type | None = None,
+) -> Any:
+    """Conversational round-trip: prepare → [executor + tool loop] → process.
+
+    Without tools this is equivalent to :func:`invoke` (prepare → executor →
+    process, calling executor and process directly — not via :func:`run`).
+    With tools it runs an agent loop: call the LLM, execute any requested
+    tool calls, feed results back, and repeat until the model stops
+    requesting tools or *max_iterations* is reached.
+
+    Supports all agent loop extensions: events, cancellation, context window
+    management, guardrails, steering, and parallel tool execution.
+
+    Parameters
+    ----------
+    prompt:
+        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
+    inputs:
+        Input values for template rendering.
+    tools:
+        Mapping of tool name → callable.  When ``None`` or empty, no
+        tool-call loop is executed.
+    max_iterations:
+        Maximum number of tool-call loop iterations (default 10).
+    raw:
+        If ``True``, skip processing and return the raw final response.
+    on_event:
+        Optional callback ``(event_type, data) → None`` for structured events.
+    cancel:
+        Optional cancellation token for cooperative cancellation.
+    context_budget:
+        Character budget for context window management. ``None`` = no trimming.
+    guardrails:
+        Optional validation hooks (input, output, tool).
+    steering:
+        Optional handle for injecting messages mid-loop.
+    parallel_tool_calls:
+        If ``True``, execute multiple tool calls concurrently.
+    target_type:
+        If provided, cast the final result to this type via :func:`cast`.
+
+    Returns
+    -------
+    Any
+        The processed result from the final LLM response.
+
+    Raises
+    ------
+    CancelledError
+        If the cancellation token is triggered.
+    GuardrailError
+        If an input or output guardrail denies the operation.
+    ValueError
+        If *max_iterations* is exceeded.
+    """
+    from ..tracing.tracer import Tracer
+    from .loader import load
+
+    agent = load(prompt) if isinstance(prompt, str) else prompt
+    tools = tools or {}
+    parent_inputs = inputs or {}
+    messages = prepare(agent, inputs)
+
+    # Fast path: no tools and no loop extensions — single executor + process call (not via run)
+    _has_extensions = on_event is not None or cancel is not None or context_budget is not None or guardrails is not None or steering is not None
+    if not tools and not _has_extensions:
+        response = _invoke_executor(agent, messages)
+        if raw:
+            return response
+        result = process(agent, response)
+        if target_type is not None:
+            return cast(result, target_type)
+        return result
+
+    # Tool-call loop
+    with Tracer.start("AgentLoop") as t:
+        t("type", "agent")
+        t("tools", list(tools.keys()))
+
+        response = None
+        iteration = 0
+
+        while True:
+            if cancel is not None and cancel.is_cancelled:
+                emit_event(on_event, "cancelled", {})
+                raise CancelledError()
+
+            if steering is not None:
+                pending = steering.drain()
+                if pending:
+                    messages.extend(pending)
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+                    emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
+
+            if context_budget is not None:
+                dropped_count, _ = trim_to_context_window(messages, context_budget)
+                if dropped_count > 0:
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+                    emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
+
+            if guardrails is not None:
+                gr_input = guardrails.check_input(messages)
+                if not gr_input.allowed:
+                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
+                if gr_input.rewrite is not None:
+                    messages = gr_input.rewrite
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+
+            if cancel is not None and cancel.is_cancelled:
+                emit_event(on_event, "cancelled", {})
+                raise CancelledError()
+
+            # Call LLM (directly via executor, not via run)
+            response = _invoke_executor(agent, messages)
+
+            # Streaming: consume through processor, extract tool calls
+            if _is_stream(response):
+                streamed_tool_calls, content = _consume_stream(agent, response, on_event)
+
+                if not streamed_tool_calls:
+                    if guardrails is not None and content:
+                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                        gr = guardrails.check_output(assistant_msg)
+                        if not gr.allowed:
+                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            raise GuardrailError(gr.reason or "Output guardrail denied")
+                        if gr.rewrite is not None:
+                            content = gr.rewrite
+                    t("iterations", iteration)
+                    t("result", content)
+                    emit_event(on_event, "done", {"response": content, "messages": messages})
+                    return content
+
+                if guardrails is not None and content:
+                    assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                    gr = guardrails.check_output(assistant_msg)
+                    if not gr.allowed:
+                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        content = gr.rewrite
+
+                iteration += 1
+                if iteration > max_iterations:
+                    raise ValueError(
+                        f"Agent loop exceeded max_iterations ({max_iterations}). "
+                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                    )
+
+                tool_messages = _build_tool_messages_from_calls_with_extensions(
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
+                    parallel=parallel_tool_calls,
+                )
+                messages.extend(tool_messages)
+                emit_event(on_event, "messages_updated", {"messages": messages})
+                continue
+
+            # Non-streaming: check raw response for tool calls
+            if not _has_tool_calls(response):
+                break
+
+            if guardrails is not None:
+                tool_calls_list, text_content = _extract_tool_info(response)
+                if text_content:
+                    assistant_msg = Message(role="assistant", parts=[TextPart(value=text_content)])
+                    gr = guardrails.check_output(assistant_msg)
+                    if not gr.allowed:
+                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        text_content = gr.rewrite
+
+            iteration += 1
+            if iteration > max_iterations:
+                raise ValueError(
+                    f"Agent loop exceeded max_iterations ({max_iterations}). "
+                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                )
+
+            tool_messages, _ = _build_tool_result_messages_with_extensions(
+                response,
+                tools,
+                agent,
+                parent_inputs,
+                on_event=on_event,
+                cancel=cancel,
+                guardrails=guardrails,
+                parallel=parallel_tool_calls,
+            )
+            messages.extend(tool_messages)
+            emit_event(on_event, "messages_updated", {"messages": messages})
+
+        t("iterations", iteration)
+        t("result", response)
+
+    # Process final response (directly, not via run)
+    if raw:
+        emit_event(on_event, "done", {"response": response, "messages": messages})
+        return response
+    processed_result = process(agent, response)
+    if guardrails is not None and isinstance(processed_result, str):
+        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
+        gr = guardrails.check_output(assistant_msg)
+        if not gr.allowed:
+            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            raise GuardrailError(gr.reason or "Output guardrail denied")
+        if gr.rewrite is not None:
+            processed_result = gr.rewrite
+    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    if target_type is not None:
+        return cast(processed_result, target_type)
+    return processed_result
+
+
+@trace
+async def turn_async(
+    prompt: str | Prompty,
+    inputs: dict[str, Any] | None = None,
+    *,
+    tools: dict[str, Callable[..., Any]] | None = None,
+    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+    raw: bool = False,
+    on_event: EventCallback | None = None,
+    cancel: CancellationToken | None = None,
+    context_budget: int | None = None,
+    guardrails: Guardrails | None = None,
+    steering: Steering | None = None,
+    parallel_tool_calls: bool = False,
+    target_type: type | None = None,
+) -> Any:
+    """Async variant of :func:`turn`."""
+    from ..tracing.tracer import Tracer
+    from .loader import load_async
+
+    if isinstance(prompt, str):
+        agent = await load_async(prompt)
+    else:
+        agent = prompt
+    tools = tools or {}
+    parent_inputs = inputs or {}
+    messages = await prepare_async(agent, inputs)
+
+    # Fast path: no tools and no loop extensions — single executor + process call (not via run)
+    _has_extensions = on_event is not None or cancel is not None or context_budget is not None or guardrails is not None or steering is not None
+    if not tools and not _has_extensions:
+        response = await _invoke_executor_async(agent, messages)
+        if raw:
+            return response
+        result = await process_async(agent, response)
+        if target_type is not None:
+            return cast(result, target_type)
+        return result
+
+    # Tool-call loop
+    with Tracer.start("AgentLoopAsync") as t:
+        t("type", "agent")
+        t("tools", list(tools.keys()))
+
+        response = None
+        iteration = 0
+
+        while True:
+            if cancel is not None and cancel.is_cancelled:
+                emit_event(on_event, "cancelled", {})
+                raise CancelledError()
+
+            if steering is not None:
+                pending = steering.drain()
+                if pending:
+                    messages.extend(pending)
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+                    emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
+
+            if context_budget is not None:
+                dropped_count, _ = trim_to_context_window(messages, context_budget)
+                if dropped_count > 0:
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+                    emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
+
+            if guardrails is not None:
+                gr_input = guardrails.check_input(messages)
+                if not gr_input.allowed:
+                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
+                if gr_input.rewrite is not None:
+                    messages = gr_input.rewrite
+                    emit_event(on_event, "messages_updated", {"messages": messages})
+
+            if cancel is not None and cancel.is_cancelled:
+                emit_event(on_event, "cancelled", {})
+                raise CancelledError()
+
+            # Call LLM (directly via executor, not via run)
+            response = await _invoke_executor_async(agent, messages)
+
+            # Streaming: consume through processor, extract tool calls
+            if _is_stream(response):
+                streamed_tool_calls, content = await _consume_stream_async(agent, response, on_event)
+
+                if not streamed_tool_calls:
+                    if guardrails is not None and content:
+                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                        gr = guardrails.check_output(assistant_msg)
+                        if not gr.allowed:
+                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            raise GuardrailError(gr.reason or "Output guardrail denied")
+                        if gr.rewrite is not None:
+                            content = gr.rewrite
+                    t("iterations", iteration)
+                    t("result", content)
+                    emit_event(on_event, "done", {"response": content, "messages": messages})
+                    return content
+
+                if guardrails is not None and content:
+                    assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
+                    gr = guardrails.check_output(assistant_msg)
+                    if not gr.allowed:
+                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        content = gr.rewrite
+
+                iteration += 1
+                if iteration > max_iterations:
+                    raise ValueError(
+                        f"Agent loop exceeded max_iterations ({max_iterations}). "
+                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                    )
+
+                tool_messages = await _build_tool_messages_from_calls_with_extensions_async(
+                    streamed_tool_calls,
+                    content,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
+                    parallel=parallel_tool_calls,
+                )
+                messages.extend(tool_messages)
+                emit_event(on_event, "messages_updated", {"messages": messages})
+                continue
+
+            # Non-streaming: check raw response
+            if not _has_tool_calls(response):
+                break
+
+            if guardrails is not None:
+                tool_calls_list, text_content = _extract_tool_info(response)
+                if text_content:
+                    assistant_msg = Message(role="assistant", parts=[TextPart(value=text_content)])
+                    gr = guardrails.check_output(assistant_msg)
+                    if not gr.allowed:
+                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        raise GuardrailError(gr.reason or "Output guardrail denied")
+                    if gr.rewrite is not None:
+                        text_content = gr.rewrite
+
+            iteration += 1
+            if iteration > max_iterations:
+                raise ValueError(
+                    f"Agent loop exceeded max_iterations ({max_iterations}). "
+                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
+                )
+
+            tool_messages = await _build_tool_result_messages_with_extensions_async(
+                response,
+                tools,
+                agent,
+                parent_inputs,
+                on_event=on_event,
+                cancel=cancel,
+                guardrails=guardrails,
+                parallel=parallel_tool_calls,
+            )
+            messages.extend(tool_messages)
+            emit_event(on_event, "messages_updated", {"messages": messages})
+
+        t("iterations", iteration)
+        t("result", response)
+
+    # Process final response (directly, not via run)
+    if raw:
+        emit_event(on_event, "done", {"response": response, "messages": messages})
+        return response
+    processed_result = await process_async(agent, response)
+    if guardrails is not None and isinstance(processed_result, str):
+        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
+        gr = guardrails.check_output(assistant_msg)
+        if not gr.allowed:
+            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            raise GuardrailError(gr.reason or "Output guardrail denied")
+        if gr.rewrite is not None:
+            processed_result = gr.rewrite
+    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    if target_type is not None:
+        return cast(processed_result, target_type)
+    return processed_result
 
 
 def _resolve_bindings(
@@ -1098,213 +1535,29 @@ def invoke_agent(
 ) -> Any:
     """Run a prompt with automatic tool-call execution loop.
 
-    Supports all §13 agent loop extensions: events, cancellation,
-    context window management, guardrails, steering, and parallel
-    tool execution.
-
-    Parameters
-    ----------
-    prompt:
-        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
-    inputs:
-        Input values for template rendering.
-    tools:
-        Mapping of tool name → callable.
-    max_iterations:
-        Maximum number of tool-call loop iterations (default 10).
-    raw:
-        If ``True``, skip processing and return the raw final response.
-    on_event:
-        Optional callback ``(event_type, data) → None`` for structured events.
-    cancel:
-        Optional cancellation token for cooperative cancellation.
-    context_budget:
-        Character budget for context window management. ``None`` = no trimming.
-    guardrails:
-        Optional validation hooks (input, output, tool).
-    steering:
-        Optional handle for injecting messages mid-loop.
-    parallel_tool_calls:
-        If ``True``, execute multiple tool calls concurrently.
-    target_type:
-        If provided, cast the final result to this type via :func:`cast`.
-
-    Returns
-    -------
-    Any
-        The processed result from the final LLM response.
-
-    Raises
-    ------
-    CancelledError
-        If the cancellation token is triggered.
-    GuardrailError
-        If an input or output guardrail denies the operation.
-    ValueError
-        If *max_iterations* is exceeded.
+    .. deprecated::
+        Use :func:`turn` instead.  ``invoke_agent`` will be removed in a
+        future release.
     """
-    from ..tracing.tracer import Tracer
-    from .loader import load
-
-    agent = load(prompt) if isinstance(prompt, str) else prompt
-    tools = tools or {}
-    parent_inputs = inputs or {}
-    messages = prepare(agent, inputs)
-
-    with Tracer.start("AgentLoop") as t:
-        t("type", "agent")
-        t("tools", list(tools.keys()))
-
-        response = None
-        iteration = 0
-
-        while True:
-            # §13.2 — Check cancellation at top of iteration
-            if cancel is not None and cancel.is_cancelled:
-                emit_event(on_event, "cancelled", {})
-                raise CancelledError()
-
-            # §13.5 — Drain steering messages
-            if steering is not None:
-                pending = steering.drain()
-                if pending:
-                    messages.extend(pending)
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-                    emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
-
-            # §13.3 — Trim context window
-            if context_budget is not None:
-                dropped_count, _ = trim_to_context_window(messages, context_budget)
-                if dropped_count > 0:
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-                    emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
-
-            # §13.4 — Input guardrail
-            if guardrails is not None:
-                gr_input = guardrails.check_input(messages)
-                if not gr_input.allowed:
-                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
-                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
-                if gr_input.rewrite is not None:
-                    messages = gr_input.rewrite
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-
-            # §13.2 — Check cancellation before LLM call
-            if cancel is not None and cancel.is_cancelled:
-                emit_event(on_event, "cancelled", {})
-                raise CancelledError()
-
-            # Call LLM
-            response = _invoke_executor(agent, messages)
-
-            # Streaming: consume through processor, extract tool calls
-            if _is_stream(response):
-                streamed_tool_calls, content = _consume_stream(agent, response, on_event)
-
-                if not streamed_tool_calls:
-                    # §13.4 — Output guardrail on final streaming response
-                    if guardrails is not None and content:
-                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
-                        gr = guardrails.check_output(assistant_msg)
-                        if not gr.allowed:
-                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                            raise GuardrailError(gr.reason or "Output guardrail denied")
-                        if gr.rewrite is not None:
-                            content = gr.rewrite
-                    # Final answer — return collected content
-                    t("iterations", iteration)
-                    t("result", content)
-                    emit_event(on_event, "done", {"response": content, "messages": messages})
-                    return content
-
-                # §13.4 — Output guardrail (on assistant content with tool calls)
-                if guardrails is not None and content:
-                    assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
-                    gr = guardrails.check_output(assistant_msg)
-                    if not gr.allowed:
-                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                        raise GuardrailError(gr.reason or "Output guardrail denied")
-                    if gr.rewrite is not None:
-                        content = gr.rewrite
-
-                iteration += 1
-                if iteration > max_iterations:
-                    raise ValueError(
-                        f"Agent loop exceeded max_iterations ({max_iterations}). "
-                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
-                    )
-
-                tool_messages = _build_tool_messages_from_calls_with_extensions(
-                    streamed_tool_calls,
-                    content,
-                    tools,
-                    agent,
-                    parent_inputs,
-                    on_event=on_event,
-                    cancel=cancel,
-                    guardrails=guardrails,
-                    parallel=parallel_tool_calls,
-                )
-                messages.extend(tool_messages)
-                emit_event(on_event, "messages_updated", {"messages": messages})
-                continue
-
-            # Non-streaming: check raw response for tool calls
-            if not _has_tool_calls(response):
-                break
-
-            # §13.4 — Output guardrail
-            if guardrails is not None:
-                tool_calls_list, text_content = _extract_tool_info(response)
-                if text_content:
-                    assistant_msg = Message(role="assistant", parts=[TextPart(value=text_content)])
-                    gr = guardrails.check_output(assistant_msg)
-                    if not gr.allowed:
-                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                        raise GuardrailError(gr.reason or "Output guardrail denied")
-                    if gr.rewrite is not None:
-                        text_content = gr.rewrite
-
-            iteration += 1
-            if iteration > max_iterations:
-                raise ValueError(
-                    f"Agent loop exceeded max_iterations ({max_iterations}). "
-                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
-                )
-
-            tool_messages, _ = _build_tool_result_messages_with_extensions(
-                response,
-                tools,
-                agent,
-                parent_inputs,
-                on_event=on_event,
-                cancel=cancel,
-                guardrails=guardrails,
-                parallel=parallel_tool_calls,
-            )
-            messages.extend(tool_messages)
-            emit_event(on_event, "messages_updated", {"messages": messages})
-
-        t("iterations", iteration)
-        t("result", response)
-
-    # §13.4 — Output guardrail on final non-streaming response
-    if raw:
-        emit_event(on_event, "done", {"response": response, "messages": messages})
-        return response
-    processed_result = process(agent, response)
-    if guardrails is not None and isinstance(processed_result, str):
-        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
-        gr = guardrails.check_output(assistant_msg)
-        if not gr.allowed:
-            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-            raise GuardrailError(gr.reason or "Output guardrail denied")
-        if gr.rewrite is not None:
-            processed_result = gr.rewrite
-    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
-    if target_type is not None:
-        return cast(processed_result, target_type)
-    return processed_result
+    warnings.warn(
+        "invoke_agent is deprecated, use turn() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return turn(
+        prompt,
+        inputs,
+        tools=tools,
+        max_iterations=max_iterations,
+        raw=raw,
+        on_event=on_event,
+        cancel=cancel,
+        context_budget=context_budget,
+        guardrails=guardrails,
+        steering=steering,
+        parallel_tool_calls=parallel_tool_calls,
+        target_type=target_type,
+    )
 
 
 @trace
@@ -1323,171 +1576,30 @@ async def invoke_agent_async(
     parallel_tool_calls: bool = False,
     target_type: type | None = None,
 ) -> Any:
-    """Async variant of :func:`invoke_agent` with all §13 extensions."""
-    from ..tracing.tracer import Tracer
-    from .loader import load_async
+    """Async variant of :func:`invoke_agent`.
 
-    if isinstance(prompt, str):
-        agent = await load_async(prompt)
-    else:
-        agent = prompt
-    tools = tools or {}
-    parent_inputs = inputs or {}
-    messages = await prepare_async(agent, inputs)
-
-    with Tracer.start("AgentLoopAsync") as t:
-        t("type", "agent")
-        t("tools", list(tools.keys()))
-
-        response = None
-        iteration = 0
-
-        while True:
-            # §13.2 — Check cancellation at top of iteration
-            if cancel is not None and cancel.is_cancelled:
-                emit_event(on_event, "cancelled", {})
-                raise CancelledError()
-
-            # §13.5 — Drain steering messages
-            if steering is not None:
-                pending = steering.drain()
-                if pending:
-                    messages.extend(pending)
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-                    emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
-
-            # §13.3 — Trim context window
-            if context_budget is not None:
-                dropped_count, _ = trim_to_context_window(messages, context_budget)
-                if dropped_count > 0:
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-                    emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
-
-            # §13.4 — Input guardrail
-            if guardrails is not None:
-                gr_input = guardrails.check_input(messages)
-                if not gr_input.allowed:
-                    emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
-                    raise GuardrailError(gr_input.reason or "Input guardrail denied")
-                if gr_input.rewrite is not None:
-                    messages = gr_input.rewrite
-                    emit_event(on_event, "messages_updated", {"messages": messages})
-
-            # §13.2 — Check cancellation before LLM call
-            if cancel is not None and cancel.is_cancelled:
-                emit_event(on_event, "cancelled", {})
-                raise CancelledError()
-
-            # Call LLM
-            response = await _invoke_executor_async(agent, messages)
-
-            # Streaming: consume through processor, extract tool calls
-            if _is_stream(response):
-                streamed_tool_calls, content = await _consume_stream_async(agent, response, on_event)
-
-                if not streamed_tool_calls:
-                    # §13.4 — Output guardrail on final streaming response
-                    if guardrails is not None and content:
-                        assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
-                        gr = guardrails.check_output(assistant_msg)
-                        if not gr.allowed:
-                            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                            raise GuardrailError(gr.reason or "Output guardrail denied")
-                        if gr.rewrite is not None:
-                            content = gr.rewrite
-                    t("iterations", iteration)
-                    t("result", content)
-                    emit_event(on_event, "done", {"response": content, "messages": messages})
-                    return content
-
-                # §13.4 — Output guardrail (on assistant content with tool calls)
-                if guardrails is not None and content:
-                    assistant_msg = Message(role="assistant", parts=[TextPart(value=content)])
-                    gr = guardrails.check_output(assistant_msg)
-                    if not gr.allowed:
-                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                        raise GuardrailError(gr.reason or "Output guardrail denied")
-                    if gr.rewrite is not None:
-                        content = gr.rewrite
-
-                iteration += 1
-                if iteration > max_iterations:
-                    raise ValueError(
-                        f"Agent loop exceeded max_iterations ({max_iterations}). "
-                        f"The model kept requesting tool calls. Increase max_iterations or check your tools."
-                    )
-
-                tool_messages = await _build_tool_messages_from_calls_with_extensions_async(
-                    streamed_tool_calls,
-                    content,
-                    tools,
-                    agent,
-                    parent_inputs,
-                    on_event=on_event,
-                    cancel=cancel,
-                    guardrails=guardrails,
-                    parallel=parallel_tool_calls,
-                )
-                messages.extend(tool_messages)
-                emit_event(on_event, "messages_updated", {"messages": messages})
-                continue
-
-            # Non-streaming: check raw response
-            if not _has_tool_calls(response):
-                break
-
-            # §13.4 — Output guardrail
-            if guardrails is not None:
-                tool_calls_list, text_content = _extract_tool_info(response)
-                if text_content:
-                    assistant_msg = Message(role="assistant", parts=[TextPart(value=text_content)])
-                    gr = guardrails.check_output(assistant_msg)
-                    if not gr.allowed:
-                        emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-                        raise GuardrailError(gr.reason or "Output guardrail denied")
-                    if gr.rewrite is not None:
-                        text_content = gr.rewrite
-
-            iteration += 1
-            if iteration > max_iterations:
-                raise ValueError(
-                    f"Agent loop exceeded max_iterations ({max_iterations}). "
-                    f"The model kept requesting tool calls. Increase max_iterations or check your tools."
-                )
-
-            tool_messages = await _build_tool_result_messages_with_extensions_async(
-                response,
-                tools,
-                agent,
-                parent_inputs,
-                on_event=on_event,
-                cancel=cancel,
-                guardrails=guardrails,
-                parallel=parallel_tool_calls,
-            )
-            messages.extend(tool_messages)
-            emit_event(on_event, "messages_updated", {"messages": messages})
-
-        t("iterations", iteration)
-        t("result", response)
-
-    # §13.4 — Output guardrail on final non-streaming response
-    if raw:
-        emit_event(on_event, "done", {"response": response, "messages": messages})
-        return response
-    processed_result = await process_async(agent, response)
-    if guardrails is not None and isinstance(processed_result, str):
-        assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
-        gr = guardrails.check_output(assistant_msg)
-        if not gr.allowed:
-            emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
-            raise GuardrailError(gr.reason or "Output guardrail denied")
-        if gr.rewrite is not None:
-            processed_result = gr.rewrite
-    emit_event(on_event, "done", {"response": processed_result, "messages": messages})
-    if target_type is not None:
-        return cast(processed_result, target_type)
-    return processed_result
+    .. deprecated::
+        Use :func:`turn_async` instead.
+    """
+    warnings.warn(
+        "invoke_agent_async is deprecated, use turn_async() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return await turn_async(
+        prompt,
+        inputs,
+        tools=tools,
+        max_iterations=max_iterations,
+        raw=raw,
+        on_event=on_event,
+        cancel=cancel,
+        context_budget=context_budget,
+        guardrails=guardrails,
+        steering=steering,
+        parallel_tool_calls=parallel_tool_calls,
+        target_type=target_type,
+    )
 
 
 # ---------------------------------------------------------------------------
