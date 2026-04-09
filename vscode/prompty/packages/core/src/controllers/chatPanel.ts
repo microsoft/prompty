@@ -2,9 +2,7 @@ import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } fro
 import {
 	load, turn,
 	registerConnection, clearConnections,
-	ReferenceConnection, Model, ModelOptions,
 	Tracer, PromptyTracer,
-	type ToolCall, Message,
 } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 import '@prompty/openai';

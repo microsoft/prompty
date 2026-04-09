@@ -1,5 +1,5 @@
 import { ExtensionContext, Uri, Disposable, window, workspace, commands } from 'vscode';
-import { load, invoke, registerConnection, clearConnections, ReferenceConnection, Model, Tracer, PromptyTracer, traceSpan, sanitizeValue } from '@prompty/core';
+import { load, invoke, registerConnection, clearConnections, ReferenceConnection, Model, Tracer, PromptyTracer, traceSpan } from '@prompty/core';
 import type { PromptAgent } from '@prompty/core';
 // Import provider packages to trigger auto-registration of executors/processors
 import '@prompty/openai';
