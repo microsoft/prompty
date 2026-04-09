@@ -103,16 +103,17 @@ parsers, executors, and processors.
 
 The five pipeline stages compose into higher-level operations:
 
-| Operation      | Composition                          | Description                            |
-| -------------- | ------------------------------------ | -------------------------------------- |
-| `prepare`      | render + parse + thread expansion    | Produce `Message[]` ready for the LLM  |
-| `run`          | execute + process                    | Send messages to LLM, extract result   |
-| `invoke`       | load + prepare + run                 | End-to-end from file path to result    |
-| `invoke_agent` | load + prepare + run in agent loop   | With automatic tool-call handling      |
+| Operation      | Composition                            | Description                            |
+| -------------- | -------------------------------------- | -------------------------------------- |
+| `prepare`      | render + parse + thread expansion      | Produce `Message[]` ready for the LLM  |
+| `run`          | execute + process                      | Standalone: execute + process (building block) |
+| `invoke`       | load + prepare + execute + process     | One-shot pipeline: load + prepare + execute + process |
+| `turn`         | prepare + [agent loop] + process       | Conversational round: prepare + [agent loop] + process. Accepts `tools` option for tool-calling. Primary API for multi-turn conversations. |
 
 > **Naming note**: The pipeline stage that calls the LLM is called **execute** (the
-> `ExecutorProtocol`). The top-level convenience functions that run the entire pipeline
-> end-to-end are called **invoke** / **invoke_agent** to avoid ambiguity.
+> `ExecutorProtocol`). The top-level convenience function that runs the entire pipeline
+> end-to-end is called **invoke** to avoid ambiguity. For multi-turn conversations with
+> optional tool-calling, use **turn**.
 
 ### §1.5 Public API Surface
 
@@ -126,10 +127,10 @@ variant (e.g., `load_async`). Each function SHOULD have a sync variant.
 | `parse`            | `(agent, rendered) → Message[]`              | Message list     | §6           |
 | `prepare`          | `(agent, inputs) → Message[]`                | Message list     | §5 + §6      |
 | `run`              | `(agent, messages) → result`                 | Processed result | §7 + §8      |
-| `invoke`           | `(path, inputs) → result`                    | Processed result | §4–§8        |
-| `invoke<T>`        | `(path, inputs, target_type?) → T`           | Typed result     | §4–§8 + §8.8 |
-| `invoke_agent`     | `(path, inputs, tools?) → result`            | Processed result | §4–§8 + loop |
-| `invoke_agent<T>`  | `(path, inputs, tools?, target_type?) → T`   | Typed result     | §4–§8 + §8.8 |
+| `turn`             | `(agent_or_path, inputs, options?) → result`  | Processed result | §14          |
+| `turn<T>`          | `(agent_or_path, inputs, options?) → T`       | Typed result     | §14 + §8.8   |
+| `invoke`           | `(path_or_agent, inputs) → result`            | Processed result | §4–§8        |
+| `invoke<T>`        | `(path_or_agent, inputs, target_type?) → T`   | Typed result     | §4–§8 + §8.8 |
 | `cast`             | `(result, target_type) → T`                  | Typed result     | §8.8         |
 | `process`          | `(agent, response) → result`                 | Extracted result | §8           |
 | `validate_inputs`  | `(agent, inputs) → validated_inputs`         | Validated dict   | §12          |
@@ -451,7 +452,7 @@ When the LLM invokes this tool:
 
 1. Load the referenced `.prompty` file via `load(path)`.
 2. If `mode` is `"single"`: call `invoke(path, arguments)` — one pass, no tool loop.
-3. If `mode` is `"agentic"`: call `invoke_agent(path, arguments)` — full agent loop
+3. If `mode` is `"agentic"`: call `turn(child_agent, arguments, tools=child_agent_tools)` — full agent loop
    with any tools defined in the referenced prompty.
 4. Return the result as the tool's output.
 
@@ -646,20 +647,40 @@ any backend — including the `.tracy` file backend.
 ### §3.5 Usage Hoisting
 
 Token usage information MUST be propagated from child spans to parent spans.
+The tracer MUST preserve the original field names from each provider's response
+(e.g. `prompt_tokens`, `input_tokens`, `completion_tokens`, `output_tokens`,
+`total_tokens`, `cached_tokens`, etc.) and accumulate them by key.
+
+**Well-known field names**:
+
+| Field Name            | Providers                                  |
+| --------------------- | ------------------------------------------ |
+| `prompt_tokens`       | OpenAI Chat Completions                    |
+| `completion_tokens`   | OpenAI Chat Completions                    |
+| `input_tokens`        | Anthropic, OpenAI Responses API            |
+| `output_tokens`       | Anthropic, OpenAI Responses API            |
+| `total_tokens`        | OpenAI (both APIs)                         |
 
 **Algorithm**:
 
 ```
 function hoist_usage(span):
   If span.result contains a "usage" field:
-    usage ← span.result.usage
-    propagate to parent span as "__usage":
-      __usage.prompt_tokens  += usage.prompt_tokens  (or usage.input_tokens)
-      __usage.completion_tokens += usage.completion_tokens (or usage.output_tokens)
-      __usage.total_tokens += usage.total_tokens
+    For each (key, value) in span.result.usage where value is numeric:
+      span.__usage[key] += value
   For each child in span.__frames:
     hoist_usage(child)  // recursive — deepest spans propagate first
+    For each (key, value) in child.__usage:
+      span.__usage[key] += value
 ```
+
+The tracer does NOT normalize or rename fields — it passes through whatever the
+provider returns. Consumers (trace viewers, dashboards) SHOULD handle both
+naming conventions when displaying token counts. A recommended approach:
+
+- **Input tokens**: use `input_tokens` if present, else `prompt_tokens`
+- **Output tokens**: use `output_tokens` if present, else `completion_tokens`
+- **Total tokens**: use `total_tokens` if present, else sum all values
 
 Usage hoisting enables the root span to report aggregate token consumption across the
 entire pipeline execution, including agent loops with multiple LLM calls.
@@ -753,7 +774,7 @@ Implementations SHOULD provide an OpenTelemetry tracing backend that conforms to
 
 | Prompty Concept              | OTel Attribute                   | Value                              |
 | ---------------------------- | -------------------------------- | ---------------------------------- |
-| API type                     | `gen_ai.operation.name`          | `"chat"`, `"embeddings"`, `"invoke_agent"`, `"execute_tool"` |
+| API type                     | `gen_ai.operation.name`          | `"chat"`, `"embeddings"`, `"turn"`, `"execute_tool"` |
 | Provider name                | `gen_ai.provider.name`           | `"openai"`, `"microsoft.foundry"`, `"anthropic"` |
 | Model ID                     | `gen_ai.request.model`           | From `agent.model.id`              |
 | Temperature                  | `gen_ai.request.temperature`     | From `agent.model.options.temperature` |
@@ -780,7 +801,7 @@ Implementations SHOULD provide an OpenTelemetry tracing backend that conforms to
 
 **Agent and tool spans**:
 
-- Agent loop spans: `gen_ai.operation.name = "invoke_agent"`, with `gen_ai.agent.name`.
+- Agent loop spans: `gen_ai.operation.name = "turn"`, with `gen_ai.agent.name`.
 - Tool execution spans: `gen_ai.operation.name = "execute_tool"`.
 
 **Error handling**: On error, set span status to `ERROR` and record `error.type` attribute.
@@ -2104,15 +2125,15 @@ It MUST NOT go through an intermediate dict when the raw JSON is available.
 
 #### §8.8.3 Generic Overloads
 
-Implementations MUST provide generic/typed overloads for `invoke` and `invoke_agent`:
+Implementations MUST provide generic/typed overloads for `invoke` and `turn`:
 
 ```
 function invoke<T>(path, inputs, target_type) → T:
   result ← invoke(path, inputs)
   RETURN cast<T>(result, target_type)
 
-function invoke_agent<T>(path, inputs, tools, target_type) → T:
-  result ← invoke_agent(path, inputs, tools)
+function turn<T>(agent_or_path, inputs, options, target_type) → T:
+  result ← turn(agent_or_path, inputs, options)
   RETURN cast<T>(result, target_type)
 ```
 
@@ -2123,10 +2144,12 @@ provides a `StructuredResult`, the raw JSON flows directly to `cast<T>()`.
 
 - **Python**: `invoke(..., target_type=WeatherResponse)` — keyword argument.
   Async variant: `invoke_async(..., target_type=WeatherResponse)`.
+  Turn variant: `turn(..., target_type=WeatherResponse)`.
 - **TypeScript**: `invoke<WeatherResponse>(..., { validator? })` — generic type
   parameter with optional runtime validator.
+  Turn variant: `turn<WeatherResponse>(...)`.
 - **C#**: `InvokeAsync<WeatherResponse>(...)` — generic method overload.
-  Agent variant: `InvokeAgentAsync<WeatherResponse>(...)`.
+  Turn variant: `TurnAsync<WeatherResponse>(...)`.
 
 The non-generic versions MUST remain unchanged for backward compatibility.
 
@@ -2139,12 +2162,16 @@ inspects the response for tool calls, executes them, appends results to the
 conversation, and re-calls the LLM—repeating until the LLM produces a normal
 (non-tool-call) response.
 
+The agent loop is owned by `turn()` when the `tools` option is provided.
+It is NOT a separate public API — `turn` is the entry point that dispatches
+to the agent loop internally.
+
 **Public API:**
 
-- `invoke_agent(path_or_agent, inputs, tools?) → result`
-- `invoke_agent_async(path_or_agent, inputs, tools?) → result`
+- `turn(agent_or_path, inputs, tools=...) → result`
+- `turn_async(agent_or_path, inputs, tools=...) → result`
 
-Both MUST emit an `invoke_agent` trace span that wraps
+Both MUST emit a `turn` trace span that wraps
 the entire loop including all inner `execute` and `execute_tool` spans.
 
 ### §9.1 Constants
@@ -2156,12 +2183,12 @@ the entire loop including all inner `execute` and `execute_tool` spans.
 ### §9.2 Algorithm
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null) → result:
+function turn(agent_or_path, inputs, tools=null) → result:
   // Step 1: Resolve agent
-  if path_or_agent is a string path:
-    agent = load(path_or_agent)
+  if agent_or_path is a string path:
+    agent = load(agent_or_path)
   else:
-    agent = path_or_agent
+    agent = agent_or_path
 
   // Step 2: Prepare initial messages
   messages = prepare(agent, inputs)
@@ -2429,7 +2456,7 @@ function execute_prompty_tool(tool, args, parent_inputs) → result:
       return run(child_agent, merged)
     "agentic":
       // Full agent loop — child may call tools too
-      return invoke_agent(child_agent, merged)
+      return turn(child_agent, merged, tools=child_agent_tools)
 ```
 
 Child `PromptyTool` execution MUST inherit the parent's tracer registry,
@@ -2629,7 +2656,7 @@ explicitly in the wrapper options.
 
 `bind_tools` validates that decorated tool functions match the tool
 declarations in an agent's frontmatter, and returns a handler dictionary
-suitable for `invoke_agent`.
+suitable for `turn`.
 
 **Signature:**
 
@@ -2685,7 +2712,7 @@ function bind_tools(agent, tools):
 - `bind_tools` SHOULD warn (not error) if a declared function tool has no
   handler, since the tool may be handled by the name registry or kind handler.
 - The returned dictionary MUST be suitable for passing as the `tools` parameter
-  to `invoke_agent`.
+  to `turn`.
 - `bind_tools` MUST NOT mutate `agent.tools` or the global registry. It is a
   pure validation and extraction step.
 
@@ -2817,7 +2844,7 @@ The following functions MUST exist in both sync and async forms:
 | `run`               | `run_async`                |
 | `invoke`            | `invoke_async`             |
 | `process`           | `process_async`            |
-| `invoke_agent`      | `invoke_agent_async`       |
+| `turn`              | `turn_async`               |
 
 **Naming convention:** `function_name` for sync, `function_name_async` for
 async. Language-idiomatic alternatives are acceptable (e.g., TypeScript MAY
@@ -2975,8 +3002,8 @@ and coordination without coupling the loop to any particular output mechanism.
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      on_event=null, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              on_event=null, ...) → result:
   // on_event is Callable[[event_type: string, data: dict], None]
   // Called synchronously — MUST NOT throw
 ```
@@ -3031,8 +3058,8 @@ When cancellation is detected:
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      cancel=null, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              cancel=null, ...) → result:
 ```
 
 **Language Mapping:**
@@ -3124,8 +3151,8 @@ to produce a higher-quality summary of dropped messages. When provided:
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      context_budget=null, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              context_budget=null, ...) → result:
   // context_budget is int (character count) or null (no trimming)
 ```
 
@@ -3225,8 +3252,8 @@ loop:
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      guardrails=null, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              guardrails=null, ...) → result:
 ```
 
 ### §13.5 Steering
@@ -3290,8 +3317,8 @@ the language's idiomatic concurrent queue or equivalent.
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      steering=null, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              steering=null, ...) → result:
 ```
 
 ### §13.6 Parallel Tool Execution
@@ -3302,8 +3329,8 @@ implementations MAY execute them concurrently instead of sequentially.
 **API:**
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
-                      parallel_tool_calls=false, ...) → result:
+function turn(agent_or_path, inputs, tools=null,
+              parallel_tool_calls=false, ...) → result:
 ```
 
 **Algorithm:**
@@ -3335,22 +3362,23 @@ else:
 
 ### §13.7 Unified Signature
 
-The full `invoke_agent` signature with all extensions:
+The full `turn` signature with all extensions:
 
 ```
-function invoke_agent(
-  path_or_agent,            // string path or loaded agent
-  inputs = null,            // input dictionary
-  tools = null,             // tool handlers
-  *,                        // keyword-only below
-  max_iterations = 10,      // iteration cap
-  on_event = null,          // event callback
-  cancel = null,            // cancellation token
-  context_budget = null,    // character budget for context window
-  guardrails = null,        // validation hooks
-  steering = null,          // mid-loop message injection
+function turn(
+  agent_or_path,              // string path or loaded agent
+  inputs = null,              // input dictionary
+  tools = null,               // tool handlers
+  *,                          // keyword-only below
+  max_iterations = 10,        // iteration cap
+  on_event = null,            // event callback
+  cancel = null,              // cancellation token
+  context_budget = null,      // character budget for context window
+  guardrails = null,          // validation hooks
+  steering = null,            // mid-loop message injection
   parallel_tool_calls = false,  // concurrent tool execution
-  raw = false,              // return raw response (no processing)
+  raw = false,                // return raw response (no processing)
+  turn = null,                // turn number for trace labeling
 ) → result
 ```
 
@@ -3375,4 +3403,188 @@ function invoke_agent(
 
 ---
 
-*End of Specification (Sections 1–13).*
+## §14 Turns
+
+A **turn** represents one user-message round-trip in a multi-turn conversation:
+the user provides inputs (including the thread so far), the runtime prepares
+messages, calls the LLM (possibly looping through tool calls), and returns a
+result. Turns are the fundamental unit of conversational interaction and MUST
+be traced as such.
+
+`turn` is also the primary API for tool-calling (agent) workflows. When the
+`tools` option is provided, `turn` owns the agent loop (§9) internally. The
+former `invoke_agent` function is a deprecated alias for `turn` with tools.
+
+### §14.1 Motivation
+
+Without turn boundaries, a multi-turn chat trace shows a flat sequence of
+`prepare → executor → processor` calls with no way to tell which belong to
+which user message. The `turn` function wraps each round-trip in a named trace
+span, giving trace viewers, dashboards, and cost-tracking tools a clear grouping.
+
+### §14.2 Public API
+
+- `turn(agent_or_path, inputs, options?) → result`
+- `turn_async(agent_or_path, inputs, options?) → result`
+
+**Parameters:**
+
+| Parameter       | Type                          | Required | Description                                      |
+| --------------- | ----------------------------- | -------- | ------------------------------------------------ |
+| `agent_or_path` | `string \| PromptAgent`       | Yes      | A loaded agent or a file path (loaded via `load()`) |
+| `inputs`        | `dict<string, any>`           | Yes      | Inputs including the thread                      |
+| `options.tools` | `dict<string, callable>`      | No       | Runtime tool handlers (triggers agent loop — §9)  |
+| `options.raw`   | `bool`                        | No       | If true, skip processing (default: false)         |
+| `options.turn`  | `int`                         | No       | Turn number for trace labeling (default: none)    |
+
+When `agent_or_path` is a string, `turn` MUST call `load(agent_or_path)` to
+resolve it to a `PromptAgent` before proceeding. This allows callers to pass
+a file path directly for convenience, though pre-loading is preferred for
+multi-turn conversations to avoid repeated file I/O.
+
+**Return value:** The processed LLM result (string, structured data, tool calls,
+or streaming iterator — same as `invoke`).
+
+### §14.3 Algorithm
+
+```
+function turn(agent_or_path, inputs, options={}) → result:
+  // Step 0: Resolve agent
+  if agent_or_path is a string path:
+    agent = load(agent_or_path)
+  else:
+    agent = agent_or_path
+
+  label = "turn" + (" " + str(options.turn) if options.turn else "")
+
+  TRACE: open span named label
+    emit "signature" = "prompty.turn"
+    emit "inputs"    = inputs
+
+    // Step 1: Prepare messages (render + parse + thread expansion)
+    messages = prepare(agent, inputs)
+
+    // Step 2: Dispatch based on tool presence
+    if options.tools is not null:
+      // Agent mode: run the tool-calling loop (§9)
+      // The agent loop calls executor + process directly (NOT via run())
+      result = agent_loop(agent, messages, options.tools)
+    else:
+      // Simple mode: single LLM call
+      // Calls executor + process directly (NOT via run())
+      response = executor.execute(agent, messages)
+      result = processor.process(agent, response)
+
+    emit "result" = result
+    return result
+```
+
+> **Note on `run()`**: Both `invoke` and `turn` call executor and processor
+> directly — they do NOT delegate to `run()`. The `run()` function is a
+> standalone building block with its own trace span, used when callers want
+> to execute + process messages independently.
+
+### §14.4 Relationship to Other Operations
+
+| Operation | When to use                                                   |
+| --------- | ------------------------------------------------------------- |
+| `invoke`  | One-shot: load + prepare + execute + process, no conversation state |
+| `turn`    | Conversational round: prepare + [agent loop] + process. Primary API for multi-turn and tool-calling. |
+| `run`     | Standalone building block: execute + process from pre-built messages |
+
+`invoke` accepts a file path and loads the agent internally for one-shot usage.
+`turn` accepts either a pre-loaded agent or a file path — the caller typically
+loads once and calls `turn` repeatedly as the conversation grows. This avoids
+re-loading and re-parsing the `.prompty` file on every message.
+
+> **Deprecated**: `invoke_agent` / `invoke_agent_async` are deprecated aliases
+> for `turn` / `turn_async` with the `tools` option. Implementations MAY
+> provide these aliases for backward compatibility but SHOULD emit deprecation
+> warnings when they are used.
+
+### §14.5 Tracing
+
+Each `turn` call MUST emit a trace span with the following attributes:
+
+| Attribute    | Type     | Description                                        |
+| ------------ | -------- | -------------------------------------------------- |
+| `signature`  | `string` | `"prompty.turn"`                                   |
+| `inputs`     | `any`    | The inputs dict (including thread)                 |
+| `result`     | `any`    | The processed result                               |
+
+The span name SHOULD include the turn number when provided (e.g., `"turn 3"`).
+All inner spans (`prepare`, executor, processor, tool calls) nest inside the
+turn span, making each round-trip a self-contained subtree.
+
+**Target trace structures:**
+
+One-shot (invoke — not a turn):
+```
+invoke > load > prepare > Executor > Processor
+```
+
+Chat turn (no tools):
+```
+turn 1 > prepare > Executor > Processor
+```
+
+Agent turn (with tools):
+```
+turn 1 > prepare > Executor > toolCalls > Executor > Processor
+```
+
+Standalone run:
+```
+run > Executor > Processor
+```
+
+### §14.6 Usage Pattern
+
+```python
+# Python example — multi-turn chat loop
+agent = load("chat.prompty")
+thread = []
+
+while user_input := get_input():
+    thread.append({ "role": "user", "content": user_input })
+    inputs = { "firstName": "Jane", "query": thread }
+
+    result = turn(agent, inputs, turn=len(thread) // 2)
+
+    thread.append({ "role": "assistant", "content": result })
+```
+
+```python
+# Python example — multi-turn with tool calling
+agent = load("assistant.prompty")
+thread = []
+tools = bind_tools(agent, [get_weather, search_docs])
+
+while user_input := get_input():
+    thread.append({ "role": "user", "content": user_input })
+    inputs = { "query": thread }
+
+    result = turn(agent, inputs, tools=tools, turn=len(thread) // 2)
+
+    thread.append({ "role": "assistant", "content": result })
+```
+
+```typescript
+// TypeScript example — multi-turn chat loop
+const agent = load("chat.prompty");
+const thread: Message[] = [];
+let turnCount = 0;
+
+for (const userInput of messages) {
+  thread.push({ role: "user", content: userInput });
+  const inputs = { firstName: "Jane", query: thread };
+
+  const result = await turn(agent, inputs, { turn: ++turnCount });
+
+  thread.push({ role: "assistant", content: String(result) });
+}
+```
+
+---
+
+*End of Specification (Sections 1–14).*
