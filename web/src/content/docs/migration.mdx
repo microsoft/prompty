@@ -70,7 +70,7 @@ agent.metadata["tool_functions"] = {
 result = prompty.invoke(agent, messages)
 
 # v2 — tools passed explicitly
-result = prompty.invoke_agent(
+result = prompty.turn(
     "agent.prompty",
     inputs={...},
     tools={"get_weather": get_weather},
@@ -82,9 +82,9 @@ result = prompty.invoke_agent(
 // v1 — no native agent mode in TypeScript v1
 
 // v2 — tools passed explicitly
-import { invokeAgent } from "@prompty/core";
+import { turn } from "@prompty/core";
 
-const result = await invokeAgent("agent.prompty", {
+const result = await turn("agent.prompty", {
   inputs: { question: "What's the weather?" },
   tools: { get_weather: getWeather },
 });
@@ -99,7 +99,7 @@ var tools = new Dictionary<string, Delegate>
 {
     ["get_weather"] = GetWeather
 };
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     "agent.prompty",
     new() { ["question"] = "What's the weather?" },
     tools: tools);
@@ -261,7 +261,7 @@ template: jinja2
 ## New Features in v2
 
 - **Connection registry** — register pre-configured clients for reuse across prompts
-- **Agent loop** — `invoke_agent()` with automatic tool-call execution and error recovery
+- **Agent loop** — `turn()` with automatic tool-call execution and error recovery
 - **Streaming hardening** — proper handling of tool calls, refusals, and empty chunks
 - **Structured output** — `outputs` → `response_format` for type-safe JSON responses
 - **Thread safety** — renderer nonces use thread-local storage

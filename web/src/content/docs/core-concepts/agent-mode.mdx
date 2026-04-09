@@ -53,14 +53,14 @@ flowchart TD
 
 ## Basic Usage
 
-Define one or more tool functions, then pass them to `invoke_agent()` along
+Define one or more tool functions, then pass them to `turn()` along
 with a loaded agent. The executor calls the LLM, dispatches any tool requests to
 your functions, and loops until the model is done.
 
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import load, invoke_agent, tool, bind_tools
+from prompty import load, turn, tool, bind_tools
 
 # 1. Define tool functions with @tool
 @tool
@@ -80,7 +80,7 @@ agent = load("agent.prompty")
 tools = bind_tools(agent, [get_weather, get_time])
 
 # 4. Run the agent loop
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
     tools=tools,
@@ -92,7 +92,7 @@ print(result)  # "It's currently 72°F and sunny in Seattle!"
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+import { load, turn, tool, bindTools } from "@prompty/core";
 
 // 1. Define tool functions with tool()
 const getWeather = tool(
@@ -120,7 +120,7 @@ const agent = await load("agent.prompty");
 const tools = bindTools(agent, [getWeather, getTime]);
 
 // 4. Run the agent loop
-const result = await invokeAgent(
+const result = await turn(
   agent,
   { question: "What's the weather in Seattle?" },
   { tools, maxIterations: 10 },
@@ -157,7 +157,7 @@ var service = new AssistantTools();
 var tools = ToolAttribute.BindTools(agent, service);
 
 // 4. Run the agent loop
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in Seattle?" },
     tools: tools,
@@ -229,15 +229,17 @@ user:
 <Aside type="note">
   The `.prompty` file uses `apiType: chat` — it's a normal chat prompt that
   happens to declare tools. Agent behavior is activated by your calling code:
-  use `invoke_agent()` (Python) or `invokeAgent()` (TypeScript) to enable the
-  automatic tool-calling loop. If you use `invoke()` instead, tools are sent to
-  the LLM but Prompty will **not** automatically execute them — you receive the
-  raw `tool_calls` in the response.
+  use `turn()` (Python) or `turn()` (TypeScript) to enable the automatic
+  tool-calling loop — it runs prepare + the agent loop with tools + process.
+  If you use `invoke()` instead, it runs the one-shot pipeline
+  (load → prepare → execute → process) — tools are sent to the LLM but
+  Prompty will **not** automatically execute them, and you receive the raw
+  `tool_calls` in the response.
 </Aside>
 
 ## Async Agent Mode
 
-For async applications, use `invoke_agent_async()`. Your tool functions can be
+For async applications, use `turn_async()`. Your tool functions can be
 either sync or async — the executor detects coroutine functions automatically
 and `await`s them.
 
@@ -252,7 +254,7 @@ async def get_weather(city: str) -> str:
 
 async def main():
     agent = await prompty.load_async("agent.prompty")
-    result = await prompty.invoke_agent_async(
+    result = await prompty.turn_async(
         agent,
         inputs={"question": "Weather in Tokyo?"},
         tools={"get_weather": get_weather},
@@ -264,8 +266,8 @@ asyncio.run(main())
 ```
 
 <Aside type="caution">
-  In **sync** mode (`invoke_agent`), passing an async function raises a
-  `ValueError`. Use `invoke_agent_async` when any of your tool functions are
+  In **sync** mode (`turn`), passing an async function raises a
+  `ValueError`. Use `turn_async` when any of your tool functions are
   coroutines.
 </Aside>
 
@@ -312,7 +314,7 @@ loops when the model gets stuck in a tool-calling cycle.
 
 ```python
 try:
-    result = prompty.invoke_agent(agent, inputs, tools, max_iterations=5)
+    result = prompty.turn(agent, inputs, tools, max_iterations=5)
 except ValueError as e:
     print(e)  # "Agent loop exceeded max_iterations (5)"
 ```
@@ -327,7 +329,7 @@ except ValueError as e:
 <Tabs>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+import { load, turn, tool, bindTools } from "@prompty/core";
 
 const getWeather = tool(
   (city: string) => `72°F and sunny in ${city}`,
@@ -341,7 +343,7 @@ const getWeather = tool(
 const agent = await load("agent.prompty");
 const tools = bindTools(agent, [getWeather]);
 
-const result = await invokeAgent(agent, {
+const result = await turn(agent, {
   question: "What's the weather in London?",
 }, { tools, maxIterations: 10 });
 
@@ -362,7 +364,7 @@ var agent = PromptyLoader.Load("agent.prompty");
 var service = new WeatherTools();
 var tools = ToolAttribute.BindTools(agent, service);
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in London?" },
     tools: tools,

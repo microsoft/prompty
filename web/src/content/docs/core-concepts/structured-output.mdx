@@ -254,7 +254,7 @@ round-trip.
     weather = cast(invoke("weather.prompty", inputs={"city": "Seattle"}), Weather)
     ```
 
-    Or use the `target_type` shorthand on `invoke` / `invoke_agent`:
+    Or use the `target_type` shorthand on `invoke` / `turn`:
 
     ```python
     weather = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=Weather)

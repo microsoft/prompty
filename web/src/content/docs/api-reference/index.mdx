@@ -171,7 +171,7 @@ Extract clean content from a raw LLM response.
 
 ### `invoke(path_or_agent, inputs) → result`
 
-Top-level orchestrator: load → prepare → run.
+One-shot pipeline: load → prepare → execute → process.
 
 <Tabs>
   <TabItem label="Python">
@@ -234,7 +234,11 @@ provided. Raises an error if any are missing.
     | `run()` | `run_async()` |
     | `invoke()` | `invoke_async()` |
     | `process()` | `process_async()` |
-    | `invoke_agent()` | `invoke_agent_async()` |
+    | `turn()` | `turn_async()` |
+
+    <Aside type="note">
+      `invoke_agent()` and `invoke_agent_async()` still work as deprecated aliases for `turn()` and `turn_async()`.
+    </Aside>
   </TabItem>
   <TabItem label="TypeScript">
     All functions are async by default — they return `Promise<T>`.
@@ -257,11 +261,11 @@ provided. Raises an error if any are missing.
   </TabItem>
 </Tabs>
 
-## Agent Mode
+## Conversational Turns (Agent Mode)
 
-### `invoke_agent(path_or_agent, inputs, tools, ...)`
+### `turn(path_or_agent, inputs, tools, ...)`
 
-Run a prompt with an automatic tool-calling loop.
+Run a conversational turn with optional tool-calling loop.
 
 <Tabs>
   <TabItem label="Python">
@@ -269,7 +273,7 @@ Run a prompt with an automatic tool-calling loop.
     def get_weather(location: str) -> str:
         return f"72°F and sunny in {location}"
 
-    result = prompty.invoke_agent(
+    result = prompty.turn(
         "agent.prompty",
         inputs={"question": "Weather in Seattle?"},
         tools={"get_weather": get_weather},
@@ -279,13 +283,13 @@ Run a prompt with an automatic tool-calling loop.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { invokeAgent } from "@prompty/core";
+    import { turn } from "@prompty/core";
 
     function getWeather(location: string): string {
       return `72°F and sunny in ${location}`;
     }
 
-    const result = await invokeAgent(
+    const result = await turn(
       "agent.prompty",
       { question: "Weather in Seattle?" },
       { get_weather: getWeather },
@@ -301,7 +305,7 @@ Run a prompt with an automatic tool-calling loop.
         ["get_weather"] = args => Task.FromResult("72°F and sunny")
     };
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         "agent.prompty",
         new() { ["question"] = "Weather in Seattle?" },
         tools: tools,
@@ -310,6 +314,10 @@ Run a prompt with an automatic tool-calling loop.
     ```
   </TabItem>
 </Tabs>
+
+<Aside type="caution" title="Deprecated Aliases">
+  `invoke_agent()` / `invoke_agent_async()` (Python), `invokeAgent()` (TypeScript), and `Pipeline.InvokeAgentAsync()` (C#) still work but are deprecated. Use `turn()` / `turn_async()`, `turn()`, and `Pipeline.TurnAsync()` respectively.
+</Aside>
 
 **Parameters:**
 
@@ -499,7 +507,7 @@ from `StructuredResult` when available — no dict→JSON→T round-trip.
   </TabItem>
 </Tabs>
 
-### Generic `invoke<T>` / `invoke_agent<T>`
+### Generic `invoke<T>` / `turn<T>`
 
 Cast the final result in one step:
 
@@ -507,14 +515,14 @@ Cast the final result in one step:
   <TabItem label="Python">
     ```python
     weather = invoke("weather.prompty", inputs={"city": "Seattle"}, target_type=Weather)
-    weather = invoke_agent("agent.prompty", inputs={...}, tools=tools, target_type=Weather)
+    weather = turn("agent.prompty", inputs={...}, tools=tools, target_type=Weather)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
     const weather = await invoke("weather.prompty", { city: "Seattle" },
       { validator: WeatherSchema.parse });
-    const weather2 = await invokeAgent("agent.prompty", { ... }, tools,
+    const weather2 = await turn("agent.prompty", { ... }, tools,
       { validator: WeatherSchema.parse });
     ```
   </TabItem>
@@ -522,7 +530,7 @@ Cast the final result in one step:
     ```csharp
     var weather = await Pipeline.InvokeAsync<Weather>("weather.prompty",
         new() { ["city"] = "Seattle" });
-    var weather2 = await Pipeline.InvokeAgentAsync<Weather>("agent.prompty",
+    var weather2 = await Pipeline.TurnAsync<Weather>("agent.prompty",
         new() { ["question"] = "..." }, tools: tools);
     ```
   </TabItem>

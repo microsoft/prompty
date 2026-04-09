@@ -99,7 +99,7 @@ user:
 
 <Aside type="note">
   The `.prompty` file uses `apiType: chat`, not `apiType: agent`. The agent
-  loop is activated by calling `invoke_agent()` instead of `invoke()` — this
+  loop is activated by calling `turn()` instead of `invoke()` — this
   keeps the prompt reusable for non-agent use cases too.
 </Aside>
 
@@ -157,13 +157,13 @@ Write the function that the agent will call. Use the `@tool` decorator
 
 ## Step 4: Run the agent
 
-Use `invoke_agent()` instead of `invoke()` — this activates the tool-calling
+Use `turn()` instead of `invoke()` — this activates the tool-calling
 loop so the runtime automatically executes your functions:
 
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def get_weather(city: str) -> str:
@@ -175,7 +175,7 @@ loop so the runtime automatically executes your functions:
     tools = bind_tools(agent, [get_weather])
 
     # Run with the agent loop
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"question": "What's the weather in Seattle?"},
         tools=tools,
@@ -186,7 +186,7 @@ loop so the runtime automatically executes your functions:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
     import "@prompty/openai";
 
     const getWeather = tool(
@@ -201,7 +201,7 @@ loop so the runtime automatically executes your functions:
     const agent = await load("weather-agent.prompty");
     const tools = bindTools(agent, [getWeather]);
 
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "What's the weather in Seattle?",
     }, { tools });
 
@@ -217,7 +217,7 @@ loop so the runtime automatically executes your functions:
     var agent = PromptyLoader.Load("weather-agent.prompty");
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["question"] = "What's the weather in Seattle?" },
         tools: tools
@@ -250,7 +250,7 @@ Register the **console tracer** to watch each step of the agent loop:
     Tracer.add("console", console_tracer)
 
     # Now run the agent — you'll see each step printed:
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"question": "What's the weather in Seattle?"},
         tools=tools,
@@ -264,7 +264,7 @@ Register the **console tracer** to watch each step of the agent loop:
     Tracer.add("console", consoleTracer);
 
     // Now run — each step is logged to the console
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "What's the weather in Seattle?",
     }, { tools });
     ```
@@ -276,7 +276,7 @@ Register the **console tracer** to watch each step of the agent loop:
     Tracer.Add("console", ConsoleTracer.Factory);
 
     // Now run — each step is logged to the console
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["question"] = "What's the weather in Seattle?" },
         tools: tools
@@ -330,7 +330,7 @@ Now register both functions:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def get_weather(city: str) -> str:
@@ -346,7 +346,7 @@ Now register both functions:
     agent = load("weather-agent.prompty")
     tools = bind_tools(agent, [get_weather, get_time])
 
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"question": "What's the weather in Seattle and the time in Tokyo?"},
         tools=tools,
@@ -357,7 +357,7 @@ Now register both functions:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
     import "@prompty/openai";
 
     const getWeather = tool(
@@ -381,7 +381,7 @@ Now register both functions:
     const agent = await load("weather-agent.prompty");
     const tools = bindTools(agent, [getWeather, getTime]);
 
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "What's the weather in Seattle and the time in Tokyo?",
     }, { tools });
 
@@ -407,7 +407,7 @@ Now register both functions:
     var service = new MultiTools();
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["question"] = "What's the weather in Seattle and the time in Tokyo?" },
         tools: tools
@@ -428,7 +428,7 @@ the agent loop handles either pattern automatically.
 ✅ Declaring **tool definitions** in a `.prompty` file  
 ✅ Writing **tool functions** with `@tool` / `tool()` / `[Tool]`  
 ✅ Using `bind_tools()` to **validate** functions against declarations  
-✅ Running the **agent loop** with `invoke_agent()`  
+✅ Running the **agent loop** with `turn()`  
 ✅ **Tracing** the loop to see tool calls in real time  
 ✅ Adding **multiple tools** to a single agent  
 

@@ -45,7 +45,7 @@ Implementations MUST expose the following functions. Each function MUST have an 
 | `prepare` | `(agent, inputs) → Message[]` | Message list | [§5](/specification/rendering/) + [§6](/specification/parsing/) |
 | `run` | `(agent, messages) → result` | Processed result | [§7](/specification/wire-format/) + [§8](/specification/processing/) |
 | `invoke` | `(path, inputs) → result` | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) |
-| `invoke_agent` | `(path, inputs, tools?) → result` | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
+| `turn` | `(path, inputs, tools?) → result` | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
 | `process` | `(agent, response) → result` | Extracted result | [§8](/specification/processing/) |
 | `validate_inputs` | `(agent, inputs) → validated_inputs` | Validated dict | [§12](/specification/cross-cutting/) |
 

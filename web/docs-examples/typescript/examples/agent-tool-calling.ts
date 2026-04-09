@@ -10,7 +10,7 @@
  * ```
  */
 import "@prompty/openai";
-import { tool, bindTools, invokeAgent, load } from "@prompty/core";
+import { tool, bindTools, turn, load } from "@prompty/core";
 import { resolve } from "node:path";
 
 const promptyFile = resolve(import.meta.dirname, "../../prompts/chat-agent.prompty");
@@ -36,8 +36,8 @@ export async function agentToolCalling(question?: string): Promise<string> {
   // Validate tool handlers against agent's declared tools
   const tools = bindTools(agent, [getWeather]);
 
-  // invokeAgent runs the LLM loop: call → tool dispatch → call → ...
-  const result = await invokeAgent(agent, {
+  // turn runs the LLM loop: call → tool dispatch → call → ...
+  const result = await turn(agent, {
     question: question ?? "What's the weather in Seattle?",
   }, {
     tools,

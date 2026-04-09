@@ -207,8 +207,8 @@ Compare with the equivalent Chat Completions request:
 
 ## Tool Calling
 
-Tool calling works with the Responses API through the same `invoke_agent()` /
-`invokeAgent()` functions used for Chat Completions. The agent loop
+Tool calling works with the Responses API through the same `turn()` /
+`turn()` functions used for Chat Completions.The agent loop
 automatically detects the Responses API response format and handles it
 correctly.
 
@@ -253,7 +253,7 @@ user:
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import load, invoke_agent, tool, bind_tools
+from prompty import load, turn, tool, bind_tools
 
 @tool
 def get_weather(city: str) -> str:
@@ -263,7 +263,7 @@ def get_weather(city: str) -> str:
 agent = load("responses-agent.prompty")
 tools = bind_tools(agent, [get_weather])
 
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
     tools=tools,
@@ -274,7 +274,7 @@ print(result)  # "It's currently 72°F and sunny in Seattle!"
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+import { load, turn, tool, bindTools } from "@prompty/core";
 
 const getWeather = tool(
   (city: string) => `72°F and sunny in ${city}`,
@@ -288,7 +288,7 @@ const getWeather = tool(
 const agent = await load("responses-agent.prompty");
 const tools = bindTools(agent, [getWeather]);
 
-const result = await invokeAgent(agent, {
+const result = await turn(agent, {
   question: "What's the weather in Seattle?",
 }, { tools, maxIterations: 10 });
 console.log(result);
@@ -311,7 +311,7 @@ var agent = PromptyLoader.Load("responses-agent.prompty");
 var service = new WeatherTools();
 var tools = ToolAttribute.BindTools(agent, service);
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in Seattle?" },
     tools: tools,
@@ -492,6 +492,6 @@ Not all providers support every API type. Here's what's available:
 <Aside type="tip">
   You can switch between `apiType: chat` and `apiType: responses` by changing a
   single line in your `.prompty` file. Your calling code (`invoke()`,
-  `invoke_agent()`, etc.) stays exactly the same — the runtime handles the wire
+  `turn()`, etc.) stays exactly the same — the runtime handles the wire
   format differences automatically.
 </Aside>

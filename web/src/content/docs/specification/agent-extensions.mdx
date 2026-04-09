@@ -44,7 +44,7 @@ and coordination without coupling the loop to any particular output mechanism.
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       on_event=null, ...) → result:
   // on_event is Callable[[event_type: string, data: dict], None]
   // Called synchronously — MUST NOT throw
@@ -102,7 +102,7 @@ When cancellation is detected:
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       cancel=null, ...) → result:
 ```
 
@@ -203,7 +203,7 @@ to produce a higher-quality summary of dropped messages. When provided:
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       context_budget=null, ...) → result:
   // context_budget is int (character count) or null (no trimming)
 ```
@@ -306,7 +306,7 @@ loop:
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       guardrails=null, ...) → result:
 ```
 
@@ -373,7 +373,7 @@ the language's idiomatic concurrent queue or equivalent.
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       steering=null, ...) → result:
 ```
 
@@ -387,7 +387,7 @@ implementations MAY execute them concurrently instead of sequentially.
 ### API
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null,
+function turn(path_or_agent, inputs, tools=null,
                       parallel_tool_calls=false, ...) → result:
 ```
 
@@ -422,10 +422,10 @@ else:
 
 ## §13.7 Unified Signature
 
-The full `invoke_agent` signature with all extensions:
+The full `turn` signature with all extensions:
 
 ```
-function invoke_agent(
+function turn(
   path_or_agent,            // string path or loaded agent
   inputs = null,            // input dictionary
   tools = null,             // tool handlers
@@ -463,7 +463,7 @@ function invoke_agent(
 
 The `bind_tools` function validates that `@tool`-decorated handler functions match
 the tool declarations in an agent's frontmatter, and returns a handler dictionary
-suitable for passing to `invoke_agent`.
+suitable for passing to `turn`.
 
 ### Signature
 
@@ -519,7 +519,7 @@ function bind_tools(agent, tools):
 - `bind_tools` SHOULD warn (not error) if a declared function tool has no
   handler, since the tool may be handled by the name registry or kind handler.
 - The returned dictionary MUST be suitable for passing as the `tools` parameter
-  to `invoke_agent`.
+  to `turn`.
 - `bind_tools` MUST NOT mutate `agent.tools` or the global registry. It is a
   pure validation and extraction step.
 

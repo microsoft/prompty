@@ -250,7 +250,7 @@ if (raw is PromptyStream stream)
 
 ## Agent Mode
 
-Use `InvokeAgentAsync` to run the agent loop — the runtime calls the LLM,
+Use `TurnAsync` to run the agent loop — the runtime calls the LLM,
 executes any requested tool functions, feeds results back, and repeats until
 the model produces a final response.
 
@@ -270,14 +270,14 @@ var tools = new Dictionary<string, Func<string, Task<string>>>
     }
 };
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent, inputs, tools: tools, maxIterations: 10);
 
 Console.WriteLine(result);
 ```
 
 <Aside type="tip">
-  `InvokeAgentAsync` runs the full agent loop — it calls the LLM, executes any
+  `TurnAsync` runs the full agent loop — it calls the LLM, executes any
   tool calls via the `tools` dictionary, appends the results, and loops until the
   model returns a final response. Use `InvokeAsync` or `RunAsync` for single-turn
   calls where you handle tool responses yourself.
@@ -330,7 +330,7 @@ ToolDispatch.RegisterToolHandler("mcp", new McpToolHandler());
 
 When the agent loop needs to execute a tool call, dispatch follows this order:
 
-1. `userTools` dictionary (passed to `InvokeAgentAsync`)
+1. `userTools` dictionary (passed to `TurnAsync`)
 2. Name-based registry (`RegisterTool`)
 3. Kind-based handler (`RegisterToolHandler`)
 4. Wildcard `"*"` handler (if registered)

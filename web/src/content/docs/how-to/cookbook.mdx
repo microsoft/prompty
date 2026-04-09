@@ -432,7 +432,7 @@ user:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def get_weather(city: str) -> str:
@@ -440,17 +440,17 @@ user:
 
     agent = load("weather-agent.prompty")
     tools = bind_tools(agent, [get_weather])
-    result = invoke_agent(agent, {"question": "Weather in Tokyo?"}, tools=tools)
+    result = turn(agent, {"question": "Weather in Tokyo?"}, tools=tools)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
     const getWeather = tool((city: string) => `72°F and sunny in ${city}`, {
       name: "get_weather", description: "Get current weather", parameters: [{ name: "city", kind: "string", required: true }],
     });
     const agent = await load("weather-agent.prompty");
-    const result = await invokeAgent(agent, { question: "Weather in Tokyo?" }, { tools: bindTools(agent, [getWeather]) });
+    const result = await turn(agent, { question: "Weather in Tokyo?" }, { tools: bindTools(agent, [getWeather]) });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -458,7 +458,7 @@ user:
     [Tool(Name = "get_weather", Description = "Get current weather")]
     public string GetWeather(string city) => $"72°F and sunny in {city}";
     var tools = ToolAttribute.BindTools(agent, new WeatherService());
-    var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+    var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
     ```
   </TabItem>
 </Tabs>

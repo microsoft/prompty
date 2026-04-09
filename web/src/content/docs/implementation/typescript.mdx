@@ -84,14 +84,14 @@ const result2 = await invoke("chat.prompty", { question: "Hi" });
 ### Agent Mode
 
 ```typescript
-import { invokeAgent } from "@prompty/core";
+import { turn } from "@prompty/core";
 import "@prompty/openai";
 
 function getWeather(city: string): string {
   return `72°F and sunny in ${city}`;
 }
 
-const result = await invokeAgent(
+const result = await turn(
   "agent.prompty",
   { question: "Weather in Seattle?" },
   { get_weather: getWeather },

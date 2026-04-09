@@ -11,10 +11,10 @@ conversation, and re-calls the LLM—repeating until the LLM produces a normal
 
 **Public API:**
 
-- `invoke_agent(path_or_agent, inputs, tools?) → result`
-- `invoke_agent_async(path_or_agent, inputs, tools?) → result`
+- `turn(path_or_agent, inputs, tools?) → result`
+- `turn_async(path_or_agent, inputs, tools?) → result`
 
-Both MUST emit an `invoke_agent` trace span that wraps
+Both MUST emit a `turn` trace span that wraps
 the entire loop including all inner `execute` and `execute_tool` spans.
 
 ## §9.1 Constants
@@ -26,7 +26,7 @@ the entire loop including all inner `execute` and `execute_tool` spans.
 ## §9.2 Algorithm
 
 ```
-function invoke_agent(path_or_agent, inputs, tools=null) → result:
+function turn(path_or_agent, inputs, tools=null) → result:
   // Step 1: Resolve agent
   if path_or_agent is a string path:
     agent = load(path_or_agent)
@@ -265,7 +265,7 @@ function execute_prompty_tool(tool, args, parent_inputs) → result:
       return run(child_agent, merged)
     "agentic":
       // Full agent loop — child may call tools too
-      return invoke_agent(child_agent, merged)
+      return turn(child_agent, merged)
 ```
 
 Child `PromptyTool` execution MUST inherit the parent's tracer registry,

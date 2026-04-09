@@ -42,11 +42,11 @@ import { Code } from 'astro:components';
 
 Use these names consistently in all documentation:
 
-| Language   | Load                    | Invoke                      | Prepare                    | Run                    | Agent                        |
+| Language   | Load                    | Invoke                      | Prepare                    | Run                    | Turn (Agent)                 |
 |------------|-------------------------|-----------------------------|----------------------------|------------------------|------------------------------|
-| Python     | `load()`                | `invoke()`                  | `prepare()`                | `run()`                | `invoke_agent()`             |
-| TypeScript | `load()`                | `invoke()`                  | `prepare()`                | `run()`                | `invokeAgent()`              |
-| C#         | `Pipeline.LoadAsync()`  | `Pipeline.InvokeAsync()`    | `Pipeline.PrepareAsync()`  | `Pipeline.RunAsync()`  | `Pipeline.InvokeAgentAsync()`|
+| Python     | `load()`                | `invoke()`                  | `prepare()`                | `run()`                | `turn()`                     |
+| TypeScript | `load()`                | `invoke()`                  | `prepare()`                | `run()`                | `turn()`                     |
+| C#         | `Pipeline.LoadAsync()`  | `Pipeline.InvokeAsync()`    | `Pipeline.PrepareAsync()`  | `Pipeline.RunAsync()`  | `Pipeline.TurnAsync()`       |
 
 ## Schema Property Names
 

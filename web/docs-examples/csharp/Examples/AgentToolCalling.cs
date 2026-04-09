@@ -31,7 +31,7 @@ public static class AgentToolCalling
         var agent = PromptyLoader.Load(promptyPath);
 
         // Run the agent loop with tool dispatch
-        var result = await Pipeline.InvokeAgentAsync(
+        var result = await Pipeline.TurnAsync(
             agent,
             inputs,
             tools: tools,
@@ -58,7 +58,7 @@ public static class AgentToolCalling
         var agent = PromptyLoader.Load(promptyPath);
         var tools = ToolAttribute.BindTools(agent, toolInstance);
 
-        var result = await Pipeline.InvokeAgentAsync(
+        var result = await Pipeline.TurnAsync(
             agent,
             inputs,
             tools: tools,

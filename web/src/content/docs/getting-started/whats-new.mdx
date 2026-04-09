@@ -23,7 +23,7 @@ and a cleaner file format backed by the [Prompty schema](/reference/).
   - `load()` — parse a `.prompty` file into a typed agent object
   - `prepare()` — render the template and parse into messages
   - `invoke()` / `run()` — full pipeline: load → render → parse → execute → process
-  - `invoke_agent()` — agentic tool-calling loop
+  - `turn()` — agentic tool-calling loop
 
 ## New File Format
 
@@ -39,7 +39,7 @@ and a cleaner file format backed by the [Prompty schema](/reference/).
 
 ## Agent Mode
 
-- `invoke_agent()` runs a **tool-calling loop** automatically — send a prompt, receive
+- `turn()` runs a **tool-calling loop** automatically — send a prompt, receive
   tool calls, execute them, re-send, repeat until the model returns a final response
 - Register tool functions:
   - Python: `@tool` decorator or `metadata["tool_functions"]`

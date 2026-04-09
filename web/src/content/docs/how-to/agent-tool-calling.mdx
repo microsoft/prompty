@@ -150,7 +150,7 @@ user:
 <Aside type="note">
   The `.prompty` file uses `apiType: chat` — it's a normal chat prompt with
   tools declared. The agent loop is activated by your calling code: use
-  `invoke_agent()` (Python) or `invokeAgent()` (TypeScript) instead of
+  `turn()` (Python) or `turn()` (TypeScript) instead of
   `invoke()`. Without it, the LLM may return `tool_calls` but the runtime
   won't automatically execute them.
 </Aside>
@@ -162,7 +162,7 @@ user:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     # Define your tool functions with @tool
     @tool
@@ -181,7 +181,7 @@ user:
     tools = bind_tools(agent, [get_weather, get_time])
 
     # Execute with the agent loop — tools are called automatically
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"question": "What's the weather in Seattle and the time in Tokyo?"},
         tools=tools,
@@ -192,7 +192,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
 
     const getWeather = tool(
       (city: string) => `72°F and sunny in ${city}`,
@@ -216,7 +216,7 @@ user:
     const agent = await load("agent.prompty");
     const tools = bindTools(agent, [getWeather, getTime]);
 
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "What's the weather in Seattle?",
     }, { tools });
 
@@ -247,7 +247,7 @@ user:
     var service = new WeatherTools();
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["question"] = "What's the weather in Seattle and the time in Tokyo?" },
         tools: tools
@@ -268,7 +268,7 @@ If your tools call external APIs, use async functions to avoid blocking:
   <TabItem label="Python">
     ```python
     import httpx
-    from prompty import load, invoke_agent_async, tool, bind_tools
+    from prompty import load, turn_async, tool, bind_tools
 
     @tool
     async def get_weather(city: str) -> str:
@@ -281,7 +281,7 @@ If your tools call external APIs, use async functions to avoid blocking:
     async def main():
         agent = load("agent.prompty")
         tools = bind_tools(agent, [get_weather])
-        result = await invoke_agent_async(
+        result = await turn_async(
             agent,
             inputs={"question": "Weather in London?"},
             tools=tools,
@@ -296,7 +296,7 @@ If your tools call external APIs, use async functions to avoid blocking:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
 
     const getWeather = tool(
       async (city: string) => {
@@ -314,7 +314,7 @@ If your tools call external APIs, use async functions to avoid blocking:
     const agent = await load("agent.prompty");
     const tools = bindTools(agent, [getWeather]);
 
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "Weather in London?",
     }, { tools });
     ```
@@ -339,7 +339,7 @@ If your tools call external APIs, use async functions to avoid blocking:
     var service = new AsyncWeatherTools();
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["question"] = "Weather in London?" },
         tools: tools
@@ -423,7 +423,7 @@ user:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def search_docs(query: str, limit: int = 5) -> str:
@@ -443,7 +443,7 @@ user:
     agent = load("research-agent.prompty")
     tools = bind_tools(agent, [search_docs, get_user, send_email])
 
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"request": "Find docs about onboarding and email a summary to jane@example.com"},
         tools=tools,
@@ -452,7 +452,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
 
     const searchDocs = tool(
       (query: string, limit = 5) => `Found ${limit} results for '${query}'`,
@@ -491,7 +491,7 @@ user:
     const agent = await load("research-agent.prompty");
     const tools = bindTools(agent, [searchDocs, getUser, sendEmail]);
 
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       request: "Find docs about onboarding and email a summary to jane@example.com",
     }, { tools });
     ```
@@ -525,7 +525,7 @@ user:
     var service = new ResearchTools();
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent,
         new() { ["request"] = "Find docs about onboarding and email a summary to jane@example.com" },
         tools: tools
@@ -547,7 +547,7 @@ user:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def get_weather(city: str) -> str:
@@ -561,7 +561,7 @@ user:
         tools = bind_tools(agent, [get_weather])
         # If agent.prompty also declares get_time, bind_tools warns
         # that it's unbound (but doesn't error — it may be in the registry)
-        result = invoke_agent(agent, inputs={"question": "Weather?"}, tools=tools)
+        result = turn(agent, inputs={"question": "Weather?"}, tools=tools)
     except ValueError as e:
         print(f"Binding error: {e}")
     except Exception as e:
@@ -570,7 +570,7 @@ user:
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
 
     const getWeather = tool(
       (city: string) => `72°F and sunny in ${city}`,
@@ -584,7 +584,7 @@ user:
     try {
       const agent = await load("agent.prompty");
       const tools = bindTools(agent, [getWeather]);
-      const result = await invokeAgent(agent, { question: "Weather?" }, { tools });
+      const result = await turn(agent, { question: "Weather?" }, { tools });
     } catch (error) {
       console.error("Agent error:", error);
     }
@@ -606,7 +606,7 @@ user:
         var service = new MyTools();
         // BindTools throws if a [Tool] method doesn't match a declaration
         var tools = ToolAttribute.BindTools(agent, service);
-        var result = await Pipeline.InvokeAgentAsync(
+        var result = await Pipeline.TurnAsync(
             agent,
             new() { ["question"] = "What's the weather?" },
             tools: tools

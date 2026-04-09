@@ -93,12 +93,12 @@ The five pipeline stages compose into higher-level operations:
 | `prepare`      | render + parse + thread expansion    | Produce `Message[]` ready for the LLM  |
 | `run`          | execute + process                    | Send messages to LLM, extract result   |
 | `invoke`       | load + prepare + run                 | End-to-end from file path to result    |
-| `invoke_agent` | load + prepare + run in agent loop   | With automatic tool-call handling      |
+| `turn`         | load + prepare + run in agent loop   | With automatic tool-call handling      |
 
 :::note[Naming Note]
 The pipeline stage that calls the LLM is called **execute** (the
 `ExecutorProtocol`). The top-level convenience functions that run the entire pipeline
-end-to-end are called **invoke** / **invoke_agent** to avoid ambiguity.
+end-to-end are called **invoke** / **turn** to avoid ambiguity.
 :::
 
 ## §1.5 Public API Surface
@@ -114,7 +114,7 @@ variant (e.g., `load_async`). Each function SHOULD have a sync variant.
 | `prepare`          | `(agent, inputs) → Message[]`                | Message list     | [§5](/specification/rendering/) + [§6](/specification/parsing/)      |
 | `run`              | `(agent, messages) → result`                 | Processed result | [§7](/specification/wire-format/) + [§8](/specification/processing/)      |
 | `invoke`           | `(path, inputs) → result`                    | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/)        |
-| `invoke_agent`     | `(path, inputs, tools?) → result`            | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
+| `turn`             | `(path, inputs, tools?) → result`            | Processed result | [§4](/specification/loading/)–[§8](/specification/processing/) + loop |
 | `process`          | `(agent, response) → result`                 | Extracted result | [§8](/specification/processing/)           |
 | `validate_inputs`  | `(agent, inputs) → validated_inputs`         | Validated dict   | [§12](/specification/cross-cutting/)          |
 

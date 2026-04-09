@@ -52,14 +52,14 @@ Subscribe to structured events emitted during the agent loop. Event callbacks
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import invoke_agent, load
+from prompty import turn, load
 from prompty.core import AgentEvent, EventCallback
 
 def my_callback(event: AgentEvent) -> None:
     print(f"[{event.event_type}] {event.data}")
 
 agent = load("agent.prompty")
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "Hello"},
     tools={"get_weather": get_weather},
@@ -69,10 +69,10 @@ result = invoke_agent(
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent } from "@prompty/core";
+import { load, turn } from "@prompty/core";
 
 const agent = await load("agent.prompty");
-const result = await invokeAgent(agent, { question: "Hello" }, {
+const result = await turn(agent, { question: "Hello" }, {
   tools: { get_weather: getWeather },
   onEvent: (eventType, data) => {
     console.log(`[${eventType}]`, data);
@@ -85,7 +85,7 @@ const result = await invokeAgent(agent, { question: "Hello" }, {
 using Prompty.Core;
 
 var agent = PromptyLoader.Load("agent.prompty");
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "Hello" },
     tools: tools,
@@ -121,7 +121,7 @@ the top of each iteration and just before the LLM call.
 <TabItem label="Python">
 ```python
 import threading
-from prompty import invoke_agent, load
+from prompty import turn, load
 from prompty.core import CancellationToken
 
 token = CancellationToken()
@@ -130,14 +130,14 @@ token = CancellationToken()
 threading.Timer(5.0, token.cancel).start()
 
 try:
-    result = invoke_agent(agent, inputs, tools, cancel=token)
+    result = turn(agent, inputs, tools, cancel=token)
 except CancelledError:
     print("Agent loop was cancelled")
 ```
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { invokeAgent, CancelledError } from "@prompty/core";
+import { turn, CancelledError } from "@prompty/core";
 
 const controller = new AbortController();
 
@@ -145,7 +145,7 @@ const controller = new AbortController();
 setTimeout(() => controller.abort(), 5000);
 
 try {
-  const result = await invokeAgent(agent, inputs, {
+  const result = await turn(agent, inputs, {
     tools,
     signal: controller.signal,
   });
@@ -167,7 +167,7 @@ cts.CancelAfter(TimeSpan.FromSeconds(5));
 
 try
 {
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent, inputs, tools,
         cancellationToken: cts.Token
     );
@@ -197,7 +197,7 @@ dropped messages with a compact summary.
 <Tabs>
 <TabItem label="Python">
 ```python
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "Summarize our conversation"},
     tools=tools,
@@ -207,7 +207,7 @@ result = invoke_agent(
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-const result = await invokeAgent(agent, inputs, {
+const result = await turn(agent, inputs, {
   tools,
   contextBudget: 50_000,
 });
@@ -215,7 +215,7 @@ const result = await invokeAgent(agent, inputs, {
 </TabItem>
 <TabItem label="C#">
 ```csharp
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent, inputs, tools,
     contextBudget: 50_000
 );
@@ -266,7 +266,7 @@ def check_tool(name, args):
 guardrails = Guardrails(input=check_input, tool=check_tool)
 
 try:
-    result = invoke_agent(agent, inputs, tools, guardrails=guardrails)
+    result = turn(agent, inputs, tools, guardrails=guardrails)
 except GuardrailError as e:
     print(f"Blocked: {e.reason}")
 ```
@@ -293,7 +293,7 @@ const guardrails = new Guardrails({
 });
 
 try {
-  const result = await invokeAgent(agent, inputs, { tools, guardrails });
+  const result = await turn(agent, inputs, { tools, guardrails });
 } catch (err) {
   if (err instanceof GuardrailError) {
     console.log(`Blocked: ${err.reason}`);
@@ -325,7 +325,7 @@ var guardrails = new Guardrails(
 
 try
 {
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent, inputs, tools,
         guardrails: guardrails
     );
@@ -376,7 +376,7 @@ def user_input_loop():
 # Run input loop in background
 threading.Thread(target=user_input_loop, daemon=True).start()
 
-result = invoke_agent(agent, inputs, tools, steering=steering)
+result = turn(agent, inputs, tools, steering=steering)
 ```
 </TabItem>
 <TabItem label="TypeScript">
@@ -388,7 +388,7 @@ const steering = new Steering();
 // Inject a message that will be picked up at the next iteration
 steering.send("Actually, check Paris instead of London");
 
-const result = await invokeAgent(agent, inputs, {
+const result = await turn(agent, inputs, {
   tools,
   steering,
 });
@@ -403,7 +403,7 @@ var steering = new Steering();
 // From another thread or async context
 steering.Send("Actually, check Paris instead of London");
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent, inputs, tools,
     steering: steering
 );
@@ -426,7 +426,7 @@ them concurrently instead of sequentially.
 <TabItem label="Python">
 ```python
 # Async mode uses asyncio.gather for true parallelism
-result = await invoke_agent_async(
+result = await turn_async(
     agent, inputs, tools,
     parallel_tool_calls=True,
 )
@@ -435,7 +435,7 @@ result = await invoke_agent_async(
 <TabItem label="TypeScript">
 ```typescript
 // Uses Promise.all for concurrent execution
-const result = await invokeAgent(agent, inputs, {
+const result = await turn(agent, inputs, {
   tools,
   parallelToolCalls: true,
 });
@@ -444,7 +444,7 @@ const result = await invokeAgent(agent, inputs, {
 <TabItem label="C#">
 ```csharp
 // Uses Task.WhenAll for concurrent execution
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent, inputs, tools,
     parallelToolCalls: true
 );
@@ -467,7 +467,7 @@ All extensions compose naturally. Here's a fully-configured agent call:
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import invoke_agent_async, load_async
+from prompty import turn_async, load_async
 from prompty.core import (
     CancellationToken,
     Guardrails,
@@ -485,7 +485,7 @@ guardrails = Guardrails(
     tool=lambda name, args: GuardrailResult(allowed=True),
 )
 
-result = await invoke_agent_async(
+result = await turn_async(
     agent,
     inputs={"question": "Plan my trip"},
     tools=tools,
@@ -502,7 +502,7 @@ result = await invoke_agent_async(
 <TabItem label="TypeScript">
 ```typescript
 import {
-  load, invokeAgent,
+  load, turn,
   Guardrails, Steering, CancelledError,
 } from "@prompty/core";
 
@@ -515,7 +515,7 @@ const guardrails = new Guardrails({
   tool: () => ({ allowed: true }),
 });
 
-const result = await invokeAgent(agent, { question: "Plan my trip" }, {
+const result = await turn(agent, { question: "Plan my trip" }, {
   tools,
   onEvent: (type, data) => console.log(`[${type}]`),
   signal: controller.signal,
@@ -540,7 +540,7 @@ var guardrails = new Guardrails(
     tool: (_, _) => new GuardrailResult(true)
 );
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "Plan my trip" },
     tools: tools,
@@ -606,11 +606,11 @@ def get_weather(args_json):
 
 tools = {"get_weather": get_weather}
 
-result = invoke_agent(agent, inputs, tools=tools)
+result = turn(agent, inputs, tools=tools)
 ```
 ```python
 # ✅ With @tool + bind_tools — typed, validated, clean
-from prompty import tool, bind_tools, invoke_agent
+from prompty import tool, bind_tools, turn
 
 @tool
 def get_weather(city: str, units: str = "celsius") -> str:
@@ -619,7 +619,7 @@ def get_weather(city: str, units: str = "celsius") -> str:
 
 # bind_tools validates names match the .prompty declarations
 tools = bind_tools(agent, [get_weather])
-result = invoke_agent(agent, inputs, tools=tools)
+result = turn(agent, inputs, tools=tools)
 ```
 </TabItem>
 <TabItem label="TypeScript">
@@ -632,11 +632,11 @@ const tools = {
   },
 };
 
-const result = await invokeAgent(agent, inputs, { tools });
+const result = await turn(agent, inputs, { tools });
 ```
 ```typescript
 // ✅ With tool() + bindTools — typed, validated handler
-import { tool, bindTools, invokeAgent } from "@prompty/core";
+import { tool, bindTools, turn } from "@prompty/core";
 
 const getWeather = tool(
   (city: string, units?: string) => `72°F in ${city}`,
@@ -652,7 +652,7 @@ const getWeather = tool(
 
 // bindTools validates names match the .prompty declarations
 const tools = bindTools(agent, [getWeather]);
-const result = await invokeAgent(agent, inputs, { tools });
+const result = await turn(agent, inputs, { tools });
 ```
 </TabItem>
 <TabItem label="C#">
@@ -669,7 +669,7 @@ var tools = new Dictionary<string, Func<string, Task<string>>>
     },
 };
 
-var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
 ```
 ```csharp
 // ✅ With [Tool] + BindTools — typed parameters, validated, no JSON parsing
@@ -688,13 +688,13 @@ public class WeatherService
 var service = new WeatherService();
 var tools = ToolAttribute.BindTools(agent, service);
 
-var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
 ```
 </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  The `.prompty` file declares **what** tools exist (name, parameters, description)
+  The `.prompty` file declares **what** tools exist(name, parameters, description)
   — this is sent to the LLM. Your code provides **how** they run. The
   decorator/attribute handles JSON deserialization so your function receives
   real typed parameters (`string`, `int`, `bool`) instead of raw JSON.
@@ -741,7 +741,7 @@ user:
 <Tabs>
 <TabItem label="Python">
 ```python
-from prompty import load, invoke_agent, tool, bind_tools
+from prompty import load, turn, tool, bind_tools
 
 @tool
 def get_weather(city: str) -> str:
@@ -759,7 +759,7 @@ agent = load("agent.prompty")
 # in agent.tools, then returns the handler dict
 tools = bind_tools(agent, [get_weather, get_time])
 
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "What's the weather in Tokyo?"},
     tools=tools,
@@ -769,7 +769,7 @@ print(result)
 </TabItem>
 <TabItem label="TypeScript">
 ```typescript
-import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+import { load, turn, tool, bindTools } from "@prompty/core";
 
 const getWeather = tool(
   (city: string) => `72°F and sunny in ${city}`,
@@ -794,7 +794,7 @@ const agent = await load("agent.prompty");
 // bindTools validates names against agent.tools declarations
 const tools = bindTools(agent, [getWeather, getTime]);
 
-const result = await invokeAgent(agent, { question: "Weather in Tokyo?" }, {
+const result = await turn(agent, { question: "Weather in Tokyo?" }, {
   tools,
 });
 console.log(result);
@@ -825,7 +825,7 @@ var service = new AssistantTools();
 // BindTools validates [Tool] methods against agent.Tools declarations
 var tools = ToolAttribute.BindTools(agent, service);
 
-var result = await Pipeline.InvokeAgentAsync(
+var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in Tokyo?" },
     tools: tools

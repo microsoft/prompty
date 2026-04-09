@@ -236,7 +236,7 @@ Implementations SHOULD provide an OpenTelemetry tracing backend that conforms to
 
 | Prompty Concept              | OTel Attribute                   | Value                              |
 | ---------------------------- | -------------------------------- | ---------------------------------- |
-| API type                     | `gen_ai.operation.name`          | `"chat"`, `"embeddings"`, `"invoke_agent"`, `"execute_tool"` |
+| API type                     | `gen_ai.operation.name`          | `"chat"`, `"embeddings"`, `"turn"`, `"execute_tool"` |
 | Provider name                | `gen_ai.provider.name`           | `"openai"`, `"microsoft.foundry"`, `"anthropic"` |
 | Model ID                     | `gen_ai.request.model`           | From `agent.model.id`              |
 | Temperature                  | `gen_ai.request.temperature`     | From `agent.model.options.temperature` |
@@ -263,7 +263,7 @@ Implementations SHOULD provide an OpenTelemetry tracing backend that conforms to
 
 **Agent and tool spans**:
 
-- Agent loop spans: `gen_ai.operation.name = "invoke_agent"`, with `gen_ai.agent.name`.
+- Agent loop spans: `gen_ai.operation.name = "turn"`, with `gen_ai.agent.name`.
 - Tool execution spans: `gen_ai.operation.name = "execute_tool"`.
 
 **Error handling**: On error, set span status to `ERROR` and record `error.type` attribute.

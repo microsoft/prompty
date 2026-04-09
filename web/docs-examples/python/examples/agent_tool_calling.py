@@ -5,7 +5,7 @@ Used in: how-to/agent-tool-calling.mdx
 """
 from __future__ import annotations
 
-from prompty import invoke_agent, load
+from prompty import turn, load
 from prompty.core import tool
 
 
@@ -16,7 +16,7 @@ def get_weather(city: str) -> str:
 
 
 agent = load("chat-agent.prompty")
-result = invoke_agent(
+result = turn(
     agent,
     inputs={"question": "What's the weather in Seattle?"},
     tools={"get_weather": get_weather},

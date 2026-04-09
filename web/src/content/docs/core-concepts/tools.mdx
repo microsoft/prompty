@@ -132,7 +132,7 @@ tools:
 | Field | Description |
 |-------|-------------|
 | `path` | Relative path to the child `.prompty` file (resolved from the parent's location) |
-| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `invokeAgent` |
+| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `turn` |
 | `parameters` | Optional parameter schema. If omitted, the child's `inputs` are used automatically |
 | `bindings` | Map parent inputs → child parameters (the bound parameters are stripped from the wire schema) |
 
@@ -279,14 +279,14 @@ In this example, the tool parameter `query` is bound to the prompt input
 
 Tools defined in the frontmatter are sent to the LLM as part of the API
 request. To actually **execute** the tool calls the model returns, use
-`invoke_agent` — which runs the agent loop: call the LLM, execute any
+`turn()` — which runs the agent loop: call the LLM, execute any
 requested tools, feed results back, and repeat until the model produces a final
 response.
 
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent, tool, bind_tools
+    from prompty import load, turn, tool, bind_tools
 
     @tool
     def get_weather(city: str, units: str = "celsius") -> str:
@@ -296,12 +296,12 @@ response.
     agent = load("agent.prompty")
     tools = bind_tools(agent, [get_weather])
 
-    result = invoke_agent(agent, inputs={"question": "Weather in Seattle?"}, tools=tools)
+    result = turn(agent, inputs={"question": "Weather in Seattle?"}, tools=tools)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent, tool, bindTools } from "@prompty/core";
+    import { load, turn, tool, bindTools } from "@prompty/core";
 
     const getWeather = tool(
       (city: string, units = "celsius") => `72°F and sunny in ${city}`,
@@ -318,7 +318,7 @@ response.
     const agent = await load("agent.prompty");
     const tools = bindTools(agent, [getWeather]);
 
-    const result = await invokeAgent(agent, { question: "Weather in Seattle?" }, { tools });
+    const result = await turn(agent, { question: "Weather in Seattle?" }, { tools });
     ```
   </TabItem>
   <TabItem label="C#">
@@ -338,7 +338,7 @@ response.
     var service = new WeatherService();
     var tools = ToolAttribute.BindTools(agent, service);
 
-    var result = await Pipeline.InvokeAgentAsync(agent, inputs, tools: tools);
+    var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
     ```
   </TabItem>
 </Tabs>
@@ -346,7 +346,7 @@ response.
 <Tabs>
   <TabItem label="Python">
     ```python
-    result = invoke_agent(
+    result = turn(
         agent,
         inputs={"question": "Weather in Seattle?"},
         tools=tools,
@@ -356,7 +356,7 @@ response.
   </TabItem>
   <TabItem label="Python (async)">
     ```python
-    result = await invoke_agent_async(
+    result = await turn_async(
         agent,
         inputs={"question": "Weather in Seattle?"},
         tools=tools,
@@ -366,7 +366,7 @@ response.
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    const result = await invokeAgent(agent, {
+    const result = await turn(agent, {
       question: "Weather in Seattle?",
     }, { tools });
     console.log(result);
@@ -374,7 +374,7 @@ response.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent, inputs, tools: tools, maxIterations: 10);
 
     Console.WriteLine(result);
@@ -383,7 +383,7 @@ response.
 </Tabs>
 
 <Aside type="tip">
-  `invoke_agent` / `invokeAgent` / `InvokeAgentAsync` runs the full agent loop —
+  `turn` / `turn` / `TurnAsync` runs the full agent loop —
   it calls the LLM, executes any returned tool calls, appends the results, and
   loops until the model returns a final response. Use `invoke` for
   single-turn calls where you handle tool responses yourself.
@@ -510,7 +510,7 @@ returns the result string.
     ToolDispatch.RegisterToolHandler("my_provider", new MyToolHandler());
 
     // Dispatch follows this order:
-    // 1. userTools dict (passed to InvokeAgentAsync)
+    // 1. userTools dict (passed to TurnAsync)
     // 2. Name registry (RegisterTool)
     // 3. Kind handler (RegisterToolHandler)
     // 4. Wildcard "*" handler
@@ -528,13 +528,13 @@ returns the result string.
 | Scenario | Register projector? | Register handler? |
 |---|---|---|
 | Custom tool kind (e.g., a proprietary API) | ✅ Yes | ✅ Yes |
-| Override wire format for built-in kind | ✅ Yes | No — use `tools` dict in `invoke_agent` |
+| Override wire format for built-in kind | ✅ Yes | No — use `tools` dict in `turn` |
 | Custom execution for built-in kind | No | ✅ Yes |
 | Standard `function` tools | No — pre-registered | No — use `tools` dict |
 
 <Aside type="tip">
   For most use cases, you don't need the registry at all — just pass your
-  functions in the `tools` dict to `invoke_agent()`. The registry is for
+  functions in the `tools` dict to `turn()`. The registry is for
   **custom tool kinds** that need special wire projection or dispatch logic.
 </Aside>
 

@@ -302,7 +302,7 @@ When the LLM invokes this tool:
 
 1. Load the referenced `.prompty` file via `load(path)`.
 2. If `mode` is `"single"`: call `invoke(path, arguments)` — one pass, no tool loop.
-3. If `mode` is `"agentic"`: call `invoke_agent(path, arguments)` — full agent loop
+3. If `mode` is `"agentic"`: call `turn(path, arguments)` — full agent loop
    with any tools defined in the referenced prompty.
 4. Return the result as the tool's output.
 

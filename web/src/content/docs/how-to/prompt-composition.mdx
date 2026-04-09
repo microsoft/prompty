@@ -118,26 +118,26 @@ user:
 <Tabs>
   <TabItem label="Python">
     ```python
-    from prompty import load, invoke_agent
+    from prompty import load, turn
 
     agent = load("orchestrator.prompty")
-    result = invoke_agent(agent, {"article": "OpenAI announced GPT-5 today..."})
+    result = turn(agent, {"article": "OpenAI announced GPT-5 today..."})
     print(result)
     ```
   </TabItem>
   <TabItem label="TypeScript">
     ```typescript
-    import { load, invokeAgent } from "@prompty/core";
+    import { load, turn } from "@prompty/core";
 
     const agent = await load("orchestrator.prompty");
-    const result = await invokeAgent(agent, { article: "OpenAI announced GPT-5 today..." });
+    const result = await turn(agent, { article: "OpenAI announced GPT-5 today..." });
     console.log(result);
     ```
   </TabItem>
   <TabItem label="C#">
     ```csharp
     var agent = PromptyLoader.Load("orchestrator.prompty");
-    var result = await Pipeline.InvokeAgentAsync(
+    var result = await Pipeline.TurnAsync(
         agent, new { article = "OpenAI announced GPT-5 today..." });
     Console.WriteLine(result);
     ```
@@ -156,7 +156,7 @@ When the agent loop encounters a tool call for a `kind: prompty` tool, the
 
 1. **Resolve path** — `path` is resolved relative to the parent `.prompty` file's directory
 2. **Load** — the child `.prompty` is loaded via `load()`
-3. **Execute** — in `single` mode: `prepare()` + `run()`. In `agentic` mode: `invoke_agent()` (the child runs its own agent loop)
+3. **Execute** — in `single` mode: `prepare()` + `run()`. In `agentic` mode: `turn()` (the child runs its own agent loop)
 4. **Return** — the result string is sent back to the parent LLM as the tool response
 
 ```mermaid

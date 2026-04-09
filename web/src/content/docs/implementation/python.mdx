@@ -98,7 +98,7 @@ result = await prompty.invoke_async("chat.prompty", inputs={"q": "Hi"})
 def get_weather(city: str) -> str:
     return f"72°F and sunny in {city}"
 
-result = prompty.invoke_agent(
+result = prompty.turn(
     "agent.prompty",
     inputs={"question": "Weather in Seattle?"},
     tools={"get_weather": get_weather},
