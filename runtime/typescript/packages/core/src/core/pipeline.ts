@@ -808,7 +808,7 @@ export function resolveBindings(
 }
 
 // ---------------------------------------------------------------------------
-// Agent loop: invokeAgent()
+// Agent loop: turn()
 // ---------------------------------------------------------------------------
 
 /** Check if a value is an async iterable (i.e. a stream). */
@@ -858,19 +858,6 @@ async function consumeStream(
   return { toolCalls, content: textParts.join("") };
 }
 
-
-// ---------------------------------------------------------------------------
-// Backward compatibility: invokeAgent → turn
-// ---------------------------------------------------------------------------
-
-/**
- * @deprecated Use {@link turn} with `tools` option instead.
- * Kept for backward compatibility — delegates to `turn()`.
- */
-export const invokeAgent = turn;
-
-/** @deprecated Use {@link TurnOptions} instead. */
-export type InvokeAgentOptions = TurnOptions;
 
 // ---------------------------------------------------------------------------
 // Thread marker helpers

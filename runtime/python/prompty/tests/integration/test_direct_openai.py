@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.pipeline import invoke, invoke_agent, process
+from prompty.core.pipeline import invoke, turn, process
 from prompty.core.types import AsyncPromptyStream, PromptyStream
 
 from .conftest import make_direct_openai_agent, skip_direct_openai
@@ -144,7 +144,7 @@ class TestDirectOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
+        result = turn(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
@@ -159,20 +159,20 @@ class TestDirectOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
+        result = turn(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
     @pytest.mark.asyncio(loop_scope="function")
     async def test_async_tool_call_loop(self) -> None:
-        from prompty.core.pipeline import invoke_agent_async
+        from prompty.core.pipeline import turn_async
 
         agent = make_direct_openai_agent(
             options={"temperature": 0, "maxOutputTokens": 300},
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = await invoke_agent_async(agent, tools={"get_weather": _weather_fn})
+        result = await turn_async(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
@@ -200,6 +200,6 @@ class TestDirectOpenAIResponses:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = invoke_agent(agent, tools={"get_weather": _weather_fn})
+        result = turn(agent, tools={"get_weather": _weather_fn})
         assert isinstance(result, str)
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))

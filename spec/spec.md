@@ -3412,8 +3412,7 @@ result. Turns are the fundamental unit of conversational interaction and MUST
 be traced as such.
 
 `turn` is also the primary API for tool-calling (agent) workflows. When the
-`tools` option is provided, `turn` owns the agent loop (§9) internally. The
-former `invoke_agent` function is a deprecated alias for `turn` with tools.
+`tools` option is provided, `turn` owns the agent loop (§9) internally.
 
 ### §14.1 Motivation
 
@@ -3496,11 +3495,6 @@ function turn(agent_or_path, inputs, options={}) → result:
 `turn` accepts either a pre-loaded agent or a file path — the caller typically
 loads once and calls `turn` repeatedly as the conversation grows. This avoids
 re-loading and re-parsing the `.prompty` file on every message.
-
-> **Deprecated**: `invoke_agent` / `invoke_agent_async` are deprecated aliases
-> for `turn` / `turn_async` with the `tools` option. Implementations MAY
-> provide these aliases for backward compatibility but SHOULD emit deprecation
-> warnings when they are used.
 
 ### §14.5 Tracing
 

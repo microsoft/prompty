@@ -1,103 +1,173 @@
 ---
 title: What's New in v2
 description: >
-  Key changes and new features in Prompty v2 — three runtimes, agent mode,
-  streaming, structured output, and more.
+  What stayed the same, what changed, and what's new in Prompty v2.
 sidebar:
   order: 2
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Prompty v2 is a ground-up rebuild focused on multi-runtime support, agent workflows,
-and a cleaner file format backed by the [Prompty schema](/reference/).
-
 <Aside type="tip">
   Already using v1? See the [Migration Guide](/migration/) for a step-by-step upgrade path.
 </Aside>
 
-## Three Runtime Implementations
+## The Core Pattern Is the Same
 
-- **Python**, **TypeScript**, and **C#** — the same `.prompty` file works across all three
-- Consistent public API across languages:
-  - `load()` — parse a `.prompty` file into a typed agent object
-  - `prepare()` — render the template and parse into messages
-  - `invoke()` / `run()` — full pipeline: load → render → parse → execute → process
-  - `turn()` — agentic tool-calling loop
+If you used Prompty v1, the mental model carries forward unchanged. A `.prompty` file
+is still a markdown file with YAML frontmatter. The pipeline still works the same way:
 
-## New File Format
+```
+.prompty file → load → render → parse → execute → process → result
+```
 
-- YAML frontmatter follows the [Prompty schema](/reference/) (defined in TypeSpec)
-- `inputs` / `outputs` with typed property lists (`kind`, `default`, `required`)
-- `tools` block for function calling and PromptyTool composition
-- `template.format` and `template.parser` for explicit template configuration
-- `${env:VAR}` and `${file:path}` reference resolution in frontmatter values
+The functions you know still do exactly what they did:
 
-<Aside>
-  The `kind` field is not required in `.prompty` files — the loader injects `kind: "prompt"` automatically.
-</Aside>
+| Function    | What it does (same as v1)                              |
+|-------------|--------------------------------------------------------|
+| `load()`    | Parse a `.prompty` file into a typed agent object      |
+| `prepare()` | Render the template + parse role markers into messages |
+| `invoke()`  | Full pipeline: load → prepare → execute → process      |
+| `run()`     | Execute pre-prepared messages (skip load + prepare)    |
 
-## Agent Mode
+If your v1 code used `load()` → `prepare()` → `invoke()`, the same pattern works
+in v2 with updated frontmatter property names. That's it.
 
-- `turn()` runs a **tool-calling loop** automatically — send a prompt, receive
-  tool calls, execute them, re-send, repeat until the model returns a final response
-- Register tool functions:
-  - Python: `@tool` decorator or `metadata["tool_functions"]`
-  - TypeScript: tool registry
-  - C#: `[Tool]` attribute
-- **PromptyTool**: compose prompts as tools — one `.prompty` file can call another
+### What the file format updates look like
 
-## Streaming Support
+The frontmatter property names were cleaned up to align with the
+[Prompty schema](/reference/), but the structure is the same —
+model config, inputs, template settings:
 
-- First-class streaming with `PromptyStream` / `AsyncPromptyStream` wrappers
-- Built-in tracing integration — streaming responses are traced automatically
-- Works with both OpenAI and Azure OpenAI providers
+```yaml
+# v1                           # v2
+model:                          model:
+  api: chat                       apiType: chat
+  configuration:                  provider: foundry
+    type: azure_openai            connection:
+    azure_endpoint: ${env:X}        kind: key
+    api_key: ${env:Y}               endpoint: ${env:X}
+  parameters:                       apiKey: ${env:Y}
+    max_tokens: 500               options:
+    temperature: 0.7                maxOutputTokens: 500
+                                    temperature: 0.7
+```
 
-## Structured Output
+See the [Migration Guide](/migration/) for the full property mapping.
 
-- Define `outputs` in frontmatter → automatic `response_format` for OpenAI
-- Responses are JSON-parsed when a schema is defined
-- Supports strict mode for guaranteed schema conformance
+## What's New: `turn()` for Agentic Workflows
 
-## Provider Support
+The one conceptually new function in v2 is **`turn()`**. It handles what happens
+when an LLM response includes **tool calls** — something v1 didn't natively support.
 
-- **OpenAI** — direct API key authentication
-- **Azure OpenAI / Foundry** — API key, Microsoft Entra ID, and managed identity
-- **Anthropic** — pluggable via the provider registry
-- Extensible: add new providers by implementing the executor/processor protocols
-  and registering via entry points
+`turn()` runs a loop: send messages → get response → if tool calls, execute them →
+re-send → repeat until the model returns a final answer.
 
-## Pipeline Architecture
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import turn
 
-Every prompt execution follows a four-stage pipeline:
+result = turn(
+    "agent.prompty",
+    inputs={"question": "What's the weather in Seattle?"},
+    tools={"get_weather": get_weather},
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { turn } from "@prompty/core";
 
-1. **Render** — expand the template (Jinja2 or Mustache) with inputs
-2. **Parse** — convert role markers (`system:`, `user:`, `assistant:`) into messages
-3. **Execute** — call the LLM provider
-4. **Process** — extract content, tool calls, or embeddings from the response
+const result = await turn("agent.prompty", {
+  inputs: { question: "What's the weather in Seattle?" },
+  tools: { get_weather: getWeather },
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+var result = await Pipeline.TurnAsync(
+    "agent.prompty",
+    new() { ["question"] = "What's the weather in Seattle?" },
+    tools: new() { ["get_weather"] = GetWeather });
+```
+</TabItem>
+</Tabs>
 
-Each stage is independently replaceable via the discovery/registry system.
+Without tools, `turn()` behaves identically to `invoke()` — the only difference
+is that it tracks turn numbers for multi-turn conversations.
 
-## Tracing & Observability
+### What the trace looks like
 
-- `@trace` decorator wraps any function with tracing spans
-- `Tracer` registry with pluggable backends:
-  - Console output
-  - JSON file logging
-  - OpenTelemetry (`opentelemetry-api`)
-- All pipeline stages are automatically traced
+```
+turn 1
+  prepare
+    Jinja2Renderer
+    PromptyChatParser
+  Executor
+  toolCalls          ← only appears when the LLM returns tool calls
+    get_weather
+  Executor           ← re-sends with tool results
+  Processor
+```
 
-## VS Code Extension
+## Three Runtimes, One File Format
 
-- **Live preview** of rendered prompts directly in the editor
+v2 adds **TypeScript** and **C#** runtimes alongside the existing Python runtime.
+All three share the same `.prompty` file format and public API:
+
+| | Python | TypeScript | C# |
+|---|---|---|---|
+| Package | `prompty` | `@prompty/core` | `Prompty.Core` |
+| Providers | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` |
+| Install | `uv pip install` | `npm install` | `dotnet add package` |
+
+## Other Improvements
+
+### Streaming
+
+First-class streaming with tracing integration:
+
+- `PromptyStream` / `AsyncPromptyStream` wrappers
+- Automatic chunk accumulation for trace output
+- Works with all providers (OpenAI, Azure, Anthropic)
+
+### Structured Output
+
+Define `outputs` in frontmatter → automatic `response_format`:
+
+```yaml
+outputs:
+  - name: city
+    kind: string
+  - name: temperature
+    kind: float
+```
+
+Responses are JSON-parsed and validated when an output schema is defined.
+
+### Tracing & Observability
+
+- `@trace` / `[Trace]` decorator wraps any function with spans
+- Pluggable backends: console, JSON files, OpenTelemetry
+- All pipeline stages traced automatically
+
+### Provider Support
+
+- **OpenAI** — direct API key
+- **Azure OpenAI / Foundry** — API key, Entra ID, managed identity
+- **Anthropic** — via provider registry
+- Extensible: implement executor/processor protocols and register
+
+### Pipeline Architecture
+
+The four-stage pipeline (Render → Parse → Execute → Process) is now
+independently replaceable via the discovery/registry system. Third-party
+providers can register as plugins.
+
+### VS Code Extension
+
+- Live preview of rendered prompts
 - Connection management for OpenAI and Azure endpoints
-- **Copilot Chat integration** — use prompty files in GitHub Copilot workflows
-
-## Migration from v1
-
-Prompty v2 includes a **legacy migration layer** that automatically converts v1
-frontmatter properties to v2 equivalents with deprecation warnings. Old `.prompty`
-files continue to load — update them at your own pace.
-
-See the [Migration Guide](/migration/) for full details on property mappings and
-breaking changes.
+- Copilot Chat integration

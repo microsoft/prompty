@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import warnings
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -68,9 +67,6 @@ __all__ = [
     "invoke_async",
     "turn",
     "turn_async",
-    # Deprecated aliases
-    "invoke_agent",
-    "invoke_agent_async",
     # Helpers (used by tests)
     "_get_rich_input_names",
     "_inject_thread_markers",
@@ -1528,88 +1524,6 @@ async def _build_tool_messages_from_calls_async(
     executor = get_executor(provider)
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
-
-def invoke_agent(
-    prompt: str | Prompty,
-    inputs: dict[str, Any] | None = None,
-    *,
-    tools: dict[str, Callable[..., Any]] | None = None,
-    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
-    raw: bool = False,
-    on_event: EventCallback | None = None,
-    cancel: CancellationToken | None = None,
-    context_budget: int | None = None,
-    guardrails: Guardrails | None = None,
-    steering: Steering | None = None,
-    parallel_tool_calls: bool = False,
-    target_type: type | None = None,
-) -> Any:
-    """Run a prompt with automatic tool-call execution loop.
-
-    .. deprecated::
-        Use :func:`turn` instead.  ``invoke_agent`` will be removed in a
-        future release.
-    """
-    warnings.warn(
-        "invoke_agent is deprecated, use turn() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return turn(
-        prompt,
-        inputs,
-        tools=tools,
-        max_iterations=max_iterations,
-        raw=raw,
-        on_event=on_event,
-        cancel=cancel,
-        context_budget=context_budget,
-        guardrails=guardrails,
-        steering=steering,
-        parallel_tool_calls=parallel_tool_calls,
-        target_type=target_type,
-    )
-
-
-async def invoke_agent_async(
-    prompt: str | Prompty,
-    inputs: dict[str, Any] | None = None,
-    *,
-    tools: dict[str, Callable[..., Any]] | None = None,
-    max_iterations: int = _DEFAULT_MAX_ITERATIONS,
-    raw: bool = False,
-    on_event: EventCallback | None = None,
-    cancel: CancellationToken | None = None,
-    context_budget: int | None = None,
-    guardrails: Guardrails | None = None,
-    steering: Steering | None = None,
-    parallel_tool_calls: bool = False,
-    target_type: type | None = None,
-) -> Any:
-    """Async variant of :func:`invoke_agent`.
-
-    .. deprecated::
-        Use :func:`turn_async` instead.
-    """
-    warnings.warn(
-        "invoke_agent_async is deprecated, use turn_async() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return await turn_async(
-        prompt,
-        inputs,
-        tools=tools,
-        max_iterations=max_iterations,
-        raw=raw,
-        on_event=on_event,
-        cancel=cancel,
-        context_budget=context_budget,
-        guardrails=guardrails,
-        steering=steering,
-        parallel_tool_calls=parallel_tool_calls,
-        target_type=target_type,
-    )
 
 
 # ---------------------------------------------------------------------------

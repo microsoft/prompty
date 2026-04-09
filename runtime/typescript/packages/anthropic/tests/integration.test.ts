@@ -9,7 +9,7 @@ import { resolve } from "path";
 import {
   Tracer,
   invoke,
-  invokeAgent,
+  turn,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -147,7 +147,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
         },
       ],
     });
-    const result = await invokeAgent(
+    const result = await turn(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -177,7 +177,7 @@ describe.skipIf(!hasAnthropic)("Anthropic Integration", () => {
         },
       ],
     });
-    const result = await invokeAgent(
+    const result = await turn(
       agent,
       { question: "What is the weather in Seattle?" },
       {

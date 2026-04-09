@@ -236,10 +236,7 @@ provided. Raises an error if any are missing.
     | `process()` | `process_async()` |
     | `turn()` | `turn_async()` |
 
-    <Aside type="note">
-      `invoke_agent()` and `invoke_agent_async()` still work as deprecated aliases for `turn()` and `turn_async()`.
-    </Aside>
-  </TabItem>
+    </TabItem>
   <TabItem label="TypeScript">
     All functions are async by default — they return `Promise<T>`.
     Use `await` on every call:
@@ -315,9 +312,6 @@ Run a conversational turn with optional tool-calling loop.
   </TabItem>
 </Tabs>
 
-<Aside type="caution" title="Deprecated Aliases">
-  `invoke_agent()` / `invoke_agent_async()` (Python), `invokeAgent()` (TypeScript), and `Pipeline.InvokeAgentAsync()` (C#) still work but are deprecated. Use `turn()` / `turn_async()`, `turn()`, and `Pipeline.TurnAsync()` respectively.
-</Aside>
 
 **Parameters:**
 

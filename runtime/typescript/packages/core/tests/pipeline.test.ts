@@ -7,7 +7,7 @@ import {
   prepare,
   run,
   invoke,
-  invokeAgent,
+  turn,
 } from "../src/core/pipeline.js";
 import {
   registerRenderer,
@@ -189,13 +189,13 @@ describe("Pipeline", () => {
     });
   });
 
-  describe("invokeAgent()", () => {
+  describe("turn()", () => {
     it("runs a simple agent with no tool calls", async () => {
       const agent = makeAgent();
       agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
       (agent as any).model = { provider: "mock" };
 
-      const result = await invokeAgent(agent, { name: "World" });
+      const result = await turn(agent, { name: "World" });
       expect(result).toBe("Mock response");
     });
 
@@ -255,7 +255,7 @@ describe("Pipeline", () => {
         greet: (args: Record<string, unknown>) => `Hello ${args.who}!`,
       };
 
-      const result = await invokeAgent(agent, { name: "Test" }, { tools: tools as any });
+      const result = await turn(agent, { name: "Test" }, { tools: tools as any });
       expect(result).toBe("Done!");
       expect(callCount).toBe(2);
     });
@@ -306,7 +306,7 @@ describe("Pipeline", () => {
       const tools = { loop: () => "looping" };
 
       await expect(
-        invokeAgent(agent, {}, { tools: tools as any, maxIterations: 2 }),
+        turn(agent, {}, { tools: tools as any, maxIterations: 2 }),
       ).rejects.toThrow("maxIterations");
     });
   });

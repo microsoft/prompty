@@ -12,10 +12,8 @@ export {
   run,
   turn,
   invoke,
-  invokeAgent, // deprecated alias for turn
   resolveBindings,
   type TurnOptions,
-  type InvokeAgentOptions, // deprecated alias for TurnOptions
   type InvokeOptions,
 } from "./pipeline.js";
 export {

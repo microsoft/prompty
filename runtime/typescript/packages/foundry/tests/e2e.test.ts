@@ -16,7 +16,7 @@ import {
   Tracer,
   PromptyTracer,
   invoke,
-  invokeAgent,
+  turn,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -412,7 +412,7 @@ describe("Foundry E2E Pipeline", () => {
         get_weather: (_args: { city: string }) => "72°F and sunny",
       };
 
-      const result = await invokeAgent(
+      const result = await turn(
         path.resolve(FIXTURES, "agent.prompty"),
         { question: "What is the weather in Seattle?" },
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },
@@ -457,7 +457,7 @@ describe("Foundry E2E Pipeline", () => {
         get_weather: () => "sunny",
       };
 
-      await invokeAgent(
+      await turn(
         path.resolve(FIXTURES, "agent.prompty"),
         {},
         { tools: tools as Record<string, (...args: unknown[]) => unknown> },

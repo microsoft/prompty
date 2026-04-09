@@ -14,7 +14,7 @@ import {
   Tracer,
   PromptyTracer,
   invoke,
-  invokeAgent,
+  turn,
   registerConnection,
   clearConnections,
 } from "@prompty/core";
@@ -482,7 +482,7 @@ describe("e2e pipeline", () => {
     expect(lastCreateArgs!.output_config).toBeDefined();
   });
 
-  it("agent loop: invokeAgent handles tool calls", async () => {
+  it("agent loop: turn handles tool calls", async () => {
     let callNum = 0;
     createResponder = () => {
       callNum++;
@@ -519,7 +519,7 @@ describe("e2e pipeline", () => {
       return `72°F and sunny in ${args.city}`;
     }
 
-    const result = await invokeAgent(
+    const result = await turn(
       fixtureFile("agent.prompty"),
       { question: "What is the weather in Seattle?" },
       { tools: { get_weather: getWeather } },

@@ -235,7 +235,7 @@ def bind_tools(
     Returns
     -------
     dict[str, callable]
-        Handler dict suitable for ``invoke_agent(..., tools=result)``.
+        Handler dict suitable for ``turn(..., tools=result)``.
 
     Raises
     ------

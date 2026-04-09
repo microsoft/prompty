@@ -9,7 +9,7 @@ import { resolve } from "path";
 import {
   Tracer,
   invoke,
-  invokeAgent,
+  turn,
   registerConnection,
   clearConnections,
   registerExecutor,
@@ -215,7 +215,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    const result = await invokeAgent(
+    const result = await turn(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -245,8 +245,8 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    // invokeAgent should disable streaming internally, run tool loop, and return a string
-    const result = await invokeAgent(
+    // turn should disable streaming internally, run tool loop, and return a string
+    const result = await turn(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -284,7 +284,7 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
         },
       ],
     });
-    const result = await invokeAgent(
+    const result = await turn(
       agent,
       { question: "What is the weather in Seattle?" },
       {
@@ -383,7 +383,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
         "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
       tools: toolSpec,
     });
-    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await turn(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });
@@ -396,7 +396,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
       options: { temperature: 0, maxOutputTokens: 200, additionalProperties: { stream: true } },
       tools: toolSpec,
     });
-    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await turn(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });
@@ -417,7 +417,7 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
         "system:\nYou are a helpful assistant. Use the get_weather tool when asked about weather. Be brief.\nuser:\n{{question}}",
       tools: toolSpec,
     });
-    const result = await invokeAgent(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
+    const result = await turn(agent, { question: "What is the weather in Seattle?" }, { tools: toolFns });
     expect(typeof result).toBe("string");
     expect((result as string).toLowerCase()).toMatch(/72|sunny|seattle/);
   });

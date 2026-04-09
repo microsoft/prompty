@@ -522,34 +522,6 @@ public static class Pipeline
     }
 
     // -----------------------------------------------------------------------
-    // Agent Loop (deprecated — use TurnAsync)
-    // -----------------------------------------------------------------------
-
-    /// <summary>
-    /// Agent mode: runs the LLM in a loop, executing tool calls via the
-    /// two-layer dispatch system until the model returns a final response
-    /// or maxIterations is reached. Supports §13 extensions: cancellation,
-    /// steering, context window trimming, guardrails, events, and parallel tool calls.
-    /// </summary>
-    [Obsolete("Use TurnAsync with tools parameter instead.")]
-    public static async Task<object> InvokeAgentAsync(
-        Prompty agent,
-        Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<string>>>? tools = null,
-        int maxIterations = 10,
-        bool raw = false,
-        EventCallback? onEvent = null,
-        CancellationToken cancellationToken = default,
-        int? contextBudget = null,
-        Guardrails? guardrails = null,
-        Steering? steering = null,
-        bool parallelToolCalls = false)
-    {
-        return await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber: null,
-            onEvent, cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
-    }
-
-    // -----------------------------------------------------------------------
     // Generic (typed) overloads
     // -----------------------------------------------------------------------
 
@@ -612,30 +584,6 @@ public static class Pipeline
     {
         var result = await TurnAsync(path, inputs, tools, maxIterations, raw, turnNumber, onEvent,
             cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
-        return PromptyCast.Cast<T>(result);
-    }
-
-    /// <summary>
-    /// Run the agent loop and cast the result to a typed object.
-    /// </summary>
-    [Obsolete("Use TurnAsync<T> with tools parameter instead.")]
-    public static async Task<T> InvokeAgentAsync<T>(
-        Prompty agent,
-        Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<string>>>? tools = null,
-        int maxIterations = 10,
-        bool raw = false,
-        EventCallback? onEvent = null,
-        CancellationToken cancellationToken = default,
-        int? contextBudget = null,
-        Guardrails? guardrails = null,
-        Steering? steering = null,
-        bool parallelToolCalls = false)
-    {
-#pragma warning disable CS0618
-        var result = await InvokeAgentAsync(agent, inputs, tools, maxIterations, raw, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
-#pragma warning restore CS0618
         return PromptyCast.Cast<T>(result);
     }
 

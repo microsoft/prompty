@@ -28,8 +28,6 @@ from .core.discovery import (
 # --- Pipeline ---
 from .core.pipeline import (
     invoke,
-    invoke_agent,
-    invoke_agent_async,
     invoke_async,
     parse,
     parse_async,
@@ -91,9 +89,6 @@ __all__ = [
     "invoke_async",
     "turn",
     "turn_async",
-    # Deprecated aliases
-    "invoke_agent",
-    "invoke_agent_async",
     # Validation
     "validate_inputs",
     # Structured result casting (§8.8)

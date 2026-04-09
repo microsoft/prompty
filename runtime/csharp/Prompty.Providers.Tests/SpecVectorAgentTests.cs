@@ -9,7 +9,7 @@ namespace Prompty.Providers.Tests;
 /// <summary>
 /// Spec vector tests for the agent stage — loads canonical vectors from
 /// spec/vectors/agent/agent_vectors.json and runs them through the real
-/// Pipeline.InvokeAgentAsync with mock executor/processor.
+/// Pipeline.TurnAsync with mock executor/processor.
 ///
 /// The mock executor replays canned responses (pre-processed from vector data).
 /// Tool functions return results from the vector's tool_results.

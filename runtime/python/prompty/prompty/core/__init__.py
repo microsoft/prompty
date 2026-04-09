@@ -18,8 +18,6 @@ from .guardrails import GuardrailError, GuardrailResult, Guardrails
 from .loader import default_save_context, load, load_async
 from .pipeline import (
     invoke,
-    invoke_agent,
-    invoke_agent_async,
     invoke_async,
     prepare,
     prepare_async,

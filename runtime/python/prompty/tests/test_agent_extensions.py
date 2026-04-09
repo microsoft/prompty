@@ -1,7 +1,7 @@
 """Tests for §13 Agent Loop Extensions.
 
 Tests cover: events, cancellation, context window management, guardrails,
-steering, and parallel tool execution — all integrated into invoke_agent.
+steering, and parallel tool execution — all integrated into turn.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from prompty.core.agent_events import emit_event
 from prompty.core.cancellation import CancellationToken, CancelledError
 from prompty.core.context import estimate_chars, summarize_dropped, trim_to_context_window
 from prompty.core.guardrails import GuardrailError, GuardrailResult, Guardrails
-from prompty.core.pipeline import invoke_agent, invoke_agent_async
+from prompty.core.pipeline import turn, turn_async
 from prompty.core.steering import Steering
 from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
@@ -101,7 +101,7 @@ class TestEvents:
         def on_event(event_type: str, data: Any) -> None:
             events.append((event_type, data))
 
-        invoke_agent(agent, {"question": "weather"}, tools={"get_weather": lambda location: "Sunny"}, on_event=on_event)
+        turn(agent, {"question": "weather"}, tools={"get_weather": lambda location: "Sunny"}, on_event=on_event)
 
         types = [e[0] for e in events]
         assert "tool_call_start" in types
@@ -153,7 +153,7 @@ class TestCancellation:
         token.cancel()
 
         with pytest.raises(CancelledError):
-            invoke_agent(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, cancel=token)
+            turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, cancel=token)
 
     @patch(f"{_PIPELINE}._invoke_executor")
     @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
@@ -175,7 +175,7 @@ class TestCancellation:
         # The cancel check happens at the TOP of the next iteration, after tool dispatch
         # So first iteration completes tools, then cancel fires on second iteration entry
         with pytest.raises(CancelledError):
-            invoke_agent(
+            turn(
                 agent,
                 {},
                 tools={"get_weather": cancelling_tool},
@@ -230,7 +230,7 @@ class TestContextWindow:
         agent = _make_agent()
         events: list[tuple[str, Any]] = []
 
-        result = invoke_agent(
+        result = turn(
             agent,
             {},
             tools={"get_weather": lambda **kw: "sunny"},
@@ -271,7 +271,7 @@ class TestGuardrails:
         g = Guardrails(input=lambda msgs: GuardrailResult(allowed=False, reason="blocked"))
 
         with pytest.raises(GuardrailError, match="blocked"):
-            invoke_agent(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
+            turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
 
     @patch(f"{_PIPELINE}._invoke_executor")
     @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
@@ -288,7 +288,7 @@ class TestGuardrails:
         g = Guardrails(output=lambda msg: GuardrailResult(allowed=False, reason="toxic"))
 
         with pytest.raises(GuardrailError, match="toxic"):
-            invoke_agent(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
+            turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
 
     @patch(f"{_PIPELINE}._invoke_executor")
     @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
@@ -301,7 +301,7 @@ class TestGuardrails:
 
         g = Guardrails(tool=lambda name, args: GuardrailResult(allowed=False, reason="disallowed"))
 
-        invoke_agent(
+        turn(
             agent,
             {},
             tools={"get_weather": lambda **kw: "sunny"},
@@ -360,7 +360,7 @@ class TestSteering:
             if t == "tool_result":
                 steering.send("Please also check humidity")
 
-        result = invoke_agent(
+        result = turn(
             agent,
             {},
             tools={"get_weather": lambda **kw: "sunny"},
@@ -417,7 +417,7 @@ class TestParallelTools:
         mock_exec.side_effect = [tool_resp, _mock_final_response()]
 
         agent = _make_agent()
-        result = await invoke_agent_async(
+        result = await turn_async(
             agent,
             {},
             tools={"get_weather": lambda **kw: f"Sunny in {kw.get('location', '?')}"},
@@ -445,7 +445,7 @@ class TestCombinedExtensions:
         steering = Steering()
         guardrails = Guardrails()  # all allow
 
-        result = invoke_agent(
+        result = turn(
             agent,
             {},
             tools={"get_weather": lambda **kw: "sunny"},
@@ -464,7 +464,7 @@ class TestCombinedExtensions:
 
 
 class TestAgentLoopExtensions:
-    """Integration tests for §13 agent loop extensions within invoke_agent."""
+    """Integration tests for §13 agent loop extensions within turn."""
 
     # ----- 1. First-turn guardrail denial (no LLM call) --------------------
 
@@ -477,7 +477,7 @@ class TestAgentLoopExtensions:
         g = Guardrails(input=lambda msgs: GuardrailResult(allowed=False, reason="first-turn block"))
 
         with pytest.raises(GuardrailError, match="first-turn block"):
-            invoke_agent(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
+            turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
 
         mock_exec.assert_not_called()
 
@@ -487,7 +487,7 @@ class TestAgentLoopExtensions:
     @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
     @patch(f"{_PIPELINE}.process", return_value="result")
     def test_steering_on_first_turn(self, mock_process, mock_prepare, mock_exec):
-        """Messages injected via steering.send() before calling invoke_agent
+        """Messages injected via steering.send() before calling turn
         appear in the messages sent to the very first LLM call."""
         mock_exec.return_value = _mock_final_response("done")
         agent = _make_agent()
@@ -502,7 +502,7 @@ class TestAgentLoopExtensions:
 
         mock_exec.side_effect = capturing_executor
 
-        invoke_agent(agent, {}, tools={}, steering=steering)
+        turn(agent, {}, tools={}, steering=steering)
 
         assert len(captured_messages) == 1
         all_text = " ".join(p.value for m in captured_messages[0] for p in m.parts if isinstance(p, TextPart))
@@ -534,7 +534,7 @@ class TestAgentLoopExtensions:
         with patch(f"{_PIPELINE}.prepare", return_value=all_msgs):
             agent = _make_agent()
             # Budget of 2000 chars forces heavy trimming
-            invoke_agent(agent, {}, tools={}, context_budget=2000)
+            turn(agent, {}, tools={}, context_budget=2000)
 
         assert len(captured) == 1
         # The trimmed message list must be strictly smaller than the original
@@ -565,7 +565,7 @@ class TestAgentLoopExtensions:
         g = Guardrails(input=lambda msgs: GuardrailResult(allowed=True, rewrite=rewritten))
         agent = _make_agent()
 
-        invoke_agent(agent, {}, tools={}, guardrails=g)
+        turn(agent, {}, tools={}, guardrails=g)
 
         assert len(captured) == 1
         texts = [p.value for m in captured[0] for p in m.parts if isinstance(p, TextPart)]
@@ -585,7 +585,7 @@ class TestAgentLoopExtensions:
         g = Guardrails(output=lambda msg: GuardrailResult(allowed=False, reason="toxic content"))
 
         with pytest.raises(GuardrailError, match="toxic content"):
-            invoke_agent(agent, {}, tools={}, guardrails=g)
+            turn(agent, {}, tools={}, guardrails=g)
 
     @patch(f"{_PIPELINE}._invoke_executor")
     @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
@@ -597,7 +597,7 @@ class TestAgentLoopExtensions:
         agent = _make_agent()
         g = Guardrails(output=lambda msg: GuardrailResult(allowed=True, rewrite="sanitized response"))
 
-        result = invoke_agent(agent, {}, tools={}, guardrails=g)
+        result = turn(agent, {}, tools={}, guardrails=g)
         assert result == "sanitized response"
 
     # ----- 6. Tool guardrail rewrite ---------------------------------------
@@ -624,7 +624,7 @@ class TestAgentLoopExtensions:
             )
         )
 
-        invoke_agent(
+        turn(
             agent,
             {},
             tools={"get_weather": tracking_tool},
@@ -683,7 +683,7 @@ class TestAgentLoopExtensions:
             return f"Result for {kwargs.get('location', '?')}"
 
         start = time.monotonic()
-        result = invoke_agent(
+        result = turn(
             agent,
             {},
             tools={"get_weather": slow_tool},
@@ -706,7 +706,7 @@ class TestAgentLoopExtensions:
         agent = _make_agent()
 
         with pytest.raises(ValueError, match="max_iterations"):
-            invoke_agent(
+            turn(
                 agent,
                 {},
                 tools={"get_weather": lambda **kw: "sunny"},
@@ -739,7 +739,7 @@ class TestAgentLoopExtensions:
         mock_exec.side_effect = executor_with_cancel
 
         with pytest.raises(CancelledError):
-            invoke_agent(
+            turn(
                 agent,
                 {},
                 tools={"get_weather": lambda **kw: "sunny"},

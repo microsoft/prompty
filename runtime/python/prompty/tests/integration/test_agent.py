@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.pipeline import invoke_agent, invoke_agent_async
+from prompty.core.pipeline import turn, turn_async
 
 from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
 
@@ -43,7 +43,7 @@ class TestOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = invoke_agent(
+        result = turn(
             agent,
             tools={"get_weather": _weather_fn},
         )
@@ -58,7 +58,7 @@ class TestOpenAIAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = await invoke_agent_async(
+        result = await turn_async(
             agent,
             tools={"get_weather": _weather_fn},
         )
@@ -79,7 +79,7 @@ class TestFoundryAgent:
             tools=_TOOLS,
         )
         agent.instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?"
-        result = invoke_agent(
+        result = turn(
             agent,
             tools={"get_weather": _weather_fn},
         )

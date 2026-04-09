@@ -1002,17 +1002,17 @@ _EXTENSION_KEYS = {"on_event", "cancel", "context_budget", "guardrails", "steeri
 
 @pytest.mark.parametrize("vec", AGENT_VECTORS, ids=AGENT_IDS)
 def test_agent_vector(vec: dict):
-    """Test agent vectors via the REAL invoke_agent() pipeline.
+    """Test agent vectors via the REAL turn() pipeline.
 
     Registers a mock executor that replays canned LLM responses from the
-    vector sequence, then calls the production invoke_agent(). This
+    vector sequence, then calls the production turn(). This
     validates the full agent loop including binding injection, tool result
     message construction, and iteration control.
     """
     from unittest.mock import patch
 
     from prompty.core.discovery import _cache, clear_cache
-    from prompty.core.pipeline import invoke_agent
+    from prompty.core.pipeline import turn
 
     name = vec["name"]
     inp = vec["input"]
@@ -1142,7 +1142,7 @@ def test_agent_vector(vec: dict):
             if "error" in expected:
                 _test_agent_error_real(name, agent, inp, expected, tool_functions)
             else:
-                result = invoke_agent(
+                result = turn(
                     agent,
                     inputs=inp.get("parent_inputs"),
                     tools=tool_functions,
@@ -1177,14 +1177,14 @@ def _test_agent_error_real(
     expected: dict,
     tool_functions: dict[str, Any],
 ):
-    """Test that invoke_agent raises on error vectors."""
-    from prompty.core.pipeline import invoke_agent
+    """Test that turn raises on error vectors."""
+    from prompty.core.pipeline import turn
 
     error_msg = expected.get("error", "")
 
     if "max_iterations" in name.lower() or "exceeded" in error_msg.lower():
         with pytest.raises(ValueError, match="max_iterations"):
-            invoke_agent(
+            turn(
                 agent,
                 inputs=inp.get("parent_inputs"),
                 tools=tool_functions,
@@ -1192,10 +1192,10 @@ def _test_agent_error_real(
     elif "not registered" in error_msg.lower() or "unknown_tool" in name:
         # The tool_not_registered vector expects the loop to handle missing tools
         # gracefully (not crash), returning an error message to the LLM.
-        # Our invoke_agent handles this by returning an error string as tool result.
+        # Our turn handles this by returning an error string as tool result.
         # The vector just validates the loop doesn't crash — so run it.
         try:
-            invoke_agent(
+            turn(
                 agent,
                 inputs=inp.get("parent_inputs"),
                 tools=tool_functions,
@@ -1434,13 +1434,13 @@ def test_agent_extension_vector(vec: dict):
 
     Exercises events, cancellation, context budget, guardrails,
     steering, and parallel tool call vectors against the real
-    invoke_agent() pipeline with mock executor/processor.
+    turn() pipeline with mock executor/processor.
     """
     from unittest.mock import patch
 
     from prompty.core.cancellation import CancellationToken, CancelledError
     from prompty.core.guardrails import GuardrailError, GuardrailResult, Guardrails
-    from prompty.core.pipeline import invoke_agent
+    from prompty.core.pipeline import turn
     from prompty.core.steering import Steering
 
     name = vec["name"]
@@ -1582,10 +1582,10 @@ def test_agent_extension_vector(vec: dict):
                 error_type = expected.get("error", "")
                 if error_type == "CancelledError":
                     with pytest.raises(CancelledError):
-                        invoke_agent(agent, tools=tool_functions, **ext_kwargs)
+                        turn(agent, tools=tool_functions, **ext_kwargs)
                 elif error_type == "GuardrailError":
                     with pytest.raises(GuardrailError) as exc_info:
-                        invoke_agent(agent, tools=tool_functions, **ext_kwargs)
+                        turn(agent, tools=tool_functions, **ext_kwargs)
                     if "error_reason" in expected:
                         assert expected["error_reason"] in str(exc_info.value), (
                             f"Agent '{name}': GuardrailError reason mismatch\n"
@@ -1597,11 +1597,11 @@ def test_agent_extension_vector(vec: dict):
                     # The runtime may catch tool errors and continue, so we accept
                     # either an exception or mock exhaustion (StopIteration).
                     try:
-                        invoke_agent(agent, tools=tool_functions, **ext_kwargs)
+                        turn(agent, tools=tool_functions, **ext_kwargs)
                     except Exception:
                         pass  # Expected: tool error or mock exhaustion
             else:
-                result = invoke_agent(agent, tools=tool_functions, **ext_kwargs)
+                result = turn(agent, tools=tool_functions, **ext_kwargs)
 
                 # Validate result
                 if "result" in expected:

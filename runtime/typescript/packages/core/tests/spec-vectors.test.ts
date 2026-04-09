@@ -34,7 +34,7 @@ import {
   render,
   parse,
   validateInputs,
-  invokeAgent,
+  turn,
   Message,
   text,
   NunjucksRenderer,
@@ -843,7 +843,7 @@ describe("Spec Vectors: Process", () => {
 });
 
 // =========================================================================
-// AGENT VECTORS — calls REAL invokeAgent() with mock executor
+// AGENT VECTORS — calls REAL turn() with mock executor
 // =========================================================================
 
 describe("Spec Vectors: Agent", () => {
@@ -988,7 +988,7 @@ describe("Spec Vectors: Agent", () => {
           // Error vectors
           if (expected.error.includes("exceeded")) {
             await expect(
-              invokeAgent(agent, input.parent_inputs ?? {}, {
+              turn(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
               }),
             ).rejects.toThrow("maxIterations");
@@ -996,7 +996,7 @@ describe("Spec Vectors: Agent", () => {
             // tool_not_registered: invoke_agent handles this gracefully
             // (returns error string to LLM, doesn't crash)
             try {
-              await invokeAgent(agent, input.parent_inputs ?? {}, {
+              await turn(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
               });
             } catch {
@@ -1005,7 +1005,7 @@ describe("Spec Vectors: Agent", () => {
           }
         } else {
           // Success vectors
-          const result = await invokeAgent(agent, input.parent_inputs ?? {}, {
+          const result = await turn(agent, input.parent_inputs ?? {}, {
             tools: toolFunctions,
           });
 
@@ -1282,21 +1282,21 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
           const errorType = expected.error ?? "";
           if (errorType === "CancelledError") {
             await expect(
-              invokeAgent(agent, input.parent_inputs ?? {}, opts as any),
+              turn(agent, input.parent_inputs ?? {}, opts as any),
             ).rejects.toThrow();
           } else if (expected.error_type === "GuardrailError" || errorType.includes("guardrail") || errorType.includes("Guardrail")) {
             await expect(
-              invokeAgent(agent, input.parent_inputs ?? {}, opts as any),
+              turn(agent, input.parent_inputs ?? {}, opts as any),
             ).rejects.toThrow();
           } else {
             try {
-              await invokeAgent(agent, input.parent_inputs ?? {}, opts as any);
+              await turn(agent, input.parent_inputs ?? {}, opts as any);
             } catch {
               // Generic error — runtime may catch tool errors
             }
           }
         } else {
-          const result = await invokeAgent(agent, input.parent_inputs ?? {}, opts as any);
+          const result = await turn(agent, input.parent_inputs ?? {}, opts as any);
 
           if (expected.result !== undefined) {
             expect(result).toBe(expected.result);

@@ -1,7 +1,7 @@
-"""Tests for invoke_agent() / invoke_agent_async() pipeline functions.
+"""Tests for turn() / turn_async() pipeline functions.
 
 These tests mock the pipeline's _invoke_executor/process functions (not the SDK client)
-since invoke_agent is a pipeline-level orchestration, not an executor concern.
+since turn is a pipeline-level orchestration, not an executor concern.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ import pytest
 from prompty.core.pipeline import (
     _build_tool_result_messages,
     _has_tool_calls,
-    invoke_agent,
-    invoke_agent_async,
+    turn,
+    turn_async,
 )
 from prompty.core.tool_dispatch import dispatch_tool, dispatch_tool_async
 from prompty.core.types import Message, TextPart
@@ -209,18 +209,18 @@ class TestBuildToolResultMessages:
 
 
 # ---------------------------------------------------------------------------
-# invoke_agent (sync)
+# turn (sync)
 # ---------------------------------------------------------------------------
 
 
 class TestRunAgent:
-    """Tests for invoke_agent() pipeline function."""
+    """Tests for turn() pipeline function."""
 
     @patch("prompty.core.pipeline.process")
     @patch("prompty.core.pipeline._invoke_executor")
     @patch("prompty.core.pipeline.prepare")
     def test_no_tool_calls_returns_immediately(self, mock_prepare, mock_execute, mock_process):
-        """When the model returns no tool calls, invoke_agent does a single pass."""
+        """When the model returns no tool calls, turn does a single pass."""
         agent = _make_agent()
         messages = [Message(role="user", parts=[TextPart(value="Hello")])]
         final_response = _mock_final_response("Hello back!")
@@ -229,7 +229,7 @@ class TestRunAgent:
         mock_execute.return_value = final_response
         mock_process.return_value = "Hello back!"
 
-        result = invoke_agent(agent, inputs={"question": "Hello"})
+        result = turn(agent, inputs={"question": "Hello"})
 
         assert result == "Hello back!"
         assert mock_execute.call_count == 1
@@ -251,7 +251,7 @@ class TestRunAgent:
         mock_process.return_value = "It's sunny in Seattle."
 
         tools = {"get_weather": lambda location: f"72°F in {location}"}
-        result = invoke_agent(agent, inputs={}, tools=tools)
+        result = turn(agent, inputs={}, tools=tools)
 
         assert result == "It's sunny in Seattle."
         assert mock_execute.call_count == 2
@@ -275,7 +275,7 @@ class TestRunAgent:
         mock_process.return_value = "Both are sunny."
 
         tools = {"get_weather": lambda location: f"72°F in {location}"}
-        result = invoke_agent(agent, inputs={}, tools=tools)
+        result = turn(agent, inputs={}, tools=tools)
 
         assert result == "Both are sunny."
         assert mock_execute.call_count == 3
@@ -295,7 +295,7 @@ class TestRunAgent:
         tools = {"get_weather": lambda location: "sunny"}
 
         with pytest.raises(ValueError, match="max_iterations"):
-            invoke_agent(agent, inputs={}, tools=tools, max_iterations=3)
+            turn(agent, inputs={}, tools=tools, max_iterations=3)
 
         # Should have been called 4 times: initial + 3 retries
         assert mock_execute.call_count == 4
@@ -316,7 +316,7 @@ class TestRunAgent:
         mock_process.return_value = "Fixed it."
 
         tools = {"get_weather": lambda location: "sunny"}
-        result = invoke_agent(agent, inputs={}, tools=tools)
+        result = turn(agent, inputs={}, tools=tools)
 
         assert result == "Fixed it."
         # Check that error message was sent back as tool result
@@ -342,7 +342,7 @@ class TestRunAgent:
             raise RuntimeError("API down")
 
         tools = {"get_weather": failing_tool}
-        result = invoke_agent(agent, inputs={}, tools=tools)
+        result = turn(agent, inputs={}, tools=tools)
 
         assert result == "Sorry about that."
         tool_msg = [m for m in messages if m.role == "tool"][0]
@@ -365,7 +365,7 @@ class TestRunAgent:
         mock_process.return_value = "I'll try differently."
 
         tools: dict[str, Any] = {"get_weather": lambda: "sunny"}
-        result = invoke_agent(agent, inputs={}, tools=tools)
+        result = turn(agent, inputs={}, tools=tools)
 
         assert result == "I'll try differently."
         tool_msg = [m for m in messages if m.role == "tool"][0]
@@ -383,7 +383,7 @@ class TestRunAgent:
         mock_prepare.return_value = messages
         mock_execute.return_value = final_response
 
-        result = invoke_agent(agent, inputs={}, raw=True)
+        result = turn(agent, inputs={}, raw=True)
 
         assert result is final_response
         mock_process.assert_not_called()
@@ -404,7 +404,7 @@ class TestRunAgent:
         mock_process.return_value = "Done."
 
         tools = {"get_weather": lambda location: {"temp": 72, "condition": "sunny"}}
-        invoke_agent(agent, inputs={}, tools=tools)
+        turn(agent, inputs={}, tools=tools)
 
         tool_msg = [m for m in messages if m.role == "tool"][0]
         assert tool_msg.parts[0].value == "{'temp': 72, 'condition': 'sunny'}"
@@ -413,7 +413,7 @@ class TestRunAgent:
     @patch("prompty.core.pipeline._invoke_executor")
     @patch("prompty.core.pipeline.prepare")
     def test_loads_from_path(self, mock_prepare, mock_execute, mock_process):
-        """When given a string path, invoke_agent loads the prompty file."""
+        """When given a string path, turn loads the prompty file."""
         final_response = _mock_final_response("Done.")
         mock_prepare.return_value = [Message(role="user", parts=[TextPart(value="Hi")])]
         mock_execute.return_value = final_response
@@ -421,19 +421,19 @@ class TestRunAgent:
 
         with patch("prompty.core.loader.load") as mock_load:
             mock_load.return_value = _make_agent()
-            result = invoke_agent("test.prompty", inputs={})
+            result = turn("test.prompty", inputs={})
 
         mock_load.assert_called_once_with("test.prompty")
         assert result == "Done."
 
 
 # ---------------------------------------------------------------------------
-# invoke_agent_async
+# turn_async
 # ---------------------------------------------------------------------------
 
 
 class TestRunAgentAsync:
-    """Tests for invoke_agent_async() pipeline function."""
+    """Tests for turn_async() pipeline function."""
 
     @pytest.mark.asyncio
     @patch("prompty.core.pipeline.process_async")
@@ -452,7 +452,7 @@ class TestRunAgentAsync:
         mock_process.return_value = "Sunny!"
 
         tools = {"get_weather": lambda location: f"72°F in {location}"}
-        result = await invoke_agent_async(agent, inputs={}, tools=tools)
+        result = await turn_async(agent, inputs={}, tools=tools)
 
         assert result == "Sunny!"
         assert mock_execute.call_count == 2
@@ -477,7 +477,7 @@ class TestRunAgentAsync:
             return f"Async: 72°F in {location}"
 
         tools = {"get_weather": async_weather}
-        result = await invoke_agent_async(agent, inputs={}, tools=tools)
+        result = await turn_async(agent, inputs={}, tools=tools)
 
         assert result == "Done."
         tool_msg = [m for m in messages if m.role == "tool"][0]
@@ -499,7 +499,7 @@ class TestRunAgentAsync:
         tools = {"get_weather": lambda location: "sunny"}
 
         with pytest.raises(ValueError, match="max_iterations"):
-            await invoke_agent_async(agent, inputs={}, tools=tools, max_iterations=2)
+            await turn_async(agent, inputs={}, tools=tools, max_iterations=2)
 
     @pytest.mark.asyncio
     @patch("prompty.core.pipeline.process_async")
@@ -515,7 +515,7 @@ class TestRunAgentAsync:
         mock_execute.return_value = final_response
         mock_process.return_value = "Hello!"
 
-        result = await invoke_agent_async(agent, inputs={})
+        result = await turn_async(agent, inputs={})
 
         assert result == "Hello!"
         assert mock_execute.call_count == 1
@@ -533,7 +533,7 @@ class TestRunAgentAsync:
         mock_execute.return_value = _mock_final_response("Done.")
         mock_process.return_value = "Done."
 
-        result = await invoke_agent_async("test.prompty", inputs={})
+        result = await turn_async("test.prompty", inputs={})
 
         mock_load.assert_called_once_with("test.prompty")
         assert result == "Done."

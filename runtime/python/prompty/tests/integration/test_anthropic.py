@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from prompty.core.pipeline import invoke_agent
+from prompty.core.pipeline import turn
 from prompty.core.types import Message, PromptyStream, TextPart
 from prompty.providers.anthropic.executor import AnthropicExecutor
 from prompty.providers.anthropic.processor import AnthropicProcessor
@@ -120,11 +120,11 @@ class TestAnthropicAgent:
         assert "location" in args
 
     def test_full_agent_loop(self):
-        """Test the full invoke_agent pipeline: call → tool → call → final answer."""
+        """Test the full turn pipeline: call → tool → call → final answer."""
         from pathlib import Path
 
         prompty_path = Path(__file__).parent.parent / "prompts" / "anthropic_agent.prompty"
-        result = invoke_agent(
+        result = turn(
             str(prompty_path),
             inputs={"question": "What is the weather in Seattle?"},
             tools={"get_weather": lambda location: f"72°F and sunny in {location}"},

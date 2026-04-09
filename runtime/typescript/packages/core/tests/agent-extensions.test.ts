@@ -5,7 +5,7 @@ import { estimateChars, summarizeDropped, trimToContextWindow } from "../src/cor
 import { Guardrails, GuardrailError } from "../src/core/guardrails.js";
 import { Steering } from "../src/core/steering.js";
 import { Message, text } from "../src/core/types.js";
-import { invokeAgent } from "../src/core/pipeline.js";
+import { turn } from "../src/core/pipeline.js";
 import {
   registerRenderer,
   registerParser,
@@ -301,7 +301,7 @@ describe("Steering", () => {
 });
 
 // ===========================================================================
-// invokeAgent integration — §13 extension hooks in the agent loop
+// turn integration — §13 extension hooks in the agent loop
 // ===========================================================================
 
 // --- Mock implementations for integration tests ---
@@ -404,7 +404,7 @@ function makeTestAgent(): Prompty {
   return agent;
 }
 
-describe("invokeAgent integration", () => {
+describe("turn integration", () => {
   /** Messages captured by the executor during execute(). */
   let capturedMessages: Message[];
   /** How many times execute() was called. */
@@ -436,7 +436,7 @@ describe("invokeAgent integration", () => {
 
     const agent = makeTestAgent();
     await expect(
-      invokeAgent(agent, { name: "Alice" }, { guardrails }),
+      turn(agent, { name: "Alice" }, { guardrails }),
     ).rejects.toThrow(GuardrailError);
 
     expect(executeCallCount).toBe(0);
@@ -448,7 +448,7 @@ describe("invokeAgent integration", () => {
     steering.send("Extra context from steering");
 
     const agent = makeTestAgent();
-    await invokeAgent(agent, { name: "Bob" }, { steering });
+    await turn(agent, { name: "Bob" }, { steering });
 
     // The prepared message is "Hello Bob" from template, then steering appends
     expect(capturedMessages.length).toBeGreaterThanOrEqual(2);
@@ -484,7 +484,7 @@ describe("invokeAgent integration", () => {
     registerParser("ext-stub", longParser);
 
     const agent = makeTestAgent();
-    await invokeAgent(agent, { name: "X" }, { contextBudget: 500 });
+    await turn(agent, { name: "X" }, { contextBudget: 500 });
 
     // Some messages should have been dropped; system should remain
     expect(capturedMessages[0].role).toBe("system");
@@ -504,7 +504,7 @@ describe("invokeAgent integration", () => {
     });
 
     const agent = makeTestAgent();
-    await invokeAgent(agent, { name: "Carol" }, { guardrails });
+    await turn(agent, { name: "Carol" }, { guardrails });
 
     expect(capturedMessages).toHaveLength(1);
     expect(capturedMessages[0].text).toBe("Rewritten input");
@@ -523,7 +523,7 @@ describe("invokeAgent integration", () => {
 
     const agent = makeTestAgent();
     await expect(
-      invokeAgent(agent, { name: "Eve" }, { guardrails }),
+      turn(agent, { name: "Eve" }, { guardrails }),
     ).rejects.toThrow(GuardrailError);
   });
 
@@ -534,7 +534,7 @@ describe("invokeAgent integration", () => {
     });
 
     const agent = makeTestAgent();
-    const result = await invokeAgent(agent, { name: "Frank" }, { guardrails });
+    const result = await turn(agent, { name: "Frank" }, { guardrails });
     expect(result).toBe("Redacted answer");
   });
 
@@ -574,7 +574,7 @@ describe("invokeAgent integration", () => {
     };
 
     const agent = makeTestAgent();
-    await invokeAgent(agent, { name: "G" }, { tools: tools as any, guardrails });
+    await turn(agent, { name: "G" }, { tools: tools as any, guardrails });
 
     expect(receivedArgs.city).toBe("Portland");
   });
@@ -603,7 +603,7 @@ describe("invokeAgent integration", () => {
     const agent = makeTestAgent();
 
     await expect(
-      invokeAgent(agent, { name: "H" }, {
+      turn(agent, { name: "H" }, {
         tools: tools as any,
         signal: controller.signal,
       }),
@@ -625,7 +625,7 @@ describe("invokeAgent integration", () => {
     const agent = makeTestAgent();
 
     await expect(
-      invokeAgent(agent, { name: "I" }, {
+      turn(agent, { name: "I" }, {
         tools: tools as any,
         maxIterations: 2,
       }),
