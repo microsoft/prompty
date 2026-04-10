@@ -1,6 +1,7 @@
 ---
 title: "AgentSchema"
 description: "Overview of declarative agent types in AgentSchema."
+slug: "reference/index"
 sidebar:
   order: 1
 ---
