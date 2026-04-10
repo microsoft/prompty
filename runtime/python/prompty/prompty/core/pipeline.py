@@ -1525,7 +1525,6 @@ async def _build_tool_messages_from_calls_async(
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
 
-
 # ---------------------------------------------------------------------------
 # §13 Extension helpers for tool dispatch
 # ---------------------------------------------------------------------------
