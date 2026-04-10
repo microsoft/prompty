@@ -27,4 +27,4 @@ pub use pipeline::{
     validate_inputs, register_defaults, TurnOptions, ToolHandler, ToolFn, AsyncToolFn,
     AgentEvent, EventCallback,
 };
-pub use tracing::{console_tracer, sanitize_value, trace, trace_span, PromptyTracer, Tracer};
+pub use tracing::{console_tracer, sanitize_value, trace, trace_async, trace_span, trace_span_async, PromptyTracer, Tracer};

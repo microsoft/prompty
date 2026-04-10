@@ -3,17 +3,23 @@
 //! These are the 5 public functions that compose the four pipeline stages
 //! (renderer → parser → executor → processor). Matches the TypeScript
 //! implementation at `@prompty/core/pipeline.ts`.
+//!
+//! Each step is independently traced. Users can bring their own
+//! tracer backends (console, file, OpenTelemetry) via `Tracer::add`.
 
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::path::Path;
 
+use serde_json::{json, Value};
+
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
 use crate::registry;
 use crate::renderers::{clear_last_nonces, get_last_nonces};
+use crate::tracing::{sanitize_value, Tracer};
 use crate::types::{ContentPart, Message, Role, TextPart, ToolCall};
 
 // ---------------------------------------------------------------------------
@@ -64,6 +70,101 @@ fn resolve_provider(agent: &Prompty) -> String {
         .filter(|p| !p.is_empty())
         .unwrap_or(DEFAULT_PROVIDER)
         .to_string()
+}
+
+// ---------------------------------------------------------------------------
+// Trace serialization helpers
+// ---------------------------------------------------------------------------
+
+/// Serialize agent summary for trace output.
+fn serialize_agent(agent: &Prompty) -> Value {
+    let metadata = agent
+        .as_metadata_dict()
+        .map(|m| Value::Object(m.clone()))
+        .unwrap_or(Value::Null);
+
+    let inputs: Vec<Value> = agent
+        .as_inputs()
+        .map(|props| {
+            props
+                .iter()
+                .map(|p| {
+                    json!({
+                        "name": p.name,
+                        "kind": p.kind_str(),
+                        "description": p.description,
+                        "required": p.required.unwrap_or(false),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let outputs: Vec<Value> = agent
+        .as_outputs()
+        .map(|props| {
+            props
+                .iter()
+                .map(|p| {
+                    json!({
+                        "name": p.name,
+                        "kind": p.kind_str(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let tools: Vec<Value> = agent
+        .as_tools()
+        .map(|tools| {
+            tools
+                .iter()
+                .map(|t| {
+                    json!({
+                        "name": t.name,
+                        "kind": t.kind_str(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    sanitize_value(
+        "agent",
+        &json!({
+            "name": agent.name,
+            "description": agent.description,
+            "metadata": metadata,
+            "model": {
+                "id": agent.model.id,
+                "apiType": agent.model.api_type.as_deref().unwrap_or("chat"),
+                "provider": agent.model.provider.as_deref().unwrap_or(""),
+            },
+            "inputs": inputs,
+            "outputs": outputs,
+            "tools": tools,
+            "template": {
+                "format": resolve_format_kind(agent),
+                "parser": resolve_parser_kind(agent),
+            },
+        }),
+    )
+}
+
+/// Serialize messages for trace output.
+fn serialize_messages(messages: &[Message]) -> Value {
+    Value::Array(
+        messages
+            .iter()
+            .map(|m| {
+                json!({
+                    "role": m.role.to_string(),
+                    "content": m.text_content(),
+                })
+            })
+            .collect(),
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -119,7 +220,23 @@ pub async fn render(
 ) -> Result<String, InvokerError> {
     let format_kind = resolve_format_kind(agent);
     let template = agent.instructions.as_deref().unwrap_or("");
-    registry::invoke_renderer(&format_kind, agent, template, inputs).await
+
+    let span = Tracer::start("Renderer");
+    span.emit("signature", &json!(format!("prompty.renderers.{format_kind}.render")));
+    span.emit("inputs", &json!({ "data": inputs }));
+
+    match registry::invoke_renderer(&format_kind, agent, template, inputs).await {
+        Ok(result) => {
+            span.emit("result", &json!(result));
+            span.end();
+            Ok(result)
+        }
+        Err(e) => {
+            span.emit("error", &json!(e.to_string()));
+            span.end();
+            Err(e)
+        }
+    }
 }
 
 /// Parse rendered text into messages using the registered parser.
@@ -130,12 +247,28 @@ pub async fn parse(
 ) -> Result<Vec<Message>, InvokerError> {
     let parser_kind = resolve_parser_kind(agent);
 
-    // If parser is "prompty", use our built-in directly (avoids needing registration for basic use)
-    if parser_kind == "prompty" {
-        return Ok(parse_chat(rendered));
-    }
+    let span = Tracer::start("Parser");
+    span.emit("signature", &json!(format!("prompty.parsers.{parser_kind}.parse")));
+    span.emit("inputs", &json!(rendered));
 
-    registry::invoke_parser(&parser_kind, agent, rendered, context).await
+    let result = if parser_kind == "prompty" {
+        Ok(parse_chat(rendered))
+    } else {
+        registry::invoke_parser(&parser_kind, agent, rendered, context).await
+    };
+
+    match result {
+        Ok(messages) => {
+            span.emit("result", &serialize_messages(&messages));
+            span.end();
+            Ok(messages)
+        }
+        Err(e) => {
+            span.emit("error", &json!(e.to_string()));
+            span.end();
+            Err(e)
+        }
+    }
 }
 
 /// Process a raw LLM response using the registered processor.
@@ -144,7 +277,23 @@ pub async fn process(
     response: serde_json::Value,
 ) -> Result<serde_json::Value, InvokerError> {
     let provider = resolve_provider(agent);
-    registry::invoke_processor(&provider, agent, response).await
+
+    let span = Tracer::start("Processor");
+    span.emit("signature", &json!(format!("prompty.processors.{provider}.process")));
+    span.emit("inputs", &json!("raw response"));
+
+    match registry::invoke_processor(&provider, agent, response).await {
+        Ok(result) => {
+            span.emit("result", &result);
+            span.end();
+            Ok(result)
+        }
+        Err(e) => {
+            span.emit("error", &json!(e.to_string()));
+            span.end();
+            Err(e)
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,9 +307,14 @@ pub async fn prepare(
     agent: &Prompty,
     inputs: Option<&serde_json::Value>,
 ) -> Result<Vec<Message>, InvokerError> {
+    let span = Tracer::start("prepare");
+    span.emit("signature", &json!("prompty.prepare"));
+    span.emit("description", &json!("Render and parse into messages"));
+
     let empty = serde_json::json!({});
     let raw_inputs = inputs.unwrap_or(&empty);
     let validated = validate_inputs(agent, raw_inputs)?;
+    span.emit("inputs", &json!(validated));
 
     // Render
     clear_last_nonces();
@@ -173,6 +327,8 @@ pub async fn prepare(
     let nonces = get_last_nonces();
     let expanded = expand_threads(&messages, &nonces, &validated);
 
+    span.emit("result", &serialize_messages(&expanded));
+    span.end();
     Ok(expanded)
 }
 
@@ -188,8 +344,24 @@ pub async fn run(
     messages: &[Message],
 ) -> Result<serde_json::Value, InvokerError> {
     let provider = resolve_provider(agent);
-    let response = registry::invoke_executor(&provider, agent, messages).await?;
+
+    let span = Tracer::start("run");
+    span.emit("signature", &json!("prompty.run"));
+    span.emit("description", &json!("Execute and process"));
+    span.emit("inputs", &serialize_messages(messages));
+
+    let response = match registry::invoke_executor(&provider, agent, messages).await {
+        Ok(r) => r,
+        Err(e) => {
+            span.emit("error", &json!(e.to_string()));
+            span.end();
+            return Err(e);
+        }
+    };
     let result = process(agent, response).await?;
+
+    span.emit("result", &result);
+    span.end();
     Ok(result)
 }
 
@@ -204,11 +376,31 @@ pub async fn invoke(
     agent: &Prompty,
     inputs: Option<&serde_json::Value>,
 ) -> Result<serde_json::Value, InvokerError> {
-    let messages = prepare(agent, inputs).await?;
-    let provider = resolve_provider(agent);
-    let response = registry::invoke_executor(&provider, agent, &messages).await?;
-    let result = process(agent, response).await?;
-    Ok(result)
+    let span = Tracer::start("invoke");
+    span.emit("signature", &json!("prompty.invoke"));
+    span.emit("agent", &serialize_agent(agent));
+    let empty = serde_json::json!({});
+    span.emit("inputs", inputs.unwrap_or(&empty));
+
+    let result = async {
+        let messages = prepare(agent, inputs).await?;
+        let provider = resolve_provider(agent);
+        let response = registry::invoke_executor(&provider, agent, &messages).await?;
+        process(agent, response).await
+    }
+    .await;
+
+    match &result {
+        Ok(v) => {
+            span.emit("result", v);
+            span.end();
+        }
+        Err(e) => {
+            span.emit("error", &json!(e.to_string()));
+            span.end();
+        }
+    }
+    result
 }
 
 /// One-shot pipeline from a file path.
@@ -216,7 +408,14 @@ pub async fn invoke_from_path(
     path: impl AsRef<Path>,
     inputs: Option<&serde_json::Value>,
 ) -> Result<serde_json::Value, InvokerError> {
-    let agent = crate::load(path).map_err(|e| InvokerError::Validation(e.to_string()))?;
+    let agent = crate::load(&path).map_err(|e| InvokerError::Validation(e.to_string()))?;
+
+    let span = Tracer::start("load");
+    span.emit("signature", &json!("prompty.load"));
+    span.emit("inputs", &json!({ "path": path.as_ref().display().to_string() }));
+    span.emit("result", &serialize_agent(&agent));
+    span.end();
+
     invoke(&agent, inputs).await
 }
 
@@ -231,6 +430,10 @@ pub async fn invoke_from_path(
 /// Events emitted during the agent loop in `turn()`.
 #[derive(Debug, Clone)]
 pub enum AgentEvent {
+    /// A streaming token from the LLM.
+    Token(String),
+    /// A thinking/reasoning token from the LLM.
+    Thinking(String),
     /// A tool call is about to be dispatched.
     ToolCallStart {
         name: String,
@@ -241,6 +444,10 @@ pub enum AgentEvent {
         name: String,
         result: String,
     },
+    /// Status update from the agent loop.
+    Status(String),
+    /// The message list was updated (e.g., tool results appended).
+    MessagesUpdated,
     /// The agent loop has completed.
     Done,
     /// An error occurred.
@@ -342,9 +549,17 @@ pub async fn turn(
         return invoke(agent, inputs).await;
     }
 
+    let span = Tracer::start("turn");
+    span.emit("signature", &json!("prompty.turn"));
+    span.emit("agent", &serialize_agent(agent));
+    let empty = serde_json::json!({});
+    span.emit("inputs", inputs.unwrap_or(&empty));
+
     // Check cancellation at start
     if opts.is_cancelled() {
         opts.emit(AgentEvent::Cancelled);
+        span.emit("error", &json!("Operation cancelled"));
+        span.end();
         return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
     }
 
@@ -356,8 +571,13 @@ pub async fn turn(
         // Check cancellation before each LLM call
         if opts.is_cancelled() {
             opts.emit(AgentEvent::Cancelled);
+            span.emit("error", &json!("Operation cancelled"));
+            span.end();
             return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
         }
+
+        let iter_span = Tracer::start(&format!("turn.iteration.{iteration}"));
+        iter_span.emit("iteration", &json!(iteration));
 
         // Execute LLM
         let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
@@ -370,7 +590,12 @@ pub async fn turn(
 
         if tool_calls.is_empty() {
             // No tool calls — we're done
+            iter_span.emit("result", &processed);
+            iter_span.end();
             opts.emit(AgentEvent::Done);
+            span.emit("result", &processed);
+            span.emit("iterations", &json!(iteration + 1));
+            span.end();
             return Ok(processed);
         }
 
@@ -380,6 +605,9 @@ pub async fn turn(
             // Check cancellation before each tool call
             if opts.is_cancelled() {
                 opts.emit(AgentEvent::Cancelled);
+                iter_span.end();
+                span.emit("error", &json!("Operation cancelled"));
+                span.end();
                 return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
             }
 
@@ -388,14 +616,26 @@ pub async fn turn(
                 arguments: tc.arguments.clone(),
             });
 
-            let result = dispatch_tool(&opts.tools, tc).await?;
+            let result = dispatch_tool(&opts.tools, tc).await;
 
-            opts.emit(AgentEvent::ToolResult {
-                name: tc.name.clone(),
-                result: result.clone(),
-            });
-
-            tool_results.push(result);
+            match &result {
+                Ok(r) => {
+                    opts.emit(AgentEvent::ToolResult {
+                        name: tc.name.clone(),
+                        result: r.clone(),
+                    });
+                    tool_results.push(r.clone());
+                }
+                Err(e) => {
+                    // Non-fatal: return error string to LLM like TypeScript does
+                    let error_msg = e.to_string();
+                    opts.emit(AgentEvent::ToolResult {
+                        name: tc.name.clone(),
+                        result: error_msg.clone(),
+                    });
+                    tool_results.push(error_msg);
+                }
+            }
         }
 
         // Extract text content for formatToolMessages (some providers need it)
@@ -411,21 +651,27 @@ pub async fn turn(
         )?;
 
         messages.extend(tool_messages);
+        opts.emit(AgentEvent::MessagesUpdated);
 
-        // If this was the last iteration, log a warning
+        iter_span.emit("tool_calls", &json!(tool_calls.iter().map(|tc| {
+            json!({ "name": tc.name, "id": tc.id })
+        }).collect::<Vec<_>>()));
+        iter_span.end();
+
+        // If this was the last iteration, error out like TypeScript does
         if iteration == opts.max_iterations - 1 {
-            opts.emit(AgentEvent::Error(format!(
-                "Agent loop reached max iterations ({})",
+            let msg = format!(
+                "Agent loop exceeded max iterations ({})",
                 opts.max_iterations
-            )));
+            );
+            opts.emit(AgentEvent::Error(msg.clone()));
+            span.emit("error", &json!(msg));
+            span.end();
+            return Err(InvokerError::Execute(msg.into()));
         }
     }
 
-    // If we exhausted iterations, do one final call without tool handling
-    let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
-    let result = process(agent, raw_response).await?;
-    opts.emit(AgentEvent::Done);
-    Ok(result)
+    unreachable!("Loop should return or error before reaching here")
 }
 
 /// Extract ToolCalls from a processed response value.
@@ -458,15 +704,22 @@ fn extract_text_from_processed(processed: &serde_json::Value) -> Option<String> 
 }
 
 /// Dispatch a single tool call to its handler.
+///
+/// If no handler is registered, returns an error message string (non-fatal)
+/// so the model can recover — matching TypeScript behavior.
 async fn dispatch_tool(
     tools: &HashMap<String, ToolHandler>,
     tool_call: &ToolCall,
 ) -> Result<String, InvokerError> {
-    let handler = tools.get(&tool_call.name).ok_or_else(|| {
-        InvokerError::Execute(
-            format!("No handler registered for tool '{}'", tool_call.name).into(),
-        )
-    })?;
+    let handler = match tools.get(&tool_call.name) {
+        Some(h) => h,
+        None => {
+            return Ok(format!(
+                "Error: No handler registered for tool '{}'",
+                tool_call.name
+            ));
+        }
+    };
 
     let args: serde_json::Value = serde_json::from_str(&tool_call.arguments).map_err(|e| {
         InvokerError::Execute(format!("Invalid tool arguments JSON: {e}").into())
@@ -815,8 +1068,10 @@ mod tests {
             arguments: "{}".to_string(),
         };
 
-        let err = dispatch_tool(&tools, &tc).await.unwrap_err();
-        assert!(err.to_string().contains("nonexistent"));
+        // Missing tool returns error string (non-fatal), matching TypeScript behavior
+        let result = dispatch_tool(&tools, &tc).await.unwrap();
+        assert!(result.contains("nonexistent"));
+        assert!(result.contains("Error"));
     }
 
     #[test]
@@ -1254,8 +1509,10 @@ mod tests {
         })));
 
         let opts = TurnOptions::with_tools(tools);
-        let err = turn(&agent, None, Some(opts)).await.unwrap_err();
-        assert!(err.to_string().contains("rate limited"));
+        // Tool errors are non-fatal (matching TypeScript) — error string sent to LLM,
+        // and the model returns a normal response on the second call
+        let result = turn(&agent, None, Some(opts)).await.unwrap();
+        assert!(result.is_string());
     }
 
     #[tokio::test]
@@ -1274,8 +1531,9 @@ mod tests {
         tools.insert("other_tool".to_string(), ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))));
 
         let opts = TurnOptions::with_tools(tools);
-        let err = turn(&agent, None, Some(opts)).await.unwrap_err();
-        assert!(err.to_string().contains("get_weather"));
+        // Missing tool is non-fatal (matching TypeScript) — error string sent to LLM
+        let result = turn(&agent, None, Some(opts)).await.unwrap();
+        assert!(result.is_string());
     }
 
     #[tokio::test]

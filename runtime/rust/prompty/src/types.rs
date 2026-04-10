@@ -1,4 +1,5 @@
-//! Core pipeline types — `Message`, `ContentPart`, `ToolCall`, `PromptyStream`.
+//! Core pipeline types — `Message`, `ContentPart`, `ToolCall`, `PromptyStream`,
+//! `StructuredResult`.
 //!
 //! These mirror the TypeScript definitions in `@prompty/core/types.ts`
 //! and follow the spec at `spec/spec.md` §6.5.

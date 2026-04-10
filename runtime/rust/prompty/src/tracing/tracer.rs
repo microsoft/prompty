@@ -155,6 +155,46 @@ where
     }
 }
 
+/// Async version of `trace_span`. Execute an async body inside a traced span.
+/// The body receives the span emitter for manual event emission.
+pub async fn trace_span_async<F, Fut, T>(name: &str, body: F) -> Result<T, Box<dyn std::error::Error>>
+where
+    F: FnOnce(SpanEmitter) -> Fut,
+    Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
+{
+    let span = Tracer::start(name);
+    match body(span).await {
+        Ok(result) => Ok(result),
+        Err(err) => Err(err),
+    }
+}
+
+/// Async version of `trace`. Wraps an async function with automatic input/output tracing.
+pub async fn trace_async<F, Fut, T>(name: &str, inputs: &Value, f: F) -> Result<T, Box<dyn std::error::Error>>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
+    T: serde::Serialize,
+{
+    let span = Tracer::start(name);
+    span.emit("inputs", &sanitize_value("inputs", inputs));
+
+    match f().await {
+        Ok(result) => {
+            if let Ok(val) = serde_json::to_value(&result) {
+                span.emit("result", &val);
+            }
+            span.end();
+            Ok(result)
+        }
+        Err(err) => {
+            span.emit("error", &Value::String(err.to_string()));
+            span.end();
+            Err(err)
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Sanitization
 // ---------------------------------------------------------------------------

@@ -383,10 +383,24 @@ async fn test_empty_tool_result() {
 
 #[tokio::test]
 async fn test_tool_not_registered_error() {
-    // The LLM tries to call "unknown_tool" which has no handler
+    // The LLM tries to call "unknown_tool" which has no handler.
+    // Missing tool is non-fatal (matching TypeScript) — error string sent to LLM.
     let vector = find_vector("tool_not_registered_error");
     let key = mock_key("tool_not_registered_error");
-    let responses = collect_responses(&vector);
+
+    // Need an extra response: after the missing-tool error string is sent back
+    // to the LLM, the mock needs to return a final non-tool-call response.
+    let mut responses = collect_responses(&vector);
+    responses.push(json!({
+        "choices": [{
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "I could not find that tool."
+            },
+            "finish_reason": "stop"
+        }]
+    }));
     register_mocks(&key, responses);
 
     let mut agent = build_agent(&vector, &key);
@@ -415,39 +429,17 @@ async fn test_tool_not_registered_error() {
 
     prompty::pipeline::register_defaults();
 
-    let err = turn(&agent, None, Some(opts)).await.unwrap_err();
-    let err_str = err.to_string();
-    assert!(
-        err_str.contains("unknown_tool") || err_str.contains("No handler"),
-        "Expected error about unknown_tool, got: {err_str}"
-    );
+    let result = turn(&agent, None, Some(opts)).await.unwrap();
+    assert!(result.is_string());
 }
 
 #[tokio::test]
 async fn test_max_iterations_exceeded() {
     // The LLM returns tool calls on every turn for 11 turns.
-    // With max_iterations=10, the loop should exhaust and do a final call.
-    // The 11th response is ALSO a tool-call, so the final (after-loop) call
-    // needs a response too. The vector has 11 tool-call responses; the
-    // after-loop call is response #12 (we need to add it since the loop
-    // does one more execute after exhaustion).
+    // With max_iterations=10, the loop should error (matching TypeScript).
     let vector = find_vector("max_iterations_exceeded");
     let key = mock_key("max_iterations_exceeded");
-    let mut responses = collect_responses(&vector);
-    // After exhausting max_iterations, pipeline.rs does one final execute.
-    // Provide a 12th response that also has tool calls — this still gets
-    // processed and returned.
-    responses.push(json!({
-        "choices": [{
-            "index": 0,
-            "message": {
-                "role": "assistant",
-                "content": "I checked many cities.",
-                "tool_calls": null
-            },
-            "finish_reason": "stop"
-        }]
-    }));
+    let responses = collect_responses(&vector);
     register_mocks(&key, responses);
 
     let mut agent = build_agent(&vector, &key);
@@ -472,14 +464,13 @@ async fn test_max_iterations_exceeded() {
 
     prompty::pipeline::register_defaults();
 
-    // The current pipeline does a final execute after max iterations,
-    // so we get a result rather than an error.
+    // Max iterations exceeded → error (matching TypeScript behavior)
     let result = turn(&agent, None, Some(opts)).await;
-    // Either an error about iterations or a final result is acceptable
-    // as long as the loop ran the expected number of iterations.
+    assert!(result.is_err(), "Expected iteration error, got: {result:?}");
+    let err = result.unwrap_err();
     assert!(
-        result.is_ok() || result.as_ref().unwrap_err().to_string().contains("iteration"),
-        "Expected either a final result or iteration error, got: {result:?}"
+        err.to_string().contains("max iterations") || err.to_string().contains("exceeded"),
+        "Expected max iterations error message, got: {err}"
     );
 }
 
@@ -558,8 +549,12 @@ async fn run_vector_with_events(
     let events_clone = events.clone();
     let on_event: EventCallback = Box::new(move |event: AgentEvent| {
         let event_type = match &event {
+            AgentEvent::Token(_) => "token",
+            AgentEvent::Thinking(_) => "thinking",
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
             AgentEvent::ToolResult { .. } => "tool_result",
+            AgentEvent::Status(_) => "status",
+            AgentEvent::MessagesUpdated => "messages_updated",
             AgentEvent::Done => "done",
             AgentEvent::Error(_) => "error",
             AgentEvent::Cancelled => "cancelled",
@@ -726,8 +721,12 @@ async fn test_cancellation_between_iterations() {
     let events_clone = events.clone();
     let on_event: EventCallback = Box::new(move |event: AgentEvent| {
         let event_type = match &event {
+            AgentEvent::Token(_) => "token",
+            AgentEvent::Thinking(_) => "thinking",
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
             AgentEvent::ToolResult { .. } => "tool_result",
+            AgentEvent::Status(_) => "status",
+            AgentEvent::MessagesUpdated => "messages_updated",
             AgentEvent::Done => "done",
             AgentEvent::Error(_) => "error",
             AgentEvent::Cancelled => "cancelled",
