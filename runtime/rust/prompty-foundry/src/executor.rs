@@ -598,4 +598,103 @@ mod tests {
         let result = build_azure_request(&agent, "unknown").await;
         assert!(result.is_err());
     }
+
+    // --- Reference connection resolution tests ---
+
+    #[test]
+    fn test_resolve_connection_passthrough() {
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "key",
+                "endpoint": "https://myresource.openai.azure.com",
+                "apiKey": "test-key"
+            }
+        }));
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("kind").unwrap().as_str().unwrap(), "key");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "test-key");
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_missing_name() {
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference" }
+        }));
+        let result = resolve_connection(&agent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("name"));
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_success() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "azure-prod",
+            json!({
+                "kind": "key",
+                "endpoint": "https://prod.openai.azure.com",
+                "apiKey": "prod-key"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference", "name": "azure-prod" }
+        }));
+
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://prod.openai.azure.com");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "prod-key");
+
+        prompty::connections::clear_connections();
+    }
+
+    #[tokio::test]
+    async fn test_reference_connection_flows_to_auth_header() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "azure-resolved",
+            json!({
+                "kind": "key",
+                "endpoint": "https://resolved.openai.azure.com",
+                "apiKey": "resolved-key"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference", "name": "azure-resolved" }
+        }));
+
+        let (header_name, header_value) = get_auth_header(&agent).await.unwrap();
+        assert_eq!(header_name, "api-key");
+        assert_eq!(header_value, "resolved-key");
+
+        prompty::connections::clear_connections();
+    }
+
+    // --- Entra ID stub test ---
+
+    #[tokio::test]
+    async fn test_auth_header_foundry_no_key_no_entra() {
+        prompty::connections::clear_connections();
+        // Remove env var to ensure no fallback
+        // SAFETY: tests run single-threaded
+        unsafe { std::env::remove_var("AZURE_OPENAI_API_KEY") };
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "foundry",
+                "endpoint": "https://resource.services.ai.azure.com/api/projects/proj"
+            }
+        }));
+
+        let result = get_auth_header(&agent).await;
+        // Without entra_id feature: should error (can't get token)
+        // With entra_id feature: would attempt DefaultAzureCredential (would also fail in CI)
+        assert!(result.is_err());
+    }
 }

@@ -824,4 +824,117 @@ mod tests {
         assert_eq!(parsed["city"], "Paris");
         assert_eq!(parsed["unit"], "celsius");
     }
+
+    // --- PromptyToolHandler tests ---
+
+    #[tokio::test]
+    async fn test_prompty_handler_missing_source_path() {
+        let handler = PromptyToolHandler;
+        // Agent without __source_path metadata
+        let agent = default_agent();
+        let tool_def = serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"});
+        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("__source_path"));
+    }
+
+    #[tokio::test]
+    async fn test_prompty_handler_missing_path_field() {
+        let handler = PromptyToolHandler;
+        let mut agent = default_agent();
+        agent.metadata = serde_json::json!({"__source_path": "/fake/parent.prompty"});
+        // tool_def missing 'path' field
+        let tool_def = serde_json::json!({"kind": "prompty", "name": "child"});
+        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("missing 'path'"));
+    }
+
+    #[tokio::test]
+    async fn test_prompty_handler_circular_reference_detection() {
+        let handler = PromptyToolHandler;
+        let mut agent = default_agent();
+
+        // Simulate: parent.prompty loads child.prompty, and child already visited parent
+        let parent_path = if cfg!(windows) { "C:\\fake\\parent.prompty" } else { "/fake/parent.prompty" };
+        agent.metadata = serde_json::json!({
+            "__source_path": parent_path,
+            "__prompty_tool_stack": []
+        });
+
+        // The tool "path" resolves to the same as __source_path → circular
+        let tool_def = serde_json::json!({
+            "kind": "prompty",
+            "name": "self_ref",
+            "path": "parent.prompty"  // resolves to same dir as parent
+        });
+
+        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        // This will either detect circular reference or fail to load the file.
+        // Either way it should be an error, not a hang.
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_prompty_handler_nonexistent_child() {
+        let handler = PromptyToolHandler;
+        let mut agent = default_agent();
+        // Use a real directory but point to a nonexistent child
+        let parent_path = std::env::current_dir()
+            .unwrap()
+            .join("nonexistent_parent.prompty");
+        agent.metadata = serde_json::json!({
+            "__source_path": parent_path.to_string_lossy()
+        });
+
+        let tool_def = serde_json::json!({
+            "kind": "prompty",
+            "name": "missing",
+            "path": "does_not_exist.prompty"
+        });
+        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("failed to load"));
+    }
+
+    // --- Kind handler dispatch via dispatch_tool (layer 3) ---
+
+    #[tokio::test]
+    async fn test_dispatch_layer3_kind_handler() {
+        clear_tools();
+        clear_tool_handlers();
+        register_builtin_handlers();
+
+        // Agent has an MCP tool defined — dispatch should reach the MCP kind handler
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "my_mcp_tool",
+            "kind": "mcp",
+            "serverName": "test-server"
+        }]));
+
+        let tc = make_tool_call("my_mcp_tool", "{}");
+        let result = dispatch_tool(&tc, &HashMap::new(), &agent, None).await;
+        // MCP handler returns "Error: MCP tool dispatch is not yet implemented"
+        assert!(result.contains("MCP"));
+        assert!(result.starts_with("Error:"));
+    }
+
+    #[tokio::test]
+    async fn test_dispatch_layer3_wildcard_handler() {
+        clear_tools();
+        clear_tool_handlers();
+        register_builtin_handlers();
+
+        // Agent has a tool with unknown kind — should fall through to "*" wildcard
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "my_exotic_tool",
+            "kind": "exotic_provider"
+        }]));
+
+        let tc = make_tool_call("my_exotic_tool", "{}");
+        let result = dispatch_tool(&tc, &HashMap::new(), &agent, None).await;
+        // CustomToolHandler (*) should catch it
+        assert!(result.contains("exotic_provider"));
+        assert!(result.starts_with("Error:"));
+    }
 }

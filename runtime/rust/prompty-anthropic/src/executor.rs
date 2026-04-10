@@ -432,4 +432,104 @@ mod tests {
         let result = AnthropicExecutor::build_args(&agent, &messages);
         assert!(result.is_err());
     }
+
+    // --- Reference connection resolution tests ---
+
+    #[test]
+    fn test_resolve_connection_passthrough() {
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": {
+                "kind": "key",
+                "apiKey": "sk-test"
+            }
+        }));
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-test");
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_missing_name() {
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": { "kind": "reference" }
+        }));
+        let result = resolve_connection(&agent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("name"));
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_success() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "anthropic-prod",
+            json!({
+                "kind": "key",
+                "endpoint": "https://custom.anthropic.com",
+                "apiKey": "sk-resolved"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": { "kind": "reference", "name": "anthropic-prod" }
+        }));
+
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-resolved");
+        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://custom.anthropic.com");
+
+        prompty::connections::clear_connections();
+    }
+
+    #[test]
+    fn test_reference_connection_flows_to_api_key() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "anthropic-ref",
+            json!({
+                "kind": "key",
+                "apiKey": "sk-via-reference"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": { "kind": "reference", "name": "anthropic-ref" }
+        }));
+
+        let key = get_api_key(&agent).unwrap();
+        assert_eq!(key, "sk-via-reference");
+
+        prompty::connections::clear_connections();
+    }
+
+    #[test]
+    fn test_reference_connection_flows_to_build_url() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "anthropic-custom",
+            json!({
+                "kind": "key",
+                "endpoint": "https://proxy.anthropic.com",
+                "apiKey": "sk-proxy"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": { "kind": "reference", "name": "anthropic-custom" }
+        }));
+
+        let url = build_url(&agent).unwrap();
+        assert_eq!(url, "https://proxy.anthropic.com/v1/messages");
+
+        prompty::connections::clear_connections();
+    }
 }
