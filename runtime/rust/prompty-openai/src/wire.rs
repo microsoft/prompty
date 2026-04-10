@@ -277,12 +277,22 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
         func_def.insert("description".to_string(), Value::String(desc.clone()));
     }
 
-    // Parameters → JSON Schema
-    // parameters is serde_json::Value containing the typed parameter list
+    // Collect bound parameter names to strip from wire format (§7.1.3)
+    let bound_names: std::collections::HashSet<String> = tool
+        .as_bindings()
+        .unwrap_or_default()
+        .iter()
+        .map(|b| b.name.clone())
+        .collect();
+
+    // Parameters → JSON Schema, filtering out bound params
     if let Some(params) = parameters.as_array() {
+        use prompty::model::context::LoadContext;
+        let ctx = LoadContext::default();
         let typed_params: Vec<Property> = params
             .iter()
-            .map(Property::load_from_value)
+            .map(|v| Property::load_from_value(v, &ctx))
+            .filter(|p| !bound_names.contains(&p.name))
             .collect();
         let schema = parameters_to_json_schema(&typed_params);
         func_def.insert("parameters".to_string(), schema);
@@ -391,6 +401,209 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
             "name": "structured_output",
             "strict": true,
             "schema": Value::Object(schema),
+        },
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// Responses API wire format
+// ---------------------------------------------------------------------------
+
+/// Build the request body for the OpenAI Responses API.
+///
+/// System/developer messages become `instructions`; other messages become `input` items.
+pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
+    let model = if agent.model.id.is_empty() {
+        "gpt-4o".to_string()
+    } else {
+        agent.model.id.clone()
+    };
+
+    let mut system_parts: Vec<String> = Vec::new();
+    let mut input_messages: Vec<Value> = Vec::new();
+
+    for msg in messages {
+        let role_str = msg.role.to_string();
+        if role_str == "system" || role_str == "developer" {
+            system_parts.push(msg.text_content());
+        } else {
+            input_messages.push(message_to_responses_input(msg));
+        }
+    }
+
+    let mut args = Map::new();
+    args.insert("model".to_string(), Value::String(model));
+    args.insert("input".to_string(), Value::Array(input_messages));
+
+    if !system_parts.is_empty() {
+        args.insert("instructions".to_string(), Value::String(system_parts.join("\n\n")));
+    }
+
+    // Options
+    apply_responses_options(&mut args, &agent.model.options);
+
+    // Tools (flat format — no nested "function" key)
+    let tools = responses_tools_to_wire(agent);
+    if !tools.is_empty() {
+        args.insert("tools".to_string(), Value::Array(tools));
+    }
+
+    // Structured output via text.format
+    if let Some(text_config) = output_schema_to_responses_wire(agent) {
+        args.insert("text".to_string(), text_config);
+    }
+
+    Value::Object(args)
+}
+
+fn message_to_responses_input(msg: &Message) -> Value {
+    let content = msg.to_text_content();
+
+    // Pass-through function_call items from agent loop
+    if let Some(fc) = msg.metadata.get("responses_function_call") {
+        return fc.clone();
+    }
+
+    // Tool result → function_call_output
+    if let Some(call_id) = msg.metadata.get("tool_call_id") {
+        let output = if content.is_string() {
+            content.as_str().unwrap_or("").to_string()
+        } else {
+            serde_json::to_string(&content).unwrap_or_default()
+        };
+        return json!({
+            "type": "function_call_output",
+            "call_id": call_id,
+            "output": output,
+        });
+    }
+
+    let role = if msg.role.to_string() == "tool" {
+        "user".to_string()
+    } else {
+        msg.role.to_string()
+    };
+
+    let mut obj = Map::new();
+    obj.insert("role".to_string(), Value::String(role));
+    obj.insert("content".to_string(), content);
+    Value::Object(obj)
+}
+
+fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
+    let Some(opts) = opts else { return };
+
+    if let Some(t) = opts.temperature {
+        args.insert("temperature".to_string(), f32_to_json(t));
+    }
+    if let Some(m) = opts.max_output_tokens {
+        args.insert("max_output_tokens".to_string(), json!(m));
+    }
+    if let Some(p) = opts.top_p {
+        args.insert("top_p".to_string(), f32_to_json(p));
+    }
+
+    // additionalProperties — pass through without overwriting
+    if let Some(map) = opts.additional_properties.as_object() {
+        for (k, v) in map {
+            if !args.contains_key(k) {
+                args.insert(k.clone(), v.clone());
+            }
+        }
+    }
+}
+
+fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
+    let Some(tools) = agent.as_tools() else {
+        return Vec::new();
+    };
+
+    tools
+        .iter()
+        .filter(|tool| matches!(tool.kind, ToolKind::Function { .. }))
+        .map(|tool| responses_function_tool_to_wire(tool))
+        .collect()
+}
+
+fn responses_function_tool_to_wire(tool: &Tool) -> Value {
+    let (parameters, strict) = match &tool.kind {
+        ToolKind::Function { parameters, strict } => (parameters, strict),
+        _ => return json!({}),
+    };
+
+    // Responses API uses flat format: { type, name, description, parameters }
+    let mut obj = Map::new();
+    obj.insert("type".to_string(), Value::String("function".to_string()));
+    obj.insert("name".to_string(), Value::String(tool.name.clone()));
+
+    if let Some(ref desc) = tool.description {
+        obj.insert("description".to_string(), Value::String(desc.clone()));
+    }
+
+    // Collect bound parameter names to strip (§7.1.3)
+    let bound_names: std::collections::HashSet<String> = tool
+        .as_bindings()
+        .unwrap_or_default()
+        .iter()
+        .map(|b| b.name.clone())
+        .collect();
+
+    if let Some(params) = parameters.as_array() {
+        use prompty::model::context::LoadContext;
+        let ctx = LoadContext::default();
+        let typed_params: Vec<Property> = params
+            .iter()
+            .map(|v| Property::load_from_value(v, &ctx))
+            .filter(|p| !bound_names.contains(&p.name))
+            .collect();
+        let schema = parameters_to_json_schema(&typed_params);
+        obj.insert("parameters".to_string(), schema);
+    }
+
+    if strict.unwrap_or(false) {
+        obj.insert("strict".to_string(), Value::Bool(true));
+        if let Some(Value::Object(params)) = obj.get_mut("parameters") {
+            params.insert("additionalProperties".to_string(), Value::Bool(false));
+        }
+    }
+
+    Value::Object(obj)
+}
+
+fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
+    let outputs = agent.as_outputs()?;
+    if outputs.is_empty() {
+        return None;
+    }
+
+    let mut properties = Map::new();
+    let mut required = Vec::new();
+
+    for prop in &outputs {
+        let mut prop_schema = Map::new();
+        prop_schema.insert(
+            "type".to_string(),
+            Value::String(kind_to_json_type(prop.kind_str())),
+        );
+        if let Some(ref desc) = prop.description {
+            prop_schema.insert("description".to_string(), Value::String(desc.clone()));
+        }
+        properties.insert(prop.name.clone(), Value::Object(prop_schema));
+        required.push(Value::String(prop.name.clone()));
+    }
+
+    let mut schema = Map::new();
+    schema.insert("type".to_string(), Value::String("object".to_string()));
+    schema.insert("properties".to_string(), Value::Object(properties));
+    schema.insert("required".to_string(), Value::Array(required));
+    schema.insert("additionalProperties".to_string(), Value::Bool(false));
+
+    Some(json!({
+        "format": {
+            "type": "json_schema",
+            "name": "structured_output",
+            "schema": Value::Object(schema),
+            "strict": true,
         },
     }))
 }

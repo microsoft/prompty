@@ -1,0 +1,14 @@
+[package]
+name = "prompty-anthropic"
+version = "0.1.0"
+edition = "2021"
+description = "Anthropic provider for Prompty — Claude Messages API executor and processor"
+license = "MIT"
+
+[dependencies]
+prompty = { path = "../prompty" }
+async-trait = "0.1"
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }

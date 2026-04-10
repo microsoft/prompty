@@ -25,6 +25,11 @@ impl Processor for OpenAIProcessor {
 
 /// Process an OpenAI API response, dispatching by response shape.
 pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+    // Responses API — has "object" == "response"
+    if response.get("object").and_then(Value::as_str) == Some("response") {
+        return process_responses_api(agent, response);
+    }
+
     // ChatCompletion — has "choices"
     if let Some(choices) = response.get("choices").and_then(Value::as_array) {
         return process_chat_completion(agent, choices);
@@ -39,7 +44,10 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
 
     // Image — has "data" array with url/b64_json
     if let Some(data) = response.get("data").and_then(Value::as_array) {
-        if data.iter().any(|d| d.get("url").is_some() || d.get("b64_json").is_some()) {
+        if data.iter().any(|d| {
+            d.get("url").is_some_and(|v| !v.is_null())
+                || d.get("b64_json").is_some_and(|v| !v.is_null())
+        }) {
             return process_image(data);
         }
     }
@@ -93,17 +101,60 @@ fn process_chat_completion(agent: &Prompty, choices: &[Value]) -> Result<Value, 
         .and_then(Value::as_str)
         .unwrap_or("");
 
-    // Structured output: if agent has outputs, parse as JSON
+    // Structured output: if agent has outputs, try to parse as JSON.
+    // Falls back to raw string gracefully if parsing fails.
     if let Some(outputs) = agent.as_outputs() {
         if !outputs.is_empty() {
-            let parsed: Value = serde_json::from_str(content_str).map_err(|e| {
-                InvokerError::Process(format!("Failed to parse structured output: {e}").into())
-            })?;
-            return Ok(parsed);
+            if let Ok(parsed) = serde_json::from_str::<Value>(content_str) {
+                return Ok(parsed);
+            }
+            // Fall through to return raw string
         }
     }
 
     Ok(Value::String(content_str.to_string()))
+}
+
+// ---------------------------------------------------------------------------
+// Responses API (OpenAI new format)
+// ---------------------------------------------------------------------------
+
+fn process_responses_api(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+    // Check for tool calls in output items
+    if let Some(output) = response.get("output").and_then(Value::as_array) {
+        let tool_calls: Vec<Value> = output
+            .iter()
+            .filter(|item| item.get("type").and_then(Value::as_str) == Some("function_call"))
+            .map(|item| {
+                serde_json::json!({
+                    "id": item.get("call_id").and_then(Value::as_str).unwrap_or(""),
+                    "name": item.get("name").and_then(Value::as_str).unwrap_or(""),
+                    "arguments": item.get("arguments").and_then(Value::as_str).unwrap_or("{}"),
+                })
+            })
+            .collect();
+
+        if !tool_calls.is_empty() {
+            return Ok(Value::Array(tool_calls));
+        }
+    }
+
+    // Extract output_text (convenience field)
+    let output_text = response
+        .get("output_text")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+
+    // Structured output
+    if let Some(outputs) = agent.as_outputs() {
+        if !outputs.is_empty() {
+            if let Ok(parsed) = serde_json::from_str::<Value>(output_text) {
+                return Ok(parsed);
+            }
+        }
+    }
+
+    Ok(Value::String(output_text.to_string()))
 }
 
 // ---------------------------------------------------------------------------
@@ -131,10 +182,10 @@ fn process_image(data: &[Value]) -> Result<Value, InvokerError> {
     let urls: Vec<Value> = data
         .iter()
         .map(|d| {
-            d.get("url")
-                .or_else(|| d.get("b64_json"))
-                .cloned()
-                .unwrap_or(Value::Null)
+            // Prefer url, fall back to b64_json, skip nulls
+            let url = d.get("url").filter(|v| !v.is_null());
+            let b64 = d.get("b64_json").filter(|v| !v.is_null());
+            url.or(b64).cloned().unwrap_or(Value::Null)
         })
         .collect();
 
@@ -425,8 +476,8 @@ mod tests {
     }
 
     #[test]
-    fn test_structured_output_invalid_json() {
-        // Agent with outputs, but content is not valid JSON
+    fn test_structured_output_invalid_json_falls_back() {
+        // Agent with outputs, but content is not valid JSON — falls back to raw string
         let data = serde_json::json!({
             "kind": "prompt",
             "name": "structured",
@@ -442,8 +493,8 @@ mod tests {
                 }
             }]
         });
-        let err = process_response(&agent, &response).unwrap_err();
-        assert!(err.to_string().contains("structured output"));
+        let result = process_response(&agent, &response).unwrap();
+        assert_eq!(result, "this is not json");
     }
 
     #[test]

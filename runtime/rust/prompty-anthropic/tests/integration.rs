@@ -1,0 +1,211 @@
+//! Integration tests for the Anthropic provider.
+//!
+//! These tests hit the real Anthropic Messages API and require `ANTHROPIC_API_KEY`.
+//! Run with:
+//! ```sh
+//! cargo test --test integration -- --ignored
+//! ```
+
+use prompty::model::context::LoadContext;
+use prompty::model::Prompty;
+use prompty::{register_defaults, ToolHandler, TurnOptions};
+use serde_json::{json, Value};
+use std::collections::HashMap;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+fn load_dotenv() {
+    let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join(".env");
+    if let Ok(contents) = std::fs::read_to_string(env_path) {
+        for line in contents.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Some((key, value)) = line.split_once('=') {
+                let key = key.trim();
+                let value = value.trim();
+                if std::env::var(key).is_err() {
+                    // SAFETY: integration tests are single-threaded by convention.
+                    unsafe { std::env::set_var(key, value) };
+                }
+            }
+        }
+    }
+}
+
+macro_rules! skip_if_no_env {
+    ($var:expr) => {
+        if std::env::var($var).unwrap_or_default().is_empty() {
+            eprintln!("Skipping: {} not set", $var);
+            return;
+        }
+    };
+}
+
+fn setup() {
+    load_dotenv();
+    register_defaults();
+    prompty_anthropic::register();
+}
+
+fn model_id() -> String {
+    std::env::var("ANTHROPIC_MODEL").unwrap_or_else(|_| "claude-sonnet-4-20250514".into())
+}
+
+fn build_anthropic_chat_agent(question: &str, options: Value) -> Prompty {
+    let data = json!({
+        "name": "anthropic-integration-chat",
+        "kind": "prompt",
+        "model": {
+            "id": model_id(),
+            "provider": "anthropic",
+            "apiType": "chat",
+            "connection": { "kind": "key" },
+            "options": options,
+        },
+        "template": {
+            "format": { "kind": "nunjucks" },
+            "parser": { "kind": "prompty" },
+        },
+        "instructions": format!(
+            "system:\nYou are a helpful assistant. Be very brief.\nuser:\n{question}"
+        ),
+    });
+    Prompty::load_from_value(&data, &LoadContext::default())
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+#[ignore]
+async fn test_anthropic_chat_completion() {
+    setup();
+    skip_if_no_env!("ANTHROPIC_API_KEY");
+
+    let agent = build_anthropic_chat_agent(
+        "Say hello in exactly 3 words.",
+        json!({ "temperature": 0, "maxOutputTokens": 100 }),
+    );
+
+    let result = prompty::invoke_agent(&agent, None)
+        .await
+        .expect("Anthropic chat completion should succeed");
+
+    assert!(result.is_string(), "result should be a string: {result:?}");
+    let text = result.as_str().unwrap();
+    assert!(!text.is_empty(), "result should not be empty");
+    eprintln!("Anthropic chat result: {text}");
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_anthropic_structured_output() {
+    setup();
+    skip_if_no_env!("ANTHROPIC_API_KEY");
+
+    // Anthropic doesn't have a native response_format like OpenAI, so we test
+    // by instructing the model to return JSON and parsing the result.
+    let agent = build_anthropic_chat_agent(
+        "Tell me about Paris. Return a JSON object with keys: city (string), country (string), population (integer). Return ONLY the JSON, no other text.",
+        json!({ "temperature": 0, "maxOutputTokens": 200 }),
+    );
+
+    let result = prompty::invoke_agent(&agent, None)
+        .await
+        .expect("Anthropic structured output should succeed");
+
+    let text = result.as_str().unwrap_or(&result.to_string()).to_string();
+    // Try to extract JSON from the response — model may wrap in markdown code block
+    let json_str = if let Some(start) = text.find('{') {
+        if let Some(end) = text.rfind('}') {
+            &text[start..=end]
+        } else {
+            &text
+        }
+    } else {
+        &text
+    };
+
+    let parsed: Value =
+        serde_json::from_str(json_str).unwrap_or_else(|e| panic!("Failed to parse JSON: {e}\nRaw: {text}"));
+    let obj = parsed.as_object().expect("parsed JSON should be an object");
+    assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
+    assert!(obj.contains_key("country"), "missing 'country' field: {obj:?}");
+    assert!(
+        obj.contains_key("population"),
+        "missing 'population' field: {obj:?}"
+    );
+    eprintln!("Anthropic structured output: {obj:?}");
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_anthropic_agent_tool_calling() {
+    setup();
+    skip_if_no_env!("ANTHROPIC_API_KEY");
+
+    let data = json!({
+        "name": "anthropic-integration-agent",
+        "kind": "prompt",
+        "model": {
+            "id": model_id(),
+            "provider": "anthropic",
+            "apiType": "agent",
+            "connection": { "kind": "key" },
+            "options": { "temperature": 0, "maxOutputTokens": 300 },
+        },
+        "template": {
+            "format": { "kind": "nunjucks" },
+            "parser": { "kind": "prompty" },
+        },
+        "tools": [
+            {
+                "name": "get_weather",
+                "kind": "function",
+                "description": "Get the current weather for a city",
+                "parameters": {
+                    "properties": [
+                        { "name": "city", "kind": "string", "description": "The city name", "required": true }
+                    ]
+                },
+            }
+        ],
+        "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",
+    });
+    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+
+    let mut tools = HashMap::new();
+    tools.insert(
+        "get_weather".to_string(),
+        ToolHandler::Sync(Box::new(|args: Value| {
+            let city = args
+                .get("city")
+                .and_then(|c| c.as_str())
+                .unwrap_or("unknown");
+            Ok(format!("72°F and sunny in {city}"))
+        })),
+    );
+
+    let result = prompty::turn(&agent, None, Some(TurnOptions::with_tools(tools)))
+        .await
+        .expect("Anthropic agent tool calling should succeed");
+
+    let text = result.as_str().unwrap_or(&result.to_string()).to_string();
+    let mentions_weather = text.contains("72")
+        || text.to_lowercase().contains("sunny")
+        || text.to_lowercase().contains("weather")
+        || text.to_lowercase().contains("seattle");
+    assert!(
+        mentions_weather,
+        "Agent response should mention weather info: {text}"
+    );
+    eprintln!("Anthropic agent result: {text}");
+}

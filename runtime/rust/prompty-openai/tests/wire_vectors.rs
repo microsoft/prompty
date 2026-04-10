@@ -145,6 +145,7 @@ macro_rules! wire_test {
 
             let actual = match api_type {
                 "chat" | "agent" => wire::build_chat_args(&agent, &messages),
+                "responses" => wire::build_responses_args(&agent, &messages),
                 "embedding" => wire::build_embedding_args(&agent, &messages),
                 "image" => wire::build_image_args(&agent, &messages),
                 _ => panic!("Unknown apiType: {api_type}"),
@@ -178,3 +179,9 @@ wire_test!(structured_output);
 wire_test!(options_max_completion_tokens);
 wire_test!(options_stop_sequences);
 wire_test!(options_additional_properties);
+wire_test!(tools_bindings_stripped);
+wire_test!(tools_null_when_empty);
+wire_test!(chat_image_base64);
+wire_test!(responses_simple);
+wire_test!(responses_with_tools);
+wire_test!(responses_structured_output);

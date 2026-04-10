@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = [
+    "prompty",
+    "prompty-openai",
+    "prompty-foundry",
+    "prompty-anthropic",
+]

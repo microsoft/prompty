@@ -34,6 +34,11 @@ impl Executor for OpenAIExecutor {
                 let url = build_url(agent, "/v1/chat/completions")?;
                 (url, args)
             }
+            "responses" => {
+                let args = wire::build_responses_args(agent, messages);
+                let url = build_url(agent, "/v1/responses")?;
+                (url, args)
+            }
             "embedding" => {
                 let args = wire::build_embedding_args(agent, messages);
                 let url = build_url(agent, "/v1/embeddings")?;
@@ -118,13 +123,29 @@ impl OpenAIExecutor {
 
 fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
     let conn = &agent.model.connection;
+
+    // 1. connection.endpoint from the agent
+    // 2. OPENAI_BASE_URL env var (matches OpenAI SDK behavior)
+    // 3. default https://api.openai.com
     let endpoint = conn
         .get("endpoint")
         .and_then(|e| e.as_str())
-        .unwrap_or("https://api.openai.com");
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+        .or_else(|| std::env::var("OPENAI_BASE_URL").ok().filter(|s| !s.is_empty()))
+        .unwrap_or_else(|| "https://api.openai.com".to_string());
 
     let base = endpoint.trim_end_matches('/');
-    Ok(format!("{base}{path}"))
+
+    // If base already includes /v1 (e.g. OPENAI_BASE_URL="https://proxy.example.com/openai/v1"),
+    // strip the leading /v1 from the path to avoid duplication.
+    let adjusted_path = if base.ends_with("/v1") || base.ends_with("/v1/") {
+        path.strip_prefix("/v1").unwrap_or(path)
+    } else {
+        path
+    };
+
+    Ok(format!("{base}{adjusted_path}"))
 }
 
 fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
