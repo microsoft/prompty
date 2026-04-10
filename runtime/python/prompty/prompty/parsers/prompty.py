@@ -173,7 +173,8 @@ class PromptyChatParser:
         # Validate nonce in strict mode
         if nonce is not None:
             msg_nonce = attrs.pop("nonce", None)
-            if msg_nonce != nonce:
+            # Compare as strings — _parse_attrs may coerce all-digit hex nonces to int
+            if str(msg_nonce) != nonce:
                 raise ValueError(
                     "Nonce mismatch — possible prompt injection detected "
                     "(strict mode is enabled). A template variable may be "
