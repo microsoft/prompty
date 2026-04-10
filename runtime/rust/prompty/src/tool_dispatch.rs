@@ -4,14 +4,16 @@
 //! - **Name registry**: register a specific tool handler by name
 //! - **Kind handlers**: register a handler for a tool kind (function, mcp, etc.)
 //! - **`dispatch_tool()`**: 3-layer resolution: user tools → name registry → kind handler
+//! - **`resolve_bindings()`**: inject parent inputs into tool args via tool.bindings
 //!
 //! The built-in `function` kind handler calls user-provided tool functions
 //! from `TurnOptions.tools` or the name registry.
 
 use std::collections::HashMap;
 use std::future::Future;
+use std::path::Path;
 use std::pin::Pin;
-use std::sync::{OnceLock, RwLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
 use crate::model::Prompty;
 use crate::types::ToolCall;
@@ -68,14 +70,14 @@ pub type ToolCallable = Box<
 // ---------------------------------------------------------------------------
 
 static TOOL_NAME_REGISTRY: OnceLock<RwLock<HashMap<String, ToolCallable>>> = OnceLock::new();
-static TOOL_KIND_HANDLERS: OnceLock<RwLock<HashMap<String, Box<dyn ToolHandlerTrait>>>> =
+static TOOL_KIND_HANDLERS: OnceLock<RwLock<HashMap<String, Arc<dyn ToolHandlerTrait>>>> =
     OnceLock::new();
 
 fn name_registry() -> &'static RwLock<HashMap<String, ToolCallable>> {
     TOOL_NAME_REGISTRY.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn kind_handlers() -> &'static RwLock<HashMap<String, Box<dyn ToolHandlerTrait>>> {
+fn kind_handlers() -> &'static RwLock<HashMap<String, Arc<dyn ToolHandlerTrait>>> {
     TOOL_KIND_HANDLERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
@@ -125,7 +127,7 @@ pub fn register_tool_handler(kind: impl Into<String>, handler: impl ToolHandlerT
     kind_handlers()
         .write()
         .expect("tool kind handlers lock poisoned")
-        .insert(kind.into(), Box::new(handler));
+        .insert(kind.into(), Arc::new(handler));
 }
 
 /// Get whether a kind handler is registered.
@@ -146,6 +148,59 @@ pub fn clear_tool_handlers() {
 }
 
 // ---------------------------------------------------------------------------
+// Binding resolution
+// ---------------------------------------------------------------------------
+
+/// Resolve tool bindings: inject values from `parent_inputs` into tool arguments.
+///
+/// For each binding on the matched tool definition, looks up `binding.input` in
+/// `parent_inputs` and sets `args[binding.name]` to that value. Returns the
+/// merged args object.
+///
+/// Matches TypeScript `resolveBindings()`.
+pub fn resolve_bindings(
+    agent: &Prompty,
+    tool_name: &str,
+    mut args: serde_json::Value,
+    parent_inputs: &serde_json::Value,
+) -> serde_json::Value {
+    let Some(parent_obj) = parent_inputs.as_object() else {
+        return args;
+    };
+
+    let Some(tool_def) = find_tool_def(agent, tool_name) else {
+        return args;
+    };
+
+    let Some(bindings) = tool_def.get("bindings").and_then(|b| b.as_array()) else {
+        return args;
+    };
+
+    if bindings.is_empty() {
+        return args;
+    }
+
+    let args_obj = match args.as_object_mut() {
+        Some(obj) => obj,
+        None => return args,
+    };
+
+    for binding in bindings {
+        let Some(target_name) = binding.get("name").and_then(|n| n.as_str()) else {
+            continue;
+        };
+        let Some(source_input) = binding.get("input").and_then(|i| i.as_str()) else {
+            continue;
+        };
+        if let Some(value) = parent_obj.get(source_input) {
+            args_obj.insert(target_name.to_string(), value.clone());
+        }
+    }
+
+    args
+}
+
+// ---------------------------------------------------------------------------
 // dispatch_tool — 3-layer resolution
 // ---------------------------------------------------------------------------
 
@@ -157,6 +212,8 @@ pub fn clear_tool_handlers() {
 /// 3. Kind handler — handlers registered via `register_tool_handler()` for the
 ///    tool's `kind` from `agent.tools`, with fallback to `"*"` wildcard
 ///
+/// Before dispatching, resolves tool bindings from `parent_inputs` into args.
+///
 /// Returns an error message string (never throws) — the LLM can recover.
 pub async fn dispatch_tool(
     tool_call: &ToolCall,
@@ -165,10 +222,17 @@ pub async fn dispatch_tool(
     parent_inputs: Option<&serde_json::Value>,
 ) -> String {
     let args_result: Result<serde_json::Value, _> = serde_json::from_str(&tool_call.arguments);
-    let args = match args_result {
+    let mut args = match args_result {
         Ok(a) => a,
         Err(e) => return format!("Error: Invalid tool arguments JSON: {e}"),
     };
+
+    // Resolve bindings: inject parent_inputs into args per tool.bindings
+    if let Some(inputs) = parent_inputs {
+        if args.is_object() {
+            args = resolve_bindings(agent, &tool_call.name, args, inputs);
+        }
+    }
 
     // Layer 1: user_tools (from TurnOptions)
     if let Some(handler) = user_tools.get(&tool_call.name) {
@@ -180,9 +244,12 @@ pub async fn dispatch_tool(
 
     // Layer 2: global name registry
     {
-        let map = name_registry().read().expect("tool name registry lock poisoned");
-        if let Some(callable) = map.get(&tool_call.name) {
-            return match callable(args.clone()).await {
+        let fut = {
+            let map = name_registry().read().expect("tool name registry lock poisoned");
+            map.get(&tool_call.name).map(|callable| callable(args.clone()))
+        };
+        if let Some(fut) = fut {
+            return match fut.await {
                 Ok(r) => r,
                 Err(e) => format!("Error: {e}"),
             };
@@ -198,10 +265,14 @@ pub async fn dispatch_tool(
             .unwrap_or("function");
 
         // Try specific kind handler, then fallback to "*" wildcard
-        let handlers = kind_handlers()
-            .read()
-            .expect("tool kind handlers lock poisoned");
-        if let Some(handler) = handlers.get(kind).or_else(|| handlers.get("*")) {
+        // Clone the Arc before dropping the read guard to avoid holding it across .await
+        let handler = {
+            let handlers = kind_handlers()
+                .read()
+                .expect("tool kind handlers lock poisoned");
+            handlers.get(kind).cloned().or_else(|| handlers.get("*").cloned())
+        };
+        if let Some(handler) = handler {
             return match handler
                 .execute_tool(def, args, agent, parent_inputs)
                 .await
@@ -240,7 +311,7 @@ async fn execute_user_handler(
 }
 
 // ---------------------------------------------------------------------------
-// Built-in function handler
+// Built-in kind handlers
 // ---------------------------------------------------------------------------
 
 /// Built-in handler for `kind: "function"` tools.
@@ -265,11 +336,199 @@ impl ToolHandlerTrait for FunctionToolHandler {
     }
 }
 
+/// Handler for `kind: "prompty"` tools — loads a child `.prompty` file
+/// relative to the parent agent and executes it.
+///
+/// - `mode === "single"` (default): `prepare()` → `run()` (via `invoke()`)
+/// - `mode === "agentic"`: `turn()`
+pub struct PromptyToolHandler;
+
+#[async_trait::async_trait]
+impl ToolHandlerTrait for PromptyToolHandler {
+    async fn execute_tool(
+        &self,
+        tool_def: &serde_json::Value,
+        args: serde_json::Value,
+        agent: &Prompty,
+        _parent_inputs: Option<&serde_json::Value>,
+    ) -> Result<String, ToolHandlerError> {
+        let tool_name = tool_def
+            .get("name")
+            .and_then(|n| n.as_str())
+            .unwrap_or("<unknown>");
+
+        // Get parent source path from metadata
+        let parent_path = agent
+            .metadata
+            .get("__source_path")
+            .and_then(|p| p.as_str())
+            .ok_or_else(|| {
+                ToolHandlerError::Execution(format!(
+                    "cannot resolve PromptyTool '{tool_name}': parent has no __source_path"
+                ))
+            })?;
+
+        // Get the child path from tool_def.path
+        let child_relative = tool_def
+            .get("path")
+            .and_then(|p| p.as_str())
+            .ok_or_else(|| {
+                ToolHandlerError::Execution(format!(
+                    "PromptyTool '{tool_name}' is missing 'path' field"
+                ))
+            })?;
+
+        let parent_dir = Path::new(parent_path)
+            .parent()
+            .unwrap_or(Path::new("."));
+        let child_path = parent_dir.join(child_relative);
+
+        // Circular reference detection
+        let stack: Vec<String> = agent
+            .metadata
+            .get("__prompty_tool_stack")
+            .and_then(|s| serde_json::from_value(s.clone()).ok())
+            .unwrap_or_default();
+
+        let normalized_child = child_path
+            .canonicalize()
+            .unwrap_or_else(|_| child_path.clone());
+        let normalized_parent = Path::new(parent_path)
+            .canonicalize()
+            .unwrap_or_else(|_| Path::new(parent_path).to_path_buf());
+
+        let mut visited = std::collections::HashSet::new();
+        visited.insert(normalized_parent.to_string_lossy().to_string());
+        for p in &stack {
+            let np = Path::new(p)
+                .canonicalize()
+                .unwrap_or_else(|_| Path::new(p).to_path_buf());
+            visited.insert(np.to_string_lossy().to_string());
+        }
+
+        if visited.contains(&*normalized_child.to_string_lossy()) {
+            let chain_parts: Vec<&str> = stack
+                .iter()
+                .map(|s| s.as_str())
+                .chain(std::iter::once(parent_path))
+                .chain(std::iter::once(child_relative))
+                .collect();
+            return Err(ToolHandlerError::Execution(format!(
+                "circular reference detected: {}",
+                chain_parts.join(" → ")
+            )));
+        }
+
+        // Load the child .prompty file
+        let mut child = crate::loader::load(&child_path).map_err(|e| {
+            ToolHandlerError::Execution(format!(
+                "failed to load PromptyTool '{tool_name}': {e}"
+            ))
+        })?;
+
+        // Propagate visited-path stack
+        if let Some(meta) = child.metadata.as_object_mut() {
+            let mut new_stack = stack;
+            new_stack.push(parent_path.to_string());
+            meta.insert(
+                "__prompty_tool_stack".to_string(),
+                serde_json::to_value(new_stack).unwrap_or_default(),
+            );
+        }
+
+        let mode = tool_def
+            .get("mode")
+            .and_then(|m| m.as_str())
+            .unwrap_or("single");
+
+        let result = if mode == "agentic" {
+            crate::pipeline::turn(&child, Some(&args), None)
+                .await
+                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
+        } else {
+            crate::pipeline::invoke(&child, Some(&args))
+                .await
+                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
+        };
+
+        Ok(if let Some(s) = result.as_str() {
+            s.to_string()
+        } else {
+            serde_json::to_string(&result).unwrap_or_default()
+        })
+    }
+}
+
+/// Placeholder handler for `kind: "mcp"` tools.
+/// MCP tool dispatch is not yet implemented.
+pub struct McpToolHandler;
+
+#[async_trait::async_trait]
+impl ToolHandlerTrait for McpToolHandler {
+    async fn execute_tool(
+        &self,
+        _tool_def: &serde_json::Value,
+        _args: serde_json::Value,
+        _agent: &Prompty,
+        _parent_inputs: Option<&serde_json::Value>,
+    ) -> Result<String, ToolHandlerError> {
+        Err(ToolHandlerError::Execution(
+            "MCP tool dispatch is not yet implemented".into(),
+        ))
+    }
+}
+
+/// Placeholder handler for `kind: "openapi"` tools.
+/// OpenAPI tool dispatch is not yet implemented.
+pub struct OpenApiToolHandler;
+
+#[async_trait::async_trait]
+impl ToolHandlerTrait for OpenApiToolHandler {
+    async fn execute_tool(
+        &self,
+        _tool_def: &serde_json::Value,
+        _args: serde_json::Value,
+        _agent: &Prompty,
+        _parent_inputs: Option<&serde_json::Value>,
+    ) -> Result<String, ToolHandlerError> {
+        Err(ToolHandlerError::Execution(
+            "OpenAPI tool dispatch is not yet implemented".into(),
+        ))
+    }
+}
+
+/// Wildcard handler for unknown tool kinds.
+/// Custom tool dispatch is not yet implemented.
+pub struct CustomToolHandler;
+
+#[async_trait::async_trait]
+impl ToolHandlerTrait for CustomToolHandler {
+    async fn execute_tool(
+        &self,
+        tool_def: &serde_json::Value,
+        _args: serde_json::Value,
+        _agent: &Prompty,
+        _parent_inputs: Option<&serde_json::Value>,
+    ) -> Result<String, ToolHandlerError> {
+        let kind = tool_def
+            .get("kind")
+            .and_then(|k| k.as_str())
+            .unwrap_or("unknown");
+        Err(ToolHandlerError::Execution(format!(
+            "Custom tool dispatch for kind '{kind}' is not yet implemented"
+        )))
+    }
+}
+
 /// Register the built-in tool kind handlers.
 ///
 /// Called by `register_defaults()` in pipeline.rs.
 pub fn register_builtin_handlers() {
     register_tool_handler("function", FunctionToolHandler);
+    register_tool_handler("prompty", PromptyToolHandler);
+    register_tool_handler("mcp", McpToolHandler);
+    register_tool_handler("openapi", OpenApiToolHandler);
+    register_tool_handler("*", CustomToolHandler);
 }
 
 // ---------------------------------------------------------------------------
@@ -291,6 +550,12 @@ mod tests {
 
     fn default_agent() -> Prompty {
         Prompty::default()
+    }
+
+    fn agent_with_tools(tools: serde_json::Value) -> Prompty {
+        let mut agent = Prompty::default();
+        agent.tools = tools;
+        agent
     }
 
     #[tokio::test]
@@ -397,5 +662,166 @@ mod tests {
         clear_tool_handlers();
         register_builtin_handlers();
         assert!(has_tool_handler("function"));
+        assert!(has_tool_handler("prompty"));
+        assert!(has_tool_handler("mcp"));
+        assert!(has_tool_handler("openapi"));
+        assert!(has_tool_handler("*"));
+    }
+
+    // --- resolve_bindings tests ---
+
+    #[test]
+    fn test_resolve_bindings_injects_values() {
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "get_weather",
+            "kind": "function",
+            "bindings": [
+                { "name": "unit", "input": "temperatureUnit" }
+            ]
+        }]));
+
+        let args = serde_json::json!({ "city": "Paris" });
+        let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
+
+        let result = resolve_bindings(&agent, "get_weather", args, &parent_inputs);
+        assert_eq!(result["city"], "Paris");
+        assert_eq!(result["unit"], "celsius");
+    }
+
+    #[test]
+    fn test_resolve_bindings_no_bindings_passthrough() {
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "get_weather",
+            "kind": "function"
+        }]));
+
+        let args = serde_json::json!({ "city": "Paris" });
+        let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
+
+        let result = resolve_bindings(&agent, "get_weather", args.clone(), &parent_inputs);
+        assert_eq!(result, args);
+    }
+
+    #[test]
+    fn test_resolve_bindings_missing_input_skipped() {
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "get_weather",
+            "kind": "function",
+            "bindings": [
+                { "name": "unit", "input": "missingKey" }
+            ]
+        }]));
+
+        let args = serde_json::json!({ "city": "Paris" });
+        let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
+
+        let result = resolve_bindings(&agent, "get_weather", args.clone(), &parent_inputs);
+        assert_eq!(result, args); // no "unit" added since "missingKey" not in parent_inputs
+    }
+
+    #[test]
+    fn test_resolve_bindings_multiple() {
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "get_weather",
+            "kind": "function",
+            "bindings": [
+                { "name": "unit", "input": "temperatureUnit" },
+                { "name": "city", "input": "defaultCity" }
+            ]
+        }]));
+
+        let args = serde_json::json!({});
+        let parent_inputs = serde_json::json!({
+            "temperatureUnit": "fahrenheit",
+            "defaultCity": "London"
+        });
+
+        let result = resolve_bindings(&agent, "get_weather", args, &parent_inputs);
+        assert_eq!(result["unit"], "fahrenheit");
+        assert_eq!(result["city"], "London");
+    }
+
+    #[test]
+    fn test_resolve_bindings_no_tool_def() {
+        let agent = default_agent();
+        let args = serde_json::json!({ "city": "Paris" });
+        let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
+
+        let result = resolve_bindings(&agent, "nonexistent", args.clone(), &parent_inputs);
+        assert_eq!(result, args);
+    }
+
+    // --- Kind handler tests ---
+
+    #[tokio::test]
+    async fn test_mcp_handler_not_implemented() {
+        let handler = McpToolHandler;
+        let result = handler
+            .execute_tool(
+                &serde_json::json!({"kind": "mcp", "name": "test"}),
+                serde_json::json!({}),
+                &default_agent(),
+                None,
+            )
+            .await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("MCP"));
+    }
+
+    #[tokio::test]
+    async fn test_openapi_handler_not_implemented() {
+        let handler = OpenApiToolHandler;
+        let result = handler
+            .execute_tool(
+                &serde_json::json!({"kind": "openapi", "name": "test"}),
+                serde_json::json!({}),
+                &default_agent(),
+                None,
+            )
+            .await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("OpenAPI"));
+    }
+
+    #[tokio::test]
+    async fn test_custom_handler_not_implemented() {
+        let handler = CustomToolHandler;
+        let result = handler
+            .execute_tool(
+                &serde_json::json!({"kind": "my_custom", "name": "test"}),
+                serde_json::json!({}),
+                &default_agent(),
+                None,
+            )
+            .await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("my_custom"));
+    }
+
+    #[tokio::test]
+    async fn test_dispatch_bindings_integrated() {
+        clear_tools();
+        clear_tool_handlers();
+
+        // Register a tool that returns its args as JSON
+        register_tool("get_weather", |args| async move {
+            Ok(serde_json::to_string(&args).unwrap())
+        });
+
+        let agent = agent_with_tools(serde_json::json!([{
+            "name": "get_weather",
+            "kind": "function",
+            "bindings": [
+                { "name": "unit", "input": "temperatureUnit" }
+            ]
+        }]));
+
+        let tc = make_tool_call("get_weather", r#"{"city":"Paris"}"#);
+        let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
+        let result = dispatch_tool(&tc, &HashMap::new(), &agent, Some(&parent_inputs)).await;
+
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["city"], "Paris");
+        assert_eq!(parsed["unit"], "celsius");
     }
 }

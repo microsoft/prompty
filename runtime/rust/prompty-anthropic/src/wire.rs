@@ -57,6 +57,11 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
         }
     }
 
+    // Structured output (outputSchema → output_config)
+    if let Some(output_config) = output_schema_to_wire(agent) {
+        body.insert("output_config".into(), output_config);
+    }
+
     Value::Object(body)
 }
 
@@ -223,6 +228,52 @@ fn f32_to_json(v: f32) -> Value {
     let s = format!("{}", v);
     let f: f64 = s.parse().unwrap_or(v as f64);
     json!(f)
+}
+
+// ---------------------------------------------------------------------------
+// Structured output (outputSchema → output_config)
+// ---------------------------------------------------------------------------
+
+/// Convert `agent.outputs` to Anthropic's `output_config` format.
+///
+/// Anthropic uses: `output_config: { format: { type: "json_schema", schema: {...} } }`
+fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
+    let outputs = agent.as_outputs()?;
+    if outputs.is_empty() {
+        return None;
+    }
+
+    let mut properties = Map::new();
+    let mut required = Vec::new();
+
+    for prop in &outputs {
+        let kind_str = prop.kind_str();
+        let json_type = match kind_str {
+            "float" | "number" => "number",
+            other => other,
+        };
+
+        let mut prop_schema = Map::new();
+        prop_schema.insert("type".into(), json!(json_type));
+        if let Some(ref desc) = prop.description {
+            prop_schema.insert("description".into(), json!(desc));
+        }
+
+        properties.insert(prop.name.clone(), Value::Object(prop_schema));
+        required.push(json!(prop.name));
+    }
+
+    Some(json!({
+        "format": {
+            "type": "json_schema",
+            "schema": {
+                "type": "object",
+                "properties": properties,
+                "required": required,
+                "additionalProperties": false,
+            }
+        }
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -558,5 +609,39 @@ mod tests {
         ];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["system"], "Rule 1\n\nRule 2");
+    }
+
+    #[test]
+    fn test_output_schema_to_wire() {
+        let mut data = json!({
+            "name": "structured",
+            "kind": "prompt",
+            "model": {"id": "claude-3", "provider": "anthropic"},
+            "outputs": [
+                {"name": "city", "kind": "string", "description": "The city name"},
+                {"name": "temperature", "kind": "float"}
+            ],
+        });
+        data["instructions"] = json!("test");
+        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let messages = vec![Message::text(Role::User, "Weather?")];
+        let args = build_chat_args(&agent, &messages);
+
+        let oc = &args["output_config"];
+        assert_eq!(oc["format"]["type"], "json_schema");
+        let schema = &oc["format"]["schema"];
+        assert_eq!(schema["type"], "object");
+        assert_eq!(schema["properties"]["city"]["type"], "string");
+        assert_eq!(schema["properties"]["city"]["description"], "The city name");
+        assert_eq!(schema["properties"]["temperature"]["type"], "number");
+        assert_eq!(schema["additionalProperties"], false);
+    }
+
+    #[test]
+    fn test_no_output_config_without_outputs() {
+        let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
+        let messages = vec![Message::text(Role::User, "Hello")];
+        let args = build_chat_args(&agent, &messages);
+        assert!(args.get("output_config").is_none());
     }
 }

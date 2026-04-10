@@ -2,10 +2,11 @@
 //! implementations by key.
 //!
 //! Matches the registry pattern from the TypeScript, Python, and C# runtimes.
-//! Uses `HashMap<String, Box<dyn Trait>>` behind a `RwLock`.
+//! Uses `HashMap<String, Arc<dyn Trait>>` behind a `RwLock`. Arc allows cloning
+//! the trait object so the lock guard is dropped before any `.await` point.
 
 use std::collections::HashMap;
-use std::sync::{OnceLock, RwLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
 use crate::interfaces::{Executor, InvokerError, Parser, Processor, Renderer};
 
@@ -13,24 +14,24 @@ use crate::interfaces::{Executor, InvokerError, Parser, Processor, Renderer};
 // Global singletons
 // ---------------------------------------------------------------------------
 
-static RENDERERS: OnceLock<RwLock<HashMap<String, Box<dyn Renderer>>>> = OnceLock::new();
-static PARSERS: OnceLock<RwLock<HashMap<String, Box<dyn Parser>>>> = OnceLock::new();
-static EXECUTORS: OnceLock<RwLock<HashMap<String, Box<dyn Executor>>>> = OnceLock::new();
-static PROCESSORS: OnceLock<RwLock<HashMap<String, Box<dyn Processor>>>> = OnceLock::new();
+static RENDERERS: OnceLock<RwLock<HashMap<String, Arc<dyn Renderer>>>> = OnceLock::new();
+static PARSERS: OnceLock<RwLock<HashMap<String, Arc<dyn Parser>>>> = OnceLock::new();
+static EXECUTORS: OnceLock<RwLock<HashMap<String, Arc<dyn Executor>>>> = OnceLock::new();
+static PROCESSORS: OnceLock<RwLock<HashMap<String, Arc<dyn Processor>>>> = OnceLock::new();
 
-fn renderers() -> &'static RwLock<HashMap<String, Box<dyn Renderer>>> {
+fn renderers() -> &'static RwLock<HashMap<String, Arc<dyn Renderer>>> {
     RENDERERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn parsers() -> &'static RwLock<HashMap<String, Box<dyn Parser>>> {
+fn parsers() -> &'static RwLock<HashMap<String, Arc<dyn Parser>>> {
     PARSERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn executors() -> &'static RwLock<HashMap<String, Box<dyn Executor>>> {
+fn executors() -> &'static RwLock<HashMap<String, Arc<dyn Executor>>> {
     EXECUTORS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn processors() -> &'static RwLock<HashMap<String, Box<dyn Processor>>> {
+fn processors() -> &'static RwLock<HashMap<String, Arc<dyn Processor>>> {
     PROCESSORS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
@@ -43,7 +44,7 @@ pub fn register_renderer(key: impl Into<String>, renderer: impl Renderer + 'stat
     renderers()
         .write()
         .expect("renderers lock poisoned")
-        .insert(key.into(), Box::new(renderer));
+        .insert(key.into(), Arc::new(renderer));
 }
 
 /// Register a parser under the given key (e.g. `"prompty"`).
@@ -51,7 +52,7 @@ pub fn register_parser(key: impl Into<String>, parser: impl Parser + 'static) {
     parsers()
         .write()
         .expect("parsers lock poisoned")
-        .insert(key.into(), Box::new(parser));
+        .insert(key.into(), Arc::new(parser));
 }
 
 /// Register an executor under the given key (e.g. `"openai"`, `"azure"`).
@@ -59,7 +60,7 @@ pub fn register_executor(key: impl Into<String>, executor: impl Executor + 'stat
     executors()
         .write()
         .expect("executors lock poisoned")
-        .insert(key.into(), Box::new(executor));
+        .insert(key.into(), Arc::new(executor));
 }
 
 /// Register a processor under the given key (e.g. `"openai"`, `"azure"`).
@@ -67,7 +68,7 @@ pub fn register_processor(key: impl Into<String>, processor: impl Processor + 's
     processors()
         .write()
         .expect("processors lock poisoned")
-        .insert(key.into(), Box::new(processor));
+        .insert(key.into(), Arc::new(processor));
 }
 
 // ---------------------------------------------------------------------------
@@ -145,12 +146,13 @@ pub async fn invoke_renderer(
     template: &str,
     inputs: &serde_json::Value,
 ) -> Result<String, InvokerError> {
-    let map = renderers();
-    let guard = map.read().expect("renderers lock poisoned");
-    let renderer = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "renderer".into(),
-        key: key.into(),
-    })?;
+    let renderer = {
+        let guard = renderers().read().expect("renderers lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "renderer".into(),
+            key: key.into(),
+        })?)
+    };
     renderer.render(agent, template, inputs).await
 }
 
@@ -165,12 +167,13 @@ pub async fn invoke_parser(
     rendered: &str,
     context: Option<&serde_json::Value>,
 ) -> Result<Vec<crate::types::Message>, InvokerError> {
-    let map = parsers();
-    let guard = map.read().expect("parsers lock poisoned");
-    let parser = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "parser".into(),
-        key: key.into(),
-    })?;
+    let parser = {
+        let guard = parsers().read().expect("parsers lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "parser".into(),
+            key: key.into(),
+        })?)
+    };
     parser.parse(agent, rendered, context).await
 }
 
@@ -184,12 +187,13 @@ pub async fn invoke_executor(
     agent: &crate::model::Prompty,
     messages: &[crate::types::Message],
 ) -> Result<serde_json::Value, InvokerError> {
-    let map = executors();
-    let guard = map.read().expect("executors lock poisoned");
-    let executor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "executor".into(),
-        key: key.into(),
-    })?;
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
     executor.execute(agent, messages).await
 }
 
@@ -206,12 +210,13 @@ pub async fn invoke_executor_stream(
     agent: &crate::model::Prompty,
     messages: &[crate::types::Message],
 ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
-    let map = executors();
-    let guard = map.read().expect("executors lock poisoned");
-    let executor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "executor".into(),
-        key: key.into(),
-    })?;
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
     executor.execute_stream(agent, messages).await
 }
 
@@ -225,12 +230,13 @@ pub async fn invoke_processor(
     agent: &crate::model::Prompty,
     response: serde_json::Value,
 ) -> Result<serde_json::Value, InvokerError> {
-    let map = processors();
-    let guard = map.read().expect("processors lock poisoned");
-    let processor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "processor".into(),
-        key: key.into(),
-    })?;
+    let processor = {
+        let guard = processors().read().expect("processors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "processor".into(),
+            key: key.into(),
+        })?)
+    };
     processor.process(agent, response).await
 }
 
@@ -246,12 +252,13 @@ pub fn invoke_processor_stream(
     key: &str,
     inner: std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
 ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError> {
-    let map = processors();
-    let guard = map.read().expect("processors lock poisoned");
-    let processor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "processor".into(),
-        key: key.into(),
-    })?;
+    let processor = {
+        let guard = processors().read().expect("processors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "processor".into(),
+            key: key.into(),
+        })?)
+    };
     processor.process_stream(inner)
 }
 
@@ -263,23 +270,25 @@ pub fn invoke_format_tool_messages(
     tool_results: &[String],
     text_content: Option<&str>,
 ) -> Result<Vec<crate::types::Message>, InvokerError> {
-    let map = executors();
-    let guard = map.read().expect("executors lock poisoned");
-    let executor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "executor".into(),
-        key: key.into(),
-    })?;
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
     Ok(executor.format_tool_messages(raw_response, tool_calls, tool_results, text_content))
 }
 
 /// Get the pre-render hook from a registered parser (if it provides one).
 pub fn invoke_pre_render(key: &str, template: &str) -> Result<Option<(String, serde_json::Value)>, InvokerError> {
-    let map = parsers();
-    let guard = map.read().expect("parsers lock poisoned");
-    let parser = guard.get(key).ok_or_else(|| InvokerError::NotFound {
-        group: "parser".into(),
-        key: key.into(),
-    })?;
+    let parser = {
+        let guard = parsers().read().expect("parsers lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "parser".into(),
+            key: key.into(),
+        })?)
+    };
     Ok(parser.pre_render(template))
 }
 

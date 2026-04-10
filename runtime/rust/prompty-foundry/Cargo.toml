@@ -1,7 +1,8 @@
 [package]
 name = "prompty-foundry"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 description = "Azure OpenAI / Foundry provider for Prompty"
 license = "MIT"
 
@@ -9,12 +10,18 @@ license = "MIT"
 prompty = { path = "../prompty" }
 prompty-openai = { path = "../prompty-openai" }
 async-trait = "0.1"
+azure_identity = { version = "0.23", optional = true }
+azure_core = { version = "0.23", optional = true }
 bytes = "1"
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+
+[features]
+default = []
+entra_id = ["azure_identity", "azure_core"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

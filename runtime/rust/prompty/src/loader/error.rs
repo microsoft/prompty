@@ -23,6 +23,8 @@ pub enum LoadError {
         /// Detail message
         detail: String,
     },
+    /// A catch-all for other load errors (e.g. spawn_blocking panic).
+    Other(String),
 }
 
 impl std::fmt::Display for LoadError {
@@ -42,6 +44,9 @@ impl std::fmt::Display for LoadError {
             }
             LoadError::FileReference { path, detail } => {
                 write!(f, "File reference error: {}: {}", path.display(), detail)
+            }
+            LoadError::Other(msg) => {
+                write!(f, "Load error: {msg}")
             }
         }
     }

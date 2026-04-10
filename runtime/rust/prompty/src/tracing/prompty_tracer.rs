@@ -78,12 +78,64 @@ impl Frame {
             obj.insert("__frames".to_string(), Value::Array(frames));
         }
 
+        // Hoist __usage from result, array results, and children
+        let mut usage = Map::new();
+
+        // 1. From result.usage (single object response)
+        if let Some(result) = obj.get("result") {
+            if let Some(result_obj) = result.as_object() {
+                if let Some(u) = result_obj.get("usage") {
+                    hoist_usage(u, &mut usage);
+                }
+            }
+            // 2. From array results (streaming chunks)
+            if let Some(result_arr) = result.as_array() {
+                for item in result_arr {
+                    if let Some(item_obj) = item.as_object() {
+                        if let Some(u) = item_obj.get("usage") {
+                            hoist_usage(u, &mut usage);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. From child frames' __usage
+        for child_json in obj.get("__frames").and_then(|f| f.as_array()).unwrap_or(&Vec::new()) {
+            if let Some(child_usage) = child_json.get("__usage") {
+                hoist_usage(child_usage, &mut usage);
+            }
+        }
+
+        if !usage.is_empty() {
+            obj.insert("__usage".to_string(), Value::Object(usage));
+        }
+
         Value::Object(obj)
     }
 }
 
 fn format_datetime(dt: &DateTime<Local>) -> String {
     dt.format("%Y-%m-%dT%H:%M:%S%.3f000").to_string()
+}
+
+/// Merge numeric fields from a usage source into an accumulator.
+///
+/// Mirrors TypeScript's `hoistUsage()`: for each key in `src` whose value is a
+/// number, add it to the running total in `acc`. Non-numeric/null values are skipped.
+fn hoist_usage(src: &Value, acc: &mut Map<String, Value>) {
+    if let Some(obj) = src.as_object() {
+        for (key, value) in obj {
+            // Try integer first to preserve i64 precision
+            if let Some(n) = value.as_i64() {
+                let current = acc.get(key).and_then(|v| v.as_i64()).unwrap_or(0);
+                acc.insert(key.clone(), json!(current + n));
+            } else if let Some(n) = value.as_f64() {
+                let current = acc.get(key).and_then(|v| v.as_f64()).unwrap_or(0.0);
+                acc.insert(key.clone(), json!(current + n));
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -264,5 +316,55 @@ mod tests {
         // Should be like "2025-01-15T14:30:45.123000"
         assert!(formatted.len() >= 23, "datetime too short: {formatted}");
         assert!(formatted.contains('T'));
+    }
+
+    #[test]
+    fn test_hoist_usage_from_result() {
+        let mut frame = Frame::new("executor");
+        frame.emit(
+            "result",
+            &json!({
+                "choices": [{"message": {"content": "hi"}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}
+            }),
+        );
+        let output = frame.to_json();
+        assert_eq!(output["__usage"]["prompt_tokens"], 10);
+        assert_eq!(output["__usage"]["completion_tokens"], 5);
+        assert_eq!(output["__usage"]["total_tokens"], 15);
+    }
+
+    #[test]
+    fn test_hoist_usage_from_children() {
+        let mut child1 = Frame::new("child1");
+        child1.emit(
+            "result",
+            &json!({"usage": {"prompt_tokens": 10, "completion_tokens": 5}}),
+        );
+        let mut child2 = Frame::new("child2");
+        child2.emit(
+            "result",
+            &json!({"usage": {"prompt_tokens": 20, "completion_tokens": 8}}),
+        );
+
+        let mut parent = Frame::new("parent");
+        parent.children.push(child1);
+        parent.children.push(child2);
+
+        let output = parent.to_json();
+        // Usage should be aggregated from children
+        assert_eq!(output["__usage"]["prompt_tokens"], 30);
+        assert_eq!(output["__usage"]["completion_tokens"], 13);
+    }
+
+    #[test]
+    fn test_hoist_usage_ignores_non_numeric() {
+        let mut acc = Map::new();
+        hoist_usage(
+            &json!({"prompt_tokens": 10, "model": "gpt-4", "null_field": null}),
+            &mut acc,
+        );
+        assert_eq!(acc.len(), 1);
+        assert_eq!(acc["prompt_tokens"], 10);
     }
 }

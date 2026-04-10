@@ -5,12 +5,16 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
+use std::sync::LazyLock;
 
 use prompty::interfaces::{Executor, InvokerError};
 use prompty::model::Prompty;
 use prompty::types::Message;
 
 use crate::wire;
+
+/// Shared HTTP client — reuses connection pool across requests.
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// Anthropic executor implementing the `Executor` trait.
 pub struct AnthropicExecutor;
@@ -33,7 +37,7 @@ impl Executor for AnthropicExecutor {
         let url = build_url(agent)?;
         let api_key = get_api_key(agent)?;
 
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header("x-api-key", &api_key)
@@ -94,7 +98,7 @@ impl Executor for AnthropicExecutor {
         let url = build_url(agent)?;
         let api_key = get_api_key(agent)?;
 
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header("x-api-key", &api_key)
@@ -141,8 +145,33 @@ impl AnthropicExecutor {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn build_url(agent: &Prompty) -> Result<String, InvokerError> {
+/// Resolve the effective connection — if `kind == "reference"`, look up the
+/// named connection from the registry. Otherwise return the connection as-is.
+fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let conn = &agent.model.connection;
+    let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+
+    if kind == "reference" {
+        let name = conn
+            .get("name")
+            .and_then(|n| n.as_str())
+            .ok_or_else(|| {
+                InvokerError::Execute(
+                    "Reference connection missing 'name' field".to_string().into(),
+                )
+            })?;
+
+        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+            .map_err(|e| InvokerError::Execute(e.into()))?;
+
+        Ok(std::borrow::Cow::Owned(resolved))
+    } else {
+        Ok(std::borrow::Cow::Borrowed(conn))
+    }
+}
+
+fn build_url(agent: &Prompty) -> Result<String, InvokerError> {
+    let conn = resolve_connection(agent)?;
     let endpoint = conn
         .get("endpoint")
         .and_then(|e| e.as_str())
@@ -153,7 +182,7 @@ fn build_url(agent: &Prompty) -> Result<String, InvokerError> {
 }
 
 fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
-    let conn = &agent.model.connection;
+    let conn = resolve_connection(agent)?;
 
     // Try connection.apiKey first
     if let Some(key) = conn

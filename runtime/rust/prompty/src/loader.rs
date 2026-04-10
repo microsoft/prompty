@@ -80,7 +80,13 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
 
-    match build_agent(&raw, &resolved) {
+    // build_agent may do blocking FS for ${file:} resolution — offload to blocking pool
+    let resolved_clone = resolved.clone();
+    let result = tokio::task::spawn_blocking(move || build_agent(&raw, &resolved_clone))
+        .await
+        .map_err(|e| LoadError::Other(format!("spawn_blocking panicked: {e}")))?;
+
+    match result {
         Ok(agent) => {
             span.emit("result", &serde_json::json!({ "name": agent.name }));
             span.end();
