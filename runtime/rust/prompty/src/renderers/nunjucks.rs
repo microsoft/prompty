@@ -8,8 +8,6 @@ use async_trait::async_trait;
 use crate::interfaces::{InvokerError, Renderer};
 use crate::model::Prompty;
 
-use super::common::prepare_render_inputs;
-
 /// Jinja2/Nunjucks-compatible renderer powered by MiniJinja.
 pub struct NunjucksRenderer;
 
@@ -17,13 +15,11 @@ pub struct NunjucksRenderer;
 impl Renderer for NunjucksRenderer {
     async fn render(
         &self,
-        agent: &Prompty,
+        _agent: &Prompty,
         template: &str,
         inputs: &serde_json::Value,
     ) -> Result<String, InvokerError> {
-        let (modified_inputs, _nonces) = prepare_render_inputs(agent, inputs);
-
-        render_template(template, &modified_inputs)
+        render_template(template, inputs)
     }
 }
 
@@ -100,6 +96,7 @@ mod tests {
 
     #[test]
     fn test_missing_variable_renders_empty() {
+        // Per spec: undefined variables render as empty string
         let result = render_template("Hello {{ name }}!", &serde_json::json!({}));
         assert_eq!(result.unwrap(), "Hello !");
     }

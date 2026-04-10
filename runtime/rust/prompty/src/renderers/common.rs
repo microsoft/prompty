@@ -5,7 +5,6 @@
 //! `__PROMPTY_THREAD_<hex8>_<propertyName>__`
 
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 use rand::Rng;
 
@@ -13,10 +12,6 @@ use crate::model::Prompty;
 
 /// Input kinds that receive nonce replacement during rendering.
 pub const RICH_KINDS: &[&str] = &["thread", "image", "file", "audio"];
-
-/// Thread-local nonce storage. The pipeline reads this after rendering to
-/// know which nonces map to which input names.
-static LAST_NONCES: Mutex<Option<HashMap<String, String>>> = Mutex::new(None);
 
 /// Generate a nonce marker: `__PROMPTY_THREAD_<hex8>_<name>__`
 fn generate_nonce(name: &str) -> String {
@@ -30,8 +25,8 @@ fn generate_nonce(name: &str) -> String {
 /// Returns `(modified_inputs, nonces_map)` where `nonces_map` maps
 /// `property_name → nonce_string`.
 ///
-/// Also stores the nonces in global state for later retrieval by
-/// [`get_last_nonces`].
+/// The pipeline is responsible for passing the nonces to `expand_threads()`
+/// after rendering and parsing — no global state is involved.
 pub fn prepare_render_inputs(
     agent: &Prompty,
     inputs: &serde_json::Value,
@@ -52,24 +47,7 @@ pub fn prepare_render_inputs(
         }
     }
 
-    // Stash for pipeline use
-    *LAST_NONCES.lock().expect("nonces lock poisoned") = Some(nonces.clone());
-
     (modified, nonces)
-}
-
-/// Get the nonces from the most recent `prepare_render_inputs` call.
-pub fn get_last_nonces() -> HashMap<String, String> {
-    LAST_NONCES
-        .lock()
-        .expect("nonces lock poisoned")
-        .clone()
-        .unwrap_or_default()
-}
-
-/// Clear stored nonces. Called by the pipeline before each render cycle.
-pub fn clear_last_nonces() {
-    *LAST_NONCES.lock().expect("nonces lock poisoned") = None;
 }
 
 #[cfg(test)]
@@ -101,12 +79,6 @@ mod tests {
         let (modified, nonces) = prepare_render_inputs(&agent, &inputs);
         assert!(nonces.is_empty());
         assert_eq!(modified, inputs);
-    }
-
-    #[test]
-    fn test_clear_and_get_nonces() {
-        clear_last_nonces();
-        assert!(get_last_nonces().is_empty());
     }
 
     #[test]
@@ -174,8 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_prepare_render_inputs_stores_for_retrieval() {
-        clear_last_nonces();
+    fn test_prepare_render_inputs_returns_nonces() {
         let data = serde_json::json!({
             "kind": "prompt",
             "name": "test",
@@ -189,8 +160,6 @@ mod tests {
         let inputs = serde_json::json!({"audio_clip": "data:audio/wav;base64,abc"});
 
         let (_, nonces) = prepare_render_inputs(&agent, &inputs);
-        let retrieved = get_last_nonces();
-        assert_eq!(nonces, retrieved);
-        assert!(retrieved.contains_key("audio_clip"));
+        assert!(nonces.contains_key("audio_clip"));
     }
 }

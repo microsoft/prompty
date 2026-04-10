@@ -554,8 +554,8 @@ async fn run_vector_with_events(
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
             AgentEvent::ToolResult { .. } => "tool_result",
             AgentEvent::Status(_) => "status",
-            AgentEvent::MessagesUpdated => "messages_updated",
-            AgentEvent::Done => "done",
+            AgentEvent::MessagesUpdated { .. } => "messages_updated",
+            AgentEvent::Done { .. } => "done",
             AgentEvent::Error(_) => "error",
             AgentEvent::Cancelled => "cancelled",
         };
@@ -726,8 +726,8 @@ async fn test_cancellation_between_iterations() {
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
             AgentEvent::ToolResult { .. } => "tool_result",
             AgentEvent::Status(_) => "status",
-            AgentEvent::MessagesUpdated => "messages_updated",
-            AgentEvent::Done => "done",
+            AgentEvent::MessagesUpdated { .. } => "messages_updated",
+            AgentEvent::Done { .. } => "done",
             AgentEvent::Error(_) => "error",
             AgentEvent::Cancelled => "cancelled",
         };
@@ -969,8 +969,8 @@ fn build_extension_opts(
             let label = match &event {
                 AgentEvent::ToolCallStart { name, .. } => format!("ToolCallStart:{name}"),
                 AgentEvent::ToolResult { name, .. } => format!("ToolResult:{name}"),
-                AgentEvent::MessagesUpdated => "MessagesUpdated".into(),
-                AgentEvent::Done => "Done".into(),
+                AgentEvent::MessagesUpdated { .. } => "MessagesUpdated".into(),
+                AgentEvent::Done { .. } => "Done".into(),
                 AgentEvent::Error(e) => format!("Error:{e}"),
                 AgentEvent::Cancelled => "Cancelled".into(),
                 _ => format!("{event:?}"),

@@ -146,7 +146,7 @@ pub fn trim_to_context_window(
     let summary_text = summarize_dropped(dropped);
     let summary_msg = Message::text(
         Role::User,
-        &format!("[Previous conversation summary ({drop_count} messages omitted)]\n{summary_text}"),
+        &format!("[Context summary: {summary_text}\n... ({drop_count} messages omitted)]"),
     );
 
     let mut result = Vec::with_capacity(system_msgs.len() + 1 + kept.len());
