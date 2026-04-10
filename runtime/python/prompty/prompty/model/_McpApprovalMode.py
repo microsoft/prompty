@@ -5,10 +5,9 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-
 
 
 @dataclass
@@ -16,7 +15,7 @@ class McpApprovalMode:
     """The approval mode for MCP server tools.
     When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
     to control per-tool approval. For "always" and "never", those fields are ignored.
-    
+
     Attributes
     ----------
     kind : str
@@ -27,14 +26,14 @@ class McpApprovalMode:
         List of tools that never require approval (only used when kind is 'specify')
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = "kind"
+    _shorthand_property: ClassVar[str | None] = "kind"
 
     kind: str = field(default="")
     alwaysRequireApprovalTools: list[str] = field(default_factory=list)
     neverRequireApprovalTools: list[str] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "McpApprovalMode":
+    def load(data: Any, context: LoadContext | None = None) -> "McpApprovalMode":
         """Load a McpApprovalMode instance.
         Args:
             data (Any): The data to load the instance from.
@@ -46,11 +45,11 @@ class McpApprovalMode:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         # handle alternate representations
         if isinstance(data, str):
             data = {"kind": data}
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpApprovalMode: {data}")
 
@@ -67,9 +66,7 @@ class McpApprovalMode:
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the McpApprovalMode instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -80,7 +77,6 @@ class McpApprovalMode:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -95,7 +91,7 @@ class McpApprovalMode:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the McpApprovalMode instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -107,7 +103,7 @@ class McpApprovalMode:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the McpApprovalMode instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -119,4 +115,3 @@ class McpApprovalMode:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-

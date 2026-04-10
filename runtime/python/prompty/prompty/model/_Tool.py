@@ -6,20 +6,19 @@
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._Binding import Binding
 from ._Connection import Connection
+from ._context import LoadContext, SaveContext
 from ._McpApprovalMode import McpApprovalMode
 from ._Property import Property
-
 
 
 @dataclass
 class Tool(ABC):
     """Represents a tool that can be used in prompts.
-    
+
     Attributes
     ----------
     name : str
@@ -32,15 +31,15 @@ class Tool(ABC):
         Tool argument bindings to input properties
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     name: str = field(default="")
     kind: str = field(default="")
-    description: Optional[str] = None
+    description: str | None = None
     bindings: list[Binding] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "Tool":
+    def load(data: Any, context: LoadContext | None = None) -> "Tool":
         """Load a Tool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -52,13 +51,12 @@ class Tool(ABC):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Tool: {data}")
 
         # load polymorphic Tool instance
         instance = Tool.load_kind(data, context)
-
 
         if data is not None and "name" in data:
             instance.name = data["name"]
@@ -72,9 +70,8 @@ class Tool(ABC):
             instance = context.process_output(instance)
         return instance
 
-
     @staticmethod
-    def load_bindings(data: dict | list, context: Optional[LoadContext]) -> list[Binding]:
+    def load_bindings(data: dict | list, context: LoadContext | None) -> list[Binding]:
         if isinstance(data, dict):
             # convert simple named bindings to list of Binding
             result = []
@@ -89,7 +86,7 @@ class Tool(ABC):
         return [Binding.load(item, context) for item in data]
 
     @staticmethod
-    def save_bindings(items: list[Binding], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_bindings(items: list[Binding], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -103,7 +100,7 @@ class Tool(ABC):
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -116,9 +113,8 @@ class Tool(ABC):
                 result["_unnamed"].append(item_data)
         return result
 
-
     @staticmethod
-    def load_kind(data: dict, context: Optional[LoadContext]) -> "Tool":
+    def load_kind(data: dict, context: LoadContext | None) -> "Tool":
         # load polymorphic Tool instance
         if data is not None and "kind" in data:
             discriminator_value = str(data["kind"]).lower()
@@ -132,16 +128,13 @@ class Tool(ABC):
                 return PromptyTool.load(data, context)
 
             else:
-
                 # load default instance
                 return CustomTool.load(data, context)
 
         else:
-
             raise ValueError("Missing Tool discriminator property: 'kind'")
 
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Tool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -152,7 +145,6 @@ class Tool(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -169,7 +161,7 @@ class Tool(ABC):
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the Tool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -181,7 +173,7 @@ class Tool(ABC):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the Tool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -198,7 +190,7 @@ class Tool(ABC):
 @dataclass
 class FunctionTool(Tool):
     """Represents a local function tool.
-    
+
     Attributes
     ----------
     kind : str
@@ -209,14 +201,14 @@ class FunctionTool(Tool):
         Indicates whether the function tool enforces strict validation on its parameters
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="function")
     parameters: list[Property] = field(default_factory=list)
-    strict: Optional[bool] = None
+    strict: bool | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "FunctionTool":
+    def load(data: Any, context: LoadContext | None = None) -> "FunctionTool":
         """Load a FunctionTool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -228,7 +220,7 @@ class FunctionTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FunctionTool: {data}")
 
@@ -245,9 +237,8 @@ class FunctionTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
     @staticmethod
-    def load_parameters(data: dict | list, context: Optional[LoadContext]) -> list[Property]:
+    def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
             # convert simple named parameters to list of Property
             result = []
@@ -262,7 +253,7 @@ class FunctionTool(Tool):
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_parameters(items: list[Property], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_parameters(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -276,7 +267,7 @@ class FunctionTool(Tool):
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -289,8 +280,7 @@ class FunctionTool(Tool):
                 result["_unnamed"].append(item_data)
         return result
 
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -302,10 +292,8 @@ class FunctionTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -316,7 +304,7 @@ class FunctionTool(Tool):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the FunctionTool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -328,7 +316,7 @@ class FunctionTool(Tool):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the FunctionTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -349,7 +337,7 @@ class CustomTool(Tool):
     It may include features such as authentication, data storage, and long-running processes
     This tool kind is ideal for tasks that involve complex computations or access to secure resources
     Server tools can be used to offload heavy processing from client applications
-    
+
     Attributes
     ----------
     kind : str
@@ -360,14 +348,14 @@ class CustomTool(Tool):
         Configuration options for the server tool
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="*")
     connection: Connection = field(default_factory=Connection)
     options: dict[str, Any] = field(default_factory=dict)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "CustomTool":
+    def load(data: Any, context: LoadContext | None = None) -> "CustomTool":
         """Load a CustomTool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -379,7 +367,7 @@ class CustomTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for CustomTool: {data}")
 
@@ -396,9 +384,7 @@ class CustomTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the CustomTool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -410,10 +396,8 @@ class CustomTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -424,7 +408,7 @@ class CustomTool(Tool):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the CustomTool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -436,7 +420,7 @@ class CustomTool(Tool):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the CustomTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -453,7 +437,7 @@ class CustomTool(Tool):
 @dataclass
 class McpTool(Tool):
     """The MCP Server tool.
-    
+
     Attributes
     ----------
     kind : str
@@ -470,17 +454,17 @@ class McpTool(Tool):
         List of allowed operations or resources for the MCP tool
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="mcp")
     connection: Connection = field(default_factory=Connection)
     serverName: str = field(default="")
-    serverDescription: Optional[str] = None
+    serverDescription: str | None = None
     approvalMode: McpApprovalMode = field(default_factory=McpApprovalMode)
     allowedTools: list[str] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "McpTool":
+    def load(data: Any, context: LoadContext | None = None) -> "McpTool":
         """Load a McpTool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -492,7 +476,7 @@ class McpTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpTool: {data}")
 
@@ -515,9 +499,7 @@ class McpTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the McpTool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -529,10 +511,8 @@ class McpTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -549,7 +529,7 @@ class McpTool(Tool):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the McpTool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -561,7 +541,7 @@ class McpTool(Tool):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the McpTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -578,7 +558,7 @@ class McpTool(Tool):
 @dataclass
 class OpenApiTool(Tool):
     """
-    
+
     Attributes
     ----------
     kind : str
@@ -589,14 +569,14 @@ class OpenApiTool(Tool):
         The full OpenAPI specification
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="openapi")
     connection: Connection = field(default_factory=Connection)
     specification: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "OpenApiTool":
+    def load(data: Any, context: LoadContext | None = None) -> "OpenApiTool":
         """Load a OpenApiTool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -608,7 +588,7 @@ class OpenApiTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for OpenApiTool: {data}")
 
@@ -625,9 +605,7 @@ class OpenApiTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the OpenApiTool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -639,10 +617,8 @@ class OpenApiTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -653,7 +629,7 @@ class OpenApiTool(Tool):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the OpenApiTool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -665,7 +641,7 @@ class OpenApiTool(Tool):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the OpenApiTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -682,10 +658,10 @@ class OpenApiTool(Tool):
 @dataclass
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
-    
+
     In `single` mode, the child prompty is executed with a single LLM call.
     In `agentic` mode, the child prompty runs a full agent loop with its own tools.
-    
+
     Attributes
     ----------
     kind : str
@@ -696,14 +672,14 @@ class PromptyTool(Tool):
         Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="prompty")
     path: str = field(default="")
     mode: str = field(default="single")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "PromptyTool":
+    def load(data: Any, context: LoadContext | None = None) -> "PromptyTool":
         """Load a PromptyTool instance.
         Args:
             data (Any): The data to load the instance from.
@@ -715,7 +691,7 @@ class PromptyTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for PromptyTool: {data}")
 
@@ -732,9 +708,7 @@ class PromptyTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the PromptyTool instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -746,10 +720,8 @@ class PromptyTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -760,7 +732,7 @@ class PromptyTool(Tool):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the PromptyTool instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -772,7 +744,7 @@ class PromptyTool(Tool):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the PromptyTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -784,4 +756,3 @@ class PromptyTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-

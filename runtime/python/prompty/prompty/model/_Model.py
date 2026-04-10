@@ -5,12 +5,11 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._Connection import Connection
+from ._context import LoadContext, SaveContext
 from ._ModelOptions import ModelOptions
-
 
 
 @dataclass
@@ -18,7 +17,7 @@ class Model:
     """Model for defining the structure and behavior of AI agents.
     This model includes properties for specifying the model's provider, connection details, and various options.
     It allows for flexible configuration of AI models to suit different use cases and requirements.
-    
+
     Attributes
     ----------
     id : str
@@ -33,16 +32,16 @@ class Model:
         Additional options for the model
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = "id"
+    _shorthand_property: ClassVar[str | None] = "id"
 
     id: str = field(default="")
-    provider: Optional[str] = None
-    apiType: Optional[str] = None
-    connection: Optional[Connection] = None
-    options: Optional[ModelOptions] = None
+    provider: str | None = None
+    apiType: str | None = None
+    connection: Connection | None = None
+    options: ModelOptions | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "Model":
+    def load(data: Any, context: LoadContext | None = None) -> "Model":
         """Load a Model instance.
         Args:
             data (Any): The data to load the instance from.
@@ -54,11 +53,11 @@ class Model:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         # handle alternate representations
         if isinstance(data, str):
             data = {"id": data}
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Model: {data}")
 
@@ -79,9 +78,7 @@ class Model:
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Model instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -92,7 +89,6 @@ class Model:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -111,7 +107,7 @@ class Model:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the Model instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -123,7 +119,7 @@ class Model:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the Model instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -135,4 +131,3 @@ class Model:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-

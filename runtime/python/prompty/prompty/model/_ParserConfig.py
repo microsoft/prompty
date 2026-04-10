@@ -5,16 +5,15 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-
 
 
 @dataclass
 class ParserConfig:
     """Template parser definition
-    
+
     Attributes
     ----------
     kind : str
@@ -23,13 +22,13 @@ class ParserConfig:
         Options for the parser
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = "kind"
+    _shorthand_property: ClassVar[str | None] = "kind"
 
     kind: str = field(default="*")
-    options: Optional[dict[str, Any]] = None
+    options: dict[str, Any] | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ParserConfig":
+    def load(data: Any, context: LoadContext | None = None) -> "ParserConfig":
         """Load a ParserConfig instance.
         Args:
             data (Any): The data to load the instance from.
@@ -41,11 +40,11 @@ class ParserConfig:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         # handle alternate representations
         if isinstance(data, str):
             data = {"kind": data}
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ParserConfig: {data}")
 
@@ -60,9 +59,7 @@ class ParserConfig:
             instance = context.process_output(instance)
         return instance
 
-
-
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ParserConfig instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -73,7 +70,6 @@ class ParserConfig:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -86,7 +82,7 @@ class ParserConfig:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ParserConfig instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -98,7 +94,7 @@ class ParserConfig:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ParserConfig instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -110,4 +106,3 @@ class ParserConfig:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
