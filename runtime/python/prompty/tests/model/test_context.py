@@ -1,3 +1,5 @@
+
+
 # Prompty LoadContext
 from prompty.model._context import LoadContext, SaveContext
 
@@ -20,7 +22,6 @@ class TestLoadContext:
 
     def test_process_input_with_callback(self) -> None:
         """Test process_input applies the pre_process callback."""
-
         def add_field(data: dict) -> dict:
             return {**data, "added": True}
 
@@ -39,7 +40,6 @@ class TestLoadContext:
 
     def test_process_output_with_callback(self) -> None:
         """Test process_output applies the post_process callback."""
-
         def wrap_result(result: dict) -> dict:
             return {"wrapped": result}
 
@@ -50,7 +50,6 @@ class TestLoadContext:
 
     def test_both_callbacks(self) -> None:
         """Test using both pre_process and post_process callbacks."""
-
         def normalize_keys(data: dict) -> dict:
             return {k.lower(): v for k, v in data.items()}
 
@@ -68,7 +67,6 @@ class TestLoadContext:
 
     def test_pre_process_can_modify_structure(self) -> None:
         """Test that pre_process can fundamentally transform data structure."""
-
         def flatten_nested(data: dict) -> dict:
             result = {}
             for key, value in data.items():
@@ -103,7 +101,6 @@ class TestSaveContext:
 
     def test_process_object_with_callback(self) -> None:
         """Test process_object applies the pre_save callback."""
-
         def add_timestamp(obj: dict) -> dict:
             return {**obj, "timestamp": "2024-01-01"}
 
@@ -121,7 +118,6 @@ class TestSaveContext:
 
     def test_process_dict_with_callback(self) -> None:
         """Test process_dict applies the post_save callback."""
-
         def remove_internal_fields(data: dict) -> dict:
             return {k: v for k, v in data.items() if not k.startswith("_")}
 
@@ -132,7 +128,6 @@ class TestSaveContext:
 
     def test_both_callbacks(self) -> None:
         """Test using both pre_save and post_save callbacks."""
-
         def mark_for_export(obj: dict) -> dict:
             return {**obj, "_exporting": True}
 
@@ -161,7 +156,6 @@ class TestSaveContext:
     def test_to_json(self) -> None:
         """Test to_json produces valid JSON string."""
         import json
-
         context = SaveContext()
         data = {"name": "test", "items": ["a", "b"]}
         result = context.to_json(data)

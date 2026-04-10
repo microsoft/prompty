@@ -26,7 +26,7 @@ model Connection {
 
   @doc("The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')")
   @sample(#{ authenticationMode: "system" })
-  authenticationMode: AuthenticationMode = "system";
+  authenticationMode?: AuthenticationMode;
 
   @doc("The usage description for the connection, providing context on how this connection will be used")
   @sample(#{

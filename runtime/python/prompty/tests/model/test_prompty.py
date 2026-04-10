@@ -1,12 +1,12 @@
-import json
 
+import json
 import yaml
 
 from prompty.model import Prompty
 
 
 def test_load_json_prompty():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -72,16 +72,13 @@ def test_load_json_prompty():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -93,10 +90,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -162,16 +159,13 @@ def test_load_yaml_prompty():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -183,11 +177,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_roundtrip_json_prompty():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -253,7 +246,7 @@ def test_roundtrip_json_prompty():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -261,10 +254,7 @@ def test_roundtrip_json_prompty():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -276,11 +266,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_to_json_prompty():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -346,18 +335,17 @@ def test_to_json_prompty():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
-
 
 def test_to_yaml_prompty():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -423,7 +411,7 @@ def test_to_yaml_prompty():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -431,9 +419,8 @@ def test_to_yaml_prompty():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_1():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -498,16 +485,13 @@ def test_load_json_prompty_1():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -519,10 +503,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_1():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -588,16 +572,13 @@ def test_load_yaml_prompty_1():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -609,11 +590,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_roundtrip_json_prompty_1():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -678,7 +658,7 @@ def test_roundtrip_json_prompty_1():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -686,10 +666,7 @@ def test_roundtrip_json_prompty_1():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -701,11 +678,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_to_json_prompty_1():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -770,18 +746,17 @@ def test_to_json_prompty_1():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
-
 
 def test_to_yaml_prompty_1():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -846,7 +821,7 @@ def test_to_yaml_prompty_1():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -854,9 +829,8 @@ def test_to_yaml_prompty_1():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_2():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -923,16 +897,13 @@ def test_load_json_prompty_2():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -944,10 +915,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_2():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -1013,16 +984,13 @@ def test_load_yaml_prompty_2():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1034,11 +1002,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_roundtrip_json_prompty_2():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1105,7 +1072,7 @@ def test_roundtrip_json_prompty_2():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -1113,10 +1080,7 @@ def test_roundtrip_json_prompty_2():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1129,10 +1093,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_to_json_prompty_2():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1199,7 +1162,7 @@ def test_to_json_prompty_2():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
@@ -1207,10 +1170,9 @@ def test_to_json_prompty_2():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_prompty_2():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1277,7 +1239,7 @@ def test_to_yaml_prompty_2():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -1285,9 +1247,8 @@ def test_to_yaml_prompty_2():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_3():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1353,16 +1314,13 @@ def test_load_json_prompty_3():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1374,10 +1332,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_3():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -1443,16 +1401,13 @@ def test_load_yaml_prompty_3():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1464,11 +1419,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_roundtrip_json_prompty_3():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1534,7 +1488,7 @@ def test_roundtrip_json_prompty_3():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -1542,10 +1496,7 @@ def test_roundtrip_json_prompty_3():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1557,11 +1508,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_to_json_prompty_3():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1627,18 +1577,17 @@ def test_to_json_prompty_3():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
-
 
 def test_to_yaml_prompty_3():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1704,7 +1653,7 @@ def test_to_yaml_prompty_3():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -1712,9 +1661,8 @@ def test_to_yaml_prompty_3():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_4():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1783,16 +1731,13 @@ def test_load_json_prompty_4():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1804,10 +1749,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_4():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -1873,16 +1818,13 @@ def test_load_yaml_prompty_4():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1894,11 +1836,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
 
 def test_roundtrip_json_prompty_4():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -1967,7 +1908,7 @@ def test_roundtrip_json_prompty_4():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -1975,10 +1916,7 @@ def test_roundtrip_json_prompty_4():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -1991,10 +1929,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_to_json_prompty_4():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2063,7 +2000,7 @@ def test_to_json_prompty_4():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
@@ -2071,10 +2008,9 @@ def test_to_json_prompty_4():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_prompty_4():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2143,7 +2079,7 @@ def test_to_yaml_prompty_4():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -2151,9 +2087,8 @@ def test_to_yaml_prompty_4():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_5():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2221,16 +2156,13 @@ def test_load_json_prompty_5():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2242,10 +2174,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_5():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -2311,16 +2243,13 @@ def test_load_yaml_prompty_5():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2333,10 +2262,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_roundtrip_json_prompty_5():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2404,7 +2332,7 @@ def test_roundtrip_json_prompty_5():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -2412,10 +2340,7 @@ def test_roundtrip_json_prompty_5():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2428,10 +2353,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_to_json_prompty_5():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2499,7 +2423,7 @@ def test_to_json_prompty_5():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
@@ -2507,10 +2431,9 @@ def test_to_json_prompty_5():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_prompty_5():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2578,7 +2501,7 @@ def test_to_yaml_prompty_5():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -2586,9 +2509,8 @@ def test_to_yaml_prompty_5():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_6():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2658,16 +2580,13 @@ def test_load_json_prompty_6():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2679,10 +2598,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_6():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -2748,16 +2667,13 @@ def test_load_yaml_prompty_6():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2770,10 +2686,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_roundtrip_json_prompty_6():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2843,7 +2758,7 @@ def test_roundtrip_json_prompty_6():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -2851,10 +2766,7 @@ def test_roundtrip_json_prompty_6():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -2867,10 +2779,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_to_json_prompty_6():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -2940,7 +2851,7 @@ def test_to_json_prompty_6():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
@@ -2948,10 +2859,9 @@ def test_to_json_prompty_6():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_prompty_6():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -3021,7 +2931,7 @@ def test_to_yaml_prompty_6():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
@@ -3029,9 +2939,8 @@ def test_to_yaml_prompty_6():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_prompty_7():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -3100,16 +3009,13 @@ def test_load_json_prompty_7():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -3121,10 +3027,10 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-
+    
 
 def test_load_yaml_prompty_7():
-    yaml_data = r"""
+    yaml_data = r'''
     name: basic-prompt
     displayName: Basic Prompt
     description: A basic prompt that uses the GPT-3 chat API to answer questions
@@ -3190,16 +3096,13 @@ def test_load_yaml_prompty_7():
     
       {{question}}"
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.displayName == "Basic Prompt"
-    assert (
-        instance.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert instance.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -3212,10 +3115,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_roundtrip_json_prompty_7():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -3284,7 +3186,7 @@ def test_roundtrip_json_prompty_7():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Prompty.load(original_data)
     saved_data = instance.save()
@@ -3292,10 +3194,7 @@ def test_roundtrip_json_prompty_7():
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.displayName == "Basic Prompt"
-    assert (
-        reloaded.description
-        == "A basic prompt that uses the GPT-3 chat API to answer questions"
-    )
+    assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert reloaded.instructions == """system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
@@ -3308,10 +3207,9 @@ their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
 
-
 def test_to_json_prompty_7():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -3380,7 +3278,7 @@ def test_to_json_prompty_7():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     json_output = instance.to_json()
@@ -3388,10 +3286,9 @@ def test_to_json_prompty_7():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_prompty_7():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "basic-prompt",
       "displayName": "Basic Prompt",
@@ -3460,10 +3357,12 @@ def test_to_yaml_prompty_7():
       },
       "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Prompty.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+

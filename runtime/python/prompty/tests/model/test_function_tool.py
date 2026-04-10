@@ -1,12 +1,12 @@
-import json
 
+import json
 import yaml
 
 from prompty.model import FunctionTool
 
 
 def test_load_json_functiontool():
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": {
@@ -25,17 +25,17 @@ def test_load_json_functiontool():
       },
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-
+    
     assert instance.strict
-
+    
 
 def test_load_yaml_functiontool():
-    yaml_data = r"""
+    yaml_data = r'''
     kind: function
     parameters:
       firstName:
@@ -49,17 +49,16 @@ def test_load_yaml_functiontool():
         default: What is the meaning of life?
     strict: true
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
     assert instance.strict
 
-
 def test_roundtrip_json_functiontool():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": {
@@ -78,7 +77,7 @@ def test_roundtrip_json_functiontool():
       },
       "strict": true
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(original_data)
     saved_data = instance.save()
@@ -87,10 +86,9 @@ def test_roundtrip_json_functiontool():
     assert reloaded.kind == "function"
     assert reloaded.strict
 
-
 def test_to_json_functiontool():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": {
@@ -109,7 +107,7 @@ def test_to_json_functiontool():
       },
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     json_output = instance.to_json()
@@ -117,10 +115,9 @@ def test_to_json_functiontool():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_functiontool():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": {
@@ -139,7 +136,7 @@ def test_to_yaml_functiontool():
       },
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     yaml_output = instance.to_yaml()
@@ -147,9 +144,8 @@ def test_to_yaml_functiontool():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_json_functiontool_1():
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": [
@@ -171,17 +167,17 @@ def test_load_json_functiontool_1():
       ],
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-
+    
     assert instance.strict
-
+    
 
 def test_load_yaml_functiontool_1():
-    yaml_data = r"""
+    yaml_data = r'''
     kind: function
     parameters:
       - name: firstName
@@ -195,17 +191,16 @@ def test_load_yaml_functiontool_1():
         default: What is the meaning of life?
     strict: true
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
     assert instance.strict
 
-
 def test_roundtrip_json_functiontool_1():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": [
@@ -227,7 +222,7 @@ def test_roundtrip_json_functiontool_1():
       ],
       "strict": true
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(original_data)
     saved_data = instance.save()
@@ -236,10 +231,9 @@ def test_roundtrip_json_functiontool_1():
     assert reloaded.kind == "function"
     assert reloaded.strict
 
-
 def test_to_json_functiontool_1():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": [
@@ -261,7 +255,7 @@ def test_to_json_functiontool_1():
       ],
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     json_output = instance.to_json()
@@ -269,10 +263,9 @@ def test_to_json_functiontool_1():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_functiontool_1():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "kind": "function",
       "parameters": [
@@ -294,10 +287,12 @@ def test_to_yaml_functiontool_1():
       ],
       "strict": true
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FunctionTool.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+

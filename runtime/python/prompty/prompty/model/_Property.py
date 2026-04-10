@@ -5,20 +5,21 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 
 from ._context import LoadContext, SaveContext
+
 
 
 @dataclass
 class Property:
     """Represents a single property.
-
+    
     - This model defines the structure of properties that can be used in prompts,
     including their type, description, whether they are required, and other attributes.
     - It allows for the definition of dynamic inputs that can be filled with data
     and processed to generate prompts for AI models.
-
+    
     Attributes
     ----------
     name : str
@@ -37,18 +38,18 @@ class Property:
         Allowed enumeration values for the property
     """
 
-    _shorthand_property: ClassVar[str | None] = "example"
+    _shorthand_property: ClassVar[Optional[str]] = "example"
 
     name: str = field(default="")
     kind: str = field(default="")
-    description: str | None = None
-    required: bool | None = None
-    default: Any | None = None
-    example: Any | None = None
+    description: Optional[str] = None
+    required: Optional[bool] = None
+    default: Optional[Any] = None
+    example: Optional[Any] = None
     enumValues: list[Any] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "Property":
+    def load(data: Any, context: Optional[LoadContext] = None) -> "Property":
         """Load a Property instance.
         Args:
             data (Any): The data to load the instance from.
@@ -60,22 +61,23 @@ class Property:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         # handle alternate representations
         if isinstance(data, bool):
-            data = {"kind": "boolean", "example": data}
+            data = {"kind":"boolean","example": data}
         if isinstance(data, float):
-            data = {"kind": "float", "example": data}
+            data = {"kind":"float","example": data}
         if isinstance(data, int):
-            data = {"kind": "integer", "example": data}
+            data = {"kind":"integer","example": data}
         if isinstance(data, str):
-            data = {"kind": "string", "example": data}
-
+            data = {"kind":"string","example": data}
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Property: {data}")
 
         # load polymorphic Property instance
         instance = Property.load_kind(data, context)
+
 
         if data is not None and "name" in data:
             instance.name = data["name"]
@@ -95,8 +97,10 @@ class Property:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
-    def load_kind(data: dict, context: LoadContext | None) -> "Property":
+    def load_kind(data: dict, context: Optional[LoadContext]) -> "Property":
         # load polymorphic Property instance
         if data is not None and "kind" in data:
             discriminator_value = str(data["kind"]).lower()
@@ -110,12 +114,13 @@ class Property:
                 # create new instance (stop recursion)
                 return Property()
 
+
         else:
 
             # create new instance
             return Property()
 
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
         """Save the Property instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -126,6 +131,7 @@ class Property:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -148,7 +154,7 @@ class Property:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: SaveContext | None = None) -> str:
+    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
         """Convert the Property instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -160,7 +166,7 @@ class Property:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
         """Convert the Property instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -178,22 +184,22 @@ class Property:
 class ArrayProperty(Property):
     """Represents an array property.
     This extends the base Property model to represent an array of items.
-
+    
     Attributes
     ----------
     kind : str
-
+        
     items : Property
         The type of items contained in the array
     """
 
-    _shorthand_property: ClassVar[str | None] = None
+    _shorthand_property: ClassVar[Optional[str]] = None
 
     kind: str = field(default="array")
     items: Property = field(default_factory=Property)
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "ArrayProperty":
+    def load(data: Any, context: Optional[LoadContext] = None) -> "ArrayProperty":
         """Load a ArrayProperty instance.
         Args:
             data (Any): The data to load the instance from.
@@ -205,7 +211,7 @@ class ArrayProperty(Property):
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ArrayProperty: {data}")
 
@@ -220,7 +226,9 @@ class ArrayProperty(Property):
             instance = context.process_output(instance)
         return instance
 
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+
+
+    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
         """Save the ArrayProperty instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -232,8 +240,10 @@ class ArrayProperty(Property):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -242,7 +252,7 @@ class ArrayProperty(Property):
 
         return result
 
-    def to_yaml(self, context: SaveContext | None = None) -> str:
+    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
         """Convert the ArrayProperty instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -254,7 +264,7 @@ class ArrayProperty(Property):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
         """Convert the ArrayProperty instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -272,22 +282,22 @@ class ArrayProperty(Property):
 class ObjectProperty(Property):
     """Represents an object property.
     This extends the base Property model to represent a structured object.
-
+    
     Attributes
     ----------
     kind : str
-
+        
     properties : list[Property]
         The properties contained in the object
     """
 
-    _shorthand_property: ClassVar[str | None] = None
+    _shorthand_property: ClassVar[Optional[str]] = None
 
     kind: str = field(default="object")
     properties: list[Property] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "ObjectProperty":
+    def load(data: Any, context: Optional[LoadContext] = None) -> "ObjectProperty":
         """Load a ObjectProperty instance.
         Args:
             data (Any): The data to load the instance from.
@@ -299,7 +309,7 @@ class ObjectProperty(Property):
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ObjectProperty: {data}")
 
@@ -309,17 +319,14 @@ class ObjectProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "properties" in data:
-            instance.properties = ObjectProperty.load_properties(
-                data["properties"], context
-            )
+            instance.properties = ObjectProperty.load_properties(data["properties"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
     @staticmethod
-    def load_properties(
-        data: dict | list, context: LoadContext | None
-    ) -> list[Property]:
+    def load_properties(data: dict | list, context: Optional[LoadContext]) -> list[Property]:
         if isinstance(data, dict):
             # convert simple named properties to list of Property
             result = []
@@ -334,9 +341,7 @@ class ObjectProperty(Property):
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_properties(
-        items: list[Property], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_properties(items: list[Property], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -350,13 +355,9 @@ class ObjectProperty(Property):
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                if context.use_shorthand and hasattr(item, '_shorthand_property'):
                     shorthand_prop = item._shorthand_property
-                    if (
-                        shorthand_prop
-                        and len(item_data) == 1
-                        and shorthand_prop in item_data
-                    ):
+                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -367,7 +368,8 @@ class ObjectProperty(Property):
                 result["_unnamed"].append(item_data)
         return result
 
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+
+    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
         """Save the ObjectProperty instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -379,19 +381,19 @@ class ObjectProperty(Property):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
         if obj.properties is not None:
-            result["properties"] = ObjectProperty.save_properties(
-                obj.properties, context
-            )
+            result["properties"] = ObjectProperty.save_properties(obj.properties, context)
 
         return result
 
-    def to_yaml(self, context: SaveContext | None = None) -> str:
+    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
         """Convert the ObjectProperty instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -403,7 +405,7 @@ class ObjectProperty(Property):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
         """Convert the ObjectProperty instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -415,3 +417,4 @@ class ObjectProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+

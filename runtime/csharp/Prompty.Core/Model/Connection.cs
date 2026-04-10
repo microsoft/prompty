@@ -35,7 +35,7 @@ public abstract class Connection
     /// <summary>
     /// The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     /// </summary>
-    public string AuthenticationMode { get; set; } = "system";
+    public string? AuthenticationMode { get; set; }
 
     /// <summary>
     /// The usage description for the connection, providing context on how this connection will be used

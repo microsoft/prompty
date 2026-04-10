@@ -23,7 +23,7 @@ export abstract class Connection {
   /**
    * The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
    */
-  authenticationMode: string = "system";
+  authenticationMode?: string | undefined;
 
   /**
    * The usage description for the connection, providing context on how this connection will be used
@@ -36,7 +36,9 @@ export abstract class Connection {
   constructor(init?: Partial<Connection>) {
     this.kind = init?.kind ?? "";
 
-    this.authenticationMode = init?.authenticationMode ?? "system";
+    if (init?.authenticationMode !== undefined) {
+      this.authenticationMode = init.authenticationMode;
+    }
 
     if (init?.usageDescription !== undefined) {
       this.usageDescription = init.usageDescription;
