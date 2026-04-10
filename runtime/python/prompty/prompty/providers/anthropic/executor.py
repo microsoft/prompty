@@ -207,14 +207,7 @@ def _schema_to_wire(properties: list[Any]) -> dict[str, Any]:
         name = getattr(p, "name", None)
         if not name:
             continue
-        schema: dict[str, Any] = {
-            "type": _KIND_TO_JSON_TYPE.get(getattr(p, "kind", "string") or "string", "string"),
-        }
-        if hasattr(p, "description") and p.description:
-            schema["description"] = p.description
-        if hasattr(p, "enumValues") and p.enumValues:
-            schema["enum"] = p.enumValues
-        props[name] = schema
+        props[name] = _property_to_json_schema(p)
         if getattr(p, "required", False):
             required.append(name)
 

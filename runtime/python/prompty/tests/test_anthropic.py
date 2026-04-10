@@ -234,6 +234,70 @@ class TestToolsToWire:
         )
         assert _tools_to_wire(agent) == []
 
+    def test_array_of_objects_in_tool(self):
+        """Array items with nested object properties must produce full JSON Schema."""
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "log_encounters",
+                    "kind": "function",
+                    "description": "Log encounters",
+                    "parameters": [
+                        {
+                            "name": "encounters",
+                            "kind": "array",
+                            "description": "List of encounters",
+                            "items": {
+                                "kind": "object",
+                                "properties": [
+                                    {"name": "title", "kind": "string", "required": True},
+                                    {"name": "difficulty", "kind": "integer"},
+                                ],
+                            },
+                        },
+                    ],
+                }
+            ]
+        )
+        tools = _tools_to_wire(agent)
+        schema = tools[0]["input_schema"]
+        enc = schema["properties"]["encounters"]
+        assert enc["type"] == "array"
+        assert "items" in enc
+        items = enc["items"]
+        assert items["type"] == "object"
+        assert "title" in items["properties"]
+        assert items["properties"]["title"]["type"] == "string"
+        assert items["properties"]["difficulty"]["type"] == "integer"
+        assert items["additionalProperties"] is False
+
+    def test_nested_object_in_tool(self):
+        """Object properties must produce nested JSON Schema."""
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "save",
+                    "kind": "function",
+                    "parameters": [
+                        {
+                            "name": "idea",
+                            "kind": "object",
+                            "properties": [
+                                {"name": "name", "kind": "string"},
+                                {"name": "desc", "kind": "string"},
+                            ],
+                        },
+                    ],
+                }
+            ]
+        )
+        tools = _tools_to_wire(agent)
+        idea = tools[0]["input_schema"]["properties"]["idea"]
+        assert idea["type"] == "object"
+        assert "name" in idea["properties"]
+        assert "desc" in idea["properties"]
+        assert idea["additionalProperties"] is False
+
 
 class TestOutputSchemaToWire:
     def test_with_outputs(self):

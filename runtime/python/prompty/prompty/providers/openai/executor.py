@@ -178,23 +178,7 @@ def _schema_to_wire(properties: list) -> dict[str, Any]:
     required: list[str] = []
 
     for prop in properties:
-        prop_schema: dict[str, Any] = {}
-        kind_map = {
-            "string": "string",
-            "integer": "integer",
-            "float": "number",
-            "number": "number",
-            "boolean": "boolean",
-            "array": "array",
-            "object": "object",
-        }
-        prop_schema["type"] = kind_map.get(prop.kind, "string")
-        if prop.description:
-            prop_schema["description"] = prop.description
-        if prop.enumValues:
-            prop_schema["enum"] = prop.enumValues
-        props_dict[prop.name] = prop_schema
-
+        props_dict[prop.name] = _property_to_json_schema(prop)
         if prop.required:
             required.append(prop.name)
 

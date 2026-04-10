@@ -214,6 +214,120 @@ class TestSchemaToWire:
         assert result["properties"]["x"]["type"] == "integer"
         assert result["properties"]["y"]["enum"] == ["a", "b"]
 
+    def test_array_of_objects(self):
+        """Array items with nested object properties must produce full JSON Schema."""
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "log_encounters",
+                    "kind": "function",
+                    "parameters": [
+                        {
+                            "name": "encounters",
+                            "kind": "array",
+                            "description": "List of encounters",
+                            "items": {
+                                "kind": "object",
+                                "properties": [
+                                    {"name": "title", "kind": "string", "required": True},
+                                    {"name": "difficulty", "kind": "integer"},
+                                ],
+                            },
+                        },
+                    ],
+                }
+            ]
+        )
+        from prompty.model import FunctionTool
+
+        tool = agent.tools[0]
+        assert isinstance(tool, FunctionTool)
+        result = _schema_to_wire(tool.parameters)
+
+        enc = result["properties"]["encounters"]
+        assert enc["type"] == "array"
+        assert "items" in enc
+        items = enc["items"]
+        assert items["type"] == "object"
+        assert "title" in items["properties"]
+        assert items["properties"]["title"]["type"] == "string"
+        assert items["properties"]["difficulty"]["type"] == "integer"
+        assert "required" in items
+        assert "title" in items["required"]
+        assert items["additionalProperties"] is False
+
+    def test_nested_object(self):
+        """Object properties must produce nested JSON Schema."""
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "save_idea",
+                    "kind": "function",
+                    "parameters": [
+                        {
+                            "name": "idea",
+                            "kind": "object",
+                            "properties": [
+                                {"name": "name", "kind": "string"},
+                                {"name": "description", "kind": "string"},
+                            ],
+                        },
+                    ],
+                }
+            ]
+        )
+        from prompty.model import FunctionTool
+
+        tool = agent.tools[0]
+        assert isinstance(tool, FunctionTool)
+        result = _schema_to_wire(tool.parameters)
+
+        idea = result["properties"]["idea"]
+        assert idea["type"] == "object"
+        assert "name" in idea["properties"]
+        assert "description" in idea["properties"]
+        assert idea["additionalProperties"] is False
+
+    def test_deeply_nested(self):
+        """Verify recursion beyond two levels: array → object → array → string."""
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "deep",
+                    "kind": "function",
+                    "parameters": [
+                        {
+                            "name": "chapters",
+                            "kind": "array",
+                            "items": {
+                                "kind": "object",
+                                "properties": [
+                                    {"name": "title", "kind": "string"},
+                                    {
+                                        "name": "tags",
+                                        "kind": "array",
+                                        "items": {"kind": "string"},
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                }
+            ]
+        )
+        from prompty.model import FunctionTool
+
+        tool = agent.tools[0]
+        assert isinstance(tool, FunctionTool)
+        result = _schema_to_wire(tool.parameters)
+
+        chapters = result["properties"]["chapters"]
+        assert chapters["type"] == "array"
+        item_schema = chapters["items"]
+        assert item_schema["type"] == "object"
+        assert item_schema["properties"]["tags"]["type"] == "array"
+        assert item_schema["properties"]["tags"]["items"]["type"] == "string"
+
 
 # ---------------------------------------------------------------------------
 # OpenAIExecutor
