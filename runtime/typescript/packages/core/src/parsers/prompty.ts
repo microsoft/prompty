@@ -123,9 +123,10 @@ export class PromptyChatParser implements Parser {
 
     // Validate nonce in strict mode
     if (nonce !== undefined) {
-      const msgNonce = attrs.nonce as string | undefined;
+      const msgNonce = attrs.nonce;
       delete attrs.nonce;
-      if (msgNonce !== nonce) {
+      // Compare as strings — parseAttrs may coerce all-digit hex nonces to numbers
+      if (String(msgNonce ?? "") !== nonce) {
         throw new Error(
           "Nonce mismatch — possible prompt injection detected " +
           "(strict mode is enabled). A template variable may be " +

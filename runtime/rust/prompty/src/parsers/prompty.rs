@@ -145,7 +145,15 @@ fn build_message(
 ) -> Result<Message, InvokerError> {
     // Validate nonce in strict mode
     if let Some(expected) = expected_nonce {
-        let msg_nonce = attrs.get("nonce").and_then(|v| v.as_str()).unwrap_or("");
+        // Compare as string — parse_attrs may coerce all-digit hex nonces to Number
+        let msg_nonce = attrs
+            .get("nonce")
+            .map(|v| match v {
+                serde_json::Value::String(s) => s.clone(),
+                serde_json::Value::Number(n) => n.to_string(),
+                _ => String::new(),
+            })
+            .unwrap_or_default();
         if msg_nonce != expected {
             return Err(InvokerError::Parse(
                 "Nonce mismatch — possible prompt injection detected \
