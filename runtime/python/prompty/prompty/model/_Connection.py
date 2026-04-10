@@ -21,7 +21,7 @@ class Connection(ABC):
     ----------
     kind : str
         The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-    authenticationMode : str
+    authenticationMode : Optional[str]
         The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     usageDescription : Optional[str]
         The usage description for the connection, providing context on how this connection will be used
@@ -30,7 +30,7 @@ class Connection(ABC):
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="")
-    authenticationMode: str = field(default="system")
+    authenticationMode: str | None = None
     usageDescription: str | None = None
 
     @staticmethod

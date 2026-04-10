@@ -5,12 +5,16 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
+use std::sync::LazyLock;
 
 use prompty::interfaces::{Executor, InvokerError};
 use prompty::model::Prompty;
 use prompty::types::Message;
 
 use crate::wire;
+
+/// Shared HTTP client — reuses connection pool across requests.
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// OpenAI executor implementing the `Executor` trait.
 pub struct OpenAIExecutor;
@@ -57,7 +61,7 @@ impl Executor for OpenAIExecutor {
         };
 
         let api_key = get_api_key(agent)?;
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header("Authorization", format!("Bearer {api_key}"))
@@ -127,7 +131,7 @@ impl Executor for OpenAIExecutor {
         }
 
         let api_key = get_api_key(agent)?;
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header("Authorization", format!("Bearer {api_key}"))
@@ -177,8 +181,34 @@ impl OpenAIExecutor {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
+/// Resolve the effective connection — if `kind == "reference"`, look up the
+/// named connection from the registry. Otherwise return the connection as-is.
+fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let conn = &agent.model.connection;
+    let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+
+    if kind == "reference" {
+        let name = conn
+            .get("name")
+            .and_then(|n| n.as_str())
+            .ok_or_else(|| {
+                InvokerError::Execute(
+                    "Reference connection missing 'name' field".to_string().into(),
+                )
+            })?;
+
+        // Look up the named connection from the registry
+        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+            .map_err(|e| InvokerError::Execute(e.into()))?;
+
+        Ok(std::borrow::Cow::Owned(resolved))
+    } else {
+        Ok(std::borrow::Cow::Borrowed(conn))
+    }
+}
+
+fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
+    let conn = resolve_connection(agent)?;
 
     // 1. connection.endpoint from the agent
     // 2. OPENAI_BASE_URL env var (matches OpenAI SDK behavior)
@@ -205,7 +235,7 @@ fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
 }
 
 fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
-    let conn = &agent.model.connection;
+    let conn = resolve_connection(agent)?;
 
     // Try connection.apiKey first
     if let Some(key) = conn.get("apiKey").or(conn.get("api_key")).and_then(|k| k.as_str()) {
@@ -463,5 +493,110 @@ mod tests {
         assert_eq!(items.len(), 2);
         assert_eq!(items[0]["id"], 1);
         assert_eq!(items[1]["id"], 2);
+    }
+
+    // --- Reference connection resolution tests ---
+
+    #[test]
+    fn test_resolve_connection_passthrough_key() {
+        // Non-reference connections should pass through unchanged
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "key",
+                "endpoint": "https://api.openai.com",
+                "apiKey": "sk-test"
+            }
+        }));
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("kind").unwrap().as_str().unwrap(), "key");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-test");
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_missing_name() {
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "reference"
+                // missing "name" field
+            }
+        }));
+        let result = resolve_connection(&agent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("name"));
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_not_registered() {
+        prompty::connections::clear_connections();
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "reference",
+                "name": "unregistered"
+            }
+        }));
+        let result = resolve_connection(&agent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not registered"));
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_success() {
+        prompty::connections::clear_connections();
+        // Register a connection as a JSON Value
+        prompty::connections::register_connection(
+            "my-openai",
+            json!({
+                "kind": "key",
+                "endpoint": "https://custom.openai.com",
+                "apiKey": "sk-resolved"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "reference",
+                "name": "my-openai"
+            }
+        }));
+
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://custom.openai.com");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-resolved");
+
+        // Clean up
+        prompty::connections::clear_connections();
+    }
+
+    #[test]
+    fn test_reference_connection_flows_to_build_url() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "prod-openai",
+            json!({
+                "kind": "key",
+                "endpoint": "https://prod.openai.proxy.com",
+                "apiKey": "sk-prod"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "reference",
+                "name": "prod-openai"
+            }
+        }));
+
+        let url = build_url(&agent, "/v1/chat/completions").unwrap();
+        assert_eq!(url, "https://prod.openai.proxy.com/v1/chat/completions");
+
+        let key = get_api_key(&agent).unwrap();
+        assert_eq!(key, "sk-prod");
+
+        prompty::connections::clear_connections();
     }
 }

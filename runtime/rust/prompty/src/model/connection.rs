@@ -72,7 +72,7 @@ impl Default for ConnectionKind {
 #[derive(Debug, Clone, Default)]
 pub struct Connection {
     /// The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
-    pub authentication_mode: String,
+    pub authentication_mode: Option<String>,
     /// The usage description for the connection, providing context on how this connection will be used
     pub usage_description: Option<String>,
     /// Variant-specific data, discriminated by `kind`.
@@ -134,7 +134,7 @@ impl Connection {
             _ => ConnectionKind::default(),
         };
         Self {
-            authentication_mode: value.get("authenticationMode").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            authentication_mode: value.get("authenticationMode").and_then(|v| v.as_str()).map(|s| s.to_string()),
             usage_description: value.get("usageDescription").and_then(|v| v.as_str()).map(|s| s.to_string()),
             kind: kind,
         }
@@ -160,8 +160,8 @@ impl Connection {
         // Write the discriminator
         result.insert("kind".to_string(), serde_json::Value::String(self.kind_str().to_string()));
         // Write base fields
-        if !self.authentication_mode.is_empty() {
-            result.insert("authenticationMode".to_string(), serde_json::Value::String(self.authentication_mode.clone()));
+        if let Some(ref val) = self.authentication_mode {
+            result.insert("authenticationMode".to_string(), serde_json::Value::String(val.clone()));
         }
         if let Some(ref val) = self.usage_description {
             result.insert("usageDescription".to_string(), serde_json::Value::String(val.clone()));

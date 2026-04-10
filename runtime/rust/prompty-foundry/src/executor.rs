@@ -6,12 +6,16 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
+use std::sync::LazyLock;
 
 use prompty::interfaces::{Executor, InvokerError};
 use prompty::model::Prompty;
 use prompty::types::Message;
 
 use prompty_openai::wire;
+
+/// Shared HTTP client — reuses connection pool across requests.
+static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// Default Azure OpenAI API version.
 const DEFAULT_API_VERSION: &str = "2025-04-01-preview";
@@ -45,9 +49,9 @@ impl Executor for FoundryExecutor {
             }
         };
 
-        let (url, auth_header) = build_azure_request(agent, api_type)?;
+        let (url, auth_header) = build_azure_request(agent, api_type).await?;
 
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header(auth_header.0, auth_header.1)
@@ -104,9 +108,9 @@ impl Executor for FoundryExecutor {
             obj.insert("stream".into(), Value::Bool(true));
         }
 
-        let (url, auth_header) = build_azure_request(agent, api_type)?;
+        let (url, auth_header) = build_azure_request(agent, api_type).await?;
 
-        let client = reqwest::Client::new();
+        let client = &*HTTP_CLIENT;
         let response = client
             .post(&url)
             .header(auth_header.0, auth_header.1)
@@ -137,8 +141,33 @@ impl Executor for FoundryExecutor {
 // URL construction and auth
 // ---------------------------------------------------------------------------
 
+/// Resolve the effective connection — if `kind == "reference"`, look up the
+/// named connection from the registry. Otherwise return the connection as-is.
+fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
+    let conn = &agent.model.connection;
+    let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+
+    if kind == "reference" {
+        let name = conn
+            .get("name")
+            .and_then(|n| n.as_str())
+            .ok_or_else(|| {
+                InvokerError::Execute(
+                    "Reference connection missing 'name' field".to_string().into(),
+                )
+            })?;
+
+        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+            .map_err(|e| InvokerError::Execute(e.into()))?;
+
+        Ok(std::borrow::Cow::Owned(resolved))
+    } else {
+        Ok(std::borrow::Cow::Borrowed(conn))
+    }
+}
+
 /// Returns `(url, (header_name, header_value))` for the Azure OpenAI request.
-fn build_azure_request(
+async fn build_azure_request(
     agent: &Prompty,
     api_type: &str,
 ) -> Result<(String, (&'static str, String)), InvokerError> {
@@ -165,14 +194,14 @@ fn build_azure_request(
         api_version,
     );
 
-    let auth_header = get_auth_header(agent)?;
+    let auth_header = get_auth_header(agent).await?;
 
     Ok((url, auth_header))
 }
 
 /// Extract the endpoint URL from the agent's connection configuration.
 fn get_endpoint(agent: &Prompty) -> Result<String, InvokerError> {
-    let conn = &agent.model.connection;
+    let conn = resolve_connection(agent)?;
     let kind = conn.get("kind").and_then(|v| v.as_str()).unwrap_or("");
 
     // Check typed endpoint field
@@ -246,9 +275,10 @@ fn get_api_version(agent: &Prompty) -> String {
 ///
 /// Returns `(header_name, header_value)`:
 /// - API key auth: `("api-key", key)` — Azure uses `api-key` header, not `Authorization: Bearer`
-/// - Foundry (Entra ID): Not yet implemented, falls back to API key from env
-fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), InvokerError> {
-    let conn = &agent.model.connection;
+/// - Foundry (Entra ID): `("Authorization", "Bearer <token>")` — requires `entra_id` feature
+async fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), InvokerError> {
+    let conn = resolve_connection(agent)?;
+    let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     // Try connection-level API key
     if let Some(key) = conn
@@ -261,18 +291,50 @@ fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), InvokerErr
         }
     }
 
-    // Foundry connection — TODO: Implement Entra ID / DefaultAzureCredential token
-    // For now, fall through to env var
-
-    // Fall back to environment variable
+    // Fall back to environment variable (works for both key and foundry connections)
     if let Ok(key) = std::env::var("AZURE_OPENAI_API_KEY") {
         if !key.is_empty() {
             return Ok(("api-key", key));
         }
     }
 
+    // Foundry connection without API key — use Entra ID / DefaultAzureCredential
+    if kind == "foundry" {
+        return get_entra_token().await;
+    }
+
     Err(InvokerError::Execute(
         "No Azure API key found. Set AZURE_OPENAI_API_KEY or configure model.connection.apiKey"
+            .to_string()
+            .into(),
+    ))
+}
+
+/// Azure Cognitive Services scope for Entra ID tokens.
+#[cfg(feature = "entra_id")]
+const AZURE_COGNITIVE_SCOPE: &str = "https://cognitiveservices.azure.com/.default";
+
+/// Get a bearer token via DefaultAzureCredential (requires `entra_id` feature).
+#[cfg(feature = "entra_id")]
+async fn get_entra_token() -> Result<(&'static str, String), InvokerError> {
+    use azure_identity::DefaultAzureCredential;
+    use azure_core::credentials::TokenCredential;
+
+    let credential = DefaultAzureCredential::new()
+        .map_err(|e| InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into()))?;
+    let token = credential
+        .get_token(&[AZURE_COGNITIVE_SCOPE])
+        .await
+        .map_err(|e| InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into()))?;
+    Ok(("Authorization", format!("Bearer {}", token.token.secret())))
+}
+
+/// Stub when the `entra_id` feature is not enabled.
+#[cfg(not(feature = "entra_id"))]
+async fn get_entra_token() -> Result<(&'static str, String), InvokerError> {
+    Err(InvokerError::Execute(
+        "Foundry connection requires Entra ID auth. Enable the 'entra_id' feature on prompty-foundry, \
+         or provide an API key in model.connection.apiKey"
             .to_string()
             .into(),
     ))
@@ -405,8 +467,8 @@ mod tests {
         Prompty::load_from_value(&data, &LoadContext::default())
     }
 
-    #[test]
-    fn test_build_url_api_key_connection() {
+    #[tokio::test]
+    async fn test_build_url_api_key_connection() {
         let agent = make_agent(json!({
             "id": "gpt-4",
             "connection": {
@@ -415,16 +477,17 @@ mod tests {
                 "apiKey": "test-key"
             }
         }));
-        let (url, _) = build_azure_request(&agent, "chat").unwrap();
+        let (url, _) = build_azure_request(&agent, "chat").await.unwrap();
         assert!(url.starts_with("https://myresource.openai.azure.com/openai/deployments/gpt-4/chat/completions"));
         assert!(url.contains("api-version="));
     }
 
-    #[test]
-    fn test_build_url_foundry_connection() {
+    #[tokio::test]
+    async fn test_build_url_foundry_connection() {
         // Foundry connections typically use Entra ID, but for testing we
-        // supply an API key via env var since Entra ID isn't implemented yet
-        std::env::set_var("AZURE_OPENAI_API_KEY", "test-foundry-key");
+        // supply an API key via env var since Entra ID may not be enabled
+        // SAFETY: tests run single-threaded (--test-threads=1) so env var mutation is safe
+        unsafe { std::env::set_var("AZURE_OPENAI_API_KEY", "test-foundry-key") };
         let agent = make_agent(json!({
             "id": "gpt-4o",
             "connection": {
@@ -433,14 +496,14 @@ mod tests {
                 "name": "my-conn"
             }
         }));
-        let (url, _) = build_azure_request(&agent, "chat").unwrap();
+        let (url, _) = build_azure_request(&agent, "chat").await.unwrap();
         // Foundry endpoint should strip the project path
         assert!(url.starts_with("https://myresource.services.ai.azure.com/openai/deployments/gpt-4o/chat/completions"));
-        std::env::remove_var("AZURE_OPENAI_API_KEY");
+        unsafe { std::env::remove_var("AZURE_OPENAI_API_KEY") };
     }
 
-    #[test]
-    fn test_build_url_embedding() {
+    #[tokio::test]
+    async fn test_build_url_embedding() {
         let agent = make_agent(json!({
             "id": "text-embedding-3-small",
             "connection": {
@@ -449,12 +512,12 @@ mod tests {
                 "apiKey": "test-key"
             }
         }));
-        let (url, _) = build_azure_request(&agent, "embedding").unwrap();
+        let (url, _) = build_azure_request(&agent, "embedding").await.unwrap();
         assert!(url.contains("/embeddings?"));
     }
 
-    #[test]
-    fn test_build_url_image() {
+    #[tokio::test]
+    async fn test_build_url_image() {
         let agent = make_agent(json!({
             "id": "dall-e-3",
             "connection": {
@@ -463,12 +526,12 @@ mod tests {
                 "apiKey": "test-key"
             }
         }));
-        let (url, _) = build_azure_request(&agent, "image").unwrap();
+        let (url, _) = build_azure_request(&agent, "image").await.unwrap();
         assert!(url.contains("/images/generations?"));
     }
 
-    #[test]
-    fn test_auth_header_api_key() {
+    #[tokio::test]
+    async fn test_auth_header_api_key() {
         let agent = make_agent(json!({
             "id": "gpt-4",
             "connection": {
@@ -477,7 +540,7 @@ mod tests {
                 "apiKey": "my-azure-key"
             }
         }));
-        let (name, value) = get_auth_header(&agent).unwrap();
+        let (name, value) = get_auth_header(&agent).await.unwrap();
         assert_eq!(name, "api-key");
         assert_eq!(value, "my-azure-key");
     }
@@ -522,8 +585,8 @@ mod tests {
         assert_eq!(version, DEFAULT_API_VERSION);
     }
 
-    #[test]
-    fn test_unsupported_api_type() {
+    #[tokio::test]
+    async fn test_unsupported_api_type() {
         let agent = make_agent(json!({
             "id": "gpt-4",
             "connection": {
@@ -532,7 +595,106 @@ mod tests {
                 "apiKey": "key"
             }
         }));
-        let result = build_azure_request(&agent, "unknown");
+        let result = build_azure_request(&agent, "unknown").await;
+        assert!(result.is_err());
+    }
+
+    // --- Reference connection resolution tests ---
+
+    #[test]
+    fn test_resolve_connection_passthrough() {
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "key",
+                "endpoint": "https://myresource.openai.azure.com",
+                "apiKey": "test-key"
+            }
+        }));
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("kind").unwrap().as_str().unwrap(), "key");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "test-key");
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_missing_name() {
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference" }
+        }));
+        let result = resolve_connection(&agent);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("name"));
+    }
+
+    #[test]
+    fn test_resolve_connection_reference_success() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "azure-prod",
+            json!({
+                "kind": "key",
+                "endpoint": "https://prod.openai.azure.com",
+                "apiKey": "prod-key"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference", "name": "azure-prod" }
+        }));
+
+        let conn = resolve_connection(&agent).unwrap();
+        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://prod.openai.azure.com");
+        assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "prod-key");
+
+        prompty::connections::clear_connections();
+    }
+
+    #[tokio::test]
+    async fn test_reference_connection_flows_to_auth_header() {
+        prompty::connections::clear_connections();
+        prompty::connections::register_connection(
+            "azure-resolved",
+            json!({
+                "kind": "key",
+                "endpoint": "https://resolved.openai.azure.com",
+                "apiKey": "resolved-key"
+            }),
+        );
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": { "kind": "reference", "name": "azure-resolved" }
+        }));
+
+        let (header_name, header_value) = get_auth_header(&agent).await.unwrap();
+        assert_eq!(header_name, "api-key");
+        assert_eq!(header_value, "resolved-key");
+
+        prompty::connections::clear_connections();
+    }
+
+    // --- Entra ID stub test ---
+
+    #[tokio::test]
+    async fn test_auth_header_foundry_no_key_no_entra() {
+        prompty::connections::clear_connections();
+        // Remove env var to ensure no fallback
+        // SAFETY: tests run single-threaded
+        unsafe { std::env::remove_var("AZURE_OPENAI_API_KEY") };
+
+        let agent = make_agent(json!({
+            "id": "gpt-4",
+            "connection": {
+                "kind": "foundry",
+                "endpoint": "https://resource.services.ai.azure.com/api/projects/proj"
+            }
+        }));
+
+        let result = get_auth_header(&agent).await;
+        // Without entra_id feature: should error (can't get token)
+        // With entra_id feature: would attempt DefaultAzureCredential (would also fail in CI)
         assert!(result.is_err());
     }
 }

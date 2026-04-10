@@ -29,6 +29,10 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
         LoadError::FileNotFound(path.as_ref().to_path_buf(), e.to_string())
     })?;
 
+    let span = crate::tracing::Tracer::start("load");
+    span.emit("signature", &serde_json::json!("prompty.load"));
+    span.emit("inputs", &serde_json::json!({ "path": resolved.display().to_string() }));
+
     let raw = std::fs::read_to_string(&resolved).map_err(|e| {
         LoadError::FileNotFound(resolved.clone(), e.to_string())
     })?;
@@ -36,7 +40,18 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
 
-    build_agent(&raw, &resolved)
+    match build_agent(&raw, &resolved) {
+        Ok(agent) => {
+            span.emit("result", &serde_json::json!({ "name": agent.name }));
+            span.end();
+            Ok(agent)
+        }
+        Err(e) => {
+            span.emit("error", &serde_json::json!(e.to_string()));
+            span.end();
+            Err(e)
+        }
+    }
 }
 
 /// Asynchronously load a `.prompty` file and return a typed `Prompty`.
@@ -54,6 +69,10 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
         LoadError::FileNotFound(path_buf.clone(), e.to_string())
     })?;
 
+    let span = crate::tracing::Tracer::start("load");
+    span.emit("signature", &serde_json::json!("prompty.load"));
+    span.emit("inputs", &serde_json::json!({ "path": resolved.display().to_string() }));
+
     let raw = tokio::fs::read_to_string(&resolved).await.map_err(|e| {
         LoadError::FileNotFound(resolved.clone(), e.to_string())
     })?;
@@ -61,7 +80,24 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
 
-    build_agent(&raw, &resolved)
+    // build_agent may do blocking FS for ${file:} resolution — offload to blocking pool
+    let resolved_clone = resolved.clone();
+    let result = tokio::task::spawn_blocking(move || build_agent(&raw, &resolved_clone))
+        .await
+        .map_err(|e| LoadError::Other(format!("spawn_blocking panicked: {e}")))?;
+
+    match result {
+        Ok(agent) => {
+            span.emit("result", &serde_json::json!({ "name": agent.name }));
+            span.end();
+            Ok(agent)
+        }
+        Err(e) => {
+            span.emit("error", &serde_json::json!(e.to_string()));
+            span.end();
+            Err(e)
+        }
+    }
 }
 
 /// Load from raw `.prompty` content with an explicit base path for
@@ -81,11 +117,12 @@ fn build_agent(raw: &str, file_path: &Path) -> Result<Prompty, LoadError> {
     let (mut data, body) = frontmatter::split(raw)?;
 
     // 2. If there's a body (instructions), merge it in
-    let trimmed = body.trim();
-    if !trimmed.is_empty() {
+    //    Trim trailing newlines (editors add them) but preserve leading/internal whitespace
+    let body = body.trim_end_matches('\n').trim_end_matches('\r');
+    if !body.is_empty() {
         data.insert(
             "instructions".to_string(),
-            serde_json::Value::String(trimmed.to_string()),
+            serde_json::Value::String(body.to_string()),
         );
     }
 

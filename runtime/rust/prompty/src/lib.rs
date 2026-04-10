@@ -84,7 +84,7 @@ pub use guardrails::{
 };
 pub use steering::Steering;
 pub use pipeline::{
-    invoke as invoke_agent, invoke_from_path, prepare, process, render, run, turn,
+    invoke as invoke_agent, invoke_from_path, prepare, process, render, run, turn, turn_from_path,
     validate_inputs, register_defaults, TurnOptions, ToolHandler, ToolFn, AsyncToolFn,
     AgentEvent, EventCallback,
 };

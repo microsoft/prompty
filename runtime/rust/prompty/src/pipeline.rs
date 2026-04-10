@@ -18,7 +18,7 @@ use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
 use crate::registry;
-use crate::renderers::{clear_last_nonces, get_last_nonces};
+use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{sanitize_value, Tracer};
 use crate::types::{consume_stream_chunks, ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall};
@@ -248,22 +248,36 @@ pub fn validate_inputs(
 // ---------------------------------------------------------------------------
 
 /// Render the agent's template with the given inputs using the registered renderer.
+///
+/// Validates inputs (fills defaults, checks required) and injects nonce markers
+/// for rich-kind inputs (thread, image, file, audio) before rendering.
 pub async fn render(
     agent: &Prompty,
     inputs: &serde_json::Value,
 ) -> Result<String, InvokerError> {
+    let (rendered, _nonces) = render_with_nonces(agent, inputs).await?;
+    Ok(rendered)
+}
+
+/// Internal: render + return nonces for thread expansion in prepare().
+async fn render_with_nonces(
+    agent: &Prompty,
+    inputs: &serde_json::Value,
+) -> Result<(String, HashMap<String, String>), InvokerError> {
+    let validated = validate_inputs(agent, inputs)?;
+    let (nonce_inputs, nonces) = prepare_render_inputs(agent, &validated);
     let format_kind = resolve_format_kind(agent);
     let template = agent.instructions.as_deref().unwrap_or("");
 
     let span = Tracer::start("Renderer");
     span.emit("signature", &json!(format!("prompty.renderers.{format_kind}.render")));
-    span.emit("inputs", &json!({ "data": inputs }));
+    span.emit("inputs", &json!({ "data": &nonce_inputs }));
 
-    match registry::invoke_renderer(&format_kind, agent, template, inputs).await {
+    match registry::invoke_renderer(&format_kind, agent, template, &nonce_inputs).await {
         Ok(result) => {
             span.emit("result", &json!(result));
             span.end();
-            Ok(result)
+            Ok((result, nonces))
         }
         Err(e) => {
             span.emit("error", &json!(e.to_string()));
@@ -374,13 +388,11 @@ pub async fn prepare(
             let mut temp_agent = agent.clone();
             temp_agent.instructions = Some(sanitized_template);
 
-            clear_last_nonces();
-            let rendered = render(&temp_agent, &validated).await?;
+            let (rendered, nonces) = render_with_nonces(&temp_agent, &validated).await?;
 
             // Parse with nonce context for validation
             let messages = parse(agent, &rendered, Some(&context)).await?;
 
-            let nonces = get_last_nonces();
             let expanded = expand_threads(&messages, &nonces, &validated);
 
             span.emit("result", &serialize_messages(&expanded));
@@ -390,11 +402,9 @@ pub async fn prepare(
     }
 
     // Non-strict path (or parser has no pre_render)
-    clear_last_nonces();
-    let rendered = render(agent, &validated).await?;
+    let (rendered, nonces) = render_with_nonces(agent, &validated).await?;
     let messages = parse(agent, &rendered, None).await?;
 
-    let nonces = get_last_nonces();
     let expanded = expand_threads(&messages, &nonces, &validated);
 
     span.emit("result", &serialize_messages(&expanded));
@@ -480,8 +490,7 @@ pub async fn invoke(
         let messages = prepare(agent, inputs).await?;
         let provider = resolve_provider(agent);
         let response = registry::invoke_executor(&provider, agent, &messages).await?;
-        let processed = process(agent, response).await?;
-        Ok(unwrap_structured(&processed))
+        process(agent, response).await
     }
     .await;
 
@@ -543,9 +552,14 @@ pub enum AgentEvent {
     /// Status update from the agent loop.
     Status(String),
     /// The message list was updated (e.g., tool results appended).
-    MessagesUpdated,
+    MessagesUpdated {
+        messages: Vec<Message>,
+    },
     /// The agent loop has completed.
-    Done,
+    Done {
+        response: serde_json::Value,
+        messages: Vec<Message>,
+    },
     /// An error occurred.
     Error(String),
     /// The operation was cancelled.
@@ -729,7 +743,7 @@ pub async fn turn(
                         return Ok(raw_response);
                     }
                     let p = process(agent, raw_response).await?;
-                    unwrap_structured(&p)
+                    p
                 }
             }
         } else {
@@ -742,7 +756,7 @@ pub async fn turn(
             }
 
             let p = process(agent, raw_response).await?;
-            unwrap_structured(&p)
+            p
         };
 
         // Output guardrail
@@ -896,7 +910,7 @@ pub async fn turn(
                 if let Some(rewrite) = gr.rewrite {
                     iter_span.emit("result", &rewrite);
                     iter_span.end();
-                    opts.emit(AgentEvent::Done);
+                    opts.emit(AgentEvent::Done { response: rewrite.clone(), messages: messages.clone() });
                     span.emit("result", &rewrite);
                     span.emit("iterations", &json!(iteration + 1));
                     span.end();
@@ -906,8 +920,8 @@ pub async fn turn(
 
             iter_span.emit("result", &processed);
             iter_span.end();
-            opts.emit(AgentEvent::Done);
             let final_result = unwrap_structured(&processed);
+            opts.emit(AgentEvent::Done { response: final_result.clone(), messages: messages.clone() });
             span.emit("result", &final_result);
             span.emit("iterations", &json!(iteration + 1));
             span.end();
@@ -943,7 +957,7 @@ pub async fn turn(
         )?;
 
         messages.extend(tool_messages);
-        opts.emit(AgentEvent::MessagesUpdated);
+        opts.emit(AgentEvent::MessagesUpdated { messages: messages.clone() });
 
         iter_span.emit("tool_calls", &json!(tool_calls.iter().map(|tc| {
             json!({ "name": tc.name, "id": tc.id })
@@ -971,7 +985,19 @@ pub async fn turn(
     Err(InvokerError::Execute(msg.into()))
 }
 
-/// Check if any tools are defined (either globally registered or in agent.tools).
+/// Convenience wrapper: load a `.prompty` file and run `turn()` on it.
+///
+/// Mirrors the TypeScript API where `turn()` accepts either a loaded agent or a path string.
+pub async fn turn_from_path(
+    path: impl AsRef<std::path::Path>,
+    inputs: Option<&serde_json::Value>,
+    options: Option<TurnOptions>,
+) -> Result<serde_json::Value, InvokerError> {
+    let agent = crate::loader::load_async(path).await.map_err(|e| {
+        InvokerError::Load(e.to_string())
+    })?;
+    turn(&agent, inputs, options).await
+}
 fn has_any_tools(agent: &Prompty) -> bool {
     if let Some(arr) = agent.tools.as_array() {
         if !arr.is_empty() {
@@ -1283,7 +1309,8 @@ mod tests {
     async fn test_prepare_with_defaults() {
         ensure_defaults();
         let agent = make_agent_with_inputs();
-        let inputs = serde_json::json!({"lastName": "Smith"});
+        // question is provided (no default), firstName uses default "Jane"
+        let inputs = serde_json::json!({"lastName": "Smith", "question": "test"});
         let messages = prepare(&agent, Some(&inputs)).await.unwrap();
         assert!(messages[0].text_content().contains("Jane Smith"));
     }
@@ -1486,7 +1513,7 @@ mod tests {
             name: "test".into(),
             arguments: "{}".into(),
         });
-        opts.emit(AgentEvent::Done);
+        opts.emit(AgentEvent::Done { response: json!("test"), messages: vec![] });
 
         let captured = events.lock().unwrap();
         assert_eq!(captured.len(), 2);

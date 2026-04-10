@@ -40,6 +40,10 @@ pub enum InvokerError {
     #[error("validation error: {0}")]
     Validation(String),
 
+    /// Loading a .prompty file failed.
+    #[error("load error: {0}")]
+    Load(String),
+
     /// The operation was cancelled via the cancellation token.
     #[error("cancelled: {0}")]
     Cancelled(String),

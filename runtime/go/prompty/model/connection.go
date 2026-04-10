@@ -14,7 +14,7 @@ import (
 
 type Connection struct {
 	Kind               string  `json:"kind" yaml:"kind"`
-	AuthenticationMode string  `json:"authenticationMode" yaml:"authenticationMode"`
+	AuthenticationMode *string `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
 	UsageDescription   *string `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
 }
 
@@ -48,7 +48,8 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 			result.Kind = val.(string)
 		}
 		if val, ok := m["authenticationMode"]; ok && val != nil {
-			result.AuthenticationMode = val.(string)
+			v := val.(string)
+			result.AuthenticationMode = &v
 		}
 		if val, ok := m["usageDescription"]; ok && val != nil {
 			v := val.(string)
@@ -63,7 +64,9 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 func (obj *Connection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
-	result["authenticationMode"] = obj.AuthenticationMode
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = *obj.AuthenticationMode
+	}
 	if obj.UsageDescription != nil {
 		result["usageDescription"] = *obj.UsageDescription
 	}

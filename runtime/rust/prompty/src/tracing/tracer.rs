@@ -156,16 +156,30 @@ where
 }
 
 /// Async version of `trace_span`. Execute an async body inside a traced span.
-/// The body receives the span emitter for manual event emission.
+/// The body receives a shared reference to the span emitter for manual event
+/// emission. The span is automatically ended (with `duration_ms` and `__end__`)
+/// when the body completes.
 pub async fn trace_span_async<F, Fut, T>(name: &str, body: F) -> Result<T, Box<dyn std::error::Error>>
 where
-    F: FnOnce(SpanEmitter) -> Fut,
+    F: FnOnce(std::sync::Arc<SpanEmitter>) -> Fut,
     Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
 {
-    let span = Tracer::start(name);
-    match body(span).await {
-        Ok(result) => Ok(result),
-        Err(err) => Err(err),
+    let span = std::sync::Arc::new(Tracer::start(name));
+    match body(std::sync::Arc::clone(&span)).await {
+        Ok(result) => {
+            // Unwrap the Arc — we're the only holder after body completes.
+            if let Ok(owned) = std::sync::Arc::try_unwrap(span) {
+                owned.end();
+            }
+            Ok(result)
+        }
+        Err(err) => {
+            span.emit("error", &Value::String(err.to_string()));
+            if let Ok(owned) = std::sync::Arc::try_unwrap(span) {
+                owned.end();
+            }
+            Err(err)
+        }
     }
 }
 
@@ -203,7 +217,7 @@ where
 fn is_sensitive_key(key: &str) -> bool {
     static PAT: OnceLock<Regex> = OnceLock::new();
     let pat = PAT.get_or_init(|| {
-        Regex::new(r"(?i)secret|password|credential|passphrase|bearer|api[_.]?key|token|auth")
+        Regex::new(r"(?i)secret|password|credential|passphrase|bearer|cookie|authorization|api[_.]?key|token|auth")
             .unwrap()
     });
 

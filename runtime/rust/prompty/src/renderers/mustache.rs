@@ -8,8 +8,6 @@ use async_trait::async_trait;
 use crate::interfaces::{InvokerError, Renderer};
 use crate::model::Prompty;
 
-use super::common::prepare_render_inputs;
-
 /// Mustache renderer powered by `ribboncurls` (Mustache v1.4.2 spec compliant).
 pub struct MustacheRenderer;
 
@@ -17,13 +15,11 @@ pub struct MustacheRenderer;
 impl Renderer for MustacheRenderer {
     async fn render(
         &self,
-        agent: &Prompty,
+        _agent: &Prompty,
         template: &str,
         inputs: &serde_json::Value,
     ) -> Result<String, InvokerError> {
-        let (modified_inputs, _nonces) = prepare_render_inputs(agent, inputs);
-
-        render_mustache(template, &modified_inputs)
+        render_mustache(template, inputs)
     }
 }
 
