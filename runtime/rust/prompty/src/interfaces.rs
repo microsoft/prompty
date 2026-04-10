@@ -6,6 +6,8 @@
 //! All traits use `async-trait` for dynamic dispatch compatibility.
 //! Implementations are registered in the [`registry`](crate::registry).
 
+use std::pin::Pin;
+
 use async_trait::async_trait;
 
 use crate::model::Prompty;
@@ -37,6 +39,10 @@ pub enum InvokerError {
     /// Input validation failed.
     #[error("validation error: {0}")]
     Validation(String),
+
+    /// The operation was cancelled via the cancellation token.
+    #[error("cancelled: {0}")]
+    Cancelled(String),
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +108,21 @@ pub trait Executor: Send + Sync {
         messages: &[Message],
     ) -> Result<serde_json::Value, InvokerError>;
 
+    /// Execute an LLM call and return a stream of raw SSE chunks.
+    ///
+    /// Not all providers support streaming. Default returns an error.
+    /// When implemented, returns a `Stream<Item = Value>` where each item
+    /// is a raw SSE chunk from the provider (e.g., OpenAI delta events).
+    async fn execute_stream(
+        &self,
+        _agent: &Prompty,
+        _messages: &[Message],
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
+        Err(InvokerError::Execute(
+            "Streaming not supported by this executor".to_string().into(),
+        ))
+    }
+
     /// Format tool-call results into messages for the next iteration of the
     /// agent loop. Returns messages to append to the conversation.
     ///
@@ -164,6 +185,21 @@ pub trait Processor: Send + Sync {
         agent: &Prompty,
         response: serde_json::Value,
     ) -> Result<serde_json::Value, InvokerError>;
+
+    /// Process a streaming response into a stream of `StreamChunk` items.
+    ///
+    /// Takes a raw SSE chunk stream from the executor and yields processed
+    /// `StreamChunk::Text` and `StreamChunk::Tool` items.
+    ///
+    /// Default returns an error. Override in providers that support streaming.
+    fn process_stream(
+        &self,
+        _inner: Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError> {
+        Err(InvokerError::Process(
+            "Streaming not supported by this processor".to_string().into(),
+        ))
+    }
 }
 
 #[cfg(test)]

@@ -72,6 +72,53 @@ impl Executor for AnthropicExecutor {
     ) -> Vec<Message> {
         wire::format_tool_messages(raw_response, tool_calls, tool_results)
     }
+
+    async fn execute_stream(
+        &self,
+        agent: &Prompty,
+        messages: &[Message],
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        if api_type != "chat" && api_type != "agent" {
+            return Err(InvokerError::Execute(
+                format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
+            ));
+        }
+
+        let mut body = wire::build_chat_args(agent, messages);
+        // Force stream: true
+        if let Some(obj) = body.as_object_mut() {
+            obj.insert("stream".into(), Value::Bool(true));
+        }
+
+        let url = build_url(agent)?;
+        let api_key = get_api_key(agent)?;
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post(&url)
+            .header("x-api-key", &api_key)
+            .header("anthropic-version", wire::ANTHROPIC_VERSION)
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| InvokerError::Execute(format!("HTTP request failed: {e}").into()))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "unable to read body".to_string());
+            return Err(InvokerError::Execute(
+                format!("Anthropic API error (HTTP {status}): {body_text}").into(),
+            ));
+        }
+
+        let byte_stream = response.bytes_stream();
+        Ok(Box::pin(AnthropicSseParser::new(byte_stream)))
+    }
 }
 
 impl AnthropicExecutor {
@@ -131,6 +178,151 @@ fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
             .to_string()
             .into(),
     ))
+}
+
+// ---------------------------------------------------------------------------
+// Anthropic SSE parser — converts raw HTTP byte stream to JSON events
+// ---------------------------------------------------------------------------
+
+use std::collections::VecDeque;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+use bytes::Bytes;
+use futures::Stream;
+
+/// Parses Anthropic Server-Sent Events from a raw byte stream into JSON `Value` items.
+///
+/// Anthropic SSE events have `event:` and `data:` lines:
+/// ```text
+/// event: content_block_delta
+/// data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}
+/// ```
+///
+/// Each complete SSE event is parsed and yielded as a JSON `Value` with
+/// an additional `"event"` field injected from the `event:` line.
+struct AnthropicSseParser {
+    inner: Pin<Box<dyn Stream<Item = Result<Bytes, reqwest::Error>> + Send>>,
+    buffer: String,
+    pending: VecDeque<Value>,
+    done: bool,
+}
+
+impl AnthropicSseParser {
+    fn new(inner: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
+        Self {
+            inner: Box::pin(inner),
+            buffer: String::new(),
+            pending: VecDeque::new(),
+            done: false,
+        }
+    }
+
+    fn parse_buffer(&mut self) {
+        // SSE events are separated by double newlines
+        while let Some(pos) = self.buffer.find("\n\n") {
+            let event_block = self.buffer[..pos].to_string();
+            self.buffer = self.buffer[pos + 2..].to_string();
+
+            let mut event_type = String::new();
+            let mut data_lines = Vec::new();
+
+            for line in event_block.lines() {
+                if let Some(ev) = line.strip_prefix("event: ").or_else(|| line.strip_prefix("event:")) {
+                    event_type = ev.trim().to_string();
+                } else if let Some(d) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                    data_lines.push(d.trim().to_string());
+                }
+            }
+
+            // Skip empty events
+            if data_lines.is_empty() {
+                continue;
+            }
+
+            let data_str = data_lines.join("\n");
+
+            // message_stop terminates the stream
+            if event_type == "message_stop" {
+                self.done = true;
+                return;
+            }
+
+            // Parse data as JSON
+            match serde_json::from_str::<Value>(&data_str) {
+                Ok(mut parsed) => {
+                    // Inject the event type for downstream processing
+                    if !event_type.is_empty() {
+                        if let Some(obj) = parsed.as_object_mut() {
+                            obj.insert("event".to_string(), Value::String(event_type));
+                        }
+                    }
+                    self.pending.push_back(parsed);
+                }
+                Err(e) => {
+                    self.pending.push_back(serde_json::json!({
+                        "error": {
+                            "type": "sse_parse_error",
+                            "message": format!("Failed to parse Anthropic SSE data: {e}"),
+                            "raw": data_str,
+                        }
+                    }));
+                }
+            }
+        }
+    }
+}
+
+impl Stream for AnthropicSseParser {
+    type Item = Value;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        loop {
+            if let Some(item) = self.pending.pop_front() {
+                return Poll::Ready(Some(item));
+            }
+            if self.done {
+                return Poll::Ready(None);
+            }
+
+            match self.inner.as_mut().poll_next(cx) {
+                Poll::Ready(Some(Ok(bytes))) => {
+                    match std::str::from_utf8(&bytes) {
+                        Ok(text) => self.buffer.push_str(text),
+                        Err(e) => {
+                            self.pending.push_back(serde_json::json!({
+                                "error": {
+                                    "type": "sse_decode_error",
+                                    "message": format!("Invalid UTF-8 in SSE stream: {e}"),
+                                }
+                            }));
+                        }
+                    }
+                    self.parse_buffer();
+                }
+                Poll::Ready(Some(Err(e))) => {
+                    self.pending.push_back(serde_json::json!({
+                        "error": {
+                            "type": "sse_transport_error",
+                            "message": format!("SSE stream error: {e}"),
+                        }
+                    }));
+                    self.done = true;
+                    if let Some(item) = self.pending.pop_front() {
+                        return Poll::Ready(Some(item));
+                    }
+                    return Poll::Ready(None);
+                }
+                Poll::Ready(None) => {
+                    self.done = true;
+                    return Poll::Ready(None);
+                }
+                Poll::Pending => {
+                    return Poll::Pending;
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]

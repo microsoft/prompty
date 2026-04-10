@@ -245,14 +245,11 @@ impl Tool {
             serde_json::Value::Object(obj) => {
                 let result: Vec<Binding> = obj
                     .iter()
-                    .map(|(name, value)| {
+                    .filter_map(|(name, value)| {
                         if value.is_array() {
-                            panic!(
-                                "Invalid 'bindings' format: key '{}' has an array value. \
-                                'bindings' must be a flat list of objects or a name-keyed dict — \
-                                not a nested {{ {}: [...] }} structure.",
-                                name, name
-                            );
+                            // Invalid format: skip entries with array values.
+                            // 'bindings' must be a flat list or name-keyed dict.
+                            return None;
                         }
                         let mut v = if value.is_object() {
                             value.clone()
@@ -262,7 +259,7 @@ impl Tool {
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
                         }
-                        Binding::load_from_value(&v, &LoadContext::default())
+                        Some(Binding::load_from_value(&v, &LoadContext::default()))
                     })
                     .collect();
                 Some(result)

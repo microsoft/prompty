@@ -17,7 +17,8 @@ fn test_tool_load_json() {
   }
 }
 "####;
-    let result = Tool::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Tool::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
 }
 
@@ -31,7 +32,8 @@ bindings:
   input: value
 
 "####;
-    let result = Tool::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Tool::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
 }
 
@@ -47,7 +49,8 @@ fn test_tool_roundtrip() {
   }
 }
 "####;
-    let result = Tool::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Tool::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
 }
 

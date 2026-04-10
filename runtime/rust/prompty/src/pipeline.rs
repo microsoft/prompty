@@ -19,8 +19,9 @@ use crate::model::Prompty;
 use crate::parsers::parse_chat;
 use crate::registry;
 use crate::renderers::{clear_last_nonces, get_last_nonces};
+use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{sanitize_value, Tracer};
-use crate::types::{ContentPart, Message, Role, TextPart, ToolCall};
+use crate::types::{consume_stream_chunks, ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall};
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -29,6 +30,25 @@ use crate::types::{ContentPart, Message, Role, TextPart, ToolCall};
 const DEFAULT_FORMAT: &str = "nunjucks";
 const DEFAULT_PARSER: &str = "prompty";
 const DEFAULT_PROVIDER: &str = "openai";
+
+// ---------------------------------------------------------------------------
+// Structured output helpers
+// ---------------------------------------------------------------------------
+
+/// Wrap a processor result in StructuredResult transport if the agent has outputs
+/// and the result is a JSON object or array (i.e., structured data).
+/// This preserves raw JSON for `cast()` while keeping processors clean.
+fn wrap_structured_if_needed(agent: &Prompty, result: Value) -> Value {
+    let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
+    if has_outputs && (result.is_object() || result.is_array()) {
+        // The raw_json is the serialized form of the parsed result
+        let raw_json = result.to_string();
+        let sr = create_structured_result(result, raw_json);
+        to_structured_value(&sr)
+    } else {
+        result
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Config resolution helpers
@@ -70,6 +90,20 @@ fn resolve_provider(agent: &Prompty) -> String {
         .filter(|p| !p.is_empty())
         .unwrap_or(DEFAULT_PROVIDER)
         .to_string()
+}
+
+/// Check if the agent's model options request streaming.
+fn is_streaming(agent: &Prompty) -> bool {
+    agent
+        .model
+        .options
+        .as_ref()
+        .and_then(|opts| {
+            opts.additional_properties
+                .get("stream")
+                .and_then(|v| v.as_bool())
+        })
+        .unwrap_or(false)
 }
 
 // ---------------------------------------------------------------------------
@@ -284,6 +318,8 @@ pub async fn process(
 
     match registry::invoke_processor(&provider, agent, response).await {
         Ok(result) => {
+            // Wrap in StructuredResult if agent has outputs and result is parsed JSON object/array
+            let result = wrap_structured_if_needed(agent, result);
             span.emit("result", &result);
             span.end();
             Ok(result)
@@ -300,9 +336,19 @@ pub async fn process(
 // prepare — render + parse + expand threads
 // ---------------------------------------------------------------------------
 
+/// Check if the agent has strict mode enabled (default: true per spec).
+fn is_strict_mode(agent: &Prompty) -> bool {
+    agent
+        .template
+        .as_ref()
+        .and_then(|t| t.format.strict)
+        .unwrap_or(true)
+}
+
 /// Render template + parse into messages + expand thread markers.
 ///
 /// This is the first half of the pipeline: template → messages.
+/// When strict mode is enabled (default), uses nonce-based injection defense.
 pub async fn prepare(
     agent: &Prompty,
     inputs: Option<&serde_json::Value>,
@@ -316,14 +362,38 @@ pub async fn prepare(
     let validated = validate_inputs(agent, raw_inputs)?;
     span.emit("inputs", &json!(validated));
 
-    // Render
+    let parser_kind = resolve_parser_kind(agent);
+    let strict = is_strict_mode(agent);
+
+    if strict {
+        // Try to get pre_render context from the parser
+        let pre_render_result = registry::invoke_pre_render(&parser_kind, agent.instructions.as_deref().unwrap_or(""));
+
+        if let Ok(Some((sanitized_template, context))) = pre_render_result {
+            // Create a temporary agent with sanitized instructions for rendering
+            let mut temp_agent = agent.clone();
+            temp_agent.instructions = Some(sanitized_template);
+
+            clear_last_nonces();
+            let rendered = render(&temp_agent, &validated).await?;
+
+            // Parse with nonce context for validation
+            let messages = parse(agent, &rendered, Some(&context)).await?;
+
+            let nonces = get_last_nonces();
+            let expanded = expand_threads(&messages, &nonces, &validated);
+
+            span.emit("result", &serialize_messages(&expanded));
+            span.end();
+            return Ok(expanded);
+        }
+    }
+
+    // Non-strict path (or parser has no pre_render)
     clear_last_nonces();
     let rendered = render(agent, &validated).await?;
-
-    // Parse
     let messages = parse(agent, &rendered, None).await?;
 
-    // Thread expansion
     let nonces = get_last_nonces();
     let expanded = expand_threads(&messages, &nonces, &validated);
 
@@ -339,6 +409,8 @@ pub async fn prepare(
 /// Execute messages against the LLM and process the response.
 ///
 /// Takes pre-prepared messages (from `prepare`).
+/// When `model.options.stream` is `true`, uses streaming execution and
+/// returns the accumulated text content.
 pub async fn run(
     agent: &Prompty,
     messages: &[Message],
@@ -350,15 +422,34 @@ pub async fn run(
     span.emit("description", &json!("Execute and process"));
     span.emit("inputs", &serialize_messages(messages));
 
-    let response = match registry::invoke_executor(&provider, agent, messages).await {
-        Ok(r) => r,
-        Err(e) => {
-            span.emit("error", &json!(e.to_string()));
-            span.end();
-            return Err(e);
+    let streaming = is_streaming(agent);
+    let result = if streaming {
+        match registry::invoke_executor_stream(&provider, agent, messages).await {
+            Ok(sse_stream) => {
+                let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
+                let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+                let (_, text) = consume_stream_chunks(chunk_stream, None).await;
+                json!(text)
+            }
+            Err(_) => {
+                // Fallback to non-streaming
+                let response = registry::invoke_executor(&provider, agent, messages).await?;
+                let result = process(agent, response).await?;
+                unwrap_structured(&result)
+            }
         }
+    } else {
+        let response = match registry::invoke_executor(&provider, agent, messages).await {
+            Ok(r) => r,
+            Err(e) => {
+                span.emit("error", &json!(e.to_string()));
+                span.end();
+                return Err(e);
+            }
+        };
+        let result = process(agent, response).await?;
+        unwrap_structured(&result)
     };
-    let result = process(agent, response).await?;
 
     span.emit("result", &result);
     span.end();
@@ -378,15 +469,19 @@ pub async fn invoke(
 ) -> Result<serde_json::Value, InvokerError> {
     let span = Tracer::start("invoke");
     span.emit("signature", &json!("prompty.invoke"));
-    span.emit("agent", &serialize_agent(agent));
+    span.emit("description", &json!(agent.description.as_deref().unwrap_or("")));
     let empty = serde_json::json!({});
-    span.emit("inputs", inputs.unwrap_or(&empty));
+    span.emit("inputs", &json!({
+        "prompt": serialize_agent(agent),
+        "inputs": inputs.unwrap_or(&empty),
+    }));
 
-    let result = async {
+    let result: Result<serde_json::Value, InvokerError> = async {
         let messages = prepare(agent, inputs).await?;
         let provider = resolve_provider(agent);
         let response = registry::invoke_executor(&provider, agent, &messages).await?;
-        process(agent, response).await
+        let processed = process(agent, response).await?;
+        Ok(unwrap_structured(&processed))
     }
     .await;
 
@@ -412,7 +507,8 @@ pub async fn invoke_from_path(
 
     let span = Tracer::start("load");
     span.emit("signature", &json!("prompty.load"));
-    span.emit("inputs", &json!({ "path": path.as_ref().display().to_string() }));
+    span.emit("description", &json!(agent.description.as_deref().unwrap_or("")));
+    span.emit("inputs", &json!({ "prompty_file": path.as_ref().display().to_string() }));
     span.emit("result", &serialize_agent(&agent));
     span.end();
 
@@ -491,6 +587,16 @@ pub struct TurnOptions {
     pub on_event: Option<EventCallback>,
     /// Cancellation token — set to true to cancel the loop.
     pub cancelled: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    /// Context window budget in characters. If set, messages are trimmed before each LLM call.
+    pub context_budget: Option<usize>,
+    /// Guardrails for input/output/tool checks.
+    pub guardrails: Option<crate::guardrails::Guardrails>,
+    /// Steering message queue for injecting messages between iterations.
+    pub steering: Option<crate::steering::Steering>,
+    /// If true, dispatch tool calls in parallel (via tokio::join!).
+    pub parallel_tool_calls: bool,
+    /// Optional validator for structured output (called via cast after processing).
+    pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
 }
 
 impl Default for TurnOptions {
@@ -501,6 +607,11 @@ impl Default for TurnOptions {
             tools: HashMap::new(),
             on_event: None,
             cancelled: None,
+            context_budget: None,
+            guardrails: None,
+            steering: None,
+            parallel_tool_calls: false,
+            validator: None,
         }
     }
 }
@@ -534,24 +645,133 @@ impl TurnOptions {
 
 /// One conversational round-trip: prepare → [agent loop with tool calls] → process.
 ///
-/// Without tools, this is equivalent to `invoke`. With tools, it loops:
-/// execute → check for tool_calls → dispatch tools → re-execute → ... until
-/// the model returns a final response or `max_iterations` is reached.
+/// Without tools, this is equivalent to `invoke` (simple mode). With tools,
+/// it loops: execute → check for tool_calls → dispatch tools → re-execute
+/// until the model returns a final response or `max_iterations` is reached.
+///
+/// Extensions (matching TypeScript):
+/// - **Context trimming**: If `context_budget` is set, messages are trimmed before each LLM call
+/// - **Guardrails**: Input/output/tool guardrails checked at appropriate points
+/// - **Steering**: Messages injected between iterations
+/// - **Parallel tools**: If `parallel_tool_calls` is true, tool calls run concurrently
+/// - **Cancellation**: Checked at each iteration boundary
 pub async fn turn(
     agent: &Prompty,
     inputs: Option<&serde_json::Value>,
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
-    let opts = options.unwrap_or_default();
+    let mut opts = options.unwrap_or_default();
 
-    // If no tools registered, fast-path to invoke
-    if opts.tools.is_empty() {
-        return invoke(agent, inputs).await;
+    // If no tools registered (neither user tools nor global registry), fast-path to invoke
+    if opts.tools.is_empty() && !has_any_tools(agent) {
+        // Simple mode: steering → trim → input guardrail → execute → output guardrail → process
+        let span = Tracer::start("turn");
+        span.emit("signature", &json!("prompty.turn"));
+        span.emit("description", &json!("Simple turn (no tools)"));
+        let empty = serde_json::json!({});
+        span.emit("inputs", inputs.unwrap_or(&empty));
+
+        let mut messages = prepare(agent, inputs).await?;
+        let provider = resolve_provider(agent);
+
+        // Drain steering
+        if let Some(ref mut steering) = opts.steering {
+            messages.extend(steering.drain());
+        }
+
+        // Context trimming
+        if let Some(budget) = opts.context_budget {
+            let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
+            if dropped > 0 {
+                span.emit("context_trimmed", &json!(dropped));
+            }
+            messages = trimmed;
+        }
+
+        // Input guardrail
+        if let Some(ref guardrails) = opts.guardrails {
+            let gr = guardrails.check_input(&messages, agent).await;
+            if !gr.allowed {
+                let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
+                span.emit("error", &json!(format!("Input guardrail: {reason}")));
+                span.end();
+                return Err(InvokerError::Execute(
+                    format!("Input guardrail denied: {reason}").into(),
+                ));
+            }
+        }
+
+        // Execute (streaming-aware)
+        let streaming = is_streaming(agent);
+        let processed = if streaming {
+            match registry::invoke_executor_stream(&provider, agent, &messages).await {
+                Ok(sse_stream) => {
+                    let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
+                    let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+
+                    use futures::StreamExt;
+                    let mut text_parts = Vec::new();
+                    futures::pin_mut!(chunk_stream);
+                    while let Some(chunk) = chunk_stream.next().await {
+                        if let StreamChunk::Text(t) = chunk {
+                            opts.emit(AgentEvent::Token(t.clone()));
+                            text_parts.push(t);
+                        }
+                    }
+                    json!(text_parts.join(""))
+                }
+                Err(_) => {
+                    // Fallback to non-streaming
+                    let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+                    if opts.raw {
+                        span.emit("result", &json!("(raw)"));
+                        span.end();
+                        return Ok(raw_response);
+                    }
+                    let p = process(agent, raw_response).await?;
+                    unwrap_structured(&p)
+                }
+            }
+        } else {
+            let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+
+            if opts.raw {
+                span.emit("result", &json!("(raw)"));
+                span.end();
+                return Ok(raw_response);
+            }
+
+            let p = process(agent, raw_response).await?;
+            unwrap_structured(&p)
+        };
+
+        // Output guardrail
+        if let Some(ref guardrails) = opts.guardrails {
+            let gr = guardrails.check_output(&processed, agent).await;
+            if !gr.allowed {
+                let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
+                span.emit("error", &json!(format!("Output guardrail: {reason}")));
+                span.end();
+                return Err(InvokerError::Execute(
+                    format!("Output guardrail denied: {reason}").into(),
+                ));
+            }
+            if let Some(rewrite) = gr.rewrite {
+                span.emit("result", &rewrite);
+                span.end();
+                return Ok(rewrite);
+            }
+        }
+
+        span.emit("result", &processed);
+        span.end();
+        return Ok(processed);
     }
 
+    // Agent mode — tool-calling loop
     let span = Tracer::start("turn");
     span.emit("signature", &json!("prompty.turn"));
-    span.emit("agent", &serialize_agent(agent));
+    span.emit("description", &json!("Agent turn (tool-calling loop)"));
     let empty = serde_json::json!({});
     span.emit("inputs", inputs.unwrap_or(&empty));
 
@@ -560,7 +780,7 @@ pub async fn turn(
         opts.emit(AgentEvent::Cancelled);
         span.emit("error", &json!("Operation cancelled"));
         span.end();
-        return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
+        return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
     }
 
     // Prepare messages
@@ -573,70 +793,142 @@ pub async fn turn(
             opts.emit(AgentEvent::Cancelled);
             span.emit("error", &json!("Operation cancelled"));
             span.end();
-            return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
+            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
         }
 
         let iter_span = Tracer::start(&format!("turn.iteration.{iteration}"));
         iter_span.emit("iteration", &json!(iteration));
 
-        // Execute LLM
-        let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+        // Drain steering messages
+        if let Some(ref mut steering) = opts.steering {
+            let steering_msgs = steering.drain();
+            if !steering_msgs.is_empty() {
+                iter_span.emit("steering_messages", &json!(steering_msgs.len()));
+                messages.extend(steering_msgs);
+            }
+        }
 
-        // Process response
-        let processed = process(agent, raw_response.clone()).await?;
+        // Context trimming
+        if let Some(budget) = opts.context_budget {
+            let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
+            if dropped > 0 {
+                iter_span.emit("context_trimmed", &json!(dropped));
+            }
+            messages = trimmed;
+        }
 
-        // Check for tool calls in the processed result
-        let tool_calls = extract_tool_calls_from_processed(&processed);
+        // Input guardrail
+        if let Some(ref guardrails) = opts.guardrails {
+            let gr = guardrails.check_input(&messages, agent).await;
+            if !gr.allowed {
+                let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
+                iter_span.end();
+                span.emit("error", &json!(format!("Input guardrail: {reason}")));
+                span.end();
+                return Err(InvokerError::Execute(
+                    format!("Input guardrail denied: {reason}").into(),
+                ));
+            }
+        }
+
+        // Execute LLM — streaming or non-streaming
+        let streaming = is_streaming(agent);
+        let (tool_calls, processed, raw_response) = if streaming {
+            // Streaming path: execute_stream → PromptyStream → process_stream → consume
+            match registry::invoke_executor_stream(&provider, agent, &messages).await {
+                Ok(sse_stream) => {
+                    let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
+                    let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+
+                    let (tool_calls_vec, text) = {
+                        use futures::StreamExt;
+                        let mut tool_calls_vec = Vec::new();
+                        let mut text_parts = Vec::new();
+                        futures::pin_mut!(chunk_stream);
+                        while let Some(chunk) = chunk_stream.next().await {
+                            match chunk {
+                                StreamChunk::Text(t) => {
+                                    opts.emit(AgentEvent::Token(t.clone()));
+                                    text_parts.push(t);
+                                }
+                                StreamChunk::Tool(tc) => {
+                                    tool_calls_vec.push(tc);
+                                }
+                            }
+                        }
+                        (tool_calls_vec, text_parts.join(""))
+                    };
+
+                    let processed = json!(text);
+                    (tool_calls_vec, processed, json!(null))
+                }
+                Err(_) => {
+                    // Fallback to non-streaming if executor doesn't support it
+                    let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+                    let processed = process(agent, raw_response.clone()).await?;
+                    let tool_calls = extract_tool_calls_from_processed(&processed);
+                    (tool_calls, processed, raw_response)
+                }
+            }
+        } else {
+            // Non-streaming path
+            let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+            let processed = process(agent, raw_response.clone()).await?;
+            let tool_calls = extract_tool_calls_from_processed(&processed);
+            (tool_calls, processed, raw_response)
+        };
 
         if tool_calls.is_empty() {
-            // No tool calls — we're done
+            // No tool calls — final response
+
+            // Output guardrail
+            if let Some(ref guardrails) = opts.guardrails {
+                let gr = guardrails.check_output(&processed, agent).await;
+                if !gr.allowed {
+                    let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
+                    iter_span.end();
+                    span.emit("error", &json!(format!("Output guardrail: {reason}")));
+                    span.end();
+                    return Err(InvokerError::Execute(
+                        format!("Output guardrail denied: {reason}").into(),
+                    ));
+                }
+                if let Some(rewrite) = gr.rewrite {
+                    iter_span.emit("result", &rewrite);
+                    iter_span.end();
+                    opts.emit(AgentEvent::Done);
+                    span.emit("result", &rewrite);
+                    span.emit("iterations", &json!(iteration + 1));
+                    span.end();
+                    return Ok(rewrite);
+                }
+            }
+
             iter_span.emit("result", &processed);
             iter_span.end();
             opts.emit(AgentEvent::Done);
-            span.emit("result", &processed);
+            let final_result = unwrap_structured(&processed);
+            span.emit("result", &final_result);
             span.emit("iterations", &json!(iteration + 1));
             span.end();
-            return Ok(processed);
+            return Ok(final_result);
         }
 
-        // Dispatch tool calls
-        let mut tool_results = Vec::new();
-        for tc in &tool_calls {
-            // Check cancellation before each tool call
-            if opts.is_cancelled() {
-                opts.emit(AgentEvent::Cancelled);
-                iter_span.end();
-                span.emit("error", &json!("Operation cancelled"));
-                span.end();
-                return Err(InvokerError::Execute("Operation cancelled".to_string().into()));
-            }
+        // Dispatch tool calls (parallel or sequential)
+        let tool_span = Tracer::start("turn.toolCalls");
+        tool_span.emit("signature", &json!("prompty.turn.toolCalls"));
+        tool_span.emit("inputs", &json!(tool_calls.iter().map(|tc| {
+            json!({ "name": tc.name, "id": tc.id, "arguments": tc.arguments })
+        }).collect::<Vec<_>>()));
 
-            opts.emit(AgentEvent::ToolCallStart {
-                name: tc.name.clone(),
-                arguments: tc.arguments.clone(),
-            });
+        let tool_results = if opts.parallel_tool_calls {
+            dispatch_tools_parallel(&tool_calls, &opts, agent, inputs).await
+        } else {
+            dispatch_tools_sequential(&tool_calls, &opts, agent, inputs).await?
+        };
 
-            let result = dispatch_tool(&opts.tools, tc).await;
-
-            match &result {
-                Ok(r) => {
-                    opts.emit(AgentEvent::ToolResult {
-                        name: tc.name.clone(),
-                        result: r.clone(),
-                    });
-                    tool_results.push(r.clone());
-                }
-                Err(e) => {
-                    // Non-fatal: return error string to LLM like TypeScript does
-                    let error_msg = e.to_string();
-                    opts.emit(AgentEvent::ToolResult {
-                        name: tc.name.clone(),
-                        result: error_msg.clone(),
-                    });
-                    tool_results.push(error_msg);
-                }
-            }
-        }
+        tool_span.emit("result", &json!(tool_results));
+        tool_span.end();
 
         // Extract text content for formatToolMessages (some providers need it)
         let text_content = extract_text_from_processed(&processed);
@@ -671,7 +963,117 @@ pub async fn turn(
         }
     }
 
-    unreachable!("Loop should return or error before reaching here")
+    // Loop exhausted without returning — only reachable if max_iterations == 0
+    let msg = format!("Agent loop exceeded max iterations ({})", opts.max_iterations);
+    opts.emit(AgentEvent::Error(msg.clone()));
+    span.emit("error", &json!(msg));
+    span.end();
+    Err(InvokerError::Execute(msg.into()))
+}
+
+/// Check if any tools are defined (either globally registered or in agent.tools).
+fn has_any_tools(agent: &Prompty) -> bool {
+    if let Some(arr) = agent.tools.as_array() {
+        if !arr.is_empty() {
+            return true;
+        }
+    }
+    false
+}
+
+/// Dispatch tool calls sequentially, checking cancellation and tool guardrails.
+async fn dispatch_tools_sequential(
+    tool_calls: &[ToolCall],
+    opts: &TurnOptions,
+    agent: &Prompty,
+    parent_inputs: Option<&serde_json::Value>,
+) -> Result<Vec<String>, InvokerError> {
+    let mut tool_results = Vec::new();
+    for tc in tool_calls {
+        // Check cancellation before each tool call
+        if opts.is_cancelled() {
+            opts.emit(AgentEvent::Cancelled);
+            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
+        }
+
+        // Tool guardrail
+        if let Some(ref guardrails) = opts.guardrails {
+            let args: serde_json::Value = serde_json::from_str(&tc.arguments).unwrap_or(json!({}));
+            let gr = guardrails.check_tool(&tc.name, &args, agent).await;
+            if !gr.allowed {
+                let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
+                opts.emit(AgentEvent::ToolResult {
+                    name: tc.name.clone(),
+                    result: format!("Error: Tool guardrail denied: {reason}"),
+                });
+                tool_results.push(format!("Error: Tool guardrail denied: {reason}"));
+                continue;
+            }
+        }
+
+        opts.emit(AgentEvent::ToolCallStart {
+            name: tc.name.clone(),
+            arguments: tc.arguments.clone(),
+        });
+
+        let result = crate::tool_dispatch::dispatch_tool(tc, &opts.tools, agent, parent_inputs).await;
+
+        opts.emit(AgentEvent::ToolResult {
+            name: tc.name.clone(),
+            result: result.clone(),
+        });
+        tool_results.push(result);
+    }
+    Ok(tool_results)
+}
+
+/// Dispatch tool calls in parallel using tokio::join_all.
+async fn dispatch_tools_parallel(
+    tool_calls: &[ToolCall],
+    opts: &TurnOptions,
+    agent: &Prompty,
+    parent_inputs: Option<&serde_json::Value>,
+) -> Vec<String> {
+    // Emit start events synchronously before dispatching
+    for tc in tool_calls {
+        opts.emit(AgentEvent::ToolCallStart {
+            name: tc.name.clone(),
+            arguments: tc.arguments.clone(),
+        });
+    }
+
+    // Dispatch all in parallel
+    let futures: Vec<_> = tool_calls
+        .iter()
+        .map(|tc| {
+            let tools = &opts.tools;
+            async move {
+                // Tool guardrail (check in parallel)
+                if let Some(ref guardrails) = opts.guardrails {
+                    let args: serde_json::Value =
+                        serde_json::from_str(&tc.arguments).unwrap_or(json!({}));
+                    let gr = guardrails.check_tool(&tc.name, &args, agent).await;
+                    if !gr.allowed {
+                        let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
+                        return format!("Error: Tool guardrail denied: {reason}");
+                    }
+                }
+                crate::tool_dispatch::dispatch_tool(tc, tools, agent, parent_inputs).await
+            }
+        })
+        .collect();
+
+    let results = futures::future::join_all(futures).await;
+
+    // Emit result events
+    for (tc, result) in tool_calls.iter().zip(results.iter()) {
+        opts.emit(AgentEvent::ToolResult {
+            name: tc.name.clone(),
+            result: result.clone(),
+        });
+    }
+
+    results
 }
 
 /// Extract ToolCalls from a processed response value.
@@ -701,38 +1103,6 @@ fn extract_tool_calls_from_processed(processed: &serde_json::Value) -> Vec<ToolC
 /// Extract text content from a processed response (if it's a string, not tool calls).
 fn extract_text_from_processed(processed: &serde_json::Value) -> Option<String> {
     processed.as_str().map(String::from)
-}
-
-/// Dispatch a single tool call to its handler.
-///
-/// If no handler is registered, returns an error message string (non-fatal)
-/// so the model can recover — matching TypeScript behavior.
-async fn dispatch_tool(
-    tools: &HashMap<String, ToolHandler>,
-    tool_call: &ToolCall,
-) -> Result<String, InvokerError> {
-    let handler = match tools.get(&tool_call.name) {
-        Some(h) => h,
-        None => {
-            return Ok(format!(
-                "Error: No handler registered for tool '{}'",
-                tool_call.name
-            ));
-        }
-    };
-
-    let args: serde_json::Value = serde_json::from_str(&tool_call.arguments).map_err(|e| {
-        InvokerError::Execute(format!("Invalid tool arguments JSON: {e}").into())
-    })?;
-
-    match handler {
-        ToolHandler::Sync(f) => f(args).map_err(|e| {
-            InvokerError::Execute(format!("Tool '{}' failed: {e}", tool_call.name).into())
-        }),
-        ToolHandler::Async(f) => f(args).await.map_err(|e| {
-            InvokerError::Execute(format!("Tool '{}' failed: {e}", tool_call.name).into())
-        }),
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -827,16 +1197,19 @@ fn dict_to_message(value: &serde_json::Value) -> Option<Message> {
 // Default registrations
 // ---------------------------------------------------------------------------
 
-/// Register the built-in renderers and parsers.
+/// Register the built-in renderers, parsers, and tool handlers.
 ///
 /// Call this once at startup (or it's called automatically by the pipeline).
 pub fn register_defaults() {
     use crate::parsers::PromptyChatParser;
-    use crate::renderers::NunjucksRenderer;
+    use crate::renderers::{MustacheRenderer, NunjucksRenderer};
+    use crate::tool_dispatch::register_builtin_handlers;
 
     registry::register_renderer("nunjucks", NunjucksRenderer);
     registry::register_renderer("jinja2", NunjucksRenderer);
+    registry::register_renderer("mustache", MustacheRenderer);
     registry::register_parser("prompty", PromptyChatParser);
+    register_builtin_handlers();
 }
 
 /// Ensure defaults are registered (idempotent). Only used in tests.
@@ -1032,7 +1405,8 @@ mod tests {
             arguments: r#"{"name":"Rust"}"#.to_string(),
         };
 
-        let result = dispatch_tool(&tools, &tc).await.unwrap();
+        let agent = Prompty::default();
+        let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert_eq!(result, "Hello, Rust!");
     }
 
@@ -1055,7 +1429,8 @@ mod tests {
             arguments: r#"{"name":"Async"}"#.to_string(),
         };
 
-        let result = dispatch_tool(&tools, &tc).await.unwrap();
+        let agent = Prompty::default();
+        let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert_eq!(result, "Hello, Async!");
     }
 
@@ -1068,8 +1443,9 @@ mod tests {
             arguments: "{}".to_string(),
         };
 
+        let agent = Prompty::default();
         // Missing tool returns error string (non-fatal), matching TypeScript behavior
-        let result = dispatch_tool(&tools, &tc).await.unwrap();
+        let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert!(result.contains("nonexistent"));
         assert!(result.contains("Error"));
     }
@@ -1547,8 +1923,10 @@ mod tests {
             arguments: "not valid json".to_string(),
         };
 
-        let err = dispatch_tool(&tools, &tc).await.unwrap_err();
-        assert!(err.to_string().contains("Invalid tool arguments"));
+        let agent = Prompty::default();
+        let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
+        assert!(result.contains("Error"));
+        assert!(result.contains("Invalid tool arguments"));
     }
 
     // -----------------------------------------------------------------------

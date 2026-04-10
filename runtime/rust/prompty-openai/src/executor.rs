@@ -95,6 +95,62 @@ impl Executor for OpenAIExecutor {
     ) -> Vec<Message> {
         wire::format_tool_messages(tool_calls, tool_results)
     }
+
+    async fn execute_stream(
+        &self,
+        agent: &Prompty,
+        messages: &[Message],
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+
+        let (url, mut body) = match api_type {
+            "chat" | "agent" => {
+                let args = wire::build_chat_args(agent, messages);
+                let url = build_url(agent, "/v1/chat/completions")?;
+                (url, args)
+            }
+            "responses" => {
+                let args = wire::build_responses_args(agent, messages);
+                let url = build_url(agent, "/v1/responses")?;
+                (url, args)
+            }
+            other => {
+                return Err(InvokerError::Execute(
+                    format!("Streaming not supported for apiType: {other}").into(),
+                ));
+            }
+        };
+
+        // Force stream: true
+        if let Some(obj) = body.as_object_mut() {
+            obj.insert("stream".into(), Value::Bool(true));
+        }
+
+        let api_key = get_api_key(agent)?;
+        let client = reqwest::Client::new();
+        let response = client
+            .post(&url)
+            .header("Authorization", format!("Bearer {api_key}"))
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| InvokerError::Execute(format!("HTTP request failed: {e}").into()))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "unable to read body".to_string());
+            return Err(InvokerError::Execute(
+                format!("OpenAI API error (HTTP {status}): {body_text}").into(),
+            ));
+        }
+
+        let byte_stream = response.bytes_stream();
+        Ok(Box::pin(SseParser::new(byte_stream)))
+    }
 }
 
 impl OpenAIExecutor {
@@ -172,6 +228,135 @@ fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
     ))
 }
 
+// ---------------------------------------------------------------------------
+// SSE stream parser — converts raw HTTP byte stream to JSON Value stream
+// ---------------------------------------------------------------------------
+
+use std::collections::VecDeque;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+use bytes::Bytes;
+use futures::Stream;
+
+/// Parses Server-Sent Events (SSE) from a raw byte stream into JSON `Value` items.
+///
+/// Handles:
+/// - `data: [DONE]` → terminates the stream
+/// - `data: {...}` → yields parsed JSON
+/// - Multi-line buffers (splits on `\n\n`)
+struct SseParser {
+    inner: Pin<Box<dyn Stream<Item = Result<Bytes, reqwest::Error>> + Send>>,
+    buffer: String,
+    pending: VecDeque<Value>,
+    done: bool,
+}
+
+impl SseParser {
+    fn new(inner: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
+        Self {
+            inner: Box::pin(inner),
+            buffer: String::new(),
+            pending: VecDeque::new(),
+            done: false,
+        }
+    }
+
+    fn parse_buffer(&mut self) {
+        // SSE events are separated by double newlines
+        while let Some(pos) = self.buffer.find("\n\n") {
+            let event = self.buffer[..pos].to_string();
+            self.buffer = self.buffer[pos + 2..].to_string();
+
+            for line in event.lines() {
+                if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                    let data = data.trim();
+                    if data == "[DONE]" {
+                        self.done = true;
+                        return;
+                    }
+                    match serde_json::from_str::<Value>(data) {
+                        Ok(parsed) => self.pending.push_back(parsed),
+                        Err(e) => {
+                            // Surface SSE JSON parse errors as error events
+                            // so consumers can detect malformed responses
+                            self.pending.push_back(serde_json::json!({
+                                "error": {
+                                    "type": "sse_parse_error",
+                                    "message": format!("Failed to parse SSE data: {e}"),
+                                    "raw": data,
+                                }
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl Stream for SseParser {
+    type Item = Value;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        loop {
+            // Drain pending items first
+            if let Some(item) = self.pending.pop_front() {
+                return Poll::Ready(Some(item));
+            }
+            if self.done {
+                return Poll::Ready(None);
+            }
+
+            // Pull more bytes from the inner stream
+            match self.inner.as_mut().poll_next(cx) {
+                Poll::Ready(Some(Ok(bytes))) => {
+                    match std::str::from_utf8(&bytes) {
+                        Ok(text) => self.buffer.push_str(text),
+                        Err(e) => {
+                            // Surface UTF-8 decode errors
+                            self.pending.push_back(serde_json::json!({
+                                "error": {
+                                    "type": "sse_decode_error",
+                                    "message": format!("Invalid UTF-8 in SSE stream: {e}"),
+                                }
+                            }));
+                        }
+                    }
+                    self.parse_buffer();
+                }
+                Poll::Ready(Some(Err(e))) => {
+                    // Surface transport errors instead of silently terminating
+                    self.pending.push_back(serde_json::json!({
+                        "error": {
+                            "type": "sse_transport_error",
+                            "message": format!("SSE stream error: {e}"),
+                        }
+                    }));
+                    self.done = true;
+                    // Drain pending (including error) before ending
+                    if let Some(item) = self.pending.pop_front() {
+                        return Poll::Ready(Some(item));
+                    }
+                    return Poll::Ready(None);
+                }
+                Poll::Ready(None) => {
+                    // Final buffer flush
+                    if !self.buffer.is_empty() {
+                        self.buffer.push_str("\n\n");
+                        self.parse_buffer();
+                    }
+                    if let Some(item) = self.pending.pop_front() {
+                        return Poll::Ready(Some(item));
+                    }
+                    return Poll::Ready(None);
+                }
+                Poll::Pending => return Poll::Pending,
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -240,5 +425,43 @@ mod tests {
         let args = OpenAIExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "text-embedding-3-small");
         assert!(args.get("input").is_some());
+    }
+
+    #[tokio::test]
+    async fn test_sse_parser_basic() {
+        use futures::StreamExt;
+
+        let sse_data = b"data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}\n\n\
+                         data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}\n\n\
+                         data: [DONE]\n\n";
+
+        let byte_stream = futures::stream::once(async {
+            Ok::<bytes::Bytes, reqwest::Error>(bytes::Bytes::from(&sse_data[..]))
+        });
+
+        let parser = SseParser::new(byte_stream);
+        let items: Vec<Value> = parser.collect().await;
+
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0]["choices"][0]["delta"]["content"], "Hello");
+        assert_eq!(items[1]["choices"][0]["delta"]["content"], " world");
+    }
+
+    #[tokio::test]
+    async fn test_sse_parser_multi_chunk() {
+        use futures::StreamExt;
+
+        // Simulate data arriving in two separate network chunks
+        let byte_stream = futures::stream::iter(vec![
+            Ok::<bytes::Bytes, reqwest::Error>(bytes::Bytes::from("data: {\"id\":1}\n")),
+            Ok(bytes::Bytes::from("\ndata: {\"id\":2}\n\ndata: [DONE]\n\n")),
+        ]);
+
+        let parser = SseParser::new(byte_stream);
+        let items: Vec<Value> = parser.collect().await;
+
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0]["id"], 1);
+        assert_eq!(items[1]["id"], 2);
     }
 }

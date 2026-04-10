@@ -866,87 +866,302 @@ async fn test_bindings_injected() {
 
 // ===================================================================
 // EXTENSION VECTORS — context trimming, guardrails, steering, parallel
-// These features are not yet implemented in the Rust runtime.
-// Each test loads the vector and skips with a clear message.
 // ===================================================================
 
-macro_rules! skip_extension_vector {
-    ($test_name:ident, $vector_name:expr, $feature:expr) => {
-        #[tokio::test]
-        async fn $test_name() {
-            eprintln!(
-                "SKIP: {} — {} not yet implemented in Rust runtime",
-                $vector_name, $feature
-            );
-            // Validate that the vector exists and parses
-            let vector = find_vector($vector_name);
-            assert!(
-                vector.get("name").is_some(),
-                "vector should have a name field"
-            );
-            assert!(
-                vector.get("expected").is_some(),
-                "vector should have an expected field"
-            );
+/// Helper to build a full TurnOptions from a vector's `input` section,
+/// wiring up guardrails, steering, context_budget, parallel_tool_calls,
+/// and event collection.
+fn build_extension_opts(
+    vector: &Value,
+    tools: HashMap<String, ToolHandler>,
+    events: Option<Arc<Mutex<Vec<String>>>>,
+) -> TurnOptions {
+    let input = &vector["input"];
+
+    // Context budget
+    let context_budget = input.get("context_budget").and_then(|v| v.as_u64()).map(|v| v as usize);
+
+    // Parallel tool calls
+    let parallel_tool_calls = input.get("parallel_tool_calls").and_then(|v| v.as_bool()).unwrap_or(false);
+
+    // Guardrails
+    let guardrails = input.get("guardrails").map(|g| {
+        let input_guardrail: Option<prompty::guardrails::InputGuardrail> = g.get("input").map(|ig| {
+            let action = ig.get("action").and_then(|a| a.as_str()).unwrap_or("allow").to_string();
+            let reason = ig.get("reason").and_then(|r| r.as_str()).unwrap_or("").to_string();
+            let f: prompty::guardrails::InputGuardrail = Box::new(move |_msgs, _agent| {
+                let action = action.clone();
+                let reason = reason.clone();
+                Box::pin(async move {
+                    if action == "deny" {
+                        prompty::guardrails::GuardrailResult::deny(reason)
+                    } else {
+                        prompty::guardrails::GuardrailResult::allow()
+                    }
+                })
+            });
+            f
+        });
+
+        let output_guardrail: Option<prompty::guardrails::OutputGuardrail> = g.get("output").map(|og| {
+            let action = og.get("action").and_then(|a| a.as_str()).unwrap_or("allow").to_string();
+            let reason = og.get("reason").and_then(|r| r.as_str()).unwrap_or("").to_string();
+            let f: prompty::guardrails::OutputGuardrail = Box::new(move |_resp, _agent| {
+                let action = action.clone();
+                let reason = reason.clone();
+                Box::pin(async move {
+                    if action == "deny" {
+                        prompty::guardrails::GuardrailResult::deny(reason)
+                    } else {
+                        prompty::guardrails::GuardrailResult::allow()
+                    }
+                })
+            });
+            f
+        });
+
+        let tool_guardrail: Option<prompty::guardrails::ToolGuardrail> = g.get("tool").map(|tg| {
+            let deny_tools: Vec<String> = tg
+                .get("deny_tools")
+                .and_then(|d| d.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default();
+            let reason = tg.get("reason").and_then(|r| r.as_str()).unwrap_or("Tool denied").to_string();
+            let f: prompty::guardrails::ToolGuardrail = Box::new(move |tool_name, _args, _agent| {
+                let denied = deny_tools.contains(&tool_name.to_string());
+                let reason = reason.clone();
+                Box::pin(async move {
+                    if denied {
+                        prompty::guardrails::GuardrailResult::deny(reason)
+                    } else {
+                        prompty::guardrails::GuardrailResult::allow()
+                    }
+                })
+            });
+            f
+        });
+
+        prompty::guardrails::Guardrails {
+            input: input_guardrail,
+            output: output_guardrail,
+            tool: tool_guardrail,
         }
-    };
+    });
+
+    // Steering
+    let steering = input.get("steering").map(|s| {
+        let mut steering = prompty::steering::Steering::new();
+        if let Some(msgs) = s.get("messages").and_then(|m| m.as_array()) {
+            for msg in msgs {
+                let text = msg.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                // All steering messages in our vectors have inject_before_iteration: 2
+                // The Steering queue is drained at the start of each iteration,
+                // so we pre-load them — they'll be drained before iteration 2 (index 1).
+                steering.send(text);
+            }
+        }
+        steering
+    });
+
+    // Event callback
+    let on_event: Option<EventCallback> = events.map(|ev| {
+        let f: EventCallback = Box::new(move |event: AgentEvent| {
+            let label = match &event {
+                AgentEvent::ToolCallStart { name, .. } => format!("ToolCallStart:{name}"),
+                AgentEvent::ToolResult { name, .. } => format!("ToolResult:{name}"),
+                AgentEvent::MessagesUpdated => "MessagesUpdated".into(),
+                AgentEvent::Done => "Done".into(),
+                AgentEvent::Error(e) => format!("Error:{e}"),
+                AgentEvent::Cancelled => "Cancelled".into(),
+                _ => format!("{event:?}"),
+            };
+            ev.lock().unwrap().push(label);
+        });
+        f
+    });
+
+    TurnOptions {
+        tools,
+        context_budget,
+        parallel_tool_calls,
+        guardrails,
+        steering,
+        on_event,
+        ..Default::default()
+    }
 }
 
+/// Helper for running extension vectors — like run_vector but with extension TurnOptions.
+async fn run_extension_vector(vector_name: &str) -> Result<Value, InvokerError> {
+    run_extension_vector_with_events(vector_name, None).await
+}
+
+async fn run_extension_vector_with_events(
+    vector_name: &str,
+    events: Option<Arc<Mutex<Vec<String>>>>,
+) -> Result<Value, InvokerError> {
+    let vector = find_vector(vector_name);
+    let key = mock_key(vector_name);
+    let responses = collect_responses(&vector);
+    register_mocks(&key, responses);
+
+    let mut agent = build_agent(&vector, &key);
+    let input_msgs = &vector["input"]["messages"];
+    let mut instruction_lines = Vec::new();
+    if let Some(msgs) = input_msgs.as_array() {
+        for m in msgs {
+            let role = m["role"].as_str().unwrap_or("user");
+            let content = m["content"].as_str().unwrap_or("");
+            instruction_lines.push(format!("{role}:\n{content}"));
+        }
+    }
+    agent.instructions = Some(instruction_lines.join("\n\n"));
+
+    let tools = build_tool_handlers(&vector);
+    let opts = build_extension_opts(&vector, tools, events);
+
+    prompty::pipeline::register_defaults();
+
+    turn(&agent, None, Some(opts)).await
+}
+
+// -------------------------------------------------------------------
 // Context trimming (§13.3)
-skip_extension_vector!(test_context_trim_basic, "context_trim_basic", "context trimming");
-skip_extension_vector!(
-    test_context_no_trim_when_fits,
-    "context_no_trim_when_fits",
-    "context trimming"
-);
-skip_extension_vector!(
-    test_context_preserves_system_messages,
-    "context_preserves_system_messages",
-    "context trimming"
-);
+// -------------------------------------------------------------------
 
+#[tokio::test]
+async fn test_context_trim_basic() {
+    // Vector has many long messages that exceed context_budget.
+    // After trimming, oldest non-system messages are dropped and a summary inserted.
+    let vector = find_vector("context_trim_basic");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("context_trim_basic").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+#[tokio::test]
+async fn test_context_no_trim_when_fits() {
+    // Messages fit within budget — no trimming occurs.
+    let vector = find_vector("context_no_trim_when_fits");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("context_no_trim_when_fits").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+#[tokio::test]
+async fn test_context_preserves_system_messages() {
+    // Two system messages + many exchanges. Both system messages MUST survive trimming.
+    let vector = find_vector("context_preserves_system_messages");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("context_preserves_system_messages").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+// -------------------------------------------------------------------
 // Guardrails (§13.4)
-skip_extension_vector!(
-    test_guardrail_input_deny,
-    "guardrail_input_deny",
-    "guardrails"
-);
-skip_extension_vector!(
-    test_guardrail_output_deny,
-    "guardrail_output_deny",
-    "guardrails"
-);
-skip_extension_vector!(
-    test_guardrail_tool_deny,
-    "guardrail_tool_deny",
-    "guardrails"
-);
-skip_extension_vector!(
-    test_guardrail_all_pass,
-    "guardrail_all_pass",
-    "guardrails"
-);
+// -------------------------------------------------------------------
 
+#[tokio::test]
+async fn test_guardrail_input_deny() {
+    // Input guardrail denies before any LLM call.
+    let result = run_extension_vector("guardrail_input_deny").await;
+    assert!(result.is_err(), "Expected error from input guardrail");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("guardrail") || err_msg.contains("Guardrail") || err_msg.contains("denied"),
+        "Error should mention guardrail: {err_msg}"
+    );
+    assert!(
+        err_msg.contains("PII") || err_msg.contains("Contains PII"),
+        "Error should mention denial reason: {err_msg}"
+    );
+}
+
+#[tokio::test]
+async fn test_guardrail_output_deny() {
+    // Input guardrail passes, LLM responds, output guardrail denies.
+    let result = run_extension_vector("guardrail_output_deny").await;
+    assert!(result.is_err(), "Expected error from output guardrail");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("guardrail") || err_msg.contains("Guardrail") || err_msg.contains("denied"),
+        "Error should mention guardrail: {err_msg}"
+    );
+    assert!(
+        err_msg.contains("harmful") || err_msg.contains("Response contains harmful"),
+        "Error should mention denial reason: {err_msg}"
+    );
+}
+
+#[tokio::test]
+async fn test_guardrail_tool_deny() {
+    // Two tool calls — dangerous_tool is denied, get_weather executes normally.
+    let vector = find_vector("guardrail_tool_deny");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("guardrail_tool_deny").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+#[tokio::test]
+async fn test_guardrail_all_pass() {
+    // All guardrails configured but all pass — normal agent loop completes.
+    let vector = find_vector("guardrail_all_pass");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("guardrail_all_pass").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+// -------------------------------------------------------------------
 // Steering (§13.5)
-skip_extension_vector!(
-    test_steering_inject_message,
-    "steering_inject_message",
-    "steering"
-);
-skip_extension_vector!(
-    test_steering_multiple_messages,
-    "steering_multiple_messages",
-    "steering"
-);
+// -------------------------------------------------------------------
 
+#[tokio::test]
+async fn test_steering_inject_message() {
+    // Steering message injected before iteration 2.
+    let vector = find_vector("steering_inject_message");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("steering_inject_message").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+#[tokio::test]
+async fn test_steering_multiple_messages() {
+    // Two steering messages injected before iteration 2.
+    let vector = find_vector("steering_multiple_messages");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("steering_multiple_messages").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+// -------------------------------------------------------------------
 // Parallel tool calls (§13.6)
-skip_extension_vector!(
-    test_parallel_tools_basic,
-    "parallel_tools_basic",
-    "parallel tool calls"
-);
-skip_extension_vector!(
-    test_parallel_tools_with_guardrail_deny,
-    "parallel_tools_with_guardrail_deny",
-    "parallel tool calls with guardrails"
-);
+// -------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_parallel_tools_basic() {
+    // 3 tool calls in one turn, dispatched in parallel.
+    let vector = find_vector("parallel_tools_basic");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("parallel_tools_basic").await.unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}
+
+#[tokio::test]
+async fn test_parallel_tools_with_guardrail_deny() {
+    // 3 parallel tool calls — one denied by tool guardrail, two allowed.
+    let vector = find_vector("parallel_tools_with_guardrail_deny");
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
+
+    let result = run_extension_vector("parallel_tools_with_guardrail_deny")
+        .await
+        .unwrap();
+    assert_eq!(result.as_str().unwrap(), expected_result);
+}

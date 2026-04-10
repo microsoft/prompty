@@ -17,6 +17,9 @@ pub use error::LoadError;
 
 /// Load a `.prompty` file and return a typed `Prompty`.
 ///
+/// Per the spec, the runtime MUST NOT auto-load `.env` files.
+/// Environment variable loading is the application's responsibility.
+///
 /// # Errors
 ///
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
@@ -27,6 +30,31 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     })?;
 
     let raw = std::fs::read_to_string(&resolved).map_err(|e| {
+        LoadError::FileNotFound(resolved.clone(), e.to_string())
+    })?;
+
+    // Normalize line endings (Windows \r\n → \n)
+    let raw = raw.replace("\r\n", "\n");
+
+    build_agent(&raw, &resolved)
+}
+
+/// Asynchronously load a `.prompty` file and return a typed `Prompty`.
+///
+/// Uses `tokio::fs` for non-blocking file I/O, avoiding blocking the async
+/// runtime's thread pool. Equivalent to `load()` but suitable for async contexts.
+///
+/// # Errors
+///
+/// Returns `LoadError` if the file cannot be read, the frontmatter is
+/// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
+pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+    let path_buf = path.as_ref().to_path_buf();
+    let resolved = tokio::fs::canonicalize(&path_buf).await.map_err(|e| {
+        LoadError::FileNotFound(path_buf.clone(), e.to_string())
+    })?;
+
+    let raw = tokio::fs::read_to_string(&resolved).await.map_err(|e| {
         LoadError::FileNotFound(resolved.clone(), e.to_string())
     })?;
 
@@ -110,10 +138,13 @@ fn make_load_context(agent_dir: PathBuf) -> LoadContext {
     }
 }
 
-/// Ensure `metadata` is an object; create one if it's null.
+/// Ensure `metadata` is an object; create one if it's null or not already an object.
 fn ensure_metadata_object(agent: &mut Prompty) -> &mut serde_json::Map<String, serde_json::Value> {
-    if agent.metadata.is_null() {
+    if !agent.metadata.is_object() {
         agent.metadata = serde_json::Value::Object(serde_json::Map::new());
     }
-    agent.metadata.as_object_mut().expect("metadata should be an object")
+    // Safety: we just ensured it's an object above
+    agent.metadata.as_object_mut().unwrap()
 }
+
+

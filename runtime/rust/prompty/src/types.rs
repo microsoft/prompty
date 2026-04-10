@@ -199,25 +199,271 @@ impl Message {
 
 /// Wrapper for streaming LLM responses with tracing support.
 ///
-/// Buffers chunks as they arrive so the tracer can capture the full response
-/// when the stream is exhausted.
+/// `PromptyStream` wraps an inner async stream (from the executor/processor)
+/// and acts as both an `AsyncIterator` and a chunk accumulator. As chunks flow
+/// through, they are buffered in `items` for tracing. When the stream is
+/// exhausted (or explicitly flushed), a trace span is emitted.
+///
+/// This matches TypeScript's `PromptyStream` which implements `AsyncIterable<unknown>`.
+///
+/// # Usage
+///
+/// ```rust
+/// use prompty::types::PromptyStream;
+/// use serde_json::json;
+///
+/// // Create from collected chunks (non-streaming usage / testing)
+/// let mut stream = PromptyStream::new("chat.streaming");
+/// stream.push(json!({"delta": {"content": "Hello"}}));
+/// stream.push(json!({"delta": {"content": " world"}}));
+/// assert_eq!(stream.len(), 2);
+///
+/// // When done, flush emits a trace span with all collected items
+/// stream.flush();
+/// ```
 pub struct PromptyStream {
+    /// Span name for tracing.
     pub name: String,
+    /// Collected chunks.
     pub items: Vec<serde_json::Value>,
+    /// Optional inner async stream for streaming mode.
+    /// When present, `poll_next` pulls from this and buffers into `items`.
+    inner: Option<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>>,
+    /// Whether the stream has been exhausted (inner drained).
+    exhausted: bool,
 }
 
 impl PromptyStream {
+    /// Create a new PromptyStream (buffer-only mode, no inner stream).
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             items: Vec::new(),
+            inner: None,
+            exhausted: false,
         }
     }
 
-    /// Record a chunk.
+    /// Create a PromptyStream wrapping an inner async stream.
+    ///
+    /// Chunks from the inner stream will be buffered in `items` as they are
+    /// yielded, and a trace span is emitted when the stream is exhausted.
+    pub fn from_stream(
+        name: impl Into<String>,
+        inner: impl futures::Stream<Item = serde_json::Value> + Send + 'static,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            items: Vec::new(),
+            inner: Some(Box::pin(inner)),
+            exhausted: false,
+        }
+    }
+
+    /// Record a chunk (buffer-only mode).
     pub fn push(&mut self, chunk: serde_json::Value) {
         self.items.push(chunk);
     }
+
+    /// Number of collected chunks.
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    /// Whether any chunks have been collected.
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    /// Whether this stream wraps an inner async stream.
+    pub fn is_streaming(&self) -> bool {
+        self.inner.is_some()
+    }
+
+    /// Flush the stream: emit a tracer span with signature, inputs, and result.
+    /// Matches TypeScript's `PromptyStream[Symbol.asyncDispose]`.
+    pub fn flush(&self) {
+        if self.items.is_empty() {
+            return;
+        }
+        let span = crate::tracing::Tracer::start(&self.name);
+        span.emit(
+            "signature",
+            &serde_json::Value::String(format!("{}.PromptyStream", self.name)),
+        );
+        span.emit("inputs", &serde_json::Value::String("None".into()));
+        span.emit("result", &serde_json::Value::Array(self.items.clone()));
+        span.end();
+    }
+
+    /// Extract accumulated text content from delta chunks (OpenAI format).
+    /// Concatenates all `choices[0].delta.content` strings.
+    pub fn collect_text(&self) -> String {
+        let mut text = String::new();
+        for item in &self.items {
+            if let Some(content) = item
+                .pointer("/choices/0/delta/content")
+                .and_then(|v| v.as_str())
+            {
+                text.push_str(content);
+            }
+        }
+        text
+    }
+
+    /// Extract accumulated tool calls from delta chunks (OpenAI format).
+    /// Merges tool_calls deltas across chunks.
+    pub fn collect_tool_calls(&self) -> Vec<crate::types::ToolCall> {
+        use std::collections::BTreeMap;
+        let mut calls: BTreeMap<usize, (String, String, String)> = BTreeMap::new(); // index -> (id, name, args)
+        for item in &self.items {
+            if let Some(tcs) = item
+                .pointer("/choices/0/delta/tool_calls")
+                .and_then(|v| v.as_array())
+            {
+                for tc in tcs {
+                    let idx = tc.get("index").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
+                    let id = tc
+                        .get("id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let name = tc
+                        .pointer("/function/name")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let args = tc
+                        .pointer("/function/arguments")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+
+                    let entry = calls.entry(idx);
+                    let (existing_id, existing_name, existing_args) =
+                        entry.or_insert_with(|| (String::new(), String::new(), String::new()));
+                    if !id.is_empty() {
+                        *existing_id = id;
+                    }
+                    if !name.is_empty() {
+                        *existing_name = name;
+                    }
+                    existing_args.push_str(&args);
+                }
+            }
+        }
+        calls
+            .into_iter()
+            .map(|(_, (id, name, arguments))| crate::types::ToolCall {
+                id,
+                name,
+                arguments,
+            })
+            .collect()
+    }
+
+    /// Consume the stream, collecting all chunks. Returns the collected items.
+    ///
+    /// If this stream has an inner async stream, drains it completely.
+    /// If it's buffer-only, returns the existing items.
+    pub async fn collect_all(&mut self) -> &[serde_json::Value] {
+        if let Some(mut inner) = self.inner.take() {
+            use futures::StreamExt;
+            while let Some(chunk) = inner.next().await {
+                self.items.push(chunk);
+            }
+            self.exhausted = true;
+        }
+        &self.items
+    }
+}
+
+impl futures::Stream for PromptyStream {
+    type Item = serde_json::Value;
+
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        if let Some(ref mut inner) = self.inner {
+            match inner.as_mut().poll_next(cx) {
+                std::task::Poll::Ready(Some(chunk)) => {
+                    self.items.push(chunk.clone());
+                    std::task::Poll::Ready(Some(chunk))
+                }
+                std::task::Poll::Ready(None) => {
+                    // Stream exhausted — flush trace
+                    self.exhausted = true;
+                    self.flush();
+                    self.inner = None;
+                    std::task::Poll::Ready(None)
+                }
+                std::task::Poll::Pending => std::task::Poll::Pending,
+            }
+        } else {
+            // No inner stream — nothing to poll
+            std::task::Poll::Ready(None)
+        }
+    }
+}
+
+impl Drop for PromptyStream {
+    fn drop(&mut self) {
+        // If the stream was never fully consumed, flush what we have
+        if !self.exhausted && !self.items.is_empty() {
+            self.flush();
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// StreamChunk — yielded from processor stream generators
+// ---------------------------------------------------------------------------
+
+/// A chunk yielded by a processor's stream generator.
+///
+/// Matches TypeScript's `string | ToolCall` union yielded by `streamGenerator`.
+#[derive(Debug, Clone)]
+pub enum StreamChunk {
+    /// A text content token.
+    Text(String),
+    /// A completed tool call (yielded at end of stream).
+    Tool(ToolCall),
+}
+
+// ---------------------------------------------------------------------------
+// consume_stream — drains a processed stream into text + tool calls
+// ---------------------------------------------------------------------------
+
+/// Consume a stream of `StreamChunk`s, collecting text content and tool calls.
+///
+/// Matches TypeScript's `consumeStream()` in `pipeline.ts`.
+/// Returns `(tool_calls, content_text)`.
+pub async fn consume_stream_chunks(
+    stream: impl futures::Stream<Item = StreamChunk> + Unpin,
+    on_token: Option<&dyn Fn(&str)>,
+) -> (Vec<ToolCall>, String) {
+    use futures::StreamExt;
+
+    let mut tool_calls = Vec::new();
+    let mut text_parts = Vec::new();
+
+    futures::pin_mut!(stream);
+    while let Some(chunk) = stream.next().await {
+        match chunk {
+            StreamChunk::Text(t) => {
+                if let Some(cb) = on_token {
+                    cb(&t);
+                }
+                text_parts.push(t);
+            }
+            StreamChunk::Tool(tc) => {
+                tool_calls.push(tc);
+            }
+        }
+    }
+
+    (tool_calls, text_parts.join(""))
 }
 
 impl fmt::Debug for PromptyStream {
@@ -225,6 +471,8 @@ impl fmt::Debug for PromptyStream {
         f.debug_struct("PromptyStream")
             .field("name", &self.name)
             .field("items_len", &self.items.len())
+            .field("is_streaming", &self.inner.is_some())
+            .field("exhausted", &self.exhausted)
             .finish()
     }
 }

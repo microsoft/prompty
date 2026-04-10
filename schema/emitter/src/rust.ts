@@ -273,9 +273,11 @@ function buildFileContext(node: TypeNode, polymorphicTypeNames: Set<string>): Ru
   ];
 
   // Collect unique imports from all classes, excluding types defined in this file
+  // and skipping child classes (they're inline enum variants, not rendered as structs)
   const definedInFile = new Set([node.typeName.name, ...node.childTypes.map(c => c.typeName.name)]);
   const allImports = new Set<string>();
   for (const cls of classes) {
+    if (cls.isPolymorphicChild) continue;
     for (const imp of cls.imports) {
       if (!definedInFile.has(imp)) {
         allImports.add(imp);
@@ -357,6 +359,7 @@ function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: s
  * with no typed accessor method).
  */
 function getUniqueImportTypes(node: TypeNode, polymorphicTypeNames: Set<string>): string[] {
+  const isPolyBase = !!(node.discriminator && node.childTypes.length > 0);
   const imports = [
     node.properties
       .filter(p => !p.isScalar && !p.isDict)
@@ -366,7 +369,10 @@ function getUniqueImportTypes(node: TypeNode, polymorphicTypeNames: Set<string>)
     ...node.childTypes.flatMap(c =>
       c.properties
         .filter(p => !p.isScalar && !p.isDict)
-        .filter(p => !polymorphicTypeNames.has(p.typeName.name) || p.isCollection)
+        // Child properties in enum variants: non-scalar collections and polymorphic types
+        // become serde_json::Value, so skip those imports
+        .filter(p => !polymorphicTypeNames.has(p.typeName.name))
+        .filter(p => !isPolyBase || !p.isCollection)
         .map(p => p.typeName.name)
     )
   ].flat().filter(n => n !== node.typeName.name && node.base?.name !== n);

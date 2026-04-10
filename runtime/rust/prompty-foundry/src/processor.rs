@@ -24,6 +24,14 @@ impl Processor for FoundryProcessor {
     ) -> Result<Value, InvokerError> {
         prompty_openai::process_response(agent, &response)
     }
+
+    fn process_stream(
+        &self,
+        inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>, InvokerError> {
+        // Azure uses the same SSE chunk format as OpenAI
+        prompty_openai::OpenAIProcessor.process_stream(inner)
+    }
 }
 
 #[cfg(test)]

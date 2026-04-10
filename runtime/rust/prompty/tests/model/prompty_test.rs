@@ -74,7 +74,8 @@ fn test_prompty_load_json() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -155,7 +156,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -233,10 +235,12 @@ fn test_prompty_roundtrip() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -309,7 +313,8 @@ fn test_prompty_load_json_1() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -390,7 +395,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -467,10 +473,12 @@ fn test_prompty_roundtrip_1() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -545,7 +553,8 @@ fn test_prompty_load_json_2() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -626,7 +635,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -705,10 +715,12 @@ fn test_prompty_roundtrip_2() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -782,7 +794,8 @@ fn test_prompty_load_json_3() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -863,7 +876,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -941,10 +955,12 @@ fn test_prompty_roundtrip_3() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -1021,7 +1037,8 @@ fn test_prompty_load_json_4() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1102,7 +1119,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1183,10 +1201,12 @@ fn test_prompty_roundtrip_4() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -1262,7 +1282,8 @@ fn test_prompty_load_json_5() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1343,7 +1364,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1423,10 +1445,12 @@ fn test_prompty_roundtrip_5() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -1504,7 +1528,8 @@ fn test_prompty_load_json_6() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1585,7 +1610,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1667,10 +1693,12 @@ fn test_prompty_roundtrip_6() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -1747,7 +1775,8 @@ fn test_prompty_load_json_7() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1828,7 +1857,8 @@ instructions: "system:
   {{question}}"
 
 "####;
-    let result = Prompty::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Prompty::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1909,10 +1939,12 @@ fn test_prompty_roundtrip_7() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let result = Prompty::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Prompty::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 

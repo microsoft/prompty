@@ -1,6 +1,6 @@
 //! OpenAI processor — extracts results from OpenAI API responses.
 //!
-//! Handles chat completions, embeddings, and image generation responses.
+//! Handles chat completions, embeddings, image generation, and streaming responses.
 
 use async_trait::async_trait;
 use serde_json::Value;
@@ -20,6 +20,13 @@ impl Processor for OpenAIProcessor {
         response: Value,
     ) -> Result<Value, InvokerError> {
         process_response(agent, &response)
+    }
+
+    fn process_stream(
+        &self,
+        inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>, InvokerError> {
+        Ok(process_stream(inner))
     }
 }
 
@@ -217,6 +224,157 @@ pub fn extract_tool_calls(response: &Value) -> Option<Vec<ToolCall>> {
         })
         .collect();
     if calls.is_empty() { None } else { Some(calls) }
+}
+
+// ---------------------------------------------------------------------------
+// Streaming processor — yields StreamChunk from raw SSE chunks
+// ---------------------------------------------------------------------------
+
+use prompty::types::StreamChunk;
+
+/// Process an OpenAI streaming response (SSE chunks) into a stream of `StreamChunk`s.
+///
+/// Handles three types of streaming deltas:
+/// - `delta.content` — yields `StreamChunk::Text`
+/// - `delta.tool_calls` — accumulates partial tool call chunks,
+///   yields `StreamChunk::Tool` objects when the stream ends
+/// - `delta.refusal` — yields an error as text
+///
+/// Matches TypeScript's `streamGenerator()` in `openai/processor.ts`.
+pub fn process_stream(
+    inner: impl futures::Stream<Item = Value> + Send + Unpin + 'static,
+) -> std::pin::Pin<Box<dyn futures::Stream<Item = StreamChunk> + Send>> {
+    Box::pin(OpenAIStreamProcessor::new(inner))
+}
+
+/// Stream adapter that processes OpenAI SSE chunks into StreamChunks.
+struct OpenAIStreamProcessor {
+    inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
+    /// Accumulated partial tool calls, keyed by index.
+    tool_call_acc: std::collections::BTreeMap<usize, (String, String, String)>,
+    /// Phase: Streaming (pulling from inner) or Yielding (emitting accumulated tool calls).
+    phase: StreamPhase,
+    /// Buffer for chunks to yield (content text from a single SSE event can only produce one).
+    pending: std::collections::VecDeque<StreamChunk>,
+}
+
+enum StreamPhase {
+    Streaming,
+    /// Yielding accumulated tool calls, current index.
+    YieldingTools(Vec<ToolCall>, usize),
+    Done,
+}
+
+impl OpenAIStreamProcessor {
+    fn new(inner: impl futures::Stream<Item = Value> + Send + Unpin + 'static) -> Self {
+        Self {
+            inner: Box::pin(inner),
+            tool_call_acc: std::collections::BTreeMap::new(),
+            phase: StreamPhase::Streaming,
+            pending: std::collections::VecDeque::new(),
+        }
+    }
+}
+
+impl futures::Stream for OpenAIStreamProcessor {
+    type Item = StreamChunk;
+
+    fn poll_next(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        let this = self.get_mut();
+
+        // Return any pending chunks first
+        if let Some(chunk) = this.pending.pop_front() {
+            return std::task::Poll::Ready(Some(chunk));
+        }
+
+        match &mut this.phase {
+            StreamPhase::Streaming => {
+                match this.inner.as_mut().poll_next(cx) {
+                    std::task::Poll::Ready(Some(chunk)) => {
+                        let delta = chunk
+                            .get("choices")
+                            .and_then(Value::as_array)
+                            .and_then(|c| c.first())
+                            .and_then(|c| c.get("delta"));
+
+                        if let Some(delta) = delta {
+                            // Content text
+                            if let Some(content) = delta.get("content").and_then(Value::as_str) {
+                                if !content.is_empty() {
+                                    return std::task::Poll::Ready(Some(StreamChunk::Text(content.to_string())));
+                                }
+                            }
+
+                            // Tool call deltas
+                            if let Some(tc_deltas) = delta.get("tool_calls").and_then(Value::as_array) {
+                                for tc_delta in tc_deltas {
+                                    let idx = tc_delta.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
+                                    let entry = this.tool_call_acc.entry(idx).or_insert_with(|| {
+                                        (String::new(), String::new(), String::new())
+                                    });
+                                    if let Some(id) = tc_delta.get("id").and_then(Value::as_str) {
+                                        entry.0 = id.to_string();
+                                    }
+                                    if let Some(name) = tc_delta.pointer("/function/name").and_then(Value::as_str) {
+                                        entry.1 = name.to_string();
+                                    }
+                                    if let Some(args) = tc_delta.pointer("/function/arguments").and_then(Value::as_str) {
+                                        entry.2.push_str(args);
+                                    }
+                                }
+                            }
+
+                            // Refusal
+                            if let Some(refusal) = delta.get("refusal").and_then(Value::as_str) {
+                                return std::task::Poll::Ready(Some(
+                                    StreamChunk::Text(format!("Model refused: {refusal}")),
+                                ));
+                            }
+                        }
+
+                        // No content from this SSE event, wake and re-poll
+                        cx.waker().wake_by_ref();
+                        std::task::Poll::Pending
+                    }
+                    std::task::Poll::Ready(None) => {
+                        // Inner stream exhausted — yield accumulated tool calls
+                        let tools: Vec<ToolCall> = this.tool_call_acc
+                            .values()
+                            .map(|(id, name, args)| ToolCall {
+                                id: id.clone(),
+                                name: name.clone(),
+                                arguments: args.clone(),
+                            })
+                            .collect();
+
+                        if tools.is_empty() {
+                            this.phase = StreamPhase::Done;
+                            std::task::Poll::Ready(None)
+                        } else {
+                            let first = tools[0].clone();
+                            this.phase = StreamPhase::YieldingTools(tools, 1);
+                            std::task::Poll::Ready(Some(StreamChunk::Tool(first)))
+                        }
+                    }
+                    std::task::Poll::Pending => std::task::Poll::Pending,
+                }
+            }
+            StreamPhase::YieldingTools(tools, idx) => {
+                if *idx < tools.len() {
+                    let tc = tools[*idx].clone();
+                    *idx += 1;
+                    std::task::Poll::Ready(Some(StreamChunk::Tool(tc)))
+                } else {
+                    this.phase = StreamPhase::Done;
+                    std::task::Poll::Ready(None)
+                }
+            }
+            StreamPhase::Done => std::task::Poll::Ready(None),
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -524,5 +682,113 @@ mod tests {
         let result = process_response(&agent, &response).unwrap();
         let arr = result.as_array().unwrap();
         assert_eq!(arr.len(), 2);
+    }
+
+    // -----------------------------------------------------------------------
+    // Streaming processor tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_stream_text_content() {
+        use futures::StreamExt;
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "Hello"}}]}),
+            json!({"choices": [{"delta": {"content": " world"}}]}),
+            json!({"choices": [{"delta": {}}]}),  // empty delta
+        ];
+        let inner = futures::stream::iter(chunks);
+        let mut stream = process_stream(inner);
+        let mut texts = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            match chunk {
+                StreamChunk::Text(t) => texts.push(t),
+                StreamChunk::Tool(_) => panic!("unexpected tool call"),
+            }
+        }
+        assert_eq!(texts.join(""), "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_tool_calls() {
+        use futures::StreamExt;
+        let chunks = vec![
+            json!({"choices": [{"delta": {"tool_calls": [
+                {"index": 0, "id": "call_1", "function": {"name": "get_weather", "arguments": "{\"ci"}}
+            ]}}]}),
+            json!({"choices": [{"delta": {"tool_calls": [
+                {"index": 0, "function": {"arguments": "ty\":\"SF\"}"}}
+            ]}}]}),
+        ];
+        let inner = futures::stream::iter(chunks);
+        let mut stream = process_stream(inner);
+        let mut tools = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            match chunk {
+                StreamChunk::Text(_) => {}
+                StreamChunk::Tool(tc) => tools.push(tc),
+            }
+        }
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0].id, "call_1");
+        assert_eq!(tools[0].name, "get_weather");
+        assert_eq!(tools[0].arguments, "{\"city\":\"SF\"}");
+    }
+
+    #[tokio::test]
+    async fn test_stream_refusal() {
+        use futures::StreamExt;
+        let chunks = vec![
+            json!({"choices": [{"delta": {"refusal": "I cannot help with that"}}]}),
+        ];
+        let inner = futures::stream::iter(chunks);
+        let mut stream = process_stream(inner);
+        let mut texts = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Text(t) = chunk {
+                texts.push(t);
+            }
+        }
+        assert_eq!(texts.len(), 1);
+        assert!(texts[0].contains("refused"));
+    }
+
+    #[tokio::test]
+    async fn test_stream_with_consume() {
+        use prompty::types::consume_stream_chunks;
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "Hello"}}]}),
+            json!({"choices": [{"delta": {"content": " "}}]}),
+            json!({"choices": [{"delta": {"content": "world"}}]}),
+        ];
+        let inner = futures::stream::iter(chunks);
+        let stream = process_stream(inner);
+        let (tool_calls, content) = consume_stream_chunks(stream, None).await;
+        assert!(tool_calls.is_empty());
+        assert_eq!(content, "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_mixed_content_then_tools() {
+        use futures::StreamExt;
+        // Some providers may send content then tool calls
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "Let me check..."}}]}),
+            json!({"choices": [{"delta": {"tool_calls": [
+                {"index": 0, "id": "c1", "function": {"name": "search", "arguments": "{}"}}
+            ]}}]}),
+        ];
+        let inner = futures::stream::iter(chunks);
+        let mut stream = process_stream(inner);
+        let mut texts = Vec::new();
+        let mut tools = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            match chunk {
+                StreamChunk::Text(t) => texts.push(t),
+                StreamChunk::Tool(tc) => tools.push(tc),
+            }
+        }
+        assert_eq!(texts.join(""), "Let me check...");
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0].name, "search");
     }
 }

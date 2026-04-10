@@ -18,7 +18,8 @@ fn test_mcp_approval_mode_load_json() {
   ]
 }
 "####;
-    let result = McpApprovalMode::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = McpApprovalMode::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.kind, "never");
@@ -34,7 +35,8 @@ neverRequireApprovalTools:
   - operation2
 
 "####;
-    let result = McpApprovalMode::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = McpApprovalMode::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.kind, "never");
@@ -53,10 +55,12 @@ fn test_mcp_approval_mode_roundtrip() {
   ]
 }
 "####;
-    let result = McpApprovalMode::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = McpApprovalMode::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -65,7 +69,8 @@ fn test_mcp_approval_mode_roundtrip() {
 #[test]
 fn test_mcp_approval_mode_from_kind() {
     let value = serde_json::json!("never");
-    let instance = McpApprovalMode::load_from_value(&value, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let instance = McpApprovalMode::load_from_value(&value, &ctx);
     assert_eq!(instance.kind, "never");
 }
 

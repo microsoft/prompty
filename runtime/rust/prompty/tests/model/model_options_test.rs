@@ -27,7 +27,8 @@ fn test_model_options_load_json() {
   }
 }
 "####;
-    let result = ModelOptions::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = ModelOptions::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert!(instance.frequency_penalty.is_some(), "Expected frequency_penalty to be Some");
@@ -67,7 +68,8 @@ additionalProperties:
   anotherProperty: anotherValue
 
 "####;
-    let result = ModelOptions::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = ModelOptions::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert!(instance.frequency_penalty.is_some(), "Expected frequency_penalty to be Some");
@@ -102,10 +104,12 @@ fn test_model_options_roundtrip() {
   }
 }
 "####;
-    let result = ModelOptions::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = ModelOptions::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 

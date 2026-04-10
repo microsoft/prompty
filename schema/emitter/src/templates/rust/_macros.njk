@@ -197,9 +197,9 @@ Default::default()
         if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
             if val.is_object() || val.is_array() {
 {%- if prop.isOptional %}
-                result.{{ propNameRust }} = Some({{ prop.typeName.name }}::load_from_value(val));
+                result.{{ propNameRust }} = Some({{ prop.typeName.name }}::load_from_value(val, ctx));
 {%- else %}
-                result.{{ propNameRust }} = {{ prop.typeName.name }}::load_from_value(val);
+                result.{{ propNameRust }} = {{ prop.typeName.name }}::load_from_value(val, ctx);
 {%- endif %}
             }
         }
@@ -269,14 +269,14 @@ Default::default()
 {# Non-scalar, non-polymorphic #}
 {%- if prop.isOptional %}
         if let Some(ref val) = self.{{ propNameRust }} {
-            let nested = val.to_value();
+            let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("{{ prop.name }}".to_string(), nested);
             }
         }
 {%- else %}
         {
-            let nested = self.{{ propNameRust }}.to_value();
+            let nested = self.{{ propNameRust }}.to_value(ctx);
             if !nested.is_null() {
                 result.insert("{{ prop.name }}".to_string(), nested);
             }
@@ -348,14 +348,14 @@ Default::default()
 {%- else %}
 {%- if prop.isOptional %}
         if let Some(val) = {{ propNameRust }} {
-            let nested = val.to_value();
+            let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("{{ prop.name }}".to_string(), nested);
             }
         }
 {%- else %}
         {
-            let nested = {{ propNameRust }}.to_value();
+            let nested = {{ propNameRust }}.to_value(ctx);
             if !nested.is_null() {
                 result.insert("{{ prop.name }}".to_string(), nested);
             }
@@ -380,19 +380,16 @@ Default::default()
     pub fn as_{{ propNameRust }}(&self) -> Option<Vec<{{ prop.typeName.name }}>> {
         match &self.{{ propNameRust }} {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map({{ prop.typeName.name }}::load_from_value).collect())
+                Some(arr.iter().map(|v| {{ prop.typeName.name }}::load_from_value(v, &LoadContext::default())).collect())
             }
             serde_json::Value::Object(obj) => {
                 let result: Vec<{{ prop.typeName.name }}> = obj
                     .iter()
-                    .map(|(name, value)| {
+                    .filter_map(|(name, value)| {
                         if value.is_array() {
-                            panic!(
-                                "Invalid '{{ prop.name }}' format: key '{}' has an array value. \
-                                '{{ prop.name }}' must be a flat list of objects or a name-keyed dict — \
-                                not a nested {{ '{' }}{{ '{' }} {}: [...] {{ '}' }}{{ '}' }} structure.",
-                                name, name
-                            );
+                            // Invalid format: skip entries with array values.
+                            // '{{ prop.name }}' must be a flat list or name-keyed dict.
+                            return None;
                         }
                         let mut v = if value.is_object() {
                             value.clone()
@@ -402,7 +399,7 @@ Default::default()
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
                         }
-                        {{ prop.typeName.name }}::load_from_value(&v)
+                        Some({{ prop.typeName.name }}::load_from_value(&v, &LoadContext::default()))
                     })
                     .collect();
                 Some(result)
@@ -523,9 +520,9 @@ Default::default()
 {{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
 {%- else %}
 {%- if prop.isOptional %}
-{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map({{ prop.typeName.name }}::load_from_value)
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| {{ prop.typeName.name }}::load_from_value(v, ctx))
 {%- else %}
-{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map({{ prop.typeName.name }}::load_from_value).unwrap_or_default()
+{{ varName }}.get("{{ prop.name }}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| {{ prop.typeName.name }}::load_from_value(v, ctx)).unwrap_or_default()
 {%- endif %}
 {%- endif %}
 {%- endif %}

@@ -14,7 +14,8 @@ fn test_connection_load_json() {
   "usageDescription": "This will allow the agent to respond to an email on your behalf"
 }
 "####;
-    let result = Connection::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Connection::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
 }
 
@@ -26,7 +27,8 @@ authenticationMode: system
 usageDescription: This will allow the agent to respond to an email on your behalf
 
 "####;
-    let result = Connection::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Connection::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
 }
 
@@ -39,7 +41,8 @@ fn test_connection_roundtrip() {
   "usageDescription": "This will allow the agent to respond to an email on your behalf"
 }
 "####;
-    let result = Connection::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Connection::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
 }
 

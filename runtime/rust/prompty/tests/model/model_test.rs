@@ -24,7 +24,8 @@ fn test_model_load_json() {
   }
 }
 "####;
-    let result = Model::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Model::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.id, "gpt-35-turbo");
@@ -50,7 +51,8 @@ options:
   maxOutputTokens: 1000
 
 "####;
-    let result = Model::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Model::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.id, "gpt-35-turbo");
@@ -77,10 +79,12 @@ fn test_model_roundtrip() {
   }
 }
 "####;
-    let result = Model::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Model::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -89,7 +93,8 @@ fn test_model_roundtrip() {
 #[test]
 fn test_model_from_model() {
     let value = serde_json::json!("example");
-    let instance = Model::load_from_value(&value, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let instance = Model::load_from_value(&value, &ctx);
     assert_eq!(instance.id, "example");
 }
 

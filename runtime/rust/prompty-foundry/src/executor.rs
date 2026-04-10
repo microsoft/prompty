@@ -85,6 +85,52 @@ impl Executor for FoundryExecutor {
     ) -> Vec<Message> {
         wire::format_tool_messages(tool_calls, tool_results)
     }
+
+    async fn execute_stream(
+        &self,
+        agent: &Prompty,
+        messages: &[Message],
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        if api_type != "chat" && api_type != "agent" {
+            return Err(InvokerError::Execute(
+                format!("Foundry streaming only supports apiType 'chat', got: {api_type}").into(),
+            ));
+        }
+
+        let mut body = wire::build_chat_args(agent, messages);
+        // Force stream: true
+        if let Some(obj) = body.as_object_mut() {
+            obj.insert("stream".into(), Value::Bool(true));
+        }
+
+        let (url, auth_header) = build_azure_request(agent, api_type)?;
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post(&url)
+            .header(auth_header.0, auth_header.1)
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| InvokerError::Execute(format!("HTTP request failed: {e}").into()))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "unable to read body".to_string());
+            return Err(InvokerError::Execute(
+                format!("Azure OpenAI API error (HTTP {status}): {body_text}").into(),
+            ));
+        }
+
+        // Reuse OpenAI SSE parser — Azure uses the same SSE format
+        let byte_stream = response.bytes_stream();
+        Ok(Box::pin(FoundrySseParser::new(byte_stream)))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -230,6 +276,117 @@ fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), InvokerErr
             .to_string()
             .into(),
     ))
+}
+
+// ---------------------------------------------------------------------------
+// SSE stream parser — same OpenAI SSE format, copied for crate boundaries
+// ---------------------------------------------------------------------------
+
+use std::collections::VecDeque;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+use bytes::Bytes;
+use futures::Stream;
+
+/// SSE parser for Azure OpenAI (same format as OpenAI).
+struct FoundrySseParser {
+    inner: Pin<Box<dyn Stream<Item = Result<Bytes, reqwest::Error>> + Send>>,
+    buffer: String,
+    pending: VecDeque<Value>,
+    done: bool,
+}
+
+impl FoundrySseParser {
+    fn new(inner: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
+        Self {
+            inner: Box::pin(inner),
+            buffer: String::new(),
+            pending: VecDeque::new(),
+            done: false,
+        }
+    }
+
+    fn parse_buffer(&mut self) {
+        while let Some(pos) = self.buffer.find("\n\n") {
+            let event = self.buffer[..pos].to_string();
+            self.buffer = self.buffer[pos + 2..].to_string();
+
+            for line in event.lines() {
+                if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                    let data = data.trim();
+                    if data == "[DONE]" {
+                        self.done = true;
+                        return;
+                    }
+                    match serde_json::from_str::<Value>(data) {
+                        Ok(parsed) => self.pending.push_back(parsed),
+                        Err(e) => {
+                            self.pending.push_back(serde_json::json!({
+                                "error": {
+                                    "type": "sse_parse_error",
+                                    "message": format!("Failed to parse SSE data: {e}"),
+                                    "raw": data,
+                                }
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl Stream for FoundrySseParser {
+    type Item = Value;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        loop {
+            if let Some(item) = self.pending.pop_front() {
+                return Poll::Ready(Some(item));
+            }
+            if self.done {
+                return Poll::Ready(None);
+            }
+
+            match self.inner.as_mut().poll_next(cx) {
+                Poll::Ready(Some(Ok(bytes))) => {
+                    match std::str::from_utf8(&bytes) {
+                        Ok(text) => self.buffer.push_str(text),
+                        Err(e) => {
+                            self.pending.push_back(serde_json::json!({
+                                "error": {
+                                    "type": "sse_decode_error",
+                                    "message": format!("Invalid UTF-8 in SSE stream: {e}"),
+                                }
+                            }));
+                        }
+                    }
+                    self.parse_buffer();
+                }
+                Poll::Ready(Some(Err(e))) => {
+                    self.pending.push_back(serde_json::json!({
+                        "error": {
+                            "type": "sse_transport_error",
+                            "message": format!("SSE stream error: {e}"),
+                        }
+                    }));
+                    self.done = true;
+                    if let Some(item) = self.pending.pop_front() {
+                        return Poll::Ready(Some(item));
+                    }
+                    return Poll::Ready(None);
+                }
+                Poll::Ready(None) => {
+                    self.done = true;
+                    return Poll::Ready(None);
+                }
+                Poll::Pending => {
+                    return Poll::Pending;
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]

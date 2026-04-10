@@ -13,7 +13,8 @@ fn test_binding_load_json() {
   "input": "input-variable"
 }
 "####;
-    let result = Binding::from_json(json, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Binding::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "my-tool");
@@ -27,7 +28,8 @@ name: my-tool
 input: input-variable
 
 "####;
-    let result = Binding::from_yaml(yaml, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let result = Binding::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "my-tool");
@@ -42,10 +44,12 @@ fn test_binding_roundtrip() {
   "input": "input-variable"
 }
 "####;
-    let result = Binding::from_json(json, &LoadContext::default());
+    let load_ctx = LoadContext::default();
+    let result = Binding::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
-    let json_output = instance.to_json(&SaveContext::default());
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
     assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
@@ -54,7 +58,8 @@ fn test_binding_roundtrip() {
 #[test]
 fn test_binding_from_string() {
     let value = serde_json::json!("example");
-    let instance = Binding::load_from_value(&value, &LoadContext::default());
+    let ctx = LoadContext::default();
+    let instance = Binding::load_from_value(&value, &ctx);
     assert_eq!(instance.input, "example");
 }
 

@@ -110,7 +110,8 @@ pub fn has_processor(key: &str) -> bool {
 // Utility
 // ---------------------------------------------------------------------------
 
-/// Clear all registrations. Mainly useful for testing.
+/// Clear all registrations (invokers, connections, tool registries).
+/// Mainly useful for testing.
 pub fn clear_cache() {
     if let Some(m) = RENDERERS.get() {
         m.write().expect("renderers lock poisoned").clear();
@@ -124,6 +125,9 @@ pub fn clear_cache() {
     if let Some(m) = PROCESSORS.get() {
         m.write().expect("processors lock poisoned").clear();
     }
+    crate::connections::clear_connections();
+    crate::tool_dispatch::clear_tools();
+    crate::tool_dispatch::clear_tool_handlers();
 }
 
 // ---------------------------------------------------------------------------
@@ -189,6 +193,28 @@ pub async fn invoke_executor(
     executor.execute(agent, messages).await
 }
 
+/// Execute using the registered executor in streaming mode.
+///
+/// Returns a `Stream<Item = Value>` of raw SSE chunks from the provider.
+///
+/// # Errors
+///
+/// Returns `InvokerError::NotFound` if no executor is registered for `key`.
+/// Returns `InvokerError::Execute` if the executor does not support streaming.
+pub async fn invoke_executor_stream(
+    key: &str,
+    agent: &crate::model::Prompty,
+    messages: &[crate::types::Message],
+) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
+    let map = executors();
+    let guard = map.read().expect("executors lock poisoned");
+    let executor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
+        group: "executor".into(),
+        key: key.into(),
+    })?;
+    executor.execute_stream(agent, messages).await
+}
+
 /// Process using the registered processor for the given key.
 ///
 /// # Errors
@@ -206,6 +232,27 @@ pub async fn invoke_processor(
         key: key.into(),
     })?;
     processor.process(agent, response).await
+}
+
+/// Process a streaming response using the registered processor.
+///
+/// Returns a `Stream<Item = StreamChunk>` of processed chunks.
+///
+/// # Errors
+///
+/// Returns `InvokerError::NotFound` if no processor is registered for `key`.
+/// Returns `InvokerError::Process` if the processor does not support streaming.
+pub fn invoke_processor_stream(
+    key: &str,
+    inner: std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
+) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError> {
+    let map = processors();
+    let guard = map.read().expect("processors lock poisoned");
+    let processor = guard.get(key).ok_or_else(|| InvokerError::NotFound {
+        group: "processor".into(),
+        key: key.into(),
+    })?;
+    processor.process_stream(inner)
 }
 
 /// Get tool messages from a registered executor's `format_tool_messages`.
