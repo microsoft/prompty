@@ -27,18 +27,7 @@ public static class SchemaHelpers
         {
             if (string.IsNullOrEmpty(prop.Name)) continue;
 
-            var propSchema = new Dictionary<string, object?>
-            {
-                ["type"] = MapKindToJsonType(prop.Kind),
-            };
-
-            if (!string.IsNullOrEmpty(prop.Description))
-                propSchema["description"] = prop.Description;
-
-            if (prop.EnumValues is not null && prop.EnumValues.Count > 0)
-                propSchema["enum"] = prop.EnumValues;
-
-            props[prop.Name] = propSchema;
+            props[prop.Name] = PropertyToJsonSchema(prop);
 
             if (prop.Required == true)
                 required.Add(prop.Name);
@@ -57,6 +46,57 @@ public static class SchemaHelpers
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Convert a single Property to a JSON Schema definition (recursive for arrays/objects).
+    /// </summary>
+    public static Dictionary<string, object?> PropertyToJsonSchema(Property prop)
+    {
+        var schema = new Dictionary<string, object?>
+        {
+            ["type"] = MapKindToJsonType(prop.Kind),
+        };
+
+        if (!string.IsNullOrEmpty(prop.Description))
+            schema["description"] = prop.Description;
+
+        if (prop.EnumValues is not null && prop.EnumValues.Count > 0)
+            schema["enum"] = prop.EnumValues;
+
+        // Array items — recurse into item schema
+        if (prop is ArrayProperty arrayProp)
+        {
+            schema["items"] = arrayProp.Items is not null
+                ? PropertyToJsonSchema(arrayProp.Items)
+                : new Dictionary<string, object?> { ["type"] = "string" };
+        }
+
+        // Object properties — recurse into nested properties
+        if (prop is ObjectProperty objectProp)
+        {
+            if (objectProp.Properties is not null && objectProp.Properties.Count > 0)
+            {
+                var nested = new Dictionary<string, object?>();
+                var nestedRequired = new List<string>();
+                foreach (var p in objectProp.Properties)
+                {
+                    if (string.IsNullOrEmpty(p.Name)) continue;
+                    nested[p.Name] = PropertyToJsonSchema(p);
+                    nestedRequired.Add(p.Name);
+                }
+                schema["properties"] = nested;
+                schema["required"] = nestedRequired;
+            }
+            else
+            {
+                schema["properties"] = new Dictionary<string, object?>();
+                schema["required"] = new List<string>();
+            }
+            schema["additionalProperties"] = false;
+        }
+
+        return schema;
     }
 
     /// <summary>

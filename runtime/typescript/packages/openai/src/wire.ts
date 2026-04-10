@@ -234,14 +234,9 @@ function schemaToWire(properties: unknown[]): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   const required: string[] = [];
 
-  for (const p of properties as Array<{ name?: string; kind?: string; description?: string; required?: boolean; enumValues?: unknown[] }>) {
+  for (const p of properties as Array<{ name?: string; required?: boolean } & Parameters<typeof propertyToJsonSchema>[0]>) {
     if (!p.name) continue;
-    const schema: Record<string, unknown> = {
-      type: KIND_TO_JSON_TYPE[p.kind ?? "string"] ?? "string",
-    };
-    if (p.description) schema.description = p.description;
-    if (p.enumValues && p.enumValues.length > 0) schema.enum = p.enumValues;
-    props[p.name] = schema;
+    props[p.name] = propertyToJsonSchema(p);
     if (p.required) required.push(p.name);
   }
 

@@ -141,6 +141,119 @@ public class SchemaHelpersTests
         Assert.True(properties.ContainsKey("valid"));
     }
 
+    [Fact]
+    public void PropertiesToJsonSchema_ArrayOfObjects()
+    {
+        var itemProps = new List<Property>
+        {
+            new() { Name = "title", Kind = "string", Required = true },
+            new() { Name = "difficulty", Kind = "integer" },
+        };
+        var props = new List<Property>
+        {
+            new ArrayProperty
+            {
+                Name = "encounters",
+                Kind = "array",
+                Description = "List of encounters",
+                Items = new ObjectProperty
+                {
+                    Kind = "object",
+                    Properties = itemProps,
+                },
+            },
+        };
+
+        var result = SchemaHelpers.PropertiesToJsonSchema(props, strict: true);
+        var properties = Assert.IsType<Dictionary<string, object?>>(result["properties"]);
+        var encounters = Assert.IsType<Dictionary<string, object?>>(properties["encounters"]);
+        Assert.Equal("array", encounters["type"]);
+
+        var items = Assert.IsType<Dictionary<string, object?>>(encounters["items"]);
+        Assert.Equal("object", items["type"]);
+        var itemProperties = Assert.IsType<Dictionary<string, object?>>(items["properties"]);
+        Assert.True(itemProperties.ContainsKey("title"));
+        Assert.True(itemProperties.ContainsKey("difficulty"));
+
+        var titleSchema = Assert.IsType<Dictionary<string, object?>>(itemProperties["title"]);
+        Assert.Equal("string", titleSchema["type"]);
+
+        var itemRequired = Assert.IsType<List<string>>(items["required"]);
+        Assert.Contains("title", itemRequired);
+
+        Assert.Equal(false, items["additionalProperties"]);
+    }
+
+    [Fact]
+    public void PropertiesToJsonSchema_NestedObject()
+    {
+        var props = new List<Property>
+        {
+            new ObjectProperty
+            {
+                Name = "idea",
+                Kind = "object",
+                Properties = new List<Property>
+                {
+                    new() { Name = "name", Kind = "string" },
+                    new() { Name = "description", Kind = "string" },
+                },
+            },
+        };
+
+        var result = SchemaHelpers.PropertiesToJsonSchema(props);
+        var properties = Assert.IsType<Dictionary<string, object?>>(result["properties"]);
+        var idea = Assert.IsType<Dictionary<string, object?>>(properties["idea"]);
+        Assert.Equal("object", idea["type"]);
+
+        var nestedProps = Assert.IsType<Dictionary<string, object?>>(idea["properties"]);
+        Assert.True(nestedProps.ContainsKey("name"));
+        Assert.True(nestedProps.ContainsKey("description"));
+        Assert.Equal(false, idea["additionalProperties"]);
+    }
+
+    [Fact]
+    public void PropertiesToJsonSchema_DeeplyNested()
+    {
+        var props = new List<Property>
+        {
+            new ArrayProperty
+            {
+                Name = "chapters",
+                Kind = "array",
+                Items = new ObjectProperty
+                {
+                    Kind = "object",
+                    Properties = new List<Property>
+                    {
+                        new() { Name = "title", Kind = "string" },
+                        new ArrayProperty
+                        {
+                            Name = "tags",
+                            Kind = "array",
+                            Items = new Property { Kind = "string" },
+                        },
+                    },
+                },
+            },
+        };
+
+        var result = SchemaHelpers.PropertiesToJsonSchema(props);
+        var properties = Assert.IsType<Dictionary<string, object?>>(result["properties"]);
+        var chapters = Assert.IsType<Dictionary<string, object?>>(properties["chapters"]);
+        Assert.Equal("array", chapters["type"]);
+
+        var chapterItems = Assert.IsType<Dictionary<string, object?>>(chapters["items"]);
+        Assert.Equal("object", chapterItems["type"]);
+
+        var chapterProps = Assert.IsType<Dictionary<string, object?>>(chapterItems["properties"]);
+        var tags = Assert.IsType<Dictionary<string, object?>>(chapterProps["tags"]);
+        Assert.Equal("array", tags["type"]);
+
+        var tagItems = Assert.IsType<Dictionary<string, object?>>(tags["items"]);
+        Assert.Equal("string", tagItems["type"]);
+    }
+
     [Theory]
     [InlineData("string", "string")]
     [InlineData("integer", "integer")]

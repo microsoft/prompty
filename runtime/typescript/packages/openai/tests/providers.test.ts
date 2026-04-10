@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { messageToWire } from "../src/wire.js";
+import { messageToWire, buildChatArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
 import { Message, text } from "@prompty/core";
 import { Prompty } from "@prompty/core";
@@ -85,5 +85,146 @@ describe("processResponse", () => {
     };
     const result = processResponse(agent, response);
     expect(result).toBe("https://example.com/image.png");
+  });
+});
+
+describe("buildChatArgs nested tool schemas", () => {
+  it("produces array items with nested object properties", () => {
+    const agent = Prompty.load({
+      name: "test",
+      model: {
+        id: "gpt-4",
+        provider: "openai",
+        apiType: "chat",
+        connection: { kind: "key", apiKey: "test-key" },
+      },
+      tools: [
+        {
+          name: "log_encounters",
+          kind: "function",
+          description: "Log encounters",
+          parameters: [
+            {
+              name: "encounters",
+              kind: "array",
+              description: "List of encounters",
+              items: {
+                kind: "object",
+                properties: [
+                  { name: "title", kind: "string" },
+                  { name: "difficulty", kind: "integer" },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const msgs = [new Message("user", [text("test")])];
+    const args = buildChatArgs(agent, msgs);
+    const tools = args.tools as Record<string, unknown>[];
+    expect(tools).toHaveLength(1);
+
+    const func = (tools[0] as Record<string, unknown>).function as Record<string, unknown>;
+    const params = func.parameters as Record<string, unknown>;
+    const props = params.properties as Record<string, Record<string, unknown>>;
+    const encounters = props.encounters;
+
+    expect(encounters.type).toBe("array");
+    expect(encounters.items).toBeDefined();
+
+    const items = encounters.items as Record<string, unknown>;
+    expect(items.type).toBe("object");
+
+    const itemProps = items.properties as Record<string, Record<string, unknown>>;
+    expect(itemProps.title).toBeDefined();
+    expect(itemProps.title.type).toBe("string");
+    expect(itemProps.difficulty.type).toBe("integer");
+    expect(items.additionalProperties).toBe(false);
+  });
+
+  it("produces nested object properties", () => {
+    const agent = Prompty.load({
+      name: "test",
+      model: { id: "gpt-4", provider: "openai" },
+      tools: [
+        {
+          name: "save",
+          kind: "function",
+          parameters: [
+            {
+              name: "idea",
+              kind: "object",
+              properties: [
+                { name: "name", kind: "string" },
+                { name: "description", kind: "string" },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const msgs = [new Message("user", [text("test")])];
+    const args = buildChatArgs(agent, msgs);
+    const tools = args.tools as Record<string, unknown>[];
+    const func = (tools[0] as Record<string, unknown>).function as Record<string, unknown>;
+    const params = func.parameters as Record<string, unknown>;
+    const props = params.properties as Record<string, Record<string, unknown>>;
+    const idea = props.idea;
+
+    expect(idea.type).toBe("object");
+    const nested = idea.properties as Record<string, Record<string, unknown>>;
+    expect(nested.name.type).toBe("string");
+    expect(nested.description.type).toBe("string");
+    expect(idea.additionalProperties).toBe(false);
+  });
+
+  it("handles deeply nested schemas (array > object > array > string)", () => {
+    const agent = Prompty.load({
+      name: "test",
+      model: { id: "gpt-4", provider: "openai" },
+      tools: [
+        {
+          name: "deep",
+          kind: "function",
+          parameters: [
+            {
+              name: "chapters",
+              kind: "array",
+              items: {
+                kind: "object",
+                properties: [
+                  { name: "title", kind: "string" },
+                  {
+                    name: "tags",
+                    kind: "array",
+                    items: { kind: "string" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const msgs = [new Message("user", [text("test")])];
+    const args = buildChatArgs(agent, msgs);
+    const tools = args.tools as Record<string, unknown>[];
+    const func = (tools[0] as Record<string, unknown>).function as Record<string, unknown>;
+    const params = func.parameters as Record<string, unknown>;
+    const props = params.properties as Record<string, Record<string, unknown>>;
+    const chapters = props.chapters;
+
+    expect(chapters.type).toBe("array");
+    const itemSchema = chapters.items as Record<string, unknown>;
+    expect(itemSchema.type).toBe("object");
+
+    const chapterProps = itemSchema.properties as Record<string, Record<string, unknown>>;
+    expect(chapterProps.tags.type).toBe("array");
+    const tagItems = chapterProps.tags.items as Record<string, unknown>;
+    expect(tagItems.type).toBe("string");
   });
 });

@@ -1,6 +1,6 @@
 """Integration tests against direct OpenAI (api.openai.com).
 
-These tests use DIRECT_OPENAI_API_KEY and hit OpenAI's own endpoints —
+These tests use DIRECT_OPENAI_API_KEY and hit OpenAI's own endpoints ΓÇö
 no Azure compat proxy, no base URL override. Auto-skipped when the
 key is not set.
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.core.pipeline import invoke, turn, process
+from prompty.core.pipeline import invoke, process, turn
 from prompty.core.types import AsyncPromptyStream, PromptyStream
 
 from .conftest import make_direct_openai_agent, skip_direct_openai
@@ -32,7 +32,7 @@ _TOOLS = [
 
 
 def _weather_fn(city: str) -> str:
-    return f"72°F and sunny in {city}"
+    return f"72┬░F and sunny in {city}"
 
 
 @skip_direct_openai
@@ -149,7 +149,7 @@ class TestDirectOpenAIAgent:
         assert any(w in result.lower() for w in ("72", "sunny", "seattle"))
 
     def test_streaming_agent_loop(self) -> None:
-        """Agent loop with streaming enabled — stream is consumed internally."""
+        """Agent loop with streaming enabled ΓÇö stream is consumed internally."""
         agent = make_direct_openai_agent(
             options={
                 "temperature": 0,

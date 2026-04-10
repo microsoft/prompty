@@ -11,7 +11,7 @@
 //! - `max_tokens` required, defaults to 4096
 //! - Options: `top_k`, `stop_sequences` (not `stop`)
 
-use prompty::model::{Prompty, Tool, ToolKind};
+use prompty::model::{Property, PropertyKind, Prompty, Tool, ToolKind};
 use prompty::types::{ContentPart, Message, Role, ToolCall};
 use serde_json::{json, Map, Value};
 
@@ -258,9 +258,66 @@ fn tool_to_wire(tool: &Tool) -> Value {
     Value::Object(wire)
 }
 
+/// Convert a single Property to a recursive JSON Schema definition.
+fn property_to_json_schema(prop: &Property) -> Value {
+    let mut schema = Map::new();
+    let json_type = match prop.kind_str() {
+        "string" => "string",
+        "integer" => "integer",
+        "float" | "number" => "number",
+        "boolean" => "boolean",
+        "array" => "array",
+        "object" => "object",
+        other => other,
+    };
+    schema.insert("type".into(), json!(json_type));
+
+    if let Some(ref desc) = prop.description {
+        schema.insert("description".into(), json!(desc));
+    }
+    if let Some(ref enum_vals) = prop.enum_values {
+        schema.insert("enum".into(), Value::Array(enum_vals.clone()));
+    }
+
+    match &prop.kind {
+        PropertyKind::Array { items } => {
+            if !items.is_null() {
+                let ctx = prompty::model::context::LoadContext::default();
+                let item_prop = Property::load_from_value(items, &ctx);
+                schema.insert("items".into(), property_to_json_schema(&item_prop));
+            } else {
+                schema.insert("items".into(), json!({"type": "string"}));
+            }
+        }
+        PropertyKind::Object { properties } => {
+            if let Some(arr) = properties.as_array() {
+                let ctx = prompty::model::context::LoadContext::default();
+                let mut nested = Map::new();
+                let mut req = Vec::new();
+                for val in arr {
+                    let p = Property::load_from_value(val, &ctx);
+                    if p.name.is_empty() {
+                        continue;
+                    }
+                    nested.insert(p.name.clone(), property_to_json_schema(&p));
+                    req.push(json!(p.name));
+                }
+                schema.insert("properties".into(), Value::Object(nested));
+                schema.insert("required".into(), Value::Array(req));
+            } else {
+                schema.insert("properties".into(), json!({}));
+                schema.insert("required".into(), json!([]));
+            }
+            schema.insert("additionalProperties".into(), Value::Bool(false));
+        }
+        _ => {}
+    }
+
+    Value::Object(schema)
+}
+
 /// Convert tool parameters (stored as serde_json::Value) to JSON Schema for `input_schema`.
 fn parameters_to_json_schema(params_value: &Value) -> Value {
-    use prompty::model::Property;
     use prompty::model::context::LoadContext;
 
     let ctx = LoadContext::default();
@@ -274,13 +331,7 @@ fn parameters_to_json_schema(params_value: &Value) -> Value {
     let mut required = Vec::new();
 
     for param in &params {
-        let mut prop = Map::new();
-        let kind_str = param.kind_str();
-        prop.insert("type".into(), json!(kind_str));
-        if let Some(ref desc) = param.description {
-            prop.insert("description".into(), json!(desc));
-        }
-        properties.insert(param.name.clone(), Value::Object(prop));
+        properties.insert(param.name.clone(), property_to_json_schema(param));
         if param.required.unwrap_or(false) {
             required.push(json!(param.name));
         }

@@ -3,7 +3,7 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{ModelOptions, Property, Prompty, Tool, ToolKind};
+use prompty::model::{ModelOptions, Property, PropertyKind, Prompty, Tool, ToolKind};
 use prompty::types::{ContentPart, Message};
 use serde_json::{json, Map, Value};
 
@@ -313,24 +313,61 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
     })
 }
 
+/// Convert a single Property to a recursive JSON Schema definition.
+fn property_to_json_schema(prop: &Property) -> Value {
+    let mut schema = Map::new();
+    schema.insert("type".to_string(), Value::String(kind_to_json_type(prop.kind_str())));
+
+    if let Some(ref desc) = prop.description {
+        schema.insert("description".to_string(), Value::String(desc.clone()));
+    }
+    if let Some(ref enum_vals) = prop.enum_values {
+        schema.insert("enum".to_string(), Value::Array(enum_vals.clone()));
+    }
+
+    match &prop.kind {
+        PropertyKind::Array { items } => {
+            if !items.is_null() {
+                let ctx = prompty::model::context::LoadContext::default();
+                let item_prop = Property::load_from_value(items, &ctx);
+                schema.insert("items".to_string(), property_to_json_schema(&item_prop));
+            } else {
+                schema.insert("items".to_string(), json!({"type": "string"}));
+            }
+        }
+        PropertyKind::Object { properties } => {
+            if let Some(arr) = properties.as_array() {
+                let ctx = prompty::model::context::LoadContext::default();
+                let mut nested = Map::new();
+                let mut req = Vec::new();
+                for val in arr {
+                    let p = Property::load_from_value(val, &ctx);
+                    if p.name.is_empty() {
+                        continue;
+                    }
+                    nested.insert(p.name.clone(), property_to_json_schema(&p));
+                    req.push(Value::String(p.name.clone()));
+                }
+                schema.insert("properties".to_string(), Value::Object(nested));
+                schema.insert("required".to_string(), Value::Array(req));
+            } else {
+                schema.insert("properties".to_string(), json!({}));
+                schema.insert("required".to_string(), json!([]));
+            }
+            schema.insert("additionalProperties".to_string(), Value::Bool(false));
+        }
+        _ => {}
+    }
+
+    Value::Object(schema)
+}
+
 fn parameters_to_json_schema(params: &[Property]) -> Value {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for param in params {
-        let mut prop_schema = Map::new();
-        prop_schema.insert(
-            "type".to_string(),
-            Value::String(kind_to_json_type(param.kind_str())),
-        );
-        if let Some(ref desc) = param.description {
-            prop_schema.insert("description".to_string(), Value::String(desc.clone()));
-        }
-        if let Some(ref enum_vals) = param.enum_values {
-            prop_schema.insert("enum".to_string(), Value::Array(enum_vals.clone()));
-        }
-
-        properties.insert(param.name.clone(), Value::Object(prop_schema));
+        properties.insert(param.name.clone(), property_to_json_schema(param));
 
         if param.required.unwrap_or(false) {
             required.push(Value::String(param.name.clone()));
@@ -372,16 +409,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     let mut required = Vec::new();
 
     for prop in &outputs {
-        let mut prop_schema = Map::new();
-        prop_schema.insert(
-            "type".to_string(),
-            Value::String(kind_to_json_type(prop.kind_str())),
-        );
-        if let Some(ref desc) = prop.description {
-            prop_schema.insert("description".to_string(), Value::String(desc.clone()));
-        }
-        properties.insert(prop.name.clone(), Value::Object(prop_schema));
-
+        properties.insert(prop.name.clone(), property_to_json_schema(prop));
         if prop.required.unwrap_or(false) {
             required.push(Value::String(prop.name.clone()));
         }
@@ -580,15 +608,7 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
     let mut required = Vec::new();
 
     for prop in &outputs {
-        let mut prop_schema = Map::new();
-        prop_schema.insert(
-            "type".to_string(),
-            Value::String(kind_to_json_type(prop.kind_str())),
-        );
-        if let Some(ref desc) = prop.description {
-            prop_schema.insert("description".to_string(), Value::String(desc.clone()));
-        }
-        properties.insert(prop.name.clone(), Value::Object(prop_schema));
+        properties.insert(prop.name.clone(), property_to_json_schema(prop));
         required.push(Value::String(prop.name.clone()));
     }
 
