@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>2.0.0-alpha.7</Version>
+    <Version>2.0.0-alpha.8</Version>
     <PackageId>Prompty.Core</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Prompty is an asset class and format for LLM prompts. Core library with loader, pipeline, renderers, parsers, and tracing.</Description>
