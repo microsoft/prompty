@@ -5,9 +5,14 @@ edition = "2024"
 rust-version = "1.85"
 description = "OpenAI provider for Prompty"
 license = "MIT"
+repository = "https://github.com/microsoft/prompty"
+documentation = "https://docs.rs/prompty-openai"
+readme = "README.md"
+keywords = ["llm", "prompt", "openai", "ai"]
+categories = ["development-tools"]
 
 [dependencies]
-prompty = { path = "../prompty" }
+prompty = { version = "0.1.0", path = "../prompty" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1"
@@ -18,3 +23,4 @@ bytes = "1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+serial_test = "3"

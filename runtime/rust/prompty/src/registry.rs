@@ -295,6 +295,7 @@ pub fn invoke_pre_render(key: &str, template: &str) -> Result<Option<(String, se
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     struct DummyRenderer;
     #[async_trait::async_trait]
@@ -350,6 +351,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_get_renderer() {
         clear_cache();
         register_renderer("test", DummyRenderer);
@@ -358,6 +360,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_get_parser() {
         clear_cache();
         register_parser("test", DummyParser);
@@ -366,6 +369,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_get_executor() {
         clear_cache();
         register_executor("test", DummyExecutor);
@@ -374,6 +378,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_get_processor() {
         clear_cache();
         register_processor("test", DummyProcessor);
@@ -382,6 +387,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_clear_cache() {
         register_renderer("clear_test", DummyRenderer);
         assert!(has_renderer("clear_test"));
@@ -390,6 +396,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_renderer() {
         clear_cache();
         register_renderer("inv_test", DummyRenderer);
@@ -399,6 +406,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_missing_renderer_error() {
         clear_cache();
         let agent = crate::model::Prompty::default();
@@ -409,6 +417,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_parser() {
         clear_cache();
         register_parser("test_parser", DummyParser);
@@ -419,6 +428,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_parser_missing() {
         clear_cache();
         let agent = crate::model::Prompty::default();
@@ -428,6 +438,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_executor() {
         clear_cache();
         register_executor("test_exec", DummyExecutor);
@@ -437,6 +448,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_executor_missing() {
         clear_cache();
         let agent = crate::model::Prompty::default();
@@ -446,6 +458,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_processor() {
         clear_cache();
         register_processor("test_proc", DummyProcessor);
@@ -455,6 +468,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_processor_missing() {
         clear_cache();
         let agent = crate::model::Prompty::default();
@@ -464,6 +478,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_invoke_format_tool_messages_default() {
         clear_cache();
         register_executor("test_ftm", DummyExecutor);
@@ -485,6 +500,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_invoke_format_tool_messages_missing_executor() {
         clear_cache();
         let err = invoke_format_tool_messages("nope", &serde_json::json!({}), &[], &[], None).unwrap_err();
@@ -492,6 +508,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_invoke_pre_render() {
         clear_cache();
         register_parser("test_pre", DummyParser);
@@ -501,6 +518,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_invoke_pre_render_missing_parser() {
         clear_cache();
         let err = invoke_pre_render("nope", "template").unwrap_err();

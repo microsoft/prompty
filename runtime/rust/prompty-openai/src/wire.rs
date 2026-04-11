@@ -331,30 +331,29 @@ fn property_to_json_schema(prop: &Property) -> Value {
                 let ctx = prompty::model::context::LoadContext::default();
                 let item_prop = Property::load_from_value(items, &ctx);
                 schema.insert("items".to_string(), property_to_json_schema(&item_prop));
-            } else {
-                schema.insert("items".to_string(), json!({"type": "string"}));
             }
+            // When items is null/unspecified, emit bare {"type": "array"}
         }
         PropertyKind::Object { properties } => {
             if let Some(arr) = properties.as_array() {
-                let ctx = prompty::model::context::LoadContext::default();
-                let mut nested = Map::new();
-                let mut req = Vec::new();
-                for val in arr {
-                    let p = Property::load_from_value(val, &ctx);
-                    if p.name.is_empty() {
-                        continue;
+                if !arr.is_empty() {
+                    let ctx = prompty::model::context::LoadContext::default();
+                    let mut nested = Map::new();
+                    let mut req = Vec::new();
+                    for val in arr {
+                        let p = Property::load_from_value(val, &ctx);
+                        if p.name.is_empty() {
+                            continue;
+                        }
+                        nested.insert(p.name.clone(), property_to_json_schema(&p));
+                        req.push(Value::String(p.name.clone()));
                     }
-                    nested.insert(p.name.clone(), property_to_json_schema(&p));
-                    req.push(Value::String(p.name.clone()));
+                    schema.insert("properties".to_string(), Value::Object(nested));
+                    schema.insert("required".to_string(), Value::Array(req));
+                    schema.insert("additionalProperties".to_string(), Value::Bool(false));
                 }
-                schema.insert("properties".to_string(), Value::Object(nested));
-                schema.insert("required".to_string(), Value::Array(req));
-            } else {
-                schema.insert("properties".to_string(), json!({}));
-                schema.insert("required".to_string(), json!([]));
             }
-            schema.insert("additionalProperties".to_string(), Value::Bool(false));
+            // When properties is empty or absent, emit bare {"type": "object"}
         }
         _ => {}
     }

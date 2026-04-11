@@ -5,10 +5,15 @@ edition = "2024"
 rust-version = "1.85"
 description = "Azure OpenAI / Foundry provider for Prompty"
 license = "MIT"
+repository = "https://github.com/microsoft/prompty"
+documentation = "https://docs.rs/prompty-foundry"
+readme = "README.md"
+keywords = ["llm", "prompt", "azure", "openai", "foundry"]
+categories = ["development-tools"]
 
 [dependencies]
-prompty = { path = "../prompty" }
-prompty-openai = { path = "../prompty-openai" }
+prompty = { version = "0.1.0", path = "../prompty" }
+prompty-openai = { version = "0.1.0", path = "../prompty-openai" }
 async-trait = "0.1"
 azure_identity = { version = "0.23", optional = true }
 azure_core = { version = "0.23", optional = true }
@@ -25,3 +30,4 @@ entra_id = ["azure_identity", "azure_core"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }
+serial_test = "3"

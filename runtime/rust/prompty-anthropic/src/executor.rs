@@ -359,6 +359,7 @@ mod tests {
     use super::*;
     use prompty::model::Prompty;
     use prompty::model::context::LoadContext;
+    use serial_test::serial;
     use serde_json::json;
 
     fn make_agent(model_json: Value) -> Prompty {
@@ -462,6 +463,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_success() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(
@@ -487,6 +489,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_reference_connection_flows_to_api_key() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(
@@ -510,6 +513,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_reference_connection_flows_to_build_url() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(

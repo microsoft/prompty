@@ -455,6 +455,7 @@ impl Stream for FoundrySseParser {
 mod tests {
     use super::*;
     use prompty::model::context::LoadContext;
+    use serial_test::serial;
     use serde_json::json;
 
     fn make_agent(model_json: Value) -> Prompty {
@@ -628,6 +629,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_success() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(
@@ -652,6 +654,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_reference_connection_flows_to_auth_header() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(
@@ -678,6 +681,7 @@ mod tests {
     // --- Entra ID stub test ---
 
     #[tokio::test]
+    #[serial]
     async fn test_auth_header_foundry_no_key_no_entra() {
         prompty::connections::clear_connections();
         // Remove env var to ensure no fallback
