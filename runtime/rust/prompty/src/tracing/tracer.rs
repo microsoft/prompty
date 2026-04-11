@@ -274,6 +274,7 @@ pub fn sanitize_value(key: &str, value: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use serde_json::json;
     use std::sync::{Arc, Mutex};
 
@@ -309,6 +310,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_trace_success() {
         let events = setup_memory_tracer();
         let result: Result<String, _> = trace("test_span", &json!({"x": 1}), || {
@@ -326,6 +328,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_trace_error() {
         let events = setup_memory_tracer();
         let result: Result<String, _> = trace("err_span", &json!(null), || {
@@ -343,6 +346,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_trace_span_manual() {
         let events = setup_memory_tracer();
         let result: Result<i32, _> = trace_span("manual", |span| {
@@ -363,6 +367,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_tracer_add_remove() {
         Tracer::clear();
         let events = Arc::new(Mutex::new(Vec::new()));
@@ -385,6 +390,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_api_key() {
         let input = json!({"api_key": "sk-123", "name": "test"});
         let sanitized = sanitize_value("root", &input);
@@ -393,6 +399,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_password() {
         let input = json!({"password": "hunter2", "data": "visible"});
         let sanitized = sanitize_value("root", &input);
@@ -401,6 +408,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_nested() {
         let input = json!({"config": {"secret": "shh", "host": "localhost"}});
         let sanitized = sanitize_value("root", &input);
@@ -409,6 +417,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_bearer_token() {
         let input = json!({"bearer": "abc", "token": "xyz", "tokens": "visible"});
         let sanitized = sanitize_value("root", &input);
@@ -419,6 +428,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_preserves_authors() {
         // "auth" pattern should not match "authors"
         let input = json!({"authors": ["Alice", "Bob"]});
@@ -427,6 +437,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_sanitize_top_level_key() {
         // If the top-level key itself is sensitive, the whole value is redacted.
         let val = json!({"nested": "data"});
