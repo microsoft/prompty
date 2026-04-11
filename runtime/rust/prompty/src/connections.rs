@@ -109,6 +109,7 @@ pub fn clear_connections() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[derive(Debug)]
     struct FakeClient {
@@ -116,6 +117,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_check() {
         clear_connections();
         assert!(!has_connection("test"));
@@ -129,6 +131,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_with_connection_success() {
         clear_connections();
         register_connection(
@@ -142,6 +145,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_with_connection_missing() {
         clear_connections();
         let result = with_connection::<FakeClient, _>("missing", |_| ());
@@ -150,6 +154,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_with_connection_wrong_type() {
         clear_connections();
         register_connection("typed", 42_u32);
@@ -159,6 +164,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_clear_connections() {
         register_connection("temp", 100_u32);
         assert!(has_connection("temp"));
@@ -167,6 +173,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_overwrite_connection() {
         clear_connections();
         register_connection(

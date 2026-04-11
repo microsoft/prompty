@@ -392,6 +392,7 @@ mod tests {
     use super::*;
     use prompty::model::Prompty;
     use prompty::model::context::LoadContext;
+    use serial_test::serial;
     use serde_json::json;
 
     fn make_agent(model_json: Value) -> Prompty {
@@ -405,6 +406,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_url_default() {
         let agent = make_agent(json!({"id": "gpt-4"}));
         let url = build_url(&agent, "/v1/chat/completions").unwrap();
@@ -412,6 +414,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_url_custom_endpoint() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -426,6 +429,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_api_key_from_connection() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -440,6 +444,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_args_chat() {
         let agent = make_agent(json!({"id": "gpt-4", "apiType": "chat"}));
         let messages = vec![Message::text(prompty::Role::User, "Hello")];
@@ -449,6 +454,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_args_embedding() {
         let agent = make_agent(json!({"id": "text-embedding-3-small", "apiType": "embedding"}));
         let messages = vec![Message::text(prompty::Role::User, "Hello world")];
@@ -458,6 +464,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_sse_parser_basic() {
         use futures::StreamExt;
 
@@ -478,6 +485,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_sse_parser_multi_chunk() {
         use futures::StreamExt;
 
@@ -498,6 +506,7 @@ mod tests {
     // --- Reference connection resolution tests ---
 
     #[test]
+    #[serial]
     fn test_resolve_connection_passthrough_key() {
         // Non-reference connections should pass through unchanged
         let agent = make_agent(json!({
@@ -514,6 +523,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_missing_name() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -528,6 +538,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_not_registered() {
         prompty::connections::clear_connections();
         let agent = make_agent(json!({
@@ -543,6 +554,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_success() {
         prompty::connections::clear_connections();
         // Register a connection as a JSON Value
@@ -572,6 +584,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_reference_connection_flows_to_build_url() {
         prompty::connections::clear_connections();
         prompty::connections::register_connection(

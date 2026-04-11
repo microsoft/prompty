@@ -244,6 +244,7 @@ impl TracerFactory for PromptyTracer {
 mod tests {
     use super::*;
     use crate::tracing::tracer::Tracer;
+    use serial_test::serial;
     use serde_json::json;
     use std::fs;
 
@@ -274,9 +275,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_tracy_file_written() {
         Tracer::clear();
-        let dir = std::env::temp_dir().join("prompty_test_tracy");
+        let dir = std::env::temp_dir().join(format!("prompty_test_tracy_{:?}", std::thread::current().id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
 

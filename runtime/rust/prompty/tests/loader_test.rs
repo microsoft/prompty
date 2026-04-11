@@ -3,6 +3,7 @@
 //! These tests exercise the full load pipeline: frontmatter splitting, reference
 //! resolution, model shorthand expansion, and typed construction.
 
+use serial_test::serial;
 use std::path::PathBuf;
 
 /// Path to the spec fixtures directory.
@@ -64,6 +65,7 @@ fn load_from_frontmatter(
 // ===== Spec vector tests =====
 
 #[test]
+#[serial]
 fn test_basic_load() {
     let agent = load_fixture(
         "basic.prompty",
@@ -112,6 +114,7 @@ fn test_basic_load() {
 }
 
 #[test]
+#[serial]
 fn test_minimal_load() {
     let agent = load_fixture("minimal.prompty", &[]).unwrap();
 
@@ -124,6 +127,7 @@ fn test_minimal_load() {
 }
 
 #[test]
+#[serial]
 fn test_model_shorthand() {
     let fm = serde_json::json!({
         "name": "test",
@@ -134,6 +138,7 @@ fn test_model_shorthand() {
 }
 
 #[test]
+#[serial]
 fn test_env_resolution() {
     let fm = serde_json::json!({
         "name": "env-test",
@@ -151,6 +156,7 @@ fn test_env_resolution() {
 }
 
 #[test]
+#[serial]
 fn test_env_default() {
     let fm = serde_json::json!({
         "name": "env-default-test",
@@ -168,6 +174,7 @@ fn test_env_default() {
 }
 
 #[test]
+#[serial]
 fn test_env_missing_error() {
     let fm = serde_json::json!({
         "name": "env-error-test",
@@ -186,6 +193,7 @@ fn test_env_missing_error() {
 }
 
 #[test]
+#[serial]
 fn test_kind_always_prompt() {
     let agent = load_fixture("minimal.prompty", &[]).unwrap();
     // The kind is injected but not stored as a field on Prompty — it's
@@ -195,12 +203,14 @@ fn test_kind_always_prompt() {
 }
 
 #[test]
+#[serial]
 fn test_missing_file_error() {
     let result = prompty::load(fixtures_dir().join("nonexistent.prompty"));
     assert!(result.is_err());
 }
 
 #[test]
+#[serial]
 fn test_invalid_frontmatter_error() {
     let raw = "---\nname: [invalid\n---\nHello";
     let result = prompty::load_from_string(raw, std::env::current_dir().unwrap());
@@ -214,6 +224,7 @@ fn test_invalid_frontmatter_error() {
 }
 
 #[test]
+#[serial]
 fn test_instructions_from_body() {
     let agent = load_fixture(
         "basic.prompty",
@@ -229,6 +240,7 @@ fn test_instructions_from_body() {
 }
 
 #[test]
+#[serial]
 fn test_tools_function_load() {
     let agent = load_fixture("tools_function.prompty", &[]).unwrap();
 
@@ -242,6 +254,7 @@ fn test_tools_function_load() {
 }
 
 #[test]
+#[serial]
 fn test_embedding_load() {
     let agent = load_fixture(
         "embedding.prompty",
@@ -258,6 +271,7 @@ fn test_embedding_load() {
 }
 
 #[test]
+#[serial]
 fn test_empty_frontmatter_body_only() {
     let fm = serde_json::json!({
         "name": "empty-fm"
@@ -269,6 +283,7 @@ fn test_empty_frontmatter_body_only() {
 }
 
 #[test]
+#[serial]
 fn test_connection_types_load() {
     let fm = serde_json::json!({
         "name": "connection-test",
@@ -287,6 +302,7 @@ fn test_connection_types_load() {
 }
 
 #[test]
+#[serial]
 fn test_input_scalar_shorthand() {
     let fm = serde_json::json!({
         "name": "scalar-test",
@@ -306,6 +322,7 @@ fn test_input_scalar_shorthand() {
 }
 
 #[test]
+#[serial]
 fn test_tools_mcp_load() {
     let fm = serde_json::json!({
         "name": "mcp-test",
@@ -327,6 +344,7 @@ fn test_tools_mcp_load() {
 }
 
 #[test]
+#[serial]
 fn test_tools_openapi_load() {
     let fm = serde_json::json!({
         "name": "openapi-test",
@@ -348,6 +366,7 @@ fn test_tools_openapi_load() {
 }
 
 #[test]
+#[serial]
 fn test_tools_custom_load() {
     let fm = serde_json::json!({
         "name": "custom-tool-test",
@@ -368,6 +387,7 @@ fn test_tools_custom_load() {
 }
 
 #[test]
+#[serial]
 fn test_metadata_preserved() {
     let agent = load_fixture(
         "basic.prompty",
@@ -387,6 +407,7 @@ fn test_metadata_preserved() {
 }
 
 #[test]
+#[serial]
 fn test_threaded_load() {
     let agent = load_fixture("threaded.prompty", &[]).unwrap();
     assert_eq!(agent.name, "threaded-chat");

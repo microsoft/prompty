@@ -538,6 +538,7 @@ pub fn register_builtin_handlers() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use crate::pipeline::ToolHandler as PipelineToolHandler;
 
     fn make_tool_call(name: &str, args: &str) -> ToolCall {
@@ -559,6 +560,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_user_tools_first() {
         clear_tools();
         clear_tool_handlers();
@@ -574,6 +576,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_name_registry_second() {
         clear_tools();
         clear_tool_handlers();
@@ -588,6 +591,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_missing_tool() {
         clear_tools();
         clear_tool_handlers();
@@ -599,6 +603,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_invalid_json_args() {
         clear_tools();
         let user_tools = HashMap::new();
@@ -609,6 +614,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_user_tool_error() {
         clear_tools();
         let mut user_tools = HashMap::new();
@@ -626,6 +632,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_check_tool() {
         clear_tools();
         assert!(!has_tool("my_tool"));
@@ -634,6 +641,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_and_check_handler() {
         clear_tool_handlers();
         assert!(!has_tool_handler("custom_kind"));
@@ -642,6 +650,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_clear_tools() {
         register_tool("temp", |_| async { Ok("ok".into()) });
         assert!(has_tool("temp"));
@@ -650,6 +659,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_clear_tool_handlers() {
         register_tool_handler("temp_kind", FunctionToolHandler);
         assert!(has_tool_handler("temp_kind"));
@@ -658,6 +668,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_register_builtin_handlers() {
         clear_tool_handlers();
         register_builtin_handlers();
@@ -671,6 +682,7 @@ mod tests {
     // --- resolve_bindings tests ---
 
     #[test]
+    #[serial]
     fn test_resolve_bindings_injects_values() {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "get_weather",
@@ -689,6 +701,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_bindings_no_bindings_passthrough() {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "get_weather",
@@ -703,6 +716,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_bindings_missing_input_skipped() {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "get_weather",
@@ -720,6 +734,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_bindings_multiple() {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "get_weather",
@@ -742,6 +757,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_bindings_no_tool_def() {
         let agent = default_agent();
         let args = serde_json::json!({ "city": "Paris" });
@@ -754,6 +770,7 @@ mod tests {
     // --- Kind handler tests ---
 
     #[tokio::test]
+    #[serial]
     async fn test_mcp_handler_not_implemented() {
         let handler = McpToolHandler;
         let result = handler
@@ -769,6 +786,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_openapi_handler_not_implemented() {
         let handler = OpenApiToolHandler;
         let result = handler
@@ -784,6 +802,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_custom_handler_not_implemented() {
         let handler = CustomToolHandler;
         let result = handler
@@ -799,6 +818,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_bindings_integrated() {
         clear_tools();
         clear_tool_handlers();
@@ -828,6 +848,7 @@ mod tests {
     // --- PromptyToolHandler tests ---
 
     #[tokio::test]
+    #[serial]
     async fn test_prompty_handler_missing_source_path() {
         let handler = PromptyToolHandler;
         // Agent without __source_path metadata
@@ -839,6 +860,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_prompty_handler_missing_path_field() {
         let handler = PromptyToolHandler;
         let mut agent = default_agent();
@@ -851,6 +873,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_prompty_handler_circular_reference_detection() {
         let handler = PromptyToolHandler;
         let mut agent = default_agent();
@@ -876,6 +899,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_prompty_handler_nonexistent_child() {
         let handler = PromptyToolHandler;
         let mut agent = default_agent();
@@ -900,6 +924,7 @@ mod tests {
     // --- Kind handler dispatch via dispatch_tool (layer 3) ---
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_layer3_kind_handler() {
         clear_tools();
         clear_tool_handlers();
@@ -920,6 +945,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_dispatch_layer3_wildcard_handler() {
         clear_tools();
         clear_tool_handlers();

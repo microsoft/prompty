@@ -1251,6 +1251,7 @@ mod tests {
     use super::*;
     use crate::model::Prompty;
     use crate::model::context::LoadContext;
+    use serial_test::serial;
 
     fn make_agent_with_inputs() -> Prompty {
         let data = serde_json::json!({
@@ -1293,6 +1294,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_prepare_renders_and_parses() {
         ensure_defaults();
         let agent = make_agent_with_inputs();
@@ -1306,6 +1308,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_prepare_with_defaults() {
         ensure_defaults();
         let agent = make_agent_with_inputs();
@@ -1691,6 +1694,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_without_tools_invokes_directly() {
         ensure_defaults();
         let key = "turn_test_no_tools";
@@ -1706,6 +1710,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_with_tools_single_iteration() {
         ensure_defaults();
         let key = "turn_test_single";
@@ -1730,6 +1735,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_with_multiple_tools() {
         ensure_defaults();
         let key = "turn_test_multi";
@@ -1760,6 +1766,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_max_iterations() {
         ensure_defaults();
         let key = "turn_test_max_iter";
@@ -1794,6 +1801,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_cancellation_before_start() {
         ensure_defaults();
         let key = "turn_test_cancel_before";
@@ -1818,6 +1826,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_cancellation_mid_loop() {
         ensure_defaults();
         let key = "turn_test_cancel_mid";
@@ -1859,6 +1868,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_events_sequence() {
         ensure_defaults();
         let key = "turn_test_events";
@@ -1896,6 +1906,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_tool_error_propagates() {
         ensure_defaults();
         let key = "turn_test_tool_err";
@@ -1919,6 +1930,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_turn_missing_tool_handler_error() {
         ensure_defaults();
         let key = "turn_test_missing_tool";
@@ -1961,6 +1973,7 @@ mod tests {
     // -----------------------------------------------------------------------
 
     #[tokio::test]
+    #[serial]
     async fn test_run_with_mock_executor() {
         ensure_defaults();
         let key = "run_test";
@@ -1976,6 +1989,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_invoke_with_mock_executor() {
         ensure_defaults();
         let key = "invoke_test";
