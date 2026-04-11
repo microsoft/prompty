@@ -58,7 +58,7 @@ fn part_to_wire(part: &ContentPart) -> Value {
                 .media_type
                 .as_deref()
                 .map(mime_to_audio_format)
-                .unwrap_or("wav");
+                .unwrap_or_else(|| "wav".to_string());
             json!({
                 "type": "input_audio",
                 "input_audio": {
@@ -74,16 +74,17 @@ fn part_to_wire(part: &ContentPart) -> Value {
     }
 }
 
-fn mime_to_audio_format(mime: &str) -> &str {
+fn mime_to_audio_format(mime: &str) -> String {
     match mime {
-        "audio/wav" | "audio/x-wav" => "wav",
-        "audio/mpeg" | "audio/mp3" => "mp3",
-        "audio/mp4" => "mp4",
-        "audio/ogg" => "ogg",
-        "audio/flac" => "flac",
-        "audio/webm" => "webm",
-        "audio/pcm" => "pcm",
-        _ => "wav",
+        "audio/wav" | "audio/x-wav" => "wav".to_string(),
+        "audio/mpeg" | "audio/mp3" => "mp3".to_string(),
+        "audio/mp4" => "mp4".to_string(),
+        "audio/ogg" => "ogg".to_string(),
+        "audio/flac" => "flac".to_string(),
+        "audio/webm" => "webm".to_string(),
+        "audio/pcm" => "pcm".to_string(),
+        // Per spec §7.1.2: strip "audio/" prefix for unmapped types
+        other => other.strip_prefix("audio/").unwrap_or("wav").to_string(),
     }
 }
 
@@ -766,6 +767,11 @@ mod tests {
         assert_eq!(mime_to_audio_format("audio/flac"), "flac");
         assert_eq!(mime_to_audio_format("audio/webm"), "webm");
         assert_eq!(mime_to_audio_format("audio/pcm"), "pcm");
+        // Per spec §7.1.2: unmapped audio/* types strip the prefix
+        assert_eq!(mime_to_audio_format("audio/aac"), "aac");
+        assert_eq!(mime_to_audio_format("audio/opus"), "opus");
+        // Non-audio MIME falls back to "wav"
+        assert_eq!(mime_to_audio_format("text/plain"), "wav");
     }
 
     #[test]

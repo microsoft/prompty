@@ -668,7 +668,11 @@ impl TurnOptions {
 
     fn emit(&self, event: AgentEvent) {
         if let Some(ref cb) = self.on_event {
-            cb(event);
+            // Per spec §13.1: event callbacks MUST NOT block the loop.
+            // If a callback panics, log and continue.
+            if let Err(e) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cb(event))) {
+                eprintln!("[prompty] Event callback panicked: {e:?}");
+            }
         }
     }
 
@@ -755,9 +759,20 @@ pub async fn turn(
                     let mut text_parts = Vec::new();
                     futures::pin_mut!(chunk_stream);
                     while let Some(chunk) = chunk_stream.next().await {
-                        if let StreamChunk::Text(t) = chunk {
-                            opts.emit(AgentEvent::Token(t.clone()));
-                            text_parts.push(t);
+                        match chunk {
+                            StreamChunk::Text(t) => {
+                                opts.emit(AgentEvent::Token(t.clone()));
+                                text_parts.push(t);
+                            }
+                            StreamChunk::Thinking(t) => {
+                                opts.emit(AgentEvent::Thinking(t));
+                            }
+                            StreamChunk::Error(e) => {
+                                span.emit("error", &json!(e));
+                                span.end();
+                                return Err(InvokerError::Execute(e.into()));
+                            }
+                            _ => {}
                         }
                     }
                     json!(text_parts.join(""))
@@ -842,11 +857,18 @@ pub async fn turn(
         iter_span.emit("iteration", &json!(iteration));
 
         // Drain steering messages
-        if let Some(ref mut steering) = opts.steering {
+        if let Some(ref steering) = opts.steering {
             let steering_msgs = steering.drain();
             if !steering_msgs.is_empty() {
-                iter_span.emit("steering_messages", &json!(steering_msgs.len()));
+                let count = steering_msgs.len();
+                iter_span.emit("steering_messages", &json!(count));
                 messages.extend(steering_msgs);
+                opts.emit(AgentEvent::Status(format!(
+                    "Injected {count} steering message(s)"
+                )));
+                opts.emit(AgentEvent::MessagesUpdated {
+                    messages: messages.clone(),
+                });
             }
         }
 
@@ -855,8 +877,13 @@ pub async fn turn(
             let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
             if dropped > 0 {
                 iter_span.emit("context_trimmed", &json!(dropped));
+                messages = trimmed;
+                opts.emit(AgentEvent::MessagesUpdated {
+                    messages: messages.clone(),
+                });
+            } else {
+                messages = trimmed;
             }
-            messages = trimmed;
         }
 
         // Input guardrail
@@ -887,6 +914,7 @@ pub async fn turn(
                         use futures::StreamExt;
                         let mut tool_calls_vec = Vec::new();
                         let mut text_parts = Vec::new();
+                        let mut stream_error = None;
                         futures::pin_mut!(chunk_stream);
                         while let Some(chunk) = chunk_stream.next().await {
                             match chunk {
@@ -894,10 +922,23 @@ pub async fn turn(
                                     opts.emit(AgentEvent::Token(t.clone()));
                                     text_parts.push(t);
                                 }
+                                StreamChunk::Thinking(t) => {
+                                    opts.emit(AgentEvent::Thinking(t));
+                                }
                                 StreamChunk::Tool(tc) => {
                                     tool_calls_vec.push(tc);
                                 }
+                                StreamChunk::Error(e) => {
+                                    stream_error = Some(e);
+                                    break;
+                                }
                             }
+                        }
+                        if let Some(err) = stream_error {
+                            iter_span.end();
+                            span.emit("error", &json!(err));
+                            span.end();
+                            return Err(InvokerError::Execute(err.into()));
                         }
                         (tool_calls_vec, text_parts.join(""))
                     };

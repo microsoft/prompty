@@ -427,8 +427,12 @@ impl Drop for PromptyStream {
 pub enum StreamChunk {
     /// A text content token.
     Text(String),
+    /// A thinking/reasoning token from the LLM.
+    Thinking(String),
     /// A completed tool call (yielded at end of stream).
     Tool(ToolCall),
+    /// A stream error (e.g., model refusal). Consumers MUST stop iteration.
+    Error(String),
 }
 
 // ---------------------------------------------------------------------------
@@ -457,8 +461,15 @@ pub async fn consume_stream_chunks(
                 }
                 text_parts.push(t);
             }
+            StreamChunk::Thinking(_) => {
+                // Thinking tokens are informational; not collected into output
+            }
             StreamChunk::Tool(tc) => {
                 tool_calls.push(tc);
+            }
+            StreamChunk::Error(_) => {
+                // Error chunks signal stream termination; stop consuming
+                break;
             }
         }
     }
