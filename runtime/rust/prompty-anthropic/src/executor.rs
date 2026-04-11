@@ -21,11 +21,7 @@ pub struct AnthropicExecutor;
 
 #[async_trait]
 impl Executor for AnthropicExecutor {
-    async fn execute(
-        &self,
-        agent: &Prompty,
-        messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
@@ -127,10 +123,7 @@ impl Executor for AnthropicExecutor {
 
 impl AnthropicExecutor {
     /// Build the request args without sending — useful for testing wire format.
-    pub fn build_args(
-        agent: &Prompty,
-        messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
@@ -147,22 +140,24 @@ impl AnthropicExecutor {
 
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
-fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
+fn resolve_connection(
+    agent: &Prompty,
+) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let conn = &agent.model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
-        let name = conn
-            .get("name")
-            .and_then(|n| n.as_str())
-            .ok_or_else(|| {
-                InvokerError::Execute(
-                    "Reference connection missing 'name' field".to_string().into(),
-                )
-            })?;
+        let name = conn.get("name").and_then(|n| n.as_str()).ok_or_else(|| {
+            InvokerError::Execute(
+                "Reference connection missing 'name' field"
+                    .to_string()
+                    .into(),
+            )
+        })?;
 
-        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
-            .map_err(|e| InvokerError::Execute(e.into()))?;
+        let resolved =
+            prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+                .map_err(|e| InvokerError::Execute(e.into()))?;
 
         Ok(std::borrow::Cow::Owned(resolved))
     } else {
@@ -257,9 +252,15 @@ impl AnthropicSseParser {
             let mut data_lines = Vec::new();
 
             for line in event_block.lines() {
-                if let Some(ev) = line.strip_prefix("event: ").or_else(|| line.strip_prefix("event:")) {
+                if let Some(ev) = line
+                    .strip_prefix("event: ")
+                    .or_else(|| line.strip_prefix("event:"))
+                {
                     event_type = ev.trim().to_string();
-                } else if let Some(d) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                } else if let Some(d) = line
+                    .strip_prefix("data: ")
+                    .or_else(|| line.strip_prefix("data:"))
+                {
                     data_lines.push(d.trim().to_string());
                 }
             }
@@ -359,8 +360,8 @@ mod tests {
     use super::*;
     use prompty::model::Prompty;
     use prompty::model::context::LoadContext;
-    use serial_test::serial;
     use serde_json::json;
+    use serial_test::serial;
 
     fn make_agent(model_json: Value) -> Prompty {
         let mut data = json!({
@@ -490,7 +491,10 @@ mod tests {
 
         let conn = resolve_connection(&agent).unwrap();
         assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-resolved");
-        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://custom.anthropic.com");
+        assert_eq!(
+            conn.get("endpoint").unwrap().as_str().unwrap(),
+            "https://custom.anthropic.com"
+        );
 
         prompty::connections::clear_connections();
     }

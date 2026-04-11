@@ -12,12 +12,12 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use prompty::interfaces::{Executor, InvokerError, Processor};
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use prompty::pipeline::{turn, TurnOptions, ToolHandler, AgentEvent, EventCallback};
+use prompty::model::context::LoadContext;
+use prompty::pipeline::{AgentEvent, EventCallback, ToolHandler, TurnOptions, turn};
 use prompty::types::{Message, Role};
 
 // ---------------------------------------------------------------------------
@@ -26,9 +26,12 @@ use prompty::types::{Message, Role};
 
 fn vectors_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent().unwrap()  // runtime/rust/
-        .parent().unwrap()  // runtime/
-        .parent().unwrap()  // repo root
+        .parent()
+        .unwrap() // runtime/rust/
+        .parent()
+        .unwrap() // runtime/
+        .parent()
+        .unwrap() // repo root
         .join("spec")
         .join("vectors")
         .join("agent")
@@ -36,8 +39,8 @@ fn vectors_path() -> PathBuf {
 }
 
 fn load_vectors() -> Vec<Value> {
-    let content = std::fs::read_to_string(vectors_path())
-        .expect("failed to read agent_vectors.json");
+    let content =
+        std::fs::read_to_string(vectors_path()).expect("failed to read agent_vectors.json");
     serde_json::from_str(&content).expect("failed to parse agent_vectors.json")
 }
 
@@ -93,11 +96,7 @@ struct MockProcessor;
 
 #[async_trait]
 impl Processor for MockProcessor {
-    async fn process(
-        &self,
-        _agent: &Prompty,
-        response: Value,
-    ) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         // Navigate OpenAI-style response: choices[0].message
         let message = &response["choices"][0]["message"];
 
@@ -197,16 +196,15 @@ fn build_tool_handlers(vector: &Value) -> HashMap<String, ToolHandler> {
                     // Find the tool name from expected_tool_calls
                     let tool_name = expected_calls
                         .and_then(|calls| {
-                            calls.iter().find(|c| c["id"].as_str() == Some(tool_call_id))
+                            calls
+                                .iter()
+                                .find(|c| c["id"].as_str() == Some(tool_call_id))
                         })
                         .and_then(|c| c["name"].as_str())
                         .unwrap_or("unknown")
                         .to_string();
 
-                    result_queues
-                        .entry(tool_name)
-                        .or_default()
-                        .push(result);
+                    result_queues.entry(tool_name).or_default().push(result);
                 }
             }
         }
@@ -581,9 +579,7 @@ async fn test_events_basic_tool_loop() {
     let (result, events) = run_vector_with_events("events_basic_tool_loop", None, None).await;
     assert!(result.is_ok(), "expected Ok, got: {result:?}");
     let vector = find_vector("events_basic_tool_loop");
-    let expected_result = vector["expected"]["result"]
-        .as_str()
-        .unwrap();
+    let expected_result = vector["expected"]["result"].as_str().unwrap();
     assert_eq!(result.unwrap().as_str().unwrap(), expected_result);
 
     // Verify event sequence contains the expected types
@@ -632,8 +628,7 @@ async fn test_events_error_logged() {
         })),
     );
 
-    let (result, events) =
-        run_vector_with_events("events_error_logged", Some(tools), None).await;
+    let (result, events) = run_vector_with_events("events_error_logged", Some(tools), None).await;
 
     // The Rust runtime propagates tool errors — this differs from the spec
     // which expects error strings to be fed back to the LLM. We accept
@@ -879,65 +874,98 @@ fn build_extension_opts(
     let input = &vector["input"];
 
     // Context budget
-    let context_budget = input.get("context_budget").and_then(|v| v.as_u64()).map(|v| v as usize);
+    let context_budget = input
+        .get("context_budget")
+        .and_then(|v| v.as_u64())
+        .map(|v| v as usize);
 
     // Parallel tool calls
-    let parallel_tool_calls = input.get("parallel_tool_calls").and_then(|v| v.as_bool()).unwrap_or(false);
+    let parallel_tool_calls = input
+        .get("parallel_tool_calls")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
 
     // Guardrails
     let guardrails = input.get("guardrails").map(|g| {
-        let input_guardrail: Option<prompty::guardrails::InputGuardrail> = g.get("input").map(|ig| {
-            let action = ig.get("action").and_then(|a| a.as_str()).unwrap_or("allow").to_string();
-            let reason = ig.get("reason").and_then(|r| r.as_str()).unwrap_or("").to_string();
-            let f: prompty::guardrails::InputGuardrail = Box::new(move |_msgs, _agent| {
-                let action = action.clone();
-                let reason = reason.clone();
-                Box::pin(async move {
-                    if action == "deny" {
-                        prompty::guardrails::GuardrailResult::deny(reason)
-                    } else {
-                        prompty::guardrails::GuardrailResult::allow()
-                    }
-                })
+        let input_guardrail: Option<prompty::guardrails::InputGuardrail> =
+            g.get("input").map(|ig| {
+                let action = ig
+                    .get("action")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("allow")
+                    .to_string();
+                let reason = ig
+                    .get("reason")
+                    .and_then(|r| r.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let f: prompty::guardrails::InputGuardrail = Box::new(move |_msgs, _agent| {
+                    let action = action.clone();
+                    let reason = reason.clone();
+                    Box::pin(async move {
+                        if action == "deny" {
+                            prompty::guardrails::GuardrailResult::deny(reason)
+                        } else {
+                            prompty::guardrails::GuardrailResult::allow()
+                        }
+                    })
+                });
+                f
             });
-            f
-        });
 
-        let output_guardrail: Option<prompty::guardrails::OutputGuardrail> = g.get("output").map(|og| {
-            let action = og.get("action").and_then(|a| a.as_str()).unwrap_or("allow").to_string();
-            let reason = og.get("reason").and_then(|r| r.as_str()).unwrap_or("").to_string();
-            let f: prompty::guardrails::OutputGuardrail = Box::new(move |_resp, _agent| {
-                let action = action.clone();
-                let reason = reason.clone();
-                Box::pin(async move {
-                    if action == "deny" {
-                        prompty::guardrails::GuardrailResult::deny(reason)
-                    } else {
-                        prompty::guardrails::GuardrailResult::allow()
-                    }
-                })
+        let output_guardrail: Option<prompty::guardrails::OutputGuardrail> =
+            g.get("output").map(|og| {
+                let action = og
+                    .get("action")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("allow")
+                    .to_string();
+                let reason = og
+                    .get("reason")
+                    .and_then(|r| r.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let f: prompty::guardrails::OutputGuardrail = Box::new(move |_resp, _agent| {
+                    let action = action.clone();
+                    let reason = reason.clone();
+                    Box::pin(async move {
+                        if action == "deny" {
+                            prompty::guardrails::GuardrailResult::deny(reason)
+                        } else {
+                            prompty::guardrails::GuardrailResult::allow()
+                        }
+                    })
+                });
+                f
             });
-            f
-        });
 
         let tool_guardrail: Option<prompty::guardrails::ToolGuardrail> = g.get("tool").map(|tg| {
             let deny_tools: Vec<String> = tg
                 .get("deny_tools")
                 .and_then(|d| d.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default();
-            let reason = tg.get("reason").and_then(|r| r.as_str()).unwrap_or("Tool denied").to_string();
-            let f: prompty::guardrails::ToolGuardrail = Box::new(move |tool_name, _args, _agent| {
-                let denied = deny_tools.contains(&tool_name.to_string());
-                let reason = reason.clone();
-                Box::pin(async move {
-                    if denied {
-                        prompty::guardrails::GuardrailResult::deny(reason)
-                    } else {
-                        prompty::guardrails::GuardrailResult::allow()
-                    }
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
                 })
-            });
+                .unwrap_or_default();
+            let reason = tg
+                .get("reason")
+                .and_then(|r| r.as_str())
+                .unwrap_or("Tool denied")
+                .to_string();
+            let f: prompty::guardrails::ToolGuardrail =
+                Box::new(move |tool_name, _args, _agent| {
+                    let denied = deny_tools.contains(&tool_name.to_string());
+                    let reason = reason.clone();
+                    Box::pin(async move {
+                        if denied {
+                            prompty::guardrails::GuardrailResult::deny(reason)
+                        } else {
+                            prompty::guardrails::GuardrailResult::allow()
+                        }
+                    })
+                });
             f
         });
 
@@ -1046,7 +1074,9 @@ async fn test_context_no_trim_when_fits() {
     let vector = find_vector("context_no_trim_when_fits");
     let expected_result = vector["expected"]["result"].as_str().unwrap();
 
-    let result = run_extension_vector("context_no_trim_when_fits").await.unwrap();
+    let result = run_extension_vector("context_no_trim_when_fits")
+        .await
+        .unwrap();
     assert_eq!(result.as_str().unwrap(), expected_result);
 }
 
@@ -1056,7 +1086,9 @@ async fn test_context_preserves_system_messages() {
     let vector = find_vector("context_preserves_system_messages");
     let expected_result = vector["expected"]["result"].as_str().unwrap();
 
-    let result = run_extension_vector("context_preserves_system_messages").await.unwrap();
+    let result = run_extension_vector("context_preserves_system_messages")
+        .await
+        .unwrap();
     assert_eq!(result.as_str().unwrap(), expected_result);
 }
 
@@ -1071,7 +1103,9 @@ async fn test_guardrail_input_deny() {
     assert!(result.is_err(), "Expected error from input guardrail");
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("guardrail") || err_msg.contains("Guardrail") || err_msg.contains("denied"),
+        err_msg.contains("guardrail")
+            || err_msg.contains("Guardrail")
+            || err_msg.contains("denied"),
         "Error should mention guardrail: {err_msg}"
     );
     assert!(
@@ -1087,7 +1121,9 @@ async fn test_guardrail_output_deny() {
     assert!(result.is_err(), "Expected error from output guardrail");
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("guardrail") || err_msg.contains("Guardrail") || err_msg.contains("denied"),
+        err_msg.contains("guardrail")
+            || err_msg.contains("Guardrail")
+            || err_msg.contains("denied"),
         "Error should mention guardrail: {err_msg}"
     );
     assert!(
@@ -1126,7 +1162,9 @@ async fn test_steering_inject_message() {
     let vector = find_vector("steering_inject_message");
     let expected_result = vector["expected"]["result"].as_str().unwrap();
 
-    let result = run_extension_vector("steering_inject_message").await.unwrap();
+    let result = run_extension_vector("steering_inject_message")
+        .await
+        .unwrap();
     assert_eq!(result.as_str().unwrap(), expected_result);
 }
 
@@ -1136,7 +1174,9 @@ async fn test_steering_multiple_messages() {
     let vector = find_vector("steering_multiple_messages");
     let expected_result = vector["expected"]["result"].as_str().unwrap();
 
-    let result = run_extension_vector("steering_multiple_messages").await.unwrap();
+    let result = run_extension_vector("steering_multiple_messages")
+        .await
+        .unwrap();
     assert_eq!(result.as_str().unwrap(), expected_result);
 }
 

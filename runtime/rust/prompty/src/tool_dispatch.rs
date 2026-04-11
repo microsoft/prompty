@@ -60,8 +60,12 @@ pub enum ToolHandlerError {
 pub type ToolCallable = Box<
     dyn Fn(
             serde_json::Value,
-        ) -> Pin<Box<dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>>
-        + Send
+        ) -> Pin<
+            Box<
+                dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>>
+                    + Send,
+            >,
+        > + Send
         + Sync,
 >;
 
@@ -112,9 +116,7 @@ pub fn has_tool(name: &str) -> bool {
 /// Clear all registered tool callables.
 pub fn clear_tools() {
     if let Some(m) = TOOL_NAME_REGISTRY.get() {
-        m.write()
-            .expect("tool name registry lock poisoned")
-            .clear();
+        m.write().expect("tool name registry lock poisoned").clear();
     }
 }
 
@@ -141,9 +143,7 @@ pub fn has_tool_handler(kind: &str) -> bool {
 /// Clear all registered kind handlers.
 pub fn clear_tool_handlers() {
     if let Some(m) = TOOL_KIND_HANDLERS.get() {
-        m.write()
-            .expect("tool kind handlers lock poisoned")
-            .clear();
+        m.write().expect("tool kind handlers lock poisoned").clear();
     }
 }
 
@@ -245,8 +245,11 @@ pub async fn dispatch_tool(
     // Layer 2: global name registry
     {
         let fut = {
-            let map = name_registry().read().expect("tool name registry lock poisoned");
-            map.get(&tool_call.name).map(|callable| callable(args.clone()))
+            let map = name_registry()
+                .read()
+                .expect("tool name registry lock poisoned");
+            map.get(&tool_call.name)
+                .map(|callable| callable(args.clone()))
         };
         if let Some(fut) = fut {
             return match fut.await {
@@ -270,13 +273,13 @@ pub async fn dispatch_tool(
             let handlers = kind_handlers()
                 .read()
                 .expect("tool kind handlers lock poisoned");
-            handlers.get(kind).cloned().or_else(|| handlers.get("*").cloned())
+            handlers
+                .get(kind)
+                .cloned()
+                .or_else(|| handlers.get("*").cloned())
         };
         if let Some(handler) = handler {
-            return match handler
-                .execute_tool(def, args, agent, parent_inputs)
-                .await
-            {
+            return match handler.execute_tool(def, args, agent, parent_inputs).await {
                 Ok(r) => r,
                 Err(e) => format!("Error: {e}"),
             };
@@ -378,9 +381,7 @@ impl ToolHandlerTrait for PromptyToolHandler {
                 ))
             })?;
 
-        let parent_dir = Path::new(parent_path)
-            .parent()
-            .unwrap_or(Path::new("."));
+        let parent_dir = Path::new(parent_path).parent().unwrap_or(Path::new("."));
         let child_path = parent_dir.join(child_relative);
 
         // Circular reference detection
@@ -421,9 +422,7 @@ impl ToolHandlerTrait for PromptyToolHandler {
 
         // Load the child .prompty file
         let mut child = crate::loader::load(&child_path).map_err(|e| {
-            ToolHandlerError::Execution(format!(
-                "failed to load PromptyTool '{tool_name}': {e}"
-            ))
+            ToolHandlerError::Execution(format!("failed to load PromptyTool '{tool_name}': {e}"))
         })?;
 
         // Propagate visited-path stack
@@ -538,8 +537,8 @@ pub fn register_builtin_handlers() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
     use crate::pipeline::ToolHandler as PipelineToolHandler;
+    use serial_test::serial;
 
     fn make_tool_call(name: &str, args: &str) -> ToolCall {
         ToolCall {
@@ -620,9 +619,7 @@ mod tests {
         let mut user_tools = HashMap::new();
         user_tools.insert(
             "fail_tool".into(),
-            PipelineToolHandler::Sync(Box::new(|_args| {
-                Err("tool exploded".into())
-            })),
+            PipelineToolHandler::Sync(Box::new(|_args| Err("tool exploded".into()))),
         );
 
         let tc = make_tool_call("fail_tool", "{}");
@@ -853,8 +850,11 @@ mod tests {
         let handler = PromptyToolHandler;
         // Agent without __source_path metadata
         let agent = default_agent();
-        let tool_def = serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"});
-        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        let tool_def =
+            serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"});
+        let result = handler
+            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("__source_path"));
     }
@@ -867,7 +867,9 @@ mod tests {
         agent.metadata = serde_json::json!({"__source_path": "/fake/parent.prompty"});
         // tool_def missing 'path' field
         let tool_def = serde_json::json!({"kind": "prompty", "name": "child"});
-        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        let result = handler
+            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("missing 'path'"));
     }
@@ -879,7 +881,11 @@ mod tests {
         let mut agent = default_agent();
 
         // Simulate: parent.prompty loads child.prompty, and child already visited parent
-        let parent_path = if cfg!(windows) { "C:\\fake\\parent.prompty" } else { "/fake/parent.prompty" };
+        let parent_path = if cfg!(windows) {
+            "C:\\fake\\parent.prompty"
+        } else {
+            "/fake/parent.prompty"
+        };
         agent.metadata = serde_json::json!({
             "__source_path": parent_path,
             "__prompty_tool_stack": []
@@ -892,7 +898,9 @@ mod tests {
             "path": "parent.prompty"  // resolves to same dir as parent
         });
 
-        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        let result = handler
+            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .await;
         // This will either detect circular reference or fail to load the file.
         // Either way it should be an error, not a hang.
         assert!(result.is_err());
@@ -916,7 +924,9 @@ mod tests {
             "name": "missing",
             "path": "does_not_exist.prompty"
         });
-        let result = handler.execute_tool(&tool_def, serde_json::json!({}), &agent, None).await;
+        let result = handler
+            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("failed to load"));
     }

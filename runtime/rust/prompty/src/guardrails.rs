@@ -78,25 +78,32 @@ pub enum GuardrailPhase {
 
 /// Input guardrail: checks messages before they're sent to the LLM.
 pub type InputGuardrail = Box<
-    dyn Fn(&[Message], &Prompty) -> std::pin::Pin<
-            Box<dyn std::future::Future<Output = GuardrailResult> + Send>,
-        > + Send
+    dyn Fn(
+            &[Message],
+            &Prompty,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
+        + Send
         + Sync,
 >;
 
 /// Output guardrail: checks the LLM response before returning.
 pub type OutputGuardrail = Box<
-    dyn Fn(&serde_json::Value, &Prompty) -> std::pin::Pin<
-            Box<dyn std::future::Future<Output = GuardrailResult> + Send>,
-        > + Send
+    dyn Fn(
+            &serde_json::Value,
+            &Prompty,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
+        + Send
         + Sync,
 >;
 
 /// Tool guardrail: checks before executing a tool call.
 pub type ToolGuardrail = Box<
-    dyn Fn(&str, &serde_json::Value, &Prompty) -> std::pin::Pin<
-            Box<dyn std::future::Future<Output = GuardrailResult> + Send>,
-        > + Send
+    dyn Fn(
+            &str,
+            &serde_json::Value,
+            &Prompty,
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
+        + Send
         + Sync,
 >;
 
@@ -239,9 +246,7 @@ mod tests {
     async fn test_input_guardrail_rewrite() {
         let g = Guardrails {
             input: Some(Box::new(|_msgs, _agent| {
-                Box::pin(async {
-                    GuardrailResult::rewrite(serde_json::json!("rewritten"))
-                })
+                Box::pin(async { GuardrailResult::rewrite(serde_json::json!("rewritten")) })
             })),
             ..Default::default()
         };

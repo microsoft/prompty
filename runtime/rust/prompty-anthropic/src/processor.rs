@@ -8,7 +8,7 @@
 //! `tool_use` blocks take priority — if any exist, they're returned instead of text.
 
 use async_trait::async_trait;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::Prompty;
@@ -19,18 +19,17 @@ pub struct AnthropicProcessor;
 
 #[async_trait]
 impl Processor for AnthropicProcessor {
-    async fn process(
-        &self,
-        agent: &Prompty,
-        response: Value,
-    ) -> Result<Value, InvokerError> {
+    async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
     }
 
     fn process_stream(
         &self,
         inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
-    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>, InvokerError> {
+    ) -> Result<
+        std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>,
+        InvokerError,
+    > {
         Ok(Box::pin(AnthropicStreamProcessor::new(inner)))
     }
 }
@@ -44,7 +43,9 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
         .get("content")
         .and_then(|c| c.as_array())
         .ok_or_else(|| {
-            InvokerError::Process(format!("Invalid Anthropic response: missing 'content' array").into())
+            InvokerError::Process(
+                format!("Invalid Anthropic response: missing 'content' array").into(),
+            )
         })?;
 
     // Extract tool_use blocks
@@ -93,10 +94,7 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
         .join("");
 
     // Check for structured output
-    let has_outputs = agent
-        .as_outputs()
-        .map(|o| !o.is_empty())
-        .unwrap_or(false);
+    let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
 
     if has_outputs {
         // Parse text as JSON for structured output
@@ -105,7 +103,9 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
                 return Ok(parsed);
             }
             Err(e) => {
-                return Err(InvokerError::Process(format!("Failed to parse structured output: {e}").into()));
+                return Err(InvokerError::Process(
+                    format!("Failed to parse structured output: {e}").into(),
+                ));
             }
         }
     }
@@ -203,20 +203,32 @@ impl futures::Stream for AnthropicStreamProcessor {
                         match event_type {
                             "content_block_delta" => {
                                 if let Some(delta) = event.get("delta") {
-                                    let delta_type = delta.get("type").and_then(Value::as_str).unwrap_or("");
+                                    let delta_type =
+                                        delta.get("type").and_then(Value::as_str).unwrap_or("");
                                     match delta_type {
                                         "text_delta" => {
-                                            if let Some(text) = delta.get("text").and_then(Value::as_str) {
+                                            if let Some(text) =
+                                                delta.get("text").and_then(Value::as_str)
+                                            {
                                                 if !text.is_empty() {
-                                                    return Poll::Ready(Some(StreamChunk::Text(text.to_string())));
+                                                    return Poll::Ready(Some(StreamChunk::Text(
+                                                        text.to_string(),
+                                                    )));
                                                 }
                                             }
                                         }
                                         "input_json_delta" => {
                                             // Accumulate partial JSON for tool arguments
-                                            let idx = event.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
-                                            if let Some(partial) = delta.get("partial_json").and_then(Value::as_str) {
-                                                if let Some(acc) = this.tool_call_acc.get_mut(&idx) {
+                                            let idx = event
+                                                .get("index")
+                                                .and_then(Value::as_u64)
+                                                .unwrap_or(0)
+                                                as usize;
+                                            if let Some(partial) =
+                                                delta.get("partial_json").and_then(Value::as_str)
+                                            {
+                                                if let Some(acc) = this.tool_call_acc.get_mut(&idx)
+                                                {
                                                     acc.2.push_str(partial);
                                                 }
                                             }
@@ -231,10 +243,21 @@ impl futures::Stream for AnthropicStreamProcessor {
                             "content_block_start" => {
                                 // Accumulate tool use blocks
                                 if let Some(block) = event.get("content_block") {
-                                    if block.get("type").and_then(Value::as_str) == Some("tool_use") {
-                                        let idx = event.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
-                                        let id = block.get("id").and_then(Value::as_str).unwrap_or("").to_string();
-                                        let name = block.get("name").and_then(Value::as_str).unwrap_or("").to_string();
+                                    if block.get("type").and_then(Value::as_str) == Some("tool_use")
+                                    {
+                                        let idx =
+                                            event.get("index").and_then(Value::as_u64).unwrap_or(0)
+                                                as usize;
+                                        let id = block
+                                            .get("id")
+                                            .and_then(Value::as_str)
+                                            .unwrap_or("")
+                                            .to_string();
+                                        let name = block
+                                            .get("name")
+                                            .and_then(Value::as_str)
+                                            .unwrap_or("")
+                                            .to_string();
                                         this.tool_call_acc.insert(idx, (id, name, String::new()));
                                     }
                                 }
@@ -251,13 +274,15 @@ impl futures::Stream for AnthropicStreamProcessor {
                     Poll::Ready(None) => {
                         // Stream ended — yield accumulated tool calls
                         if !this.tool_call_acc.is_empty() {
-                            let tools: Vec<ToolCall> = this.tool_call_acc.iter().map(|(_idx, (id, name, args))| {
-                                ToolCall {
+                            let tools: Vec<ToolCall> = this
+                                .tool_call_acc
+                                .iter()
+                                .map(|(_idx, (id, name, args))| ToolCall {
                                     id: id.clone(),
                                     name: name.clone(),
                                     arguments: args.clone(),
-                                }
-                            }).collect();
+                                })
+                                .collect();
                             this.phase = AnthropicStreamPhase::YieldingTools(tools, 0);
                             cx.waker().wake_by_ref();
                             Poll::Pending

@@ -7,8 +7,8 @@
 use std::path::PathBuf;
 use std::sync::Once;
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
+use prompty::model::context::LoadContext;
 use serde_json::Value;
 
 static INIT: Once = Once::new();
@@ -38,10 +38,8 @@ fn vectors_path() -> PathBuf {
 
 /// Load all 23 render vectors from the JSON file.
 fn load_vectors() -> Vec<Value> {
-    let raw = std::fs::read_to_string(vectors_path())
-        .expect("failed to read render_vectors.json");
-    serde_json::from_str::<Vec<Value>>(&raw)
-        .expect("failed to parse render_vectors.json")
+    let raw = std::fs::read_to_string(vectors_path()).expect("failed to read render_vectors.json");
+    serde_json::from_str::<Vec<Value>>(&raw).expect("failed to parse render_vectors.json")
 }
 
 /// Mustache engine names that we skip when no MustacheRenderer exists.
@@ -102,7 +100,9 @@ async fn test_render_vectors() {
         let input = &vec["input"];
         let expected = &vec["expected"];
 
-        let template = input["template"].as_str().expect("vector missing 'template'");
+        let template = input["template"]
+            .as_str()
+            .expect("vector missing 'template'");
         let engine = input["engine"].as_str().expect("vector missing 'engine'");
         let inputs = &input["inputs"];
 

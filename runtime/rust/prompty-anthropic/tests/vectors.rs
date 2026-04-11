@@ -7,7 +7,7 @@ use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
 use prompty::types::{AudioPart, ContentPart, ImagePart, Message, Role, TextPart};
 use prompty_anthropic::wire;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 fn spec_root() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -18,7 +18,10 @@ fn spec_root() -> std::path::PathBuf {
 }
 
 fn load_wire_vectors() -> Vec<Value> {
-    let path = spec_root().join("vectors").join("wire").join("wire_vectors.json");
+    let path = spec_root()
+        .join("vectors")
+        .join("wire")
+        .join("wire_vectors.json");
     let content = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("Failed to read wire vectors at {}: {e}", path.display()));
     serde_json::from_str(&content).expect("Invalid JSON in wire_vectors.json")
@@ -36,7 +39,9 @@ fn load_process_vectors() -> Vec<Value> {
 
 /// Build messages from vector input content/messages format.
 fn build_messages(input: &Value) -> Vec<Message> {
-    let msgs = input["messages"].as_array().expect("messages should be array");
+    let msgs = input["messages"]
+        .as_array()
+        .expect("messages should be array");
     msgs.iter()
         .map(|m| {
             let role = Role::from_str_opt(m["role"].as_str().unwrap()).unwrap();
@@ -180,10 +185,7 @@ macro_rules! wire_test {
                 .unwrap_or_else(|| panic!("Vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
 
             // Skip non-Anthropic vectors
             if provider != "anthropic" {
@@ -227,10 +229,7 @@ macro_rules! process_test {
                 .unwrap_or_else(|| panic!("Process vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
 
             // Skip non-Anthropic vectors
             if provider != "anthropic" {

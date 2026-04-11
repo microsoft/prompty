@@ -8,7 +8,10 @@ use std::path::Path;
 use super::error::LoadError;
 
 /// Recursively resolve `${protocol:value}` references in-place.
-pub fn resolve_references(value: &mut serde_json::Value, agent_dir: &Path) -> Result<(), LoadError> {
+pub fn resolve_references(
+    value: &mut serde_json::Value,
+    agent_dir: &Path,
+) -> Result<(), LoadError> {
     match value {
         serde_json::Value::Object(map) => {
             // Collect keys first to avoid borrow issues
@@ -42,7 +45,9 @@ pub fn resolve_references(value: &mut serde_json::Value, agent_dir: &Path) -> Re
 ///
 /// Used by `LoadContext.pre_process` to resolve references as the model tree loads.
 pub fn resolve_single_ref(s: &str, agent_dir: &Path) -> Option<serde_json::Value> {
-    try_resolve_string(s, "<pre_process>", agent_dir).ok().flatten()
+    try_resolve_string(s, "<pre_process>", agent_dir)
+        .ok()
+        .flatten()
 }
 
 /// Try to resolve a single string value. Returns `Some(resolved)` if it was
@@ -112,16 +117,16 @@ fn resolve_file(
 
     match ext.as_str() {
         "json" => {
-            let parsed: serde_json::Value = serde_json::from_str(&content)
-                .map_err(|e| LoadError::FileReference {
+            let parsed: serde_json::Value =
+                serde_json::from_str(&content).map_err(|e| LoadError::FileReference {
                     path: full_path,
                     detail: format!("Invalid JSON: {e}"),
                 })?;
             Ok(Some(parsed))
         }
         "yaml" | "yml" => {
-            let parsed: serde_json::Value = serde_yaml::from_str(&content)
-                .map_err(|e| LoadError::FileReference {
+            let parsed: serde_json::Value =
+                serde_yaml::from_str(&content).map_err(|e| LoadError::FileReference {
                     path: full_path,
                     detail: format!("Invalid YAML: {e}"),
                 })?;
@@ -198,7 +203,11 @@ mod tests {
         let dir = std::env::temp_dir().join("prompty_resolve_test");
         std::fs::create_dir_all(&dir).unwrap();
         let file_path = dir.join("config.json");
-        std::fs::write(&file_path, r#"{"endpoint": "https://api.example.com", "apiKey": "test123"}"#).unwrap();
+        std::fs::write(
+            &file_path,
+            r#"{"endpoint": "https://api.example.com", "apiKey": "test123"}"#,
+        )
+        .unwrap();
 
         let mut val = serde_json::json!({
             "connection": "${file:config.json}"
@@ -218,7 +227,11 @@ mod tests {
         let dir = std::env::temp_dir().join("prompty_resolve_yaml_test");
         std::fs::create_dir_all(&dir).unwrap();
         let file_path = dir.join("config.yaml");
-        std::fs::write(&file_path, "endpoint: https://api.example.com\nmodel: gpt-4").unwrap();
+        std::fs::write(
+            &file_path,
+            "endpoint: https://api.example.com\nmodel: gpt-4",
+        )
+        .unwrap();
 
         let mut val = serde_json::json!({
             "config": "${file:config.yaml}"
@@ -263,7 +276,11 @@ mod tests {
     fn test_file_resolution_nested() {
         let dir = std::env::temp_dir().join("prompty_resolve_nested_test");
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("conn.json"), r#"{"kind": "key", "apiKey": "sk-test"}"#).unwrap();
+        std::fs::write(
+            dir.join("conn.json"),
+            r#"{"kind": "key", "apiKey": "sk-test"}"#,
+        )
+        .unwrap();
 
         let mut val = serde_json::json!({
             "model": {

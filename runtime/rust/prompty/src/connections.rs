@@ -89,9 +89,9 @@ pub fn with_connection<T: Any + Send + Sync, R>(
     let boxed = map.get(name).ok_or_else(|| {
         format!("Connection \"{name}\" is not registered. Use register_connection() first.")
     })?;
-    let typed = boxed.downcast_ref::<T>().ok_or_else(|| {
-        format!("Connection \"{name}\" exists but is not the expected type")
-    })?;
+    let typed = boxed
+        .downcast_ref::<T>()
+        .ok_or_else(|| format!("Connection \"{name}\" exists but is not the expected type"))?;
     Ok(f(typed))
 }
 

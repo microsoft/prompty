@@ -14,18 +14,17 @@ pub struct OpenAIProcessor;
 
 #[async_trait]
 impl Processor for OpenAIProcessor {
-    async fn process(
-        &self,
-        agent: &Prompty,
-        response: Value,
-    ) -> Result<Value, InvokerError> {
+    async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
     }
 
     fn process_stream(
         &self,
         inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
-    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>, InvokerError> {
+    ) -> Result<
+        std::pin::Pin<Box<dyn futures::Stream<Item = prompty::types::StreamChunk> + Send>>,
+        InvokerError,
+    > {
         Ok(process_stream(inner))
     }
 }
@@ -104,9 +103,7 @@ fn process_chat_completion(agent: &Prompty, choices: &[Value]) -> Result<Value, 
         }
     }
 
-    let content_str = content
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let content_str = content.and_then(Value::as_str).unwrap_or("");
 
     // Structured output: if agent has outputs, try to parse as JSON.
     // Falls back to raw string gracefully if parsing fails.
@@ -304,24 +301,36 @@ impl futures::Stream for OpenAIStreamProcessor {
                             // Content text
                             if let Some(content) = delta.get("content").and_then(Value::as_str) {
                                 if !content.is_empty() {
-                                    return std::task::Poll::Ready(Some(StreamChunk::Text(content.to_string())));
+                                    return std::task::Poll::Ready(Some(StreamChunk::Text(
+                                        content.to_string(),
+                                    )));
                                 }
                             }
 
                             // Tool call deltas
-                            if let Some(tc_deltas) = delta.get("tool_calls").and_then(Value::as_array) {
+                            if let Some(tc_deltas) =
+                                delta.get("tool_calls").and_then(Value::as_array)
+                            {
                                 for tc_delta in tc_deltas {
-                                    let idx = tc_delta.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
-                                    let entry = this.tool_call_acc.entry(idx).or_insert_with(|| {
-                                        (String::new(), String::new(), String::new())
-                                    });
+                                    let idx =
+                                        tc_delta.get("index").and_then(Value::as_u64).unwrap_or(0)
+                                            as usize;
+                                    let entry =
+                                        this.tool_call_acc.entry(idx).or_insert_with(|| {
+                                            (String::new(), String::new(), String::new())
+                                        });
                                     if let Some(id) = tc_delta.get("id").and_then(Value::as_str) {
                                         entry.0 = id.to_string();
                                     }
-                                    if let Some(name) = tc_delta.pointer("/function/name").and_then(Value::as_str) {
+                                    if let Some(name) =
+                                        tc_delta.pointer("/function/name").and_then(Value::as_str)
+                                    {
                                         entry.1 = name.to_string();
                                     }
-                                    if let Some(args) = tc_delta.pointer("/function/arguments").and_then(Value::as_str) {
+                                    if let Some(args) = tc_delta
+                                        .pointer("/function/arguments")
+                                        .and_then(Value::as_str)
+                                    {
                                         entry.2.push_str(args);
                                     }
                                 }
@@ -329,9 +338,9 @@ impl futures::Stream for OpenAIStreamProcessor {
 
                             // Refusal
                             if let Some(refusal) = delta.get("refusal").and_then(Value::as_str) {
-                                return std::task::Poll::Ready(Some(
-                                    StreamChunk::Text(format!("Model refused: {refusal}")),
-                                ));
+                                return std::task::Poll::Ready(Some(StreamChunk::Text(format!(
+                                    "Model refused: {refusal}"
+                                ))));
                             }
                         }
 
@@ -341,7 +350,8 @@ impl futures::Stream for OpenAIStreamProcessor {
                     }
                     std::task::Poll::Ready(None) => {
                         // Inner stream exhausted — yield accumulated tool calls
-                        let tools: Vec<ToolCall> = this.tool_call_acc
+                        let tools: Vec<ToolCall> = this
+                            .tool_call_acc
                             .values()
                             .map(|(id, name, args)| ToolCall {
                                 id: id.clone(),
@@ -694,7 +704,7 @@ mod tests {
         let chunks = vec![
             json!({"choices": [{"delta": {"content": "Hello"}}]}),
             json!({"choices": [{"delta": {"content": " world"}}]}),
-            json!({"choices": [{"delta": {}}]}),  // empty delta
+            json!({"choices": [{"delta": {}}]}), // empty delta
         ];
         let inner = futures::stream::iter(chunks);
         let mut stream = process_stream(inner);
@@ -737,9 +747,7 @@ mod tests {
     #[tokio::test]
     async fn test_stream_refusal() {
         use futures::StreamExt;
-        let chunks = vec![
-            json!({"choices": [{"delta": {"refusal": "I cannot help with that"}}]}),
-        ];
+        let chunks = vec![json!({"choices": [{"delta": {"refusal": "I cannot help with that"}}]})];
         let inner = futures::stream::iter(chunks);
         let mut stream = process_stream(inner);
         let mut texts = Vec::new();

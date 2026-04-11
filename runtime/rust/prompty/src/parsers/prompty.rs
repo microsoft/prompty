@@ -27,14 +27,15 @@ use crate::types::{ContentPart, Message, Role, TextPart};
 /// Matches role markers with optional attribute blocks like `system[nonce="abc"]:`.
 /// Spec-recognized roles: system, user, assistant (developer is NOT a valid role marker).
 static BOUNDARY_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?i)^\s*#?\s*(system|user|assistant)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#)
-        .expect("boundary regex is valid")
+    Regex::new(
+        r#"(?i)^\s*#?\s*(system|user|assistant)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#,
+    )
+    .expect("boundary regex is valid")
 });
 
 /// Regex to extract individual key=value pairs from an attribute block.
-static ATTR_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(\w+)\s*=\s*"?([^",\]]*)"?"#).expect("attr regex is valid")
-});
+static ATTR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(\w+)\s*=\s*"?([^",\]]*)"?"#).expect("attr regex is valid"));
 
 /// The Prompty chat parser — splits role-marker-delimited text into messages.
 ///
@@ -85,7 +86,10 @@ fn generate_nonce() -> String {
 }
 
 /// Parse rendered text into a list of messages, validating nonces in strict mode.
-fn parse_chat_strict(text: &str, expected_nonce: Option<&str>) -> Result<Vec<Message>, InvokerError> {
+fn parse_chat_strict(
+    text: &str,
+    expected_nonce: Option<&str>,
+) -> Result<Vec<Message>, InvokerError> {
     let mut messages: Vec<Message> = Vec::new();
     let mut current_role = Role::System;
     let mut content_lines: Vec<&str> = Vec::new();
@@ -98,7 +102,16 @@ fn parse_chat_strict(text: &str, expected_nonce: Option<&str>) -> Result<Vec<Mes
             // Flush accumulated content as a message
             if !content_lines.is_empty() || has_role_marker {
                 let content = join_and_trim(&content_lines);
-                let msg = build_message(current_role, content, &current_attrs, if has_role_marker { expected_nonce } else { None })?;
+                let msg = build_message(
+                    current_role,
+                    content,
+                    &current_attrs,
+                    if has_role_marker {
+                        expected_nonce
+                    } else {
+                        None
+                    },
+                )?;
                 messages.push(msg);
                 content_lines.clear();
                 current_attrs = serde_json::Map::new();
@@ -122,7 +135,16 @@ fn parse_chat_strict(text: &str, expected_nonce: Option<&str>) -> Result<Vec<Mes
     // Flush remaining content
     if !content_lines.is_empty() || has_role_marker {
         let content = join_and_trim(&content_lines);
-        let msg = build_message(current_role, content, &current_attrs, if has_role_marker { expected_nonce } else { None })?;
+        let msg = build_message(
+            current_role,
+            content,
+            &current_attrs,
+            if has_role_marker {
+                expected_nonce
+            } else {
+                None
+            },
+        )?;
         messages.push(msg);
     }
 
@@ -236,7 +258,8 @@ mod tests {
 
     #[test]
     fn test_system_user_assistant() {
-        let msgs = parse_chat("system:\nBe concise.\n\nuser:\nHi\n\nassistant:\nHello! How can I help?");
+        let msgs =
+            parse_chat("system:\nBe concise.\n\nuser:\nHi\n\nassistant:\nHello! How can I help?");
         assert_eq!(msgs.len(), 3);
         assert_eq!(msgs[0].role, Role::System);
         assert_eq!(msgs[1].role, Role::User);
@@ -395,9 +418,7 @@ mod tests {
     #[test]
     fn test_strict_parse_preserves_non_nonce_attrs() {
         let nonce = "abc123";
-        let text = format!(
-            "system[nonce=\"{nonce}\",name=\"Alice\"]:\nHello"
-        );
+        let text = format!("system[nonce=\"{nonce}\",name=\"Alice\"]:\nHello");
         let result = parse_chat_strict(&text, Some(nonce));
         assert!(result.is_ok());
         let msgs = result.unwrap();

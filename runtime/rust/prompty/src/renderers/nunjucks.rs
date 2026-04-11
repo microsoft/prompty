@@ -103,7 +103,10 @@ mod tests {
 
     #[test]
     fn test_html_not_escaped() {
-        let result = render_template("{{ content }}", &serde_json::json!({"content": "<b>bold</b>"}));
+        let result = render_template(
+            "{{ content }}",
+            &serde_json::json!({"content": "<b>bold</b>"}),
+        );
         assert_eq!(result.unwrap(), "<b>bold</b>");
     }
 
@@ -121,7 +124,10 @@ mod tests {
 
     #[test]
     fn test_filter_trim() {
-        let result = render_template("{{ name | trim }}", &serde_json::json!({"name": "  hello  "}));
+        let result = render_template(
+            "{{ name | trim }}",
+            &serde_json::json!({"name": "  hello  "}),
+        );
         assert_eq!(result.unwrap(), "hello");
     }
 
@@ -162,10 +168,7 @@ mod tests {
 
     #[test]
     fn test_default_filter() {
-        let result = render_template(
-            "{{ name | default(\"stranger\") }}",
-            &serde_json::json!({}),
-        );
+        let result = render_template("{{ name | default(\"stranger\") }}", &serde_json::json!({}));
         assert_eq!(result.unwrap(), "stranger");
     }
 }
