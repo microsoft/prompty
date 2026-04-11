@@ -384,9 +384,11 @@ implement features like message editing, branching, and context management.
 
 ## Thread Inputs with Agent Mode
 
-When using `apiType: agent` (the automatic tool-calling loop), thread inputs
-work the same way — they provide the initial conversation context. The agent
-loop then appends tool calls and results within a single `run()` invocation:
+When running the [agent loop](/core-concepts/agent-mode/) (via `turn()` /
+`TurnAsync()`), thread inputs work the same way — they provide the initial
+conversation context. The `.prompty` file still uses `apiType: chat`; agent
+behavior is activated by your calling code. The agent loop then appends tool
+calls and results within a single `turn()` invocation:
 
 ```yaml
 ---
@@ -394,7 +396,7 @@ name: agent-with-history
 model:
   id: gpt-4o
   provider: openai
-  apiType: agent
+  apiType: chat
   connection:
     kind: key
     apiKey: ${env:OPENAI_API_KEY}
@@ -421,8 +423,68 @@ user:
 {{question}}
 ```
 
-The thread provides context from prior turns, and the agent loop handles
-any new tool calls within the current turn.
+Then in your code, use `turn()` to execute the agent loop with thread history:
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import load, turn, tool, bind_tools
+
+    @tool
+    def get_weather(city: str) -> str:
+        """Get the current weather for a city."""
+        return f"72°F and sunny in {city}"
+
+    agent = load("agent.prompty")
+    tools = bind_tools(agent, [get_weather])
+    history = []
+
+    while True:
+        question = input("You: ")
+        if question.lower() in ("quit", "exit"):
+            break
+
+        result = turn(
+            agent,
+            inputs={"question": question, "conversation": history},
+            tools=tools,
+        )
+        print(f"Assistant: {result}\n")
+
+        history.append({"role": "user", "content": question})
+        history.append({"role": "assistant", "content": result})
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { load, turn, tool, bindTools } from "@prompty/core";
+    import "@prompty/openai";
+
+    const getWeather = tool(
+      (city: string) => `72°F and sunny in ${city}`,
+      { name: "get_weather", description: "Get the current weather",
+        parameters: [{ name: "city", kind: "string", required: true }] },
+    );
+
+    const agent = await load("agent.prompty");
+    const tools = bindTools(agent, [getWeather]);
+    const history: { role: string; content: string }[] = [];
+
+    // In your chat loop:
+    const result = await turn(
+      agent,
+      { question: userMessage, conversation: history },
+      { tools },
+    );
+
+    history.push({ role: "user", content: userMessage });
+    history.push({ role: "assistant", content: String(result) });
+    ```
+  </TabItem>
+</Tabs>
+
+The thread provides context from prior turns, and `turn()` handles any new
+tool calls within the current turn.
 
 ---
 
