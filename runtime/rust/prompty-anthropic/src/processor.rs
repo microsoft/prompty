@@ -44,7 +44,9 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
         .and_then(|c| c.as_array())
         .ok_or_else(|| {
             InvokerError::Process(
-                format!("Invalid Anthropic response: missing 'content' array").into(),
+                "Invalid Anthropic response: missing 'content' array"
+                    .to_string()
+                    .into(),
             )
         })?;
 

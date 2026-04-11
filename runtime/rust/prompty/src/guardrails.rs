@@ -114,6 +114,7 @@ pub type ToolGuardrail = Box<
 /// Guardrail configuration for the agent loop.
 ///
 /// All fields are optional — missing guardrails default to "allowed".
+#[derive(Default)]
 pub struct Guardrails {
     /// Checked before each LLM call.
     pub input: Option<InputGuardrail>,
@@ -121,16 +122,6 @@ pub struct Guardrails {
     pub output: Option<OutputGuardrail>,
     /// Checked before each tool execution.
     pub tool: Option<ToolGuardrail>,
-}
-
-impl Default for Guardrails {
-    fn default() -> Self {
-        Self {
-            input: None,
-            output: None,
-            tool: None,
-        }
-    }
 }
 
 impl Guardrails {

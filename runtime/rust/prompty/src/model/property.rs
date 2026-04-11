@@ -123,7 +123,7 @@ impl Property {
                 .get("enumValues")
                 .and_then(|v| v.as_array())
                 .map(|arr| arr.to_vec()),
-            kind: kind,
+            kind,
         }
     }
 

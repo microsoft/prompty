@@ -12,6 +12,7 @@ pub use connection::*;
 pub mod model_options;
 pub use model_options::*;
 
+#[allow(clippy::module_inception)]
 pub mod model;
 pub use model::*;
 

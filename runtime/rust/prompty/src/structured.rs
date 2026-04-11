@@ -91,6 +91,7 @@ pub fn unwrap_structured(value: &Value) -> Value {
 /// Optionally runs a `validator` function on the deserialized result.
 ///
 /// Matches TypeScript's `cast<T>(result, validator?)`.
+#[allow(clippy::type_complexity)]
 pub fn cast<T>(
     value: &Value,
     validator: Option<&dyn Fn(&T) -> Result<(), String>>,

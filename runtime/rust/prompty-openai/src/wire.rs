@@ -257,7 +257,7 @@ pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
     tools
         .iter()
         .filter(|tool| matches!(tool.kind, ToolKind::Function { .. }))
-        .map(|tool| function_tool_to_wire(tool))
+        .map(function_tool_to_wire)
         .collect()
 }
 
@@ -551,7 +551,7 @@ fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
     tools
         .iter()
         .filter(|tool| matches!(tool.kind, ToolKind::Function { .. }))
-        .map(|tool| responses_function_tool_to_wire(tool))
+        .map(responses_function_tool_to_wire)
         .collect()
 }
 
