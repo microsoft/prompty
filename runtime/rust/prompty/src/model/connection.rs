@@ -194,7 +194,7 @@ impl Connection {
                 .get("usageDescription")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            kind: kind,
+            kind,
         }
     }
 

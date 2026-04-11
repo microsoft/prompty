@@ -185,7 +185,7 @@ impl Tool {
                 .get("bindings")
                 .cloned()
                 .unwrap_or(serde_json::Value::Null),
-            kind: kind,
+            kind,
         }
     }
 

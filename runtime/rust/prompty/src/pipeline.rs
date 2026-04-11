@@ -636,6 +636,7 @@ pub struct TurnOptions {
     /// If true, dispatch tool calls in parallel (via tokio::join!).
     pub parallel_tool_calls: bool,
     /// Optional validator for structured output (called via cast after processing).
+    #[allow(clippy::type_complexity)]
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
 }
 
@@ -770,8 +771,8 @@ pub async fn turn(
                         span.end();
                         return Ok(raw_response);
                     }
-                    let p = process(agent, raw_response).await?;
-                    p
+
+                    process(agent, raw_response).await?
                 }
             }
         } else {
@@ -783,8 +784,7 @@ pub async fn turn(
                 return Ok(raw_response);
             }
 
-            let p = process(agent, raw_response).await?;
-            p
+            process(agent, raw_response).await?
         };
 
         // Output guardrail
