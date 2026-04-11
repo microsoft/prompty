@@ -469,6 +469,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_build_url_api_key_connection() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -484,6 +485,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_build_url_foundry_connection() {
         // Foundry connections typically use Entra ID, but for testing we
         // supply an API key via env var since Entra ID may not be enabled
@@ -504,6 +506,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_build_url_embedding() {
         let agent = make_agent(json!({
             "id": "text-embedding-3-small",
@@ -518,6 +521,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_build_url_image() {
         let agent = make_agent(json!({
             "id": "dall-e-3",
@@ -532,6 +536,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_auth_header_api_key() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -547,6 +552,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_strip_project_path() {
         assert_eq!(
             strip_project_path("https://myresource.services.ai.azure.com/api/projects/my-project"),
@@ -559,6 +565,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_deployment_from_model_id() {
         let agent = make_agent(json!({
             "id": "my-deployment-name",
@@ -573,6 +580,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_api_version_default() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -587,6 +595,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_unsupported_api_type() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -603,6 +612,7 @@ mod tests {
     // --- Reference connection resolution tests ---
 
     #[test]
+    #[serial]
     fn test_resolve_connection_passthrough() {
         let agent = make_agent(json!({
             "id": "gpt-4",
@@ -618,6 +628,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_missing_name() {
         let agent = make_agent(json!({
             "id": "gpt-4",

@@ -373,6 +373,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_url_default() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let url = build_url(&agent).unwrap();
@@ -380,6 +381,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_url_custom_endpoint() {
         let agent = make_agent(json!({
             "id": "claude-3",
@@ -395,6 +397,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_api_key_from_connection() {
         let agent = make_agent(json!({
             "id": "claude-3",
@@ -409,6 +412,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_args_chat() {
         let agent = make_agent(json!({
             "id": "claude-3",
@@ -423,6 +427,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_args_rejects_embedding() {
         let agent = make_agent(json!({
             "id": "claude-3",
@@ -437,6 +442,7 @@ mod tests {
     // --- Reference connection resolution tests ---
 
     #[test]
+    #[serial]
     fn test_resolve_connection_passthrough() {
         let agent = make_agent(json!({
             "id": "claude-3",
@@ -451,6 +457,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_connection_reference_missing_name() {
         let agent = make_agent(json!({
             "id": "claude-3",
