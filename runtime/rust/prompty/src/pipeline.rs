@@ -9,10 +9,10 @@
 
 use std::collections::HashMap;
 use std::future::Future;
-use std::pin::Pin;
 use std::path::Path;
+use std::pin::Pin;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
@@ -20,8 +20,11 @@ use crate::parsers::parse_chat;
 use crate::registry;
 use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
-use crate::tracing::{sanitize_value, Tracer};
-use crate::types::{consume_stream_chunks, ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall};
+use crate::tracing::{Tracer, sanitize_value};
+use crate::types::{
+    ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall,
+    consume_stream_chunks,
+};
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -251,10 +254,7 @@ pub fn validate_inputs(
 ///
 /// Validates inputs (fills defaults, checks required) and injects nonce markers
 /// for rich-kind inputs (thread, image, file, audio) before rendering.
-pub async fn render(
-    agent: &Prompty,
-    inputs: &serde_json::Value,
-) -> Result<String, InvokerError> {
+pub async fn render(agent: &Prompty, inputs: &serde_json::Value) -> Result<String, InvokerError> {
     let (rendered, _nonces) = render_with_nonces(agent, inputs).await?;
     Ok(rendered)
 }
@@ -270,7 +270,10 @@ async fn render_with_nonces(
     let template = agent.instructions.as_deref().unwrap_or("");
 
     let span = Tracer::start("Renderer");
-    span.emit("signature", &json!(format!("prompty.renderers.{format_kind}.render")));
+    span.emit(
+        "signature",
+        &json!(format!("prompty.renderers.{format_kind}.render")),
+    );
     span.emit("inputs", &json!({ "data": &nonce_inputs }));
 
     match registry::invoke_renderer(&format_kind, agent, template, &nonce_inputs).await {
@@ -296,7 +299,10 @@ pub async fn parse(
     let parser_kind = resolve_parser_kind(agent);
 
     let span = Tracer::start("Parser");
-    span.emit("signature", &json!(format!("prompty.parsers.{parser_kind}.parse")));
+    span.emit(
+        "signature",
+        &json!(format!("prompty.parsers.{parser_kind}.parse")),
+    );
     span.emit("inputs", &json!(rendered));
 
     let result = if parser_kind == "prompty" {
@@ -327,7 +333,10 @@ pub async fn process(
     let provider = resolve_provider(agent);
 
     let span = Tracer::start("Processor");
-    span.emit("signature", &json!(format!("prompty.processors.{provider}.process")));
+    span.emit(
+        "signature",
+        &json!(format!("prompty.processors.{provider}.process")),
+    );
     span.emit("inputs", &json!("raw response"));
 
     match registry::invoke_processor(&provider, agent, response).await {
@@ -381,7 +390,8 @@ pub async fn prepare(
 
     if strict {
         // Try to get pre_render context from the parser
-        let pre_render_result = registry::invoke_pre_render(&parser_kind, agent.instructions.as_deref().unwrap_or(""));
+        let pre_render_result =
+            registry::invoke_pre_render(&parser_kind, agent.instructions.as_deref().unwrap_or(""));
 
         if let Ok(Some((sanitized_template, context))) = pre_render_result {
             // Create a temporary agent with sanitized instructions for rendering
@@ -421,10 +431,7 @@ pub async fn prepare(
 /// Takes pre-prepared messages (from `prepare`).
 /// When `model.options.stream` is `true`, uses streaming execution and
 /// returns the accumulated text content.
-pub async fn run(
-    agent: &Prompty,
-    messages: &[Message],
-) -> Result<serde_json::Value, InvokerError> {
+pub async fn run(agent: &Prompty, messages: &[Message]) -> Result<serde_json::Value, InvokerError> {
     let provider = resolve_provider(agent);
 
     let span = Tracer::start("run");
@@ -437,7 +444,8 @@ pub async fn run(
         match registry::invoke_executor_stream(&provider, agent, messages).await {
             Ok(sse_stream) => {
                 let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+                let chunk_stream =
+                    registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
                 let (_, text) = consume_stream_chunks(chunk_stream, None).await;
                 json!(text)
             }
@@ -479,12 +487,18 @@ pub async fn invoke(
 ) -> Result<serde_json::Value, InvokerError> {
     let span = Tracer::start("invoke");
     span.emit("signature", &json!("prompty.invoke"));
-    span.emit("description", &json!(agent.description.as_deref().unwrap_or("")));
+    span.emit(
+        "description",
+        &json!(agent.description.as_deref().unwrap_or("")),
+    );
     let empty = serde_json::json!({});
-    span.emit("inputs", &json!({
-        "prompt": serialize_agent(agent),
-        "inputs": inputs.unwrap_or(&empty),
-    }));
+    span.emit(
+        "inputs",
+        &json!({
+            "prompt": serialize_agent(agent),
+            "inputs": inputs.unwrap_or(&empty),
+        }),
+    );
 
     let result: Result<serde_json::Value, InvokerError> = async {
         let messages = prepare(agent, inputs).await?;
@@ -516,8 +530,14 @@ pub async fn invoke_from_path(
 
     let span = Tracer::start("load");
     span.emit("signature", &json!("prompty.load"));
-    span.emit("description", &json!(agent.description.as_deref().unwrap_or("")));
-    span.emit("inputs", &json!({ "prompty_file": path.as_ref().display().to_string() }));
+    span.emit(
+        "description",
+        &json!(agent.description.as_deref().unwrap_or("")),
+    );
+    span.emit(
+        "inputs",
+        &json!({ "prompty_file": path.as_ref().display().to_string() }),
+    );
     span.emit("result", &serialize_agent(&agent));
     span.end();
 
@@ -540,21 +560,13 @@ pub enum AgentEvent {
     /// A thinking/reasoning token from the LLM.
     Thinking(String),
     /// A tool call is about to be dispatched.
-    ToolCallStart {
-        name: String,
-        arguments: String,
-    },
+    ToolCallStart { name: String, arguments: String },
     /// A tool call has completed with a result.
-    ToolResult {
-        name: String,
-        result: String,
-    },
+    ToolResult { name: String, result: String },
     /// Status update from the agent loop.
     Status(String),
     /// The message list was updated (e.g., tool results appended).
-    MessagesUpdated {
-        messages: Vec<Message>,
-    },
+    MessagesUpdated { messages: Vec<Message> },
     /// The agent loop has completed.
     Done {
         response: serde_json::Value,
@@ -574,10 +586,24 @@ pub type EventCallback = Box<dyn Fn(AgentEvent) + Send + Sync>;
 // ---------------------------------------------------------------------------
 
 /// A synchronous tool function: takes JSON arguments, returns a string result.
-pub type ToolFn = Box<dyn Fn(serde_json::Value) -> Result<String, Box<dyn std::error::Error + Send + Sync>> + Send + Sync>;
+pub type ToolFn = Box<
+    dyn Fn(serde_json::Value) -> Result<String, Box<dyn std::error::Error + Send + Sync>>
+        + Send
+        + Sync,
+>;
 
 /// An async tool function: takes JSON arguments, returns a string result.
-pub type AsyncToolFn = Box<dyn Fn(serde_json::Value) -> Pin<Box<dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>> + Send + Sync>;
+pub type AsyncToolFn = Box<
+    dyn Fn(
+            serde_json::Value,
+        ) -> Pin<
+            Box<
+                dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>>
+                    + Send,
+            >,
+        > + Send
+        + Sync,
+>;
 
 /// A tool handler — either sync or async.
 pub enum ToolHandler {
@@ -721,7 +747,8 @@ pub async fn turn(
             match registry::invoke_executor_stream(&provider, agent, &messages).await {
                 Ok(sse_stream) => {
                     let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                    let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+                    let chunk_stream =
+                        registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
 
                     use futures::StreamExt;
                     let mut text_parts = Vec::new();
@@ -736,7 +763,8 @@ pub async fn turn(
                 }
                 Err(_) => {
                     // Fallback to non-streaming
-                    let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+                    let raw_response =
+                        registry::invoke_executor(&provider, agent, &messages).await?;
                     if opts.raw {
                         span.emit("result", &json!("(raw)"));
                         span.end();
@@ -852,7 +880,8 @@ pub async fn turn(
             match registry::invoke_executor_stream(&provider, agent, &messages).await {
                 Ok(sse_stream) => {
                     let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                    let chunk_stream = registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+                    let chunk_stream =
+                        registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
 
                     let (tool_calls_vec, text) = {
                         use futures::StreamExt;
@@ -878,7 +907,8 @@ pub async fn turn(
                 }
                 Err(_) => {
                     // Fallback to non-streaming if executor doesn't support it
-                    let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+                    let raw_response =
+                        registry::invoke_executor(&provider, agent, &messages).await?;
                     let processed = process(agent, raw_response.clone()).await?;
                     let tool_calls = extract_tool_calls_from_processed(&processed);
                     (tool_calls, processed, raw_response)
@@ -910,7 +940,10 @@ pub async fn turn(
                 if let Some(rewrite) = gr.rewrite {
                     iter_span.emit("result", &rewrite);
                     iter_span.end();
-                    opts.emit(AgentEvent::Done { response: rewrite.clone(), messages: messages.clone() });
+                    opts.emit(AgentEvent::Done {
+                        response: rewrite.clone(),
+                        messages: messages.clone(),
+                    });
                     span.emit("result", &rewrite);
                     span.emit("iterations", &json!(iteration + 1));
                     span.end();
@@ -921,7 +954,10 @@ pub async fn turn(
             iter_span.emit("result", &processed);
             iter_span.end();
             let final_result = unwrap_structured(&processed);
-            opts.emit(AgentEvent::Done { response: final_result.clone(), messages: messages.clone() });
+            opts.emit(AgentEvent::Done {
+                response: final_result.clone(),
+                messages: messages.clone(),
+            });
             span.emit("result", &final_result);
             span.emit("iterations", &json!(iteration + 1));
             span.end();
@@ -931,9 +967,17 @@ pub async fn turn(
         // Dispatch tool calls (parallel or sequential)
         let tool_span = Tracer::start("turn.toolCalls");
         tool_span.emit("signature", &json!("prompty.turn.toolCalls"));
-        tool_span.emit("inputs", &json!(tool_calls.iter().map(|tc| {
-            json!({ "name": tc.name, "id": tc.id, "arguments": tc.arguments })
-        }).collect::<Vec<_>>()));
+        tool_span.emit(
+            "inputs",
+            &json!(
+                tool_calls
+                    .iter()
+                    .map(|tc| {
+                        json!({ "name": tc.name, "id": tc.id, "arguments": tc.arguments })
+                    })
+                    .collect::<Vec<_>>()
+            ),
+        );
 
         let tool_results = if opts.parallel_tool_calls {
             dispatch_tools_parallel(&tool_calls, &opts, agent, inputs).await
@@ -957,11 +1001,19 @@ pub async fn turn(
         )?;
 
         messages.extend(tool_messages);
-        opts.emit(AgentEvent::MessagesUpdated { messages: messages.clone() });
+        opts.emit(AgentEvent::MessagesUpdated {
+            messages: messages.clone(),
+        });
 
-        iter_span.emit("tool_calls", &json!(tool_calls.iter().map(|tc| {
-            json!({ "name": tc.name, "id": tc.id })
-        }).collect::<Vec<_>>()));
+        iter_span.emit(
+            "tool_calls",
+            &json!(
+                tool_calls
+                    .iter()
+                    .map(|tc| { json!({ "name": tc.name, "id": tc.id }) })
+                    .collect::<Vec<_>>()
+            ),
+        );
         iter_span.end();
 
         // If this was the last iteration, error out like TypeScript does
@@ -978,7 +1030,10 @@ pub async fn turn(
     }
 
     // Loop exhausted without returning — only reachable if max_iterations == 0
-    let msg = format!("Agent loop exceeded max iterations ({})", opts.max_iterations);
+    let msg = format!(
+        "Agent loop exceeded max iterations ({})",
+        opts.max_iterations
+    );
     opts.emit(AgentEvent::Error(msg.clone()));
     span.emit("error", &json!(msg));
     span.end();
@@ -993,9 +1048,9 @@ pub async fn turn_from_path(
     inputs: Option<&serde_json::Value>,
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
-    let agent = crate::loader::load_async(path).await.map_err(|e| {
-        InvokerError::Load(e.to_string())
-    })?;
+    let agent = crate::loader::load_async(path)
+        .await
+        .map_err(|e| InvokerError::Load(e.to_string()))?;
     turn(&agent, inputs, options).await
 }
 fn has_any_tools(agent: &Prompty) -> bool {
@@ -1042,7 +1097,8 @@ async fn dispatch_tools_sequential(
             arguments: tc.arguments.clone(),
         });
 
-        let result = crate::tool_dispatch::dispatch_tool(tc, &opts.tools, agent, parent_inputs).await;
+        let result =
+            crate::tool_dispatch::dispatch_tool(tc, &opts.tools, agent, parent_inputs).await;
 
         opts.emit(AgentEvent::ToolResult {
             name: tc.name.clone(),
@@ -1206,10 +1262,7 @@ fn dict_to_message(value: &serde_json::Value) -> Option<Message> {
     let obj = value.as_object()?;
     let role_str = obj.get("role")?.as_str()?;
     let role = Role::from_str_opt(role_str)?;
-    let content = obj
-        .get("content")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let content = obj.get("content").and_then(|v| v.as_str()).unwrap_or("");
     Some(Message {
         role,
         parts: vec![ContentPart::Text(TextPart {
@@ -1409,7 +1462,10 @@ mod tests {
     #[test]
     fn test_extract_text_from_processed_string() {
         let processed = serde_json::json!("Hello!");
-        assert_eq!(extract_text_from_processed(&processed), Some("Hello!".to_string()));
+        assert_eq!(
+            extract_text_from_processed(&processed),
+            Some("Hello!".to_string())
+        );
     }
 
     #[test]
@@ -1516,7 +1572,10 @@ mod tests {
             name: "test".into(),
             arguments: "{}".into(),
         });
-        opts.emit(AgentEvent::Done { response: json!("test"), messages: vec![] });
+        opts.emit(AgentEvent::Done {
+            response: json!("test"),
+            messages: vec![],
+        });
 
         let captured = events.lock().unwrap();
         assert_eq!(captured.len(), 2);
@@ -1531,8 +1590,8 @@ mod tests {
     // These tests register mock executors/processors in the global registry
     // and exercise the full turn() function.
 
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     /// Mock executor that returns tool calls on first call, then a final response.
     struct ToolCallThenDoneExecutor {
@@ -1698,9 +1757,12 @@ mod tests {
     async fn test_turn_without_tools_invokes_directly() {
         ensure_defaults();
         let key = "turn_test_no_tools";
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: Arc::new(AtomicUsize::new(1)), // start at 1 → returns text response
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)), // start at 1 → returns text response
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
@@ -1715,16 +1777,20 @@ mod tests {
         ensure_defaults();
         let key = "turn_test_single";
         let call_count = Arc::new(AtomicUsize::new(0));
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: call_count.clone(),
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: call_count.clone(),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
         let mut tools = HashMap::new();
-        tools.insert("get_weather".to_string(), ToolHandler::Sync(Box::new(|_args| {
-            Ok("72°F and sunny".to_string())
-        })));
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(|_args| Ok("72°F and sunny".to_string()))),
+        );
 
         let opts = TurnOptions::with_tools(tools);
         let result = turn(&agent, None, Some(opts)).await.unwrap();
@@ -1740,23 +1806,32 @@ mod tests {
         ensure_defaults();
         let key = "turn_test_multi";
         let call_count = Arc::new(AtomicUsize::new(0));
-        registry::register_executor(key, MultiToolExecutor {
-            call_count: call_count.clone(),
-        });
+        registry::register_executor(
+            key,
+            MultiToolExecutor {
+                call_count: call_count.clone(),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
         let mut tools = HashMap::new();
-        tools.insert("add".to_string(), ToolHandler::Sync(Box::new(|args| {
-            let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
-            let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
-            Ok(format!("{}", a + b))
-        })));
-        tools.insert("multiply".to_string(), ToolHandler::Sync(Box::new(|args| {
-            let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
-            let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
-            Ok(format!("{}", a * b))
-        })));
+        tools.insert(
+            "add".to_string(),
+            ToolHandler::Sync(Box::new(|args| {
+                let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
+                let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
+                Ok(format!("{}", a + b))
+            })),
+        );
+        tools.insert(
+            "multiply".to_string(),
+            ToolHandler::Sync(Box::new(|args| {
+                let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
+                let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
+                Ok(format!("{}", a * b))
+            })),
+        );
 
         let opts = TurnOptions::with_tools(tools);
         let result = turn(&agent, None, Some(opts)).await.unwrap();
@@ -1775,9 +1850,10 @@ mod tests {
 
         let agent = make_simple_agent(key);
         let mut tools = HashMap::new();
-        tools.insert("ticker".to_string(), ToolHandler::Sync(Box::new(|_| {
-            Ok("tick".to_string())
-        })));
+        tools.insert(
+            "ticker".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("tick".to_string()))),
+        );
 
         let events = Arc::new(std::sync::Mutex::new(Vec::new()));
         let events_clone = events.clone();
@@ -1797,7 +1873,11 @@ mod tests {
         // Check that we got an error event about max iterations
         let captured = events.lock().unwrap();
         let has_max_iter_warning = captured.iter().any(|e| e.contains("max iterations"));
-        assert!(has_max_iter_warning, "Should warn about max iterations: {:?}", captured);
+        assert!(
+            has_max_iter_warning,
+            "Should warn about max iterations: {:?}",
+            captured
+        );
     }
 
     #[tokio::test]
@@ -1805,15 +1885,21 @@ mod tests {
     async fn test_turn_cancellation_before_start() {
         ensure_defaults();
         let key = "turn_test_cancel_before";
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: Arc::new(AtomicUsize::new(0)),
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(0)),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
         let cancel = Arc::new(std::sync::atomic::AtomicBool::new(true)); // already cancelled
         let mut tools = HashMap::new();
-        tools.insert("test".to_string(), ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))));
+        tools.insert(
+            "test".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+        );
 
         let opts = TurnOptions {
             tools,
@@ -1843,14 +1929,17 @@ mod tests {
         let count_clone = call_count.clone();
         let cancel_in_tool = cancel_clone.clone();
 
-        tools.insert("ticker".to_string(), ToolHandler::Sync(Box::new(move |_| {
-            let n = count_clone.fetch_add(1, Ordering::SeqCst);
-            if n >= 1 {
-                // Cancel after second tool dispatch
-                cancel_in_tool.store(true, Ordering::Relaxed);
-            }
-            Ok("tick".to_string())
-        })));
+        tools.insert(
+            "ticker".to_string(),
+            ToolHandler::Sync(Box::new(move |_| {
+                let n = count_clone.fetch_add(1, Ordering::SeqCst);
+                if n >= 1 {
+                    // Cancel after second tool dispatch
+                    cancel_in_tool.store(true, Ordering::Relaxed);
+                }
+                Ok("tick".to_string())
+            })),
+        );
 
         let opts = TurnOptions {
             tools,
@@ -1873,9 +1962,12 @@ mod tests {
         ensure_defaults();
         let key = "turn_test_events";
         let call_count = Arc::new(AtomicUsize::new(0));
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: call_count.clone(),
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: call_count.clone(),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
@@ -1883,9 +1975,10 @@ mod tests {
         let events_clone = events.clone();
 
         let mut tools = HashMap::new();
-        tools.insert("get_weather".to_string(), ToolHandler::Sync(Box::new(|_| {
-            Ok("sunny".to_string())
-        })));
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("sunny".to_string()))),
+        );
 
         let opts = TurnOptions {
             tools,
@@ -1899,7 +1992,11 @@ mod tests {
 
         let captured = events.lock().unwrap();
         // Should see: ToolCallStart → ToolResult → Done
-        assert!(captured.len() >= 3, "Expected at least 3 events, got {:?}", captured);
+        assert!(
+            captured.len() >= 3,
+            "Expected at least 3 events, got {:?}",
+            captured
+        );
         assert!(captured[0].contains("ToolCallStart"));
         assert!(captured[1].contains("ToolResult"));
         assert!(captured.last().unwrap().contains("Done"));
@@ -1911,16 +2008,20 @@ mod tests {
         ensure_defaults();
         let key = "turn_test_tool_err";
         let call_count = Arc::new(AtomicUsize::new(0));
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: call_count.clone(),
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: call_count.clone(),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
         let mut tools = HashMap::new();
-        tools.insert("get_weather".to_string(), ToolHandler::Sync(Box::new(|_| {
-            Err("API rate limited".into())
-        })));
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(|_| Err("API rate limited".into()))),
+        );
 
         let opts = TurnOptions::with_tools(tools);
         // Tool errors are non-fatal (matching TypeScript) — error string sent to LLM,
@@ -1935,15 +2036,21 @@ mod tests {
         ensure_defaults();
         let key = "turn_test_missing_tool";
         let call_count = Arc::new(AtomicUsize::new(0));
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: call_count.clone(),
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: call_count.clone(),
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
         // Register tools map that does NOT include "get_weather"
         let mut tools = HashMap::new();
-        tools.insert("other_tool".to_string(), ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))));
+        tools.insert(
+            "other_tool".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+        );
 
         let opts = TurnOptions::with_tools(tools);
         // Missing tool is non-fatal (matching TypeScript) — error string sent to LLM
@@ -1954,7 +2061,10 @@ mod tests {
     #[tokio::test]
     async fn test_dispatch_tool_invalid_json_arguments() {
         let mut tools = HashMap::new();
-        tools.insert("test".to_string(), ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))));
+        tools.insert(
+            "test".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+        );
 
         let tc = ToolCall {
             id: "call_1".to_string(),
@@ -1977,9 +2087,12 @@ mod tests {
     async fn test_run_with_mock_executor() {
         ensure_defaults();
         let key = "run_test";
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: Arc::new(AtomicUsize::new(1)), // skip to final response
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)), // skip to final response
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
@@ -1993,9 +2106,12 @@ mod tests {
     async fn test_invoke_with_mock_executor() {
         ensure_defaults();
         let key = "invoke_test";
-        registry::register_executor(key, ToolCallThenDoneExecutor {
-            call_count: Arc::new(AtomicUsize::new(1)), // skip to final response
-        });
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)), // skip to final response
+            },
+        );
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);

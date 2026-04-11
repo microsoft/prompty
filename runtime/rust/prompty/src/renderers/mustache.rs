@@ -25,11 +25,9 @@ impl Renderer for MustacheRenderer {
 
 /// Render a Mustache template string with the given context values.
 fn render_mustache(template: &str, context: &serde_json::Value) -> Result<String, InvokerError> {
-    let data_str = serde_json::to_string(context)
-        .map_err(|e| InvokerError::Render(Box::new(e)))?;
+    let data_str = serde_json::to_string(context).map_err(|e| InvokerError::Render(Box::new(e)))?;
 
-    ribboncurls::render(template, &data_str, None)
-        .map_err(|e| InvokerError::Render(e.into()))
+    ribboncurls::render(template, &data_str, None).map_err(|e| InvokerError::Render(e.into()))
 }
 
 #[cfg(test)]
@@ -89,7 +87,11 @@ mod tests {
         let renderer = MustacheRenderer;
         let agent = Prompty::default();
         let result = renderer
-            .render(&agent, "Hello {{name}}!", &serde_json::json!({"name": "Rust"}))
+            .render(
+                &agent,
+                "Hello {{name}}!",
+                &serde_json::json!({"name": "Rust"}),
+            )
             .await;
         assert_eq!(result.unwrap(), "Hello Rust!");
     }

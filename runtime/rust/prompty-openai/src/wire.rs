@@ -3,9 +3,9 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{ModelOptions, Property, PropertyKind, Prompty, Tool, ToolKind};
+use prompty::model::{ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, Message};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 // ---------------------------------------------------------------------------
 // Message → OpenAI wire format
@@ -92,10 +92,7 @@ fn mime_to_audio_format(mime: &str) -> &str {
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for a chat completions call.
-pub fn build_chat_args(
-    agent: &Prompty,
-    messages: &[Message],
-) -> Value {
+pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
     let mut args = Map::new();
 
     // Model ID
@@ -316,7 +313,10 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
 /// Convert a single Property to a recursive JSON Schema definition.
 fn property_to_json_schema(prop: &Property) -> Value {
     let mut schema = Map::new();
-    schema.insert("type".to_string(), Value::String(kind_to_json_type(prop.kind_str())));
+    schema.insert(
+        "type".to_string(),
+        Value::String(kind_to_json_type(prop.kind_str())),
+    );
 
     if let Some(ref desc) = prop.description {
         schema.insert("description".to_string(), Value::String(desc.clone()));
@@ -463,7 +463,10 @@ pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
     args.insert("input".to_string(), Value::Array(input_messages));
 
     if !system_parts.is_empty() {
-        args.insert("instructions".to_string(), Value::String(system_parts.join("\n\n")));
+        args.insert(
+            "instructions".to_string(),
+            Value::String(system_parts.join("\n\n")),
+        );
     }
 
     // Options
@@ -657,13 +660,16 @@ pub fn format_tool_messages(
         .collect();
 
     let mut assistant = Message::text(prompty::Role::Assistant, "");
-    assistant.metadata.insert("tool_calls".to_string(), Value::Array(wire_calls));
+    assistant
+        .metadata
+        .insert("tool_calls".to_string(), Value::Array(wire_calls));
     messages.push(assistant);
 
     // One tool result message per call
     for (tc, result) in tool_calls.iter().zip(results) {
         let mut msg = Message::tool_result(&tc.id, result);
-        msg.metadata.insert("name".to_string(), Value::String(tc.name.clone()));
+        msg.metadata
+            .insert("name".to_string(), Value::String(tc.name.clone()));
         messages.push(msg);
     }
 
@@ -731,8 +737,10 @@ mod tests {
     #[test]
     fn test_message_to_wire_metadata() {
         let mut msg = Message::text(prompty::Role::Tool, "result");
-        msg.metadata.insert("tool_call_id".to_string(), json!("call_123"));
-        msg.metadata.insert("name".to_string(), json!("get_weather"));
+        msg.metadata
+            .insert("tool_call_id".to_string(), json!("call_123"));
+        msg.metadata
+            .insert("name".to_string(), json!("get_weather"));
         let wire = message_to_wire(&msg);
         assert_eq!(wire["tool_call_id"], "call_123");
         assert_eq!(wire["name"], "get_weather");

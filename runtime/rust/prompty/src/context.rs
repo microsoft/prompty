@@ -99,10 +99,7 @@ pub fn summarize_dropped(messages: &[Message]) -> String {
 ///    after the system messages
 ///
 /// The summary budget is `min(5000, 5% of budget_chars)`.
-pub fn trim_to_context_window(
-    messages: &[Message],
-    budget_chars: usize,
-) -> (usize, Vec<Message>) {
+pub fn trim_to_context_window(messages: &[Message], budget_chars: usize) -> (usize, Vec<Message>) {
     let current = estimate_chars(messages);
     if current <= budget_chars {
         return (0, messages.to_vec());
@@ -203,10 +200,7 @@ mod tests {
 
     #[test]
     fn test_summarize_dropped_basic() {
-        let msgs = vec![
-            msg(Role::User, "Hello"),
-            msg(Role::Assistant, "Hi there"),
-        ];
+        let msgs = vec![msg(Role::User, "Hello"), msg(Role::Assistant, "Hi there")];
         let summary = summarize_dropped(&msgs);
         assert!(summary.contains("[user]: Hello"));
         assert!(summary.contains("[assistant]: Hi there"));
@@ -223,10 +217,7 @@ mod tests {
 
     #[test]
     fn test_trim_under_budget() {
-        let msgs = vec![
-            msg(Role::System, "sys"),
-            msg(Role::User, "hi"),
-        ];
+        let msgs = vec![msg(Role::System, "sys"), msg(Role::User, "hi")];
         let (dropped, result) = trim_to_context_window(&msgs, 100_000);
         assert_eq!(dropped, 0);
         assert_eq!(result.len(), 2);

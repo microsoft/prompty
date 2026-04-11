@@ -9,10 +9,10 @@
 //!
 //! Or set the env vars and run without `--ignored` after removing the `#[ignore]` attrs.
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use prompty::{register_defaults, ToolHandler, TurnOptions};
-use serde_json::{json, Value};
+use prompty::model::context::LoadContext;
+use prompty::{ToolHandler, TurnOptions, register_defaults};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 // ---------------------------------------------------------------------------
@@ -196,7 +196,10 @@ async fn test_embedding() {
         .await
         .expect("embedding should succeed");
 
-    assert!(result.is_array(), "embedding result should be an array: {result:?}");
+    assert!(
+        result.is_array(),
+        "embedding result should be an array: {result:?}"
+    );
     let arr = result.as_array().unwrap();
     assert!(!arr.is_empty(), "embedding vector should not be empty");
     assert!(
@@ -302,19 +305,23 @@ async fn test_structured_output() {
     // The result should be parseable as JSON with the expected fields
     let obj = match result {
         Value::Object(ref o) => o.clone(),
-        Value::String(ref s) => {
-            serde_json::from_str::<Value>(s)
-                .expect("structured output string should be valid JSON")
-                .as_object()
-                .expect("parsed JSON should be an object")
-                .clone()
-        }
+        Value::String(ref s) => serde_json::from_str::<Value>(s)
+            .expect("structured output string should be valid JSON")
+            .as_object()
+            .expect("parsed JSON should be an object")
+            .clone(),
         other => panic!("Expected object or JSON string, got: {other:?}"),
     };
 
     assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
-    assert!(obj.contains_key("country"), "missing 'country' field: {obj:?}");
-    assert!(obj.contains_key("population"), "missing 'population' field: {obj:?}");
+    assert!(
+        obj.contains_key("country"),
+        "missing 'country' field: {obj:?}"
+    );
+    assert!(
+        obj.contains_key("population"),
+        "missing 'population' field: {obj:?}"
+    );
     eprintln!("Structured output: {obj:?}");
 }
 

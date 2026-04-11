@@ -64,10 +64,7 @@ fn clear_env_vars(keys: &[String]) {
 // Load helpers
 // ---------------------------------------------------------------------------
 
-fn load_fixture(
-    name: &str,
-    env: &Value,
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+fn load_fixture(name: &str, env: &Value) -> Result<prompty::model::Prompty, prompty::LoadError> {
     let keys = set_env_vars(env);
     let result = prompty::load(fixtures_dir().join(name));
     clear_env_vars(&keys);
@@ -86,10 +83,7 @@ fn load_from_frontmatter(
     result
 }
 
-fn load_from_raw(
-    raw: &str,
-    env: &Value,
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+fn load_from_raw(raw: &str, env: &Value) -> Result<prompty::model::Prompty, prompty::LoadError> {
     let keys = set_env_vars(env);
     let result = prompty::load_from_string(raw, std::env::current_dir().unwrap());
     clear_env_vars(&keys);
@@ -189,7 +183,10 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
     // kind
     if let Some(kind) = expected.get("kind").and_then(Value::as_str) {
         // kind is consumed during load; verify it was "prompt" by confirming load succeeded
-        assert_eq!(kind, "prompt", "[{vec_name}] expected kind=prompt in vector");
+        assert_eq!(
+            kind, "prompt",
+            "[{vec_name}] expected kind=prompt in vector"
+        );
     }
 
     // model
@@ -284,18 +281,12 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
             .unwrap_or_else(|| panic!("[{vec_name}] expected template but got None"));
         if let Some(fmt) = tmpl_exp.get("format") {
             if let Some(kind) = fmt.get("kind").and_then(Value::as_str) {
-                assert_eq!(
-                    tmpl.format.kind, kind,
-                    "[{vec_name}] template.format.kind"
-                );
+                assert_eq!(tmpl.format.kind, kind, "[{vec_name}] template.format.kind");
             }
         }
         if let Some(parser) = tmpl_exp.get("parser") {
             if let Some(kind) = parser.get("kind").and_then(Value::as_str) {
-                assert_eq!(
-                    tmpl.parser.kind, kind,
-                    "[{vec_name}] template.parser.kind"
-                );
+                assert_eq!(tmpl.parser.kind, kind, "[{vec_name}] template.parser.kind");
             }
         }
     }
@@ -317,11 +308,7 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
     }
 }
 
-fn validate_model(
-    model: &prompty::model::model::Model,
-    expected: &Value,
-    vec_name: &str,
-) {
+fn validate_model(model: &prompty::model::model::Model, expected: &Value, vec_name: &str) {
     if let Some(id) = expected.get("id").and_then(Value::as_str) {
         assert_eq!(model.id, id, "[{vec_name}] model.id");
     }
@@ -380,12 +367,7 @@ fn validate_model(
     }
 }
 
-fn validate_tool(
-    tool: &prompty::model::tool::Tool,
-    expected: &Value,
-    vec_name: &str,
-    idx: usize,
-) {
+fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: &str, idx: usize) {
     if let Some(name) = expected.get("name").and_then(Value::as_str) {
         assert_eq!(tool.name, name, "[{vec_name}] tool[{idx}].name");
     }
@@ -406,19 +388,13 @@ fn validate_tool(
             parameters, strict, ..
         } => {
             if let Some(exp_strict) = expected.get("strict").and_then(Value::as_bool) {
-                assert_eq!(
-                    *strict,
-                    Some(exp_strict),
-                    "[{vec_name}] tool[{idx}].strict"
-                );
+                assert_eq!(*strict, Some(exp_strict), "[{vec_name}] tool[{idx}].strict");
             }
             if let Some(exp_params) = expected.get("parameters").and_then(Value::as_array) {
                 // Parameters may be stored as a JSON array of property objects
-                let params_arr = parameters
-                    .as_array()
-                    .unwrap_or_else(|| {
-                        panic!("[{vec_name}] tool[{idx}].parameters is not an array")
-                    });
+                let params_arr = parameters.as_array().unwrap_or_else(|| {
+                    panic!("[{vec_name}] tool[{idx}].parameters is not an array")
+                });
                 assert_eq!(
                     params_arr.len(),
                     exp_params.len(),
@@ -427,7 +403,10 @@ fn validate_tool(
                 for (j, ep) in exp_params.iter().enumerate() {
                     if let Some(pname) = ep.get("name").and_then(Value::as_str) {
                         assert_eq!(
-                            params_arr[j].get("name").and_then(Value::as_str).unwrap_or(""),
+                            params_arr[j]
+                                .get("name")
+                                .and_then(Value::as_str)
+                                .unwrap_or(""),
                             pname,
                             "[{vec_name}] tool[{idx}].parameters[{j}].name"
                         );
@@ -437,10 +416,7 @@ fn validate_tool(
         }
         prompty::model::tool::ToolKind::Mcp { server_name, .. } => {
             if let Some(sn) = expected.get("serverName").and_then(Value::as_str) {
-                assert_eq!(
-                    server_name, sn,
-                    "[{vec_name}] tool[{idx}].serverName"
-                );
+                assert_eq!(server_name, sn, "[{vec_name}] tool[{idx}].serverName");
             }
         }
         prompty::model::tool::ToolKind::OpenApi { specification, .. } => {
@@ -484,7 +460,8 @@ fn run_validation(
 #[test]
 fn spec_load_vectors() {
     let raw = std::fs::read_to_string(vectors_path()).expect("Failed to read load_vectors.json");
-    let vectors: Vec<Value> = serde_json::from_str(&raw).expect("Failed to parse load_vectors.json");
+    let vectors: Vec<Value> =
+        serde_json::from_str(&raw).expect("Failed to parse load_vectors.json");
 
     let mut failures: Vec<String> = Vec::new();
 
@@ -560,8 +537,7 @@ fn load_agent(vec_name: &str, input: &Value, env: &Value) -> prompty::model::Pro
         load_from_frontmatter(fm, env)
             .unwrap_or_else(|e| panic!("[{vec_name}] load_from_frontmatter failed: {e}"))
     } else if let Some(raw) = input.get("frontmatter_raw").and_then(Value::as_str) {
-        load_from_raw(raw, env)
-            .unwrap_or_else(|e| panic!("[{vec_name}] load_from_raw failed: {e}"))
+        load_from_raw(raw, env).unwrap_or_else(|e| panic!("[{vec_name}] load_from_raw failed: {e}"))
     } else {
         panic!("[{vec_name}] vector has no fixture, frontmatter, or frontmatter_raw");
     }
@@ -572,10 +548,7 @@ fn load_agent(vec_name: &str, input: &Value, env: &Value) -> prompty::model::Pro
 // ---------------------------------------------------------------------------
 
 fn run_error_vector(vec_name: &str, input: &Value, expected: &Value, env: &Value) {
-    let expected_err = expected
-        .get("error")
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let expected_err = expected.get("error").and_then(Value::as_str).unwrap_or("");
 
     let result = attempt_load(input, env);
 
@@ -603,9 +576,7 @@ fn run_error_vector(vec_name: &str, input: &Value, expected: &Value, env: &Value
                 // Pass — runtime doesn't error but produces an unusable template
                 return;
             }
-            panic!(
-                "[{vec_name}] expected error containing '{expected_err}', but load succeeded"
-            );
+            panic!("[{vec_name}] expected error containing '{expected_err}', but load succeeded");
         }
         Err(err) => {
             let err_str = err.to_string();
@@ -619,9 +590,10 @@ fn run_error_vector(vec_name: &str, input: &Value, expected: &Value, env: &Value
                     || err_lower.contains("file not found")
             } else {
                 // Check for substring containment of key words from expected error
-                exp_lower.split_whitespace().any(|word| {
-                    word.len() > 3 && err_lower.contains(word)
-                }) || err_lower.contains(&exp_lower)
+                exp_lower
+                    .split_whitespace()
+                    .any(|word| word.len() > 3 && err_lower.contains(word))
+                    || err_lower.contains(&exp_lower)
             };
 
             assert!(
@@ -642,7 +614,10 @@ fn run_validation_vector(vec_name: &str, input: &Value, expected: &Value, env: &
     let agent = load_from_frontmatter(fm, env)
         .unwrap_or_else(|e| panic!("[{vec_name}] load_from_frontmatter failed: {e}"));
 
-    let inputs = input.get("inputs").cloned().unwrap_or(serde_json::json!({}));
+    let inputs = input
+        .get("inputs")
+        .cloned()
+        .unwrap_or(serde_json::json!({}));
 
     if let Some(exp_validated) = expected.get("validated_inputs") {
         // Expect success
@@ -697,7 +672,9 @@ fn run_validation_vector(vec_name: &str, input: &Value, expected: &Value, env: &
             let err_lower = err_str.to_lowercase();
             let exp_lower = exp_err.to_lowercase();
             assert!(
-                exp_lower.split_whitespace().any(|w| w.len() > 3 && err_lower.contains(w)),
+                exp_lower
+                    .split_whitespace()
+                    .any(|w| w.len() > 3 && err_lower.contains(w)),
                 "[{vec_name}] error mismatch: expected '{exp_err}', got '{err_str}'"
             );
         }

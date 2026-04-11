@@ -7,7 +7,7 @@ use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
 use prompty::types::{AudioPart, ContentPart, ImagePart, Message, Role, TextPart};
 use prompty_openai::wire;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 fn spec_root() -> std::path::PathBuf {
     // runtime/rust/ → project root → spec/
@@ -19,7 +19,10 @@ fn spec_root() -> std::path::PathBuf {
 }
 
 fn load_wire_vectors() -> Vec<Value> {
-    let path = spec_root().join("vectors").join("wire").join("wire_vectors.json");
+    let path = spec_root()
+        .join("vectors")
+        .join("wire")
+        .join("wire_vectors.json");
     let content = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("Failed to read wire vectors at {}: {e}", path.display()));
     serde_json::from_str(&content).expect("Invalid JSON in wire_vectors.json")
@@ -27,7 +30,9 @@ fn load_wire_vectors() -> Vec<Value> {
 
 /// Build messages from vector input content/messages format.
 fn build_messages(input: &Value) -> Vec<Message> {
-    let msgs = input["messages"].as_array().expect("messages should be array");
+    let msgs = input["messages"]
+        .as_array()
+        .expect("messages should be array");
     msgs.iter()
         .map(|m| {
             let role = Role::from_str_opt(m["role"].as_str().unwrap()).unwrap();
@@ -43,11 +48,17 @@ fn build_messages(input: &Value) -> Vec<Message> {
                         "image" => ContentPart::Image(ImagePart {
                             source: p["value"].as_str().unwrap().to_string(),
                             detail: None,
-                            media_type: p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                            media_type: p
+                                .get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from),
                         }),
                         "audio" => ContentPart::Audio(AudioPart {
                             source: p["value"].as_str().unwrap().to_string(),
-                            media_type: p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                            media_type: p
+                                .get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from),
                         }),
                         _ => panic!("Unknown content kind: {kind}"),
                     }
@@ -65,8 +76,14 @@ fn build_messages(input: &Value) -> Vec<Message> {
 /// Build a Prompty agent from vector input fields.
 fn build_agent(input: &Value) -> Prompty {
     let model_id = input["model_id"].as_str().unwrap_or("gpt-4");
-    let api_type = input.get("apiType").and_then(|v| v.as_str()).unwrap_or("chat");
-    let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("openai");
+    let api_type = input
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat");
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
 
     let mut data = json!({
         "name": "test",
@@ -107,7 +124,8 @@ fn json_eq(actual: &Value, expected: &Value) -> bool {
             if a.len() != b.len() {
                 return false;
             }
-            a.iter().all(|(k, v)| b.get(k).is_some_and(|bv| json_eq(v, bv)))
+            a.iter()
+                .all(|(k, v)| b.get(k).is_some_and(|bv| json_eq(v, bv)))
         }
         (Value::Array(a), Value::Array(b)) => {
             a.len() == b.len() && a.iter().zip(b).all(|(av, bv)| json_eq(av, bv))
@@ -132,7 +150,10 @@ macro_rules! wire_test {
                 .unwrap_or_else(|| panic!("Vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("openai");
+            let provider = input
+                .get("provider")
+                .and_then(|v| v.as_str())
+                .unwrap_or("openai");
 
             // Skip non-OpenAI vectors
             if provider != "openai" {
@@ -141,7 +162,10 @@ macro_rules! wire_test {
 
             let agent = build_agent(input);
             let messages = build_messages(input);
-            let api_type = input.get("apiType").and_then(|v| v.as_str()).unwrap_or("chat");
+            let api_type = input
+                .get("apiType")
+                .and_then(|v| v.as_str())
+                .unwrap_or("chat");
 
             let actual = match api_type {
                 "chat" | "agent" => wire::build_chat_args(&agent, &messages),

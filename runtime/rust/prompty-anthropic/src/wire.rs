@@ -11,9 +11,9 @@
 //! - `max_tokens` required, defaults to 4096
 //! - Options: `top_k`, `stop_sequences` (not `stop`)
 
-use prompty::model::{Property, PropertyKind, Prompty, Tool, ToolKind};
+use prompty::model::{Prompty, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, Message, Role, ToolCall};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 /// Default max_tokens when not specified (Anthropic requires this field).
 const DEFAULT_MAX_TOKENS: i64 = 4096;
@@ -373,7 +373,9 @@ fn parameters_to_json_schema(params_value: &Value) -> Value {
 
     let ctx = LoadContext::default();
     let params: Vec<Property> = if let Some(arr) = params_value.as_array() {
-        arr.iter().map(|v| Property::load_from_value(v, &ctx)).collect()
+        arr.iter()
+            .map(|v| Property::load_from_value(v, &ctx))
+            .collect()
     } else {
         return json!({"type": "object", "properties": {}});
     };

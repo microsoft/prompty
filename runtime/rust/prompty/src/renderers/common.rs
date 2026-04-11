@@ -16,7 +16,9 @@ pub const RICH_KINDS: &[&str] = &["thread", "image", "file", "audio"];
 /// Generate a nonce marker: `__PROMPTY_THREAD_<hex8>_<name>__`
 fn generate_nonce(name: &str) -> String {
     let mut rng = rand::rng();
-    let hex: String = (0..8).map(|_| format!("{:x}", rng.random_range(0..16u8))).collect();
+    let hex: String = (0..8)
+        .map(|_| format!("{:x}", rng.random_range(0..16u8)))
+        .collect();
     format!("__PROMPTY_THREAD_{hex}_{name}__")
 }
 

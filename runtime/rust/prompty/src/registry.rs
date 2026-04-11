@@ -209,7 +209,8 @@ pub async fn invoke_executor_stream(
     key: &str,
     agent: &crate::model::Prompty,
     messages: &[crate::types::Message],
-) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
+) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
+{
     let executor = {
         let guard = executors().read().expect("executors lock poisoned");
         Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
@@ -251,7 +252,10 @@ pub async fn invoke_processor(
 pub fn invoke_processor_stream(
     key: &str,
     inner: std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
-) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError> {
+) -> Result<
+    std::pin::Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>,
+    InvokerError,
+> {
     let processor = {
         let guard = processors().read().expect("processors lock poisoned");
         Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
@@ -281,7 +285,10 @@ pub fn invoke_format_tool_messages(
 }
 
 /// Get the pre-render hook from a registered parser (if it provides one).
-pub fn invoke_pre_render(key: &str, template: &str) -> Result<Option<(String, serde_json::Value)>, InvokerError> {
+pub fn invoke_pre_render(
+    key: &str,
+    template: &str,
+) -> Result<Option<(String, serde_json::Value)>, InvokerError> {
     let parser = {
         let guard = parsers().read().expect("parsers lock poisoned");
         Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
@@ -422,7 +429,9 @@ mod tests {
         clear_cache();
         register_parser("test_parser", DummyParser);
         let agent = crate::model::Prompty::default();
-        let msgs = invoke_parser("test_parser", &agent, "hello", None).await.unwrap();
+        let msgs = invoke_parser("test_parser", &agent, "hello", None)
+            .await
+            .unwrap();
         assert_eq!(msgs.len(), 1);
         assert_eq!(msgs[0].text_content(), "parsed");
     }
@@ -432,7 +441,9 @@ mod tests {
     async fn test_invoke_parser_missing() {
         clear_cache();
         let agent = crate::model::Prompty::default();
-        let err = invoke_parser("nope", &agent, "hello", None).await.unwrap_err();
+        let err = invoke_parser("nope", &agent, "hello", None)
+            .await
+            .unwrap_err();
         assert!(err.to_string().contains("parser"));
         assert!(err.to_string().contains("nope"));
     }
@@ -463,7 +474,9 @@ mod tests {
         clear_cache();
         register_processor("test_proc", DummyProcessor);
         let agent = crate::model::Prompty::default();
-        let result = invoke_processor("test_proc", &agent, serde_json::json!({"x": 1})).await.unwrap();
+        let result = invoke_processor("test_proc", &agent, serde_json::json!({"x": 1}))
+            .await
+            .unwrap();
         assert_eq!(result["x"], 1);
     }
 
@@ -472,7 +485,9 @@ mod tests {
     async fn test_invoke_processor_missing() {
         clear_cache();
         let agent = crate::model::Prompty::default();
-        let err = invoke_processor("nope", &agent, serde_json::json!({})).await.unwrap_err();
+        let err = invoke_processor("nope", &agent, serde_json::json!({}))
+            .await
+            .unwrap_err();
         assert!(err.to_string().contains("processor"));
         assert!(err.to_string().contains("nope"));
     }
@@ -482,15 +497,20 @@ mod tests {
     fn test_invoke_format_tool_messages_default() {
         clear_cache();
         register_executor("test_ftm", DummyExecutor);
-        let tool_calls = vec![
-            crate::types::ToolCall {
-                id: "call_1".into(),
-                name: "get_weather".into(),
-                arguments: r#"{"city":"NY"}"#.into(),
-            },
-        ];
+        let tool_calls = vec![crate::types::ToolCall {
+            id: "call_1".into(),
+            name: "get_weather".into(),
+            arguments: r#"{"city":"NY"}"#.into(),
+        }];
         let results = vec!["72°F sunny".to_string()];
-        let msgs = invoke_format_tool_messages("test_ftm", &serde_json::json!({}), &tool_calls, &results, None).unwrap();
+        let msgs = invoke_format_tool_messages(
+            "test_ftm",
+            &serde_json::json!({}),
+            &tool_calls,
+            &results,
+            None,
+        )
+        .unwrap();
         // Default impl: assistant message with tool_calls + tool result message
         assert_eq!(msgs.len(), 2);
         assert_eq!(msgs[0].role, crate::types::Role::Assistant);
@@ -503,7 +523,8 @@ mod tests {
     #[serial]
     fn test_invoke_format_tool_messages_missing_executor() {
         clear_cache();
-        let err = invoke_format_tool_messages("nope", &serde_json::json!({}), &[], &[], None).unwrap_err();
+        let err = invoke_format_tool_messages("nope", &serde_json::json!({}), &[], &[], None)
+            .unwrap_err();
         assert!(err.to_string().contains("executor"));
     }
 

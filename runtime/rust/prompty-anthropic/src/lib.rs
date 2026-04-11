@@ -23,7 +23,7 @@ pub mod processor;
 pub mod wire;
 
 pub use executor::AnthropicExecutor;
-pub use processor::{process_response, AnthropicProcessor};
+pub use processor::{AnthropicProcessor, process_response};
 
 /// Register the Anthropic executor and processor in the global registry.
 pub fn register() {

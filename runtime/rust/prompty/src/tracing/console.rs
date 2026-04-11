@@ -24,7 +24,10 @@ impl TracerBackend for ConsoleBackend {
         }
 
         // Print the header on the first event.
-        if !self.printed_header.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        if !self
+            .printed_header
+            .swap(true, std::sync::atomic::Ordering::Relaxed)
+        {
             eprintln!("[Tracer] ── {}", self.signature);
         }
 

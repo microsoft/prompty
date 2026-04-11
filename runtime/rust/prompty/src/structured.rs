@@ -91,7 +91,10 @@ pub fn unwrap_structured(value: &Value) -> Value {
 /// Optionally runs a `validator` function on the deserialized result.
 ///
 /// Matches TypeScript's `cast<T>(result, validator?)`.
-pub fn cast<T>(value: &Value, validator: Option<&dyn Fn(&T) -> Result<(), String>>) -> Result<T, CastError>
+pub fn cast<T>(
+    value: &Value,
+    validator: Option<&dyn Fn(&T) -> Result<(), String>>,
+) -> Result<T, CastError>
 where
     T: serde::de::DeserializeOwned,
 {
@@ -104,8 +107,7 @@ where
         serde_json::to_string(value).map_err(|e| CastError::Serialization(e.to_string()))?
     };
 
-    let parsed: T =
-        serde_json::from_str(&json_str).map_err(|e| CastError::Parse(e.to_string()))?;
+    let parsed: T = serde_json::from_str(&json_str).map_err(|e| CastError::Parse(e.to_string()))?;
 
     if let Some(v) = validator {
         v(&parsed).map_err(CastError::Validation)?;

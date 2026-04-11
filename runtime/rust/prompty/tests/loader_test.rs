@@ -77,7 +77,10 @@ fn test_basic_load() {
     .unwrap();
 
     assert_eq!(agent.name, "basic-prompt");
-    assert_eq!(agent.description.as_deref(), Some("A basic prompt for testing"));
+    assert_eq!(
+        agent.description.as_deref(),
+        Some("A basic prompt for testing")
+    );
     assert_eq!(agent.model.id, "gpt-4");
     assert_eq!(agent.model.provider.as_deref(), Some("openai"));
     assert_eq!(agent.model.api_type.as_deref(), Some("chat"));

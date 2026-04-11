@@ -10,10 +10,10 @@
 //! cargo test --test integration -- --ignored
 //! ```
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use prompty::{register_defaults, ToolHandler, TurnOptions};
-use serde_json::{json, Value};
+use prompty::model::context::LoadContext;
+use prompty::{ToolHandler, TurnOptions, register_defaults};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 // ---------------------------------------------------------------------------
@@ -216,7 +216,10 @@ async fn test_azure_structured_output() {
     };
 
     assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
-    assert!(obj.contains_key("country"), "missing 'country' field: {obj:?}");
+    assert!(
+        obj.contains_key("country"),
+        "missing 'country' field: {obj:?}"
+    );
     assert!(
         obj.contains_key("population"),
         "missing 'population' field: {obj:?}"

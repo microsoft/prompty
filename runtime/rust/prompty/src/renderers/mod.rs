@@ -8,6 +8,6 @@ mod common;
 mod mustache;
 mod nunjucks;
 
-pub use common::{prepare_render_inputs, RICH_KINDS};
+pub use common::{RICH_KINDS, prepare_render_inputs};
 pub use mustache::MustacheRenderer;
 pub use nunjucks::NunjucksRenderer;

@@ -123,7 +123,9 @@ pub trait Executor: Send + Sync {
         _messages: &[Message],
     ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
         Err(InvokerError::Execute(
-            "Streaming not supported by this executor".to_string().into(),
+            "Streaming not supported by this executor"
+                .to_string()
+                .into(),
         ))
     }
 
@@ -199,9 +201,12 @@ pub trait Processor: Send + Sync {
     fn process_stream(
         &self,
         _inner: Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
-    ) -> Result<Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError> {
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError>
+    {
         Err(InvokerError::Process(
-            "Streaming not supported by this processor".to_string().into(),
+            "Streaming not supported by this processor"
+                .to_string()
+                .into(),
         ))
     }
 }
@@ -235,12 +240,18 @@ mod tests {
         }];
         let results = vec!["72°F".to_string()];
 
-        let msgs = executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);
+        let msgs =
+            executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);
 
         assert_eq!(msgs.len(), 2);
         // First: assistant message with tool_calls metadata
         assert_eq!(msgs[0].role, crate::types::Role::Assistant);
-        let tc_meta = msgs[0].metadata.get("tool_calls").unwrap().as_array().unwrap();
+        let tc_meta = msgs[0]
+            .metadata
+            .get("tool_calls")
+            .unwrap()
+            .as_array()
+            .unwrap();
         assert_eq!(tc_meta.len(), 1);
         assert_eq!(tc_meta[0]["id"], "call_1");
         assert_eq!(tc_meta[0]["type"], "function");
@@ -256,12 +267,21 @@ mod tests {
     fn test_default_format_tool_messages_multiple() {
         let executor = DefaultFormatExecutor;
         let tool_calls = vec![
-            crate::types::ToolCall { id: "c1".into(), name: "add".into(), arguments: "{}".into() },
-            crate::types::ToolCall { id: "c2".into(), name: "sub".into(), arguments: "{}".into() },
+            crate::types::ToolCall {
+                id: "c1".into(),
+                name: "add".into(),
+                arguments: "{}".into(),
+            },
+            crate::types::ToolCall {
+                id: "c2".into(),
+                name: "sub".into(),
+                arguments: "{}".into(),
+            },
         ];
         let results = vec!["3".to_string(), "1".to_string()];
 
-        let msgs = executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);
+        let msgs =
+            executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);
 
         // 1 assistant + 2 tool results = 3
         assert_eq!(msgs.len(), 3);

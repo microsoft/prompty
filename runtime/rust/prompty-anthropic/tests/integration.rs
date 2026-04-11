@@ -6,10 +6,10 @@
 //! cargo test --test integration -- --ignored
 //! ```
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use prompty::{register_defaults, ToolHandler, TurnOptions};
-use serde_json::{json, Value};
+use prompty::model::context::LoadContext;
+use prompty::{ToolHandler, TurnOptions, register_defaults};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 // ---------------------------------------------------------------------------
@@ -134,11 +134,14 @@ async fn test_anthropic_structured_output() {
         &text
     };
 
-    let parsed: Value =
-        serde_json::from_str(json_str).unwrap_or_else(|e| panic!("Failed to parse JSON: {e}\nRaw: {text}"));
+    let parsed: Value = serde_json::from_str(json_str)
+        .unwrap_or_else(|e| panic!("Failed to parse JSON: {e}\nRaw: {text}"));
     let obj = parsed.as_object().expect("parsed JSON should be an object");
     assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
-    assert!(obj.contains_key("country"), "missing 'country' field: {obj:?}");
+    assert!(
+        obj.contains_key("country"),
+        "missing 'country' field: {obj:?}"
+    );
     assert!(
         obj.contains_key("population"),
         "missing 'population' field: {obj:?}"

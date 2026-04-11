@@ -3,9 +3,9 @@
 //! Reads `spec/vectors/process/process_vectors.json` and tests that our processor
 //! matches the expected output for all OpenAI-provider vectors.
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use serde_json::{json, Value};
+use prompty::model::context::LoadContext;
+use serde_json::{Value, json};
 
 fn spec_root() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -76,10 +76,7 @@ macro_rules! process_test {
                 .unwrap_or_else(|| panic!("Process vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
 
             // Skip non-OpenAI vectors
             if provider != "openai" {
@@ -96,7 +93,9 @@ macro_rules! process_test {
             match result {
                 Ok(actual) => {
                     // Handle edge cases with null/empty
-                    if actual == Value::String(String::new()) && *expected == Value::String(String::new()) {
+                    if actual == Value::String(String::new())
+                        && *expected == Value::String(String::new())
+                    {
                         return;
                     }
                     if actual == Value::Null && *expected == Value::String(String::new()) {

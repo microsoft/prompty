@@ -17,8 +17,8 @@
 use std::sync::Mutex;
 
 use opentelemetry::{
-    trace::{Span, SpanKind, Status, Tracer as OtelTracer},
     KeyValue,
+    trace::{Span, SpanKind, Status, Tracer as OtelTracer},
 };
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use serde_json::Value;

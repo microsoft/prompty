@@ -6,8 +6,8 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::model::context::LoadContext;
 use crate::model::Prompty;
+use crate::model::context::LoadContext;
 
 mod error;
 mod frontmatter;
@@ -25,17 +25,20 @@ pub use error::LoadError;
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
 pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
-    let resolved = path.as_ref().canonicalize().map_err(|e| {
-        LoadError::FileNotFound(path.as_ref().to_path_buf(), e.to_string())
-    })?;
+    let resolved = path
+        .as_ref()
+        .canonicalize()
+        .map_err(|e| LoadError::FileNotFound(path.as_ref().to_path_buf(), e.to_string()))?;
 
     let span = crate::tracing::Tracer::start("load");
     span.emit("signature", &serde_json::json!("prompty.load"));
-    span.emit("inputs", &serde_json::json!({ "path": resolved.display().to_string() }));
+    span.emit(
+        "inputs",
+        &serde_json::json!({ "path": resolved.display().to_string() }),
+    );
 
-    let raw = std::fs::read_to_string(&resolved).map_err(|e| {
-        LoadError::FileNotFound(resolved.clone(), e.to_string())
-    })?;
+    let raw = std::fs::read_to_string(&resolved)
+        .map_err(|e| LoadError::FileNotFound(resolved.clone(), e.to_string()))?;
 
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
@@ -65,17 +68,20 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
 pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     let path_buf = path.as_ref().to_path_buf();
-    let resolved = tokio::fs::canonicalize(&path_buf).await.map_err(|e| {
-        LoadError::FileNotFound(path_buf.clone(), e.to_string())
-    })?;
+    let resolved = tokio::fs::canonicalize(&path_buf)
+        .await
+        .map_err(|e| LoadError::FileNotFound(path_buf.clone(), e.to_string()))?;
 
     let span = crate::tracing::Tracer::start("load");
     span.emit("signature", &serde_json::json!("prompty.load"));
-    span.emit("inputs", &serde_json::json!({ "path": resolved.display().to_string() }));
+    span.emit(
+        "inputs",
+        &serde_json::json!({ "path": resolved.display().to_string() }),
+    );
 
-    let raw = tokio::fs::read_to_string(&resolved).await.map_err(|e| {
-        LoadError::FileNotFound(resolved.clone(), e.to_string())
-    })?;
+    let raw = tokio::fs::read_to_string(&resolved)
+        .await
+        .map_err(|e| LoadError::FileNotFound(resolved.clone(), e.to_string()))?;
 
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
@@ -183,5 +189,3 @@ fn ensure_metadata_object(agent: &mut Prompty) -> &mut serde_json::Map<String, s
     // Safety: we just ensured it's an object above
     agent.metadata.as_object_mut().unwrap()
 }
-
-

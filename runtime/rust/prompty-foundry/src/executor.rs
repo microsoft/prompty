@@ -31,11 +31,7 @@ pub struct FoundryExecutor;
 
 #[async_trait]
 impl Executor for FoundryExecutor {
-    async fn execute(
-        &self,
-        agent: &Prompty,
-        messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
 
         let body = match api_type {
@@ -143,22 +139,24 @@ impl Executor for FoundryExecutor {
 
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
-fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
+fn resolve_connection(
+    agent: &Prompty,
+) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let conn = &agent.model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
-        let name = conn
-            .get("name")
-            .and_then(|n| n.as_str())
-            .ok_or_else(|| {
-                InvokerError::Execute(
-                    "Reference connection missing 'name' field".to_string().into(),
-                )
-            })?;
+        let name = conn.get("name").and_then(|n| n.as_str()).ok_or_else(|| {
+            InvokerError::Execute(
+                "Reference connection missing 'name' field"
+                    .to_string()
+                    .into(),
+            )
+        })?;
 
-        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
-            .map_err(|e| InvokerError::Execute(e.into()))?;
+        let resolved =
+            prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+                .map_err(|e| InvokerError::Execute(e.into()))?;
 
         Ok(std::borrow::Cow::Owned(resolved))
     } else {
@@ -255,7 +253,9 @@ fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
     }
 
     Err(InvokerError::Execute(
-        "No deployment name found. Set model.id or AZURE_OPENAI_DEPLOYMENT".to_string().into(),
+        "No deployment name found. Set model.id or AZURE_OPENAI_DEPLOYMENT"
+            .to_string()
+            .into(),
     ))
 }
 
@@ -263,7 +263,11 @@ fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
 fn get_api_version(agent: &Prompty) -> String {
     // Check model options for custom api version
     if let Some(opts) = &agent.model.options {
-        if let Some(version) = opts.additional_properties.get("apiVersion").and_then(|v| v.as_str()) {
+        if let Some(version) = opts
+            .additional_properties
+            .get("apiVersion")
+            .and_then(|v| v.as_str())
+        {
             return version.to_string();
         }
     }
@@ -317,15 +321,18 @@ const AZURE_COGNITIVE_SCOPE: &str = "https://cognitiveservices.azure.com/.defaul
 /// Get a bearer token via DefaultAzureCredential (requires `entra_id` feature).
 #[cfg(feature = "entra_id")]
 async fn get_entra_token() -> Result<(&'static str, String), InvokerError> {
-    use azure_identity::DefaultAzureCredential;
     use azure_core::credentials::TokenCredential;
+    use azure_identity::DefaultAzureCredential;
 
-    let credential = DefaultAzureCredential::new()
-        .map_err(|e| InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into()))?;
+    let credential = DefaultAzureCredential::new().map_err(|e| {
+        InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into())
+    })?;
     let token = credential
         .get_token(&[AZURE_COGNITIVE_SCOPE])
         .await
-        .map_err(|e| InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into()))?;
+        .map_err(|e| {
+            InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into())
+        })?;
     Ok(("Authorization", format!("Bearer {}", token.token.secret())))
 }
 
@@ -375,7 +382,10 @@ impl FoundrySseParser {
             self.buffer = self.buffer[pos + 2..].to_string();
 
             for line in event.lines() {
-                if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                if let Some(data) = line
+                    .strip_prefix("data: ")
+                    .or_else(|| line.strip_prefix("data:"))
+                {
                     let data = data.trim();
                     if data == "[DONE]" {
                         self.done = true;
@@ -455,8 +465,8 @@ impl Stream for FoundrySseParser {
 mod tests {
     use super::*;
     use prompty::model::context::LoadContext;
-    use serial_test::serial;
     use serde_json::json;
+    use serial_test::serial;
 
     fn make_agent(model_json: Value) -> Prompty {
         let mut data = json!({
@@ -480,7 +490,9 @@ mod tests {
             }
         }));
         let (url, _) = build_azure_request(&agent, "chat").await.unwrap();
-        assert!(url.starts_with("https://myresource.openai.azure.com/openai/deployments/gpt-4/chat/completions"));
+        assert!(url.starts_with(
+            "https://myresource.openai.azure.com/openai/deployments/gpt-4/chat/completions"
+        ));
         assert!(url.contains("api-version="));
     }
 
@@ -501,7 +513,9 @@ mod tests {
         }));
         let (url, _) = build_azure_request(&agent, "chat").await.unwrap();
         // Foundry endpoint should strip the project path
-        assert!(url.starts_with("https://myresource.services.ai.azure.com/openai/deployments/gpt-4o/chat/completions"));
+        assert!(url.starts_with(
+            "https://myresource.services.ai.azure.com/openai/deployments/gpt-4o/chat/completions"
+        ));
         unsafe { std::env::remove_var("AZURE_OPENAI_API_KEY") };
     }
 
@@ -658,7 +672,10 @@ mod tests {
         }));
 
         let conn = resolve_connection(&agent).unwrap();
-        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://prod.openai.azure.com");
+        assert_eq!(
+            conn.get("endpoint").unwrap().as_str().unwrap(),
+            "https://prod.openai.azure.com"
+        );
         assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "prod-key");
 
         prompty::connections::clear_connections();

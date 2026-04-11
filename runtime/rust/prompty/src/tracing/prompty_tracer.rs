@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Local};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use super::tracer::{TracerBackend, TracerFactory};
 
@@ -101,7 +101,11 @@ impl Frame {
         }
 
         // 3. From child frames' __usage
-        for child_json in obj.get("__frames").and_then(|f| f.as_array()).unwrap_or(&Vec::new()) {
+        for child_json in obj
+            .get("__frames")
+            .and_then(|f| f.as_array())
+            .unwrap_or(&Vec::new())
+        {
             if let Some(child_usage) = child_json.get("__usage") {
                 hoist_usage(child_usage, &mut usage);
             }
@@ -197,7 +201,13 @@ impl TracerBackend for PromptyBackend {
 
 fn sanitize_filename(s: &str) -> String {
     s.chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -244,8 +254,8 @@ impl TracerFactory for PromptyTracer {
 mod tests {
     use super::*;
     use crate::tracing::tracer::Tracer;
-    use serial_test::serial;
     use serde_json::json;
+    use serial_test::serial;
     use std::fs;
 
     #[test]
@@ -278,7 +288,10 @@ mod tests {
     #[serial]
     fn test_tracy_file_written() {
         Tracer::clear();
-        let dir = std::env::temp_dir().join(format!("prompty_test_tracy_{:?}", std::thread::current().id()));
+        let dir = std::env::temp_dir().join(format!(
+            "prompty_test_tracy_{:?}",
+            std::thread::current().id()
+        ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
 

@@ -21,16 +21,8 @@ pub struct OpenAIExecutor;
 
 #[async_trait]
 impl Executor for OpenAIExecutor {
-    async fn execute(
-        &self,
-        agent: &Prompty,
-        messages: &[Message],
-    ) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .api_type
-            .as_deref()
-            .unwrap_or("chat");
+    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
 
         let (url, body) = match api_type {
             "chat" | "agent" => {
@@ -159,10 +151,7 @@ impl Executor for OpenAIExecutor {
 
 impl OpenAIExecutor {
     /// Build the request args without sending — useful for testing wire format.
-    pub fn build_args(
-        agent: &Prompty,
-        messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
         Ok(match api_type {
             "chat" | "agent" => wire::build_chat_args(agent, messages),
@@ -183,23 +172,25 @@ impl OpenAIExecutor {
 
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
-fn resolve_connection(agent: &Prompty) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
+fn resolve_connection(
+    agent: &Prompty,
+) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let conn = &agent.model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
-        let name = conn
-            .get("name")
-            .and_then(|n| n.as_str())
-            .ok_or_else(|| {
-                InvokerError::Execute(
-                    "Reference connection missing 'name' field".to_string().into(),
-                )
-            })?;
+        let name = conn.get("name").and_then(|n| n.as_str()).ok_or_else(|| {
+            InvokerError::Execute(
+                "Reference connection missing 'name' field"
+                    .to_string()
+                    .into(),
+            )
+        })?;
 
         // Look up the named connection from the registry
-        let resolved = prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
-            .map_err(|e| InvokerError::Execute(e.into()))?;
+        let resolved =
+            prompty::connections::with_connection::<serde_json::Value, _>(name, |c| c.clone())
+                .map_err(|e| InvokerError::Execute(e.into()))?;
 
         Ok(std::borrow::Cow::Owned(resolved))
     } else {
@@ -218,7 +209,11 @@ fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
         .and_then(|e| e.as_str())
         .filter(|s| !s.is_empty())
         .map(String::from)
-        .or_else(|| std::env::var("OPENAI_BASE_URL").ok().filter(|s| !s.is_empty()))
+        .or_else(|| {
+            std::env::var("OPENAI_BASE_URL")
+                .ok()
+                .filter(|s| !s.is_empty())
+        })
         .unwrap_or_else(|| "https://api.openai.com".to_string());
 
     let base = endpoint.trim_end_matches('/');
@@ -238,7 +233,11 @@ fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
 
     // Try connection.apiKey first
-    if let Some(key) = conn.get("apiKey").or(conn.get("api_key")).and_then(|k| k.as_str()) {
+    if let Some(key) = conn
+        .get("apiKey")
+        .or(conn.get("api_key"))
+        .and_then(|k| k.as_str())
+    {
         if !key.is_empty() {
             return Ok(key.to_string());
         }
@@ -299,7 +298,10 @@ impl SseParser {
             self.buffer = self.buffer[pos + 2..].to_string();
 
             for line in event.lines() {
-                if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
+                if let Some(data) = line
+                    .strip_prefix("data: ")
+                    .or_else(|| line.strip_prefix("data:"))
+                {
                     let data = data.trim();
                     if data == "[DONE]" {
                         self.done = true;
@@ -392,8 +394,8 @@ mod tests {
     use super::*;
     use prompty::model::Prompty;
     use prompty::model::context::LoadContext;
-    use serial_test::serial;
     use serde_json::json;
+    use serial_test::serial;
 
     fn make_agent(model_json: Value) -> Prompty {
         let mut data = json!({
@@ -576,7 +578,10 @@ mod tests {
         }));
 
         let conn = resolve_connection(&agent).unwrap();
-        assert_eq!(conn.get("endpoint").unwrap().as_str().unwrap(), "https://custom.openai.com");
+        assert_eq!(
+            conn.get("endpoint").unwrap().as_str().unwrap(),
+            "https://custom.openai.com"
+        );
         assert_eq!(conn.get("apiKey").unwrap().as_str().unwrap(), "sk-resolved");
 
         // Clean up

@@ -159,7 +159,10 @@ where
 /// The body receives a shared reference to the span emitter for manual event
 /// emission. The span is automatically ended (with `duration_ms` and `__end__`)
 /// when the body completes.
-pub async fn trace_span_async<F, Fut, T>(name: &str, body: F) -> Result<T, Box<dyn std::error::Error>>
+pub async fn trace_span_async<F, Fut, T>(
+    name: &str,
+    body: F,
+) -> Result<T, Box<dyn std::error::Error>>
 where
     F: FnOnce(std::sync::Arc<SpanEmitter>) -> Fut,
     Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
@@ -184,7 +187,11 @@ where
 }
 
 /// Async version of `trace`. Wraps an async function with automatic input/output tracing.
-pub async fn trace_async<F, Fut, T>(name: &str, inputs: &Value, f: F) -> Result<T, Box<dyn std::error::Error>>
+pub async fn trace_async<F, Fut, T>(
+    name: &str,
+    inputs: &Value,
+    f: F,
+) -> Result<T, Box<dyn std::error::Error>>
 where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
@@ -274,8 +281,8 @@ pub fn sanitize_value(key: &str, value: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
     use serde_json::json;
+    use serial_test::serial;
     use std::sync::{Arc, Mutex};
 
     // A simple in-memory backend for testing.
@@ -305,7 +312,12 @@ mod tests {
     fn setup_memory_tracer() -> Arc<Mutex<Vec<(String, Value)>>> {
         Tracer::clear();
         let events = Arc::new(Mutex::new(Vec::new()));
-        Tracer::add("test", MemoryFactory { events: events.clone() });
+        Tracer::add(
+            "test",
+            MemoryFactory {
+                events: events.clone(),
+            },
+        );
         events
     }
 
@@ -313,9 +325,8 @@ mod tests {
     #[serial]
     fn test_trace_success() {
         let events = setup_memory_tracer();
-        let result: Result<String, _> = trace("test_span", &json!({"x": 1}), || {
-            Ok("hello".to_string())
-        });
+        let result: Result<String, _> =
+            trace("test_span", &json!({"x": 1}), || Ok("hello".to_string()));
         assert_eq!(result.unwrap(), "hello");
 
         let ev = events.lock().unwrap();
@@ -331,9 +342,7 @@ mod tests {
     #[serial]
     fn test_trace_error() {
         let events = setup_memory_tracer();
-        let result: Result<String, _> = trace("err_span", &json!(null), || {
-            Err("boom".into())
-        });
+        let result: Result<String, _> = trace("err_span", &json!(null), || Err("boom".into()));
         assert!(result.is_err());
 
         let ev = events.lock().unwrap();
@@ -371,7 +380,12 @@ mod tests {
     fn test_tracer_add_remove() {
         Tracer::clear();
         let events = Arc::new(Mutex::new(Vec::new()));
-        Tracer::add("a", MemoryFactory { events: events.clone() });
+        Tracer::add(
+            "a",
+            MemoryFactory {
+                events: events.clone(),
+            },
+        );
 
         // Span should reach the backend.
         let span = Tracer::start("sig");
