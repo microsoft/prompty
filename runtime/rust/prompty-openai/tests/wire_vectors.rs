@@ -7,7 +7,7 @@ use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
 use prompty::types::{AudioPart, ContentPart, ImagePart, Message, Role, TextPart};
 use prompty_openai::wire;
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 
 fn spec_root() -> std::path::PathBuf {
     // runtime/rust/ → project root → spec/
