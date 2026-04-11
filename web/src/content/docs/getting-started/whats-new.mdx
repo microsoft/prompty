@@ -93,6 +93,28 @@ var result = await Pipeline.TurnAsync(
     tools: new() { ["get_weather"] = GetWeather });
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::TurnOptions;
+use serde_json::json;
+
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        Ok(json!(format!("72°F in {city}")))
+    })
+});
+
+let result = prompty::turn_from_path(
+    "agent.prompty",
+    Some(&json!({ "question": "Weather in Seattle?" })),
+    Some(TurnOptions {
+        max_iterations: Some(10),
+        ..Default::default()
+    }),
+).await?;
+```
+</TabItem>
 </Tabs>
 
 Without tools, `turn()` behaves identically to `invoke()` — the only difference
@@ -114,14 +136,15 @@ turn 1
 
 ## Three Runtimes, One File Format
 
-v2 adds **TypeScript** and **C#** runtimes alongside the existing Python runtime.
-All three share the same `.prompty` file format and public API:
+v2 adds **TypeScript** and **C#** runtimes alongside the existing Python runtime,
+and introduces a new **Rust** runtime.
+All four share the same `.prompty` file format and public API:
 
-| | Python | TypeScript | C# |
-|---|---|---|---|
-| Package | `prompty` | `@prompty/core` | `Prompty.Core` |
-| Providers | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` |
-| Install | `uv pip install` | `npm install` | `dotnet add package` |
+| | Python | TypeScript | C# | Rust |
+|---|---|---|---|---|
+| Package | `prompty` | `@prompty/core` | `Prompty.Core` | `prompty` |
+| Providers | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` | `prompty-openai` |
+| Install | `uv pip install` | `npm install` | `dotnet add package` | `cargo add` |
 
 ## Other Improvements
 

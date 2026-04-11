@@ -44,6 +44,7 @@ you need:
 | **Python** | `uv pip install prompty[jinja2,openai]` |
 | **TypeScript** | `npm install @prompty/core @prompty/openai` |
 | **C#** | `dotnet add package Prompty.OpenAI` |
+| **Rust** | `cargo add prompty prompty-openai` |
 
 **Python extras:**
 
@@ -105,6 +106,28 @@ var result = await Pipeline.TurnAsync(
     tools: tools);
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+// Rust is new in v2 — no v1 equivalent
+
+// v2 — tools passed explicitly
+use prompty;
+use serde_json::json;
+
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        Ok(json!(format!("72°F in {city}")))
+    })
+});
+
+let result = prompty::turn_from_path(
+    "agent.prompty",
+    Some(&json!({ "question": "What's the weather?" })),
+    None,
+).await?;
+```
+</TabItem>
 </Tabs>
 
 ### Azure Credentials
@@ -162,6 +185,21 @@ ConnectionRegistry.Register("azure", new AzureOpenAIConnectionOptions
 {
     Endpoint = Environment.GetEnvironmentVariable("AZURE_ENDPOINT")!,
     Credential = credential,
+});
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+// v2 — explicit credential setup
+use prompty;
+use prompty_openai;
+
+let credential = azure_identity::DefaultAzureCredential::new()?;
+let endpoint = std::env::var("AZURE_ENDPOINT")?;
+
+prompty::register_connection("azure", prompty_openai::AzureConnectionOptions {
+    endpoint,
+    credential: Box::new(credential),
 });
 ```
 </TabItem>
@@ -281,5 +319,5 @@ template:
 - **Structured output** — `outputs` → `response_format` for type-safe JSON responses
 - **Thread safety** — renderer nonces use thread-local storage
 - **Entry-point discovery** (Python) — third-party providers register as plugins
-- **Multi-runtime support** — Python (`prompty`), TypeScript (`@prompty/core`), and C# (`Prompty.Core`) all share the same `.prompty` file format
+- **Multi-runtime support** — Python (`prompty`), TypeScript (`@prompty/core`), C# (`Prompty.Core`), and Rust (`prompty`) all share the same `.prompty` file format
 - **C# runtime** — `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` NuGet packages

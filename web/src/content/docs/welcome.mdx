@@ -3,7 +3,7 @@ title: Welcome to Prompty
 description: >
   Prompty is a markdown file format for LLM prompts. Define model config,
   inputs, tools, and templates in YAML frontmatter — then execute across
-  Python, TypeScript, and more.
+  Python, TypeScript, C#, Rust, and more.
 sidebar:
   order: 1
 ---
@@ -12,7 +12,7 @@ import { Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/com
 
 **Prompty** is a file format (`.prompty`) for LLM prompts. Write your prompt
 once — model config, inputs, tools, and template in a single markdown file —
-then run it from Python, TypeScript, or C#. Treat prompts as code: version
+then run it from Python, TypeScript, C#, or Rust. Treat prompts as code: version
 them in git, test them in CI, share them across teams, and deploy with
 confidence.
 
@@ -66,6 +66,19 @@ Say hello to {{userName}}.
     var result = await Pipeline.InvokeAsync("greeting.prompty", new() { ["userName"] = "Jane" });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_defaults();
+    prompty_openai::register();
+
+    let result = prompty::invoke_from_path(
+        "greeting.prompty",
+        Some(&json!({ "userName": "Jane" })),
+    ).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ## What Can You Build?
@@ -78,7 +91,7 @@ Say hello to {{userName}}.
 
 ## Key Features
 
-- **Three runtimes** — Python, TypeScript, and C#
+- **Four runtimes** — Python, TypeScript, C#, and Rust
 - **Pipeline architecture** — render → parse → execute → process, each stage swappable
 - **Built-in tracing** — console, JSON file, and OpenTelemetry backends
 - **Provider support** — OpenAI, Azure / Foundry, and Anthropic

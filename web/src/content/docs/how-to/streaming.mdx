@@ -160,9 +160,36 @@ pass it to `process()` which yields text chunks.
     Console.WriteLine();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{StreamChunk, consume_stream_chunks};
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let agent = prompty::load("chat.prompty")?;
+        let inputs = json!({ "question": "Tell me a joke" });
+        let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+        let result = prompty::run(&agent, &messages).await?;
+
+        let stream = prompty::from_structured_value::<prompty::PromptyStream>(&result)?;
+        consume_stream_chunks(stream, |chunk| match chunk {
+            StreamChunk::Text(t) => print!("{t}"),
+            StreamChunk::Thinking(t) => { /* reasoning tokens */ },
+            StreamChunk::Tool(tc) => { /* tool call */ },
+            StreamChunk::Error(e) => eprintln!("{e}"),
+        }).await;
+        println!();
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
-Each `chunk` is a **string** — the processor extracts `delta.content` from
+Each `chunk` is a **string**— the processor extracts `delta.content` from
 the raw API response objects so you don't handle the wire format yourself.
 
 ---
@@ -274,6 +301,33 @@ A full, tested example you can copy and run:
   </TabItem>
   <TabItem label="C#">
     <Code code={csStreaming} lang="csharp" title="Streaming.cs" />
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{StreamChunk, consume_stream_chunks};
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let agent = prompty::load("chat.prompty")?;
+        let inputs = json!({ "question": "Tell me a short joke" });
+        let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+        let result = prompty::run(&agent, &messages).await?;
+
+        let stream = prompty::from_structured_value::<prompty::PromptyStream>(&result)?;
+        consume_stream_chunks(stream, |chunk| match chunk {
+            StreamChunk::Text(t) => print!("{t}"),
+            StreamChunk::Thinking(_) => {},
+            StreamChunk::Tool(_) => {},
+            StreamChunk::Error(e) => eprintln!("{e}"),
+        }).await;
+        println!();
+        Ok(())
+    }
+    ```
   </TabItem>
 </Tabs>
 

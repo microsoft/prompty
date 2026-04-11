@@ -143,6 +143,9 @@ var result = await Pipeline.InvokeAsync("my-prompt.prompty",
 Console.WriteLine(result); // "Hi there! How can I help?"
 ```
 </TabItem>
+<TabItem label="Rust">
+Rust does not yet support the OpenAI Responses API. Use the standard Chat Completions API instead. Contributions welcome!
+</TabItem>
 </Tabs>
 
 ---
@@ -320,6 +323,9 @@ var result = await Pipeline.TurnAsync(
 Console.WriteLine(result); // "It's currently 72°F and sunny in Seattle!"
 ```
 </TabItem>
+<TabItem label="Rust">
+Rust does not yet support the OpenAI Responses API. Use the standard Chat Completions API instead. Contributions welcome!
+</TabItem>
 </Tabs>
 
 ### How Tool Calls Work with the Responses API
@@ -436,9 +442,12 @@ Console.WriteLine(result.GetProperty("temperature"));  // 62
 Console.WriteLine(result.GetProperty("conditions"));   // "Partly cloudy"
 ```
 </TabItem>
+<TabItem label="Rust">
+Rust does not yet support the OpenAI Responses API. Use the standard Chat Completions API instead. Contributions welcome!
+</TabItem>
 </Tabs>
 
-The runtime sends structured output as `text.format` instead of `response_format`:
+The runtime sends structured output as `text.format`instead of `response_format`:
 
 ```json title="Responses API structured output"
 {

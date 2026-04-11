@@ -315,10 +315,33 @@ The individual functions map to subsets of this pipeline:
     var output = await Pipeline.InvokeAsync("chat.prompty", inputs);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    let agent = prompty::load("chat.prompty")?;
+    let inputs = json!({"firstName": "Jane", "question": "What is AI?"});
+
+    // Stage 1 only — render the template
+    let rendered = prompty::render(&agent, Some(&inputs)).await?;
+
+    // Stage 2 only — parse rendered string into messages
+    let messages = prompty::parse(&agent, &rendered).await?;
+
+    // Stages 1 + 2 — render, parse, and expand threads
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+
+    // Stages 3 + 4 — execute LLM call and process response
+    let result = prompty::run(&agent, &messages).await?;
+
+    // Full pipeline — load + prepare + run
+    let output = prompty::invoke_from_path("chat.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  Most users only need **`invoke()`** — it handles the full pipeline from file to
+  Most users only need **`invoke()`**— it handles the full pipeline from file to
   result. Use the granular functions when you need to inspect or modify intermediate
   outputs (e.g., editing messages before sending them to the LLM).
 </Aside>
@@ -424,6 +447,26 @@ and the pipeline looks them up at runtime.
     InvokerRegistry.RegisterProcessor("my-provider", new MyProcessor());
     ```
   </TabItem>
+  <TabItem label="Rust">
+    Rust uses **explicit registration** via function calls at startup. Built-in
+    renderers and parsers auto-register when `prompty::register_defaults()` is
+    called. Provider crates register their executors and processors via their
+    own `register()` function.
+
+    ```rust
+    // Register built-in renderers + parsers
+    prompty::register_defaults();
+
+    // Provider crates register on call:
+    prompty_openai::register();    // → registers "openai" executor + processor
+    prompty_foundry::register();   // → registers "foundry" executor + processor
+    prompty_anthropic::register(); // → registers "anthropic" executor + processor
+
+    // Manual registration for custom implementations:
+    prompty::register_executor("my-provider", MyExecutor::new());
+    prompty::register_processor("my-provider", MyProcessor::new());
+    ```
+  </TabItem>
 </Tabs>
 
 ### Registration groups
@@ -510,6 +553,40 @@ Each protocol defines `sync` and `async` methods. Here's an example custom execu
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::types::Message;
+    use async_trait::async_trait;
+
+    pub struct AnthropicExecutor;
+
+    #[async_trait]
+    impl prompty::Executor for AnthropicExecutor {
+        async fn execute(
+            &self,
+            agent: &prompty::Prompty,
+            messages: &[Message],
+        ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+            // Call your LLM API here
+            todo!()
+        }
+    }
+
+    pub struct AnthropicProcessor;
+
+    #[async_trait]
+    impl prompty::Processor for AnthropicProcessor {
+        async fn process(
+            &self,
+            agent: &prompty::Prompty,
+            response: serde_json::Value,
+        ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+            // Extract content from the API response
+            todo!()
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ### 2. Register the implementation
@@ -555,6 +632,23 @@ Each protocol defines `sync` and `async` methods. Here's an example custom execu
         .AddAnthropic();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    Register at startup via a `register()` function in your crate:
+
+    ```rust
+    pub fn register() {
+        prompty::register_executor("anthropic", AnthropicExecutor);
+        prompty::register_processor("anthropic", AnthropicProcessor);
+    }
+    ```
+
+    Then call it at application startup:
+
+    ```rust
+    prompty::register_defaults();
+    my_crate::register();
+    ```
+  </TabItem>
 </Tabs>
 
 ### 3. Use it
@@ -596,6 +690,17 @@ model:
 
     var result = await Pipeline.InvokeAsync("claude-chat.prompty",
         new() { ["question"] = "Hello!" });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_defaults();
+    prompty_anthropic::register();
+
+    let inputs = json!({"question": "Hello!"});
+    let result = prompty::invoke_from_path("claude-chat.prompty", Some(&inputs)).await?;
     ```
   </TabItem>
 </Tabs>

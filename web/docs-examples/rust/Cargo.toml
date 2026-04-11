@@ -1,0 +1,27 @@
+[package]
+name = "prompty-docs-examples"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+prompty = { version = "2.0.0-alpha.8" }
+prompty-openai = { version = "2.0.0-alpha.8" }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "chat_basic"
+path = "examples/chat_basic.rs"
+
+[[example]]
+name = "streaming"
+path = "examples/streaming.rs"
+
+[[example]]
+name = "agent_tool_calling"
+path = "examples/agent_tool_calling.rs"
+
+[[example]]
+name = "structured_output"
+path = "examples/structured_output.rs"

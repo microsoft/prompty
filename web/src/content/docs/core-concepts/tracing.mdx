@@ -96,6 +96,18 @@ like — every trace event is dispatched to **all** registered backends.
     new PromptyTracer().Register();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, PromptyTracer, console_tracer};
+
+    // JSON file tracer — writes structured traces to disk
+    let pt = PromptyTracer::new("./traces");
+    Tracer::register("json", pt.tracer());
+
+    // Console tracer — prints to stdout
+    Tracer::register("console", console_tracer);
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -150,6 +162,20 @@ other traced functions (including Prompty's built-in pipeline), they appear as
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::trace_async;
+    use serde_json::json;
+
+    let result = trace_async("my_business_logic", json!({"query": &query}), async {
+        let output = prompty::invoke_from_path(
+            "search.prompty",
+            Some(&json!({"q": &query})),
+        ).await?;
+        Ok(output)
+    }).await;
+    ```
+  </TabItem>
 </Tabs>
 
 The decorator automatically captures:
@@ -199,9 +225,17 @@ one `.tracy` file per top-level trace to the specified output directory.
     new PromptyTracer().Register();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, PromptyTracer};
+
+    let tracer = PromptyTracer::new("./traces");
+    Tracer::register("json", tracer.tracer());
+    ```
+  </TabItem>
 </Tabs>
 
-Each `.tracy` file contains structured JSON with the full trace tree — every
+Each `.tracy` filecontains structured JSON with the full trace tree — every
 span, its duration, inputs, outputs, and any nested child spans. These files
 are human-readable and easy to inspect or post-process.
 
@@ -244,6 +278,15 @@ and more.
     OTelTracer.Register();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    #[cfg(feature = "otel")]
+    {
+        prompty::init_otel_stdout();
+        prompty::Tracer::register("otel", prompty::otel_tracer());
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="caution">
@@ -263,6 +306,11 @@ and more.
       ```bash
       dotnet add package Prompty.Core --prerelease
       # OTel support is built into Prompty.Core
+      ```
+    </TabItem>
+    <TabItem label="Rust">
+      ```bash
+      cargo add prompty --features otel
       ```
     </TabItem>
   </Tabs>
@@ -317,6 +365,25 @@ production monitoring and console output for local debugging:
 
     // Debugging: also write .tracy files
     new PromptyTracer().Register();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, PromptyTracer, console_tracer};
+
+    // Production: send to OTel collector
+    #[cfg(feature = "otel")]
+    {
+        prompty::init_otel_stdout();
+        Tracer::register("otel", prompty::otel_tracer());
+    }
+
+    // Development: also log to console
+    Tracer::register("console", console_tracer);
+
+    // Debugging: also write .tracy files
+    let pt = PromptyTracer::new("./traces");
+    Tracer::register("json", pt.tracer());
     ```
   </TabItem>
 </Tabs>
@@ -429,6 +496,35 @@ When the span ends, the backend should flush or finalize.
 
     // Register it
     Tracer.Add("my_backend", spanName => new MyTracerSpan(spanName));
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    In Rust, a tracer factory is a function that receives a span name and
+    returns a `(key, value)` callback:
+
+    ```rust
+    use prompty::Tracer;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+
+    fn my_tracer(name: &str) -> Box<dyn Fn(&str, &serde_json::Value) + Send + Sync> {
+        let span_data = Arc::new(Mutex::new(HashMap::new()));
+        span_data.lock().unwrap().insert(
+            "name".to_string(),
+            serde_json::json!(name),
+        );
+
+        let data = span_data.clone();
+        Box::new(move |key: &str, value: &serde_json::Value| {
+            if key == "__end__" {
+                println!("Span complete: {:?}", data.lock().unwrap());
+                return;
+            }
+            data.lock().unwrap().insert(key.to_string(), value.clone());
+        })
+    }
+
+    Tracer::register("my_backend", my_tracer);
     ```
   </TabItem>
 </Tabs>
@@ -555,10 +651,43 @@ A practical example — post completed spans to an HTTP endpoint:
     Tracer.Add("webhook", name => new WebhookTracerSpan(name));
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::Tracer;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+
+    fn webhook_tracer(name: &str) -> Box<dyn Fn(&str, &serde_json::Value) + Send + Sync> {
+        let span = Arc::new(Mutex::new(HashMap::from([
+            ("name".into(), serde_json::json!(name)),
+            ("started_at".into(), serde_json::json!(chrono::Utc::now().to_rfc3339())),
+        ])));
+
+        let data = span.clone();
+        Box::new(move |key: &str, value: &serde_json::Value| {
+            if key == "__end__" {
+                let mut d = data.lock().unwrap();
+                d.insert("ended_at".into(), serde_json::json!(chrono::Utc::now().to_rfc3339()));
+                let json = serde_json::to_string(&*d).unwrap_or_default();
+                // Fire-and-forget POST — never block the pipeline
+                let _ = reqwest::blocking::Client::new()
+                    .post("https://example.com/traces")
+                    .header("Content-Type", "application/json")
+                    .body(json)
+                    .send();
+                return;
+            }
+            data.lock().unwrap().insert(key.to_string(), value.clone());
+        })
+    }
+
+    Tracer::register("webhook", webhook_tracer);
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="caution">
-  Backends **must not block the pipeline**. If your backend does I/O (HTTP,
+  Backends **must not block the pipeline**.If your backend does I/O (HTTP,
   database, file writes), catch all exceptions and consider buffering or
   flushing asynchronously. A failing backend must never cause the pipeline to
   fail.
@@ -642,6 +771,14 @@ default state is already off.
     var agent = PromptyLoader.Load("my-prompt.prompty");
     var result = await Pipeline.InvokeAsync(agent,
         new() { ["query"] = "hello" });
+    // No traces produced — zero overhead
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // No Tracer::register() calls → tracing is a no-op
+    let inputs = serde_json::json!({"query": "hello"});
+    let result = prompty::invoke_from_path("my-prompt.prompty", Some(&inputs)).await?;
     // No traces produced — zero overhead
     ```
   </TabItem>

@@ -40,9 +40,14 @@ load → prepare → execute → process pipeline, and how thread inputs work.
     dotnet add package Prompty.OpenAI --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-openai tokio serde_json
+    ```
+  </TabItem>
 </Tabs>
 
-Create a **`.env`** file in your project root with your OpenAI key:
+Create a **`.env`** filein your project root with your OpenAI key:
 
 ```bash
 OPENAI_API_KEY=sk-your-key-here
@@ -140,6 +145,27 @@ The quickest way — one function call that handles everything:
     // → "Prompty is a markdown file format for LLM prompts..."
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let result = prompty::invoke_from_path(
+            "assistant.prompty",
+            Some(&json!({ "question": "What is Prompty?" })),
+        ).await?;
+        println!("{result}");
+        // → "Prompty is a markdown file format for LLM prompts..."
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 `invoke()` handles the full pipeline: **load** the file → **render** the
@@ -206,9 +232,37 @@ For more control, break the pipeline into individual steps:
     Console.WriteLine(result);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        // 1. Load — parse the .prompty file into a typed Prompty
+        let agent = prompty::load("assistant.prompty")?;
+
+        // 2. Prepare — render the template + parse role markers → messages
+        let messages = prompty::prepare(
+            &agent,
+            Some(&json!({ "question": "Explain async/await" })),
+        ).await?;
+        println!("{messages:?}");
+
+        // 3. Run — call the LLM + process the response → clean string
+        let result = prompty::run(&agent, &messages).await?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
-This is useful when you need to inspect or modify the messages before sending
+This is useful when you need to inspector modify the messages before sending
 them to the LLM — for example, injecting extra context from a database.
 
 ---
@@ -332,9 +386,49 @@ Now accumulate messages across turns:
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+    use std::io::{self, Write};
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let mut history: Vec<serde_json::Value> = vec![];
+
+        loop {
+            print!("You: ");
+            io::stdout().flush()?;
+            let mut question = String::new();
+            io::stdin().read_line(&mut question)?;
+            let question = question.trim();
+            if question == "quit" || question == "exit" {
+                break;
+            }
+
+            let result = prompty::invoke_from_path(
+                "assistant.prompty",
+                Some(&json!({
+                    "question": question,
+                    "conversation": history,
+                })),
+            ).await?;
+            println!("Assistant: {result}\n");
+
+            history.push(json!({"role": "user", "content": question}));
+            history.push(json!({"role": "assistant", "content": result}));
+        }
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
-Each call now includes the full conversation history. The pipeline injects
+Each call now includes the full conversation history.The pipeline injects
 the `conversation` thread messages between the system prompt and the new
 user message, so the LLM sees the entire context.
 
@@ -374,9 +468,18 @@ at the top of your script:
     // Now every InvokeAsync() call prints trace details to stdout
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, console_tracer};
+
+    Tracer::register("console", console_tracer);
+
+    // Now every invoke_from_path() call prints trace details to stdout
+    ```
+  </TabItem>
 </Tabs>
 
-The console tracer logs each pipeline stage — you'll see the rendered prompt,
+The console tracer logs each pipeline stage— you'll see the rendered prompt,
 the parsed messages, the raw LLM response, and the processed result. It's
 invaluable for debugging unexpected outputs.
 

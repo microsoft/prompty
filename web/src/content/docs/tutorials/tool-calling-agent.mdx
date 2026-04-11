@@ -42,6 +42,11 @@ and how to add multiple tools to a single agent.
     dotnet add package Prompty.OpenAI --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-openai tokio serde_json
+    ```
+  </TabItem>
 </Tabs>
 
 Create a **`.env`** file with your OpenAI key:
@@ -151,6 +156,20 @@ Write the function that the agent will call. Use the `@tool` decorator
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    prompty::register_tool_handler("get_weather", |args| {
+        Box::pin(async move {
+            let city = args["city"].as_str().unwrap_or("unknown");
+            // In production, call a real weather API here
+            Ok(json!(format!("72°F and sunny in {city}")))
+        })
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -227,6 +246,35 @@ loop so the runtime automatically executes your functions:
     // → "The weather in Seattle is 72°F and sunny!"
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        prompty::register_tool_handler("get_weather", |args| {
+            Box::pin(async move {
+                let city = args["city"].as_str().unwrap_or("unknown");
+                Ok(json!(format!("72°F and sunny in {city}")))
+            })
+        });
+
+        let result = prompty::turn_from_path(
+            "weather-agent.prompty",
+            Some(&json!({ "question": "What's the weather in Seattle?" })),
+            None,
+        ).await?;
+        println!("{result}");
+        // → "The weather in Seattle is 72°F and sunny!"
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -281,6 +329,20 @@ Register the **console tracer** to watch each step of the agent loop:
         new() { ["question"] = "What's the weather in Seattle?" },
         tools: tools
     );
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, console_tracer};
+
+    Tracer::register("console", console_tracer);
+
+    // Now run — each step is logged to the console
+    let result = prompty::turn_from_path(
+        "weather-agent.prompty",
+        Some(&json!({ "question": "What's the weather in Seattle?" })),
+        None,
+    ).await?;
     ```
   </TabItem>
 </Tabs>
@@ -416,9 +478,47 @@ Now register both functions:
     Console.WriteLine(result);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        prompty::register_tool_handler("get_weather", |args| {
+            Box::pin(async move {
+                let city = args["city"].as_str().unwrap_or("unknown");
+                Ok(json!(format!("72°F and sunny in {city}")))
+            })
+        });
+
+        prompty::register_tool_handler("get_time", |args| {
+            Box::pin(async move {
+                let _tz = args["timezone"].as_str().unwrap_or("UTC");
+                Ok(json!(chrono::Utc::now().to_rfc3339()))
+            })
+        });
+
+        let result = prompty::turn_from_path(
+            "weather-agent.prompty",
+            Some(&json!({
+                "question": "What's the weather in Seattle and the time in Tokyo?"
+            })),
+            None,
+        ).await?;
+        println!("{result}");
+        // The model calls both tools and combines the results
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
-The model may call both tools in a single round or across multiple rounds —
+The model may call both toolsin a single round or across multiple rounds —
 the agent loop handles either pattern automatically.
 
 ---

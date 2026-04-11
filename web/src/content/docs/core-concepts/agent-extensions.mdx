@@ -96,6 +96,31 @@ var result = await Pipeline.TurnAsync(
 );
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, AgentEvent};
+use std::sync::Arc;
+
+let agent = prompty::load("agent.prompty")?;
+
+let options = TurnOptions {
+    events: Some(Arc::new(|event: AgentEvent| {
+        match &event {
+            AgentEvent::Status(msg) => println!("Status: {msg}"),
+            AgentEvent::MessagesUpdated => println!("Messages updated"),
+            _ => println!("Event: {event:?}"),
+        }
+    })),
+    ..Default::default()
+};
+
+let result = prompty::turn(
+    &agent,
+    Some(&serde_json::json!({"question": "Hello"})),
+    Some(options),
+).await?;
+```
+</TabItem>
 </Tabs>
 
 ### Event Types
@@ -178,10 +203,38 @@ catch (OperationCanceledException)
 }
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::TurnOptions;
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+
+let cancel = Arc::new(AtomicBool::new(false));
+let cancel_clone = cancel.clone();
+
+// Cancel from another task after 5 seconds
+tokio::spawn(async move {
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    cancel_clone.store(true, Ordering::SeqCst);
+});
+
+let options = TurnOptions {
+    cancellation_token: Some(cancel),
+    ..Default::default()
+};
+
+match prompty::turn(&agent, Some(&inputs), Some(options)).await {
+    Ok(result) => println!("{result}"),
+    Err(e) if e.to_string().contains("cancelled") => {
+        println!("Agent loop was cancelled");
+    }
+    Err(e) => return Err(e),
+}
+```
+</TabItem>
 </Tabs>
 
 <Aside type="note">
-  Python uses a custom `CancellationToken` (wrapping `threading.Event`),
+  Python uses a custom `CancellationToken`(wrapping `threading.Event`),
   TypeScript uses the native `AbortSignal`, and C# uses the native
   `System.Threading.CancellationToken`.
 </Aside>
@@ -219,6 +272,16 @@ var result = await Pipeline.TurnAsync(
     agent, inputs, tools,
     contextBudget: 50_000
 );
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+let options = TurnOptions {
+    context_window: Some(50_000),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
 ```
 </TabItem>
 </Tabs>
@@ -336,6 +399,42 @@ catch (GuardrailError e)
 }
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, Guardrails, GuardrailResult};
+use std::sync::Arc;
+
+let guardrails = Guardrails {
+    input: vec![Arc::new(|msgs: &[prompty::Message]| {
+        Box::pin(async move {
+            for msg in msgs {
+                if msg.text().to_lowercase().contains("ignore previous instructions") {
+                    return Ok(GuardrailResult::Deny("Prompt injection detected".into()));
+                }
+            }
+            Ok(GuardrailResult::Allow)
+        })
+    })],
+    output: vec![],
+    tool: vec![Arc::new(|name: &str, _args: &serde_json::Value| {
+        Box::pin(async move {
+            if name == "delete_all_data" {
+                return Ok(GuardrailResult::Deny("Dangerous tool blocked".into()));
+            }
+            Ok(GuardrailResult::Allow)
+        })
+    })],
+    ..Default::default()
+};
+
+let options = TurnOptions {
+    guardrails: Some(guardrails),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+```
+</TabItem>
 </Tabs>
 
 ### Guardrail Checkpoints
@@ -409,6 +508,26 @@ var result = await Pipeline.TurnAsync(
 );
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, Steering};
+
+let steering = Steering::new();
+
+// Inject a message that will be picked up at the next iteration
+steering.send(prompty::Message::text(
+    prompty::Role::User,
+    "Actually, check Paris instead of London",
+));
+
+let options = TurnOptions {
+    steering: Some(steering),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+```
+</TabItem>
 </Tabs>
 
 At the top of each iteration, the loop calls `steering.drain()` to collect all
@@ -448,6 +567,17 @@ var result = await Pipeline.TurnAsync(
     agent, inputs, tools,
     parallelToolCalls: true
 );
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+// Uses tokio::join! for concurrent execution
+let options = TurnOptions {
+    parallel_tool_calls: Some(true),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
 ```
 </TabItem>
 </Tabs>
@@ -552,6 +682,42 @@ var result = await Pipeline.TurnAsync(
     steering: steering,
     parallelToolCalls: true
 );
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, AgentEvent, Steering, Guardrails, GuardrailResult};
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+
+let agent = prompty::load("agent.prompty")?;
+let cancel = Arc::new(AtomicBool::new(false));
+let steering = Steering::new();
+
+let guardrails = Guardrails {
+    input: vec![Arc::new(|_| Box::pin(async { Ok(GuardrailResult::Allow) }))],
+    output: vec![Arc::new(|_| Box::pin(async { Ok(GuardrailResult::Allow) }))],
+    tool: vec![Arc::new(|_, _| Box::pin(async { Ok(GuardrailResult::Allow) }))],
+    ..Default::default()
+};
+
+let options = TurnOptions {
+    max_iterations: Some(20),
+    events: Some(Arc::new(|event: AgentEvent| {
+        println!("[{event:?}]");
+    })),
+    cancellation_token: Some(cancel),
+    context_window: Some(50_000),
+    guardrails: Some(guardrails),
+    steering: Some(steering),
+    parallel_tool_calls: Some(true),
+    ..Default::default()
+};
+
+let result = prompty::turn(
+    &agent,
+    Some(&serde_json::json!({"question": "Plan my trip"})),
+    Some(options),
+).await?;
 ```
 </TabItem>
 </Tabs>
@@ -689,6 +855,23 @@ var service = new WeatherService();
 var tools = ToolAttribute.BindTools(agent, service);
 
 var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+// Register tool handlers (Rust uses register_tool_handler)
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        let _units = args.get("units")
+            .and_then(|v| v.as_str())
+            .unwrap_or("celsius");
+        Ok(serde_json::json!(format!("72°F in {city}")))
+    })
+});
+
+let agent = prompty::load("agent.prompty")?;
+let result = prompty::turn(&agent, Some(&inputs), None).await?;
 ```
 </TabItem>
 </Tabs>
@@ -833,10 +1016,41 @@ var result = await Pipeline.TurnAsync(
 Console.WriteLine(result);
 ```
 </TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::TurnOptions;
+use serde_json::json;
+
+// Register tool handlers
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        Ok(json!(format!("72°F and sunny in {city}")))
+    })
+});
+
+prompty::register_tool_handler("get_time", |args| {
+    Box::pin(async move {
+        let tz = args["timezone"].as_str().unwrap_or("unknown");
+        Ok(json!(format!("3:42 PM in {tz}")))
+    })
+});
+
+let agent = prompty::load("agent.prompty")?;
+
+let result = prompty::turn(
+    &agent,
+    Some(&json!({"question": "What's the weather in Tokyo?"})),
+    None,
+).await?;
+
+println!("{result}");
+```
+</TabItem>
 </Tabs>
 
 <Aside type="note">
-  `bind_tools` validates that every handler name matches a `kind: "function"` tool
+  `bind_tools` validates that every handler namematches a `kind: "function"` tool
   declared in the agent's frontmatter. If you typo a name or forget a declaration,
   you get an immediate error — not a silent runtime failure when the LLM tries to
   call the tool.
@@ -892,6 +1106,25 @@ var method = typeof(MyClass).GetMethod("MyMethod")!;
 var toolDef = ToolAttribute.BuildFromMethod(method);
 Console.WriteLine(toolDef.Name);        // "MyMethod"
 Console.WriteLine(toolDef.Parameters);  // [Property { Name = "x", Kind = "string" }]
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+// Register a handler with a specific name
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        Ok(serde_json::json!(format!("72°F in {city}")))
+    })
+});
+
+// Access tool definitions from a loaded agent
+let agent = prompty::load("agent.prompty")?;
+if let Some(tools) = &agent.tools {
+    for tool in tools {
+        println!("Tool: {} — {:?}", tool.name(), tool.description());
+    }
+}
 ```
 </TabItem>
 </Tabs>

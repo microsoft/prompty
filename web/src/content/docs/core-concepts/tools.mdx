@@ -341,6 +341,23 @@ response.
     var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_tool_handler("get_weather", |args| {
+        Box::pin(async move {
+            let city = args["city"].as_str().unwrap_or("unknown");
+            let units = args["units"].as_str().unwrap_or("celsius");
+            Ok(json!(format!("72°F and sunny in {city}")))
+        })
+    });
+
+    let agent = prompty::load("agent.prompty")?;
+    let inputs = json!({"question": "Weather in Seattle?"});
+    let result = prompty::turn(&agent, Some(&inputs), None).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 <Tabs>
@@ -378,6 +395,16 @@ response.
         agent, inputs, tools: tools, maxIterations: 10);
 
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    let agent = prompty::load("agent.prompty")?;
+    let inputs = json!({"question": "Weather in Seattle?"});
+    let result = prompty::turn(&agent, Some(&inputs), None).await?;
+    println!("{result}");
     ```
   </TabItem>
 </Tabs>
@@ -463,6 +490,24 @@ into the wire format the LLM expects (typically an OpenAI-style function definit
     ToolDispatch.RegisterToolHandler("my_provider", new MyToolHandler());
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    fn my_tool_projector(tool: &prompty::Tool) -> serde_json::Value {
+        json!({
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": { /* ... */ },
+            }
+        })
+    }
+
+    prompty::register_tool("my_provider", my_tool_projector);
+    ```
+  </TabItem>
 </Tabs>
 
 When the executor sends tools to the LLM, it calls each tool's registered
@@ -519,6 +564,19 @@ returns the result string.
     // Parse LLM-returned JSON arguments into a dictionary
     var args = ToolDispatch.ParseArguments(jsonArgs);
     var city = args["city"]?.ToString() ?? "unknown";
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_tool_handler("my_provider", |args| {
+        Box::pin(async move {
+            // Use the tool's connection, options, etc.
+            let result = call_my_service(&args).await?;
+            Ok(json!(result))
+        })
+    });
     ```
   </TabItem>
 </Tabs>

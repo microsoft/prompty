@@ -39,6 +39,11 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     dotnet add package Prompty.Foundry --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-foundry
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip" title="Migrating from Azure OpenAI?">
@@ -126,6 +131,24 @@ user:
     );
 
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_foundry::register();
+
+        let result = prompty::invoke_from_path(
+            "foundry-chat.prompty",
+            Some(&json!({ "question": "What services does Microsoft Foundry offer?" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>
@@ -258,6 +281,33 @@ or VS Code login:
       credential registration is needed in C#.
     </Aside>
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_foundry::register();
+
+        // Register the named connection before loading the prompt
+        prompty::register_connection(
+            "foundry_default",
+            json!({
+                "endpoint": std::env::var("AZURE_AI_PROJECT_ENDPOINT")?,
+                "credential": "default",
+            }),
+        );
+
+        let result = prompty::invoke_from_path(
+            "foundry-chat-aad.prompty",
+            Some(&json!({ "question": "What is Microsoft Foundry?" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ### 3. Production Deployment: Use Managed Identity
@@ -357,6 +407,33 @@ az role assignment create \
     );
 
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_foundry::register();
+
+        // For production: use managed identity credential
+        prompty::register_connection(
+            "foundry_default",
+            json!({
+                "endpoint": std::env::var("AZURE_AI_PROJECT_ENDPOINT")?,
+                "credential": "managed_identity",
+            }),
+        );
+
+        let result = prompty::invoke_from_path(
+            "foundry-chat-aad.prompty",
+            Some(&json!({ "question": "What is Microsoft Foundry?" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>

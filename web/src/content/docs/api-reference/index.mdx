@@ -38,6 +38,13 @@ Parse a `.prompty` file into a typed `Prompty` object.
     Console.WriteLine(agent.Model.Id); // "gpt-4o"
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let agent = prompty::load("chat.prompty")?;
+    println!("{}", agent.name());       // "chat"
+    println!("{}", agent.model().id()); // "gpt-4o"
+    ```
+  </TabItem>
 </Tabs>
 
 ### `render(agent, inputs) → str`
@@ -61,6 +68,12 @@ before parsing into messages.
   <TabItem label="C#">
     ```csharp
     var rendered = await Pipeline.RenderAsync(agent, new() { ["q"] = "Hi" });
+    // "system:\nYou are helpful.\n\nuser:\nHi"
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let rendered = prompty::render(&agent, Some(&json!({ "q": "Hi" }))).await?;
     // "system:\nYou are helpful.\n\nuser:\nHi"
     ```
   </TabItem>
@@ -89,6 +102,12 @@ Parse a rendered string into structured messages.
     // List<Message> with system and user messages
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let messages = prompty::parse(&agent, &rendered).await?;
+    // Vec<Message> with system and user messages
+    ```
+  </TabItem>
 </Tabs>
 
 ### `prepare(agent, inputs) → list[Message]`
@@ -111,6 +130,11 @@ wire-ready messages.
   <TabItem label="C#">
     ```csharp
     var messages = await Pipeline.PrepareAsync(agent, new() { ["q"] = "Hi" });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let messages = prompty::prepare(&agent, Some(&json!({ "q": "Hi" }))).await?;
     ```
   </TabItem>
 </Tabs>
@@ -144,6 +168,15 @@ Composite: call the LLM executor then process the response.
     var response = await Pipeline.RunAsync(agent, messages, raw: true);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let result = prompty::run(&agent, &messages).await?;
+    // "Hello! How can I help you?"
+
+    // Pass raw flag to get the raw SDK response
+    let response = prompty::run_raw(&agent, &messages).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ### `process(agent, response) → result`
@@ -167,6 +200,11 @@ Extract clean content from a raw LLM response.
     var result = await Pipeline.ProcessAsync(agent, response);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let result = prompty::process(&agent, &response).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ### `invoke(path_or_agent, inputs) → result`
@@ -188,6 +226,11 @@ One-shot pipeline: load → prepare → execute → process.
   <TabItem label="C#">
     ```csharp
     var result = await Pipeline.InvokeAsync("chat.prompty", new() { ["q"] = "Hi" });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let result = prompty::invoke_from_path("chat.prompty", Some(&json!({ "q": "Hi" }))).await?;
     ```
   </TabItem>
 </Tabs>
@@ -215,6 +258,12 @@ provided. Raises an error if any are missing.
     ```csharp
     Pipeline.ValidateInputs(agent, new() { ["name"] = "Jane" });
     // Throws ArgumentException if required fields are missing
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    prompty::validate_inputs(&agent, &json!({ "name": "Jane" }))?;
+    // Returns Err(InvokerError) if required fields are missing
     ```
   </TabItem>
 </Tabs>
@@ -254,6 +303,16 @@ provided. Raises an error if any are missing.
     var agent = PromptyLoader.Load("chat.prompty");           // sync
     var messages = await Pipeline.PrepareAsync(agent, inputs); // async
     var result = await Pipeline.RunAsync(agent, messages);     // async
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    All pipeline functions are async by default — they return `Result<T>`.
+    Use `.await` on every call:
+
+    ```rust
+    let agent = prompty::load("chat.prompty")?;                          // sync
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;       // async
+    let result = prompty::run(&agent, &messages).await?;                 // async
     ```
   </TabItem>
 </Tabs>
@@ -308,6 +367,29 @@ Run a conversational turn with optional tool-calling loop.
         tools: tools,
         maxIterations: 10
     );
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{self, TurnOptions};
+    use serde_json::json;
+
+    fn get_weather(location: &str) -> String {
+        format!("72°F and sunny in {location}")
+    }
+
+    prompty::register_tool_handler("get_weather", |args| {
+        Box::pin(async move {
+            let loc = args["location"].as_str().unwrap_or("unknown");
+            Ok(json!(get_weather(loc)))
+        })
+    });
+
+    let result = prompty::turn_from_path(
+        "agent.prompty",
+        Some(&json!({ "question": "Weather in Seattle?" })),
+        Some(TurnOptions { max_iterations: Some(10), ..Default::default() }),
+    ).await?;
     ```
   </TabItem>
 </Tabs>
@@ -388,6 +470,22 @@ can reference them via `connection.kind: reference`.
     ConnectionRegistry.Clear(); // useful in tests
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    prompty::register_connection("my-foundry", json!({
+        "kind": "key",
+        "endpoint": std::env::var("AZURE_ENDPOINT")?,
+        "apiKey": std::env::var("AZURE_API_KEY")?,
+    }));
+
+    // Lookup and clear
+    let conn = prompty::get_connection("my-foundry");
+    prompty::clear_connections(); // useful in tests
+    ```
+  </TabItem>
 </Tabs>
 
 Then in your `.prompty` file:
@@ -437,6 +535,21 @@ Set `stream: true` in model options:
         {
             Console.Write(chunk);
         }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+    use futures::StreamExt;
+
+    let agent = prompty::load("chat.prompty")?;
+    let messages = prompty::prepare(&agent, Some(&json!({}))).await?;
+
+    let mut stream = prompty::run_stream(&agent, &messages).await?;
+    while let Some(chunk) = stream.next().await {
+        print!("{chunk}");
     }
     ```
   </TabItem>
@@ -499,6 +612,21 @@ from `StructuredResult` when available — no dict→JSON→T round-trip.
     // Or: await Pipeline.InvokeAsync<Weather>("weather.prompty", inputs);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct Weather {
+        city: String,
+        temperature: i32,
+    }
+
+    let weather: Weather = prompty::cast(&result)?;
+    // Supports any type implementing serde::Deserialize
+    ```
+  </TabItem>
 </Tabs>
 
 ### Generic `invoke<T>` / `turn<T>`
@@ -526,6 +654,27 @@ Cast the final result in one step:
         new() { ["city"] = "Seattle" });
     var weather2 = await Pipeline.TurnAsync<Weather>("agent.prompty",
         new() { ["question"] = "..." }, tools: tools);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde::Deserialize;
+    use serde_json::json;
+
+    #[derive(Deserialize)]
+    struct Weather { city: String, temperature: i32 }
+
+    let weather: Weather = prompty::invoke_from_path_typed(
+        "weather.prompty",
+        Some(&json!({ "city": "Seattle" })),
+    ).await?;
+
+    let weather2: Weather = prompty::turn_from_path_typed(
+        "agent.prompty",
+        Some(&json!({ "question": "..." })),
+        None,
+    ).await?;
     ```
   </TabItem>
 </Tabs>
@@ -585,6 +734,30 @@ Cast the final result in one step:
         var output = await DoWork();
         return output;
     });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, PromptyTracer, console_tracer, trace_async};
+
+    // Console tracer
+    Tracer::register("console", console_tracer);
+
+    // JSON file tracer
+    let pt = PromptyTracer::new("./traces");
+    Tracer::register("file", pt.tracer());
+
+    // OpenTelemetry (feature-gated)
+    #[cfg(feature = "otel")]
+    {
+        prompty::init_otel_stdout();
+        Tracer::register("otel", prompty::otel_tracer());
+    }
+
+    // Trace your own async functions
+    let result = trace_async("my-operation", async {
+        // your code here
+    }).await;
     ```
   </TabItem>
 </Tabs>

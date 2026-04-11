@@ -63,6 +63,12 @@ console.log(resolve("chat.prompty"));  // see what Prompty will look for
 Console.WriteLine(Path.GetFullPath("chat.prompty"));  // see what Prompty will look for
 ```
 </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use std::path::Path;
+    println!("{}", Path::new("chat.prompty").canonicalize()?.display());
+    ```
+  </TabItem>
 </Tabs>
 
 ### Missing Environment Variable
@@ -145,6 +151,18 @@ exists at that relative location.
 
     new PromptyBuilder()
         .AddOpenAI();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```
+    Error: "No executor registered for key 'openai'"
+    ```
+
+    **Fix:** Call the provider registration function before invoking:
+
+    ```rust
+    prompty::register_defaults();
+    prompty_openai::register(); // registers the OpenAI executor + processor
     ```
   </TabItem>
 </Tabs>
@@ -249,6 +267,16 @@ using Prompty.Core;
 static string GetWeather(string city) => $"72°F in {city}";
 ```
 </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    prompty::register_tool_handler("get_weather", |args| {
+        Box::pin(async move {
+            let city = args["city"].as_str().unwrap_or("unknown");
+            Ok(serde_json::json!(format!("72°F in {city}")))
+        })
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 ### Tool Schema Mismatch
@@ -308,6 +336,22 @@ await foreach (var chunk in result)
 }
 ```
 </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{StreamChunk, consume_stream_chunks};
+
+    let agent = prompty::load("chat.prompty")?;
+    let inputs = serde_json::json!({ "question": "Hello" });
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+    let result = prompty::run(&agent, &messages).await?;
+
+    let stream = prompty::from_structured_value::<prompty::PromptyStream>(&result)?;
+    consume_stream_chunks(stream, |chunk| match chunk {
+        StreamChunk::Text(t) => print!("{t}"),
+        _ => {},
+    }).await;
+    ```
+  </TabItem>
 </Tabs>
 
 ### Model Refused Response
@@ -379,6 +423,20 @@ Tracer.Add("console", name => new ConsoleTracer(name));
 var result = await Pipeline.InvokeAsync("chat.prompty", new() { ["question"] = "Hello" });
 ```
 </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    prompty::register_defaults();
+    prompty_openai::register();
+
+    // Enable console tracing — see exactly what goes to/from the LLM
+    prompty::tracing::enable_console_tracing();
+
+    let result = prompty::invoke_from_path(
+        "chat.prompty",
+        Some(&serde_json::json!({ "question": "Hello" })),
+    ).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ### Use `prepare()` to Inspect Messages
@@ -419,6 +477,16 @@ foreach (var msg in messages)
 }
 ```
 </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let agent = prompty::load("chat.prompty")?;
+    let inputs = serde_json::json!({ "name": "Jane" });
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+    for msg in &messages {
+        println!("[{}] {}", msg.role, msg.content);
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ### Verify With a Minimal Example
