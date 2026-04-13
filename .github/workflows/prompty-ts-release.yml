@@ -23,12 +23,9 @@ jobs:
         with:
           node-version: 24  # Ships npm 11+ natively (OIDC trusted publishing)
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm run build
 
-      # Determine npm dist-tag from version
-      - name: Determine dist-tag
-        id: dist-tag
+      - name: Extract version from tag
+        id: meta
         run: |
           VERSION="${GITHUB_REF_NAME#typescript/}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -37,9 +34,71 @@ jobs:
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
+          echo "Publishing version: $VERSION (tag: $(grep tag <<< "$(cat "$GITHUB_OUTPUT")" | tail -1 | cut -d= -f2))"
+
+      - name: Rewrite package versions
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const PACKAGES = ['core', 'openai', 'foundry', 'anthropic'];
+            for (const pkg of PACKAGES) {
+              const pkgPath = path.join('packages', pkg, 'package.json');
+              const data = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+              data.version = process.env.VERSION;
+              for (const depKey of ['dependencies', 'peerDependencies', 'devDependencies']) {
+                if (!data[depKey]) continue;
+                for (const dep of Object.keys(data[depKey])) {
+                  if (dep.startsWith('@prompty/')) {
+                    data[depKey][dep] = '^' + process.env.VERSION;
+                  }
+                }
+              }
+              fs.writeFileSync(pkgPath, JSON.stringify(data, null, 2) + '\n');
+              console.log('  ' + pkgPath + ' -> ' + process.env.VERSION);
+            }
+          "
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+
+      - run: npm ci
+      - run: npm run build
 
       # Publish in dependency order — OIDC trusted publisher auth
-      - run: npm publish --workspace=packages/core --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/openai --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/foundry --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/anthropic --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+      # Each step checks if the version already exists (idempotent reruns)
+      - name: Publish @prompty/core
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/core@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/core@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/core --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/openai
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/openai@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/openai@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/openai --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/foundry
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/foundry@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/foundry@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/foundry --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/anthropic
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/anthropic@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/anthropic@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/anthropic --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
