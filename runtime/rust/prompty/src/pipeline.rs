@@ -946,13 +946,13 @@ pub async fn turn(
                         opts.max_llm_retries
                     )));
                     // Exponential backoff with jitter, capped at 60s
-                    let backoff_secs = (2u64.pow(llm_attempts)).min(60);
-                    let jitter_ms = {
+                    // Formula: min(2^attempts + jitter, 60) per spec §9.10
+                    let backoff_secs = {
                         use rand::Rng;
-                        (rand::rng().random::<f64>() * 1000.0) as u64
+                        let jitter: f64 = rand::rng().random();
+                        (2.0_f64.powi(llm_attempts as i32) + jitter).min(60.0)
                     };
-                    let delay = std::time::Duration::from_secs(backoff_secs)
-                        + std::time::Duration::from_millis(jitter_ms);
+                    let delay = std::time::Duration::from_secs_f64(backoff_secs);
 
                     // Check cancellation during backoff sleep (spec §9.10)
                     if let Some(ref cancel_flag) = opts.cancelled {

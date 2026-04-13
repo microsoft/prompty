@@ -85,6 +85,7 @@ result = turn(
     inputs={"question": "What's the weather in Seattle?"},
     tools=tools,
     max_iterations=10,
+    max_llm_retries=3,
 )
 
 print(result)  # "It's currently 72°F and sunny in Seattle!"
@@ -123,7 +124,7 @@ const tools = bindTools(agent, [getWeather, getTime]);
 const result = await turn(
   agent,
   { question: "What's the weather in Seattle?" },
-  { tools, maxIterations: 10 },
+  { tools, maxIterations: 10, maxLlmRetries: 3 },
 );
 
 console.log(result); // "It's currently 72°F and sunny in Seattle!"
@@ -161,7 +162,8 @@ var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in Seattle?" },
     tools: tools,
-    maxIterations: 10
+    maxIterations: 10,
+    maxLlmRetries: 3
 );
 
 Console.WriteLine(result); // "It's currently 72°F and sunny in Seattle!"
@@ -193,6 +195,7 @@ let agent = prompty::load("agent.prompty")?;
 // 3. Run the agent loop
 let options = TurnOptions {
     max_iterations: Some(10),
+    max_llm_retries: Some(3),
     ..Default::default()
 };
 
@@ -309,31 +312,132 @@ asyncio.run(main())
   coroutines.
 </Aside>
 
-## Error Recovery
+## Error Recovery & Resilience
 
-The agent loop is designed to be resilient. Instead of crashing on tool
-execution errors, it feeds error information back to the LLM so the model can
-retry or adjust its approach.
+The agent loop is designed to be resilient at three levels: malformed tool
+arguments, tool execution failures, and transient LLM errors. Instead of
+crashing, the loop recovers and feeds error information back to the LLM so
+the model can retry or adjust its approach.
 
-### Bad JSON in Tool Arguments
+### §9.8 — Resilient Argument Parsing
 
-If the LLM returns malformed JSON in a tool call's `arguments` field, Prompty
-catches the `json.JSONDecodeError` and sends the error string back as the tool
-result. The model typically corrects the JSON on the next attempt.
+LLMs sometimes return malformed JSON in tool call arguments — markdown code
+fences wrapping JSON, trailing commas, or JSON embedded in prose. Prompty
+uses a four-strategy fallback chain before giving up:
+
+1. **Direct parse** — try `JSON.parse` as-is
+2. **Strip markdown fences** — remove `` ```json ... ``` `` wrappers
+3. **Extract first JSON block** — find the first `{` to its matching `}`
+4. **Strip trailing commas** — remove `,` before `}` or `]`
+
+If all four strategies fail, the parse error is sent back to the LLM as a
+tool result string (never a silent empty `{}`). The model typically corrects
+the JSON on the next attempt.
 
 ```
-tool message → "Error parsing arguments: Expecting ',' delimiter: line 1 column 42"
+tool message → "Error: Invalid JSON in tool arguments: Expecting ',' delimiter: line 1 column 42"
 ```
 
-### Tool Function Throws an Exception
+### §9.9 — Tool Execution Error Safety
 
-If your tool function raises any exception, Prompty catches it and sends the
-error message back to the LLM as the tool result. This lets the model decide
-whether to retry with different arguments or inform the user.
+If your tool function raises any exception (or panics in Rust), Prompty
+catches it and sends the error message back to the LLM as the tool result.
+The agent loop **never** terminates due to a tool handler failure — the
+model decides whether to retry with different arguments or inform the user.
 
 ```
-tool message → "Error executing get_weather: ConnectionTimeout: API unreachable"
+tool message → "Error: Tool 'get_weather' failed: ConnectionTimeout: API unreachable"
 ```
+
+### §9.10 — LLM Call Retry
+
+Transient LLM failures (429 rate limits, 500 server errors) can derail a
+long and expensive agent loop. Prompty retries the LLM call with exponential
+backoff before giving up — preserving the conversation state accumulated
+across iterations.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_llm_retries` | `3` | Maximum retry attempts per LLM call |
+
+The backoff formula is `min(2^attempt + jitter, 60s)` — exponential with
+random jitter, capped at 60 seconds.
+
+When all retries are exhausted, Prompty raises an `ExecuteError` that
+**includes the full conversation history**. This lets you resume a failed
+agent loop without losing work:
+
+<Tabs>
+<TabItem label="Python">
+```python
+from prompty import turn, ExecuteError
+
+try:
+    result = turn(
+        "agent.prompty",
+        inputs={"question": "Plan my trip"},
+        tools=tools,
+        max_llm_retries=3,
+    )
+except ExecuteError as e:
+    print(f"Failed after retries: {e}")
+    # e.messages contains the full conversation — resume later
+    saved_messages = e.messages
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+import { turn, ExecuteError } from "@prompty/core";
+
+try {
+  const result = await turn(agent, inputs, {
+    tools,
+    maxLlmRetries: 3,
+  });
+} catch (e) {
+  if (e instanceof ExecuteError) {
+    console.log(`Failed after retries: ${e.message}`);
+    // e.messages contains the full conversation — resume later
+    const savedMessages = e.messages;
+  }
+}
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+try
+{
+    var result = await Pipeline.TurnAsync(
+        agent, inputs, tools: tools, maxLlmRetries: 3);
+}
+catch (ExecuteError e)
+{
+    Console.WriteLine($"Failed after retries: {e.Message}");
+    // e.Messages contains the full conversation — resume later
+    var savedMessages = e.Messages;
+}
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, InvokerError};
+
+let options = TurnOptions {
+    max_llm_retries: Some(3),
+    ..Default::default()
+};
+
+match prompty::turn(&agent, Some(&inputs), Some(options)).await {
+    Ok(result) => println!("{result}"),
+    Err(InvokerError::ExecuteRetryExhausted { message, messages }) => {
+        eprintln!("Failed after retries: {message}");
+        // messages contains the full conversation — resume later
+    }
+    Err(e) => eprintln!("Other error: {e}"),
+}
+```
+</TabItem>
+</Tabs>
 
 ### Missing Tool Name
 
@@ -383,7 +487,7 @@ const tools = bindTools(agent, [getWeather]);
 
 const result = await turn(agent, {
   question: "What's the weather in London?",
-}, { tools, maxIterations: 10 });
+}, { tools, maxIterations: 10, maxLlmRetries: 3 });
 
 console.log(result);
 ```
@@ -406,7 +510,8 @@ var result = await Pipeline.TurnAsync(
     agent,
     new() { ["question"] = "What's the weather in London?" },
     tools: tools,
-    maxIterations: 10
+    maxIterations: 10,
+    maxLlmRetries: 3
 );
 
 Console.WriteLine(result);
@@ -428,6 +533,7 @@ let agent = prompty::load("agent.prompty")?;
 
 let options = TurnOptions {
     max_iterations: Some(10),
+    max_llm_retries: Some(3),
     ..Default::default()
 };
 
@@ -452,8 +558,9 @@ Under the hood, the agent loop in the executor follows these steps:
    off, it reads tool calls directly from the response. Either way, tool calls
    are fully collected before any are executed.
 
-2. **Call the LLM** — send the current message list plus tool definitions via
-   the chat completions API.
+2. **Call the LLM (with retry)** — send the current message list plus tool
+   definitions via the chat completions API. If the call fails, retry with
+   exponential backoff up to `max_llm_retries` times (§9.10).
 
 3. **Check `finish_reason`** — if the response's `finish_reason` is
    `"tool_calls"`, the model wants to invoke tools. If it's `"stop"`, the model
@@ -462,35 +569,53 @@ Under the hood, the agent loop in the executor follows these steps:
 4. **Extract tool calls** — each tool call has an `id`, a `function.name`, and
    `function.arguments` (a JSON string).
 
-5. **Look up & execute** — for each tool call, find the matching function in the
-   `tools` dict (or `agent.metadata["tool_functions"]`), parse the arguments,
-   and call the function.
+5. **Parse arguments (resilient)** — parse the JSON arguments using the
+   four-strategy fallback chain (§9.8). If all strategies fail, send the
+   error back to the LLM as a tool result.
 
-6. **Append results** — add the assistant's tool-call message and one `tool`
+6. **Execute (with error safety)** — for each tool call, find the matching
+   function and call it. If the function throws, catch the error and send it
+   back to the LLM as a tool result (§9.9) — the loop continues.
+
+7. **Append results** — add the assistant's tool-call message and one `tool`
    role message per call result back to the conversation.
 
-7. **Repeat** — go back to step 2 with the updated message list.
+8. **Repeat** — go back to step 2 with the updated message list.
 
-8. **Return** — when the model produces a final response (no tool calls), pass
+9. **Return** — when the model produces a final response (no tool calls), pass
    it through the processor and return the result.
 
 ```python
-# Simplified pseudocode of the agent loop
+# Simplified pseudocode of the agent loop (with resilience)
+from prompty import ExecuteError
+from prompty.core.tool_dispatch import resilient_json_parse
+
 messages = prepare(agent, inputs)
 for i in range(max_iterations):
-    response = client.chat.completions.create(
-        model=agent.model.id,
-        messages=messages,
-        tools=tool_definitions,
-    )
+    # LLM call with retry (§9.10)
+    for attempt in range(max_llm_retries):
+        try:
+            response = client.chat.completions.create(
+                model=agent.model.id, messages=messages, tools=tool_defs)
+            break
+        except Exception as e:
+            if attempt + 1 >= max_llm_retries:
+                raise ExecuteError(str(e), messages=messages)
+            time.sleep(min(2 ** (attempt + 1) + random(), 60))
+
     if response.finish_reason != "tool_calls":
         return process(response)
 
-    # Execute each tool call
     messages.append(response.message)
     for tool_call in response.tool_calls:
-        result = tools[tool_call.function.name](**tool_call.args)
-        messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
+        # Resilient parsing (§9.8)
+        args = resilient_json_parse(tool_call.function.arguments)
+        try:
+            # Error safety (§9.9) — catch tool failures
+            result = tools[tool_call.function.name](**args)
+        except Exception as e:
+            result = f"Error: Tool '{tool_call.function.name}' failed: {e}"
+        messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": str(result)})
 
 raise ValueError(f"Agent loop exceeded max_iterations ({max_iterations})")
 ```

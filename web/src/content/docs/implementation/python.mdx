@@ -95,6 +95,8 @@ result = await prompty.invoke_async("chat.prompty", inputs={"q": "Hi"})
 ### Agent Mode
 
 ```python
+from prompty import turn, ExecuteError
+
 def get_weather(city: str) -> str:
     return f"72°F and sunny in {city}"
 
@@ -103,8 +105,14 @@ result = prompty.turn(
     inputs={"question": "Weather in Seattle?"},
     tools={"get_weather": get_weather},
     max_iterations=10,
+    max_llm_retries=3,
 )
 ```
+
+The agent loop includes built-in resilience:
+- **Resilient JSON parsing** — recovers from malformed tool arguments (markdown fences, trailing commas)
+- **Tool error safety** — tool exceptions are caught and fed back to the LLM
+- **LLM call retry** — transient failures are retried with exponential backoff; `ExecuteError` carries the full conversation for resumption
 
 ### Connection Registry
 
