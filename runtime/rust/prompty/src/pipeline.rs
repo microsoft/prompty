@@ -949,11 +949,35 @@ pub async fn turn(
                     let backoff_secs = (2u64.pow(llm_attempts)).min(60);
                     let jitter_ms = {
                         use rand::Rng;
-                        (rand::rng().random::<f64>() * 500.0) as u64
+                        (rand::rng().random::<f64>() * 1000.0) as u64
                     };
                     let delay = std::time::Duration::from_secs(backoff_secs)
                         + std::time::Duration::from_millis(jitter_ms);
-                    tokio::time::sleep(delay).await;
+
+                    // Check cancellation during backoff sleep (spec §9.10)
+                    if let Some(ref cancel_flag) = opts.cancelled {
+                        let cancel_flag = cancel_flag.clone();
+                        tokio::select! {
+                            _ = tokio::time::sleep(delay) => {}
+                            _ = async {
+                                loop {
+                                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                                    if cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                                        return;
+                                    }
+                                }
+                            } => {
+                                opts.emit(AgentEvent::Cancelled);
+                                span.emit("error", &json!("Operation cancelled during retry backoff"));
+                                span.end();
+                                return Err(InvokerError::Cancelled(
+                                    "Operation cancelled during retry backoff".to_string(),
+                                ));
+                            }
+                        }
+                    } else {
+                        tokio::time::sleep(delay).await;
+                    }
                 }
             }
         };
