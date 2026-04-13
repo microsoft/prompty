@@ -231,7 +231,8 @@ public static class Pipeline
         int? contextBudget = null,
         Guardrails? guardrails = null,
         Steering? steering = null,
-        bool parallelToolCalls = false)
+        bool parallelToolCalls = false,
+        int maxLlmRetries = 3)
     {
         var label = turnNumber.HasValue ? $"turn {turnNumber.Value}" : "turn";
         return await Trace.TraceAsync<object>($"prompty.turn", async (emit) =>
@@ -330,7 +331,7 @@ public static class Pipeline
                 AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
                     new Dictionary<string, object?> { ["iteration"] = iteration, ["phase"] = "executing" });
 
-                response2 = await ExecuteAsync(agent, messages);
+                response2 = await InvokeWithRetryAsync(agent, messages, maxLlmRetries, onEvent, cancellationToken);
 
                 // If response is a stream, consume it fully before processing.
                 if (response2 is PromptyStream stream)
@@ -386,11 +387,21 @@ public static class Pipeline
 
                             tasks.Add(Task.Run(async () =>
                             {
-                                var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                string toolResponse;
+                                try
                                 {
-                                    toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                    return await ToolDispatch.DispatchAsync(agent, call, tools);
-                                });
+                                    toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                    {
+                                        toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+                                        return await ToolDispatch.DispatchAsync(agent, call, tools);
+                                    });
+                                }
+                                catch (Exception ex) when (ex is not OperationCanceledException)
+                                {
+                                    toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
+                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
+                                }
                                 return (capturedIndex, toolResponse);
                             }));
                         }
@@ -437,11 +448,21 @@ public static class Pipeline
                             AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
                                 new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
 
-                            var toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                            string toolResponse;
+                            try
                             {
-                                toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                return await ToolDispatch.DispatchAsync(agent, call, tools);
-                            });
+                                toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                {
+                                    toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
+                                    return await ToolDispatch.DispatchAsync(agent, call, tools);
+                                });
+                            }
+                            catch (Exception ex) when (ex is not OperationCanceledException)
+                            {
+                                toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
+                                AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
+                                    new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
+                            }
                             toolResults.Add(toolResponse);
 
                             AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
@@ -514,11 +535,12 @@ public static class Pipeline
         int? contextBudget = null,
         Guardrails? guardrails = null,
         Steering? steering = null,
-        bool parallelToolCalls = false)
+        bool parallelToolCalls = false,
+        int maxLlmRetries = 3)
     {
         var agent = PromptyLoader.Load(path);
         return await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
     }
 
     // -----------------------------------------------------------------------
@@ -558,10 +580,11 @@ public static class Pipeline
         int? contextBudget = null,
         Guardrails? guardrails = null,
         Steering? steering = null,
-        bool parallelToolCalls = false)
+        bool parallelToolCalls = false,
+        int maxLlmRetries = 3)
     {
         var result = await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
         return PromptyCast.Cast<T>(result);
     }
 
@@ -580,11 +603,56 @@ public static class Pipeline
         int? contextBudget = null,
         Guardrails? guardrails = null,
         Steering? steering = null,
-        bool parallelToolCalls = false)
+        bool parallelToolCalls = false,
+        int maxLlmRetries = 3)
     {
         var result = await TurnAsync(path, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
         return PromptyCast.Cast<T>(result);
+    }
+
+    // -----------------------------------------------------------------------
+    // LLM Retry Helper (§9.10)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Invoke ExecuteAsync with exponential backoff retry on transient failures.
+    /// </summary>
+    private static async Task<object> InvokeWithRetryAsync(
+        Prompty agent,
+        List<Message> messages,
+        int maxRetries,
+        EventCallback? onEvent,
+        CancellationToken cancellationToken)
+    {
+        var attempts = 0;
+        while (true)
+        {
+            try
+            {
+                return await ExecuteAsync(agent, messages);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                attempts++;
+                if (attempts >= maxRetries)
+                {
+                    throw new ExecuteError(
+                        $"LLM call failed after {maxRetries} retries: {ex.Message}",
+                        new List<Message>(messages));
+                }
+
+                AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
+                    new Dictionary<string, object?>
+                    {
+                        ["message"] = $"LLM call failed, retrying (attempt {attempts + 1}/{maxRetries})..."
+                    });
+
+                // Exponential backoff with jitter, capped at 60s
+                var backoff = Math.Min(Math.Pow(2, attempts) + Random.Shared.NextDouble(), 60);
+                await Task.Delay(TimeSpan.FromSeconds(backoff), cancellationToken);
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -676,4 +744,18 @@ public class ToolCallResult
 {
     public string? Content { get; set; }
     public List<ToolCall> ToolCalls { get; set; } = [];
+}
+
+/// <summary>
+/// Error from agent loop that includes accumulated conversation state (§9.10).
+/// </summary>
+public class ExecuteError : Exception
+{
+    public List<Message> Messages { get; }
+
+    public ExecuteError(string message, List<Message> messages)
+        : base(message)
+    {
+        Messages = messages;
+    }
 }

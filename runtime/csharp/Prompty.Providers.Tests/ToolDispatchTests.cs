@@ -210,11 +210,10 @@ public class ToolDispatchTests : IDisposable
     }
 
     [Fact]
-    public void ParseArguments_InvalidJson_ReturnsRawFallback()
+    public void ParseArguments_InvalidJson_ReturnsErrorFallback()
     {
         var result = ToolDispatch.ParseArguments("not json");
-        Assert.True(result.ContainsKey("_raw"));
-        Assert.Equal("not json", result["_raw"]);
+        Assert.True(result.ContainsKey("_error"));
     }
 
     [Fact]

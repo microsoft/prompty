@@ -406,15 +406,19 @@ public class PipelineTests : IDisposable
     }
 
     [Fact]
-    public async Task TurnAsync_MissingTool_Throws()
+    public async Task TurnAsync_MissingTool_FeedsErrorBackToLlm()
     {
         InvokerRegistry.RegisterExecutor("openai", new ToolCallingExecutor());
         InvokerRegistry.RegisterProcessor("openai", new ToolCallingProcessor());
 
         var agent = CreateAgent();
         agent.Tools = [new FunctionTool { Name = "get_weather", Kind = "function" }];
-        await Assert.ThrowsAsync<ToolHandlerError>(
-            () => Pipeline.TurnAsync(agent));
+        // With §9.9, tool errors are caught and fed back to the LLM.
+        // The loop continues and returns the final processed response.
+        var result = await Pipeline.TurnAsync(agent);
+        Assert.NotNull(result);
+        // The error is caught, the loop continues to the next LLM call which succeeds
+        Assert.IsType<string>(result);
     }
 
     // --- Thread Expansion ---

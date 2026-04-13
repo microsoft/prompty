@@ -169,15 +169,19 @@ public class SpecVectorAgentTests : IDisposable
         }
         else if (errorMsg.Contains("not registered"))
         {
-            // The agent loop may throw ToolHandlerError (which extends InvalidOperationException)
-            // or run out of mock responses
+            // With §9.9 tool error safety, the tool error is caught and fed back to the LLM.
+            // The mock executor may then run out of responses, triggering LLM retry exhaustion.
             try
             {
                 await Pipeline.TurnAsync(agent, tools: toolFunctions);
             }
             catch (InvalidOperationException)
             {
-                // Expected — either ToolHandlerError or mock ran out of responses
+                // Expected — ToolHandlerError or mock ran out of responses
+            }
+            catch (ExecuteError)
+            {
+                // Expected — LLM retries exhausted after tool error was fed back
             }
         }
     }
