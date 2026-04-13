@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.Text.RegularExpressions;
+
 namespace Prompty.Core;
 
 /// <summary>
@@ -174,6 +176,12 @@ public static class ToolDispatch
     {
         var arguments = ParseArguments(call.Arguments);
 
+        // If all parse strategies failed, return error to LLM (§9.8)
+        if (arguments.ContainsKey("_error"))
+        {
+            return $"Error: Invalid JSON in tool arguments for '{call.Name}': {arguments["_error"]}";
+        }
+
         // Apply bindings from the tool definition
         var toolDef = FindToolDefinition(agent, call.Name);
         if (toolDef?.Bindings is not null)
@@ -239,16 +247,106 @@ public static class ToolDispatch
     }
 
     /// <summary>
-    /// Parse JSON arguments string into a dictionary.
+    /// Parse tool arguments JSON with fallback strategies per spec §9.8.
+    /// Strategy order: direct parse → strip markdown fences → extract JSON block → strip trailing commas.
     /// </summary>
     public static Dictionary<string, object?> ParseArguments(string arguments)
     {
         if (string.IsNullOrWhiteSpace(arguments))
             return [];
 
+        // Strategy 1: Direct parse
+        var direct = TryParseJson(arguments);
+        if (direct is not null) return direct;
+
+        // Strategy 2: Strip markdown code fences
+        var fenceMatch = Regex.Match(arguments, @"^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$");
+        if (fenceMatch.Success)
+        {
+            var stripped = fenceMatch.Groups[1].Value;
+            var fenced = TryParseJson(stripped);
+            if (fenced is not null)
+            {
+                Console.Error.WriteLine("[prompty] Parsed tool arguments after stripping markdown fences");
+                return fenced;
+            }
+        }
+
+        // Strategy 3: Extract first balanced JSON block
+        var block = ExtractFirstJsonBlock(arguments);
+        if (block is not null)
+        {
+            var extracted = TryParseJson(block);
+            if (extracted is not null)
+            {
+                Console.Error.WriteLine("[prompty] Parsed tool arguments after extracting JSON block");
+                return extracted;
+            }
+        }
+
+        // Strategy 4: Strip trailing commas before } or ]
+        var cleaned = Regex.Replace(arguments, @",\s*([}\]])", "$1");
+        if (cleaned != arguments)
+        {
+            var trailingFixed = TryParseJson(cleaned);
+            if (trailingFixed is not null)
+            {
+                Console.Error.WriteLine("[prompty] Parsed tool arguments after stripping trailing commas");
+                return trailingFixed;
+            }
+        }
+
+        // All strategies failed — return error marker (NOT silent empty dict)
+        return new Dictionary<string, object?> { ["_error"] = "All JSON parse strategies failed for tool arguments" };
+    }
+
+    /// <summary>
+    /// Extract the first balanced {...} block from text, respecting string escapes.
+    /// </summary>
+    internal static string? ExtractFirstJsonBlock(string text)
+    {
+        var start = text.IndexOf('{');
+        if (start == -1) return null;
+
+        var depth = 0;
+        var inString = false;
+        var escapeNext = false;
+
+        for (var i = start; i < text.Length; i++)
+        {
+            var ch = text[i];
+            if (escapeNext)
+            {
+                escapeNext = false;
+                continue;
+            }
+            if (inString)
+            {
+                if (ch == '\\') escapeNext = true;
+                else if (ch == '"') inString = false;
+                continue;
+            }
+            switch (ch)
+            {
+                case '"': inString = true; break;
+                case '{': depth++; break;
+                case '}':
+                    depth--;
+                    if (depth == 0) return text[start..(i + 1)];
+                    break;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Try to parse a JSON string into a dictionary. Returns null on failure.
+    /// </summary>
+    private static Dictionary<string, object?>? TryParseJson(string json)
+    {
         try
         {
-            var doc = System.Text.Json.JsonDocument.Parse(arguments);
+            var doc = System.Text.Json.JsonDocument.Parse(json);
             var result = new Dictionary<string, object?>();
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
@@ -266,7 +364,7 @@ public static class ToolDispatch
         }
         catch (System.Text.Json.JsonException)
         {
-            return new Dictionary<string, object?> { ["_raw"] = arguments };
+            return null;
         }
     }
 }

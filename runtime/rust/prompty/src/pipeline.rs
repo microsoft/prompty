@@ -504,7 +504,8 @@ pub async fn invoke(
         let messages = prepare(agent, inputs).await?;
         let provider = resolve_provider(agent);
         let response = registry::invoke_executor(&provider, agent, &messages).await?;
-        process(agent, response).await
+        let processed = process(agent, response).await?;
+        Ok(unwrap_structured(&processed))
     }
     .await;
 
@@ -638,6 +639,8 @@ pub struct TurnOptions {
     /// Optional validator for structured output (called via cast after processing).
     #[allow(clippy::type_complexity)]
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
+    /// Maximum retries for LLM calls with exponential backoff (§9.10, default: 3).
+    pub max_llm_retries: usize,
 }
 
 impl Default for TurnOptions {
@@ -653,6 +656,7 @@ impl Default for TurnOptions {
             steering: None,
             parallel_tool_calls: false,
             validator: None,
+            max_llm_retries: 3,
         }
     }
 }
@@ -900,67 +904,83 @@ pub async fn turn(
             }
         }
 
-        // Execute LLM — streaming or non-streaming
+        // Execute LLM — streaming or non-streaming, with retry (§9.10)
         let streaming = is_streaming(agent);
-        let (tool_calls, processed, raw_response) = if streaming {
-            // Streaming path: execute_stream → PromptyStream → process_stream → consume
-            match registry::invoke_executor_stream(&provider, agent, &messages).await {
-                Ok(sse_stream) => {
-                    let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                    let chunk_stream =
-                        registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+        let mut llm_attempts = 0u32;
+        let (tool_calls, processed, raw_response) = loop {
+            // Check cancellation before each attempt
+            if opts.is_cancelled() {
+                iter_span.end();
+                opts.emit(AgentEvent::Cancelled);
+                span.emit("error", &json!("Operation cancelled"));
+                span.end();
+                return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
+            }
 
-                    let (tool_calls_vec, text) = {
-                        use futures::StreamExt;
-                        let mut tool_calls_vec = Vec::new();
-                        let mut text_parts = Vec::new();
-                        let mut stream_error = None;
-                        futures::pin_mut!(chunk_stream);
-                        while let Some(chunk) = chunk_stream.next().await {
-                            match chunk {
-                                StreamChunk::Text(t) => {
-                                    opts.emit(AgentEvent::Token(t.clone()));
-                                    text_parts.push(t);
+            match execute_llm_attempt(&provider, agent, &messages, streaming, &opts).await {
+                Ok(result) => break result,
+                Err(e) => {
+                    llm_attempts += 1;
+                    if llm_attempts >= opts.max_llm_retries as u32 {
+                        iter_span.end();
+                        span.emit(
+                            "error",
+                            &json!(format!(
+                                "LLM call failed after {} retries: {}",
+                                opts.max_llm_retries, e
+                            )),
+                        );
+                        span.end();
+                        return Err(InvokerError::ExecuteRetryExhausted(
+                            crate::interfaces::ExecuteError {
+                                message: format!(
+                                    "LLM call failed after {} retries: {}",
+                                    opts.max_llm_retries, e
+                                ),
+                                messages: messages.clone(),
+                            },
+                        ));
+                    }
+                    opts.emit(AgentEvent::Status(format!(
+                        "LLM call failed, retrying (attempt {}/{})...",
+                        llm_attempts + 1,
+                        opts.max_llm_retries
+                    )));
+                    // Exponential backoff with jitter, capped at 60s
+                    // Formula: min(2^attempts + jitter, 60) per spec §9.10
+                    let backoff_secs = {
+                        use rand::Rng;
+                        let jitter: f64 = rand::rng().random();
+                        (2.0_f64.powi(llm_attempts as i32) + jitter).min(60.0)
+                    };
+                    let delay = std::time::Duration::from_secs_f64(backoff_secs);
+
+                    // Check cancellation during backoff sleep (spec §9.10)
+                    if let Some(ref cancel_flag) = opts.cancelled {
+                        let cancel_flag = cancel_flag.clone();
+                        tokio::select! {
+                            _ = tokio::time::sleep(delay) => {}
+                            _ = async {
+                                loop {
+                                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                                    if cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                                        return;
+                                    }
                                 }
-                                StreamChunk::Thinking(t) => {
-                                    opts.emit(AgentEvent::Thinking(t));
-                                }
-                                StreamChunk::Tool(tc) => {
-                                    tool_calls_vec.push(tc);
-                                }
-                                StreamChunk::Error(e) => {
-                                    stream_error = Some(e);
-                                    break;
-                                }
+                            } => {
+                                opts.emit(AgentEvent::Cancelled);
+                                span.emit("error", &json!("Operation cancelled during retry backoff"));
+                                span.end();
+                                return Err(InvokerError::Cancelled(
+                                    "Operation cancelled during retry backoff".to_string(),
+                                ));
                             }
                         }
-                        if let Some(err) = stream_error {
-                            iter_span.end();
-                            span.emit("error", &json!(err));
-                            span.end();
-                            return Err(InvokerError::Execute(err.into()));
-                        }
-                        (tool_calls_vec, text_parts.join(""))
-                    };
-
-                    let processed = json!(text);
-                    (tool_calls_vec, processed, json!(null))
-                }
-                Err(_) => {
-                    // Fallback to non-streaming if executor doesn't support it
-                    let raw_response =
-                        registry::invoke_executor(&provider, agent, &messages).await?;
-                    let processed = process(agent, raw_response.clone()).await?;
-                    let tool_calls = extract_tool_calls_from_processed(&processed);
-                    (tool_calls, processed, raw_response)
+                    } else {
+                        tokio::time::sleep(delay).await;
+                    }
                 }
             }
-        } else {
-            // Non-streaming path
-            let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
-            let processed = process(agent, raw_response.clone()).await?;
-            let tool_calls = extract_tool_calls_from_processed(&processed);
-            (tool_calls, processed, raw_response)
         };
 
         if tool_calls.is_empty() {
@@ -1103,6 +1123,77 @@ fn has_any_tools(agent: &Prompty) -> bool {
     false
 }
 
+/// Execute a single LLM attempt (streaming or non-streaming).
+/// Returns (tool_calls, processed, raw_response) on success, or an error string on failure.
+async fn execute_llm_attempt(
+    provider: &str,
+    agent: &Prompty,
+    messages: &[Message],
+    streaming: bool,
+    opts: &TurnOptions,
+) -> Result<(Vec<ToolCall>, Value, Value), String> {
+    if streaming {
+        match registry::invoke_executor_stream(provider, agent, messages).await {
+            Ok(sse_stream) => {
+                let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
+                let chunk_stream =
+                    registry::invoke_processor_stream(provider, Box::pin(prompty_stream))
+                        .map_err(|e| e.to_string())?;
+
+                use futures::StreamExt;
+                let mut tool_calls_vec = Vec::new();
+                let mut text_parts = Vec::new();
+                let mut stream_error = None;
+                futures::pin_mut!(chunk_stream);
+                while let Some(chunk) = chunk_stream.next().await {
+                    match chunk {
+                        StreamChunk::Text(t) => {
+                            opts.emit(AgentEvent::Token(t.clone()));
+                            text_parts.push(t);
+                        }
+                        StreamChunk::Thinking(t) => {
+                            opts.emit(AgentEvent::Thinking(t));
+                        }
+                        StreamChunk::Tool(tc) => {
+                            tool_calls_vec.push(tc);
+                        }
+                        StreamChunk::Error(e) => {
+                            stream_error = Some(e);
+                            break;
+                        }
+                    }
+                }
+                if let Some(err) = stream_error {
+                    return Err(err);
+                }
+                let text = text_parts.join("");
+                let processed = json!(text);
+                Ok((tool_calls_vec, processed, json!(null)))
+            }
+            Err(stream_err) => {
+                // Fallback to non-streaming if executor doesn't support it
+                let raw_response = registry::invoke_executor(provider, agent, messages)
+                    .await
+                    .map_err(|e| format!("{stream_err} (stream), then {e} (non-stream)"))?;
+                let processed = process(agent, raw_response.clone())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let tool_calls = extract_tool_calls_from_processed(&processed);
+                Ok((tool_calls, processed, raw_response))
+            }
+        }
+    } else {
+        let raw_response = registry::invoke_executor(provider, agent, messages)
+            .await
+            .map_err(|e| e.to_string())?;
+        let processed = process(agent, raw_response.clone())
+            .await
+            .map_err(|e| e.to_string())?;
+        let tool_calls = extract_tool_calls_from_processed(&processed);
+        Ok((tool_calls, processed, raw_response))
+    }
+}
+
 /// Dispatch tool calls sequentially, checking cancellation and tool guardrails.
 async fn dispatch_tools_sequential(
     tool_calls: &[ToolCall],
@@ -1138,8 +1229,32 @@ async fn dispatch_tools_sequential(
             arguments: tc.arguments.clone(),
         });
 
-        let result =
-            crate::tool_dispatch::dispatch_tool(tc, &opts.tools, agent, parent_inputs).await;
+        // §9.9: Wrap dispatch in catch_unwind for panic safety
+        let result = {
+            let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
+                tc,
+                &opts.tools,
+                agent,
+                parent_inputs,
+            ));
+            match futures::FutureExt::catch_unwind(fut).await {
+                Ok(r) => r,
+                Err(panic_info) => {
+                    let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                        s.to_string()
+                    } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                        s.clone()
+                    } else {
+                        "unknown panic".to_string()
+                    };
+                    opts.emit(AgentEvent::Error(format!(
+                        "Tool '{}' panicked: {}",
+                        tc.name, msg
+                    )));
+                    format!("Error: Tool '{}' panicked: {}", tc.name, msg)
+                }
+            }
+        };
 
         opts.emit(AgentEvent::ToolResult {
             name: tc.name.clone(),
@@ -1165,7 +1280,7 @@ async fn dispatch_tools_parallel(
         });
     }
 
-    // Dispatch all in parallel
+    // Dispatch all in parallel with panic safety (§9.9)
     let futures: Vec<_> = tool_calls
         .iter()
         .map(|tc| {
@@ -1181,7 +1296,29 @@ async fn dispatch_tools_parallel(
                         return format!("Error: Tool guardrail denied: {reason}");
                     }
                 }
-                crate::tool_dispatch::dispatch_tool(tc, tools, agent, parent_inputs).await
+                let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
+                    tc,
+                    tools,
+                    agent,
+                    parent_inputs,
+                ));
+                match futures::FutureExt::catch_unwind(fut).await {
+                    Ok(r) => r,
+                    Err(panic_info) => {
+                        let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                            s.to_string()
+                        } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                            s.clone()
+                        } else {
+                            "unknown panic".to_string()
+                        };
+                        opts.emit(AgentEvent::Error(format!(
+                            "Tool '{}' panicked: {}",
+                            tc.name, msg
+                        )));
+                        format!("Error: Tool '{}' panicked: {}", tc.name, msg)
+                    }
+                }
             }
         })
         .collect();
@@ -1581,6 +1718,7 @@ mod tests {
     fn test_turn_options_default() {
         let opts = TurnOptions::default();
         assert_eq!(opts.max_iterations, 10);
+        assert_eq!(opts.max_llm_retries, 3);
         assert!(!opts.raw);
         assert!(opts.tools.is_empty());
         assert!(!opts.is_cancelled());
@@ -2158,5 +2296,159 @@ mod tests {
         let agent = make_simple_agent(key);
         let result = invoke(&agent, None).await.unwrap();
         assert_eq!(result, "The weather in Seattle is 72°F.");
+    }
+
+    // -----------------------------------------------------------------------
+    // LLM retry tests (§9.10)
+    // -----------------------------------------------------------------------
+
+    /// Mock executor that fails the first N calls, then succeeds.
+    struct FailThenSucceedExecutor {
+        call_count: Arc<AtomicUsize>,
+        fail_until: usize,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for FailThenSucceedExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            let n = self.call_count.fetch_add(1, Ordering::SeqCst);
+            if n < self.fail_until {
+                Err(InvokerError::Execute("transient failure".into()))
+            } else {
+                Ok(serde_json::json!({
+                    "choices": [{"message": {"content": "success after retry"}}]
+                }))
+            }
+        }
+    }
+
+    /// Mock executor that always fails.
+    struct AlwaysFailExecutor;
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for AlwaysFailExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Execute("persistent failure".into()))
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_llm_retry_success_on_second_attempt() {
+        ensure_defaults();
+        let key = "retry_test_success";
+        let call_count = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            FailThenSucceedExecutor {
+                call_count: call_count.clone(),
+                fail_until: 1,
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let mut tools = HashMap::new();
+        tools.insert(
+            "dummy".into(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
+        );
+
+        let opts = TurnOptions {
+            tools,
+            max_llm_retries: 3,
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "Should have failed once and succeeded once"
+        );
+        assert_eq!(result, "success after retry");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_llm_retry_exhausted_carries_messages() {
+        ensure_defaults();
+        let key = "retry_test_exhaust";
+        registry::register_executor(key, AlwaysFailExecutor);
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let mut tools = HashMap::new();
+        tools.insert(
+            "dummy".into(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
+        );
+
+        let opts = TurnOptions {
+            tools,
+            max_llm_retries: 2,
+            ..Default::default()
+        };
+
+        let err = turn(&agent, None, Some(opts)).await.unwrap_err();
+        let err_str = format!("{}", err);
+        assert!(
+            err_str.contains("retries") || err_str.contains("failed"),
+            "Error should mention retry exhaustion: {}",
+            err_str
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_llm_retry_emits_status_events() {
+        ensure_defaults();
+        let key = "retry_test_events";
+        let call_count = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            FailThenSucceedExecutor {
+                call_count: call_count.clone(),
+                fail_until: 1,
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let events_clone = events.clone();
+
+        let mut tools = HashMap::new();
+        tools.insert(
+            "dummy".into(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
+        );
+
+        let opts = TurnOptions {
+            tools,
+            max_llm_retries: 3,
+            on_event: Some(Box::new(move |event| {
+                events_clone.lock().unwrap().push(format!("{:?}", event));
+            })),
+            ..Default::default()
+        };
+
+        let _ = turn(&agent, None, Some(opts)).await.unwrap();
+        let captured = events.lock().unwrap();
+        assert!(
+            captured
+                .iter()
+                .any(|e| e.contains("Status") && e.contains("retrying")),
+            "Expected retry status event, got: {:?}",
+            *captured
+        );
     }
 }

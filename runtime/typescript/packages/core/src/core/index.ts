@@ -13,6 +13,7 @@ export {
   turn,
   invoke,
   resolveBindings,
+  ExecuteError,
   type TurnOptions,
   type InvokeOptions,
 } from "./pipeline.js";
@@ -26,6 +27,8 @@ export {
   getToolHandler,
   clearToolHandlers,
   dispatchTool,
+  resilientJsonParse,
+  extractFirstJsonBlock,
 } from "./tool-dispatch.js";
 export { type AgentEventType, type EventCallback, emitEvent } from "./agent-events.js";
 export { CancelledError, checkCancellation } from "./cancellation.js";

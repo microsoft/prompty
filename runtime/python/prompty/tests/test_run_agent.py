@@ -118,7 +118,7 @@ class TestExecuteTool:
     def test_bad_json(self):
         tools = {"fn": lambda: None}
         result = dispatch_tool("fn", "not json", tools, None, {})
-        assert "invalid JSON" in result
+        assert "Invalid JSON" in result
         assert "fn" in result
 
     def test_tool_exception(self):
@@ -158,7 +158,7 @@ class TestExecuteToolAsync:
     def test_bad_json(self):
         tools = {"fn": lambda: None}
         result = asyncio.get_event_loop().run_until_complete(dispatch_tool_async("fn", "{bad}", tools, None, {}))
-        assert "invalid JSON" in result
+        assert "Invalid JSON" in result
 
 
 # ---------------------------------------------------------------------------
@@ -321,7 +321,7 @@ class TestRunAgent:
         assert result == "Fixed it."
         # Check that error message was sent back as tool result
         tool_msg = [m for m in messages if m.role == "tool"][0]
-        assert "invalid JSON" in tool_msg.parts[0].value
+        assert "Invalid JSON" in tool_msg.parts[0].value
 
     @patch("prompty.core.pipeline.process")
     @patch("prompty.core.pipeline._invoke_executor")

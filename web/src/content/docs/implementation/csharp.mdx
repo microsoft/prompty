@@ -271,10 +271,15 @@ var tools = new Dictionary<string, Func<string, Task<string>>>
 };
 
 var result = await Pipeline.TurnAsync(
-    agent, inputs, tools: tools, maxIterations: 10);
+    agent, inputs, tools: tools, maxIterations: 10, maxLlmRetries: 3);
 
 Console.WriteLine(result);
 ```
+
+The agent loop includes built-in resilience:
+- **Resilient JSON parsing** — `ParseArguments()` recovers from malformed tool arguments (markdown fences, trailing commas)
+- **Tool error safety** — tool exceptions are caught and fed back to the LLM
+- **LLM call retry** — transient failures are retried with exponential backoff; `ExecuteError` carries the full conversation for resumption
 
 <Aside type="tip">
   `TurnAsync` runs the full agent loop — it calls the LLM, executes any

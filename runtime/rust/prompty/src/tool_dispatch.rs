@@ -201,6 +201,91 @@ pub fn resolve_bindings(
 }
 
 // ---------------------------------------------------------------------------
+// Resilient JSON parsing (§9.8)
+// ---------------------------------------------------------------------------
+
+/// Attempt to parse JSON with fallback strategies per spec §9.8.
+/// Returns Ok(value) on success, or Err(error_message) if all strategies fail.
+fn resilient_json_parse(raw: &str) -> Result<serde_json::Value, String> {
+    // Strategy 1: Direct parse
+    if let Ok(v) = serde_json::from_str(raw) {
+        return Ok(v);
+    }
+
+    // Strategy 2: Strip markdown code fences
+    let fence_re = regex::Regex::new(r"(?s)^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$").unwrap();
+    if let Some(caps) = fence_re.captures(raw) {
+        let stripped = caps.get(1).unwrap().as_str();
+        if stripped != raw {
+            if let Ok(v) = serde_json::from_str(stripped) {
+                eprintln!("[prompty] Parsed tool arguments after stripping markdown fences");
+                return Ok(v);
+            }
+        }
+    }
+
+    // Strategy 3: Extract first balanced JSON block { ... }
+    if let Some(block) = extract_first_json_block(raw) {
+        if let Ok(v) = serde_json::from_str(&block) {
+            eprintln!("[prompty] Parsed tool arguments after extracting JSON block");
+            return Ok(v);
+        }
+    }
+
+    // Strategy 4: Strip trailing commas before } or ]
+    let comma_re = regex::Regex::new(r",\s*([}\]])").unwrap();
+    let cleaned = comma_re.replace_all(raw, "$1");
+    if cleaned != raw {
+        if let Ok(v) = serde_json::from_str(&cleaned) {
+            eprintln!("[prompty] Parsed tool arguments after stripping trailing commas");
+            return Ok(v);
+        }
+    }
+
+    Err(format!(
+        "All JSON parse strategies failed for: {}",
+        &raw[..raw.len().min(200)]
+    ))
+}
+
+/// Extract the first balanced `{...}` block from text, respecting string escapes.
+fn extract_first_json_block(text: &str) -> Option<String> {
+    let start = text.find('{')?;
+    let mut depth = 0i32;
+    let mut in_string = false;
+    let mut escape_next = false;
+    let bytes = text.as_bytes();
+
+    for i in start..bytes.len() {
+        let ch = bytes[i] as char;
+        if escape_next {
+            escape_next = false;
+            continue;
+        }
+        if in_string {
+            if ch == '\\' {
+                escape_next = true;
+            } else if ch == '"' {
+                in_string = false;
+            }
+            continue;
+        }
+        match ch {
+            '"' => in_string = true,
+            '{' => depth += 1,
+            '}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(text[start..=i].to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+// ---------------------------------------------------------------------------
 // dispatch_tool — 3-layer resolution
 // ---------------------------------------------------------------------------
 
@@ -221,8 +306,7 @@ pub async fn dispatch_tool(
     agent: &Prompty,
     parent_inputs: Option<&serde_json::Value>,
 ) -> String {
-    let args_result: Result<serde_json::Value, _> = serde_json::from_str(&tool_call.arguments);
-    let mut args = match args_result {
+    let mut args = match resilient_json_parse(&tool_call.arguments) {
         Ok(a) => a,
         Err(e) => return format!("Error: Invalid tool arguments JSON: {e}"),
     };
@@ -303,13 +387,43 @@ fn find_tool_def(agent: &Prompty, name: &str) -> Option<serde_json::Value> {
 }
 
 /// Execute a user-provided tool handler (from TurnOptions.tools).
+/// Wraps sync handlers in catch_unwind for panic safety (§9.9).
 async fn execute_user_handler(
     handler: &crate::pipeline::ToolHandler,
     args: serde_json::Value,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     match handler {
-        crate::pipeline::ToolHandler::Sync(f) => f(args),
-        crate::pipeline::ToolHandler::Async(f) => f(args).await,
+        crate::pipeline::ToolHandler::Sync(f) => {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(args))) {
+                Ok(result) => result,
+                Err(panic_info) => {
+                    let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                        s.to_string()
+                    } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                        s.clone()
+                    } else {
+                        "unknown panic".to_string()
+                    };
+                    Err(format!("Tool handler panicked: {msg}").into())
+                }
+            }
+        }
+        crate::pipeline::ToolHandler::Async(f) => {
+            let fut = std::panic::AssertUnwindSafe(f(args));
+            match futures::FutureExt::catch_unwind(fut).await {
+                Ok(result) => result,
+                Err(panic_info) => {
+                    let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                        s.to_string()
+                    } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                        s.clone()
+                    } else {
+                        "unknown panic".to_string()
+                    };
+                    Err(format!("Tool handler panicked: {msg}").into())
+                }
+            }
+        }
     }
 }
 
@@ -972,5 +1086,95 @@ mod tests {
         // CustomToolHandler (*) should catch it
         assert!(result.contains("exotic_provider"));
         assert!(result.starts_with("Error:"));
+    }
+
+    // --- Resilient JSON parsing tests (§9.8) ---
+
+    #[test]
+    fn test_resilient_parse_direct() {
+        let result = resilient_json_parse(r#"{"city": "NY"}"#).unwrap();
+        assert_eq!(result["city"], "NY");
+    }
+
+    #[test]
+    fn test_resilient_parse_markdown_fences() {
+        let input = "```json\n{\"city\": \"NY\"}\n```";
+        let result = resilient_json_parse(input).unwrap();
+        assert_eq!(result["city"], "NY");
+    }
+
+    #[test]
+    fn test_resilient_parse_markdown_fences_no_lang() {
+        let input = "```\n{\"city\": \"NY\"}\n```";
+        let result = resilient_json_parse(input).unwrap();
+        assert_eq!(result["city"], "NY");
+    }
+
+    #[test]
+    fn test_resilient_parse_extract_block() {
+        let input = "Here is the JSON: {\"city\": \"NY\"} and some more text";
+        let result = resilient_json_parse(input).unwrap();
+        assert_eq!(result["city"], "NY");
+    }
+
+    #[test]
+    fn test_resilient_parse_trailing_commas() {
+        let input = r#"{"city": "NY", "temp": 72,}"#;
+        let result = resilient_json_parse(input).unwrap();
+        assert_eq!(result["city"], "NY");
+    }
+
+    #[test]
+    fn test_resilient_parse_all_fail() {
+        let result = resilient_json_parse("this is not json at all");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_resilient_parse_no_silent_empty_object() {
+        // Spec: MUST NOT silently substitute empty object
+        let result = resilient_json_parse("garbage");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_first_json_block_respects_strings() {
+        // Braces inside strings should NOT be matched
+        let input = r#"prefix {"key": "value with {braces}"} suffix"#;
+        let block = extract_first_json_block(input).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&block).unwrap();
+        assert_eq!(parsed["key"], "value with {braces}");
+    }
+
+    // --- Tool panic safety test (§9.9) ---
+
+    #[tokio::test]
+    #[serial]
+    async fn test_tool_panic_caught_in_dispatch() {
+        clear_tools();
+        clear_tool_handlers();
+
+        let mut user_tools = HashMap::new();
+        user_tools.insert(
+            "panicking_tool".into(),
+            PipelineToolHandler::Sync(Box::new(|_args| {
+                panic!("tool handler panicked!");
+            })),
+        );
+
+        let tc = make_tool_call("panicking_tool", "{}");
+
+        // Should NOT panic — should return error string
+        let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
+        assert!(
+            result.contains("Error"),
+            "Expected error string, got: {}",
+            result
+        );
+        assert!(
+            result.contains("panic"),
+            "Expected panic mention, got: {}",
+            result
+        );
     }
 }

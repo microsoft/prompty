@@ -177,7 +177,7 @@ public class AgentLoopTests : IDisposable
     }
 
     [Fact]
-    public async Task TurnAsync_MissingTool_ThrowsToolHandlerError()
+    public async Task TurnAsync_MissingTool_ErrorFedBackToLlm()
     {
         var executor = new SequenceExecutor(
         [
@@ -185,6 +185,8 @@ public class AgentLoopTests : IDisposable
             {
                 ToolCalls = [new ToolCall { Id = "c1", Name = "missing_tool", Arguments = "{}" }],
             },
+            // Second response after error feedback — loop continues
+            "recovered after missing tool",
         ]);
 
         InvokerRegistry.RegisterExecutor("openai", executor);
@@ -193,9 +195,10 @@ public class AgentLoopTests : IDisposable
         var agent = CreateTestAgent(tools:
             [new FunctionTool { Name = "missing_tool", Kind = "function" }]);
 
-        // No user tools provided — function handler will throw
-        await Assert.ThrowsAsync<ToolHandlerError>(
-            () => Pipeline.TurnAsync(agent));
+        // With §9.9, tool errors are caught and fed back to the LLM.
+        // The loop continues and returns the final response.
+        var result = await Pipeline.TurnAsync(agent);
+        Assert.Equal("recovered after missing tool", result);
     }
 
     [Fact]

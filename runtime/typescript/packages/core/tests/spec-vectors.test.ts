@@ -990,6 +990,7 @@ describe("Spec Vectors: Agent", () => {
             await expect(
               turn(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
+                maxLlmRetries: 1,
               }),
             ).rejects.toThrow("maxIterations");
           } else if (expected.error.includes("not registered")) {
@@ -998,6 +999,7 @@ describe("Spec Vectors: Agent", () => {
             try {
               await turn(agent, input.parent_inputs ?? {}, {
                 tools: toolFunctions,
+                maxLlmRetries: 1,
               });
             } catch {
               // Mock may run out of responses — that's fine
@@ -1007,6 +1009,7 @@ describe("Spec Vectors: Agent", () => {
           // Success vectors
           const result = await turn(agent, input.parent_inputs ?? {}, {
             tools: toolFunctions,
+            maxLlmRetries: 1,
           });
 
           // Validate result
@@ -1168,7 +1171,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
 
       try {
         // --- Build extension options ---
-        const opts: Record<string, unknown> = { tools: toolFunctions };
+        const opts: Record<string, unknown> = { tools: toolFunctions, maxLlmRetries: 1 };
 
         // Events
         const collectedEvents: Array<{ type: string; data: Record<string, unknown> }> = [];

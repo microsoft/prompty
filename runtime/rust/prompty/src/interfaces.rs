@@ -47,7 +47,30 @@ pub enum InvokerError {
     /// The operation was cancelled via the cancellation token.
     #[error("cancelled: {0}")]
     Cancelled(String),
+
+    /// LLM call failed after retries, carrying accumulated conversation state (§9.10).
+    #[error("{0}")]
+    ExecuteRetryExhausted(ExecuteError),
+
+    /// A generic retryable/other error.
+    #[error("{0}")]
+    Other(String),
 }
+
+/// Error from the agent loop that includes accumulated conversation state (§9.10).
+#[derive(Debug)]
+pub struct ExecuteError {
+    pub message: String,
+    pub messages: Vec<crate::types::Message>,
+}
+
+impl std::fmt::Display for ExecuteError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ExecuteError {}
 
 // ---------------------------------------------------------------------------
 // Renderer

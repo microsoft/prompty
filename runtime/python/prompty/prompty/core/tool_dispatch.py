@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import inspect
 import json
+import re
+import warnings
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -43,6 +45,8 @@ __all__ = [
     "CustomToolHandler",
     "dispatch_tool",
     "dispatch_tool_async",
+    "_resilient_json_parse",
+    "_extract_first_json_block",
 ]
 
 
@@ -369,6 +373,89 @@ class CustomToolHandler:
 
 
 # ---------------------------------------------------------------------------
+# Resilient JSON parsing (spec §9.8)
+# ---------------------------------------------------------------------------
+
+
+def _resilient_json_parse(raw: str) -> dict | list | None:
+    """Parse JSON with fallback strategies per spec §9.8.
+
+    Returns parsed value on success, None if all strategies fail.
+    """
+    # Strategy 1: Direct parse
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Strategy 2: Strip markdown code fences
+    fence_match = re.match(r"^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$", raw, re.DOTALL)
+    if fence_match:
+        stripped = fence_match.group(1)
+        try:
+            result = json.loads(stripped)
+            warnings.warn("Parsed tool arguments after stripping markdown fences", stacklevel=2)
+            return result
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Strategy 3: Extract first balanced JSON block
+    block = _extract_first_json_block(raw)
+    if block is not None:
+        try:
+            result = json.loads(block)
+            warnings.warn("Parsed tool arguments after extracting JSON block", stacklevel=2)
+            return result
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Strategy 4: Strip trailing commas before } or ]
+    cleaned = re.sub(r",\s*([}\]])", r"\1", raw)
+    if cleaned != raw:
+        try:
+            result = json.loads(cleaned)
+            warnings.warn("Parsed tool arguments after stripping trailing commas", stacklevel=2)
+            return result
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    return None  # All strategies failed
+
+
+def _extract_first_json_block(text: str) -> str | None:
+    """Extract the first balanced ``{...}`` block, respecting string escapes."""
+    start = text.find("{")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escape_next = False
+
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape_next:
+            escape_next = False
+            continue
+        if in_string:
+            if ch == "\\":
+                escape_next = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Main dispatch entry points
 # ---------------------------------------------------------------------------
 
@@ -424,11 +511,11 @@ def dispatch_tool(
     str
         The tool result, or an error message string on failure.
     """
-    # 1. Parse arguments
-    try:
-        args = json.loads(arguments_json) if arguments_json else {}
-    except json.JSONDecodeError as e:
-        return f"Error: invalid JSON arguments for '{tool_name}': {e}"
+    # 1. Parse arguments (resilient per §9.8)
+    parsed = _resilient_json_parse(arguments_json) if arguments_json else {}
+    if parsed is None:
+        return f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed"
+    args = parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
     # 2. Resolve bindings
     if agent is not None and parent_inputs:
@@ -491,11 +578,11 @@ async def dispatch_tool_async(
     functions and calls ``handler.execute_tool_async()`` for registered
     handlers.
     """
-    # 1. Parse arguments
-    try:
-        args = json.loads(arguments_json) if arguments_json else {}
-    except json.JSONDecodeError as e:
-        return f"Error: invalid JSON arguments for '{tool_name}': {e}"
+    # 1. Parse arguments (resilient per §9.8)
+    parsed = _resilient_json_parse(arguments_json) if arguments_json else {}
+    if parsed is None:
+        return f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed"
+    args = parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
     # 2. Resolve bindings
     if agent is not None and parent_inputs:

@@ -84,7 +84,7 @@ const result2 = await invoke("chat.prompty", { question: "Hi" });
 ### Agent Mode
 
 ```typescript
-import { turn } from "@prompty/core";
+import { turn, ExecuteError } from "@prompty/core";
 import "@prompty/openai";
 
 function getWeather(city: string): string {
@@ -95,8 +95,14 @@ const result = await turn(
   "agent.prompty",
   { question: "Weather in Seattle?" },
   { get_weather: getWeather },
+  { maxIterations: 10, maxLlmRetries: 3 },
 );
 ```
+
+The agent loop includes built-in resilience:
+- **Resilient JSON parsing** — recovers from malformed tool arguments (markdown fences, trailing commas)
+- **Tool error safety** — tool exceptions are caught and fed back to the LLM
+- **LLM call retry** — transient failures are retried with exponential backoff; `ExecuteError` carries the full conversation for resumption
 
 ### Streaming
 

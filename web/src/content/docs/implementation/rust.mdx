@@ -162,6 +162,7 @@ let agent = prompty::load("agent.prompty")?;
 
 let options = TurnOptions {
     max_iterations: Some(10),
+    max_llm_retries: Some(3),
     events: Some(Arc::new(|event: AgentEvent| {
         println!("Event: {event:?}");
     })),
@@ -174,6 +175,12 @@ let result = prompty::turn(
     Some(options),
 ).await?;
 ```
+
+The agent loop includes built-in resilience:
+- **Resilient JSON parsing** — recovers from malformed tool arguments (markdown fences, trailing commas)
+- **Tool error safety** — both exceptions and `panic!`s are caught via `catch_unwind` and fed back to the LLM
+- **LLM call retry** — transient failures are retried with exponential backoff; `InvokerError::ExecuteRetryExhausted` carries the full conversation for resumption
+- **Cancellation** — respects `cancel` token during backoff sleep via `tokio::select!`
 
 ### Connection Registry
 

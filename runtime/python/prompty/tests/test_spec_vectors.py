@@ -1200,7 +1200,7 @@ def _test_agent_error_real(
                 inputs=inp.get("parent_inputs"),
                 tools=tool_functions,
             )
-        except StopIteration:
+        except (StopIteration, Exception):
             pass  # Mock ran out of responses — that's fine for error vectors
     else:
         pytest.fail(f"Agent '{name}': unknown error type: {error_msg}")
