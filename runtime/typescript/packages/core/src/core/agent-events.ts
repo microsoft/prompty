@@ -13,7 +13,10 @@ export type AgentEventType =
   | "messages_updated"
   | "done"
   | "error"
-  | "cancelled";
+  | "cancelled"
+  | "compaction_start"
+  | "compaction_complete"
+  | "compaction_failed";
 
 /** Callback signature for agent loop events. */
 export type EventCallback = (eventType: AgentEventType, data: Record<string, unknown>) => void;

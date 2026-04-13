@@ -46,7 +46,7 @@ import { load } from "./loader.js";
 import { dispatchTool, resilientJsonParse } from "./tool-dispatch.js";
 import { type EventCallback, emitEvent } from "./agent-events.js";
 import { CancelledError, checkCancellation } from "./cancellation.js";
-import { trimToContextWindow } from "./context.js";
+import { trimToContextWindow, formatDroppedMessages } from "./context.js";
 import { GuardrailError, Guardrails } from "./guardrails.js";
 import { Steering } from "./steering.js";
 import { cast } from "./structured.js";
@@ -548,6 +548,63 @@ export interface TurnOptions {
   parallelToolCalls?: boolean;
   /** Maximum LLM call retries on transient failure in agent loop (§9.10, default: 3). */
   maxLlmRetries?: number;
+  /** Context compaction: path to .prompty file or function returning a summary of dropped messages. */
+  compaction?: string | ((messages: Message[]) => string | Promise<string>);
+}
+
+// ---------------------------------------------------------------------------
+// Context Compaction
+// ---------------------------------------------------------------------------
+
+/**
+ * Replace the default "[Context summary: …]" message with a compaction-produced summary.
+ * Finds the summary message by looking for the "[Context summary:" marker and replaces it.
+ */
+function replaceSummaryMessage(messages: Message[], summary: string): void {
+  const idx = messages.findIndex(
+    (m) =>
+      m.role === "user" &&
+      m.parts.some(
+        (p) => p.kind === "text" && (p as { value: string }).value.includes("[Context summary:"),
+      ),
+  );
+  if (idx >= 0) {
+    messages[idx] = new Message("user", [text(`[Context summary: ${summary}]`)]);
+  }
+}
+
+/**
+ * Apply context compaction to replace the default summary with a higher-quality one.
+ * On failure, the default summary already in `messages` is preserved.
+ */
+async function applyCompaction(
+  compaction: string | ((messages: Message[]) => string | Promise<string>),
+  dropped: Message[],
+  messages: Message[],
+  onEvent: EventCallback | undefined,
+): Promise<void> {
+  emitEvent(onEvent, "compaction_start", { dropped_count: dropped.length });
+  try {
+    let summary: string;
+    if (typeof compaction === "string") {
+      const formatted = formatDroppedMessages(dropped);
+      const result = await invoke(compaction, { messages: formatted });
+      summary = typeof result === "string" ? result : String(result);
+    } else {
+      const result = compaction(dropped);
+      summary =
+        typeof result === "string" ? result : String(await (result as Promise<string>));
+    }
+
+    if (summary && summary.trim()) {
+      replaceSummaryMessage(messages, summary);
+      emitEvent(onEvent, "compaction_complete", { summary_length: summary.length });
+    } else {
+      emitEvent(onEvent, "compaction_failed", { reason: "empty result" });
+    }
+  } catch (err) {
+    emitEvent(onEvent, "compaction_failed", { reason: String(err) });
+  }
 }
 
 /**
@@ -626,9 +683,12 @@ export async function turn<T = unknown>(
 
       // §13.3 — Trim context window
       if (options?.contextBudget !== undefined) {
-        const [droppedCount] = trimToContextWindow(messages, options.contextBudget);
+        const [droppedCount, droppedMsgs] = trimToContextWindow(messages, options.contextBudget);
         if (droppedCount > 0) {
           emitEvent(onEvent, "messages_updated", { messages });
+          if (options.compaction != null) {
+            await applyCompaction(options.compaction, droppedMsgs, messages, onEvent);
+          }
         }
       }
 
@@ -715,10 +775,13 @@ export async function turn<T = unknown>(
 
       // §13.3 — Trim context window
       if (contextBudget !== undefined) {
-        const [droppedCount] = trimToContextWindow(messages, contextBudget);
+        const [droppedCount, droppedMsgs] = trimToContextWindow(messages, contextBudget);
         if (droppedCount > 0) {
           emitEvent(onEvent, "messages_updated", { messages });
           emitEvent(onEvent, "status", { message: `Trimmed ${droppedCount} messages for context budget` });
+          if (options?.compaction != null) {
+            await applyCompaction(options.compaction, droppedMsgs, messages, onEvent);
+          }
         }
       }
 
