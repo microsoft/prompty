@@ -161,8 +161,13 @@ function makeAgent(): Prompty {
 
 describe("LLM Call Retry (§9.10)", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     registerRenderer("mock", new MockRenderer());
     registerParser("mock", new MockParser());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("retries on transient failure and succeeds", async () => {
@@ -218,7 +223,9 @@ describe("LLM Call Retry (§9.10)", () => {
     const agent = makeAgent();
     const tools = { greet: (args: Record<string, unknown>) => `Hello ${args.who}!` };
 
-    const result = await turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 3 });
+    const promise = turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 3 });
+    await vi.runAllTimersAsync();
+    const result = await promise;
     expect(result).toBe("Retry success!");
     expect(callCount).toBe(3); // 1 fail + 1 tool call + 1 final
   });
@@ -244,17 +251,17 @@ describe("LLM Call Retry (§9.10)", () => {
     const agent = makeAgent();
     const tools = { greet: () => "hello" };
 
-    try {
-      await turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 2 });
-      expect.unreachable("Should have thrown");
-    } catch (err) {
-      expect(err).toBeInstanceOf(ExecuteError);
-      const execErr = err as ExecuteError;
-      expect(execErr.message).toContain("2 retries");
-      expect(execErr.message).toContain("Service unavailable");
-      expect(execErr.messages).toBeInstanceOf(Array);
-      expect(execErr.messages.length).toBeGreaterThan(0);
-    }
+    const promise = turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 2 });
+    // Attach catch handler immediately to prevent unhandled rejection during timer flush
+    const settled = promise.catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    const err = await settled;
+    expect(err).toBeInstanceOf(ExecuteError);
+    const execErr = err as ExecuteError;
+    expect(execErr.message).toContain("2 retries");
+    expect(execErr.message).toContain("Service unavailable");
+    expect(execErr.messages).toBeInstanceOf(Array);
+    expect(execErr.messages.length).toBeGreaterThan(0);
   });
 
   it("emits status event before retry", async () => {
@@ -310,11 +317,13 @@ describe("LLM Call Retry (§9.10)", () => {
     const agent = makeAgent();
     const tools = { greet: () => "hi" };
 
-    await turn(agent, { name: "Test" }, {
+    const promise = turn(agent, { name: "Test" }, {
       tools: tools as any,
       maxLlmRetries: 3,
       onEvent: onEvent as any,
     });
+    await vi.runAllTimersAsync();
+    await promise;
 
     const statusEvents = events.filter(e => e.type === "status");
     const retryEvent = statusEvents.find(e =>
@@ -362,9 +371,11 @@ describe("LLM Call Retry (§9.10)", () => {
     const agent = makeAgent();
     const tools = { greet: () => "hi" };
 
-    await expect(
-      turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 1 }),
-    ).rejects.toThrow(ExecuteError);
+    const promise = turn(agent, { name: "Test" }, { tools: tools as any, maxLlmRetries: 1 });
+    const settled = promise.catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    const err = await settled;
+    expect(err).toBeInstanceOf(ExecuteError);
     expect(callCount).toBe(1); // Only one attempt
   });
 });

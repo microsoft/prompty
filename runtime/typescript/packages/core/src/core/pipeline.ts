@@ -499,14 +499,15 @@ async function invokeWithRetry(
       emitEvent(onEvent, "status", {
         message: `LLM call failed, retrying (attempt ${attempts + 1}/${maxRetries})...`,
       });
-      // Exponential backoff with jitter, capped at 60s
-      const backoffMs = Math.min(Math.pow(2, attempts) * 100 + Math.random() * 100, 60_000);
+      // Exponential backoff with jitter, capped at 60s (§9.10)
+      // backoff = min(2^attempts + jitter(), 60) — values in seconds
+      const backoffSecs = Math.min(Math.pow(2, attempts) + Math.random(), 60);
       // Check cancellation before sleeping
       if (signal?.aborted) {
         throw new CancelledError("Operation cancelled during retry backoff");
       }
       await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(resolve, backoffMs);
+        const timer = setTimeout(resolve, backoffSecs * 1000);
         if (signal) {
           const onAbort = () => {
             clearTimeout(timer);
