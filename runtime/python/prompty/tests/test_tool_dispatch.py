@@ -236,7 +236,7 @@ class TestDispatchTool:
     def test_invalid_json(self):
         result = dispatch_tool("fn", "not valid json", user_tools={}, agent=_make_agent(), parent_inputs={})
         assert "Error" in result
-        assert "invalid JSON" in result
+        assert "Invalid JSON" in result
 
     def test_empty_arguments(self):
         result = dispatch_tool(

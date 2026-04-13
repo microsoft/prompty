@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -67,6 +69,8 @@ __all__ = [
     "invoke_async",
     "turn",
     "turn_async",
+    # Errors
+    "ExecuteError",
     # Helpers (used by tests)
     "_get_rich_input_names",
     "_inject_thread_markers",
@@ -74,6 +78,19 @@ __all__ = [
     "_dict_to_message",
     "_dict_content_to_part",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+
+
+class ExecuteError(Exception):
+    """Error from agent loop that includes accumulated conversation state."""
+
+    def __init__(self, message: str, messages: list[Message] | None = None) -> None:
+        super().__init__(message)
+        self.messages = messages or []
 
 
 # ---------------------------------------------------------------------------
@@ -602,6 +619,74 @@ async def _invoke_executor_async(
 
 
 # ---------------------------------------------------------------------------
+# LLM call retry wrappers (spec §9.10)
+# ---------------------------------------------------------------------------
+
+
+def _invoke_with_retry(
+    agent: Prompty,
+    messages: list[Message],
+    max_retries: int,
+    on_event: EventCallback | None = None,
+    cancel: CancellationToken | None = None,
+) -> Any:
+    """Call executor with retry and exponential backoff per §9.10."""
+    attempts = 0
+    while True:
+        try:
+            return _invoke_executor(agent, messages)
+        except Exception as e:
+            attempts += 1
+            if attempts >= max_retries:
+                raise ExecuteError(
+                    f"LLM call failed after {max_retries} retries: {e}",
+                    messages=list(messages),
+                ) from e
+            # Emit status event
+            emit_event(
+                on_event,
+                "status",
+                {"message": f"LLM call failed, retrying (attempt {attempts + 1}/{max_retries})..."},
+            )
+            # Exponential backoff with jitter, capped at 60s
+            backoff = min(2**attempts + random.random(), 60)
+            # Check cancellation during backoff
+            if cancel is not None and cancel.is_cancelled:
+                raise
+            time.sleep(backoff)
+
+
+async def _invoke_with_retry_async(
+    agent: Prompty,
+    messages: list[Message],
+    max_retries: int,
+    on_event: EventCallback | None = None,
+    cancel: CancellationToken | None = None,
+) -> Any:
+    """Async variant of :func:`_invoke_with_retry`."""
+    attempts = 0
+    while True:
+        try:
+            return await _invoke_executor_async(agent, messages)
+        except Exception as e:
+            attempts += 1
+            if attempts >= max_retries:
+                raise ExecuteError(
+                    f"LLM call failed after {max_retries} retries: {e}",
+                    messages=list(messages),
+                ) from e
+            emit_event(
+                on_event,
+                "status",
+                {"message": f"LLM call failed, retrying (attempt {attempts + 1}/{max_retries})..."},
+            )
+            backoff = min(2**attempts + random.random(), 60)
+            if cancel is not None and cancel.is_cancelled:
+                raise
+            await asyncio.sleep(backoff)
+
+
+# ---------------------------------------------------------------------------
 # Pipeline: process()
 # ---------------------------------------------------------------------------
 
@@ -774,6 +859,7 @@ async def invoke_async(
 # ---------------------------------------------------------------------------
 
 _DEFAULT_MAX_ITERATIONS = 10
+_DEFAULT_MAX_LLM_RETRIES = 3
 
 
 @trace
@@ -791,6 +877,7 @@ def turn(
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
     target_type: type | None = None,
+    max_llm_retries: int = _DEFAULT_MAX_LLM_RETRIES,
 ) -> Any:
     """Conversational round-trip: prepare → [executor + tool loop] → process.
 
@@ -830,6 +917,8 @@ def turn(
         If ``True``, execute multiple tool calls concurrently.
     target_type:
         If provided, cast the final result to this type via :func:`cast`.
+    max_llm_retries:
+        Maximum number of LLM call retries in the agent loop (default 3).
 
     Returns
     -------
@@ -842,6 +931,8 @@ def turn(
         If the cancellation token is triggered.
     GuardrailError
         If an input or output guardrail denies the operation.
+    ExecuteError
+        If LLM call retries are exhausted in the agent loop.
     ValueError
         If *max_iterations* is exceeded.
     """
@@ -909,8 +1000,8 @@ def turn(
                 emit_event(on_event, "cancelled", {})
                 raise CancelledError()
 
-            # Call LLM (directly via executor, not via run)
-            response = _invoke_executor(agent, messages)
+            # Call LLM (with retry per §9.10 in agent loop)
+            response = _invoke_with_retry(agent, messages, max_llm_retries, on_event, cancel)
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
@@ -1033,6 +1124,7 @@ async def turn_async(
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
     target_type: type | None = None,
+    max_llm_retries: int = _DEFAULT_MAX_LLM_RETRIES,
 ) -> Any:
     """Async variant of :func:`turn`."""
     from ..tracing.tracer import Tracer
@@ -1102,8 +1194,8 @@ async def turn_async(
                 emit_event(on_event, "cancelled", {})
                 raise CancelledError()
 
-            # Call LLM (directly via executor, not via run)
-            response = await _invoke_executor_async(agent, messages)
+            # Call LLM (with retry per §9.10 in agent loop)
+            response = await _invoke_with_retry_async(agent, messages, max_llm_retries, on_event, cancel)
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
@@ -1693,8 +1785,12 @@ def _dispatch_tools_with_extensions(
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
-        # Execute tool
-        result = dispatch_tool(name, arguments, tools, agent, parent_inputs)
+        # Execute tool (with safety net per §9.9)
+        try:
+            result = dispatch_tool(name, arguments, tools, agent, parent_inputs)
+        except Exception as e:
+            result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
+            emit_event(on_event, "error", {"tool": name, "error": str(e)})
 
         # §13.1 — Emit tool_result
         emit_event(on_event, "tool_result", {"name": name, "result": result})
@@ -1745,8 +1841,12 @@ async def _dispatch_tools_with_extensions_async(
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
-        # Execute tool
-        result = await dispatch_tool_async(name, arguments, tools, agent, parent_inputs)
+        # Execute tool (with safety net per §9.9)
+        try:
+            result = await dispatch_tool_async(name, arguments, tools, agent, parent_inputs)
+        except Exception as e:
+            result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
+            emit_event(on_event, "error", {"tool": name, "error": str(e)})
 
         # §13.1 — Emit tool_result
         emit_event(on_event, "tool_result", {"name": name, "result": result})

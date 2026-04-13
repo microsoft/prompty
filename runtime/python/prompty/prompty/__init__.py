@@ -102,6 +102,7 @@ __all__ = [
     "emit_event",
     "CancellationToken",
     "CancelledError",
+    "ExecuteError",
     "estimate_chars",
     "summarize_dropped",
     "trim_to_context_window",
@@ -131,6 +132,7 @@ from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
 
 # Loader
 from .core.loader import load, load_async
+from .core.pipeline import ExecuteError
 from .core.steering import Steering
 from .core.structured import StructuredResult, cast
 from .core.tool_decorator import bind_tools, tool
