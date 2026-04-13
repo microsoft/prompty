@@ -89,7 +89,7 @@ pub fn summarize_dropped(messages: &[Message]) -> String {
 
 /// Trim messages to fit within a character budget.
 ///
-/// Returns `(dropped_count, trimmed_messages)`.
+/// Returns `(dropped_messages, trimmed_messages)`.
 ///
 /// Behavior (matches TypeScript):
 /// 1. System messages at the start are always preserved
@@ -99,10 +99,13 @@ pub fn summarize_dropped(messages: &[Message]) -> String {
 ///    after the system messages
 ///
 /// The summary budget is `min(5000, 5% of budget_chars)`.
-pub fn trim_to_context_window(messages: &[Message], budget_chars: usize) -> (usize, Vec<Message>) {
+pub fn trim_to_context_window(
+    messages: &[Message],
+    budget_chars: usize,
+) -> (Vec<Message>, Vec<Message>) {
     let current = estimate_chars(messages);
     if current <= budget_chars {
-        return (0, messages.to_vec());
+        return (vec![], messages.to_vec());
     }
 
     // Split: leading system messages + rest
@@ -115,7 +118,7 @@ pub fn trim_to_context_window(messages: &[Message], budget_chars: usize) -> (usi
 
     // Keep at least 2 non-system messages
     if rest.len() <= 2 {
-        return (0, messages.to_vec());
+        return (vec![], messages.to_vec());
     }
 
     let system_chars = estimate_chars(system_msgs);
@@ -133,7 +136,7 @@ pub fn trim_to_context_window(messages: &[Message], budget_chars: usize) -> (usi
     }
 
     if drop_count == 0 {
-        return (0, messages.to_vec());
+        return (vec![], messages.to_vec());
     }
 
     // Build the trimmed message list
@@ -151,7 +154,41 @@ pub fn trim_to_context_window(messages: &[Message], budget_chars: usize) -> (usi
     result.push(summary_msg);
     result.extend_from_slice(kept);
 
-    (drop_count, result)
+    (dropped.to_vec(), result)
+}
+
+/// Format dropped messages for use in compaction prompts.
+///
+/// Produces a `[role]: text` line per message. Tool calls are shown as
+/// `Called: name(args)`.
+pub fn format_dropped_messages(messages: &[Message]) -> String {
+    let mut lines: Vec<String> = Vec::new();
+    for msg in messages {
+        let role = msg.role.to_string();
+        let text = msg.text_content();
+
+        // Check for tool calls in metadata
+        if let Some(tc_val) = msg.metadata.get("tool_calls") {
+            if let Some(arr) = tc_val.as_array() {
+                for tc in arr {
+                    let name = tc.get("name").and_then(|v| v.as_str()).unwrap_or("unknown");
+                    let args = tc.get("arguments").and_then(|v| v.as_str()).unwrap_or("{}");
+                    lines.push(format!("[{role}]: Called: {name}({args})"));
+                }
+            }
+        }
+
+        if !text.is_empty() {
+            lines.push(format!("[{role}]: {text}"));
+        } else if lines.is_empty()
+            || !lines
+                .last()
+                .is_some_and(|l| l.starts_with(&format!("[{role}]")))
+        {
+            lines.push(format!("[{role} message]"));
+        }
+    }
+    lines.join("\n")
 }
 
 // ---------------------------------------------------------------------------
@@ -219,7 +256,7 @@ mod tests {
     fn test_trim_under_budget() {
         let msgs = vec![msg(Role::System, "sys"), msg(Role::User, "hi")];
         let (dropped, result) = trim_to_context_window(&msgs, 100_000);
-        assert_eq!(dropped, 0);
+        assert!(dropped.is_empty());
         assert_eq!(result.len(), 2);
     }
 
@@ -234,7 +271,7 @@ mod tests {
         ];
         // Budget that can't fit all messages
         let (dropped, result) = trim_to_context_window(&msgs, 500);
-        assert!(dropped > 0);
+        assert!(!dropped.is_empty());
         // System message preserved
         assert_eq!(result[0].role, Role::System);
         // Summary message inserted
@@ -269,7 +306,51 @@ mod tests {
         ];
         // Even with tiny budget, keep at least 2 non-system messages
         let (dropped, result) = trim_to_context_window(&msgs, 10);
-        assert_eq!(dropped, 0);
+        assert!(dropped.is_empty());
         assert_eq!(result.len(), 3);
+    }
+
+    #[test]
+    fn test_trim_returns_dropped_messages() {
+        let msgs = vec![
+            msg(Role::System, "sys"),
+            msg(Role::User, &"A".repeat(1000)),
+            msg(Role::User, &"B".repeat(1000)),
+            msg(Role::User, &"C".repeat(100)),
+            msg(Role::User, &"D".repeat(100)),
+        ];
+        let (dropped, _result) = trim_to_context_window(&msgs, 500);
+        assert!(!dropped.is_empty());
+        // Dropped messages should be the oldest non-system ones
+        assert_eq!(dropped[0].role, Role::User);
+        assert!(dropped[0].text_content().starts_with('A'));
+    }
+
+    #[test]
+    fn test_format_dropped_messages_basic() {
+        let msgs = vec![
+            msg(Role::User, "Hello there"),
+            msg(Role::Assistant, "Hi! How can I help?"),
+        ];
+        let formatted = format_dropped_messages(&msgs);
+        assert!(formatted.contains("[user]: Hello there"));
+        assert!(formatted.contains("[assistant]: Hi! How can I help?"));
+    }
+
+    #[test]
+    fn test_format_dropped_messages_with_tool_calls() {
+        let mut m = msg(Role::Assistant, "");
+        m.metadata.insert(
+            "tool_calls".into(),
+            serde_json::json!([{"name": "get_weather", "arguments": "{\"city\":\"NY\"}"}]),
+        );
+        let formatted = format_dropped_messages(&[m]);
+        assert!(formatted.contains("Called: get_weather"));
+        assert!(formatted.contains("NY"));
+    }
+
+    #[test]
+    fn test_format_dropped_messages_empty() {
+        assert_eq!(format_dropped_messages(&[]), "");
     }
 }
