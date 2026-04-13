@@ -23,17 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Extract version from tag
-        run: |
-          VERSION=$(echo "$GITHUB_REF" | sed 's|refs/tags/python/||')
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Publishing version: $VERSION"
-
-      - name: Rewrite version
+      - name: Verify tag matches source version
         working-directory: ./runtime/python/prompty
         run: |
-          echo "VERSION = \"$VERSION\"" > ./prompty/_version.py
-          cat ./prompty/_version.py
+          TAG_VERSION=$(echo "$GITHUB_REF" | sed 's|refs/tags/python/||')
+          SOURCE_VERSION=$(python3 -c "exec(open('./prompty/_version.py').read()); print(VERSION)")
+          echo "tag=$TAG_VERSION source=$SOURCE_VERSION"
+          if [ "$TAG_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match source version ($SOURCE_VERSION). Run the release script to bump versions before tagging."
+            exit 1
+          fi
+          echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -54,7 +54,18 @@ jobs:
           flit build --format wheel
           flit build --format sdist
 
+      - name: Check if already published
+        id: check
+        run: |
+          if pip index versions prompty 2>/dev/null | grep -q "$VERSION"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "⏭️  prompty==$VERSION already on PyPI, skipping"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to PyPI
+        if: steps.check.outputs.skip != 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ./runtime/python/prompty/dist

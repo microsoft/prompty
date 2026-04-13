@@ -26,56 +26,61 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Extract version from tag
+      - name: Verify tag matches source version
         run: |
-          VERSION="${GITHUB_REF_NAME#rust/}"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Publishing version: $VERSION"
-
-      - name: Rewrite crate versions
-        run: |
-          # Update package versions in all crates
-          for toml in prompty/Cargo.toml prompty-openai/Cargo.toml prompty-anthropic/Cargo.toml prompty-foundry/Cargo.toml; do
-            sed -i "0,/^version = .*/s//version = \"$VERSION\"/" "$toml"
-            echo "=== $toml ==="
-            head -5 "$toml"
-          done
-
-          # Update dependency versions (prompty = { version = "...", path = "..." })
-          for toml in prompty-openai/Cargo.toml prompty-anthropic/Cargo.toml prompty-foundry/Cargo.toml; do
-            sed -i "s/prompty = { version = \"[^\"]*\"/prompty = { version = \"$VERSION\"/" "$toml"
-            sed -i "s/prompty-openai = { version = \"[^\"]*\"/prompty-openai = { version = \"$VERSION\"/" "$toml"
-          done
-
-          # Regenerate lockfile with new versions
-          cargo generate-lockfile
+          TAG_VERSION="${GITHUB_REF_NAME#rust/}"
+          SOURCE_VERSION=$(grep '^version' prompty/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "tag=$TAG_VERSION source=$SOURCE_VERSION"
+          if [ "$TAG_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match source version ($SOURCE_VERSION). Run the release script to bump versions before tagging."
+            exit 1
+          fi
+          echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
 
       - name: Verify build
         run: cargo build --workspace
 
-      # Publish in dependency order — each crate must be available before its dependents
-      - name: Publish prompty (core)
-        run: cargo publish -p prompty
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      # Publish in dependency order — each crate must be available before its dependents.
+      # publish_crate helper: skips if already published, retries on index lag.
+      - name: Publish crates
+        run: |
+          publish_crate() {
+            local crate="$1"
+            local version="$VERSION"
 
-      - name: Wait for crates.io index
-        run: sleep 30
+            # Check if already published (idempotent reruns)
+            if cargo search "$crate" --limit 1 2>/dev/null | grep -q "\"$version\""; then
+              echo "⏭️  $crate@$version already published, skipping"
+              return 0
+            fi
 
-      - name: Publish prompty-openai
-        run: cargo publish -p prompty-openai
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+            echo "📦 Publishing $crate@$version..."
+            cargo publish -p "$crate"
+          }
 
-      - name: Wait for crates.io index
-        run: sleep 30
+          wait_for_index() {
+            local crate="$1"
+            local version="$VERSION"
+            echo "⏳ Waiting for $crate@$version to appear in crates.io index..."
+            for i in $(seq 1 12); do
+              sleep 10
+              if cargo search "$crate" --limit 1 2>/dev/null | grep -q "\"$version\""; then
+                echo "✅ $crate@$version is now available"
+                return 0
+              fi
+              echo "   attempt $i/12..."
+            done
+            echo "⚠️  $crate@$version not yet in index after 120s, proceeding anyway"
+          }
 
-      - name: Publish prompty-anthropic
-        run: cargo publish -p prompty-anthropic
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          publish_crate prompty
+          wait_for_index prompty
 
-      - name: Publish prompty-foundry
-        run: cargo publish -p prompty-foundry
+          publish_crate prompty-openai
+          wait_for_index prompty-openai
+
+          publish_crate prompty-anthropic
+
+          publish_crate prompty-foundry
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

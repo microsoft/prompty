@@ -25,18 +25,17 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Determine version from tag
-        run: |
-          VERSION="${GITHUB_REF_NAME#csharp/}"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Publishing version: $VERSION"
-
-      - name: Set package versions
+      - name: Verify tag matches source version
         working-directory: ./runtime/csharp
         run: |
-          echo "Setting version to $VERSION"
-          find . -name '*.csproj' -path '*/Prompty.*/Prompty.*.csproj' \
-            -exec sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|g" {} +
+          TAG_VERSION="${GITHUB_REF_NAME#csharp/}"
+          SOURCE_VERSION=$(grep '<Version>' Prompty.Core/Prompty.Core.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/')
+          echo "tag=$TAG_VERSION source=$SOURCE_VERSION"
+          if [ "$TAG_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match source version ($SOURCE_VERSION). Run the release script to bump versions before tagging."
+            exit 1
+          fi
+          echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
 
       - name: dotnet restore
         working-directory: ./runtime/csharp

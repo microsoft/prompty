@@ -23,23 +23,61 @@ jobs:
         with:
           node-version: 24  # Ships npm 11+ natively (OIDC trusted publishing)
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm run build
 
-      # Determine npm dist-tag from version
-      - name: Determine dist-tag
-        id: dist-tag
+      - name: Verify tag matches source version
+        id: meta
         run: |
-          VERSION="${GITHUB_REF_NAME#typescript/}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [[ "$VERSION" == *-* ]]; then
+          TAG_VERSION="${GITHUB_REF_NAME#typescript/}"
+          SOURCE_VERSION=$(node -p "require('./packages/core/package.json').version")
+          echo "tag=$TAG_VERSION source=$SOURCE_VERSION"
+          if [ "$TAG_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match source version ($SOURCE_VERSION). Run the release script to bump versions before tagging."
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG_VERSION" == *-* ]]; then
             echo "tag=alpha" >> "$GITHUB_OUTPUT"
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
+      - run: npm ci
+      - run: npm run build
+
       # Publish in dependency order — OIDC trusted publisher auth
-      - run: npm publish --workspace=packages/core --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/openai --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/foundry --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-      - run: npm publish --workspace=packages/anthropic --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+      # Each step checks if the version already exists (idempotent reruns)
+      - name: Publish @prompty/core
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/core@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/core@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/core --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/openai
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/openai@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/openai@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/openai --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/foundry
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/foundry@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/foundry@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/foundry --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
+
+      - name: Publish @prompty/anthropic
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          if npm view @prompty/anthropic@$VERSION version 2>/dev/null; then
+            echo "⏭️  @prompty/anthropic@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/anthropic --access public --provenance --tag ${{ steps.meta.outputs.tag }}
+          fi
