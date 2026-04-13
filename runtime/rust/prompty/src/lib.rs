@@ -43,6 +43,7 @@ pub mod loader;
 pub mod model;
 pub mod parsers;
 pub mod pipeline;
+pub mod prelude;
 pub mod registry;
 pub mod renderers;
 pub mod steering;
@@ -65,8 +66,8 @@ pub use loader::{LoadError, load, load_async, load_from_string};
 pub use model::Prompty;
 pub use pipeline::{
     AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,
-    TurnOptions, invoke as invoke_agent, invoke_from_path, prepare, process, register_defaults,
-    render, run, turn, turn_from_path, validate_inputs,
+    TurnOptions, TurnOptionsBuilder, invoke as invoke_agent, invoke_from_path, prepare, process,
+    register_defaults, render, run, turn, turn_from_path, validate_inputs,
 };
 pub use registry::{
     clear_cache, has_executor, has_parser, has_processor, has_renderer, invoke_executor,

@@ -724,6 +724,104 @@ impl TurnOptions {
             .map(|c| c.load(std::sync::atomic::Ordering::Relaxed))
             .unwrap_or(false)
     }
+
+    /// Create a builder starting from defaults.
+    pub fn builder() -> TurnOptionsBuilder {
+        TurnOptionsBuilder {
+            opts: TurnOptions::default(),
+        }
+    }
+}
+
+/// Builder for [`TurnOptions`] with fluent API.
+///
+/// ```rust
+/// use prompty::TurnOptions;
+///
+/// let opts = TurnOptions::builder()
+///     .max_iterations(5)
+///     .context_budget(50_000)
+///     .build();
+/// assert_eq!(opts.max_iterations, 5);
+/// ```
+pub struct TurnOptionsBuilder {
+    opts: TurnOptions,
+}
+
+impl TurnOptionsBuilder {
+    pub fn max_iterations(mut self, n: usize) -> Self {
+        self.opts.max_iterations = n;
+        self
+    }
+
+    pub fn raw(mut self, raw: bool) -> Self {
+        self.opts.raw = raw;
+        self
+    }
+
+    pub fn tools(mut self, tools: HashMap<String, ToolHandler>) -> Self {
+        self.opts.tools = tools;
+        self
+    }
+
+    pub fn tool(mut self, name: impl Into<String>, handler: ToolHandler) -> Self {
+        self.opts.tools.insert(name.into(), handler);
+        self
+    }
+
+    pub fn on_event(mut self, cb: EventCallback) -> Self {
+        self.opts.on_event = Some(cb);
+        self
+    }
+
+    pub fn cancelled(mut self, token: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
+        self.opts.cancelled = Some(token);
+        self
+    }
+
+    pub fn context_budget(mut self, budget: usize) -> Self {
+        self.opts.context_budget = Some(budget);
+        self
+    }
+
+    pub fn guardrails(mut self, g: crate::guardrails::Guardrails) -> Self {
+        self.opts.guardrails = Some(g);
+        self
+    }
+
+    pub fn steering(mut self, s: crate::steering::Steering) -> Self {
+        self.opts.steering = Some(s);
+        self
+    }
+
+    pub fn parallel_tool_calls(mut self, parallel: bool) -> Self {
+        self.opts.parallel_tool_calls = parallel;
+        self
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn validator(
+        mut self,
+        v: Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>,
+    ) -> Self {
+        self.opts.validator = Some(v);
+        self
+    }
+
+    pub fn max_llm_retries(mut self, n: usize) -> Self {
+        self.opts.max_llm_retries = n;
+        self
+    }
+
+    pub fn compaction(mut self, c: Compaction) -> Self {
+        self.opts.compaction = Some(c);
+        self
+    }
+
+    /// Consume the builder and return the configured [`TurnOptions`].
+    pub fn build(self) -> TurnOptions {
+        self.opts
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -2558,5 +2656,80 @@ mod tests {
             "Expected retry status event, got: {:?}",
             *captured
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // TurnOptionsBuilder tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_builder_defaults() {
+        let opts = TurnOptions::builder().build();
+        assert_eq!(opts.max_iterations, 10);
+        assert_eq!(opts.max_llm_retries, 3);
+        assert!(!opts.raw);
+        assert!(!opts.parallel_tool_calls);
+        assert!(opts.context_budget.is_none());
+        assert!(opts.compaction.is_none());
+        assert!(opts.on_event.is_none());
+        assert!(opts.cancelled.is_none());
+        assert!(opts.guardrails.is_none());
+        assert!(opts.steering.is_none());
+        assert!(opts.validator.is_none());
+        assert!(opts.tools.is_empty());
+    }
+
+    #[test]
+    fn test_builder_chaining() {
+        let opts = TurnOptions::builder()
+            .max_iterations(5)
+            .context_budget(50_000)
+            .max_llm_retries(5)
+            .parallel_tool_calls(true)
+            .raw(true)
+            .build();
+        assert_eq!(opts.max_iterations, 5);
+        assert_eq!(opts.context_budget, Some(50_000));
+        assert_eq!(opts.max_llm_retries, 5);
+        assert!(opts.parallel_tool_calls);
+        assert!(opts.raw);
+    }
+
+    #[test]
+    fn test_builder_tool_method() {
+        let handler = ToolHandler::Sync(Box::new(|_args| Ok("result".to_string())));
+        let opts = TurnOptions::builder().tool("my_tool", handler).build();
+        assert!(opts.tools.contains_key("my_tool"));
+        assert_eq!(opts.tools.len(), 1);
+    }
+
+    #[test]
+    fn test_builder_multiple_tools() {
+        let h1 = ToolHandler::Sync(Box::new(|_| Ok("a".to_string())));
+        let h2 = ToolHandler::Sync(Box::new(|_| Ok("b".to_string())));
+        let opts = TurnOptions::builder()
+            .tool("tool_a", h1)
+            .tool("tool_b", h2)
+            .build();
+        assert_eq!(opts.tools.len(), 2);
+        assert!(opts.tools.contains_key("tool_a"));
+        assert!(opts.tools.contains_key("tool_b"));
+    }
+
+    #[test]
+    fn test_builder_compaction() {
+        let opts = TurnOptions::builder()
+            .compaction(Compaction::Prompty("summarize.prompty".into()))
+            .build();
+        assert!(opts.compaction.is_some());
+    }
+
+    #[test]
+    fn test_builder_cancelled_token() {
+        let token = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let opts = TurnOptions::builder().cancelled(token.clone()).build();
+        assert!(!opts.is_cancelled());
+        token.store(true, std::sync::atomic::Ordering::Relaxed);
+        assert!(opts.is_cancelled());
     }
 }
