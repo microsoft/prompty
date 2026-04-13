@@ -24,43 +24,22 @@ jobs:
           node-version: 24  # Ships npm 11+ natively (OIDC trusted publishing)
           registry-url: https://registry.npmjs.org
 
-      - name: Extract version from tag
+      - name: Verify tag matches source version
         id: meta
         run: |
-          VERSION="${GITHUB_REF_NAME#typescript/}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [[ "$VERSION" == *-* ]]; then
+          TAG_VERSION="${GITHUB_REF_NAME#typescript/}"
+          SOURCE_VERSION=$(node -p "require('./packages/core/package.json').version")
+          echo "tag=$TAG_VERSION source=$SOURCE_VERSION"
+          if [ "$TAG_VERSION" != "$SOURCE_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match source version ($SOURCE_VERSION). Run the release script to bump versions before tagging."
+            exit 1
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG_VERSION" == *-* ]]; then
             echo "tag=alpha" >> "$GITHUB_OUTPUT"
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
-          echo "Publishing version: $VERSION (tag: $(grep tag <<< "$(cat "$GITHUB_OUTPUT")" | tail -1 | cut -d= -f2))"
-
-      - name: Rewrite package versions
-        run: |
-          VERSION="${{ steps.meta.outputs.version }}"
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const PACKAGES = ['core', 'openai', 'foundry', 'anthropic'];
-            for (const pkg of PACKAGES) {
-              const pkgPath = path.join('packages', pkg, 'package.json');
-              const data = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-              data.version = process.env.VERSION;
-              for (const depKey of ['dependencies', 'peerDependencies', 'devDependencies']) {
-                if (!data[depKey]) continue;
-                for (const dep of Object.keys(data[depKey])) {
-                  if (dep.startsWith('@prompty/')) {
-                    data[depKey][dep] = '^' + process.env.VERSION;
-                  }
-                }
-              }
-              fs.writeFileSync(pkgPath, JSON.stringify(data, null, 2) + '\n');
-              console.log('  ' + pkgPath + ' -> ' + process.env.VERSION);
-            }
-          "
-        env:
-          VERSION: ${{ steps.meta.outputs.version }}
 
       - run: npm ci
       - run: npm run build
