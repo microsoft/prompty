@@ -2179,6 +2179,7 @@ the entire loop including all inner `execute` and `execute_tool` spans.
 | Constant           | Default | Notes                          |
 | ------------------ | ------- | ------------------------------ |
 | `MAX_ITERATIONS`   | `10`    | MAY be configurable at runtime |
+| `MAX_LLM_RETRIES`  | `3`     | MAY be configurable at runtime (§9.10) |
 
 ### §9.2 Algorithm
 
@@ -2209,8 +2210,21 @@ function turn(agent_or_path, inputs, tools=null) → result:
         "Agent loop exceeded " + MAX_ITERATIONS + " iterations"
       )
 
-    // 5b. Call the LLM
-    response = execute_llm(agent, messages)      // raw API call
+    // 5b. Call the LLM (with retry — see §9.10)
+    llm_attempts = 0
+    loop:
+      try:
+        response = execute_llm(agent, messages)      // raw API call
+        break
+      catch error:
+        llm_attempts += 1
+        if llm_attempts >= MAX_LLM_RETRIES:
+          raise ExecuteError(
+            message: str(error),
+            messages: messages   // MUST include conversation state
+          )
+        backoff = min(2^llm_attempts + jitter(), 60)
+        sleep(backoff)
 
     // 5c. Process response
     result = process(agent, response)
@@ -2230,24 +2244,30 @@ function turn(agent_or_path, inputs, tools=null) → result:
         // Layer 1: explicit name override
         handler = get_tool(tool_call.name)
 
-        // Parse arguments
-        args = json_parse(tool_call.arguments)
+        // Parse arguments (with resilient fallback — see §9.8)
+        args = resilient_json_parse(tool_call.arguments)
 
         // Apply bindings (inject bound values from inputs)
         args = apply_bindings(tool_def, args, inputs)
 
-        if handler is not null:
-          // Name registry hit — direct call
-          tool_result = handler(args)
-        else:
-          // Layer 2: kind handler fallback
-          kind_handler = get_tool_handler(tool_def.kind)
-          if kind_handler is null:
-            raise ValueError(
-              "No handler registered for tool: " + tool_call.name
-              + " (kind: " + tool_def.kind + ")"
-            )
-          tool_result = kind_handler(tool_def, args, agent, inputs)
+        // Execute tool handler (with error safety — see §9.9)
+        try:
+          if handler is not null:
+            // Name registry hit — direct call
+            tool_result = handler(args)
+          else:
+            // Layer 2: kind handler fallback
+            kind_handler = get_tool_handler(tool_def.kind)
+            if kind_handler is null:
+              raise ValueError(
+                "No handler registered for tool: " + tool_call.name
+                + " (kind: " + tool_def.kind + ")"
+              )
+            tool_result = kind_handler(tool_def, args, agent, inputs)
+        catch error:
+          // Tool handler failures MUST NOT kill the agent loop (§9.9)
+          tool_result = "Error: Tool '" + tool_call.name + "' failed: " + str(error)
+          emit event("error", { message: tool_result })
 
         tool_results.append({ tool_call_id: tool_call.id, result: str(tool_result) })
 
@@ -2461,6 +2481,133 @@ function execute_prompty_tool(tool, args, parent_inputs) → result:
 
 Child `PromptyTool` execution MUST inherit the parent's tracer registry,
 producing nested trace spans that show the full call hierarchy.
+
+### §9.8 Resilient Argument Parsing
+
+LLMs frequently produce malformed JSON in tool call arguments — markdown
+code fences wrapping JSON, trailing commas, or JSON embedded in prose text.
+Implementations SHOULD attempt recovery using the following fallback chain
+when `json_parse` fails on the raw argument string:
+
+```
+function resilient_json_parse(raw_arguments) → dict:
+  // Strategy 1: Direct parse
+  try:
+    return json_parse(raw_arguments)
+  catch: pass
+
+  // Strategy 2: Strip markdown code fences
+  stripped = regex_replace(raw_arguments,
+    /^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$/s, "$1")
+  if stripped != raw_arguments:
+    try:
+      return json_parse(stripped)
+    catch: pass
+
+  // Strategy 3: Extract first balanced JSON block
+  block = extract_first_json_block(raw_arguments)  // find first { to matching }
+  if block is not null:
+    try:
+      return json_parse(block)
+    catch: pass
+
+  // Strategy 4: Strip trailing commas before } or ]
+  cleaned = regex_replace(raw_arguments, /,\s*([}\]])/g, "$1")
+  try:
+    return json_parse(cleaned)
+  catch: pass
+
+  // All strategies failed — return error as tool result
+  return null  // caller MUST convert to error tool result
+```
+
+**Requirements:**
+
+- Implementations SHOULD attempt all four strategies in order.
+- When a non-direct strategy succeeds, implementations SHOULD log a warning
+  indicating which fallback was used (e.g., "Parsed tool arguments after
+  stripping markdown fences").
+- If all strategies fail, implementations MUST NOT substitute a silent empty
+  object (`{}`). The parse failure MUST be reported as a string tool result
+  (e.g., `"Error: Invalid JSON in tool arguments: {error}"`) so the LLM
+  can see the error and retry.
+- `extract_first_json_block` MUST respect string escapes (do not match
+  braces inside quoted strings).
+
+### §9.9 Tool Execution Error Safety
+
+Tool handlers are user-provided code. Implementations MUST catch exceptions
+(or panics, in languages that distinguish them) raised by tool handlers
+during execution. This applies to all tool dispatch paths: direct name
+handlers (§9.2 Layer 1), kind handlers (§9.2 Layer 2), and PromptyTool
+execution (§9.7).
+
+**Requirements:**
+
+- Caught errors MUST be converted to a string tool result:
+  `"Error: Tool '{name}' failed: {message}"`
+- An `error` event (§13.1) MUST be emitted with the error details.
+- The agent loop MUST NOT terminate due to a tool handler failure — the
+  error result is fed back to the LLM as the tool's response, allowing
+  the model to recover or try an alternative approach.
+- For languages with both exceptions and panics (e.g., Rust), both MUST
+  be caught. For languages with only exceptions (e.g., Python, TypeScript),
+  catching exceptions is sufficient.
+- `ValueError` for "Tool not registered" (§12.4) is NOT subject to this
+  rule — a missing handler indicates a configuration error, not a runtime
+  failure, and SHOULD still raise.
+
+### §9.10 LLM Call Retry
+
+Long-running agent loops accumulate valuable state across iterations. A
+transient LLM failure at iteration N should not discard the work from
+iterations 1 through N-1. Implementations SHOULD retry the `execute_llm`
+call within the agent loop before raising to the caller.
+
+**Constants:**
+
+| Constant           | Default | Notes                          |
+| ------------------ | ------- | ------------------------------ |
+| `MAX_LLM_RETRIES`  | `3`     | MAY be configurable at runtime |
+
+**Algorithm:**
+
+```
+// Inside the agent loop, replacing the direct execute_llm call:
+llm_attempts = 0
+loop:
+  try:
+    response = execute_llm(agent, messages)
+    break  // success
+  catch error:
+    llm_attempts += 1
+    if llm_attempts >= MAX_LLM_RETRIES:
+      raise ExecuteError(
+        message: str(error),
+        messages: messages   // MUST include conversation state
+      )
+    backoff = min(2^llm_attempts + jitter(), 60)  // exponential backoff, capped at 60s
+    sleep(backoff)
+```
+
+**Requirements:**
+
+- This retry is independent of any HTTP-level retry inside the executor.
+  The loop retries calling the executor as a black box — this also gives
+  the runtime an opportunity to refresh credentials, failover connections,
+  or recover from transient executor state between attempts.
+- Retry SHOULD apply to all executor failures, not just specific HTTP
+  status codes. The loop does not inspect the error type — it simply
+  retries the call.
+- When all retries are exhausted, the raised error MUST include the
+  accumulated `messages` list so the caller can resume by passing them
+  back as thread input on a subsequent `turn()` call.
+- Implementations SHOULD emit a `status` event (§13.1) before each retry
+  (e.g., `"LLM call failed, retrying (attempt 2/3)..."`).
+- Retry MUST respect the cancellation token (§13.2) — if cancellation is
+  signaled during a backoff wait, the loop MUST stop retrying immediately.
+- During non-agent `invoke()` calls (single LLM call, no tool loop),
+  implementations MAY apply the same retry logic but are not required to.
 
 ---
 
@@ -2925,7 +3072,20 @@ specific exception class SHOULD follow language idioms.
 | Agent Loop  | Tool not registered                        | ValueError          | `"Tool not registered: {name}"`                     |
 | Agent Loop  | Max iterations exceeded                    | RuntimeError        | `"Agent loop exceeded {n} iterations"`              |
 | Agent Loop  | Model refusal                              | ValueError          | `"Model refused: {message}"`                        |
+| Agent Loop  | LLM call failed (retries exhausted)        | ExecuteError        | `"LLM call failed after {n} retries: {message}"` — MUST include `messages` |
+| Agent Loop  | Tool handler exception/panic               | *(not raised)*      | Converted to tool result string (§9.9)              |
 | Discovery   | No implementation for key                  | InvokerError        | `"No {component} registered for key: {key}"`        |
+
+### §12.5 Executor Retry
+
+Executors SHOULD handle transient HTTP errors (status codes 429 and 5xx)
+internally with retry and exponential backoff. This is independent of the
+agent loop's LLM call retry (§9.10) — the executor retries the HTTP
+request, while the loop retries calling the executor.
+
+When retrying, executors SHOULD respect `Retry-After` headers when present.
+The maximum number of internal retries is an implementation choice.
+Executors MUST NOT retry on 4xx errors other than 429 by default.
 
 ### §12.6 Rich Kinds
 
@@ -3371,6 +3531,7 @@ function turn(
   tools = null,               // tool handlers
   *,                          // keyword-only below
   max_iterations = 10,        // iteration cap
+  max_llm_retries = 3,        // retry execute_llm on failure (§9.10)
   on_event = null,            // event callback
   cancel = null,              // cancellation token
   context_budget = null,      // character budget for context window
@@ -3389,15 +3550,17 @@ function turn(
   2. Drain steering messages
   3. Trim context window (if budget set)
   4. Check input guardrail
-  5. Call LLM (§9.2 step 5b)
+  5. Call LLM with retry (§9.10 — up to max_llm_retries attempts)
   6. Process response (§9.2 step 5c)
   7. Check output guardrail
   8. If tool calls:
-     a. Check tool guardrails (per tool)
-     b. Execute tools (parallel or sequential), applying bindings (§9.6)
-     c. Format tool messages via executor.FormatToolMessages (§9.4)
-     d. Append to messages, emit messages_updated
-     e. Continue loop
+     a. Parse arguments with resilient fallback (§9.8)
+     b. Check tool guardrails (per tool)
+     c. Execute tools with error safety (§9.9), parallel or sequential
+     d. Apply bindings (§9.6)
+     e. Format tool messages via executor.FormatToolMessages (§9.4)
+     f. Append to messages, emit messages_updated
+     g. Continue loop
   9. Emit done, return result
 ```
 
