@@ -749,3 +749,205 @@ class TestAgentLoopExtensions:
 
         # Should have made at least 2 executor calls before cancellation
         assert iteration_count >= 2
+
+
+# =========================================================================
+# Context Compaction
+# =========================================================================
+
+
+class TestContextCompaction:
+    """Tests for context compaction via the compaction parameter."""
+
+    def test_compaction_function_replaces_summary(self):
+        """When a compaction function is provided and trimming occurs, the summary is replaced."""
+        msgs = [
+            Message(role="system", parts=[TextPart(value="You are a helper.")]),
+            Message(role="user", parts=[TextPart(value="First question " * 100)]),
+            Message(role="assistant", parts=[TextPart(value="First answer " * 100)]),
+            Message(role="user", parts=[TextPart(value="Second question " * 100)]),
+            Message(role="assistant", parts=[TextPart(value="Second answer " * 100)]),
+            Message(role="user", parts=[TextPart(value="Current question")]),
+        ]
+
+        def my_compactor(dropped: list[Message]) -> str:
+            return f"COMPACTED: {len(dropped)} messages summarized"
+
+        dropped_count, dropped = trim_to_context_window(msgs, 500)
+        assert dropped_count > 0
+
+        from prompty.core.pipeline import _replace_summary_message
+
+        summary = my_compactor(dropped)
+        _replace_summary_message(msgs, summary)
+
+        summary_msgs = [m for m in msgs if m.role == "user" and "[Context summary:" in (m.text or "")]
+        assert len(summary_msgs) == 1
+        assert "COMPACTED:" in (summary_msgs[0].text or "")
+
+    def test_compaction_function_failure_preserves_default(self):
+        """When compaction fails, the default summarize_dropped result stays."""
+        from prompty.core.pipeline import _apply_compaction
+
+        def failing_compactor(dropped: list[Message]) -> str:
+            raise RuntimeError("Compaction failed!")
+
+        events: list[tuple[str, Any]] = []
+
+        def on_event(event_type: str, data: Any) -> None:
+            events.append((event_type, data))
+
+        msgs = [
+            Message(role="system", parts=[TextPart(value="System.")]),
+            Message(role="user", parts=[TextPart(value="Q " * 200)]),
+            Message(role="assistant", parts=[TextPart(value="A " * 200)]),
+            Message(role="user", parts=[TextPart(value="Current")]),
+        ]
+        dropped_count, dropped = trim_to_context_window(msgs, 300)
+        if dropped_count > 0:
+            _apply_compaction(failing_compactor, dropped, msgs, on_event, None)
+
+        assert any(e[0] == "compaction_failed" for e in events)
+
+    def test_compaction_none_leaves_default(self):
+        """When compaction is None, default behavior is preserved."""
+        msgs = [
+            Message(role="system", parts=[TextPart(value="System.")]),
+            Message(role="user", parts=[TextPart(value="Q " * 200)]),
+            Message(role="user", parts=[TextPart(value="Current")]),
+        ]
+        dropped_count, dropped = trim_to_context_window(msgs, 200)
+        # Default summary should exist when messages were dropped
+        if dropped_count > 0:
+            summary_msgs = [m for m in msgs if m.role == "user" and "[Context summary:" in (m.text or "")]
+            assert len(summary_msgs) == 1
+
+    def test_format_dropped_messages(self):
+        """format_dropped_messages produces readable text from dropped messages."""
+        from prompty.core.context import format_dropped_messages
+
+        msgs = [
+            Message(role="user", parts=[TextPart(value="What is 2+2?")]),
+            Message(
+                role="assistant",
+                parts=[TextPart(value="4")],
+                metadata={"tool_calls": [{"name": "calculator", "arguments": '{"expr": "2+2"}'}]},
+            ),
+        ]
+        text = format_dropped_messages(msgs)
+        assert "[user]: What is 2+2?" in text
+        assert "[assistant]: 4" in text
+        assert "Called: calculator" in text
+
+    def test_compaction_events_emitted(self):
+        """Verify compaction_start, compaction_complete events are emitted."""
+        from prompty.core.pipeline import _apply_compaction
+
+        events: list[tuple[str, Any]] = []
+
+        def on_event(event_type: str, data: Any) -> None:
+            events.append((event_type, data))
+
+        def good_compactor(dropped: list[Message]) -> str:
+            return "Summary of dropped messages"
+
+        msgs = [
+            Message(role="system", parts=[TextPart(value="Sys.")]),
+            Message(role="user", parts=[TextPart(value="Old " * 200)]),
+            Message(role="assistant", parts=[TextPart(value="Old " * 200)]),
+            Message(role="user", parts=[TextPart(value="Current")]),
+        ]
+        dropped_count, dropped = trim_to_context_window(msgs, 300)
+        if dropped_count > 0:
+            _apply_compaction(good_compactor, dropped, msgs, on_event, None)
+
+        event_types = [e[0] for e in events]
+        assert "compaction_start" in event_types
+        assert "compaction_complete" in event_types
+
+    def test_compaction_empty_result_emits_failed(self):
+        """When compaction returns an empty string, compaction_failed is emitted."""
+        from prompty.core.pipeline import _apply_compaction
+
+        events: list[tuple[str, Any]] = []
+
+        def on_event(event_type: str, data: Any) -> None:
+            events.append((event_type, data))
+
+        def empty_compactor(dropped: list[Message]) -> str:
+            return ""
+
+        msgs = [
+            Message(role="system", parts=[TextPart(value="Sys.")]),
+            Message(role="user", parts=[TextPart(value="Old " * 200)]),
+            Message(role="assistant", parts=[TextPart(value="Old " * 200)]),
+            Message(role="user", parts=[TextPart(value="Current")]),
+        ]
+        dropped_count, dropped = trim_to_context_window(msgs, 300)
+        if dropped_count > 0:
+            _apply_compaction(empty_compactor, dropped, msgs, on_event, None)
+
+        event_types = [e[0] for e in events]
+        assert "compaction_failed" in event_types
+
+    def test_replace_summary_message_no_op_when_missing(self):
+        """_replace_summary_message is a no-op when no summary message exists."""
+        from prompty.core.pipeline import _replace_summary_message
+
+        msgs = [
+            Message(role="system", parts=[TextPart(value="System.")]),
+            Message(role="user", parts=[TextPart(value="Hello")]),
+        ]
+        original = [m.text for m in msgs]
+        _replace_summary_message(msgs, "replacement")
+        assert [m.text for m in msgs] == original
+
+    @patch(f"{_PIPELINE}._invoke_executor")
+    @patch(f"{_PIPELINE}.prepare", return_value=[Message(role="user", parts=[TextPart(value="hi")])])
+    @patch(f"{_PIPELINE}.process", return_value="result")
+    def test_turn_compaction_integrated(self, mock_process, mock_prepare, mock_exec):
+        """turn() accepts compaction parameter and applies it during trimming."""
+        mock_exec.return_value = _mock_final_response("result")
+        agent = _make_agent()
+        events: list[tuple[str, Any]] = []
+
+        def on_event(event_type: str, data: Any) -> None:
+            events.append((event_type, data))
+
+        def my_compactor(dropped: list[Message]) -> str:
+            return "compacted summary"
+
+        # With a very small budget no trimming occurs on a single message, so
+        # compaction won't be triggered. This test verifies the parameter is
+        # accepted without error and the function runs to completion.
+        result = turn(
+            agent,
+            {},
+            tools={},
+            on_event=on_event,
+            context_budget=100000,
+            compaction=my_compactor,
+        )
+        assert result == "result"
+
+    @pytest.mark.asyncio
+    @patch(f"{_PIPELINE}._invoke_executor_async")
+    @patch(
+        f"{_PIPELINE}.prepare_async",
+        return_value=[Message(role="user", parts=[TextPart(value="hi")])],
+    )
+    @patch(f"{_PIPELINE}.process_async", return_value="async result")
+    async def test_turn_async_compaction_integrated(self, mock_process, mock_prepare, mock_exec):
+        """turn_async() accepts compaction parameter."""
+        mock_exec.return_value = _mock_final_response("async result")
+        agent = _make_agent()
+
+        result = await turn_async(
+            agent,
+            {},
+            tools={},
+            on_event=lambda t, d: None,
+            context_budget=100000,
+            compaction=lambda dropped: "async compacted",
+        )
+        assert result == "async result"

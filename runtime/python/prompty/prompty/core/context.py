@@ -10,9 +10,34 @@ from .types import Message, TextPart
 
 __all__ = [
     "estimate_chars",
+    "format_dropped_messages",
     "summarize_dropped",
     "trim_to_context_window",
 ]
+
+
+def format_dropped_messages(messages: list[Message]) -> str:
+    """Format dropped messages as readable text for compaction prompts.
+
+    Each message is rendered as ``[role]: text`` with tool calls shown
+    as ``Called: name(args)``.
+    """
+    import json
+
+    lines: list[str] = []
+    for msg in messages:
+        text = msg.text.strip() if msg.text else ""
+        if text:
+            lines.append(f"[{msg.role}]: {text}")
+        tool_calls = msg.metadata.get("tool_calls")
+        if tool_calls and isinstance(tool_calls, list):
+            for tc in tool_calls:
+                name = tc.get("name", tc.get("function", {}).get("name", "?"))
+                args = tc.get("arguments", tc.get("function", {}).get("arguments", ""))
+                if isinstance(args, dict):
+                    args = json.dumps(args)
+                lines.append(f"Called: {name}({args})")
+    return "\n".join(lines)
 
 
 def estimate_chars(messages: list[Message]) -> int:

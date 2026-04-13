@@ -104,6 +104,7 @@ __all__ = [
     "CancelledError",
     "ExecuteError",
     "estimate_chars",
+    "format_dropped_messages",
     "summarize_dropped",
     "trim_to_context_window",
     "GuardrailError",
@@ -127,7 +128,7 @@ __all__ = [
 from .core.agent_events import AgentEvent, EventCallback, emit_event
 from .core.cancellation import CancellationToken, CancelledError
 from .core.connections import clear_connections, get_connection, register_connection
-from .core.context import estimate_chars, summarize_dropped, trim_to_context_window
+from .core.context import estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window
 from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
 
 # Loader
