@@ -58,7 +58,7 @@ pub use guardrails::{
     GuardrailError, GuardrailPhase, GuardrailResult, Guardrails, InputGuardrail, OutputGuardrail,
     ToolGuardrail,
 };
-pub use interfaces::{Executor, InvokerError, Parser, Processor, Renderer};
+pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
 pub use loader::{LoadError, load, load_async, load_from_string};
 pub use model::Prompty;
 pub use pipeline::{
