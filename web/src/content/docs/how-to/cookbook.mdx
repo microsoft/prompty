@@ -62,6 +62,14 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let agent = prompty::load("basic-chat.prompty")?;
+    let inputs = serde_json::json!({ "question": "What is quantum computing?" });
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+    let result = prompty::run(&agent, &messages).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -112,6 +120,12 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({ "text": "The food was cold and bland." });
+    let result = prompty::invoke_from_path("few-shot.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -160,6 +174,12 @@ user:
         ["text"] = article,
         ["length"] = "medium"
     });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({ "text": article, "length": "medium" });
+    let result = prompty::invoke_from_path("summarize.prompty", Some(&inputs)).await?;
     ```
   </TabItem>
 </Tabs>
@@ -215,11 +235,17 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({ "code": my_code, "language": "python" });
+    let result = prompty::invoke_from_path("code-review.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ---
 
-## 5. Data Extraction (Structured Output)
+## 5. Data Extraction(Structured Output)
 
 Uses `outputs` to constrain the LLM to return JSON matching a schema.
 
@@ -278,9 +304,16 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({ "text": "Jane Doe is a PM at Microsoft in Redmond." });
+    let data = prompty::invoke_from_path("extract-entities.prompty", Some(&inputs)).await?;
+    // data is a parsed serde_json::Value: {"name": "Jane Doe", "company": "Microsoft", ...}
+    ```
+  </TabItem>
 </Tabs>
 
-The `outputs` block generates an OpenAI `response_format` constraint — the model must return valid JSON matching the schema.
+The `outputs` blockgenerates an OpenAI `response_format` constraint — the model must return valid JSON matching the schema.
 
 ---
 
@@ -343,9 +376,22 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let history = serde_json::json!([
+        {"role": "user", "content": "What is Python?"},
+        {"role": "assistant", "content": "A programming language."},
+    ]);
+    let inputs = serde_json::json!({
+        "question": "What about Java?",
+        "conversation": history,
+    });
+    let result = prompty::invoke_from_path("multi-turn.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
-The `kind: thread` input is expanded into message objects at its position in the template — enabling stateless multi-turn conversations.
+The `kind: thread` inputis expanded into message objects at its position in the template — enabling stateless multi-turn conversations.
 
 ---
 
@@ -392,9 +438,14 @@ inputs:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    <Aside type="caution">
+      The Rust runtime does not yet support `apiType: embedding`. This feature is planned for a future release.
+    </Aside>
+  </TabItem>
 </Tabs>
 
-No role markers needed — the body is the raw text to embed.
+No role markers needed— the body is the raw text to embed.
 
 ---
 
@@ -461,9 +512,27 @@ user:
     var result = await Pipeline.TurnAsync(agent, inputs, tools: tools);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::TurnOptions;
+
+    prompty::register_tool_handler("get_weather", |args| {
+        Box::pin(async move {
+            let city = args["city"].as_str().unwrap_or("unknown");
+            Ok(serde_json::json!(format!("72°F and sunny in {city}")))
+        })
+    });
+
+    let result = prompty::turn_from_path(
+        "weather-agent.prompty",
+        Some(&serde_json::json!({ "question": "Weather in Tokyo?" })),
+        Some(TurnOptions { max_iterations: Some(10), ..Default::default() }),
+    ).await?;
+    ```
+  </TabItem>
 </Tabs>
 
-The agent loop calls `get_weather`, appends the result, and re-queries the model for a natural language answer.
+The agent loop calls`get_weather`, appends the result, and re-queries the model for a natural language answer.
 
 ---
 
@@ -517,9 +586,15 @@ Topic: {{topic}}
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({ "topic": "time travel paradox", "style": "poem" });
+    let result = prompty::invoke_from_path("creative-writer.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
-Tuning `temperature` above 1.0 and `topP` near 1.0 gives the model more freedom for creative tasks.
+Tuning `temperature`above 1.0 and `topP` near 1.0 gives the model more freedom for creative tasks.
 
 ---
 
@@ -575,6 +650,16 @@ user:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let inputs = serde_json::json!({
+        "text": "Good morning!",
+        "sourceLang": "English",
+        "targetLang": "Japanese",
+    });
+    let result = prompty::invoke_from_path("translator.prompty", Some(&inputs)).await?;
+    ```
+  </TabItem>
 </Tabs>
 
-Low temperature (0.3) keeps translations faithful. Parameterizing the languages makes this a single reusable prompt for any language pair.
+Low temperature(0.3) keeps translations faithful. Parameterizing the languages makes this a single reusable prompt for any language pair.

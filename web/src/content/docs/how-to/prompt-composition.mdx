@@ -142,6 +142,35 @@ user:
     Console.WriteLine(result);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // In Rust, PromptyTool is a registered tool kind.
+    // Define it in the .prompty frontmatter:
+    //   tools:
+    //     - name: summarize
+    //       kind: prompty
+    //       path: ./summarize.prompty
+    // The pipeline automatically loads and invokes the referenced .prompty file.
+
+    use serde_json::json;
+    use prompty::TurnOptions;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let agent = prompty::load("orchestrator.prompty")?;
+        let result = prompty::turn_from_path(
+            "orchestrator.prompty",
+            Some(&json!({ "article": "OpenAI announced GPT-5 today..." })),
+            Some(TurnOptions::default()),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 No tool functions to register — the runtime resolves `kind: prompty` tools automatically

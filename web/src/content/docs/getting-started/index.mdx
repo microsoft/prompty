@@ -72,6 +72,11 @@ renders, parses, and executes these files.
       C# packages are in **alpha preview**. Install with `--prerelease` to get the latest version.
     </Aside>
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-openai
+    ```
+  </TabItem>
 </Tabs>
 
 ## Write Your First `.prompty` File
@@ -137,6 +142,25 @@ Say hello to {{userName}} and ask how their day is going.
     // "Hello Jane! 👋 How's your day going so far?"
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    // Register providers
+    prompty::register_defaults();
+    prompty_openai::register();
+
+    // All-in-one: load → render → parse → execute → process
+    let result = prompty::invoke_from_path(
+        "greeting.prompty",
+        Some(&json!({ "userName": "Jane" })),
+    ).await?;
+    println!("{result}");
+    // "Hello Jane! 👋 How's your day going so far?"
+    ```
+  </TabItem>
 </Tabs>
 
 ## Step-by-Step Pipeline
@@ -184,6 +208,27 @@ For more control, use the pipeline stages individually:
     var result = await Pipeline.ProcessAsync(agent, response);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    prompty::register_defaults();
+    prompty_openai::register();
+
+    // 1. Load the .prompty file → typed agent
+    let agent = prompty::load("greeting.prompty")?;
+
+    // 2. Render template + parse → messages
+    let messages = prompty::prepare(
+        &agent, Some(&json!({ "userName": "Jane" }))
+    ).await?;
+
+    // 3. Call the LLM + process → clean result
+    let result = prompty::run(&agent, &messages).await?;
+    ```
+  </TabItem>
 </Tabs>
 
 ## Environment Variables
@@ -210,6 +255,28 @@ Here's a full, tested example you can copy and run:
   </TabItem>
   <TabItem label="C#">
     <Code code={csBasic} lang="csharp" title="ChatBasic.cs" />
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // chat_basic.rs
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let result = prompty::invoke_from_path(
+            "greeting.prompty",
+            Some(&json!({ "userName": "Jane" })),
+        ).await?;
+
+        println!("{result}");
+        Ok(())
+    }
+    ```
   </TabItem>
 </Tabs>
 

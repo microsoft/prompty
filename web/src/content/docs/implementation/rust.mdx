@@ -1,0 +1,278 @@
+---
+title: Rust
+description: >
+  Using Prompty with Rust — installation, crate structure, API overview, and async patterns.
+sidebar:
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installation
+
+Prompty for Rust requires **Rust ≥ 1.85** (edition 2024) and an async runtime ([Tokio](https://tokio.rs/)).
+
+```bash
+# Core runtime
+cargo add prompty
+
+# Add a provider (pick one or more)
+cargo add prompty-openai      # OpenAI
+cargo add prompty-foundry     # Azure OpenAI / Foundry
+cargo add prompty-anthropic   # Anthropic Claude
+```
+
+### Crate Structure
+
+| Crate | Description | crates.io |
+|-------|------------|-----------|
+| [`prompty`](https://crates.io/crates/prompty) | Core pipeline, types, registry, tracing | [![crates.io](https://img.shields.io/crates/v/prompty.svg)](https://crates.io/crates/prompty) |
+| [`prompty-openai`](https://crates.io/crates/prompty-openai) | OpenAI executor & processor | [![crates.io](https://img.shields.io/crates/v/prompty-openai.svg)](https://crates.io/crates/prompty-openai) |
+| [`prompty-foundry`](https://crates.io/crates/prompty-foundry) | Azure OpenAI / Foundry executor & processor | [![crates.io](https://img.shields.io/crates/v/prompty-foundry.svg)](https://crates.io/crates/prompty-foundry) |
+| [`prompty-anthropic`](https://crates.io/crates/prompty-anthropic) | Anthropic Claude executor & processor | [![crates.io](https://img.shields.io/crates/v/prompty-anthropic.svg)](https://crates.io/crates/prompty-anthropic) |
+
+### Feature Flags
+
+The core `prompty` crate has optional features:
+
+| Feature | What it enables |
+|---------|----------------|
+| `otel` | OpenTelemetry tracing backend (`opentelemetry`, `opentelemetry_sdk`, `opentelemetry-stdout`) |
+
+The `prompty-foundry` crate has:
+
+| Feature | What it enables |
+|---------|----------------|
+| `entra_id` | Azure Entra ID (AAD) authentication via `azure_identity` |
+
+```bash
+# Enable OpenTelemetry tracing
+cargo add prompty --features otel
+
+# Enable Entra ID authentication for Foundry
+cargo add prompty-foundry --features entra_id
+```
+
+## Quick Start
+
+```rust
+use prompty;
+use prompty_openai;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Register providers (once at startup)
+    prompty::register_defaults();
+    prompty_openai::register();
+
+    // 2. Load and invoke
+    let result = prompty::invoke_from_path(
+        "greeting.prompty",
+        Some(&json!({ "userName": "Jane" })),
+    ).await?;
+
+    println!("{result}");
+    Ok(())
+}
+```
+
+<Aside type="note">
+  `register_defaults()` registers built-in renderers (Nunjucks, Mustache) and the
+  Prompty chat parser. Provider crates like `prompty_openai::register()` register
+  their executor and processor under the `"openai"` key.
+</Aside>
+
+## API Overview
+
+### Loading
+
+```rust
+// Load a .prompty file into a typed Prompty object
+let agent = prompty::load("chat.prompty")?;
+
+println!("{}", agent.name);                    // "chat"
+println!("{}", agent.model.id);                // "gpt-4o"
+println!("{:?}", agent.instructions);          // Some("the markdown body")
+
+// Async loading (non-blocking file I/O)
+let agent = prompty::load_async("chat.prompty").await?;
+
+// Load from a string (no file needed)
+let agent = prompty::load_from_string(raw_content, ".")?;
+```
+
+### Pipeline Functions
+
+```rust
+use serde_json::json;
+
+let agent = prompty::load("chat.prompty")?;
+let inputs = json!({ "q": "Hi" });
+
+// Render template + parse role markers → Vec<Message>
+let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+
+// Execute LLM + process response → serde_json::Value
+let result = prompty::run(&agent, &messages).await?;
+
+// One-shot: prepare + run
+let result = prompty::invoke_agent(&agent, Some(&inputs)).await?;
+
+// Load from path + invoke in one call
+let result = prompty::invoke_from_path("chat.prompty", Some(&inputs)).await?;
+```
+
+### Async-Only Design
+
+Rust's Prompty runtime is **async-only** — all pipeline functions are `async fn`
+and require a Tokio runtime. This is idiomatic for Rust I/O and network operations.
+
+```rust
+#[tokio::main]
+async fn main() {
+    let result = prompty::invoke_from_path("chat.prompty", None).await.unwrap();
+}
+```
+
+<Aside type="tip">
+  Unlike Python (which has sync + async variants) and TypeScript (which is natively async),
+  Rust uses explicit async runtimes. All Prompty functions return futures that must be `.await`ed.
+</Aside>
+
+### Agent Mode (turn)
+
+The `turn()` function runs an agent loop — the LLM can call tools, and the runtime
+executes them automatically until it produces a final response.
+
+```rust
+use prompty::{TurnOptions, Steering, AgentEvent};
+use serde_json::json;
+use std::sync::Arc;
+
+// Register tool handlers
+prompty::register_tool_handler("get_weather", |args| {
+    Box::pin(async move {
+        let city = args["city"].as_str().unwrap_or("unknown");
+        Ok(json!(format!("72°F and sunny in {city}")))
+    })
+});
+
+let agent = prompty::load("agent.prompty")?;
+
+let options = TurnOptions {
+    max_iterations: Some(10),
+    events: Some(Arc::new(|event: AgentEvent| {
+        println!("Event: {event:?}");
+    })),
+    ..Default::default()
+};
+
+let result = prompty::turn(
+    &agent,
+    Some(&json!({ "question": "What's the weather in Seattle?" })),
+    Some(options),
+).await?;
+```
+
+### Connection Registry
+
+Pre-register named connections for production use:
+
+```rust
+use serde_json::json;
+
+// Register a named connection
+prompty::register_connection("my-openai", json!({
+    "kind": "key",
+    "apiKey": std::env::var("OPENAI_API_KEY").unwrap(),
+}));
+
+// .prompty files can reference it:
+// connection:
+//   kind: reference
+//   name: my-openai
+```
+
+### Tracing
+
+```rust
+use prompty::{Tracer, PromptyTracer, console_tracer, trace_async};
+
+// Register a file-based tracer (writes .tracy JSON files)
+let pt = PromptyTracer::new("./traces");
+Tracer::register("json", pt.tracer());
+
+// Register the console tracer
+Tracer::register("console", console_tracer);
+
+// Trace custom async functions
+let result = trace_async("my_pipeline", json!({"query": q}), async {
+    prompty::invoke_from_path("search.prompty", Some(&inputs)).await
+}).await?;
+```
+
+## Providers
+
+| Provider | Crate | Registration Key | Auth |
+|----------|-------|-----------------|------|
+| OpenAI | `prompty-openai` | `openai` | API key |
+| Azure OpenAI / Foundry | `prompty-foundry` | `foundry` | API key or Entra ID |
+| Anthropic | `prompty-anthropic` | `anthropic` | API key |
+
+Register providers at startup — once registered, any `.prompty` file with a matching
+`provider` value will use that executor and processor:
+
+```rust
+prompty::register_defaults();  // renderers + parser
+prompty_openai::register();    // "openai" executor + processor
+prompty_foundry::register();   // "foundry" executor + processor
+prompty_anthropic::register(); // "anthropic" executor + processor
+```
+
+## Environment Variables
+
+Prompty resolves `${env:VAR}` references in `.prompty` frontmatter from the process
+environment. Set them before loading:
+
+```bash
+export OPENAI_API_KEY=sk-your-key-here
+export AZURE_OPENAI_ENDPOINT=https://myresource.openai.azure.com/
+export AZURE_OPENAI_API_KEY=abc123
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
+<Aside type="caution">
+  Unlike Python, the Rust runtime does **not** auto-load `.env` files. Use a crate
+  like [`dotenvy`](https://crates.io/crates/dotenvy) if you want `.env` support:
+  ```rust
+  dotenvy::dotenv().ok();
+  ```
+</Aside>
+
+## Current Limitations
+
+The Rust runtime covers the core Prompty pipeline comprehensively but has some gaps
+compared to the Python and TypeScript runtimes:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Chat completions | ✅ | All providers |
+| Streaming | ✅ | `PromptyStream` with tracing |
+| Agent loop / `turn()` | ✅ | Events, cancellation, guardrails, steering |
+| Structured output | ✅ | `outputSchema` → `response_format` |
+| Tracing | ✅ | `.tracy`, console, OpenTelemetry |
+| Custom providers | ✅ | Implement `Executor` + `Processor` traits |
+| Embeddings API | ❌ | `apiType: embedding` not yet supported |
+| Images API | ❌ | `apiType: image` not yet supported |
+| Responses API | ❌ | OpenAI Responses API not yet supported |
+| MCP tools | ❌ | MCP tool kind not yet supported |
+| OpenAPI tools | ❌ | OpenAPI tool kind not yet supported |
+
+These features are planned for future releases. Contributions welcome!
+
+## Further Reading
+
+- [API Reference](/api-reference/) — complete type reference
+- [How-To Guides](/how-to/openai/) — practical recipes
+- [Core Concepts](/core-concepts/) — architecture deep-dives

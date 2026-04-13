@@ -28,6 +28,11 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     dotnet add package Prompty.Anthropic --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-anthropic
+    ```
+  </TabItem>
 </Tabs>
 
 You also need an [Anthropic API key](https://console.anthropic.com/settings/keys).
@@ -117,6 +122,24 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
     Console.WriteLine(result);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_anthropic::register();
+
+        let result = prompty::invoke_from_path(
+            "anthropic-chat.prompty",
+            Some(&json!({ "topic": "quantum computing" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -168,6 +191,30 @@ If you need more control, use the individual pipeline stages:
     // Execute + process → final result
     var result = await Pipeline.RunAsync(agent, messages);
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_anthropic::register();
+
+        // Load the prompt
+        let agent = prompty::load("anthropic-chat.prompty")?;
+
+        // Render + parse → message list (no LLM call)
+        let inputs = json!({ "topic": "quantum computing" });
+        let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+        println!("{messages:?}"); // inspect before sending
+
+        // Execute + process → final result
+        let result = prompty::run(&agent, &messages).await?;
+        println!("{result}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>

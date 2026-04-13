@@ -134,6 +134,21 @@ Register the client at application startup:
     ConnectionRegistry.Register("prod-client", client);
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    prompty::register_connection("prod-client", json!({
+        "kind": "key",
+        "endpoint": std::env::var("AZURE_ENDPOINT")?,
+        "apiKey": std::env::var("AZURE_API_KEY")?,
+    }));
+
+    // For managed identity, configure via environment variables
+    // and use the Azure SDK's DefaultAzureCredential equivalent.
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="note">
@@ -169,6 +184,13 @@ Register the client at application startup:
     using Prompty.Core.Tracing;
 
     Tracer.Add("console", ConsoleTracer.Factory);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, console_tracer};
+
+    Tracer::register("console", console_tracer);
     ```
   </TabItem>
 </Tabs>
@@ -208,6 +230,23 @@ Register the client at application startup:
     using Prompty.Core.Tracing;
 
     OTelTracer.Register();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::Tracer;
+
+    // Sends spans to your OTel collector (Jaeger, Azure Monitor, etc.)
+    #[cfg(feature = "otel")]
+    {
+        prompty::init_otel_stdout();
+        Tracer::register("otel", prompty::otel_tracer());
+    }
+    ```
+
+    Enable the feature in `Cargo.toml`:
+    ```toml
+    prompty = { version = "...", features = ["otel"] }
     ```
   </TabItem>
 </Tabs>
@@ -301,6 +340,37 @@ timeouts, and authentication errors.
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    async fn safe_invoke(
+        path: &str,
+        inputs: &serde_json::Value,
+    ) -> Option<String> {
+        match prompty::invoke_from_path(path, Some(inputs)).await {
+            Ok(result) => Some(result),
+            Err(prompty::InvokerError::Execute(e)) => {
+                eprintln!("LLM error: {e}");
+                None
+            }
+            Err(prompty::InvokerError::Render(e)) => {
+                eprintln!("Template error: {e}");
+                None
+            }
+            Err(prompty::InvokerError::Load(e)) => {
+                eprintln!("Failed to load prompt: {e}");
+                None
+            }
+            Err(e) => {
+                eprintln!("Unexpected error: {e}");
+                None
+            }
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -367,6 +437,30 @@ Test loading, rendering, and parsing without making API calls:
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+
+    #[tokio::test]
+    async fn test_prompt_loads() {
+        prompty::register_defaults();
+        let agent = prompty::load("prompts/chat.prompty").unwrap();
+        assert_eq!(agent.name(), "production-chat");
+        assert_eq!(agent.model().id(), "gpt-4o");
+    }
+
+    #[tokio::test]
+    async fn test_messages_prepared() {
+        prompty::register_defaults();
+        let agent = prompty::load("prompts/chat.prompty").unwrap();
+        let messages = prompty::prepare(
+            &agent,
+            Some(&serde_json::json!({ "question": "Hello" })),
+        ).await.unwrap();
+        assert_eq!(messages[0].role(), "system");
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ### Integration Tests — Gated by Environment
@@ -418,6 +512,28 @@ Only run when API keys are available:
                 new() { ["question"] = "Say hi" });
             Assert.NotNull(result);
         }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn test_live_chat() {
+        if std::env::var("OPENAI_API_KEY").is_err() {
+            eprintln!("Skipping: OPENAI_API_KEY not set");
+            return;
+        }
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let result = prompty::invoke_from_path(
+            "prompts/chat.prompty",
+            Some(&json!({ "question": "Say hi" })),
+        ).await.unwrap();
+        assert!(!result.is_empty());
     }
     ```
   </TabItem>
@@ -501,6 +617,25 @@ Stream tokens to the client as they arrive instead of waiting for the full respo
     {
         await foreach (var chunk in stream)
             Console.Write(chunk);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+    use futures::StreamExt;
+
+    let agent = prompty::load("chat.prompty")?;
+    let messages = prompty::prepare(
+        &agent,
+        Some(&json!({ "question": "Write a summary" })),
+    ).await?;
+
+    let mut stream = prompty::run_stream(&agent, &messages).await?;
+    while let Some(chunk) = stream.next().await {
+        print!("{chunk}");
     }
     ```
   </TabItem>

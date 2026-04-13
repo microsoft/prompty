@@ -98,10 +98,20 @@ user:
     agent.Model.Options.AdditionalProperties["stream"] = true;
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // Streaming is configured in the .prompty file via:
+    //   options:
+    //     additionalProperties:
+    //       stream: true
+    // The Rust runtime respects this setting at execution time.
+    let agent = prompty::load("chat.prompty")?;
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  The `additionalProperties` dict on `ModelOptions` passes through to the
+  The `additionalProperties` dict on `ModelOptions`passes through to the
   underlying SDK call. Any key the SDK accepts (like `stream`, `logprobs`,
   `n`) can be set here.
 </Aside>
@@ -195,6 +205,26 @@ user:
         }
     }
     Console.WriteLine();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{StreamChunk, PromptyStream, consume_stream_chunks};
+
+    let agent = prompty::load("chat.prompty")?;
+    let inputs = serde_json::json!({"question": "Tell me a joke"});
+    let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+    let result = prompty::run(&agent, &messages).await?;
+
+    // Process streaming chunks
+    let stream = prompty::from_structured_value::<PromptyStream>(&result)?;
+    consume_stream_chunks(stream, |chunk| match chunk {
+        StreamChunk::Text(text) => print!("{text}"),
+        StreamChunk::Thinking(thought) => print!("[thinking] {thought}"),
+        StreamChunk::Tool(tc) => println!("[tool] {}: {}", tc.name, tc.arguments),
+        StreamChunk::Error(err) => eprintln!("[error] {err}"),
+    }).await;
+    println!();
     ```
   </TabItem>
 </Tabs>

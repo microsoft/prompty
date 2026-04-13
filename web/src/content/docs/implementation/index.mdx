@@ -14,6 +14,7 @@ same pipeline architecture but uses language-native patterns and package manager
 | [**Python**](/implementation/python/) | ✅ Stable (alpha) | `prompty` on PyPI |
 | [**TypeScript**](/implementation/typescript/) | ✅ Stable (alpha) | `@prompty/core` on npm |
 | [**C#**](/implementation/csharp/) | ✅ Alpha | `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` on NuGet |
+| [**Rust**](/implementation/rust/) | ✅ Alpha | `prompty`, `prompty-openai`, `prompty-foundry`, `prompty-anthropic` on crates.io |
 
 ## Choosing a Runtime
 
@@ -41,3 +42,11 @@ and available providers.
 - Static `Pipeline` API with async-first design
 - Same four-stage render → parse → execute → process architecture
 - Install: `dotnet add package Prompty.Core --prerelease`
+
+### Rust
+
+- Async-only runtime (Tokio) with zero-cost abstractions
+- Modular crate architecture (`prompty` core + provider crates)
+- Trait-based plugin system (`Executor`, `Processor`, `Renderer`, `Parser`)
+- Full agent loop with events, cancellation, guardrails, and steering
+- Install: `cargo add prompty prompty-openai`

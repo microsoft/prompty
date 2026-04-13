@@ -641,4 +641,26 @@ Run it with the Prompty runtime:
     });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_defaults();
+    prompty_foundry::register();
+
+    // Load + render + parse + execute + process in one call
+    let inputs = json!({
+        "customerName": "Jane Doe",
+        "question": "Where is my order #12345?",
+        "orderHistory": [
+            {"id": "12345", "status": "shipped", "date": "2025-01-15"},
+            {"id": "12300", "status": "delivered", "date": "2025-01-02"},
+        ],
+    });
+    let result = prompty::invoke_from_path(
+        "customer-support.prompty",
+        Some(&inputs),
+    ).await?;
+    ```
+  </TabItem>
 </Tabs>

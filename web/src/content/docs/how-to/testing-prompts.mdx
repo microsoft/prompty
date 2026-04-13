@@ -74,6 +74,24 @@ Load a `.prompty` file and assert its properties. No LLM call is made.
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    #[cfg(test)]
+    mod tests {
+        use serde_json::json;
+
+        #[test]
+        fn test_load_prompt() {
+            prompty::register_defaults();
+            let agent = prompty::load("prompts/chat.prompty").unwrap();
+
+            assert_eq!(agent.name, "openai-chat");
+            assert_eq!(agent.model.id, "gpt-4o-mini");
+            assert_eq!(agent.model.provider, "openai");
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -133,6 +151,26 @@ calling the LLM**. Assert on message count, roles, and interpolated content.
             Assert.True(messages.Count >= 2);
             Assert.Equal("system", messages[0].Role);
             Assert.Contains("What is Prompty?", messages[^1].Text);
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    #[cfg(test)]
+    mod tests {
+        use serde_json::json;
+
+        #[tokio::test]
+        async fn test_prepare_messages() {
+            prompty::register_defaults();
+            let agent = prompty::load("prompts/chat.prompty").unwrap();
+            let inputs = json!({ "question": "What is Prompty?" });
+            let messages = prompty::prepare(&agent, Some(&inputs)).await.unwrap();
+
+            assert!(messages.len() >= 2);
+            assert_eq!(messages[0].role, prompty::Role::System);
+            assert_eq!(messages.last().unwrap().role, prompty::Role::User);
         }
     }
     ```
@@ -247,6 +285,50 @@ mocking the LLM SDK client so no real API call is made.
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    #[cfg(test)]
+    mod tests {
+        use serde_json::json;
+
+        // Register a mock executor that returns a canned response
+        struct MockExecutor;
+
+        #[async_trait::async_trait]
+        impl prompty::Executor for MockExecutor {
+            async fn execute(
+                &self, _agent: &prompty::Prompty, _messages: &[prompty::Message],
+            ) -> Result<serde_json::Value, prompty::InvokerError> {
+                Ok(json!({"choices": [{"message": {"content": "Mocked answer"}}]}))
+            }
+        }
+
+        struct MockProcessor;
+
+        #[async_trait::async_trait]
+        impl prompty::Processor for MockProcessor {
+            async fn process(
+                &self, _agent: &prompty::Prompty, response: serde_json::Value,
+            ) -> Result<serde_json::Value, prompty::InvokerError> {
+                Ok(response["choices"][0]["message"]["content"].clone())
+            }
+        }
+
+        #[tokio::test]
+        async fn test_invoke_with_mock() {
+            prompty::register_defaults();
+            prompty::register_executor("openai", MockExecutor);
+            prompty::register_processor("openai", MockProcessor);
+
+            let result = prompty::invoke_from_path(
+                "prompts/chat.prompty",
+                Some(&json!({ "question": "test" })),
+            ).await.unwrap();
+            assert_eq!(result.as_str().unwrap(), "Mocked answer");
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -330,5 +412,34 @@ to live tests locally.
     <Aside type="note">
       [`Xunit.SkippableFact`](https://www.nuget.org/packages/Xunit.SkippableFact) provides `Skip.IfNot()`.
     </Aside>
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    #[cfg(test)]
+    mod integration_tests {
+        use serde_json::json;
+
+        fn has_openai_key() -> bool {
+            std::env::var("OPENAI_API_KEY").is_ok()
+        }
+
+        #[tokio::test]
+        async fn test_live_chat() {
+            if !has_openai_key() {
+                eprintln!("Skipping: OPENAI_API_KEY not set");
+                return;
+            }
+
+            prompty::register_defaults();
+            prompty_openai::register();
+
+            let result = prompty::invoke_from_path(
+                "prompts/chat.prompty",
+                Some(&json!({ "question": "Say hello in one word." })),
+            ).await.unwrap();
+            assert!(result.as_str().map_or(false, |s| !s.is_empty()));
+        }
+    }
+    ```
   </TabItem>
 </Tabs>

@@ -139,6 +139,42 @@ prepare() → messages → Executor.execute() → raw → Processor.process() �
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // my_provider/executor.rs
+    use prompty::{Executor, InvokerError, Prompty, Message};
+    use async_trait::async_trait;
+    use serde_json::Value;
+
+    pub struct MyExecutor;
+
+    #[async_trait]
+    impl Executor for MyExecutor {
+        async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+            let conn = &agent.model.connection;
+            let payload = serde_json::json!({
+                "model": agent.model.id,
+                "messages": messages.iter().map(|m| {
+                    serde_json::json!({"role": m.role, "content": m.text})
+                }).collect::<Vec<_>>(),
+            });
+
+            let client = reqwest::Client::new();
+            let resp = client
+                .post(format!("{}/v1/completions", conn.endpoint))
+                .bearer_auth(&conn.api_key)
+                .json(&payload)
+                .send()
+                .await
+                .map_err(|e| InvokerError::ExecutionError(e.to_string()))?;
+
+            let body: Value = resp.json().await
+                .map_err(|e| InvokerError::ExecutionError(e.to_string()))?;
+            Ok(body)
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -193,6 +229,23 @@ prepare() → messages → Executor.execute() → raw → Processor.process() �
                 .GetProperty("content")
                 .GetString();
             return Task.FromResult<object>(content!);
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    // my_provider/processor.rs
+    use prompty::{Processor, InvokerError, Prompty};
+    use async_trait::async_trait;
+    use serde_json::Value;
+
+    pub struct MyProcessor;
+
+    #[async_trait]
+    impl Processor for MyProcessor {
+        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+            Ok(response["choices"][0]["message"]["content"].clone())
         }
     }
     ```
@@ -262,6 +315,19 @@ prepare() → messages → Executor.execute() → raw → Processor.process() �
         .AddMyProvider();
     ```
   </TabItem>
+  <TabItem label="Rust">
+    Register at application startup:
+
+    ```rust
+    use my_provider::{MyExecutor, MyProcessor};
+
+    fn main() {
+        prompty::register_defaults();
+        prompty::register_executor("my-custom", MyExecutor);
+        prompty::register_processor("my-custom", MyProcessor);
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -321,6 +387,25 @@ user:
     var inputs = new Dictionary<string, object?> { ["question"] = "Hello!" };
     var result = await Pipeline.InvokeAsync(agent, inputs);
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty::register_executor("my-custom", MyExecutor);
+        prompty::register_processor("my-custom", MyProcessor);
+
+        let result = prompty::invoke_from_path(
+            "custom-llm.prompty",
+            Some(&json!({ "question": "Hello!" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>

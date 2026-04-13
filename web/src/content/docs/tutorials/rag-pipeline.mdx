@@ -43,6 +43,11 @@ completions together into a retrieval-augmented generation (RAG) pipeline.
     dotnet add package Prompty.OpenAI --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-openai tokio serde_json
+    ```
+  </TabItem>
 </Tabs>
 
 Create a **`.env`** file with your OpenAI key:
@@ -163,6 +168,11 @@ the vectors in a database — here we keep everything in memory:
     Console.WriteLine($"Vector dimensions: {docVectors[0].Count}"); // 1536
     ```
   </TabItem>
+  <TabItem label="Rust">
+    <Aside type="caution">
+      The Rust runtime does not yet support `apiType: embedding`. Use the chat completion portions of this tutorial and a separate embedding service for the retrieval step.
+    </Aside>
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
@@ -253,11 +263,39 @@ datasets:
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+        let dot: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
+        let norm_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+        let norm_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+        if norm_a == 0.0 || norm_b == 0.0 {
+            return 0.0;
+        }
+        dot / (norm_a * norm_b)
+    }
+
+    fn retrieve(
+        query_vector: &[f32],
+        doc_vectors: &[Vec<f32>],
+        documents: &[&str],
+        top_k: usize,
+    ) -> Vec<String> {
+        let mut scored: Vec<(f32, &str)> = doc_vectors
+            .iter()
+            .zip(documents.iter())
+            .map(|(dv, doc)| (cosine_similarity(query_vector, dv), *doc))
+            .collect();
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        scored.into_iter().take(top_k).map(|(_, doc)| doc.to_string()).collect()
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
 
-## Step 5: Create the Q&A `.prompty` file
+## Step 5: Create the Q&A`.prompty` file
 
 Create **`rag-qa.prompty`** — a chat prompt that receives retrieved context:
 
@@ -391,6 +429,53 @@ Now connect all the pieces: embed the query → retrieve → inject context → 
 
     Console.WriteLine(await Ask("What are thread inputs?"));
     // → "Thread inputs with kind: thread enable multi-turn conversations..."
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    <Aside type="caution">
+      The Rust runtime does not yet support `apiType: embedding`. Use the chat completion portions of this tutorial and a separate embedding service for the retrieval step.
+    </Aside>
+
+    ```rust
+    use prompty;
+    use prompty_openai;
+    use serde_json::json;
+
+    // Assumes you have doc_vectors and documents from an external
+    // embedding service, and a retrieve() function as shown above.
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let question = "How does the Prompty pipeline work?";
+
+        // 1. Obtain query_vector from your embedding service
+        // let query_vector = my_embedding_service.embed(question).await?;
+
+        // 2. Retrieve relevant documents
+        // let relevant_docs = retrieve(&query_vector, &doc_vectors, &documents, 2);
+        let relevant_docs = vec![
+            "The pipeline has four stages: render, parse, execute, and process.",
+        ];
+        let context = relevant_docs
+            .iter()
+            .map(|doc| format!("- {doc}"))
+            .collect::<Vec<_>>()
+            .join("\n\n");
+
+        // 3. Answer with grounded context
+        let answer = prompty::invoke_from_path(
+            "rag-qa.prompty",
+            Some(&json!({
+                "question": question,
+                "context": context,
+            })),
+        ).await?;
+        println!("{answer}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>

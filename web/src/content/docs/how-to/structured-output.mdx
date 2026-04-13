@@ -122,10 +122,32 @@ valid JSON with exactly those fields.
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let result = prompty::invoke_from_path(
+            "weather.prompty",
+            Some(&json!({ "city": "Seattle" })),
+        ).await?;
+
+        // result is a parsed serde_json::Value matching the outputSchema
+        println!("{}", result["city"]);         // "Seattle"
+        println!("{}", result["temperature"]);  // 62
+        println!("{}", result["conditions"]);   // "Partly cloudy"
+        Ok(())
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="tip">
-  Without `outputs`, `invoke()` returns a raw string. With it, you get
+  Without `outputs`, `invoke()` returns a raw string.With it, you get
   a `StructuredResult` — a dict (Python) / object (TypeScript) / Dictionary (C#)
   that also carries the raw JSON for efficient casting.
 </Aside>
@@ -216,6 +238,21 @@ Weather for {{city}}?
     }
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    let result = prompty::invoke_from_path(
+        "detailed-weather.prompty",
+        Some(&json!({ "city": "Portland" })),
+    ).await?;
+
+    println!("{}", result["city"]);                     // "Portland"
+    println!("{}", result["current"]["temperature"]);   // 58
+    println!("{}", result["current"]["humidity"]);      // 72
+    println!("{}", result["forecast"]);                 // [{"day": "Mon", ...}, ...]
+    ```
+  </TabItem>
 </Tabs>
 
 <Aside type="caution">
@@ -304,6 +341,29 @@ deserializes directly from the raw JSON — no dict→JSON→T round-trip.
         new() { ["city"] = "Seattle" });
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde::Deserialize;
+    use serde_json::json;
+
+    #[derive(Deserialize, Debug)]
+    struct WeatherReport {
+        city: String,
+        temperature: i32,
+        conditions: String,
+    }
+
+    let result = prompty::invoke_from_path(
+        "weather.prompty",
+        Some(&json!({ "city": "Seattle" })),
+    ).await?;
+
+    // Deserialize the structured JSON into a typed struct
+    let report: WeatherReport = serde_json::from_value(result)?;
+    println!("{}", report.city);   // "Seattle"
+    println!("{:?}", report);      // WeatherReport { city: "Seattle", ... }
+    ```
+  </TabItem>
 </Tabs>
 
 ---
@@ -356,6 +416,34 @@ A full, tested example you can copy and run:
   </TabItem>
   <TabItem label="C#">
     <Code code={csStructured} lang="csharp" title="StructuredOutput.cs" />
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde::Deserialize;
+    use serde_json::json;
+
+    #[derive(Deserialize, Debug)]
+    struct WeatherReport {
+        city: String,
+        temperature: i32,
+        conditions: String,
+    }
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        let result = prompty::invoke_from_path(
+            "weather.prompty",
+            Some(&json!({ "city": "Seattle" })),
+        ).await?;
+
+        let report: WeatherReport = serde_json::from_value(result)?;
+        println!("{report:?}");
+        Ok(())
+    }
+    ```
   </TabItem>
 </Tabs>
 

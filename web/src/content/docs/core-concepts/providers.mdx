@@ -308,6 +308,40 @@ public class MyProcessor : IProcessor
 }
 ```
 </TabItem>
+  <TabItem label="Rust">
+```rust
+use prompty::types::Message;
+use async_trait::async_trait;
+
+pub struct MyExecutor;
+
+#[async_trait]
+impl prompty::Executor for MyExecutor {
+    async fn execute(
+        &self,
+        agent: &prompty::Prompty,
+        messages: &[Message],
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        // Call your LLM API here
+        todo!()
+    }
+}
+
+pub struct MyProcessor;
+
+#[async_trait]
+impl prompty::Processor for MyProcessor {
+    async fn process(
+        &self,
+        agent: &prompty::Prompty,
+        response: serde_json::Value,
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        // Extract content from the API response
+        todo!()
+    }
+}
+```
+</TabItem>
 </Tabs>
 
 ### 2. Register Your Provider
@@ -351,6 +385,15 @@ new PromptyBuilder()
 // Or register directly
 InvokerRegistry.RegisterExecutor("myprovider", new MyExecutor());
 InvokerRegistry.RegisterProcessor("myprovider", new MyProcessor());
+```
+</TabItem>
+  <TabItem label="Rust">
+Register at startup via function calls:
+
+```rust
+prompty::register_defaults();
+prompty::register_executor("myprovider", MyExecutor);
+prompty::register_processor("myprovider", MyProcessor);
 ```
 </TabItem>
 </Tabs>

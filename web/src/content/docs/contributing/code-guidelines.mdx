@@ -13,7 +13,7 @@ index: 2
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-These guidelines cover coding conventions for the **Python**, **TypeScript**, and **C#** Prompty runtimes.
+These guidelines cover coding conventions for the **Python**, **TypeScript**, **C#**, and **Rust** Prompty runtimes.
 Following them keeps the codebase consistent and makes PRs easier to review.
 
 ## Repository Layout
@@ -381,6 +381,34 @@ public static class MyProviderExtensions
 
 4. Add a NuGet package spec in the project file.
 5. Add a test project `Prompty.MyProvider.Tests`.
+</TabItem>
+<TabItem label="Rust">
+1. Create `prompty-myprovider/` as a new crate in the workspace.
+2. Implement the `Executor` and `Processor` traits.
+3. Register via the global registry in a `register()` function:
+
+```rust
+// prompty-myprovider/src/lib.rs
+use prompty::{register_executor, register_processor, Executor, Processor};
+
+pub fn register() {
+    register_executor("myprovider", MyExecutor);
+    register_processor("myprovider", MyProcessor);
+}
+```
+
+4. Add the crate to the workspace `Cargo.toml`.
+5. Add tests using `#[tokio::test]` with `serial_test` for registry isolation.
+
+```rust
+// Rust ≥ 1.85, edition 2024
+// Async runtime: Tokio
+// Serialization: serde + serde_json + serde_yaml
+// HTTP: reqwest
+// Templates: minijinja (Nunjucks/Jinja2 compatible)
+// Error handling: thiserror
+// Testing: #[tokio::test] with serial_test for registry isolation
+```
 </TabItem>
 </Tabs>
 

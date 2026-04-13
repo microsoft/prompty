@@ -99,16 +99,9 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
     let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
 
     if has_outputs {
-        // Parse text as JSON for structured output
-        match serde_json::from_str::<Value>(&text) {
-            Ok(parsed) => {
-                return Ok(parsed);
-            }
-            Err(e) => {
-                return Err(InvokerError::Process(
-                    format!("Failed to parse structured output: {e}").into(),
-                ));
-            }
+        // Per spec §8.1: try JSON parse, fall back to raw string on failure
+        if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
+            return Ok(parsed);
         }
     }
 
@@ -232,6 +225,18 @@ impl futures::Stream for AnthropicStreamProcessor {
                                                 if let Some(acc) = this.tool_call_acc.get_mut(&idx)
                                                 {
                                                     acc.2.push_str(partial);
+                                                }
+                                            }
+                                        }
+                                        "thinking_delta" => {
+                                            // Per spec §13.1: emit Thinking events for reasoning/chain-of-thought
+                                            if let Some(thinking) =
+                                                delta.get("thinking").and_then(Value::as_str)
+                                            {
+                                                if !thinking.is_empty() {
+                                                    return Poll::Ready(Some(
+                                                        StreamChunk::Thinking(thinking.to_string()),
+                                                    ));
                                                 }
                                             }
                                         }

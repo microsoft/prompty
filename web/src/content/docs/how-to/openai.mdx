@@ -28,6 +28,11 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
     dotnet add package Prompty.OpenAI --prerelease
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```bash
+    cargo add prompty prompty-openai
+    ```
+  </TabItem>
 </Tabs>
 
 You also need an [OpenAI API key](https://platform.openai.com/api-keys).
@@ -150,6 +155,49 @@ user:
     // Step 3 — Call OpenAI + process response → string
     var result = await Pipeline.RunAsync(agent, messages);
     Console.WriteLine(result);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        // One-liner: load → render → call LLM → return result
+        let result = prompty::invoke_from_path(
+            "chat.prompty",
+            Some(&json!({ "question": "What is Prompty?" })),
+        ).await?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+
+    For more control, use the pipeline stages individually:
+
+    ```rust
+    use serde_json::json;
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        prompty::register_defaults();
+        prompty_openai::register();
+
+        // Step 1 — Load the .prompty file → Prompty
+        let agent = prompty::load("chat.prompty")?;
+
+        // Step 2 — Render template + parse role markers → Vec<Message>
+        let inputs = json!({ "question": "Explain async/await" });
+        let messages = prompty::prepare(&agent, Some(&inputs)).await?;
+
+        // Step 3 — Call OpenAI + process response → string
+        let result = prompty::run(&agent, &messages).await?;
+        println!("{result}");
+        Ok(())
+    }
     ```
   </TabItem>
 </Tabs>

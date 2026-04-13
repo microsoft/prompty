@@ -192,6 +192,17 @@ Register the client at application startup:
     ));
     ```
   </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    prompty::register_connection("my-foundry-client", json!({
+        "kind": "key",
+        "endpoint": "https://my-resource.services.ai.azure.com/api/projects/my-project",
+        "apiKey": "...",
+    }));
+    ```
+  </TabItem>
 </Tabs>
 
 The executor looks up `"my-azure-client"` in the connection registry and uses
@@ -381,6 +392,23 @@ and complex auth logic in application code — not in YAML.
 
     // Register it by name — .prompty files reference this name
     ConnectionRegistry.Register("foundry-prod", client);
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde_json::json;
+
+    // Register a named connection — .prompty files reference this name
+    prompty::register_connection("foundry-prod", json!({
+        "kind": "key",
+        "endpoint": std::env::var("AZURE_ENDPOINT").unwrap(),
+        "apiKey": std::env::var("AZURE_API_KEY").unwrap(),
+    }));
+
+    // Check if a connection exists
+    if prompty::has_connection("foundry-prod") {
+        // Connection is registered and ready
+    }
     ```
   </TabItem>
 </Tabs>

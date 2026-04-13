@@ -336,11 +336,14 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 }
                             }
 
-                            // Refusal
+                            // Refusal — per spec §10.3: MUST raise error, stream MUST NOT continue
                             if let Some(refusal) = delta.get("refusal").and_then(Value::as_str) {
-                                return std::task::Poll::Ready(Some(StreamChunk::Text(format!(
-                                    "Model refused: {refusal}"
-                                ))));
+                                if !refusal.is_empty() {
+                                    this.phase = StreamPhase::Done;
+                                    return std::task::Poll::Ready(Some(StreamChunk::Error(
+                                        format!("Model refused: {refusal}"),
+                                    )));
+                                }
                             }
                         }
 
@@ -713,6 +716,7 @@ mod tests {
             match chunk {
                 StreamChunk::Text(t) => texts.push(t),
                 StreamChunk::Tool(_) => panic!("unexpected tool call"),
+                _ => {}
             }
         }
         assert_eq!(texts.join(""), "Hello world");
@@ -736,6 +740,7 @@ mod tests {
             match chunk {
                 StreamChunk::Text(_) => {}
                 StreamChunk::Tool(tc) => tools.push(tc),
+                _ => {}
             }
         }
         assert_eq!(tools.len(), 1);
@@ -750,14 +755,14 @@ mod tests {
         let chunks = vec![json!({"choices": [{"delta": {"refusal": "I cannot help with that"}}]})];
         let inner = futures::stream::iter(chunks);
         let mut stream = process_stream(inner);
-        let mut texts = Vec::new();
+        let mut errors = Vec::new();
         while let Some(chunk) = stream.next().await {
-            if let StreamChunk::Text(t) = chunk {
-                texts.push(t);
+            if let StreamChunk::Error(e) = chunk {
+                errors.push(e);
             }
         }
-        assert_eq!(texts.len(), 1);
-        assert!(texts[0].contains("refused"));
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("refused"));
     }
 
     #[tokio::test]
@@ -793,6 +798,7 @@ mod tests {
             match chunk {
                 StreamChunk::Text(t) => texts.push(t),
                 StreamChunk::Tool(tc) => tools.push(tc),
+                _ => {}
             }
         }
         assert_eq!(texts.join(""), "Let me check...");
