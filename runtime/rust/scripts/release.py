@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REPO_ROOT = ROOT.parent.parent.parent
+REPO_ROOT = ROOT.parent.parent
 TAG_PREFIX = "rust/"
 
 CRATES = ["prompty", "prompty-openai", "prompty-anthropic", "prompty-foundry"]
