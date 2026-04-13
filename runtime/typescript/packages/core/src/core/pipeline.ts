@@ -43,7 +43,7 @@ import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
-import { dispatchTool } from "./tool-dispatch.js";
+import { dispatchTool, resilientJsonParse } from "./tool-dispatch.js";
 import { type EventCallback, emitEvent } from "./agent-events.js";
 import { CancelledError, checkCancellation } from "./cancellation.js";
 import { trimToContextWindow } from "./context.js";
@@ -59,6 +59,25 @@ const DEFAULT_FORMAT = "nunjucks";
 const DEFAULT_PARSER = "prompty";
 const DEFAULT_PROVIDER = "openai";
 const DEFAULT_MAX_ITERATIONS = 10;
+const DEFAULT_MAX_LLM_RETRIES = 3;
+
+// ---------------------------------------------------------------------------
+// ExecuteError (§9.10)
+// ---------------------------------------------------------------------------
+
+/**
+ * Error from agent loop that includes accumulated conversation state.
+ * Allows callers to resume by passing messages back as thread input.
+ */
+export class ExecuteError extends Error {
+  public readonly messages: Message[];
+
+  constructor(message: string, messages: Message[]) {
+    super(message);
+    this.name = "ExecuteError";
+    this.messages = messages;
+  }
+}
 
 /** Replace raw nonce strings with readable `{{thread:name}}` in trace output. */
 function sanitizeNonces(value: unknown): unknown {
@@ -447,6 +466,60 @@ export async function invoke<T = unknown>(
 }
 
 // ---------------------------------------------------------------------------
+// LLM call retry (§9.10)
+// ---------------------------------------------------------------------------
+
+/**
+ * Invoke executor.execute with exponential-backoff retry on transient failures.
+ * Respects AbortSignal for cancellation during backoff.
+ */
+async function invokeWithRetry(
+  executor: { execute(agent: Prompty, messages: Message[]): Promise<unknown> },
+  agent: Prompty,
+  messages: Message[],
+  maxRetries: number,
+  onEvent?: EventCallback,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  let attempts = 0;
+  while (true) {
+    try {
+      return await executor.execute(agent, messages);
+    } catch (err) {
+      // Never retry cancellation
+      if (err instanceof CancelledError) throw err;
+      attempts++;
+      if (attempts >= maxRetries) {
+        throw new ExecuteError(
+          `LLM call failed after ${maxRetries} retries: ${err instanceof Error ? err.message : String(err)}`,
+          [...messages],
+        );
+      }
+      // Emit status event
+      emitEvent(onEvent, "status", {
+        message: `LLM call failed, retrying (attempt ${attempts + 1}/${maxRetries})...`,
+      });
+      // Exponential backoff with jitter, capped at 60s
+      const backoffMs = Math.min(Math.pow(2, attempts) * 100 + Math.random() * 100, 60_000);
+      // Check cancellation before sleeping
+      if (signal?.aborted) {
+        throw new CancelledError("Operation cancelled during retry backoff");
+      }
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(resolve, backoffMs);
+        if (signal) {
+          const onAbort = () => {
+            clearTimeout(timer);
+            reject(new CancelledError("Operation cancelled during retry backoff"));
+          };
+          signal.addEventListener("abort", onAbort, { once: true });
+        }
+      });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Turn: one conversational round-trip (§14)
 // ---------------------------------------------------------------------------
 
@@ -472,6 +545,8 @@ export interface TurnOptions {
   steering?: Steering;
   /** Allow parallel tool execution within a single round (§13.6). */
   parallelToolCalls?: boolean;
+  /** Maximum LLM call retries on transient failure in agent loop (§9.10, default: 3). */
+  maxLlmRetries?: number;
 }
 
 /**
@@ -602,6 +677,7 @@ export async function turn<T = unknown>(
 
     // Agent mode: prepare → [executor → toolCalls]* → executor → process
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
+    const maxLlmRetries = options?.maxLlmRetries ?? DEFAULT_MAX_LLM_RETRIES;
     const onEvent = options?.onEvent;
     const signal = options?.signal;
     const contextBudget = options?.contextBudget;
@@ -663,8 +739,8 @@ export async function turn<T = unknown>(
         throw err;
       }
 
-      // Call LLM
-      response = await executor.execute(agent, messages);
+      // Call LLM — §9.10: retry on transient failure
+      response = await invokeWithRetry(executor, agent, messages, maxLlmRetries, onEvent, signal);
 
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
@@ -1071,15 +1147,7 @@ async function dispatchOneToolWithExtensions(
 
   // §13.4 — Tool guardrail
   if (guardrails) {
-    let parsedArgs: Record<string, unknown> = {};
-    try {
-      const parsed = JSON.parse(tc.arguments);
-      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
-        parsedArgs = parsed as Record<string, unknown>;
-      }
-    } catch {
-      // ignore parse errors for guardrail check
-    }
+    const parsedArgs = resilientJsonParse(tc.arguments) ?? {};
     const gr = guardrails.checkTool(tc.name, parsedArgs);
     if (!gr.allowed) {
       const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
@@ -1095,7 +1163,14 @@ async function dispatchOneToolWithExtensions(
   let result: string;
   let parsedArgs: unknown;
   try {
-    parsedArgs = JSON.parse(tc.arguments);
+    // §9.8 — Resilient JSON parsing for tool arguments
+    parsedArgs = resilientJsonParse(tc.arguments);
+    if (parsedArgs === null) {
+      result = `Error: Tool '${tc.name}' received unparseable arguments`;
+      emitEvent(onEvent, "error", { tool: tc.name, error: "Unparseable tool arguments" });
+      emitEvent(onEvent, "tool_result", { name: tc.name, result });
+      return result;
+    }
     if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
       parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
     }
@@ -1110,11 +1185,19 @@ async function dispatchOneToolWithExtensions(
   } catch (err) {
     // Re-throw cancellation errors
     if (err instanceof CancelledError) throw err;
-    result = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    // §9.9 — Emit error event on tool execution failure
+    emitEvent(onEvent, "error", { tool: tc.name, error: errorMsg });
+    result = `Error: Tool '${tc.name}' failed: ${errorMsg}`;
   }
 
   // §13.1 — Emit tool_result
   emitEvent(onEvent, "tool_result", { name: tc.name, result });
+
+  // §9.9 — Emit error event when tool result indicates failure
+  if (result.startsWith("Error:")) {
+    emitEvent(onEvent, "error", { tool: tc.name, error: result });
+  }
   return result;
 }
 

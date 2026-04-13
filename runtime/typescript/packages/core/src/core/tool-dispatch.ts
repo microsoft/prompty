@@ -260,6 +260,98 @@ class CustomToolHandler implements ToolHandler {
 }
 
 // ---------------------------------------------------------------------------
+// Resilient JSON parsing (§9.8)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract the first balanced `{...}` block from text, respecting string escapes.
+ */
+export function extractFirstJsonBlock(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    if (inString) {
+      if (ch === "\\") escapeNext = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+/**
+ * Parse JSON with fallback strategies per spec §9.8.
+ * Returns parsed value on success, or null if all strategies fail.
+ */
+export function resilientJsonParse(raw: string): Record<string, unknown> | null {
+  // Strategy 1: Direct parse
+  try {
+    const result = JSON.parse(raw);
+    if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+    return { _raw: result };
+  } catch {
+    // continue to fallbacks
+  }
+
+  // Strategy 2: Strip markdown code fences
+  const fenceMatch = raw.match(/^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
+  if (fenceMatch) {
+    try {
+      const result = JSON.parse(fenceMatch[1]);
+      console.warn("[prompty] Parsed tool arguments after stripping markdown fences");
+      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      return { _raw: result };
+    } catch {
+      // continue
+    }
+  }
+
+  // Strategy 3: Extract first balanced JSON block
+  const block = extractFirstJsonBlock(raw);
+  if (block !== null) {
+    try {
+      const result = JSON.parse(block);
+      console.warn("[prompty] Parsed tool arguments after extracting JSON block");
+      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      return { _raw: result };
+    } catch {
+      // continue
+    }
+  }
+
+  // Strategy 4: Strip trailing commas before } or ]
+  const cleaned = raw.replace(/,\s*([}\]])/g, "$1");
+  if (cleaned !== raw) {
+    try {
+      const result = JSON.parse(cleaned);
+      console.warn("[prompty] Parsed tool arguments after stripping trailing commas");
+      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      return { _raw: result };
+    } catch {
+      // continue
+    }
+  }
+
+  return null; // All strategies failed
+}
+
+// ---------------------------------------------------------------------------
 // Main dispatch function
 // ---------------------------------------------------------------------------
 
