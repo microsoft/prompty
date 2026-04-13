@@ -829,3 +829,139 @@ class TestRichInputNames:
 
         agent = _make_agent(inputs=[p])
         assert _get_rich_input_names(agent) == {}
+
+
+# ---------------------------------------------------------------------------
+# Tests: Structured output through the pipeline
+# ---------------------------------------------------------------------------
+
+
+class MockStructuredProcessor:
+    """Processor that returns a parsed dict, simulating structured output."""
+
+    def __init__(self, structured_data: dict[str, Any]) -> None:
+        self._data = structured_data
+
+    def process(self, agent: Any, response: Any) -> dict[str, Any]:
+        return self._data
+
+    async def process_async(self, agent: Any, response: Any) -> dict[str, Any]:
+        return self.process(agent, response)
+
+
+class TestStructuredOutputPipeline:
+    """Ensure invoke() properly passes through structured output from the processor.
+
+    This catches the class of bug found in Rust where invoke() unwrapped or
+    dropped the structured result before returning it to the caller.
+    """
+
+    STRUCTURED_DATA: dict[str, Any] = {
+        "name": "Ada Lovelace",
+        "age": 36,
+        "interests": ["mathematics", "computing"],
+    }
+
+    def _make_structured_agent(self) -> Any:
+        """Create an agent with outputs defined (triggers structured output path)."""
+        from prompty.model import Property
+
+        out_prop = Property()
+        out_prop.name = "name"
+        out_prop.kind = "string"
+
+        agent = _make_agent(
+            instructions="system:\nExtract info.\n\nuser:\n{{text}}",
+            provider="openai",
+        )
+        agent.outputs = [out_prop]
+        return agent
+
+    def _patch_all_structured(self):
+        return _patch_entry_points(
+            renderers=[("jinja2", MockRenderer)],
+            parsers=[("prompty", MockParser)],
+            executors=[("openai", MockExecutor)],
+            processors=[("openai", MockStructuredProcessor(self.STRUCTURED_DATA))],
+        )
+
+    def test_invoke_structured_output_with_mocks(self):
+        """Full pipeline invoke() returns the structured dict from the processor."""
+        agent = self._make_structured_agent()
+
+        with self._patch_all_structured():
+            result = invoke(agent, {"text": "Ada was born in 1815"})
+
+        assert isinstance(result, dict)
+        assert result == self.STRUCTURED_DATA
+        assert result["name"] == "Ada Lovelace"
+        assert result["age"] == 36
+        assert result["interests"] == ["mathematics", "computing"]
+
+    @pytest.mark.asyncio
+    async def test_invoke_structured_output_async_with_mocks(self):
+        """Async invoke_async() also returns the structured dict unchanged."""
+        from prompty.invoker import invoke_async
+
+        agent = self._make_structured_agent()
+
+        with self._patch_all_structured():
+            result = await invoke_async(agent, {"text": "Ada was born in 1815"})
+
+        assert isinstance(result, dict)
+        assert result == self.STRUCTURED_DATA
+        assert result["name"] == "Ada Lovelace"
+
+    def test_invoke_structured_output_not_unwrapped(self):
+        """Verify the pipeline does not accidentally unwrap a nested dict result."""
+        nested_data: dict[str, Any] = {
+            "person": {"name": "Ada", "age": 36},
+            "meta": {"source": "test"},
+        }
+        agent = self._make_structured_agent()
+
+        patch = _patch_entry_points(
+            renderers=[("jinja2", MockRenderer)],
+            parsers=[("prompty", MockParser)],
+            executors=[("openai", MockExecutor)],
+            processors=[("openai", MockStructuredProcessor(nested_data))],
+        )
+        with patch:
+            result = invoke(agent, {"text": "test"})
+
+        assert result is not None
+        assert isinstance(result, dict)
+        assert result["person"]["name"] == "Ada"
+        assert result["meta"]["source"] == "test"
+
+    def test_invoke_structured_output_with_target_type(self):
+        """invoke() with target_type casts the structured result."""
+        from dataclasses import dataclass
+
+        @dataclass
+        class Person:
+            name: str
+            age: int
+            interests: list[str]
+
+        agent = self._make_structured_agent()
+
+        with self._patch_all_structured():
+            result = invoke(agent, {"text": "test"}, target_type=Person)
+
+        assert isinstance(result, Person)
+        assert result.name == "Ada Lovelace"
+        assert result.age == 36
+
+    def test_run_structured_output_with_mocks(self):
+        """run() (executor + process) also passes through structured output."""
+        from prompty.invoker import run
+
+        agent = self._make_structured_agent()
+        messages = [Message(role="user", parts=[TextPart(value="test")])]
+
+        with self._patch_all_structured():
+            result = run(agent, messages)
+
+        assert isinstance(result, dict)
+        assert result == self.STRUCTURED_DATA

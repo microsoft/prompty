@@ -504,7 +504,8 @@ pub async fn invoke(
         let messages = prepare(agent, inputs).await?;
         let provider = resolve_provider(agent);
         let response = registry::invoke_executor(&provider, agent, &messages).await?;
-        process(agent, response).await
+        let processed = process(agent, response).await?;
+        Ok(unwrap_structured(&processed))
     }
     .await;
 
@@ -1295,9 +1296,12 @@ async fn dispatch_tools_parallel(
                         return format!("Error: Tool guardrail denied: {reason}");
                     }
                 }
-                let fut = std::panic::AssertUnwindSafe(
-                    crate::tool_dispatch::dispatch_tool(tc, tools, agent, parent_inputs),
-                );
+                let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
+                    tc,
+                    tools,
+                    agent,
+                    parent_inputs,
+                ));
                 match futures::FutureExt::catch_unwind(fut).await {
                     Ok(r) => r,
                     Err(panic_info) => {
@@ -2440,7 +2444,9 @@ mod tests {
         let _ = turn(&agent, None, Some(opts)).await.unwrap();
         let captured = events.lock().unwrap();
         assert!(
-            captured.iter().any(|e| e.contains("Status") && e.contains("retrying")),
+            captured
+                .iter()
+                .any(|e| e.contains("Status") && e.contains("retrying")),
             "Expected retry status event, got: {:?}",
             *captured
         );

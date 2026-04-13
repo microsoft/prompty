@@ -14,10 +14,10 @@
 
 #![cfg(feature = "entra_id")]
 
-use prompty::model::context::LoadContext;
 use prompty::model::Prompty;
-use prompty::{register_defaults, TurnOptions};
-use serde_json::{json, Value};
+use prompty::model::context::LoadContext;
+use prompty::{TurnOptions, register_defaults};
+use serde_json::{Value, json};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -127,8 +127,8 @@ async fn test_entra_id_token_acquisition() {
     use azure_core::credentials::TokenCredential;
     use azure_identity::DefaultAzureCredential;
 
-    let credential = DefaultAzureCredential::new()
-        .expect("DefaultAzureCredential should be created");
+    let credential =
+        DefaultAzureCredential::new().expect("DefaultAzureCredential should be created");
 
     let token = credential
         .get_token(&["https://cognitiveservices.azure.com/.default"])
@@ -139,7 +139,10 @@ async fn test_entra_id_token_acquisition() {
         !token.token.secret().is_empty(),
         "Token should not be empty"
     );
-    eprintln!("Entra ID token acquired successfully (length: {})", token.token.secret().len());
+    eprintln!(
+        "Entra ID token acquired successfully (length: {})",
+        token.token.secret().len()
+    );
 }
 
 /// Chat completion using `kind: "foundry"` + Entra ID (no API key).
@@ -244,7 +247,10 @@ async fn test_entra_id_structured_output() {
     };
 
     assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
-    assert!(obj.contains_key("country"), "missing 'country' field: {obj:?}");
+    assert!(
+        obj.contains_key("country"),
+        "missing 'country' field: {obj:?}"
+    );
     eprintln!("Entra ID structured output: {obj:?}");
 }
 
