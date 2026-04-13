@@ -232,7 +232,8 @@ public static class Pipeline
         Guardrails? guardrails = null,
         Steering? steering = null,
         bool parallelToolCalls = false,
-        int maxLlmRetries = 3)
+        int maxLlmRetries = 3,
+        CompactionStrategy? compaction = null)
     {
         var label = turnNumber.HasValue ? $"turn {turnNumber.Value}" : "turn";
         return await Trace.TraceAsync<object>($"prompty.turn", async (emit) =>
@@ -292,11 +293,16 @@ public static class Pipeline
                 // Context window trimming
                 if (contextBudget is not null)
                 {
-                    var (droppedCount, _) = ContextWindow.TrimToContextWindow(messages, contextBudget.Value);
+                    var (droppedCount, droppedMessages) = ContextWindow.TrimToContextWindow(messages, contextBudget.Value);
                     if (droppedCount > 0)
                     {
                         AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
                             new Dictionary<string, object?> { ["source"] = "context_trim", ["dropped"] = droppedCount });
+
+                        if (compaction is not null)
+                        {
+                            await ApplyCompactionAsync(compaction, droppedMessages, messages, onEvent);
+                        }
                     }
                 }
 
@@ -536,11 +542,12 @@ public static class Pipeline
         Guardrails? guardrails = null,
         Steering? steering = null,
         bool parallelToolCalls = false,
-        int maxLlmRetries = 3)
+        int maxLlmRetries = 3,
+        CompactionStrategy? compaction = null)
     {
         var agent = PromptyLoader.Load(path);
         return await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries, compaction);
     }
 
     // -----------------------------------------------------------------------
@@ -581,10 +588,11 @@ public static class Pipeline
         Guardrails? guardrails = null,
         Steering? steering = null,
         bool parallelToolCalls = false,
-        int maxLlmRetries = 3)
+        int maxLlmRetries = 3,
+        CompactionStrategy? compaction = null)
     {
         var result = await TurnAsync(agent, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries, compaction);
         return PromptyCast.Cast<T>(result);
     }
 
@@ -604,11 +612,69 @@ public static class Pipeline
         Guardrails? guardrails = null,
         Steering? steering = null,
         bool parallelToolCalls = false,
-        int maxLlmRetries = 3)
+        int maxLlmRetries = 3,
+        CompactionStrategy? compaction = null)
     {
         var result = await TurnAsync(path, inputs, tools, maxIterations, raw, turnNumber, onEvent,
-            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries);
+            cancellationToken, contextBudget, guardrails, steering, parallelToolCalls, maxLlmRetries, compaction);
         return PromptyCast.Cast<T>(result);
+    }
+
+    // -----------------------------------------------------------------------
+    // Compaction Helper
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Apply a compaction strategy to replace the default dropped-message summary.
+    /// On failure, the existing SummarizeDropped summary is preserved.
+    /// </summary>
+    internal static async Task ApplyCompactionAsync(
+        CompactionStrategy compaction,
+        List<Message> dropped,
+        List<Message> messages,
+        EventCallback? onEvent)
+    {
+        AgentEvents.EmitEvent(onEvent, AgentEventType.CompactionStart,
+            new Dictionary<string, object?> { ["dropped_count"] = dropped.Count });
+        try
+        {
+            var summary = await compaction.CompactAsync(dropped);
+            if (!string.IsNullOrWhiteSpace(summary))
+            {
+                ReplaceSummaryMessage(messages, summary);
+                AgentEvents.EmitEvent(onEvent, AgentEventType.CompactionComplete,
+                    new Dictionary<string, object?> { ["summary_length"] = summary.Length });
+            }
+            else
+            {
+                AgentEvents.EmitEvent(onEvent, AgentEventType.CompactionFailed,
+                    new Dictionary<string, object?> { ["reason"] = "empty result" });
+            }
+        }
+        catch (Exception ex)
+        {
+            AgentEvents.EmitEvent(onEvent, AgentEventType.CompactionFailed,
+                new Dictionary<string, object?> { ["reason"] = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Replace the first "[Context summary:" message with a compaction-produced summary.
+    /// </summary>
+    internal static void ReplaceSummaryMessage(List<Message> messages, string newSummary)
+    {
+        for (int i = 0; i < messages.Count; i++)
+        {
+            if (messages[i].Text.StartsWith("[Context summary:"))
+            {
+                messages[i] = new Message
+                {
+                    Role = messages[i].Role,
+                    Parts = [new TextPart { Value = newSummary }]
+                };
+                return;
+            }
+        }
     }
 
     // -----------------------------------------------------------------------

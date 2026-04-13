@@ -13,7 +13,10 @@ public enum AgentEventType
     MessagesUpdated,
     Done,
     Error,
-    Cancelled
+    Cancelled,
+    CompactionStart,
+    CompactionComplete,
+    CompactionFailed
 }
 
 /// <summary>Callback for agent loop events.</summary>
