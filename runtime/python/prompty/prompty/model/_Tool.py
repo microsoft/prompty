@@ -196,6 +196,7 @@ class Tool(ABC):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class FunctionTool(Tool):
     """Represents a local function tool.
@@ -324,6 +325,7 @@ class FunctionTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class CustomTool(Tool):
     """Represents a generic server tool that runs on a server
@@ -430,6 +432,7 @@ class CustomTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -557,6 +560,7 @@ class McpTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class OpenApiTool(Tool):
     """
@@ -661,6 +665,7 @@ class OpenApiTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
@@ -762,4 +767,5 @@ class PromptyTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 

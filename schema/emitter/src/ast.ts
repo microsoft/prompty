@@ -11,7 +11,7 @@ import {
   getNamespaceFullName,
   getDiscriminator,
 } from "@typespec/compiler";
-import { getStateScalar, getStateValue, SampleEntry } from "./decorators.js";
+import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, HelperEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
 
@@ -70,6 +70,8 @@ export class TypeNode {
   public properties: PropertyNode[] = [];
   public isAbstract: boolean = false;
   public discriminator: string | undefined = undefined;
+  public factories: FactoryEntry[] = [];
+  public helpers: HelperEntry[] = [];
 
   constructor(public model: Model, description: string) {
     this.model = model;
@@ -107,6 +109,8 @@ export class TypeNode {
       isAbstract: this.isAbstract,
       discriminator: this.discriminator,
       alternates: this.alternates,
+      factories: this.factories,
+      helpers: this.helpers,
       childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
@@ -215,6 +219,9 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
     // shorthand .ctor
     node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, innerModel);
+    // factory and helper methods
+    node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, innerModel);
+    node.helpers = getStateValue<HelperEntry>(program, StateKeys.helpers, innerModel);
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace, rootAlias);
@@ -224,6 +231,9 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
     // shorthand .ctor
     node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, model);
+    // factory and helper methods
+    node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, model);
+    node.helpers = getStateValue<HelperEntry>(program, StateKeys.helpers, model);
     visited.add(model.name);
   }
 
@@ -738,4 +748,6 @@ export interface BaseTestContext {
   examples: TestExample[];
   /** Shorthand alternate representation tests */
   alternates: AlternateTest[];
+  /** Factory methods declared via @factory (for auto-generated factory tests) */
+  factories: FactoryEntry[];
 }

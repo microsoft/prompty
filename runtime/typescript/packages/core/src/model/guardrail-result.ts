@@ -164,4 +164,37 @@ export class GuardrailResult {
   }
 
   //#endregion
+
+  //#region Factory Methods
+
+  /**
+   * Create a GuardrailResult with preset field values.
+   */
+  static rewrite(rewrite: unknown): GuardrailResult {
+    return new GuardrailResult({
+      allowed: true,
+      rewrite: rewrite,
+    });
+  }
+
+  /**
+   * Create a GuardrailResult with preset field values.
+   */
+  static deny(reason: string): GuardrailResult {
+    return new GuardrailResult({
+      allowed: false,
+      reason: reason,
+    });
+  }
+
+  /**
+   * Create a GuardrailResult with preset field values.
+   */
+  static allow(): GuardrailResult {
+    return new GuardrailResult({
+      allowed: true,
+    });
+  }
+
+  //#endregion
 }

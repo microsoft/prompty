@@ -163,3 +163,44 @@ Record<string, unknown>
 {% macro kebabCase(str) -%}
 {{ str | lower | replace("_", "-") }}
 {%- endmacro %}
+
+
+{# ============================================================================
+   Factory Helpers — macros for @factory-generated code
+   ============================================================================ #}
+
+{#
+  Map a factory parameter type string to TypeScript type.
+#}
+{% macro factoryParamType(typeStr) -%}
+{%- if typeStr == "string" -%}
+string
+{%- elif typeStr == "boolean" -%}
+boolean
+{%- elif typeStr == "integer" or typeStr == "int32" or typeStr == "int64" -%}
+number
+{%- elif typeStr == "float" or typeStr == "float64" or typeStr == "float32" -%}
+number
+{%- elif typeStr == "unknown" -%}
+unknown
+{%- else -%}
+unknown
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Render the value expression for a factory field assignment in TypeScript.
+#}
+{% macro factoryFieldValue(prop, setValue) -%}
+{%- if setValue == true -%}
+true
+{%- elif setValue == false -%}
+false
+{%- elif setValue is number -%}
+{{ setValue }}
+{%- elif setValue is string -%}
+"{{ setValue }}"
+{%- else -%}
+undefined
+{%- endif -%}
+{%- endmacro %}

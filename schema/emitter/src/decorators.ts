@@ -155,3 +155,63 @@ export function $shorthand(context: DecoratorContext, target: Model, scalar: Typ
   }
   appendStateValue<Alternative>(context, StateKeys.shorthands, target, entry);
 }
+
+// ============================================================================
+// Factory and Helper decorators
+// ============================================================================
+
+export interface FactoryEntry {
+  /** Factory method name (e.g., "allow", "deny") */
+  name: string;
+  /** Field assignments — { fieldName: value } */
+  sets: Record<string, any>;
+  /** Optional parameters — { paramName: typeString } */
+  params: Record<string, string>;
+}
+
+export interface HelperEntry {
+  /** Helper method name (e.g., "text") */
+  name: string;
+  /** Return type as a string (e.g., "string") */
+  returns: string;
+  /** Human-readable description of what the helper does */
+  description: string;
+}
+
+function deserializeValue(value: unknown): any {
+  if (value && typeof value === 'object' && 'type' in value && (value as ObjectValue).type) {
+    // ObjectValue from TypeSpec — shouldn't happen with valueof but handle defensively
+    return value;
+  }
+  return value;
+}
+
+export function $factory(context: DecoratorContext, target: Model, name: string, sets: object, params?: object) {
+  // Handle string values from valueof
+  const nameValue = typeof name === 'object' && name !== null && 'value' in name ? (name as StringValue).value : name as string;
+
+  const setsValue = deserializeValue(sets) as Record<string, any>;
+  const paramsValue = params ? deserializeValue(params) as Record<string, string> : {};
+
+  const entry: FactoryEntry = {
+    name: nameValue,
+    sets: setsValue,
+    params: paramsValue,
+  };
+
+  appendStateValue<FactoryEntry>(context, StateKeys.factories, target, entry);
+}
+
+export function $helper(context: DecoratorContext, target: Model, name: string, returns: string, description?: string) {
+  const nameValue = typeof name === 'object' && name !== null && 'value' in name ? (name as StringValue).value : name as string;
+  const returnsValue = typeof returns === 'object' && returns !== null && 'value' in returns ? (returns as StringValue).value : returns as string;
+  const descValue = typeof description === 'object' && description !== null && 'value' in description ? (description as StringValue).value : description as string | undefined;
+
+  const entry: HelperEntry = {
+    name: nameValue,
+    returns: returnsValue,
+    description: descValue ?? "",
+  };
+
+  appendStateValue<HelperEntry>(context, StateKeys.helpers, target, entry);
+}

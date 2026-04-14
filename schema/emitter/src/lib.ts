@@ -109,7 +109,9 @@ export const $lib = createTypeSpecLibrary({
   state: {
     samples: { description: "Sample values for properties" },
     shorthands: { description: "Shorthand models creation" },
-    abstracts: { description: "Abstract models" }
+    abstracts: { description: "Abstract models" },
+    factories: { description: "Factory methods for model construction" },
+    helpers: { description: "Helper method stubs for model types" }
   }
 });
 

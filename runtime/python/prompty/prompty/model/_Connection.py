@@ -143,6 +143,7 @@ class Connection(ABC):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class ReferenceConnection(Connection):
     """Connection configuration for AI services using named connections.
@@ -245,6 +246,7 @@ class ReferenceConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -351,6 +353,7 @@ class RemoteConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class ApiKeyConnection(Connection):
     """Connection configuration for AI services using API keys.
@@ -455,6 +458,7 @@ class ApiKeyConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class AnonymousConnection(Connection):
     """
@@ -550,6 +554,7 @@ class AnonymousConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -663,6 +668,7 @@ class FoundryConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -790,4 +796,5 @@ class OAuthConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 

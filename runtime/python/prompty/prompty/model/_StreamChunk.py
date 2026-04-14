@@ -125,6 +125,7 @@ class StreamChunk(ABC):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class TextChunk(StreamChunk):
     """A text content chunk from the LLM response stream.
@@ -220,6 +221,7 @@ class TextChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -319,6 +321,7 @@ class ThinkingChunk(StreamChunk):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class ToolChunk(StreamChunk):
     """A tool call chunk from the LLM response stream.
@@ -416,6 +419,7 @@ class ToolChunk(StreamChunk):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class ErrorChunk(StreamChunk):
     """An error chunk from the LLM response stream.
@@ -511,4 +515,5 @@ class ErrorChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 

@@ -294,3 +294,44 @@ def load_{{ discriminator }}(data: dict, pre_process: Optional[Callable[[Any], A
         return {{ parentTypeName }}()
 {%- endif %}
 {% endmacro %}
+
+
+{# ============================================================================
+   Factory Helpers — macros for @factory-generated code
+   ============================================================================ #}
+
+{#
+  Map a factory parameter type string to Python type.
+#}
+{% macro factoryParamType(typeStr) -%}
+{%- if typeStr == "string" -%}
+str
+{%- elif typeStr == "boolean" -%}
+bool
+{%- elif typeStr == "integer" or typeStr == "int32" or typeStr == "int64" -%}
+int
+{%- elif typeStr == "float" or typeStr == "float64" or typeStr == "float32" -%}
+float
+{%- elif typeStr == "unknown" -%}
+Any
+{%- else -%}
+Any
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Render the value expression for a factory field assignment in Python.
+#}
+{% macro factoryFieldValue(prop, setValue) -%}
+{%- if setValue == true -%}
+True
+{%- elif setValue == false -%}
+False
+{%- elif setValue is number -%}
+{{ setValue }}
+{%- elif setValue is string -%}
+"{{ setValue }}"
+{%- else -%}
+None
+{%- endif -%}
+{%- endmacro %}

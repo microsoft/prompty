@@ -115,3 +115,28 @@ class GuardrailResult:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
+
+    @classmethod
+    def rewrite(cls, rewrite: Any) -> "GuardrailResult":
+        """Create a GuardrailResult with preset field values."""
+        instance = cls()
+        instance.allowed = True
+        instance.rewrite = rewrite
+        return instance
+
+    @classmethod
+    def deny(cls, reason: str) -> "GuardrailResult":
+        """Create a GuardrailResult with preset field values."""
+        instance = cls()
+        instance.allowed = False
+        instance.reason = reason
+        return instance
+
+    @classmethod
+    def allow(cls) -> "GuardrailResult":
+        """Create a GuardrailResult with preset field values."""
+        instance = cls()
+        instance.allowed = True
+        return instance
+
+

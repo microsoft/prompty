@@ -124,6 +124,7 @@ class ContentPart(ABC):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class TextPart(ContentPart):
     """A text content part.
@@ -219,6 +220,7 @@ class TextPart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -332,6 +334,7 @@ class ImagePart(ContentPart):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class FilePart(ContentPart):
     """A file content part. The source may be a URL or base64-encoded data.
@@ -436,6 +439,7 @@ class FilePart(ContentPart):
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class AudioPart(ContentPart):
     """An audio content part. The source may be a URL or base64-encoded data.
@@ -538,4 +542,5 @@ class AudioPart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 

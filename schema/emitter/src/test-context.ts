@@ -57,6 +57,7 @@ export function buildBaseTestContext(
     package: packageName,
     examples,
     alternates,
+    factories: node.factories,
   };
 }
 

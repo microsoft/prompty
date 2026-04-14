@@ -339,7 +339,41 @@ impl {{ class.node.typeName.name }} {
 
 {%- endif %}
 {%- endfor %}
+
+{#- ================================================================
+    FACTORY METHODS — fully generated from @factory decorators
+    ================================================================ -#}
+{%- for factory in class.node.factories %}
+    /// Create a {{ class.node.typeName.name }} with preset field values.
+    pub fn {{ factory.name | snakeCase }}({% for pName, pType in factory.params %}{{ pName | snakeCase }}: {{ rust.factoryParamType(pType) }}{% if not loop.last %}, {% endif %}{% endfor %}) -> Self {
+        Self {
+{%- for prop in class.node.properties %}
+{%- if factory.sets[prop.name] is defined %}
+            {{ prop.name | snakeCase }}: {{ rust.factoryFieldValue(prop, factory.sets[prop.name], factory.params) }},
+{%- elif prop.name in factory.params %}
+            {{ prop.name | snakeCase }}: {{ rust.factoryParamConvert(prop, prop.name) }},
+{%- else %}
+            {{ prop.name | snakeCase }}: {{ rust.defaultValue(prop, typeMapper, polymorphicTypeNames) | trim }},
+{%- endif %}
+{%- endfor %}
+        }
+    }
+{%- endfor %}
 }
+
+{#- ================================================================
+    HELPER TRAIT — stub declaration from @helper decorators.
+    Implementation must be provided in a separate extension file.
+    ================================================================ -#}
+{%- if class.node.helpers.length > 0 %}
+/// Helpers for [`{{ class.node.typeName.name }}`]. Implement in a separate file.
+pub trait {{ class.node.typeName.name }}Helpers {
+{%- for helper in class.node.helpers %}
+    /// {{ helper.description }}
+    fn {{ helper.name | snakeCase }}(&self) -> {{ rust.helperReturnType(helper.returns) }};
+{%- endfor %}
+}
+{%- endif -%}
 {%- endif %}
 
 {% endfor %}

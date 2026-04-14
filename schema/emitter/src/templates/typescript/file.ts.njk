@@ -372,5 +372,26 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
   }
 
   //#endregion
+{%- if node.factories.length > 0 %}
+
+  //#region Factory Methods
+{% for factory in node.factories %}
+  /**
+   * Create a {{ node.typeName.name }} with preset field values.
+   */
+  static {{ factory.name }}({% for pName, pType in factory.params %}{{ pName }}: {{ ts.factoryParamType(pType) }}{% if not loop.last %}, {% endif %}{% endfor %}): {{ node.typeName.name }} {
+    return new {{ node.typeName.name }}({
+{%- for prop in node.properties %}
+{%- if factory.sets[prop.name] is defined %}
+      {{ prop.name }}: {{ ts.factoryFieldValue(prop, factory.sets[prop.name]) }},
+{%- elif prop.name in factory.params %}
+      {{ prop.name }}: {{ prop.name }},
+{%- endif %}
+{%- endfor %}
+    });
+  }
+{% endfor %}
+  //#endregion
+{%- endif %}
 }
 {% endfor %}

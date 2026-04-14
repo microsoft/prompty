@@ -8,7 +8,7 @@ use super::content_part::ContentPart;
 
 
 
-/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings.  Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.
+/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings.  Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.  Each language runtime SHOULD provide a static `fromText(string) -> ToolResult` factory in its extension file.
 #[derive(Debug, Clone, Default)]
 pub struct ToolResult {
     /// The content parts of the tool result

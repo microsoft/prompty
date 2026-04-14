@@ -114,5 +114,10 @@ impl Message {
         self.metadata.as_object()
     }
 }
+/// Helpers for [`Message`]. Implement in a separate file.
+pub trait MessageHelpers {
+    /// Concatenate all TextPart values joined by newline
+    fn text(&self) -> String;
+}
 
 

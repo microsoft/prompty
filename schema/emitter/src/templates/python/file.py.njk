@@ -222,4 +222,20 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+{% if node.factories.length > 0 %}
+{% for factory in node.factories %}
+    @classmethod
+    def {{ factory.name | snakeCase }}(cls{% for pName, pType in factory.params %}, {{ pName | snakeCase }}: {{ py.factoryParamType(pType) }}{% endfor %}) -> "{{ node.typeName.name }}":
+        """Create a {{ node.typeName.name }} with preset field values."""
+        instance = cls()
+{%- for prop in node.properties %}
+{%- if factory.sets[prop.name] is defined %}
+        instance.{{ prop.name }} = {{ py.factoryFieldValue(prop, factory.sets[prop.name]) }}
+{%- elif prop.name in factory.params %}
+        instance.{{ prop.name }} = {{ prop.name | snakeCase }}
+{%- endif %}
+{%- endfor %}
+        return instance
+{% endfor %}
+{%- endif %}
 {% endfor %}

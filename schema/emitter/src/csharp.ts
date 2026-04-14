@@ -180,6 +180,9 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     renderNullCoalescing: renderNullCoalescing,
     renderLoadProperty: renderLoadProperty(findType),
     renderSaveProperty: renderSaveProperty,
+    renderCsharpFactoryParamType: renderCsharpFactoryParamType,
+    renderCsharpFactoryFieldValue: renderCsharpFactoryFieldValue,
+    renderCsharpFactoryMethodName: (factoryName: string) => renderCsharpFactoryMethodName(factoryName, node),
     converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
     polymorphicTypes: polymorphicTypes,
     collectionTypes: collectionTypes,
@@ -273,6 +276,38 @@ const renderName = (name: string): string => {
   const pascal = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   // capitalize the first letter
   return pascal.charAt(0).toUpperCase() + pascal.slice(1);
+};
+
+const renderCsharpFactoryParamType = (typeStr: string): string => {
+  switch (typeStr) {
+    case "string": return "string";
+    case "boolean": return "bool";
+    case "integer": case "int32": return "int";
+    case "int64": return "long";
+    case "float": case "float32": return "float";
+    case "float64": return "double";
+    case "unknown": return "object?";
+    default: return "object?";
+  }
+};
+
+// Returns a factory method name that won't clash with C# property names on the same type.
+// If the capitalized factory name matches a property name, prefix with "Create".
+const renderCsharpFactoryMethodName = (factoryName: string, node: TypeNode): string => {
+  const methodName = factoryName.charAt(0).toUpperCase() + factoryName.slice(1);
+  const propertyNames = node.properties.map(p => renderName(p.name));
+  if (propertyNames.includes(methodName)) {
+    return `Create${methodName}`;
+  }
+  return methodName;
+};
+
+const renderCsharpFactoryFieldValue = (prop: { name: string; isOptional?: boolean }, setValue: unknown): string => {
+  if (setValue === true) return "true";
+  if (setValue === false) return "false";
+  if (typeof setValue === "number") return String(setValue);
+  if (typeof setValue === "string") return `"${setValue}"`;
+  return "null";
 };
 
 /**

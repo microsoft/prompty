@@ -459,4 +459,27 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
     }
 
     #endregion
+{%- if node.factories.length > 0 %}
+
+    #region Factory Methods
+{% for factory in node.factories %}
+    /// <summary>
+    /// Create a {{ node.typeName.name }} with preset field values.
+    /// </summary>
+    public static {{ node.typeName.name }} {{ renderCsharpFactoryMethodName(factory.name) }}({% for pName, pType in factory.params %}{{ renderCsharpFactoryParamType(pType) }} {{ pName }}{% if not loop.last %}, {% endif %}{% endfor %})
+    {
+        return new {{ node.typeName.name }}
+        {
+{%- for prop in node.properties %}
+{%- if factory.sets[prop.name] is defined %}
+            {{ renderPropertyName(prop) }} = {{ renderCsharpFactoryFieldValue(prop, factory.sets[prop.name]) }},
+{%- elif prop.name in factory.params %}
+            {{ renderPropertyName(prop) }} = {{ prop.name }},
+{%- endif %}
+{%- endfor %}
+        };
+    }
+{% endfor %}
+    #endregion
+{%- endif %}
 }

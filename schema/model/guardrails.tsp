@@ -12,6 +12,9 @@ alias GuardrailPhase = "input" | "output" | "tool";
  * run at specific phases of the agent loop and can allow, deny, or rewrite
  * content.
  */
+@factory("allow", #{ allowed: true })
+@factory("deny", #{ allowed: false }, #{ reason: "string" })
+@factory("rewrite", #{ allowed: true }, #{ rewrite: "unknown" })
 model GuardrailResult {
   @doc("Whether the content passed the guardrail check")
   @sample(#{ allowed: true })

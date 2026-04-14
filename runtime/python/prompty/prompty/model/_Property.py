@@ -179,6 +179,7 @@ class Property:
         return context.to_json(self.save(context), indent)
 
 
+
 @dataclass
 class ArrayProperty(Property):
     """Represents an array property.
@@ -275,6 +276,7 @@ class ArrayProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 @dataclass
@@ -397,4 +399,5 @@ class ObjectProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 

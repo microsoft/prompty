@@ -187,4 +187,43 @@ public class GuardrailResult
     }
 
     #endregion
+
+    #region Factory Methods
+
+    /// <summary>
+    /// Create a GuardrailResult with preset field values.
+    /// </summary>
+    public static GuardrailResult CreateRewrite(object? rewrite)
+    {
+        return new GuardrailResult
+        {
+            Allowed = true,
+            Rewrite = rewrite,
+        };
+    }
+
+    /// <summary>
+    /// Create a GuardrailResult with preset field values.
+    /// </summary>
+    public static GuardrailResult Deny(string reason)
+    {
+        return new GuardrailResult
+        {
+            Allowed = false,
+            Reason = reason,
+        };
+    }
+
+    /// <summary>
+    /// Create a GuardrailResult with preset field values.
+    /// </summary>
+    public static GuardrailResult Allow()
+    {
+        return new GuardrailResult
+        {
+            Allowed = true,
+        };
+    }
+
+    #endregion
 }

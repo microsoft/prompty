@@ -527,3 +527,76 @@ Default::default()
 {%- endif %}
 {%- endif %}
 {%- endmacro %}
+
+
+{# ================================================================
+   FACTORY HELPERS — macros for @factory-generated code
+   ================================================================ #}
+
+{#
+  Map a factory parameter type string to Rust type.
+  "string" -> impl Into<String>, "unknown" -> impl Into<serde_json::Value>, etc.
+#}
+{% macro factoryParamType(typeStr) -%}
+{%- if typeStr == "string" -%}
+impl Into<String>
+{%- elif typeStr == "boolean" -%}
+bool
+{%- elif typeStr == "integer" or typeStr == "int32" -%}
+i32
+{%- elif typeStr == "float" or typeStr == "float64" -%}
+f64
+{%- elif typeStr == "unknown" -%}
+impl Into<serde_json::Value>
+{%- else -%}
+impl Into<serde_json::Value>
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Render the value expression for a factory field assignment.
+  prop: PropertyNode, setValue: the value from @factory sets, params: factory params dict
+#}
+{% macro factoryFieldValue(prop, setValue, params) -%}
+{%- if setValue == true -%}
+true
+{%- elif setValue == false -%}
+false
+{%- elif setValue is number -%}
+{{ setValue }}
+{%- elif setValue is string -%}
+"{{ setValue }}".to_string()
+{%- else -%}
+Default::default()
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Convert a factory parameter to the field type.
+  For string params assigned to Option<String> fields: Some(name.into())
+  For unknown params assigned to Option<Value> fields: Some(name.into())
+#}
+{% macro factoryParamConvert(prop, paramName) -%}
+{%- if prop.isOptional -%}
+Some({{ paramName | snakeCase }}.into())
+{%- else -%}
+{{ paramName | snakeCase }}.into()
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Map a helper return type string to Rust type.
+#}
+{% macro helperReturnType(typeStr) -%}
+{%- if typeStr == "string" -%}
+String
+{%- elif typeStr == "boolean" or typeStr == "bool" -%}
+bool
+{%- elif typeStr == "integer" or typeStr == "int32" -%}
+i32
+{%- elif typeStr == "float" or typeStr == "float64" -%}
+f64
+{%- else -%}
+serde_json::Value
+{%- endif -%}
+{%- endmacro %}

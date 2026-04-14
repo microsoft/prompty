@@ -71,6 +71,30 @@ impl GuardrailResult {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
+    /// Create a GuardrailResult with preset field values.
+    pub fn rewrite(rewrite: impl Into<serde_json::Value>) -> Self {
+        Self {
+            allowed: true,
+            reason: None,
+            rewrite: Some(rewrite.into()),
+        }
+    }
+    /// Create a GuardrailResult with preset field values.
+    pub fn deny(reason: impl Into<String>) -> Self {
+        Self {
+            allowed: false,
+            reason: Some(reason.into()),
+            rewrite: None,
+        }
+    }
+    /// Create a GuardrailResult with preset field values.
+    pub fn allow() -> Self {
+        Self {
+            allowed: true,
+            reason: None,
+            rewrite: None,
+        }
+    }
 }
 
 
