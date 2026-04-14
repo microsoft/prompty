@@ -999,8 +999,12 @@ AGENT_IDS = [v["name"] for v in AGENT_VECTORS]
 
 _EXTENSION_KEYS = {"on_event", "cancel", "context_budget", "guardrails", "steering", "parallel_tool_calls"}
 
+# Split vectors: core (no extension keys) and extension (has extension keys)
+_CORE_AGENT_VECTORS = [v for v in AGENT_VECTORS if not (_EXTENSION_KEYS & set(v.get("input", {}).keys()))]
+_CORE_AGENT_IDS = [v["name"] for v in _CORE_AGENT_VECTORS]
 
-@pytest.mark.parametrize("vec", AGENT_VECTORS, ids=AGENT_IDS)
+
+@pytest.mark.parametrize("vec", _CORE_AGENT_VECTORS, ids=_CORE_AGENT_IDS)
 def test_agent_vector(vec: dict):
     """Test agent vectors via the REAL turn() pipeline.
 
@@ -1008,6 +1012,9 @@ def test_agent_vector(vec: dict):
     vector sequence, then calls the production turn(). This
     validates the full agent loop including binding injection, tool result
     message construction, and iteration control.
+
+    Extension vectors (on_event, cancel, guardrails, etc.) are tested
+    separately in test_agent_extension_vector.
     """
     from unittest.mock import patch
 
@@ -1018,10 +1025,6 @@ def test_agent_vector(vec: dict):
     inp = vec["input"]
     sequence = vec["sequence"]
     expected = vec["expected"]
-
-    # Skip extension vectors — tested in test_agent_extension_vector
-    if _EXTENSION_KEYS & set(inp.keys()):
-        pytest.skip("Extension vector — tested in test_agent_extension_vector")
 
     # -- Build the Prompty agent from vector data --
     tools_list = [_build_function_tool(t) for t in inp.get("tools", [])]

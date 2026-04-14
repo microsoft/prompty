@@ -235,7 +235,7 @@ class ImagePart(ContentPart):
         URL or base64-encoded image data
     detail : Optional[str]
         Detail level hint for the model (e.g., 'auto', 'low', 'high')
-    mediaType : Optional[str]
+    media_type : Optional[str]
         MIME type of the image (e.g., 'image/png')
     """
 
@@ -244,7 +244,7 @@ class ImagePart(ContentPart):
     kind: str = field(default="image")
     source: str = field(default="")
     detail: str | None = None
-    mediaType: str | None = None
+    media_type: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ImagePart":
@@ -273,7 +273,7 @@ class ImagePart(ContentPart):
         if data is not None and "detail" in data:
             instance.detail = data["detail"]
         if data is not None and "mediaType" in data:
-            instance.mediaType = data["mediaType"]
+            instance.media_type = data["mediaType"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -303,8 +303,8 @@ class ImagePart(ContentPart):
             result["source"] = obj.source
         if obj.detail is not None:
             result["detail"] = obj.detail
-        if obj.mediaType is not None:
-            result["mediaType"] = obj.mediaType
+        if obj.media_type is not None:
+            result["mediaType"] = obj.media_type
 
         return result
 
@@ -345,7 +345,7 @@ class FilePart(ContentPart):
         The kind identifier for file content
     source : str
         URL or base64-encoded file data
-    mediaType : Optional[str]
+    media_type : Optional[str]
         MIME type of the file (e.g., 'application/pdf')
     """
 
@@ -353,7 +353,7 @@ class FilePart(ContentPart):
 
     kind: str = field(default="file")
     source: str = field(default="")
-    mediaType: str | None = None
+    media_type: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "FilePart":
@@ -380,7 +380,7 @@ class FilePart(ContentPart):
         if data is not None and "source" in data:
             instance.source = data["source"]
         if data is not None and "mediaType" in data:
-            instance.mediaType = data["mediaType"]
+            instance.media_type = data["mediaType"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -408,8 +408,8 @@ class FilePart(ContentPart):
             result["kind"] = obj.kind
         if obj.source is not None:
             result["source"] = obj.source
-        if obj.mediaType is not None:
-            result["mediaType"] = obj.mediaType
+        if obj.media_type is not None:
+            result["mediaType"] = obj.media_type
 
         return result
 
@@ -450,7 +450,7 @@ class AudioPart(ContentPart):
         The kind identifier for audio content
     source : str
         URL or base64-encoded audio data
-    mediaType : Optional[str]
+    media_type : Optional[str]
         MIME type of the audio (e.g., 'audio/wav')
     """
 
@@ -458,7 +458,7 @@ class AudioPart(ContentPart):
 
     kind: str = field(default="audio")
     source: str = field(default="")
-    mediaType: str | None = None
+    media_type: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "AudioPart":
@@ -485,7 +485,7 @@ class AudioPart(ContentPart):
         if data is not None and "source" in data:
             instance.source = data["source"]
         if data is not None and "mediaType" in data:
-            instance.mediaType = data["mediaType"]
+            instance.media_type = data["mediaType"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -513,8 +513,8 @@ class AudioPart(ContentPart):
             result["kind"] = obj.kind
         if obj.source is not None:
             result["source"] = obj.source
-        if obj.mediaType is not None:
-            result["mediaType"] = obj.mediaType
+        if obj.media_type is not None:
+            result["mediaType"] = obj.media_type
 
         return result
 

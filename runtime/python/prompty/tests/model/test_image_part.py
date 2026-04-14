@@ -19,7 +19,7 @@ def test_load_json_imagepart():
     assert instance is not None
     assert instance.source == "https://example.com/image.png"
     assert instance.detail == "auto"
-    assert instance.mediaType == "image/png"
+    assert instance.media_type == "image/png"
     
 
 def test_load_yaml_imagepart():
@@ -34,7 +34,7 @@ def test_load_yaml_imagepart():
     assert instance is not None
     assert instance.source == "https://example.com/image.png"
     assert instance.detail == "auto"
-    assert instance.mediaType == "image/png"
+    assert instance.media_type == "image/png"
 
 def test_roundtrip_json_imagepart():
     """Test that load -> save -> load produces equivalent data."""
@@ -52,7 +52,7 @@ def test_roundtrip_json_imagepart():
     assert reloaded is not None
     assert reloaded.source == "https://example.com/image.png"
     assert reloaded.detail == "auto"
-    assert reloaded.mediaType == "image/png"
+    assert reloaded.media_type == "image/png"
 
 def test_to_json_imagepart():
     """Test that to_json produces valid JSON."""

@@ -17,7 +17,7 @@ def test_load_json_audiopart():
     instance = AudioPart.load(data)
     assert instance is not None
     assert instance.source == "https://example.com/audio.wav"
-    assert instance.mediaType == "audio/wav"
+    assert instance.media_type == "audio/wav"
     
 
 def test_load_yaml_audiopart():
@@ -30,7 +30,7 @@ def test_load_yaml_audiopart():
     instance = AudioPart.load(data)
     assert instance is not None
     assert instance.source == "https://example.com/audio.wav"
-    assert instance.mediaType == "audio/wav"
+    assert instance.media_type == "audio/wav"
 
 def test_roundtrip_json_audiopart():
     """Test that load -> save -> load produces equivalent data."""
@@ -46,7 +46,7 @@ def test_roundtrip_json_audiopart():
     reloaded = AudioPart.load(saved_data)
     assert reloaded is not None
     assert reloaded.source == "https://example.com/audio.wav"
-    assert reloaded.mediaType == "audio/wav"
+    assert reloaded.media_type == "audio/wav"
 
 def test_to_json_audiopart():
     """Test that to_json produces valid JSON."""

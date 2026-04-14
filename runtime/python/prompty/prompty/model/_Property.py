@@ -33,7 +33,7 @@ class Property:
         The default value of the property - this represents the default value if none is provided
     example : Optional[Any]
         Example value used for either initialization or tooling
-    enumValues : list[Any]
+    enum_values : list[Any]
         Allowed enumeration values for the property
     """
 
@@ -45,7 +45,7 @@ class Property:
     required: bool | None = None
     default: Any | None = None
     example: Any | None = None
-    enumValues: list[Any] = field(default_factory=list)
+    enum_values: list[Any] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Property":
@@ -91,7 +91,7 @@ class Property:
         if data is not None and "example" in data:
             instance.example = data["example"]
         if data is not None and "enumValues" in data:
-            instance.enumValues = data["enumValues"]
+            instance.enum_values = data["enumValues"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -146,8 +146,8 @@ class Property:
             result["default"] = obj.default
         if obj.example is not None:
             result["example"] = obj.example
-        if obj.enumValues is not None:
-            result["enumValues"] = obj.enumValues
+        if obj.enum_values is not None:
+            result["enumValues"] = obj.enum_values
 
         if context is not None:
             result = context.process_dict(result)

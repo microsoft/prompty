@@ -154,6 +154,7 @@ classDiagram
       
         +string kind
         +string path
+        +string mode
     }
     class FormatConfig {
       

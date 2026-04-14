@@ -19,7 +19,7 @@ def test_load_json_apikeyconnection():
     assert instance is not None
     assert instance.kind == "key"
     assert instance.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    assert instance.apiKey == "your-api-key"
+    assert instance.api_key == "your-api-key"
     
 
 def test_load_yaml_apikeyconnection():
@@ -34,7 +34,7 @@ def test_load_yaml_apikeyconnection():
     assert instance is not None
     assert instance.kind == "key"
     assert instance.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    assert instance.apiKey == "your-api-key"
+    assert instance.api_key == "your-api-key"
 
 def test_roundtrip_json_apikeyconnection():
     """Test that load -> save -> load produces equivalent data."""
@@ -52,7 +52,7 @@ def test_roundtrip_json_apikeyconnection():
     assert reloaded is not None
     assert reloaded.kind == "key"
     assert reloaded.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    assert reloaded.apiKey == "your-api-key"
+    assert reloaded.api_key == "your-api-key"
 
 def test_to_json_apikeyconnection():
     """Test that to_json produces valid JSON."""

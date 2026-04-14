@@ -21,7 +21,7 @@ def test_load_json_foundryconnection():
     assert instance.kind == "foundry"
     assert instance.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert instance.name == "my-openai-connection"
-    assert instance.connectionType == "model"
+    assert instance.connection_type == "model"
     
 
 def test_load_yaml_foundryconnection():
@@ -38,7 +38,7 @@ def test_load_yaml_foundryconnection():
     assert instance.kind == "foundry"
     assert instance.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert instance.name == "my-openai-connection"
-    assert instance.connectionType == "model"
+    assert instance.connection_type == "model"
 
 def test_roundtrip_json_foundryconnection():
     """Test that load -> save -> load produces equivalent data."""
@@ -58,7 +58,7 @@ def test_roundtrip_json_foundryconnection():
     assert reloaded.kind == "foundry"
     assert reloaded.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert reloaded.name == "my-openai-connection"
-    assert reloaded.connectionType == "model"
+    assert reloaded.connection_type == "model"
 
 def test_to_json_foundryconnection():
     """Test that to_json produces valid JSON."""

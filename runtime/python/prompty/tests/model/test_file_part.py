@@ -17,7 +17,7 @@ def test_load_json_filepart():
     instance = FilePart.load(data)
     assert instance is not None
     assert instance.source == "https://example.com/document.pdf"
-    assert instance.mediaType == "application/pdf"
+    assert instance.media_type == "application/pdf"
     
 
 def test_load_yaml_filepart():
@@ -30,7 +30,7 @@ def test_load_yaml_filepart():
     instance = FilePart.load(data)
     assert instance is not None
     assert instance.source == "https://example.com/document.pdf"
-    assert instance.mediaType == "application/pdf"
+    assert instance.media_type == "application/pdf"
 
 def test_roundtrip_json_filepart():
     """Test that load -> save -> load produces equivalent data."""
@@ -46,7 +46,7 @@ def test_roundtrip_json_filepart():
     reloaded = FilePart.load(saved_data)
     assert reloaded is not None
     assert reloaded.source == "https://example.com/document.pdf"
-    assert reloaded.mediaType == "application/pdf"
+    assert reloaded.media_type == "application/pdf"
 
 def test_to_json_filepart():
     """Test that to_json produces valid JSON."""

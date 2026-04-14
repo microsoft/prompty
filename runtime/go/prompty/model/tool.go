@@ -549,15 +549,14 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 
 // PromptyTool represents A tool that references another .prompty file to be invoked as a tool.
 //
-// PromptyTool is always single-shot — the child prompty is loaded, rendered,
-// and executed with a single LLM call (invoke). It does NOT run an agent loop.
-//
-// Applications that need agentic sub-agent delegation should register
-// `kind: function` tools that internally call `turn()` with their own TurnOptions.
+// In `single` mode (default), the child prompty is loaded, rendered, and
+// executed with a single LLM call (invoke). In `agentic` mode, the child
+// runs as a sub-agent via `turn()` with its own tool-calling loop.
 
 type PromptyTool struct {
-	Kind string `json:"kind" yaml:"kind"`
-	Path string `json:"path" yaml:"path"`
+	Kind string  `json:"kind" yaml:"kind"`
+	Path string  `json:"path" yaml:"path"`
+	Mode *string `json:"mode,omitempty" yaml:"mode,omitempty"`
 }
 
 // LoadPromptyTool creates a PromptyTool from a map[string]interface{}
@@ -572,6 +571,10 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 		if val, ok := m["path"]; ok && val != nil {
 			result.Path = val.(string)
 		}
+		if val, ok := m["mode"]; ok && val != nil {
+			v := val.(string)
+			result.Mode = &v
+		}
 	}
 
 	return result, nil
@@ -582,6 +585,9 @@ func (obj *PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["path"] = obj.Path
+	if obj.Mode != nil {
+		result["mode"] = *obj.Mode
+	}
 
 	return result
 }

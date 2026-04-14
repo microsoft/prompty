@@ -23,29 +23,29 @@ class ModelInfo:
     ----------
     id : str
         The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
-    displayName : Optional[str]
+    display_name : Optional[str]
         Human-readable display name
-    ownedBy : Optional[str]
+    owned_by : Optional[str]
         The organization or entity that owns the model
-    contextWindow : Optional[int]
+    context_window : Optional[int]
         Maximum context window size in tokens
-    inputModalities : list[str]
+    input_modalities : list[str]
         Input modalities the model accepts (e.g., 'text', 'image', 'audio')
-    outputModalities : list[str]
+    output_modalities : list[str]
         Output modalities the model can produce (e.g., 'text', 'audio')
-    additionalProperties : Optional[dict[str, Any]]
+    additional_properties : Optional[dict[str, Any]]
         Additional provider-specific properties
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     id: str = field(default="")
-    displayName: str | None = None
-    ownedBy: str | None = None
-    contextWindow: int | None = None
-    inputModalities: list[str] = field(default_factory=list)
-    outputModalities: list[str] = field(default_factory=list)
-    additionalProperties: dict[str, Any] | None = None
+    display_name: str | None = None
+    owned_by: str | None = None
+    context_window: int | None = None
+    input_modalities: list[str] = field(default_factory=list)
+    output_modalities: list[str] = field(default_factory=list)
+    additional_properties: dict[str, Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ModelInfo":
@@ -70,17 +70,17 @@ class ModelInfo:
         if data is not None and "id" in data:
             instance.id = data["id"]
         if data is not None and "displayName" in data:
-            instance.displayName = data["displayName"]
+            instance.display_name = data["displayName"]
         if data is not None and "ownedBy" in data:
-            instance.ownedBy = data["ownedBy"]
+            instance.owned_by = data["ownedBy"]
         if data is not None and "contextWindow" in data:
-            instance.contextWindow = data["contextWindow"]
+            instance.context_window = data["contextWindow"]
         if data is not None and "inputModalities" in data:
-            instance.inputModalities = data["inputModalities"]
+            instance.input_modalities = data["inputModalities"]
         if data is not None and "outputModalities" in data:
-            instance.outputModalities = data["outputModalities"]
+            instance.output_modalities = data["outputModalities"]
         if data is not None and "additionalProperties" in data:
-            instance.additionalProperties = data["additionalProperties"]
+            instance.additional_properties = data["additionalProperties"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -104,18 +104,18 @@ class ModelInfo:
 
         if obj.id is not None:
             result["id"] = obj.id
-        if obj.displayName is not None:
-            result["displayName"] = obj.displayName
-        if obj.ownedBy is not None:
-            result["ownedBy"] = obj.ownedBy
-        if obj.contextWindow is not None:
-            result["contextWindow"] = obj.contextWindow
-        if obj.inputModalities is not None:
-            result["inputModalities"] = obj.inputModalities
-        if obj.outputModalities is not None:
-            result["outputModalities"] = obj.outputModalities
-        if obj.additionalProperties is not None:
-            result["additionalProperties"] = obj.additionalProperties
+        if obj.display_name is not None:
+            result["displayName"] = obj.display_name
+        if obj.owned_by is not None:
+            result["ownedBy"] = obj.owned_by
+        if obj.context_window is not None:
+            result["contextWindow"] = obj.context_window
+        if obj.input_modalities is not None:
+            result["inputModalities"] = obj.input_modalities
+        if obj.output_modalities is not None:
+            result["outputModalities"] = obj.output_modalities
+        if obj.additional_properties is not None:
+            result["additionalProperties"] = obj.additional_properties
 
         if context is not None:
             result = context.process_dict(result)

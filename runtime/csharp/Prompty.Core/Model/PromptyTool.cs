@@ -9,11 +9,9 @@ namespace Prompty.Core;
 /// <summary>
 /// A tool that references another .prompty file to be invoked as a tool.
 /// 
-/// PromptyTool is always single-shot — the child prompty is loaded, rendered,
-/// and executed with a single LLM call (invoke). It does NOT run an agent loop.
-/// 
-/// Applications that need agentic sub-agent delegation should register
-/// `kind: function` tools that internally call `turn()` with their own TurnOptions.
+/// In `single` mode (default), the child prompty is loaded, rendered, and
+/// executed with a single LLM call (invoke). In `agentic` mode, the child
+/// runs as a sub-agent via `turn()` with its own tool-calling loop.
 /// </summary>
 public class PromptyTool : Tool
 {
@@ -40,6 +38,11 @@ public class PromptyTool : Tool
     /// Path to the child .prompty file, relative to the parent
     /// </summary>
     public string Path { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
+    /// </summary>
+    public string? Mode { get; set; }
 
 
     #region Load Methods
@@ -70,6 +73,11 @@ public class PromptyTool : Tool
         if (data.TryGetValue("path", out var pathValue) && pathValue is not null)
         {
             instance.Path = pathValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
+        {
+            instance.Mode = modeValue?.ToString()!;
         }
 
         if (context is not null)
@@ -111,6 +119,11 @@ public class PromptyTool : Tool
         if (obj.Path is not null)
         {
             result["path"] = obj.Path;
+        }
+
+        if (obj.Mode is not null)
+        {
+            result["mode"] = obj.Mode;
         }
 
 

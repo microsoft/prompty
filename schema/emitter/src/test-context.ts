@@ -6,7 +6,7 @@
  */
 
 import { TypeNode, PropertyValidation, TestExample, AlternateTest, BaseTestContext } from "./ast.js";
-import { getCombinations, scalarValue } from "./utilities.js";
+import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
 import * as YAML from "yaml";
 
 /**
@@ -228,7 +228,7 @@ export const csharpTestOptions: TestContextOptions = {
  * Python test context options.
  */
 export const pythonTestOptions: TestContextOptions = {
-  renderKey: (key: string) => key, // snake_case - already correct from TypeSpec
+  renderKey: (key: string) => toSnakeCase(key), // camelCase from TypeSpec → snake_case for Python
   renderBoolean: (val: boolean) => val ? "True" : "False",
   escapeString: (str: string) => str.replace(/\\/g, "\\\\").replace(/"/g, '\\"'),
   getDelimiter: (str: string) => str.includes('\n') ? '"""' : '"',

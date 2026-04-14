@@ -18,8 +18,8 @@ def test_load_json_connection():
     instance = Connection.load(data)
     assert instance is not None
     assert instance.kind == "reference"
-    assert instance.authenticationMode == "system"
-    assert instance.usageDescription == "This will allow the agent to respond to an email on your behalf"
+    assert instance.authentication_mode == "system"
+    assert instance.usage_description == "This will allow the agent to respond to an email on your behalf"
     
 
 def test_load_yaml_connection():
@@ -33,8 +33,8 @@ def test_load_yaml_connection():
     instance = Connection.load(data)
     assert instance is not None
     assert instance.kind == "reference"
-    assert instance.authenticationMode == "system"
-    assert instance.usageDescription == "This will allow the agent to respond to an email on your behalf"
+    assert instance.authentication_mode == "system"
+    assert instance.usage_description == "This will allow the agent to respond to an email on your behalf"
 
 def test_roundtrip_json_connection():
     """Test that load -> save -> load produces equivalent data."""
@@ -51,8 +51,8 @@ def test_roundtrip_json_connection():
     reloaded = Connection.load(saved_data)
     assert reloaded is not None
     assert reloaded.kind == "reference"
-    assert reloaded.authenticationMode == "system"
-    assert reloaded.usageDescription == "This will allow the agent to respond to an email on your behalf"
+    assert reloaded.authentication_mode == "system"
+    assert reloaded.usage_description == "This will allow the agent to respond to an email on your behalf"
 
 def test_to_json_connection():
     """Test that to_json produces valid JSON."""

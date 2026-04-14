@@ -29,9 +29,9 @@ def test_load_json_modelinfo():
     instance = ModelInfo.load(data)
     assert instance is not None
     assert instance.id == "gpt-4o"
-    assert instance.displayName == "GPT-4o"
-    assert instance.ownedBy == "openai"
-    assert instance.contextWindow == 128000
+    assert instance.display_name == "GPT-4o"
+    assert instance.owned_by == "openai"
+    assert instance.context_window == 128000
     
 
 def test_load_yaml_modelinfo():
@@ -53,9 +53,9 @@ def test_load_yaml_modelinfo():
     instance = ModelInfo.load(data)
     assert instance is not None
     assert instance.id == "gpt-4o"
-    assert instance.displayName == "GPT-4o"
-    assert instance.ownedBy == "openai"
-    assert instance.contextWindow == 128000
+    assert instance.display_name == "GPT-4o"
+    assert instance.owned_by == "openai"
+    assert instance.context_window == 128000
 
 def test_roundtrip_json_modelinfo():
     """Test that load -> save -> load produces equivalent data."""
@@ -83,9 +83,9 @@ def test_roundtrip_json_modelinfo():
     reloaded = ModelInfo.load(saved_data)
     assert reloaded is not None
     assert reloaded.id == "gpt-4o"
-    assert reloaded.displayName == "GPT-4o"
-    assert reloaded.ownedBy == "openai"
-    assert reloaded.contextWindow == 128000
+    assert reloaded.display_name == "GPT-4o"
+    assert reloaded.owned_by == "openai"
+    assert reloaded.context_window == 128000
 
 def test_to_json_modelinfo():
     """Test that to_json produces valid JSON."""

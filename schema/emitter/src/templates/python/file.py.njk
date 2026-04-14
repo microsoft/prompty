@@ -41,14 +41,14 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
     Attributes
     ----------
 {%- for prop in node.properties %}
-    {{ prop.name }} : {{ py.pythonType(prop, typeMapper) }}
+    {{ prop.name | snakeCase }} : {{ py.pythonType(prop, typeMapper) }}
         {{ prop.description }}
 {%- endfor %}
     """
 
     _shorthand_property: ClassVar[Optional[str]] = {% if classCtx.shorthandProperty %}"{{ classCtx.shorthandProperty }}"{% else %}None{% endif %}
 {% for prop in node.properties %}
-    {{ prop.name }}: {{ py.pythonType(prop, typeMapper) }}{{ py.defaultValue(prop, typeMapper) }}
+    {{ prop.name | snakeCase }}: {{ py.pythonType(prop, typeMapper) }}{{ py.defaultValue(prop, typeMapper) }}
 {%- endfor %}
 
     @staticmethod
@@ -75,7 +75,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
             raise ValueError(f"Invalid data for {{ node.typeName.name }}: {data}")
 {% if polymorphicTypes %}
         # load polymorphic {{ node.typeName.name }} instance
-        instance = {{ node.typeName.name }}.load_{{ node.discriminator }}(data, context)
+        instance = {{ node.typeName.name }}.load_{{ node.discriminator | snakeCase }}(data, context)
 {% else %}
         # create new instance
         instance = {{ node.typeName.name }}()
@@ -90,7 +90,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
 {% for collection in collectionTypes %}
 
     @staticmethod
-    def load_{{ collection.prop.name }}(data: dict | list, context: Optional[LoadContext]) -> list[{{ collection.prop.typeName.name }}]:
+    def load_{{ collection.prop.name | snakeCase }}(data: dict | list, context: Optional[LoadContext]) -> list[{{ collection.prop.typeName.name }}]:
         if isinstance(data, dict):
             # convert simple named {{ collection.prop.name }} to list of {{ collection.prop.typeName.name }}
             result = []
@@ -105,7 +105,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         return [{{ collection.prop.typeName.name }}.load(item, context) for item in data]
 
     @staticmethod
-    def save_{{ collection.prop.name }}(items: list[{{ collection.prop.typeName.name }}], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_{{ collection.prop.name | snakeCase }}(items: list[{{ collection.prop.typeName.name }}], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 {% if collection.hasNameProperty %}
@@ -140,7 +140,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
 {% if polymorphicTypes %}
 
     @staticmethod
-    def load_{{ node.discriminator }}(data: dict, context: Optional[LoadContext]) -> "{{ node.typeName.name }}":
+    def load_{{ node.discriminator | snakeCase }}(data: dict, context: Optional[LoadContext]) -> "{{ node.typeName.name }}":
         # load polymorphic {{ node.typeName.name }} instance
         if data is not None and "{{ node.discriminator }}" in data:
             discriminator_value = str(data["{{ node.discriminator }}"]).lower()
@@ -189,7 +189,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         result: dict[str, Any] = {}
 {%- endif %}
 {% for prop in node.properties %}
-        if obj.{{ prop.name }} is not None:
+        if obj.{{ prop.name | snakeCase }} is not None:
             {{ py.saveProperty(prop, "obj", "result", node.typeName.name) }}
 {%- endfor %}
 {% if not node.base %}
@@ -230,9 +230,9 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         instance = cls()
 {%- for prop in node.properties %}
 {%- if factory.sets[prop.name] is defined %}
-        instance.{{ prop.name }} = {{ py.factoryFieldValue(prop, factory.sets[prop.name]) }}
+        instance.{{ prop.name | snakeCase }} = {{ py.factoryFieldValue(prop, factory.sets[prop.name]) }}
 {%- elif prop.name in factory.params %}
-        instance.{{ prop.name }} = {{ prop.name | snakeCase }}
+        instance.{{ prop.name | snakeCase }} = {{ prop.name | snakeCase }}
 {%- endif %}
 {%- endfor %}
         return instance

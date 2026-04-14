@@ -9,6 +9,14 @@ properties:
   path:
     type: string
     description: Path to the child .prompty file, relative to the parent
+  mode:
+    anyOf:
+      - type: string
+        const: single
+      - type: string
+        const: agentic
+    default: single
+    description: Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
 required:
   - kind
   - path
@@ -17,8 +25,6 @@ allOf:
 description: |-
   A tool that references another .prompty file to be invoked as a tool.
 
-  PromptyTool is always single-shot — the child prompty is loaded, rendered,
-  and executed with a single LLM call (invoke). It does NOT run an agent loop.
-
-  Applications that need agentic sub-agent delegation should register
-  `kind: function` tools that internally call `turn()` with their own TurnOptions.
+  In `single` mode (default), the child prompty is loaded, rendered, and
+  executed with a single LLM call (invoke). In `agentic` mode, the child
+  runs as a sub-agent via `turn()` with its own tool-calling loop.

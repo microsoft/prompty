@@ -55,6 +55,7 @@ classDiagram
     class PromptyTool {
         +string kind
         +string path
+        +string mode
     }
     Tool <|-- PromptyTool
     class Binding {

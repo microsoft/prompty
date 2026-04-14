@@ -330,14 +330,14 @@ class ToolChunk(StreamChunk):
     ----------
     kind : str
         The kind identifier for tool chunks
-    toolCall : ToolCall
+    tool_call : ToolCall
         The tool call data
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="tool")
-    toolCall: ToolCall = field(default_factory=ToolCall)
+    tool_call: ToolCall = field(default_factory=ToolCall)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ToolChunk":
@@ -362,7 +362,7 @@ class ToolChunk(StreamChunk):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "toolCall" in data:
-            instance.toolCall = ToolCall.load(data["toolCall"], context)
+            instance.tool_call = ToolCall.load(data["toolCall"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -388,8 +388,8 @@ class ToolChunk(StreamChunk):
 
         if obj.kind is not None:
             result["kind"] = obj.kind
-        if obj.toolCall is not None:
-            result["toolCall"] = obj.toolCall.save(context)
+        if obj.tool_call is not None:
+            result["toolCall"] = obj.tool_call.save(context)
 
         return result
 

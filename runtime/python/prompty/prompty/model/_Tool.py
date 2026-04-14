@@ -445,13 +445,13 @@ class McpTool(Tool):
         The kind identifier for MCP tools
     connection : Connection
         The connection configuration for the MCP tool
-    serverName : str
+    server_name : str
         The server name of the MCP tool
-    serverDescription : Optional[str]
+    server_description : Optional[str]
         The description of the MCP tool
-    approvalMode : McpApprovalMode
+    approval_mode : McpApprovalMode
         The approval mode for the MCP tool
-    allowedTools : list[str]
+    allowed_tools : list[str]
         List of allowed operations or resources for the MCP tool
     """
 
@@ -459,10 +459,10 @@ class McpTool(Tool):
 
     kind: str = field(default="mcp")
     connection: Connection = field(default_factory=Connection)
-    serverName: str = field(default="")
-    serverDescription: str | None = None
-    approvalMode: McpApprovalMode = field(default_factory=McpApprovalMode)
-    allowedTools: list[str] = field(default_factory=list)
+    server_name: str = field(default="")
+    server_description: str | None = None
+    approval_mode: McpApprovalMode = field(default_factory=McpApprovalMode)
+    allowed_tools: list[str] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpTool":
@@ -489,13 +489,13 @@ class McpTool(Tool):
         if data is not None and "connection" in data:
             instance.connection = Connection.load(data["connection"], context)
         if data is not None and "serverName" in data:
-            instance.serverName = data["serverName"]
+            instance.server_name = data["serverName"]
         if data is not None and "serverDescription" in data:
-            instance.serverDescription = data["serverDescription"]
+            instance.server_description = data["serverDescription"]
         if data is not None and "approvalMode" in data:
-            instance.approvalMode = McpApprovalMode.load(data["approvalMode"], context)
+            instance.approval_mode = McpApprovalMode.load(data["approvalMode"], context)
         if data is not None and "allowedTools" in data:
-            instance.allowedTools = data["allowedTools"]
+            instance.allowed_tools = data["allowedTools"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -523,14 +523,14 @@ class McpTool(Tool):
             result["kind"] = obj.kind
         if obj.connection is not None:
             result["connection"] = obj.connection.save(context)
-        if obj.serverName is not None:
-            result["serverName"] = obj.serverName
-        if obj.serverDescription is not None:
-            result["serverDescription"] = obj.serverDescription
-        if obj.approvalMode is not None:
-            result["approvalMode"] = obj.approvalMode.save(context)
-        if obj.allowedTools is not None:
-            result["allowedTools"] = obj.allowedTools
+        if obj.server_name is not None:
+            result["serverName"] = obj.server_name
+        if obj.server_description is not None:
+            result["serverDescription"] = obj.server_description
+        if obj.approval_mode is not None:
+            result["approvalMode"] = obj.approval_mode.save(context)
+        if obj.allowed_tools is not None:
+            result["allowedTools"] = obj.allowed_tools
 
         return result
 
@@ -670,11 +670,9 @@ class OpenApiTool(Tool):
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
     
-    PromptyTool is always single-shot — the child prompty is loaded, rendered,
-    and executed with a single LLM call (invoke). It does NOT run an agent loop.
-    
-    Applications that need agentic sub-agent delegation should register
-    `kind: function` tools that internally call `turn()` with their own TurnOptions.
+    In `single` mode (default), the child prompty is loaded, rendered, and
+    executed with a single LLM call (invoke). In `agentic` mode, the child
+    runs as a sub-agent via `turn()` with its own tool-calling loop.
     
     Attributes
     ----------
@@ -682,12 +680,15 @@ class PromptyTool(Tool):
         The kind identifier for prompty tools
     path : str
         Path to the child .prompty file, relative to the parent
+    mode : Optional[str]
+        Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="prompty")
     path: str = field(default="")
+    mode: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PromptyTool":
@@ -713,6 +714,8 @@ class PromptyTool(Tool):
             instance.kind = data["kind"]
         if data is not None and "path" in data:
             instance.path = data["path"]
+        if data is not None and "mode" in data:
+            instance.mode = data["mode"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -740,6 +743,8 @@ class PromptyTool(Tool):
             result["kind"] = obj.kind
         if obj.path is not None:
             result["path"] = obj.path
+        if obj.mode is not None:
+            result["mode"] = obj.mode
 
         return result
 

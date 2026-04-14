@@ -27,7 +27,7 @@ class Prompty:
     ----------
     name : str
         Human-readable name of the prompt
-    displayName : Optional[str]
+    display_name : Optional[str]
         Display name for UI purposes
     description : Optional[str]
         Description of the prompt's purpose
@@ -50,7 +50,7 @@ class Prompty:
     _shorthand_property: ClassVar[str | None] = None
 
     name: str = field(default="")
-    displayName: str | None = None
+    display_name: str | None = None
     description: str | None = None
     metadata: dict[str, Any] | None = None
     inputs: list[Property] = field(default_factory=list)
@@ -83,7 +83,7 @@ class Prompty:
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "displayName" in data:
-            instance.displayName = data["displayName"]
+            instance.display_name = data["displayName"]
         if data is not None and "description" in data:
             instance.description = data["description"]
         if data is not None and "metadata" in data:
@@ -237,8 +237,8 @@ class Prompty:
 
         if obj.name is not None:
             result["name"] = obj.name
-        if obj.displayName is not None:
-            result["displayName"] = obj.displayName
+        if obj.display_name is not None:
+            result["displayName"] = obj.display_name
         if obj.description is not None:
             result["description"] = obj.description
         if obj.metadata is not None:

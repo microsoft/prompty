@@ -130,11 +130,11 @@ list[{{ baseType }}]
 #}
 {% macro setInstance(prop, varName, dictName, parentTypeName) %}
 {%- if prop.isScalar or prop.isDict -%}
-{{ varName }}.{{ prop.name }} = {{ dictName }}["{{ prop.name }}"]
+{{ varName }}.{{ prop.name | snakeCase }} = {{ dictName }}["{{ prop.name }}"]
 {%- elif prop.isCollection -%}
-{{ varName }}.{{ prop.name }} = {{ parentTypeName }}.load_{{ prop.name }}({{ dictName }}["{{ prop.name }}"], context)
+{{ varName }}.{{ prop.name | snakeCase }} = {{ parentTypeName }}.load_{{ prop.name | snakeCase }}({{ dictName }}["{{ prop.name }}"], context)
 {%- else -%}
-{{ varName }}.{{ prop.name }} = {{ prop.typeName.name }}.load({{ dictName }}["{{ prop.name }}"], context)
+{{ varName }}.{{ prop.name | snakeCase }} = {{ prop.typeName.name }}.load({{ dictName }}["{{ prop.name }}"], context)
 {%- endif -%}
 {% endmacro %}
 
@@ -159,11 +159,11 @@ list[{{ baseType }}]
 #}
 {% macro saveProperty(prop, varName, dictName, parentTypeName) %}
 {%- if prop.isScalar or prop.isDict -%}
-{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name }}
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name | snakeCase }}
 {%- elif prop.isCollection -%}
-{{ dictName }}["{{ prop.name }}"] = {{ parentTypeName }}.save_{{ prop.name }}({{ varName }}.{{ prop.name }}, context)
+{{ dictName }}["{{ prop.name }}"] = {{ parentTypeName }}.save_{{ prop.name | snakeCase }}({{ varName }}.{{ prop.name | snakeCase }}, context)
 {%- else -%}
-{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name }}.save(context)
+{{ dictName }}["{{ prop.name }}"] = {{ varName }}.{{ prop.name | snakeCase }}.save(context)
 {%- endif -%}
 {% endmacro %}
 
@@ -207,7 +207,7 @@ list[{{ baseType }}]
     Attributes
     ----------
 {%- for prop in properties %}
-    {{ prop.name }} : {{ pythonType(prop, typeMapper) }}
+    {{ prop.name | snakeCase }} : {{ pythonType(prop, typeMapper) }}
         {{ prop.description }}
 {%- endfor %}
 {%- endif %}

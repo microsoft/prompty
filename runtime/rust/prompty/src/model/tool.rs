@@ -45,6 +45,8 @@ pub enum ToolKind {
     Prompty {
         /// Path to the child .prompty file, relative to the parent
         path: String,
+        /// Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
+        mode: Option<String>,
     },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
@@ -121,6 +123,7 @@ impl Tool {
             },
             "prompty" => ToolKind::Prompty {
                 path: value.get("path").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                mode: value.get("mode").and_then(|v| v.as_str()).map(|s| s.to_string()),
             },
             _ => ToolKind::Custom {
                 connection: value.get("connection").cloned().unwrap_or(serde_json::Value::Null),
@@ -202,9 +205,12 @@ impl Tool {
             result.insert("specification".to_string(), serde_json::Value::String(specification.clone()));
         }
             }
-            ToolKind::Prompty { path,  .. } => {
+            ToolKind::Prompty { path, mode,  .. } => {
                 if !path.is_empty() {
             result.insert("path".to_string(), serde_json::Value::String(path.clone()));
+        }
+                if let Some(val) = mode {
+            result.insert("mode".to_string(), serde_json::Value::String(val.clone()));
         }
             }
             ToolKind::Custom { connection, options, kind_name: _, .. } => {

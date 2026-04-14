@@ -20,17 +20,17 @@ class McpApprovalMode:
     ----------
     kind : str
         The approval mode: 'always', 'never', or 'specify'
-    alwaysRequireApprovalTools : list[str]
+    always_require_approval_tools : list[str]
         List of tools that always require approval (only used when kind is 'specify')
-    neverRequireApprovalTools : list[str]
+    never_require_approval_tools : list[str]
         List of tools that never require approval (only used when kind is 'specify')
     """
 
     _shorthand_property: ClassVar[str | None] = "kind"
 
     kind: str = field(default="")
-    alwaysRequireApprovalTools: list[str] = field(default_factory=list)
-    neverRequireApprovalTools: list[str] = field(default_factory=list)
+    always_require_approval_tools: list[str] = field(default_factory=list)
+    never_require_approval_tools: list[str] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpApprovalMode":
@@ -59,9 +59,9 @@ class McpApprovalMode:
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "alwaysRequireApprovalTools" in data:
-            instance.alwaysRequireApprovalTools = data["alwaysRequireApprovalTools"]
+            instance.always_require_approval_tools = data["alwaysRequireApprovalTools"]
         if data is not None and "neverRequireApprovalTools" in data:
-            instance.neverRequireApprovalTools = data["neverRequireApprovalTools"]
+            instance.never_require_approval_tools = data["neverRequireApprovalTools"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -85,10 +85,10 @@ class McpApprovalMode:
 
         if obj.kind is not None:
             result["kind"] = obj.kind
-        if obj.alwaysRequireApprovalTools is not None:
-            result["alwaysRequireApprovalTools"] = obj.alwaysRequireApprovalTools
-        if obj.neverRequireApprovalTools is not None:
-            result["neverRequireApprovalTools"] = obj.neverRequireApprovalTools
+        if obj.always_require_approval_tools is not None:
+            result["alwaysRequireApprovalTools"] = obj.always_require_approval_tools
+        if obj.never_require_approval_tools is not None:
+            result["neverRequireApprovalTools"] = obj.never_require_approval_tools
 
         if context is not None:
             result = context.process_dict(result)

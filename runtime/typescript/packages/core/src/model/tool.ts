@@ -1047,11 +1047,9 @@ export class OpenApiTool extends Tool {
 /**
  * A tool that references another .prompty file to be invoked as a tool.
  *
- * PromptyTool is always single-shot — the child prompty is loaded, rendered,
- * and executed with a single LLM call (invoke). It does NOT run an agent loop.
- *
- * Applications that need agentic sub-agent delegation should register
- * `kind: function` tools that internally call `turn()` with their own TurnOptions.
+ * In `single` mode (default), the child prompty is loaded, rendered, and
+ * executed with a single LLM call (invoke). In `agentic` mode, the child
+ * runs as a sub-agent via `turn()` with its own tool-calling loop.
  *
  */
 export class PromptyTool extends Tool {
@@ -1071,6 +1069,11 @@ export class PromptyTool extends Tool {
   path: string = "";
 
   /**
+   * Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
+   */
+  mode?: string | undefined;
+
+  /**
    * Initializes a new instance of PromptyTool.
    */
   constructor(init?: Partial<PromptyTool>) {
@@ -1079,6 +1082,10 @@ export class PromptyTool extends Tool {
     this.kind = init?.kind ?? "prompty";
 
     this.path = init?.path ?? "";
+
+    if (init?.mode !== undefined) {
+      this.mode = init.mode;
+    }
   }
 
   //#region Load Methods
@@ -1108,6 +1115,10 @@ export class PromptyTool extends Tool {
       instance.path = String(data["path"]);
     }
 
+    if (data["mode"] !== undefined && data["mode"] !== null) {
+      instance.mode = String(data["mode"]);
+    }
+
     if (context) {
       return context.processOutput(instance) as PromptyTool;
     }
@@ -1135,6 +1146,10 @@ export class PromptyTool extends Tool {
 
     if (obj.path !== undefined && obj.path !== null) {
       result["path"] = obj.path;
+    }
+
+    if (obj.mode !== undefined && obj.mode !== null) {
+      result["mode"] = obj.mode;
     }
 
     return result;
