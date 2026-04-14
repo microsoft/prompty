@@ -562,7 +562,7 @@ class TestAgentLoopExtensions:
 
         mock_exec.side_effect = capturing_executor
 
-        g = Guardrails(input=lambda msgs: GuardrailResult.rewrite(rewritten))
+        g = Guardrails(input=lambda msgs: GuardrailResult.create_rewrite(rewritten))
         agent = _make_agent()
 
         turn(agent, {}, tools={}, guardrails=g)
@@ -595,7 +595,7 @@ class TestAgentLoopExtensions:
         to be returned instead of the original."""
         mock_exec.return_value = _mock_final_response("original response")
         agent = _make_agent()
-        g = Guardrails(output=lambda msg: GuardrailResult.rewrite("sanitized response"))
+        g = Guardrails(output=lambda msg: GuardrailResult.create_rewrite("sanitized response"))
 
         result = turn(agent, {}, tools={}, guardrails=g)
         assert result == "sanitized response"
@@ -618,7 +618,7 @@ class TestAgentLoopExtensions:
             return "Sunny"
 
         g = Guardrails(
-            tool=lambda name, args: GuardrailResult.rewrite({"location": "REWRITTEN_CITY"})
+            tool=lambda name, args: GuardrailResult.create_rewrite({"location": "REWRITTEN_CITY"})
         )
 
         turn(

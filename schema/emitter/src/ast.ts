@@ -619,6 +619,8 @@ export interface PythonClassContext {
   collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
   /** The property name that can be used as a shorthand scalar representation */
   shorthandProperty: string | null;
+  /** Maps factory.name → safe Python method name (prefixed with create_ on field collision) */
+  factoryNameMap: Record<string, string>;
 }
 
 /**

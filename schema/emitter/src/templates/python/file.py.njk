@@ -225,7 +225,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
 {% if node.factories.length > 0 %}
 {% for factory in node.factories %}
     @classmethod
-    def {{ factory.name | snakeCase }}(cls{% for pName, pType in factory.params %}, {{ pName | snakeCase }}: {{ py.factoryParamType(pType) }}{% endfor %}) -> "{{ node.typeName.name }}":
+    def {{ classCtx.factoryNameMap[factory.name] }}(cls{% for pName, pType in factory.params %}, {{ pName | snakeCase }}: {{ py.factoryParamType(pType) }}{% endfor %}) -> "{{ node.typeName.name }}":
         """Create a {{ node.typeName.name }} with preset field values."""
         instance = cls()
 {%- for prop in node.properties %}

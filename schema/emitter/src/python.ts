@@ -176,6 +176,16 @@ function findPythonProjectRoot(startDir: string): string | undefined {
  * Build context for rendering a single Python class.
  */
 function buildClassContext(node: TypeNode): PythonClassContext {
+  // Pre-compute safe factory method names to avoid field/classmethod collisions.
+  // In Python, a @classmethod with the same name as a dataclass field shadows the
+  // field's default value. If collision detected, prefix with "create_".
+  const fieldNames = new Set(node.properties.map(p => toSnakeCase(p.name)));
+  const factoryNameMap: Record<string, string> = {};
+  for (const factory of node.factories) {
+    const snakeName = toSnakeCase(factory.name);
+    factoryNameMap[factory.name] = fieldNames.has(snakeName) ? `create_${snakeName}` : snakeName;
+  }
+
   return {
     node,
     typeMapper: pythonTypeMapper,
@@ -184,6 +194,7 @@ function buildClassContext(node: TypeNode): PythonClassContext {
     imports: getUniqueImportTypes(node),
     collectionTypes: getCollectionTypes(node),
     shorthandProperty: getShorthandProperty(node),
+    factoryNameMap,
   };
 }
 
