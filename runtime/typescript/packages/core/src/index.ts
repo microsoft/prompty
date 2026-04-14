@@ -21,7 +21,7 @@ export {
   type FilePart,
   type AudioPart,
   type Role,
-  type ToolCall,
+  ToolCall,
   Message,
   ThreadMarker,
   PromptyStream,

@@ -7,7 +7,7 @@ use super::context::{LoadContext, SaveContext};
 
 
 /// A tool call requested by the LLM. Contains the function name and serialized arguments that should be dispatched to the appropriate tool handler.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct ToolCall {
     /// The unique identifier of the tool call
     pub id: String,

@@ -97,17 +97,10 @@ pub struct AudioPart {
 }
 
 // ---------------------------------------------------------------------------
-// ToolCall
+// ToolCall — re-exported from generated model
 // ---------------------------------------------------------------------------
 
-/// A tool call returned by the LLM (spec §6.5.4).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ToolCall {
-    pub id: String,
-    pub name: String,
-    /// JSON-encoded arguments string.
-    pub arguments: String,
-}
+pub use crate::model::ToolCall;
 
 // ---------------------------------------------------------------------------
 // ThreadMarker

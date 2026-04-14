@@ -10,23 +10,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator, Iterator
-from dataclasses import dataclass
 from typing import Any
 
 from ...core.structured import StructuredResult
-from ...model import Prompty
+from ...model import Prompty, ToolCall
 from ...tracing.tracer import trace
 
 __all__ = ["OpenAIProcessor", "ToolCall"]
-
-
-@dataclass
-class ToolCall:
-    """Represents a tool call extracted from an LLM response."""
-
-    id: str
-    name: str
-    arguments: str
 
 
 class OpenAIProcessor:

@@ -203,6 +203,7 @@ from .model import (
     SaveContext,
     Template,
     Tool,
+    ToolCall,
 )
 
 # Concrete invokers
@@ -214,7 +215,7 @@ from .providers.anthropic.processor import AnthropicProcessor
 from .providers.foundry.executor import FoundryExecutor
 from .providers.foundry.processor import FoundryProcessor
 from .providers.openai.executor import OpenAIExecutor
-from .providers.openai.processor import OpenAIProcessor, ToolCall
+from .providers.openai.processor import OpenAIProcessor
 from .renderers import Jinja2Renderer, MustacheRenderer
 
 # Tracing

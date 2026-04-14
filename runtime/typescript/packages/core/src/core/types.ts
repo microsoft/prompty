@@ -139,15 +139,10 @@ export class ThreadMarker {
 }
 
 // ---------------------------------------------------------------------------
-// ToolCall
+// ToolCall (re-exported from generated model)
 // ---------------------------------------------------------------------------
 
-/** Represents a tool call extracted from an LLM response. */
-export interface ToolCall {
-  id: string;
-  name: string;
-  arguments: string;
-}
+export { ToolCall } from "../model/tool-call.js";
 
 // ---------------------------------------------------------------------------
 // Rich Input Kinds
