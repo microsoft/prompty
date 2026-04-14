@@ -266,7 +266,7 @@ public class GuardrailsTests
     {
         List<Message>? capturedMessages = null;
         var guard = new Guardrails(
-            input: msgs => { capturedMessages = msgs; return new GuardrailResult(false, "blocked"); });
+            input: msgs => { capturedMessages = msgs; return GuardrailResult.Deny("blocked"); });
 
         var messages = new List<Message>
         {
@@ -285,7 +285,7 @@ public class GuardrailsTests
     {
         Message? capturedMessage = null;
         var guard = new Guardrails(
-            output: msg => { capturedMessage = msg; return new GuardrailResult(true); });
+            output: msg => { capturedMessage = msg; return GuardrailResult.Allow(); });
 
         var msg = new Message { Role = "assistant", Parts = [new TextPart { Value = "response" }] };
 
@@ -305,7 +305,7 @@ public class GuardrailsTests
             {
                 capturedName = name;
                 capturedArgs = args;
-                return new GuardrailResult(false, "tool not allowed");
+                return GuardrailResult.Deny("tool not allowed");
             });
 
         var args = new Dictionary<string, object?> { ["city"] = "Seattle" };

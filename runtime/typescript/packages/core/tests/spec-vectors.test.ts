@@ -47,6 +47,7 @@ import {
   clearCache,
   CancelledError,
   Guardrails,
+  GuardrailResult,
   Steering,
   type Executor,
   type Processor,
@@ -1250,18 +1251,18 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
           if (grSpec.input) {
             if (grSpec.input.action === "deny") {
               const reason = grSpec.input.reason ?? "Denied";
-              grOpts.input = (_msgs: Message[]) => ({ allowed: false, reason });
+              grOpts.input = (_msgs: Message[]) => GuardrailResult.deny(reason);
             } else {
-              grOpts.input = (_msgs: Message[]) => ({ allowed: true });
+              grOpts.input = (_msgs: Message[]) => GuardrailResult.allow();
             }
           }
 
           if (grSpec.output) {
             if (grSpec.output.action === "deny") {
               const reason = grSpec.output.reason ?? "Denied";
-              grOpts.output = (_msg: Message) => ({ allowed: false, reason });
+              grOpts.output = (_msg: Message) => GuardrailResult.deny(reason);
             } else {
-              grOpts.output = (_msg: Message) => ({ allowed: true });
+              grOpts.output = (_msg: Message) => GuardrailResult.allow();
             }
           }
 
@@ -1269,7 +1270,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
             const denyList: string[] = grSpec.tool.deny_tools ?? [];
             const denyReason = grSpec.tool.reason ?? "Tool denied";
             grOpts.tool = (name: string, _args: Record<string, unknown>) =>
-              denyList.includes(name) ? { allowed: false, reason: denyReason } : { allowed: true };
+              denyList.includes(name) ? GuardrailResult.deny(denyReason) : GuardrailResult.allow();
           }
 
           opts.guardrails = new Guardrails(grOpts as any);

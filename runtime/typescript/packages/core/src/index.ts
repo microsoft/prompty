@@ -81,7 +81,7 @@ export {
   summarizeDropped,
   trimToContextWindow,
   formatDroppedMessages,
-  type GuardrailResult,
+  GuardrailResult,
   GuardrailError,
   type InputGuardrail,
   type OutputGuardrail,

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { emitEvent, type EventCallback, type AgentEventType } from "../src/core/agent-events.js";
 import { checkCancellation, CancelledError } from "../src/core/cancellation.js";
 import { estimateChars, summarizeDropped, trimToContextWindow } from "../src/core/context.js";
-import { Guardrails, GuardrailError } from "../src/core/guardrails.js";
+import { Guardrails, GuardrailError, GuardrailResult } from "../src/core/guardrails.js";
 import { Steering } from "../src/core/steering.js";
 import { Message, text } from "../src/core/types.js";
 import { turn } from "../src/core/pipeline.js";
@@ -188,52 +188,50 @@ describe("trimToContextWindow", () => {
 describe("Guardrails", () => {
   it("with no hooks always allows", () => {
     const g = new Guardrails();
-    expect(g.checkInput([new Message("user", [text("hi")])])).toEqual({ allowed: true });
-    expect(g.checkOutput(new Message("assistant", [text("ok")]))).toEqual({ allowed: true });
-    expect(g.checkTool("fn", {})).toEqual({ allowed: true });
+    expect(g.checkInput([new Message("user", [text("hi")])])).toEqual(GuardrailResult.allow());
+    expect(g.checkOutput(new Message("assistant", [text("ok")]))).toEqual(GuardrailResult.allow());
+    expect(g.checkTool("fn", {})).toEqual(GuardrailResult.allow());
   });
 
   it("checkInput calls input hook and returns result", () => {
     const g = new Guardrails({
       input: (msgs) => {
         if (msgs.some((m) => m.text.includes("bad"))) {
-          return { allowed: false, reason: "bad input" };
+          return GuardrailResult.deny("bad input");
         }
-        return { allowed: true };
+        return GuardrailResult.allow();
       },
     });
-    expect(g.checkInput([new Message("user", [text("hello")])])).toEqual({ allowed: true });
-    expect(g.checkInput([new Message("user", [text("bad stuff")])])).toEqual({
-      allowed: false,
-      reason: "bad input",
-    });
+    expect(g.checkInput([new Message("user", [text("hello")])])).toEqual(GuardrailResult.allow());
+    expect(g.checkInput([new Message("user", [text("bad stuff")])])).toEqual(
+      GuardrailResult.deny("bad input"),
+    );
   });
 
   it("checkOutput calls output hook and returns result", () => {
     const g = new Guardrails({
       output: (msg) => {
         if (msg.text.includes("secret")) {
-          return { allowed: false, reason: "leaked secret" };
+          return GuardrailResult.deny("leaked secret");
         }
-        return { allowed: true };
+        return GuardrailResult.allow();
       },
     });
-    expect(g.checkOutput(new Message("assistant", [text("fine")]))).toEqual({ allowed: true });
-    expect(g.checkOutput(new Message("assistant", [text("the secret is...")]))).toEqual({
-      allowed: false,
-      reason: "leaked secret",
-    });
+    expect(g.checkOutput(new Message("assistant", [text("fine")]))).toEqual(GuardrailResult.allow());
+    expect(g.checkOutput(new Message("assistant", [text("the secret is...")]))).toEqual(
+      GuardrailResult.deny("leaked secret"),
+    );
   });
 
   it("checkTool calls tool hook and returns result", () => {
     const g = new Guardrails({
       tool: (name, _args) => {
-        if (name === "dangerous") return { allowed: false, reason: "blocked tool" };
-        return { allowed: true };
+        if (name === "dangerous") return GuardrailResult.deny("blocked tool");
+        return GuardrailResult.allow();
       },
     });
-    expect(g.checkTool("safe_fn", {})).toEqual({ allowed: true });
-    expect(g.checkTool("dangerous", {})).toEqual({ allowed: false, reason: "blocked tool" });
+    expect(g.checkTool("safe_fn", {})).toEqual(GuardrailResult.allow());
+    expect(g.checkTool("dangerous", {})).toEqual(GuardrailResult.deny("blocked tool"));
   });
 });
 
@@ -431,7 +429,7 @@ describe("turn integration", () => {
   // ---- §13.4 Input guardrail: first-turn denial ----
   it("input guardrail denial prevents executor call", async () => {
     const guardrails = new Guardrails({
-      input: () => ({ allowed: false, reason: "policy violation" }),
+      input: () => GuardrailResult.deny("policy violation"),
     });
 
     const agent = makeTestAgent();
@@ -500,7 +498,7 @@ describe("turn integration", () => {
   it("input guardrail rewrite replaces messages sent to executor", async () => {
     const replacement = [new Message("user", [text("Rewritten input")])];
     const guardrails = new Guardrails({
-      input: () => ({ allowed: true, rewrite: replacement }),
+      input: () => GuardrailResult.rewrite(replacement),
     });
 
     const agent = makeTestAgent();
@@ -515,9 +513,9 @@ describe("turn integration", () => {
     const guardrails = new Guardrails({
       output: (msg) => {
         if (msg.text.includes("42")) {
-          return { allowed: false, reason: "forbidden number" };
+          return GuardrailResult.deny("forbidden number");
         }
-        return { allowed: true };
+        return GuardrailResult.allow();
       },
     });
 
@@ -530,7 +528,7 @@ describe("turn integration", () => {
   // ---- §13.4 Output guardrail: rewrite on final response ----
   it("output guardrail rewrites final response", async () => {
     const guardrails = new Guardrails({
-      output: () => ({ allowed: true, rewrite: "Redacted answer" }),
+      output: () => GuardrailResult.rewrite("Redacted answer"),
     });
 
     const agent = makeTestAgent();
@@ -560,9 +558,9 @@ describe("turn integration", () => {
     const guardrails = new Guardrails({
       tool: (name, args) => {
         if (name === "get_weather") {
-          return { allowed: true, rewrite: { city: "Portland" } };
+          return GuardrailResult.rewrite({ city: "Portland" });
         }
-        return { allowed: true };
+        return GuardrailResult.allow();
       },
     });
 

@@ -198,7 +198,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            input: _ => new GuardrailResult(false, "blocked by policy"));
+            input: _ => GuardrailResult.Deny("blocked by policy"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
             Pipeline.TurnAsync(agent, guardrails: guardrails));
@@ -282,7 +282,7 @@ public class AgentLoopIntegrationTests : IDisposable
         };
 
         var guardrails = new Guardrails(
-            input: _ => new GuardrailResult(true, Rewrite: rewritten));
+            input: _ => GuardrailResult.CreateRewrite(rewritten));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -307,7 +307,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            output: msg => new GuardrailResult(false, "output policy violation"));
+            output: msg => GuardrailResult.Deny("output policy violation"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
             Pipeline.TurnAsync(agent, guardrails: guardrails));
@@ -327,7 +327,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            output: _ => new GuardrailResult(true, Rewrite: "redacted answer"));
+            output: _ => GuardrailResult.CreateRewrite("redacted answer"));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -367,7 +367,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var rewrittenArgs = new Dictionary<string, object?> { ["city"] = "Seattle" };
         var guardrails = new Guardrails(
-            tool: (name, args) => new GuardrailResult(true, Rewrite: rewrittenArgs));
+            tool: (name, args) => GuardrailResult.CreateRewrite(rewrittenArgs));
 
         var result = await Pipeline.TurnAsync(agent, tools: tools, guardrails: guardrails);
 

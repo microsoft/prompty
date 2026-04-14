@@ -32,6 +32,12 @@ class GuardrailResult:
     reason: str | None = None
     rewrite: Any | None = None
 
+    def __post_init__(self) -> None:
+        # The @classmethod 'rewrite' shadows the dataclass field default,
+        # causing the default value to be the bound method instead of None.
+        if callable(self.rewrite):
+            self.rewrite = None
+
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "GuardrailResult":
         """Load a GuardrailResult instance.

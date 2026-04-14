@@ -12,9 +12,9 @@ All guardrails are optional. When not set, execution proceeds normally.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
+from ..model import GuardrailResult
 from .types import Message
 
 __all__ = [
@@ -32,28 +32,6 @@ class GuardrailError(Exception):
         super().__init__(f"Guardrail denied: {reason}")
 
 
-@dataclass
-class GuardrailResult:
-    """Result of a guardrail check.
-
-    Attributes
-    ----------
-    allowed:
-        Whether the operation is allowed.
-    reason:
-        Required when ``allowed`` is ``False`` — explains the denial.
-    rewrite:
-        Optional rewritten content when ``allowed`` is ``True``.
-        For input guardrails: replacement message list.
-        For output guardrails: replacement assistant content.
-        For tool guardrails: replacement tool arguments dict.
-    """
-
-    allowed: bool
-    reason: str | None = None
-    rewrite: Any | None = None
-
-
 # Callback signatures for the three guardrail hooks
 InputGuardrail = Callable[[list[Message]], GuardrailResult]
 OutputGuardrail = Callable[[Message], GuardrailResult]
@@ -66,8 +44,8 @@ class Guardrails:
     Example
     -------
     >>> guardrails = Guardrails(
-    ...     input=lambda msgs: GuardrailResult(allowed=len(msgs) < 100, reason="Too many messages"),
-    ...     tool=lambda name, args: GuardrailResult(allowed=name != "dangerous", reason="Blocked"),
+    ...     input=lambda msgs: GuardrailResult.allow() if len(msgs) < 100 else GuardrailResult.deny("Too many messages"),
+    ...     tool=lambda name, args: GuardrailResult.deny("Blocked") if name == "dangerous" else GuardrailResult.allow(),
     ... )
     """
 
@@ -85,17 +63,17 @@ class Guardrails:
     def check_input(self, messages: list[Message]) -> GuardrailResult:
         """Check input guardrail.  Returns allowed if no guardrail set."""
         if self.input is None:
-            return GuardrailResult(allowed=True)
+            return GuardrailResult.allow()
         return self.input(messages)
 
     def check_output(self, message: Message) -> GuardrailResult:
         """Check output guardrail.  Returns allowed if no guardrail set."""
         if self.output is None:
-            return GuardrailResult(allowed=True)
+            return GuardrailResult.allow()
         return self.output(message)
 
     def check_tool(self, name: str, arguments: dict[str, Any]) -> GuardrailResult:
         """Check tool guardrail.  Returns allowed if no guardrail set."""
         if self.tool is None:
-            return GuardrailResult(allowed=True)
+            return GuardrailResult.allow()
         return self.tool(name, arguments)

@@ -699,7 +699,7 @@ export async function turn<T = unknown>(
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
-        if (result.rewrite) messages = result.rewrite;
+        if (result.rewrite) messages = result.rewrite as Message[];
       }
 
       // §13.2 — Check cancellation before LLM call
@@ -792,7 +792,7 @@ export async function turn<T = unknown>(
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
-        if (result.rewrite) messages = result.rewrite;
+        if (result.rewrite) messages = result.rewrite as Message[];
       }
 
       // §13.2 — Check cancellation before LLM call

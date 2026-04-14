@@ -34,7 +34,7 @@ export { type AgentEventType, type EventCallback, emitEvent } from "./agent-even
 export { CancelledError, checkCancellation } from "./cancellation.js";
 export { estimateChars, summarizeDropped, trimToContextWindow, formatDroppedMessages } from "./context.js";
 export {
-  type GuardrailResult,
+  GuardrailResult,
   GuardrailError,
   type InputGuardrail,
   type OutputGuardrail,

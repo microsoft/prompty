@@ -339,13 +339,13 @@ public class SpecVectorAgentTests : IDisposable
             {
                 var action = ig.TryGetProperty("action", out var actProp) ? actProp.GetString() : "allow";
                 var reason = ig.TryGetProperty("reason", out var rp) ? rp.GetString() : null;
-                inputGuard = _ => new GuardrailResult(action != "deny", reason);
+                inputGuard = _ => new GuardrailResult { Allowed = action != "deny", Reason = reason };
             }
             if (guardProp.TryGetProperty("output", out var og))
             {
                 var action = og.TryGetProperty("action", out var actProp) ? actProp.GetString() : "allow";
                 var reason = og.TryGetProperty("reason", out var rp) ? rp.GetString() : null;
-                outputGuard = _ => new GuardrailResult(action != "deny", reason);
+                outputGuard = _ => new GuardrailResult { Allowed = action != "deny", Reason = reason };
             }
             if (guardProp.TryGetProperty("tool", out var tg))
             {
@@ -355,8 +355,8 @@ public class SpecVectorAgentTests : IDisposable
                         denyTools.Add(d.GetString()!);
                 var reason = tg.TryGetProperty("reason", out var rp) ? rp.GetString() : "Tool denied";
                 toolGuard = (name, _) => denyTools.Contains(name)
-                    ? new GuardrailResult(false, reason)
-                    : new GuardrailResult(true);
+                    ? GuardrailResult.Deny(reason ?? "Tool denied")
+                    : GuardrailResult.Allow();
             }
 
             guardrails = new Guardrails(input: inputGuard, output: outputGuard, tool: toolGuard);

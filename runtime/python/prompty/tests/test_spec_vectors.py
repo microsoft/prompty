@@ -1545,11 +1545,11 @@ def test_agent_extension_vector(vec: dict):
                         reason = ig.get("reason", "Denied")
 
                         def input_hook(msgs: Any, _r: str = reason) -> GuardrailResult:
-                            return GuardrailResult(allowed=False, reason=_r)
+                            return GuardrailResult.deny(_r)
                     else:
 
                         def input_hook(msgs: Any) -> GuardrailResult:
-                            return GuardrailResult(allowed=True)
+                            return GuardrailResult.allow()
 
                 if "output" in gr_spec:
                     og = gr_spec["output"]
@@ -1557,11 +1557,11 @@ def test_agent_extension_vector(vec: dict):
                         reason = og.get("reason", "Denied")
 
                         def output_hook(msg: Any, _r: str = reason) -> GuardrailResult:
-                            return GuardrailResult(allowed=False, reason=_r)
+                            return GuardrailResult.deny(_r)
                     else:
 
                         def output_hook(msg: Any) -> GuardrailResult:
-                            return GuardrailResult(allowed=True)
+                            return GuardrailResult.allow()
 
                 if "tool" in gr_spec:
                     tg = gr_spec["tool"]
@@ -1569,7 +1569,7 @@ def test_agent_extension_vector(vec: dict):
                     deny_reason = tg.get("reason", "Tool denied")
 
                     def tool_hook(n: str, a: Any, _dl: list = deny_list, _dr: str = deny_reason) -> GuardrailResult:
-                        return GuardrailResult(allowed=False, reason=_dr) if n in _dl else GuardrailResult(allowed=True)
+                        return GuardrailResult.deny(_dr) if n in _dl else GuardrailResult.allow()
 
                 ext_kwargs["guardrails"] = Guardrails(input=input_hook, output=output_hook, tool=tool_hook)
 
