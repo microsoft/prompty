@@ -1,6 +1,6 @@
 [package]
 name = "prompty-openai"
-version = "2.0.0-alpha.9"
+version = "2.0.0-alpha.10"
 edition = "2024"
 rust-version = "1.85"
 description = "OpenAI provider for Prompty"
@@ -12,7 +12,7 @@ keywords = ["llm", "prompt", "openai", "ai"]
 categories = ["development-tools"]
 
 [dependencies]
-prompty = { version = "2.0.0-alpha.9", path = "../prompty" }
+prompty = { version = "2.0.0-alpha.10", path = "../prompty" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1"
