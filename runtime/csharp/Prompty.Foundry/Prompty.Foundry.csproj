@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <NoWarn>OPENAI001;CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>2.0.0-alpha.8</Version>
+    <Version>2.0.0-alpha.10</Version>
     <PackageId>Prompty.Foundry</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Microsoft Foundry (Azure OpenAI) provider for Prompty — executor and processor for Azure-hosted models.</Description>
