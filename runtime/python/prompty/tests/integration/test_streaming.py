@@ -42,9 +42,9 @@ class TestOpenAIStreaming:
         # Force streaming by setting the stream option
         assert agent.model is not None
         assert agent.model.options is not None
-        if agent.model.options.additionalProperties is None:
-            agent.model.options.additionalProperties = {}
-        agent.model.options.additionalProperties["stream"] = True
+        if agent.model.options.additional_properties is None:
+            agent.model.options.additional_properties = {}
+        agent.model.options.additional_properties["stream"] = True
 
         messages = _chat_messages()
         response = self.executor.execute(agent, messages)
@@ -65,9 +65,9 @@ class TestOpenAIStreaming:
         )
         assert agent.model is not None
         assert agent.model.options is not None
-        if agent.model.options.additionalProperties is None:
-            agent.model.options.additionalProperties = {}
-        agent.model.options.additionalProperties["stream"] = True
+        if agent.model.options.additional_properties is None:
+            agent.model.options.additional_properties = {}
+        agent.model.options.additional_properties["stream"] = True
 
         messages = _chat_messages()
         response = await self.executor.execute_async(agent, messages)
@@ -96,9 +96,9 @@ class TestFoundryStreaming:
         )
         assert agent.model is not None
         assert agent.model.options is not None
-        if agent.model.options.additionalProperties is None:
-            agent.model.options.additionalProperties = {}
-        agent.model.options.additionalProperties["stream"] = True
+        if agent.model.options.additional_properties is None:
+            agent.model.options.additional_properties = {}
+        agent.model.options.additional_properties["stream"] = True
 
         messages = _chat_messages()
         response = self.executor.execute(agent, messages)
