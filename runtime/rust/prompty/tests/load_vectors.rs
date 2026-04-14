@@ -427,12 +427,9 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 );
             }
         }
-        prompty::model::tool::ToolKind::Prompty { path, mode, .. } => {
+        prompty::model::tool::ToolKind::Prompty { path, .. } => {
             if let Some(p) = expected.get("path").and_then(Value::as_str) {
                 assert_eq!(path, p, "[{vec_name}] tool[{idx}].path");
-            }
-            if let Some(m) = expected.get("mode").and_then(Value::as_str) {
-                assert_eq!(mode, m, "[{vec_name}] tool[{idx}].mode");
             }
         }
         prompty::model::tool::ToolKind::Custom { .. } => {

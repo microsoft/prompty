@@ -5,10 +5,9 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-
 
 
 @dataclass
@@ -27,14 +26,14 @@ class GuardrailResult:
         Optional rewritten content to replace the original
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     allowed: bool = field(default=False)
-    reason: Optional[str] = None
-    rewrite: Optional[Any] = None
+    reason: str | None = None
+    rewrite: Any | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "GuardrailResult":
+    def load(data: Any, context: LoadContext | None = None) -> "GuardrailResult":
         """Load a GuardrailResult instance.
         Args:
             data (Any): The data to load the instance from.
@@ -65,7 +64,7 @@ class GuardrailResult:
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the GuardrailResult instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -91,7 +90,7 @@ class GuardrailResult:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the GuardrailResult instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -103,7 +102,7 @@ class GuardrailResult:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the GuardrailResult instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

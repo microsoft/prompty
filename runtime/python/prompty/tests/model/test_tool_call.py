@@ -1,5 +1,6 @@
 
 import json
+
 import yaml
 
 from prompty.model import ToolCall
@@ -18,7 +19,7 @@ def test_load_json_toolcall():
     assert instance is not None
     assert instance.id == "call_abc123"
     assert instance.name == "get_weather"
-    assert instance.arguments == "{"city": "Paris"}"
+    assert instance.arguments == "{\"city\": \"Paris\"}"
     
 
 def test_load_yaml_toolcall():
@@ -33,7 +34,7 @@ def test_load_yaml_toolcall():
     assert instance is not None
     assert instance.id == "call_abc123"
     assert instance.name == "get_weather"
-    assert instance.arguments == "{"city": "Paris"}"
+    assert instance.arguments == "{\"city\": \"Paris\"}"
 
 def test_roundtrip_json_toolcall():
     """Test that load -> save -> load produces equivalent data."""
@@ -51,7 +52,7 @@ def test_roundtrip_json_toolcall():
     assert reloaded is not None
     assert reloaded.id == "call_abc123"
     assert reloaded.name == "get_weather"
-    assert reloaded.arguments == "{"city": "Paris"}"
+    assert reloaded.arguments == "{\"city\": \"Paris\"}"
 
 def test_to_json_toolcall():
     """Test that to_json produces valid JSON."""

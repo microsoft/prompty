@@ -6,11 +6,10 @@
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
 from ._ToolCall import ToolCall
-
 
 
 @dataclass
@@ -24,12 +23,12 @@ class StreamChunk(ABC):
         The kind of stream chunk
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "StreamChunk":
+    def load(data: Any, context: LoadContext | None = None) -> "StreamChunk":
         """Load a StreamChunk instance.
         Args:
             data (Any): The data to load the instance from.
@@ -58,7 +57,7 @@ class StreamChunk(ABC):
 
 
     @staticmethod
-    def load_kind(data: dict, context: Optional[LoadContext]) -> "StreamChunk":
+    def load_kind(data: dict, context: LoadContext | None) -> "StreamChunk":
         # load polymorphic StreamChunk instance
         if data is not None and "kind" in data:
             discriminator_value = str(data["kind"]).lower()
@@ -78,7 +77,7 @@ class StreamChunk(ABC):
             raise ValueError("Missing StreamChunk discriminator property: 'kind'")
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the StreamChunk instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -100,7 +99,7 @@ class StreamChunk(ABC):
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the StreamChunk instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -112,7 +111,7 @@ class StreamChunk(ABC):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the StreamChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -138,13 +137,13 @@ class TextChunk(StreamChunk):
         The text content of the chunk
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="text")
     value: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "TextChunk":
+    def load(data: Any, context: LoadContext | None = None) -> "TextChunk":
         """Load a TextChunk instance.
         Args:
             data (Any): The data to load the instance from.
@@ -173,7 +172,7 @@ class TextChunk(StreamChunk):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TextChunk instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -197,7 +196,7 @@ class TextChunk(StreamChunk):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the TextChunk instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -209,7 +208,7 @@ class TextChunk(StreamChunk):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the TextChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -235,13 +234,13 @@ class ThinkingChunk(StreamChunk):
         The thinking content of the chunk
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="thinking")
     value: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ThinkingChunk":
+    def load(data: Any, context: LoadContext | None = None) -> "ThinkingChunk":
         """Load a ThinkingChunk instance.
         Args:
             data (Any): The data to load the instance from.
@@ -270,7 +269,7 @@ class ThinkingChunk(StreamChunk):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ThinkingChunk instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -294,7 +293,7 @@ class ThinkingChunk(StreamChunk):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ThinkingChunk instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -306,7 +305,7 @@ class ThinkingChunk(StreamChunk):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ThinkingChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -332,13 +331,13 @@ class ToolChunk(StreamChunk):
         The tool call data
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="tool")
     toolCall: ToolCall = field(default_factory=ToolCall)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ToolChunk":
+    def load(data: Any, context: LoadContext | None = None) -> "ToolChunk":
         """Load a ToolChunk instance.
         Args:
             data (Any): The data to load the instance from.
@@ -367,7 +366,7 @@ class ToolChunk(StreamChunk):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolChunk instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -391,7 +390,7 @@ class ToolChunk(StreamChunk):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ToolChunk instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -403,7 +402,7 @@ class ToolChunk(StreamChunk):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ToolChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -429,13 +428,13 @@ class ErrorChunk(StreamChunk):
         The error message
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="error")
     message: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ErrorChunk":
+    def load(data: Any, context: LoadContext | None = None) -> "ErrorChunk":
         """Load a ErrorChunk instance.
         Args:
             data (Any): The data to load the instance from.
@@ -464,7 +463,7 @@ class ErrorChunk(StreamChunk):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ErrorChunk instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -488,7 +487,7 @@ class ErrorChunk(StreamChunk):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ErrorChunk instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -500,7 +499,7 @@ class ErrorChunk(StreamChunk):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ErrorChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

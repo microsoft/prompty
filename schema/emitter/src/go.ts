@@ -45,7 +45,7 @@ interface GoClassContext {
   alternates: Array<{ scalar: string; alternate: string }>;
   polymorphicTypes: any;
   imports: string[];
-  collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
+  collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
   shorthandProperty: string | null;
 }
 
@@ -244,15 +244,15 @@ function getShorthandProperty(node: TypeNode): string | null {
 /**
  * Get collection properties with their nested type info.
  */
-function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[] }> {
+function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }> {
   return node.properties
     .filter(p => p.isCollection && !p.isScalar && !p.isDict)
     .map(p => ({
       prop: p,
       type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
+      hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
     }));
 }
-
 /**
  * Get unique import types needed from other modules.
  */

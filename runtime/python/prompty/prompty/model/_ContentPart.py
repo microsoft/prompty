@@ -6,10 +6,9 @@
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-
 
 
 @dataclass
@@ -23,12 +22,12 @@ class ContentPart(ABC):
         The kind of content part
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ContentPart":
+    def load(data: Any, context: LoadContext | None = None) -> "ContentPart":
         """Load a ContentPart instance.
         Args:
             data (Any): The data to load the instance from.
@@ -57,7 +56,7 @@ class ContentPart(ABC):
 
 
     @staticmethod
-    def load_kind(data: dict, context: Optional[LoadContext]) -> "ContentPart":
+    def load_kind(data: dict, context: LoadContext | None) -> "ContentPart":
         # load polymorphic ContentPart instance
         if data is not None and "kind" in data:
             discriminator_value = str(data["kind"]).lower()
@@ -77,7 +76,7 @@ class ContentPart(ABC):
             raise ValueError("Missing ContentPart discriminator property: 'kind'")
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ContentPart instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -99,7 +98,7 @@ class ContentPart(ABC):
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ContentPart instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -111,7 +110,7 @@ class ContentPart(ABC):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ContentPart instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -137,13 +136,13 @@ class TextPart(ContentPart):
         The text content
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="text")
     value: str = field(default="")
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "TextPart":
+    def load(data: Any, context: LoadContext | None = None) -> "TextPart":
         """Load a TextPart instance.
         Args:
             data (Any): The data to load the instance from.
@@ -172,7 +171,7 @@ class TextPart(ContentPart):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TextPart instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -196,7 +195,7 @@ class TextPart(ContentPart):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the TextPart instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -208,7 +207,7 @@ class TextPart(ContentPart):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the TextPart instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -238,15 +237,15 @@ class ImagePart(ContentPart):
         MIME type of the image (e.g., 'image/png')
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="image")
     source: str = field(default="")
-    detail: Optional[str] = None
-    mediaType: Optional[str] = None
+    detail: str | None = None
+    mediaType: str | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ImagePart":
+    def load(data: Any, context: LoadContext | None = None) -> "ImagePart":
         """Load a ImagePart instance.
         Args:
             data (Any): The data to load the instance from.
@@ -279,7 +278,7 @@ class ImagePart(ContentPart):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ImagePart instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -307,7 +306,7 @@ class ImagePart(ContentPart):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ImagePart instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -319,7 +318,7 @@ class ImagePart(ContentPart):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ImagePart instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -347,14 +346,14 @@ class FilePart(ContentPart):
         MIME type of the file (e.g., 'application/pdf')
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="file")
     source: str = field(default="")
-    mediaType: Optional[str] = None
+    mediaType: str | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "FilePart":
+    def load(data: Any, context: LoadContext | None = None) -> "FilePart":
         """Load a FilePart instance.
         Args:
             data (Any): The data to load the instance from.
@@ -385,7 +384,7 @@ class FilePart(ContentPart):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FilePart instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -411,7 +410,7 @@ class FilePart(ContentPart):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the FilePart instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -423,7 +422,7 @@ class FilePart(ContentPart):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the FilePart instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -451,14 +450,14 @@ class AudioPart(ContentPart):
         MIME type of the audio (e.g., 'audio/wav')
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="audio")
     source: str = field(default="")
-    mediaType: Optional[str] = None
+    mediaType: str | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "AudioPart":
+    def load(data: Any, context: LoadContext | None = None) -> "AudioPart":
         """Load a AudioPart instance.
         Args:
             data (Any): The data to load the instance from.
@@ -489,7 +488,7 @@ class AudioPart(ContentPart):
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AudioPart instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -515,7 +514,7 @@ class AudioPart(ContentPart):
 
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the AudioPart instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -527,7 +526,7 @@ class AudioPart(ContentPart):
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the AudioPart instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

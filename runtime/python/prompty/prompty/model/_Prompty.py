@@ -5,14 +5,13 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
 from ._Model import Model
 from ._Property import Property
 from ._Template import Template
 from ._Tool import Tool
-
 
 
 @dataclass
@@ -48,21 +47,21 @@ class Prompty:
         Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     name: str = field(default="")
-    displayName: Optional[str] = None
-    description: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    displayName: str | None = None
+    description: str | None = None
+    metadata: dict[str, Any] | None = None
     inputs: list[Property] = field(default_factory=list)
     outputs: list[Property] = field(default_factory=list)
     model: Model = field(default_factory=Model)
     tools: list[Tool] = field(default_factory=list)
-    template: Optional[Template] = None
-    instructions: Optional[str] = None
+    template: Template | None = None
+    instructions: str | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "Prompty":
+    def load(data: Any, context: LoadContext | None = None) -> "Prompty":
         """Load a Prompty instance.
         Args:
             data (Any): The data to load the instance from.
@@ -107,7 +106,7 @@ class Prompty:
 
 
     @staticmethod
-    def load_inputs(data: dict | list, context: Optional[LoadContext]) -> list[Property]:
+    def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
             # convert simple named inputs to list of Property
             result = []
@@ -122,9 +121,10 @@ class Prompty:
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_inputs(items: list[Property], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
+
 
         if context.collection_format == "array":
             return [item.save(context) for item in items]
@@ -149,8 +149,9 @@ class Prompty:
                 result["_unnamed"].append(item_data)
         return result
 
+
     @staticmethod
-    def load_outputs(data: dict | list, context: Optional[LoadContext]) -> list[Property]:
+    def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
             # convert simple named outputs to list of Property
             result = []
@@ -165,35 +166,16 @@ class Prompty:
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_outputs(items: list[Property], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_outputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
 
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
 
     @staticmethod
-    def load_tools(data: dict | list, context: Optional[LoadContext]) -> list[Tool]:
+    def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
         if isinstance(data, dict):
             # convert simple named tools to list of Tool
             result = []
@@ -208,9 +190,10 @@ class Prompty:
         return [Tool.load(item, context) for item in data]
 
     @staticmethod
-    def save_tools(items: list[Tool], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tools(items: list[Tool], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
+
 
         if context.collection_format == "array":
             return [item.save(context) for item in items]
@@ -236,7 +219,8 @@ class Prompty:
         return result
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Prompty instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -276,7 +260,7 @@ class Prompty:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the Prompty instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -288,7 +272,7 @@ class Prompty:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the Prompty instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

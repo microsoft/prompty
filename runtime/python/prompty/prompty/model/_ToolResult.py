@@ -5,11 +5,10 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._ContentPart import ContentPart
-
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -26,12 +25,12 @@ class ToolResult:
         The content parts of the tool result
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
     parts: list[ContentPart] = field(default_factory=list)
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ToolResult":
+    def load(data: Any, context: LoadContext | None = None) -> "ToolResult":
         """Load a ToolResult instance.
         Args:
             data (Any): The data to load the instance from.
@@ -58,7 +57,7 @@ class ToolResult:
 
 
     @staticmethod
-    def load_parts(data: dict | list, context: Optional[LoadContext]) -> list[ContentPart]:
+    def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
         if isinstance(data, dict):
             # convert simple named parts to list of ContentPart
             result = []
@@ -73,35 +72,16 @@ class ToolResult:
         return [ContentPart.load(item, context) for item in data]
 
     @staticmethod
-    def save_parts(items: list[ContentPart], context: Optional[SaveContext]) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_parts(items: list[ContentPart], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolResult instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -123,7 +103,7 @@ class ToolResult:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ToolResult instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -135,7 +115,7 @@ class ToolResult:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ToolResult instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

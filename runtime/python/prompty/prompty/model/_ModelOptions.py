@@ -5,10 +5,9 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
-
 
 
 @dataclass
@@ -39,21 +38,21 @@ class ModelOptions:
         Additional custom properties for model options
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = None
+    _shorthand_property: ClassVar[str | None] = None
 
-    frequencyPenalty: Optional[float] = None
-    maxOutputTokens: Optional[int] = None
-    presencePenalty: Optional[float] = None
-    seed: Optional[int] = None
-    temperature: Optional[float] = None
-    topK: Optional[int] = None
-    topP: Optional[float] = None
+    frequencyPenalty: float | None = None
+    maxOutputTokens: int | None = None
+    presencePenalty: float | None = None
+    seed: int | None = None
+    temperature: float | None = None
+    topK: int | None = None
+    topP: float | None = None
     stopSequences: list[str] = field(default_factory=list)
-    allowMultipleToolCalls: Optional[bool] = None
-    additionalProperties: Optional[dict[str, Any]] = None
+    allowMultipleToolCalls: bool | None = None
+    additionalProperties: dict[str, Any] | None = None
 
     @staticmethod
-    def load(data: Any, context: Optional[LoadContext] = None) -> "ModelOptions":
+    def load(data: Any, context: LoadContext | None = None) -> "ModelOptions":
         """Load a ModelOptions instance.
         Args:
             data (Any): The data to load the instance from.
@@ -98,7 +97,7 @@ class ModelOptions:
 
 
 
-    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelOptions instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -138,7 +137,7 @@ class ModelOptions:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
+    def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ModelOptions instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -150,7 +149,7 @@ class ModelOptions:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ModelOptions instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.

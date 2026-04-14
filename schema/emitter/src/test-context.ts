@@ -199,7 +199,7 @@ export const csharpTestOptions: TestContextOptions = {
     return pascal.charAt(0).toUpperCase() + pascal.slice(1);
   },
   renderBoolean: (val: boolean) => val ? "True" : "False",
-  escapeString: (str: string) => str,
+  escapeString: (str: string) => str.replace(/\\/g, "\\\\").replace(/"/g, '\\"'),
   getDelimiter: (str: string) => str.includes('\n') ? '@"' : '"',
   scalarValues: {
     "boolean": "false",
@@ -229,7 +229,7 @@ export const csharpTestOptions: TestContextOptions = {
 export const pythonTestOptions: TestContextOptions = {
   renderKey: (key: string) => key, // snake_case - already correct from TypeSpec
   renderBoolean: (val: boolean) => val ? "True" : "False",
-  escapeString: (str: string) => str,
+  escapeString: (str: string) => str.replace(/\\/g, "\\\\").replace(/"/g, '\\"'),
   getDelimiter: (str: string) => str.includes('\n') ? '"""' : '"',
   scalarValues: {
     "boolean": "False",
