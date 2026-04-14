@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ThinkingChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: thinking
+    description: The kind identifier for thinking chunks
+  value:
+    type: string
+    description: The thinking content of the chunk
+required:
+  - kind
+  - value
+allOf:
+  - $ref: StreamChunk.yaml
+description: A thinking/reasoning content chunk from the LLM response stream.

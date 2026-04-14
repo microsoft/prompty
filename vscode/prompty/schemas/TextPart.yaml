@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TextPart.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: text
+    description: The kind identifier for text content
+  value:
+    type: string
+    description: The text content
+required:
+  - kind
+  - value
+allOf:
+  - $ref: ContentPart.yaml
+description: A text content part.

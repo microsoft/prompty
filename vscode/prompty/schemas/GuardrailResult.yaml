@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: GuardrailResult.yaml
+type: object
+properties:
+  allowed:
+    type: boolean
+    description: Whether the content passed the guardrail check
+  reason:
+    type: string
+    description: Explanation of why the content was allowed or denied
+  rewrite:
+    description: Optional rewritten content to replace the original
+required:
+  - allowed
+description: |-
+  The result of a guardrail evaluation. Guardrails are safety checks that
+  run at specific phases of the agent loop and can allow, deny, or rewrite
+  content.

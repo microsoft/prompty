@@ -1,6 +1,7 @@
 ---
 title: "AgentSchema"
 description: "Overview of declarative agent types in AgentSchema."
+slug: "reference/index"
 sidebar:
   order: 1
 ---
@@ -153,7 +154,6 @@ classDiagram
       
         +string kind
         +string path
-        +string mode
     }
     class FormatConfig {
       
@@ -184,6 +184,90 @@ classDiagram
         +Template template
         +string instructions
     }
+    class ContentPart {
+      <<abstract>>
+        +string kind
+    }
+    class TextPart {
+      
+        +string kind
+        +string value
+    }
+    class ImagePart {
+      
+        +string kind
+        +string source
+        +string detail
+        +string mediaType
+    }
+    class FilePart {
+      
+        +string kind
+        +string source
+        +string mediaType
+    }
+    class AudioPart {
+      
+        +string kind
+        +string source
+        +string mediaType
+    }
+    class Message {
+      
+        +string role
+        +ContentPart[] parts
+        +dictionary metadata
+    }
+    class ToolCall {
+      
+        +string id
+        +string name
+        +string arguments
+    }
+    class ToolResult {
+      
+        +ContentPart[] parts
+    }
+    class StreamChunk {
+      <<abstract>>
+        +string kind
+    }
+    class TextChunk {
+      
+        +string kind
+        +string value
+    }
+    class ThinkingChunk {
+      
+        +string kind
+        +string value
+    }
+    class ToolChunk {
+      
+        +string kind
+        +ToolCall toolCall
+    }
+    class ErrorChunk {
+      
+        +string kind
+        +string message
+    }
+    class GuardrailResult {
+      
+        +boolean allowed
+        +string reason
+        +unknown rewrite
+    }
+    class ModelInfo {
+      
+        +string id
+        +string displayName
+        +string ownedBy
+        +int32 contextWindow
+        +string[] inputModalities
+        +string[] outputModalities
+        +dictionary additionalProperties
+    }
     Property <|-- ArrayProperty
     Property <|-- ObjectProperty
     Connection <|-- ReferenceConnection
@@ -197,6 +281,14 @@ classDiagram
     Tool <|-- McpTool
     Tool <|-- OpenApiTool
     Tool <|-- PromptyTool
+    ContentPart <|-- TextPart
+    ContentPart <|-- ImagePart
+    ContentPart <|-- FilePart
+    ContentPart <|-- AudioPart
+    StreamChunk <|-- TextChunk
+    StreamChunk <|-- ThinkingChunk
+    StreamChunk <|-- ToolChunk
+    StreamChunk <|-- ErrorChunk
     ObjectProperty *-- Property
     ArrayProperty *-- Property
     Model *-- Connection
@@ -214,4 +306,7 @@ classDiagram
     Prompty *-- Model
     Prompty *-- Tool
     Prompty *-- Template
+    Message *-- ContentPart
+    ToolResult *-- ContentPart
+    ToolChunk *-- ToolCall
 ```

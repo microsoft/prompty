@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Message.yaml
+type: object
+properties:
+  role:
+    anyOf:
+      - type: string
+        const: system
+      - type: string
+        const: user
+      - type: string
+        const: assistant
+      - type: string
+        const: developer
+      - type: string
+        const: tool
+    description: The role of the message sender
+  parts:
+    type: array
+    items:
+      $ref: ContentPart.yaml
+    description: The content parts of the message
+  metadata:
+    $ref: RecordUnknown.yaml
+    description: Optional metadata associated with the message
+required:
+  - role
+  - parts
+description: |-
+  A message in a conversation. Messages have a role and a list of content parts
+  representing the different modalities of the message content.

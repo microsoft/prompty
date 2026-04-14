@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ErrorChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: error
+    description: The kind identifier for error chunks
+  message:
+    type: string
+    description: The error message
+required:
+  - kind
+  - message
+allOf:
+  - $ref: StreamChunk.yaml
+description: An error chunk from the LLM response stream.

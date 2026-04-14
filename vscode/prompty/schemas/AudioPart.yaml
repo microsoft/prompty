@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AudioPart.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: audio
+    description: The kind identifier for audio content
+  source:
+    type: string
+    description: URL or base64-encoded audio data
+  mediaType:
+    type: string
+    description: MIME type of the audio (e.g., 'audio/wav')
+required:
+  - kind
+  - source
+allOf:
+  - $ref: ContentPart.yaml
+description: An audio content part. The source may be a URL or base64-encoded data.

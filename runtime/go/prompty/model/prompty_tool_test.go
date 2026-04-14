@@ -16,8 +16,7 @@ func TestPromptyToolLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 `
 	var data map[string]interface{}
@@ -36,9 +35,6 @@ func TestPromptyToolLoadJSON(t *testing.T) {
 	if instance.Path != "./summarize.prompty" {
 		t.Errorf(`Expected Path to be "./summarize.prompty", got %v`, instance.Path)
 	}
-	if instance.Mode != "single" {
-		t.Errorf(`Expected Mode to be "single", got %v`, instance.Mode)
-	}
 }
 
 // TestPromptyToolLoadYAML tests loading PromptyTool from YAML
@@ -46,7 +42,6 @@ func TestPromptyToolLoadYAML(t *testing.T) {
 	yamlData := `
 kind: prompty
 path: ./summarize.prompty
-mode: single
 
 `
 	var data map[string]interface{}
@@ -65,9 +60,6 @@ mode: single
 	if instance.Path != "./summarize.prompty" {
 		t.Errorf(`Expected Path to be "./summarize.prompty", got %v`, instance.Path)
 	}
-	if instance.Mode != "single" {
-		t.Errorf(`Expected Mode to be "single", got %v`, instance.Mode)
-	}
 }
 
 // TestPromptyToolRoundtrip tests load -> save -> load produces equivalent data
@@ -75,8 +67,7 @@ func TestPromptyToolRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 `
 	var data map[string]interface{}
@@ -102,9 +93,6 @@ func TestPromptyToolRoundtrip(t *testing.T) {
 	if reloaded.Path != "./summarize.prompty" {
 		t.Errorf(`Expected Path to be "./summarize.prompty", got %v`, reloaded.Path)
 	}
-	if reloaded.Mode != "single" {
-		t.Errorf(`Expected Mode to be "single", got %v`, reloaded.Mode)
-	}
 }
 
 // TestPromptyToolToJSON tests that ToJSON produces valid JSON
@@ -112,8 +100,7 @@ func TestPromptyToolToJSON(t *testing.T) {
 	jsonData := `
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 `
 	var data map[string]interface{}
@@ -142,8 +129,7 @@ func TestPromptyToolToYAML(t *testing.T) {
 	jsonData := `
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 `
 	var data map[string]interface{}

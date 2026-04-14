@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ContentPart.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: text
+      - type: string
+        const: image
+      - type: string
+        const: file
+      - type: string
+        const: audio
+    description: The kind of content part
+required:
+  - kind
+description: |-
+  A part of a message's content. Content parts are discriminated on the `kind`
+  field and represent the different modalities that can appear in a message.

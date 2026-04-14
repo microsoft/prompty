@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StreamChunk.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: text
+      - type: string
+        const: thinking
+      - type: string
+        const: tool
+      - type: string
+        const: error
+    description: The kind of stream chunk
+required:
+  - kind
+description: |-
+  A chunk of data from a streaming LLM response. Stream chunks are
+  discriminated on the `kind` field.

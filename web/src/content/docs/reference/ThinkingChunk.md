@@ -1,0 +1,43 @@
+---
+title: "ThinkingChunk"
+description: "Documentation for the ThinkingChunk type."
+slug: "reference/thinkingchunk"
+---
+
+A thinking/reasoning content chunk from the LLM response stream.
+
+## Class Diagram
+
+```mermaid
+---
+title: ThinkingChunk
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class StreamChunk {
+        +string kind
+    }
+    StreamChunk <|-- ThinkingChunk
+    class ThinkingChunk {
+      
+        +string kind
+        +string value
+    }
+```
+
+## Yaml Example
+
+```yaml
+value: Let me consider...
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| kind | string | The kind identifier for thinking chunks |
+| value | string | The thinking content of the chunk |

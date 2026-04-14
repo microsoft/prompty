@@ -1219,10 +1219,14 @@ function parse(agent, rendered):
 
 ### §6.5 Message Structure
 
+The `Message`, `ContentPart`, `ToolCall`, and `ToolResult` types are defined in the
+TypeSpec schema (`schema/model/message.tsp`) and generated to all runtime languages.
+The canonical type definitions live there; this section specifies behavioral requirements.
+
 ```
 Message:
-  role:     string           // "system" | "user" | "assistant"
-  content:  ContentPart[]    // List of content parts
+  role:     Role             // "system" | "user" | "assistant" | "developer" | "tool"
+  parts:    ContentPart[]    // List of content parts
   metadata: dict | null      // Optional attributes from role markers
 
 ContentPart = TextPart | ImagePart | AudioPart | FilePart
@@ -1233,20 +1237,33 @@ TextPart:
 
 ImagePart:
   kind:      "image"
-  value:     string           // URL or base64-encoded data
+  source:    string           // URL or base64-encoded data
   mediaType: string | null    // MIME type (e.g., "image/png")
   detail:    string | null    // Detail level (e.g., "auto", "low", "high")
 
 AudioPart:
   kind:      "audio"
-  value:     string           // URL or base64-encoded data
+  source:    string           // URL or base64-encoded data
   mediaType: string | null    // MIME type (e.g., "audio/wav")
 
 FilePart:
   kind:      "file"
-  value:     string           // URL or base64-encoded data
+  source:    string           // URL or base64-encoded data
   mediaType: string | null    // MIME type
+
+ToolCall:
+  id:        string           // Unique identifier from the LLM
+  name:      string           // Tool function name
+  arguments: string           // Serialized JSON arguments
+
+ToolResult:
+  parts:     ContentPart[]    // Rich content from tool execution
 ```
+
+**ToolResult** enables tools to return rich content (text, images, files, audio)
+rather than plain strings. Implementations MUST support conversion from a plain
+string to a `ToolResult` containing a single `TextPart` for backward compatibility
+with existing tool handlers that return strings.
 
 ### §6.6 Content Handling Rules
 
@@ -2254,7 +2271,7 @@ function turn(agent_or_path, inputs, tools=null) → result:
         try:
           if handler is not null:
             // Name registry hit — direct call
-            tool_result = handler(args)
+            tool_result = handler(args)    // returns ToolResult
           else:
             // Layer 2: kind handler fallback
             kind_handler = get_tool_handler(tool_def.kind)
@@ -2263,13 +2280,14 @@ function turn(agent_or_path, inputs, tools=null) → result:
                 "No handler registered for tool: " + tool_call.name
                 + " (kind: " + tool_def.kind + ")"
               )
-            tool_result = kind_handler(tool_def, args, agent, inputs)
+            tool_result = kind_handler(tool_def, args, agent, inputs)  // returns ToolResult
         catch error:
           // Tool handler failures MUST NOT kill the agent loop (§9.9)
-          tool_result = "Error: Tool '" + tool_call.name + "' failed: " + str(error)
-          emit event("error", { message: tool_result })
+          error_text = "Error: Tool '" + tool_call.name + "' failed: " + str(error)
+          tool_result = ToolResult(parts: [TextPart(kind: "text", value: error_text)])
+          emit event("error", { message: error_text })
 
-        tool_results.append({ tool_call_id: tool_call.id, result: str(tool_result) })
+        tool_results.append({ tool_call_id: tool_call.id, result: tool_result })
 
       // Delegate message formatting to the executor (§9.4)
       executor = get_executor(agent.model.provider)
@@ -2342,7 +2360,7 @@ executor.FormatToolMessages(
 | -------------- | ----------------------------- | ------------------------------------------------------ |
 | `raw_response` | provider response or null     | Original API response object; needed by Anthropic to preserve content blocks. May be null in streaming path. |
 | `tool_calls`   | list of `{ id, name, arguments }` | Normalized tool call data extracted from the response. `arguments` is a JSON string. |
-| `tool_results` | list of `{ tool_call_id, result }` | Results from executing each tool, in the same order as `tool_calls`. |
+| `tool_results` | list of `{ tool_call_id, result: ToolResult }` | Results from executing each tool, in the same order as `tool_calls`. Each `result` is a `ToolResult` containing `ContentPart[]`. |
 | `text_content` | string or null                | Any text content from the response alongside tool calls (e.g., Anthropic thinking text). |
 
 **Return value:** A `list<Message>` to append to the conversation. The number
@@ -2379,12 +2397,23 @@ Returns 1 assistant message + N tool messages (one per tool call):
       }
     ]
   },
-  // One tool message per result
+  // One tool message per result — content is derived from ToolResult.parts
+  // If all parts are TextPart, content is a plain string (concatenated)
+  // If parts include non-text (ImagePart, etc.), content is an array:
   {
     role: "tool",
-    content: "72°F and sunny",
+    content: "72°F and sunny",   // simple case: single TextPart → string
     tool_call_id: "call_123"
   }
+  // Rich case (text + image):
+  // {
+  //   role: "tool",
+  //   content: [
+  //     { type: "text", text: "Here's the weather:" },
+  //     { type: "image_url", image_url: { url: "https://..." } }
+  //   ],
+  //   tool_call_id: "call_456"
+  // }
 ]
 ```
 
@@ -2399,11 +2428,17 @@ Returns 1 assistant message + 1 user message (batched tool results):
     role: "assistant",
     content: [<original content blocks from API response>]
   },
-  // ALL tool results in ONE user message
+  // ALL tool results in ONE user message — each result's ContentPart[]
+  // maps to Anthropic content blocks
   {
     role: "user",
     content: [
       { type: "tool_result", tool_use_id: "toolu_123", content: "72°F and sunny" },
+      // Rich result (text + image):
+      // { type: "tool_result", tool_use_id: "toolu_456", content: [
+      //   { type: "text", text: "Here's the chart:" },
+      //   { type: "image", source: { type: "base64", media_type: "image/png", data: "..." } }
+      // ] }
       { type: "tool_result", tool_use_id: "toolu_456", content: "Pizza Palace" }
     ]
   }
@@ -2460,24 +2495,27 @@ parameter name.
 
 ### §9.7 PromptyTool Execution
 
-A `PromptyTool` references another `.prompty` file to be invoked as a tool:
+A `PromptyTool` references another `.prompty` file to be invoked as a tool.
+PromptyTool is **always single-shot** — one LLM call, no agent loop.
 
 ```
-function execute_prompty_tool(tool, args, parent_inputs) → result:
+function execute_prompty_tool(tool, args, parent_inputs) → ToolResult:
   // Resolve path relative to the parent .prompty file
   child_agent = load(tool.path)
 
   // Merge: LLM-provided args + bindings from parent inputs
   merged = apply_bindings(tool, args, parent_inputs)
 
-  match tool.mode:
-    "single":
-      // One LLM call — no agent loop
-      return run(child_agent, merged)
-    "agentic":
-      // Full agent loop — child may call tools too
-      return turn(child_agent, merged, tools=child_agent_tools)
+  // Single-shot execution — invoke, not turn
+  result = invoke(child_agent, merged)
+  return ToolResult(parts: [TextPart(kind: "text", value: str(result))])
 ```
+
+Implementations MUST NOT run an agent loop for `kind: prompty` tools.
+Applications that need agentic sub-agent delegation SHOULD register
+`kind: function` tools that internally call `turn()` with their own
+`TurnOptions`. This keeps policy decisions (event propagation, cancellation,
+steering scope, guardrail inheritance) in application code where they belong.
 
 Child `PromptyTool` execution MUST inherit the parent's tracer registry,
 producing nested trace spans that show the full call hierarchy.
@@ -3147,17 +3185,23 @@ and coordination without coupling the loop to any particular output mechanism.
 
 **Event Types:**
 
+The `AgentEventType` enum is defined in TypeSpec (`schema/model/events.tsp`) and
+generated to all runtime languages. The event types and their payloads are:
+
 | Event Type          | Payload                                          | When Emitted                              |
 | ------------------- | ------------------------------------------------ | ----------------------------------------- |
 | `token`             | `{ token: string }`                              | Each content chunk during streaming       |
 | `thinking`          | `{ token: string }`                              | Each reasoning/chain-of-thought chunk     |
 | `tool_call_start`   | `{ name: string, arguments: string }`            | When a tool call is detected              |
-| `tool_result`       | `{ name: string, result: string }`               | After a tool call completes               |
+| `tool_result`       | `{ name: string, result: ToolResult }`           | After a tool call completes               |
 | `status`            | `{ message: string }`                            | Human-readable status updates             |
 | `messages_updated`  | `{ messages: Message[] }`                        | After messages list is mutated            |
 | `done`              | `{ response: string, messages: Message[] }`      | Final response produced                   |
 | `error`             | `{ message: string }`                            | Non-fatal error (e.g., tool panic)        |
 | `cancelled`         | `{}`                                             | Loop was cancelled via cancellation token |
+| `compaction_start`  | `{}`                                             | Context compaction beginning              |
+| `compaction_complete` | `{ removed: int, remaining: int }`             | Context compaction completed              |
+| `compaction_failed` | `{ message: string }`                            | Context compaction failed                 |
 
 **API:**
 
@@ -3421,6 +3465,17 @@ function turn(agent_or_path, inputs, tools=null,
 Steering enables external code to inject user messages into a running agent
 loop. This supports interactive scenarios where a user wants to redirect
 the agent mid-execution (e.g., "actually focus on error handling").
+
+**Principle:** Steering is for managing whatever the current agent is doing.
+Steering messages are local to the agent that receives them — they affect
+the current conversation, not sub-agent invocations or child tool calls.
+
+**Normative Requirements:**
+
+- Steering messages MUST be processed between iterations of the agent loop.
+- Steering MUST NOT interrupt in-progress tool execution.
+- Steering MUST NOT propagate to sub-agents (including `kind: prompty` tool invocations).
+- Implementations MUST NOT make implicit LLM calls to route or transform steering messages.
 
 **Steering Queue:**
 
@@ -3744,4 +3799,70 @@ for (const userInput of messages) {
 
 ---
 
-*End of Specification (Sections 1–14).*
+## §15 Model Discovery
+
+### §15.1 Overview
+
+Provider packages SHOULD implement a model discovery function that lists
+available models and their capabilities. This enables applications to build
+model selection UIs, validate model configuration, and make runtime decisions
+based on model properties (e.g., context window size, supported modalities).
+
+Model discovery is a **convention**, not a hard requirement. A conforming
+Prompty implementation MAY omit model discovery entirely. However, provider
+packages that support model discovery SHOULD follow the patterns in this section.
+
+### §15.2 ModelInfo Type
+
+The `ModelInfo` type is defined in TypeSpec (`schema/model/discovery.tsp`)
+and generated to all runtime languages. It represents information about a
+single model:
+
+```
+ModelInfo:
+  id:                   string           // Model identifier (e.g., "gpt-4o")
+  displayName:          string | null    // Human-readable name
+  ownedBy:              string | null    // Organization that owns the model
+  contextWindow:        int32 | null     // Maximum context window in tokens
+  inputModalities:      string[] | null  // Accepted modalities ("text", "image", "audio")
+  outputModalities:     string[] | null  // Produced modalities ("text", "audio")
+  additionalProperties: dict | null      // Provider-specific properties
+```
+
+### §15.3 Convention
+
+Each provider package SHOULD implement:
+
+```
+function list_models(connection) → ModelInfo[]:
+  // Call the provider's model listing API
+  // Map results to ModelInfo objects
+  // Enrich with known model properties where the API is sparse
+```
+
+**Provider API Variance:**
+
+| Provider  | API                    | Context Window | Modalities | Notes                        |
+| --------- | ---------------------- | -------------- | ---------- | ---------------------------- |
+| OpenAI    | `GET /v1/models`       | ❌              | ❌          | Sparse — enrich from lookup  |
+| Azure     | `GET /openai/models`   | ✅              | ❌          | Has `max_context_length`     |
+| Anthropic | `GET /v1/models`       | ✅              | ✅          | Rich — `context_length`, modalities |
+
+**Enrichment Strategy:**
+
+Providers with sparse APIs (particularly OpenAI) SHOULD maintain a built-in
+lookup table of known models to enrich the API response. Unknown models get
+`null` for enrichment fields. The lookup table is a best-effort cache — it
+does not need to be exhaustive or always up-to-date.
+
+### §15.4 Conformance
+
+- Provider packages SHOULD implement `list_models(connection) → ModelInfo[]`.
+- Implementations MUST use the TypeSpec-generated `ModelInfo` type.
+- Implementations SHOULD populate as many fields as the provider's API supports.
+- Implementations MAY enrich sparse results from a built-in lookup table.
+- Implementations MUST NOT require model discovery for normal prompt execution.
+
+---
+
+*End of Specification (Sections 1–15).*

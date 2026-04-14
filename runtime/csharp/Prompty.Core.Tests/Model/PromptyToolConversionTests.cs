@@ -14,7 +14,6 @@ public class PromptyToolConversionTests
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
-mode: single
 
 """;
 
@@ -23,7 +22,6 @@ mode: single
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
         Assert.Equal("./summarize.prompty", instance.Path);
-        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -32,8 +30,7 @@ mode: single
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 """;
 
@@ -41,7 +38,6 @@ mode: single
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
         Assert.Equal("./summarize.prompty", instance.Path);
-        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -51,8 +47,7 @@ mode: single
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 """;
 
@@ -66,7 +61,6 @@ mode: single
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
         Assert.Equal("./summarize.prompty", reloaded.Path);
-        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -76,7 +70,6 @@ mode: single
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
-mode: single
 
 """;
 
@@ -90,7 +83,6 @@ mode: single
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
         Assert.Equal("./summarize.prompty", reloaded.Path);
-        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -99,8 +91,7 @@ mode: single
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty",
-  "mode": "single"
+  "path": "./summarize.prompty"
 }
 """;
 
@@ -118,7 +109,6 @@ mode: single
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
-mode: single
 
 """;
 

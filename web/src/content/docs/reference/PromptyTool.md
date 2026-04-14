@@ -6,8 +6,11 @@ slug: "reference/promptytool"
 
 A tool that references another .prompty file to be invoked as a tool.
 
-In `single` mode, the child prompty is executed with a single LLM call.
-In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+PromptyTool is always single-shot — the child prompty is loaded, rendered,
+and executed with a single LLM call (invoke). It does NOT run an agent loop.
+
+Applications that need agentic sub-agent delegation should register
+`kind: function` tools that internally call `turn()` with their own TurnOptions.
 
 ## Class Diagram
 
@@ -32,7 +35,6 @@ classDiagram
       
         +string kind
         +string path
-        +string mode
     }
 ```
 
@@ -41,7 +43,6 @@ classDiagram
 ```yaml
 kind: prompty
 path: ./summarize.prompty
-mode: single
 ```
 
 ## Properties
@@ -50,4 +51,3 @@ mode: single
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for prompty tools |
 | path | string | Path to the child .prompty file, relative to the parent |
-| mode | string | Execution mode: &#39;single&#39; for one LLM call, &#39;agentic&#39; for full agent loop |

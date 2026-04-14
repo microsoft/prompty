@@ -5,24 +5,25 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 
 from ._context import LoadContext, SaveContext
 from ._FormatConfig import FormatConfig
 from ._ParserConfig import ParserConfig
 
 
+
 @dataclass
 class Template:
     """Template model for defining prompt templates.
-
+    
     This model specifies the rendering engine used for slot filling prompts,
     the parser used to process the rendered template into API-compatible format,
     and additional options for the template engine.
-
+    
     It allows for the creation of reusable templates that can be filled with dynamic data
     and processed to generate prompts for AI models.
-
+    
     Attributes
     ----------
     format : FormatConfig
@@ -31,13 +32,13 @@ class Template:
         Parser used to process the rendered template into API-compatible format
     """
 
-    _shorthand_property: ClassVar[str | None] = None
+    _shorthand_property: ClassVar[Optional[str]] = None
 
     format: FormatConfig = field(default_factory=FormatConfig)
     parser: ParserConfig = field(default_factory=ParserConfig)
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "Template":
+    def load(data: Any, context: Optional[LoadContext] = None) -> "Template":
         """Load a Template instance.
         Args:
             data (Any): The data to load the instance from.
@@ -49,7 +50,7 @@ class Template:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Template: {data}")
 
@@ -64,7 +65,9 @@ class Template:
             instance = context.process_output(instance)
         return instance
 
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+
+
+    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
         """Save the Template instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -75,6 +78,7 @@ class Template:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -87,7 +91,7 @@ class Template:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: SaveContext | None = None) -> str:
+    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
         """Convert the Template instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -99,7 +103,7 @@ class Template:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
         """Convert the Template instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -111,3 +115,4 @@ class Template:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+

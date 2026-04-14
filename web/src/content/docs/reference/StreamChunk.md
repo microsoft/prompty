@@ -1,0 +1,61 @@
+---
+title: "StreamChunk"
+description: "Documentation for the StreamChunk type."
+slug: "reference/streamchunk"
+---
+
+A chunk of data from a streaming LLM response. Stream chunks are
+discriminated on the `kind` field.
+
+## Class Diagram
+
+```mermaid
+---
+title: StreamChunk
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class StreamChunk {
+      <<abstract>>
+        +string kind
+    }
+    class TextChunk {
+        +string kind
+        +string value
+    }
+    StreamChunk <|-- TextChunk
+    class ThinkingChunk {
+        +string kind
+        +string value
+    }
+    StreamChunk <|-- ThinkingChunk
+    class ToolChunk {
+        +string kind
+        +ToolCall toolCall
+    }
+    StreamChunk <|-- ToolChunk
+    class ErrorChunk {
+        +string kind
+        +string message
+    }
+    StreamChunk <|-- ErrorChunk
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| kind | string | The kind of stream chunk |
+
+## Child Types
+
+The following types extend `StreamChunk`:
+
+- [TextChunk](../textchunk/)
+- [ThinkingChunk](../thinkingchunk/)
+- [ToolChunk](../toolchunk/)
+- [ErrorChunk](../errorchunk/)

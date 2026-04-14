@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FilePart.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: file
+    description: The kind identifier for file content
+  source:
+    type: string
+    description: URL or base64-encoded file data
+  mediaType:
+    type: string
+    description: MIME type of the file (e.g., 'application/pdf')
+required:
+  - kind
+  - source
+allOf:
+  - $ref: ContentPart.yaml
+description: A file content part. The source may be a URL or base64-encoded data.

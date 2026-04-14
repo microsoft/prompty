@@ -5,15 +5,16 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 
 from ._context import LoadContext, SaveContext
+
 
 
 @dataclass
 class ModelOptions:
     """Options for configuring the behavior of the AI model.
-
+    
     Attributes
     ----------
     frequencyPenalty : Optional[float]
@@ -38,21 +39,21 @@ class ModelOptions:
         Additional custom properties for model options
     """
 
-    _shorthand_property: ClassVar[str | None] = None
+    _shorthand_property: ClassVar[Optional[str]] = None
 
-    frequencyPenalty: float | None = None
-    maxOutputTokens: int | None = None
-    presencePenalty: float | None = None
-    seed: int | None = None
-    temperature: float | None = None
-    topK: int | None = None
-    topP: float | None = None
+    frequencyPenalty: Optional[float] = None
+    maxOutputTokens: Optional[int] = None
+    presencePenalty: Optional[float] = None
+    seed: Optional[int] = None
+    temperature: Optional[float] = None
+    topK: Optional[int] = None
+    topP: Optional[float] = None
     stopSequences: list[str] = field(default_factory=list)
-    allowMultipleToolCalls: bool | None = None
-    additionalProperties: dict[str, Any] | None = None
+    allowMultipleToolCalls: Optional[bool] = None
+    additionalProperties: Optional[dict[str, Any]] = None
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "ModelOptions":
+    def load(data: Any, context: Optional[LoadContext] = None) -> "ModelOptions":
         """Load a ModelOptions instance.
         Args:
             data (Any): The data to load the instance from.
@@ -64,7 +65,7 @@ class ModelOptions:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelOptions: {data}")
 
@@ -95,7 +96,9 @@ class ModelOptions:
             instance = context.process_output(instance)
         return instance
 
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+
+
+    def save(self, context: Optional[SaveContext] = None) -> dict[str, Any]:
         """Save the ModelOptions instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -106,6 +109,7 @@ class ModelOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -134,7 +138,7 @@ class ModelOptions:
             result = context.process_dict(result)
         return result
 
-    def to_yaml(self, context: SaveContext | None = None) -> str:
+    def to_yaml(self, context: Optional[SaveContext] = None) -> str:
         """Convert the ModelOptions instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -146,7 +150,7 @@ class ModelOptions:
             context = SaveContext()
         return context.to_yaml(self.save(context))
 
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+    def to_json(self, context: Optional[SaveContext] = None, indent: int = 2) -> str:
         """Convert the ModelOptions instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
@@ -158,3 +162,4 @@ class ModelOptions:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+

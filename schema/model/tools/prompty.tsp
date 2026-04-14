@@ -3,13 +3,14 @@ import "../tools.tsp";
 
 namespace Prompty;
 
-alias promptyToolMode = "single" | "agentic";
-
 /**
  * A tool that references another .prompty file to be invoked as a tool.
  *
- * In `single` mode, the child prompty is executed with a single LLM call.
- * In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+ * PromptyTool is always single-shot — the child prompty is loaded, rendered,
+ * and executed with a single LLM call (invoke). It does NOT run an agent loop.
+ *
+ * Applications that need agentic sub-agent delegation should register
+ * `kind: function` tools that internally call `turn()` with their own TurnOptions.
  */
 model PromptyTool extends Tool {
   @doc("The kind identifier for prompty tools")
@@ -19,8 +20,4 @@ model PromptyTool extends Tool {
   @doc("Path to the child .prompty file, relative to the parent")
   @sample(#{ path: "./summarize.prompty" })
   path: string;
-
-  @doc("Execution mode: 'single' for one LLM call, 'agentic' for full agent loop")
-  @sample(#{ mode: "single" })
-  mode: promptyToolMode = "single";
 }

@@ -18,19 +18,17 @@ describe("PromptyTool", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "kind": "prompty",\n  "path": "./summarize.prompty",\n  "mode": "single"\n}`;
+      const json = `{\n  "kind": "prompty",\n  "path": "./summarize.prompty"\n}`;
       const instance = PromptyTool.fromJson(json);
       expect(instance).toBeDefined();
 
       expect(instance.kind).toEqual("prompty");
 
       expect(instance.path).toEqual("./summarize.prompty");
-
-      expect(instance.mode).toEqual("single");
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "kind": "prompty",\n  "path": "./summarize.prompty",\n  "mode": "single"\n}`;
+      const json = `{\n  "kind": "prompty",\n  "path": "./summarize.prompty"\n}`;
       const instance = PromptyTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = PromptyTool.fromJson(output);
@@ -38,26 +36,22 @@ describe("PromptyTool", () => {
       expect(reloaded.kind).toEqual(instance.kind);
 
       expect(reloaded.path).toEqual(instance.path);
-
-      expect(reloaded.mode).toEqual(instance.mode);
     });
   });
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `kind: prompty\npath: ./summarize.prompty\nmode: single\n`;
+      const yaml = `kind: prompty\npath: ./summarize.prompty\n`;
       const instance = PromptyTool.fromYaml(yaml);
       expect(instance).toBeDefined();
 
       expect(instance.kind).toEqual("prompty");
 
       expect(instance.path).toEqual("./summarize.prompty");
-
-      expect(instance.mode).toEqual("single");
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `kind: prompty\npath: ./summarize.prompty\nmode: single\n`;
+      const yaml = `kind: prompty\npath: ./summarize.prompty\n`;
       const instance = PromptyTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = PromptyTool.fromYaml(output);
@@ -65,8 +59,6 @@ describe("PromptyTool", () => {
       expect(reloaded.kind).toEqual(instance.kind);
 
       expect(reloaded.path).toEqual(instance.path);
-
-      expect(reloaded.mode).toEqual(instance.mode);
     });
   });
 
