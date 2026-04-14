@@ -103,8 +103,9 @@ def to_dict(obj: Any) -> Any:
         return {k: v if isinstance(v, str) else to_dict(v) for k, v in obj.items()}
     elif isinstance(obj, Path):
         return str(obj)
-    elif hasattr(obj, "model_dump"):
-        # Pydantic models (e.g. OpenAI SDK response objects)
+    elif hasattr(type(obj), "model_dump") and callable(getattr(type(obj), "model_dump")):
+        # Pydantic models (e.g. OpenAI SDK response objects).
+        # Check on *type* not instance to avoid MagicMock (which fakes every attr).
         try:
             return to_dict(obj.model_dump())
         except Exception:
