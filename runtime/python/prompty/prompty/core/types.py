@@ -5,13 +5,28 @@ provider-specific wire format (OpenAI, Anthropic, etc.).
 
 Also provides streaming wrappers (``PromptyStream``, ``AsyncPromptyStream``)
 that accumulate chunks and flush to the tracer on exhaustion.
+
+Types ``ContentPart``, ``TextPart``, ``ImagePart``, ``FilePart``,
+``AudioPart``, and ``Message`` are re-exported from the generated model
+layer (``prompty.model``).  Runtime helpers (``.text``, ``.to_text_content()``)
+are attached here so every consumer gets them transparently.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
+
+# --- Re-export generated types (canonical source of truth) ----------------
+from ..model._ContentPart import (  # noqa: F401
+    AudioPart,
+    ContentPart,
+    FilePart,
+    ImagePart,
+    TextPart,
+)
+from ..model._Message import Message  # noqa: F401
 
 __all__ = [
     "AsyncPromptyStream",
@@ -35,128 +50,7 @@ ROLES = frozenset({"system", "user", "assistant", "developer"})
 
 
 # ---------------------------------------------------------------------------
-# Content parts
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class ContentPart:
-    """Base class for typed content within a message.
-
-    Each part has a ``kind`` discriminator and part-specific fields.
-    """
-
-    kind: str
-
-
-@dataclass
-class TextPart(ContentPart):
-    """Plain text content."""
-
-    kind: str = field(default="text", init=False)
-    value: str = ""
-
-
-@dataclass
-class ImagePart(ContentPart):
-    """Image content — URL, data URI, or file path.
-
-    Attributes:
-        source: URL, ``data:`` URI, or file path to the image.
-        detail: Processing detail level (``"auto"``, ``"low"``, ``"high"``).
-        media_type: MIME type (e.g. ``"image/png"``). Inferred if omitted.
-    """
-
-    kind: str = field(default="image", init=False)
-    source: str = ""
-    detail: str | None = None
-    media_type: str | None = None
-
-
-@dataclass
-class FilePart(ContentPart):
-    """File/document attachment (PDF, etc.).
-
-    Attributes:
-        source: URL or file path.
-        media_type: MIME type (e.g. ``"application/pdf"``).
-    """
-
-    kind: str = field(default="file", init=False)
-    source: str = ""
-    media_type: str | None = None
-
-
-@dataclass
-class AudioPart(ContentPart):
-    """Audio content.
-
-    Attributes:
-        source: URL, ``data:`` URI, or file path.
-        media_type: MIME type (e.g. ``"audio/wav"``).
-    """
-
-    kind: str = field(default="audio", init=False)
-    source: str = ""
-    media_type: str | None = None
-
-
-# ---------------------------------------------------------------------------
-# Messages
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class Message:
-    """A single message in the abstract message array.
-
-    Attributes:
-        role: One of the recognized roles (system, user, assistant, developer).
-        parts: Ordered list of content parts.
-        metadata: Extra key-value pairs from role boundary args
-            (e.g. ``name``, custom attributes).
-    """
-
-    role: str
-    parts: list[ContentPart] = field(default_factory=list)
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def text(self) -> str:
-        """Convenience: concatenate all TextPart values."""
-        return "".join(p.value for p in self.parts if isinstance(p, TextPart))
-
-    def to_text_content(self) -> str | list[dict[str, Any]]:
-        """Return plain string if all parts are text, else a parts list.
-
-        This is useful for simple serialization — callers that only need
-        the text content can get a ``str``, while multimodal messages
-        get the full parts array.
-        """
-        if all(isinstance(p, TextPart) for p in self.parts):
-            return self.text
-        return [_part_to_dict(p) for p in self.parts]
-
-
-@dataclass
-class ThreadMarker:
-    """Positional marker for rich-kind input insertion.
-
-    Emitted during prepare when the renderer nonce for a rich-kind input
-    (thread, image, file, audio) is found in parsed message text.
-    ``prepare()`` replaces these with actual content from the inputs.
-
-    Attributes:
-        name: The input property name (e.g. ``"conversation"``).
-        kind: The rich kind (``"thread"``, ``"image"``, ``"file"``, ``"audio"``).
-    """
-
-    name: str = "thread"
-    kind: str = "thread"
-
-
-# ---------------------------------------------------------------------------
-# Helpers
+# Runtime helpers attached to generated types
 # ---------------------------------------------------------------------------
 
 
@@ -183,6 +77,57 @@ def _part_to_dict(part: ContentPart) -> dict[str, Any]:
         return d
     else:
         return {"kind": part.kind}
+
+
+def _message_text(self: Message) -> str:
+    """Concatenate all TextPart values."""
+    return "".join(p.value for p in self.parts if isinstance(p, TextPart))
+
+
+def _message_to_text_content(self: Message) -> str | list[dict[str, Any]]:
+    """Return plain string if all parts are text, else a parts list."""
+    if all(isinstance(p, TextPart) for p in self.parts):
+        return self.text  # type: ignore[return-value]
+    return [_part_to_dict(p) for p in self.parts]
+
+
+# Attach helpers to the generated Message class
+Message.text = property(_message_text)  # type: ignore[attr-defined]
+Message.to_text_content = _message_to_text_content  # type: ignore[attr-defined]
+
+# Generated Message defaults metadata to None; runtime code expects a dict.
+_orig_message_init = Message.__init__
+
+
+def _message_init(self: Message, *args: Any, **kwargs: Any) -> None:
+    _orig_message_init(self, *args, **kwargs)
+    if self.metadata is None:
+        self.metadata = {}
+
+
+Message.__init__ = _message_init  # type: ignore[method-assign]
+
+
+# ---------------------------------------------------------------------------
+# Thread marker (not generated — runtime-only concept)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ThreadMarker:
+    """Positional marker for rich-kind input insertion.
+
+    Emitted during prepare when the renderer nonce for a rich-kind input
+    (thread, image, file, audio) is found in parsed message text.
+    ``prepare()`` replaces these with actual content from the inputs.
+
+    Attributes:
+        name: The input property name (e.g. ``"conversation"``).
+        kind: The rich kind (``"thread"``, ``"image"``, ``"file"``, ``"audio"``).
+    """
+
+    name: str = "thread"
+    kind: str = "thread"
 
 
 # ---------------------------------------------------------------------------
