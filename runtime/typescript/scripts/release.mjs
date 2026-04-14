@@ -146,7 +146,7 @@ const files = [
 ];
 run(`git add ${files.join(" ")}`);
 run(`git commit -m "chore(typescript): release v${newVersion}"`);
-run(`git tag ${TAG_PREFIX}${newVersion}`);
+run(`git tag -a ${TAG_PREFIX}${newVersion} -m "${TAG_PREFIX}${newVersion}"`);
 
 console.log(`\n🚀 Pushing to origin...\n`);
 run(`git push origin main --follow-tags`);

@@ -118,7 +118,7 @@ def main() -> None:
     print("\n🔖 Creating commit and tag...\n")
     run("git add runtime/python/prompty/prompty/_version.py")
     run(f'git commit -m "chore(python): release v{new_version}"')
-    run(f"git tag {tag}")
+    run(f'git tag -a {tag} -m "{tag}"')
 
     print("\n🚀 Pushing to origin...\n")
     run("git push origin main --follow-tags")

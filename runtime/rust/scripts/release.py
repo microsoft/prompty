@@ -137,7 +137,7 @@ def main() -> None:
     files = [f"runtime/rust/{crate}/Cargo.toml" for crate in CRATES] + ["runtime/rust/Cargo.lock"]
     run(f"git add {' '.join(files)}")
     run(f'git commit -m "chore(rust): release v{new_version}"')
-    run(f"git tag {tag}")
+    run(f'git tag -a {tag} -m "{tag}"')
 
     print("\n🚀 Pushing to origin...\n")
     run("git push origin main --follow-tags")
