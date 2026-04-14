@@ -484,6 +484,7 @@ impl fmt::Debug for PromptyStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::context::SaveContext;
 
     #[test]
     fn test_message_text() {
@@ -597,7 +598,7 @@ mod tests {
             name: "get_weather".into(),
             arguments: r#"{"city":"Seattle"}"#.into(),
         };
-        let json = serde_json::to_value(&tc).unwrap();
+        let json = tc.to_value(&Default::default());
         assert_eq!(json["id"], "call_abc");
         assert_eq!(json["name"], "get_weather");
     }
