@@ -10,7 +10,9 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::path::Path;
+use std::path::PathBuf;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use serde_json::{Value, json};
 
@@ -613,6 +615,38 @@ pub enum ToolHandler {
 }
 
 // ---------------------------------------------------------------------------
+// Compaction
+// ---------------------------------------------------------------------------
+
+/// Type alias for compaction functions.
+///
+/// Receives dropped messages and returns a summary string (or an error).
+pub type CompactionFn = Arc<
+    dyn Fn(
+            &[Message],
+        ) -> Pin<
+            Box<
+                dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>>
+                    + Send,
+            >,
+        > + Send
+        + Sync,
+>;
+
+/// Context compaction strategy for replacing low-signal summaries.
+///
+/// When messages are trimmed by `trim_to_context_window`, the default summary
+/// is a simple concatenation of truncated message texts. With compaction, the
+/// summary can be replaced by an LLM-powered (Prompty file) or function-based
+/// higher-quality summary.
+pub enum Compaction {
+    /// Path to a `.prompty` file that summarizes dropped messages.
+    Prompty(PathBuf),
+    /// Custom async function that receives dropped messages and returns a summary.
+    Function(CompactionFn),
+}
+
+// ---------------------------------------------------------------------------
 // TurnOptions
 // ---------------------------------------------------------------------------
 
@@ -641,6 +675,9 @@ pub struct TurnOptions {
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
     /// Maximum retries for LLM calls with exponential backoff (§9.10, default: 3).
     pub max_llm_retries: usize,
+    /// Context compaction strategy. When set and messages are trimmed, replaces
+    /// the default `summarize_dropped()` summary with a higher-quality one.
+    pub compaction: Option<Compaction>,
 }
 
 impl Default for TurnOptions {
@@ -657,6 +694,7 @@ impl Default for TurnOptions {
             parallel_tool_calls: false,
             validator: None,
             max_llm_retries: 3,
+            compaction: None,
         }
     }
 }
@@ -686,11 +724,169 @@ impl TurnOptions {
             .map(|c| c.load(std::sync::atomic::Ordering::Relaxed))
             .unwrap_or(false)
     }
+
+    /// Create a builder starting from defaults.
+    pub fn builder() -> TurnOptionsBuilder {
+        TurnOptionsBuilder {
+            opts: TurnOptions::default(),
+        }
+    }
+}
+
+/// Builder for [`TurnOptions`] with fluent API.
+///
+/// ```rust
+/// use prompty::TurnOptions;
+///
+/// let opts = TurnOptions::builder()
+///     .max_iterations(5)
+///     .context_budget(50_000)
+///     .build();
+/// assert_eq!(opts.max_iterations, 5);
+/// ```
+pub struct TurnOptionsBuilder {
+    opts: TurnOptions,
+}
+
+impl TurnOptionsBuilder {
+    pub fn max_iterations(mut self, n: usize) -> Self {
+        self.opts.max_iterations = n;
+        self
+    }
+
+    pub fn raw(mut self, raw: bool) -> Self {
+        self.opts.raw = raw;
+        self
+    }
+
+    pub fn tools(mut self, tools: HashMap<String, ToolHandler>) -> Self {
+        self.opts.tools = tools;
+        self
+    }
+
+    pub fn tool(mut self, name: impl Into<String>, handler: ToolHandler) -> Self {
+        self.opts.tools.insert(name.into(), handler);
+        self
+    }
+
+    pub fn on_event(mut self, cb: EventCallback) -> Self {
+        self.opts.on_event = Some(cb);
+        self
+    }
+
+    pub fn cancelled(mut self, token: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
+        self.opts.cancelled = Some(token);
+        self
+    }
+
+    pub fn context_budget(mut self, budget: usize) -> Self {
+        self.opts.context_budget = Some(budget);
+        self
+    }
+
+    pub fn guardrails(mut self, g: crate::guardrails::Guardrails) -> Self {
+        self.opts.guardrails = Some(g);
+        self
+    }
+
+    pub fn steering(mut self, s: crate::steering::Steering) -> Self {
+        self.opts.steering = Some(s);
+        self
+    }
+
+    pub fn parallel_tool_calls(mut self, parallel: bool) -> Self {
+        self.opts.parallel_tool_calls = parallel;
+        self
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn validator(
+        mut self,
+        v: Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>,
+    ) -> Self {
+        self.opts.validator = Some(v);
+        self
+    }
+
+    pub fn max_llm_retries(mut self, n: usize) -> Self {
+        self.opts.max_llm_retries = n;
+        self
+    }
+
+    pub fn compaction(mut self, c: Compaction) -> Self {
+        self.opts.compaction = Some(c);
+        self
+    }
+
+    /// Consume the builder and return the configured [`TurnOptions`].
+    pub fn build(self) -> TurnOptions {
+        self.opts
+    }
 }
 
 // ---------------------------------------------------------------------------
 // turn — conversational round-trip with optional tool calling
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Compaction helpers
+// ---------------------------------------------------------------------------
+
+/// Replace the synthetic summary message in `messages` with a compacted summary.
+///
+/// Scans for the first `User` message whose text starts with `[Context summary:`
+/// and replaces it.
+fn replace_summary_message(messages: &mut [Message], summary: &str) {
+    for msg in messages.iter_mut() {
+        if msg.role == Role::User && msg.text_content().starts_with("[Context summary:") {
+            *msg = Message::text(Role::User, format!("[Context summary: {summary}]"));
+            return;
+        }
+    }
+}
+
+/// Run the compaction strategy on dropped messages, replacing the default summary
+/// in `messages` on success. On failure the existing summary is preserved.
+pub async fn apply_compaction(
+    compaction: &Compaction,
+    dropped: &[Message],
+    messages: &mut [Message],
+    span: &crate::tracing::SpanEmitter,
+) {
+    span.emit("compaction_start", &json!({"dropped_count": dropped.len()}));
+
+    let result = match compaction {
+        Compaction::Prompty(path) => {
+            let text = crate::context::format_dropped_messages(dropped);
+            let mut inputs = serde_json::Map::new();
+            inputs.insert("messages".into(), serde_json::Value::String(text));
+            match crate::invoke_from_path(path, Some(&serde_json::Value::Object(inputs))).await {
+                Ok(val) => Ok(val.as_str().unwrap_or("").to_string()),
+                Err(e) => Err(format!("{e}")),
+            }
+        }
+        Compaction::Function(f) => match f(dropped).await {
+            Ok(s) => Ok(s),
+            Err(e) => Err(format!("{e}")),
+        },
+    };
+
+    match result {
+        Ok(summary) if !summary.trim().is_empty() => {
+            replace_summary_message(messages, &summary);
+            span.emit(
+                "compaction_complete",
+                &json!({"summary_length": summary.len()}),
+            );
+        }
+        Ok(_) => {
+            span.emit("compaction_failed", &json!({"reason": "empty result"}));
+        }
+        Err(reason) => {
+            span.emit("compaction_failed", &json!({"reason": reason}));
+        }
+    }
+}
 
 /// One conversational round-trip: prepare → [agent loop with tool calls] → process.
 ///
@@ -731,10 +927,16 @@ pub async fn turn(
         // Context trimming
         if let Some(budget) = opts.context_budget {
             let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
-            if dropped > 0 {
-                span.emit("context_trimmed", &json!(dropped));
+            if !dropped.is_empty() {
+                span.emit("context_trimmed", &json!(dropped.len()));
+                messages = trimmed;
+                // Apply compaction if configured
+                if let Some(ref compaction) = opts.compaction {
+                    apply_compaction(compaction, &dropped, &mut messages, &span).await;
+                }
+            } else {
+                messages = trimmed;
             }
-            messages = trimmed;
         }
 
         // Input guardrail
@@ -879,9 +1081,13 @@ pub async fn turn(
         // Context trimming
         if let Some(budget) = opts.context_budget {
             let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
-            if dropped > 0 {
-                iter_span.emit("context_trimmed", &json!(dropped));
+            if !dropped.is_empty() {
+                iter_span.emit("context_trimmed", &json!(dropped.len()));
                 messages = trimmed;
+                // Apply compaction if configured
+                if let Some(ref compaction) = opts.compaction {
+                    apply_compaction(compaction, &dropped, &mut messages, &iter_span).await;
+                }
                 opts.emit(AgentEvent::MessagesUpdated {
                     messages: messages.clone(),
                 });
@@ -2450,5 +2656,80 @@ mod tests {
             "Expected retry status event, got: {:?}",
             *captured
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // TurnOptionsBuilder tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_builder_defaults() {
+        let opts = TurnOptions::builder().build();
+        assert_eq!(opts.max_iterations, 10);
+        assert_eq!(opts.max_llm_retries, 3);
+        assert!(!opts.raw);
+        assert!(!opts.parallel_tool_calls);
+        assert!(opts.context_budget.is_none());
+        assert!(opts.compaction.is_none());
+        assert!(opts.on_event.is_none());
+        assert!(opts.cancelled.is_none());
+        assert!(opts.guardrails.is_none());
+        assert!(opts.steering.is_none());
+        assert!(opts.validator.is_none());
+        assert!(opts.tools.is_empty());
+    }
+
+    #[test]
+    fn test_builder_chaining() {
+        let opts = TurnOptions::builder()
+            .max_iterations(5)
+            .context_budget(50_000)
+            .max_llm_retries(5)
+            .parallel_tool_calls(true)
+            .raw(true)
+            .build();
+        assert_eq!(opts.max_iterations, 5);
+        assert_eq!(opts.context_budget, Some(50_000));
+        assert_eq!(opts.max_llm_retries, 5);
+        assert!(opts.parallel_tool_calls);
+        assert!(opts.raw);
+    }
+
+    #[test]
+    fn test_builder_tool_method() {
+        let handler = ToolHandler::Sync(Box::new(|_args| Ok("result".to_string())));
+        let opts = TurnOptions::builder().tool("my_tool", handler).build();
+        assert!(opts.tools.contains_key("my_tool"));
+        assert_eq!(opts.tools.len(), 1);
+    }
+
+    #[test]
+    fn test_builder_multiple_tools() {
+        let h1 = ToolHandler::Sync(Box::new(|_| Ok("a".to_string())));
+        let h2 = ToolHandler::Sync(Box::new(|_| Ok("b".to_string())));
+        let opts = TurnOptions::builder()
+            .tool("tool_a", h1)
+            .tool("tool_b", h2)
+            .build();
+        assert_eq!(opts.tools.len(), 2);
+        assert!(opts.tools.contains_key("tool_a"));
+        assert!(opts.tools.contains_key("tool_b"));
+    }
+
+    #[test]
+    fn test_builder_compaction() {
+        let opts = TurnOptions::builder()
+            .compaction(Compaction::Prompty("summarize.prompty".into()))
+            .build();
+        assert!(opts.compaction.is_some());
+    }
+
+    #[test]
+    fn test_builder_cancelled_token() {
+        let token = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let opts = TurnOptions::builder().cancelled(token.clone()).build();
+        assert!(!opts.is_cancelled());
+        token.store(true, std::sync::atomic::Ordering::Relaxed);
+        assert!(opts.is_cancelled());
     }
 }

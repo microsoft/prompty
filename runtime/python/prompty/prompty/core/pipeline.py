@@ -24,11 +24,13 @@ plugin discovery system.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import random
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any
 
 from ..model import Prompty
@@ -77,6 +79,10 @@ __all__ = [
     "_expand_thread_markers",
     "_dict_to_message",
     "_dict_content_to_part",
+    # Compaction helpers (used by tests)
+    "_apply_compaction",
+    "_apply_compaction_async",
+    "_replace_summary_message",
 ]
 
 
@@ -873,6 +879,7 @@ def turn(
     on_event: EventCallback | None = None,
     cancel: CancellationToken | None = None,
     context_budget: int | None = None,
+    compaction: str | Path | Callable[..., Any] | None = None,
     guardrails: Guardrails | None = None,
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
@@ -909,6 +916,11 @@ def turn(
         Optional cancellation token for cooperative cancellation.
     context_budget:
         Character budget for context window management. ``None`` = no trimming.
+    compaction:
+        Optional compaction strategy for when messages are trimmed.  A string
+        or :class:`~pathlib.Path` is treated as a ``.prompty`` file to invoke.
+        A callable receives ``(dropped_messages)`` and returns a summary
+        string.  ``None`` (default) keeps the built-in summary.
     guardrails:
         Optional validation hooks (input, output, tool).
     steering:
@@ -982,10 +994,12 @@ def turn(
                     emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
 
             if context_budget is not None:
-                dropped_count, _ = trim_to_context_window(messages, context_budget)
+                dropped_count, dropped = trim_to_context_window(messages, context_budget)
                 if dropped_count > 0:
                     emit_event(on_event, "messages_updated", {"messages": messages})
                     emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
+                    if compaction is not None:
+                        _apply_compaction(compaction, dropped, messages, on_event, agent)
 
             if guardrails is not None:
                 gr_input = guardrails.check_input(messages)
@@ -1120,6 +1134,7 @@ async def turn_async(
     on_event: EventCallback | None = None,
     cancel: CancellationToken | None = None,
     context_budget: int | None = None,
+    compaction: str | Path | Callable[..., Any] | None = None,
     guardrails: Guardrails | None = None,
     steering: Steering | None = None,
     parallel_tool_calls: bool = False,
@@ -1176,10 +1191,12 @@ async def turn_async(
                     emit_event(on_event, "status", {"message": f"Injected {len(pending)} steering message(s)"})
 
             if context_budget is not None:
-                dropped_count, _ = trim_to_context_window(messages, context_budget)
+                dropped_count, dropped = trim_to_context_window(messages, context_budget)
                 if dropped_count > 0:
                     emit_event(on_event, "messages_updated", {"messages": messages})
                     emit_event(on_event, "status", {"message": f"Trimmed {dropped_count} messages for context budget"})
+                    if compaction is not None:
+                        await _apply_compaction_async(compaction, dropped, messages, on_event, agent)
 
             if guardrails is not None:
                 gr_input = guardrails.check_input(messages)
@@ -1301,6 +1318,88 @@ async def turn_async(
     if target_type is not None:
         return cast(processed_result, target_type)
     return processed_result
+
+
+# ---------------------------------------------------------------------------
+# Compaction helpers
+# ---------------------------------------------------------------------------
+
+
+def _replace_summary_message(messages: list[Message], summary: str) -> None:
+    """Replace the synthetic summary user message with the compacted version."""
+    for i, msg in enumerate(messages):
+        if msg.role == "user" and msg.text and "[Context summary:" in msg.text:
+            messages[i] = Message(
+                role="user",
+                parts=[TextPart(value=f"[Context summary: {summary}]")],
+            )
+            return
+
+
+def _apply_compaction(
+    compaction: str | Path | Callable[..., Any],
+    dropped: list[Message],
+    messages: list[Message],
+    on_event: EventCallback | None,
+    agent: Any,
+) -> None:
+    """Replace the default summary message with a compacted one."""
+    from .context import format_dropped_messages
+
+    emit_event(on_event, "compaction_start", {"dropped_count": len(dropped)})
+    try:
+        if isinstance(compaction, (str, Path)):
+            text = format_dropped_messages(dropped)
+            summary = invoke(str(compaction), inputs={"messages": text})
+            if not isinstance(summary, str):
+                summary = str(summary)
+        elif callable(compaction):
+            result = compaction(dropped)
+            summary = str(result) if result is not None else ""
+        else:
+            return
+
+        if summary and summary.strip():
+            _replace_summary_message(messages, summary)
+            emit_event(on_event, "compaction_complete", {"summary_length": len(summary)})
+        else:
+            emit_event(on_event, "compaction_failed", {"reason": "empty result"})
+    except Exception as exc:
+        emit_event(on_event, "compaction_failed", {"reason": str(exc)})
+
+
+async def _apply_compaction_async(
+    compaction: str | Path | Callable[..., Any],
+    dropped: list[Message],
+    messages: list[Message],
+    on_event: EventCallback | None,
+    agent: Any,
+) -> None:
+    """Async version of _apply_compaction."""
+    from .context import format_dropped_messages
+
+    emit_event(on_event, "compaction_start", {"dropped_count": len(dropped)})
+    try:
+        if isinstance(compaction, (str, Path)):
+            text = format_dropped_messages(dropped)
+            summary = await invoke_async(str(compaction), inputs={"messages": text})
+            if not isinstance(summary, str):
+                summary = str(summary)
+        elif callable(compaction):
+            result = compaction(dropped)
+            if inspect.isawaitable(result):
+                result = await result
+            summary = str(result) if result is not None else ""
+        else:
+            return
+
+        if summary and summary.strip():
+            _replace_summary_message(messages, summary)
+            emit_event(on_event, "compaction_complete", {"summary_length": len(summary)})
+        else:
+            emit_event(on_event, "compaction_failed", {"reason": "empty result"})
+    except Exception as exc:
+        emit_event(on_event, "compaction_failed", {"reason": str(exc)})
 
 
 def _resolve_bindings(

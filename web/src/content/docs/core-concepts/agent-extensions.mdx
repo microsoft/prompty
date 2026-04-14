@@ -300,6 +300,142 @@ let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
   model's response.
 </Aside>
 
+### Context Compaction
+
+The default summary produced by trimming is a simple concatenation of message
+previews — functional but low-signal. **Context compaction** replaces it with a
+higher-quality summary using either a `.prompty` file or a custom function.
+
+<Tabs>
+<TabItem label="Python">
+```python
+# Option 1: Use a .prompty file for compaction
+result = turn(
+    agent,
+    inputs={"question": "Continue our discussion"},
+    tools=tools,
+    context_budget=50_000,
+    compaction="summarize.prompty",
+)
+
+# Option 2: Use a custom function
+def my_compactor(dropped_messages):
+    """Summarize dropped messages however you like."""
+    return f"Previously discussed: {len(dropped_messages)} exchanges"
+
+result = turn(
+    agent,
+    inputs={"question": "Continue our discussion"},
+    tools=tools,
+    context_budget=50_000,
+    compaction=my_compactor,
+)
+```
+</TabItem>
+<TabItem label="TypeScript">
+```typescript
+// Option 1: Use a .prompty file for compaction
+const result = await turn(agent, inputs, {
+  tools,
+  contextBudget: 50_000,
+  compaction: "summarize.prompty",
+});
+
+// Option 2: Use a custom function
+const result = await turn(agent, inputs, {
+  tools,
+  contextBudget: 50_000,
+  compaction: (dropped) =>
+    `Previously discussed: ${dropped.length} exchanges`,
+});
+```
+</TabItem>
+<TabItem label="C#">
+```csharp
+// Option 1: Use a .prompty file for compaction
+var result = await Pipeline.TurnAsync(
+    agent, inputs, tools,
+    contextBudget: 50_000,
+    compaction: "summarize.prompty"
+);
+
+// Option 2: Use a custom function
+var result = await Pipeline.TurnAsync(
+    agent, inputs, tools,
+    contextBudget: 50_000,
+    compaction: async (dropped) =>
+        $"Previously discussed: {dropped.Count} exchanges"
+);
+```
+</TabItem>
+<TabItem label="Rust">
+```rust
+use prompty::{TurnOptions, Compaction};
+
+// Option 1: Use a .prompty file for compaction
+let options = TurnOptions {
+    context_budget: Some(50_000),
+    compaction: Some(Compaction::Prompty("summarize.prompty".into())),
+    ..Default::default()
+};
+
+// Option 2: Use a custom function
+let options = TurnOptions {
+    context_budget: Some(50_000),
+    compaction: Some(Compaction::Function(Arc::new(|dropped| {
+        Box::pin(async move {
+            Ok(format!("Previously discussed: {} exchanges", dropped.len()))
+        })
+    }))),
+    ..Default::default()
+};
+```
+</TabItem>
+</Tabs>
+
+#### The Compaction `.prompty` File
+
+A compaction prompt receives the dropped messages as formatted text and should
+return a concise summary preserving key facts, decisions, and context:
+
+```yaml
+---
+name: context-compactor
+model:
+  id: gpt-4o-mini
+  provider: openai
+inputSchema:
+  properties:
+    messages:
+      kind: string
+      description: Formatted text of dropped conversation messages
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+Summarize these conversation messages into a concise summary.
+Preserve key facts, decisions, tool results, and context needed
+to continue the conversation coherently. Be brief but complete.
+
+user:
+{{messages}}
+```
+
+<Aside type="tip">
+  Use a cheap, fast model like `gpt-4o-mini` for compaction — it runs on
+  every trim, so latency and cost matter. The compacted summary replaces the
+  default `[Context summary: ...]` message in the conversation.
+</Aside>
+
+<Aside type="note">
+  Compaction is **fail-safe**: if the `.prompty` file or function throws an
+  error, the default `summarize_dropped()` summary stays in place. Errors are
+  reported via the `compaction_failed` event but never propagate as exceptions.
+</Aside>
+
 ---
 
 ## Guardrails

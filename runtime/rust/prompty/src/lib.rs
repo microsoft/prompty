@@ -43,6 +43,7 @@ pub mod loader;
 pub mod model;
 pub mod parsers;
 pub mod pipeline;
+pub mod prelude;
 pub mod registry;
 pub mod renderers;
 pub mod steering;
@@ -53,7 +54,9 @@ pub mod types;
 
 // Re-export core types for convenience
 pub use connections::{clear_connections, has_connection, register_connection, with_connection};
-pub use context::{estimate_chars, summarize_dropped, trim_to_context_window};
+pub use context::{
+    estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window,
+};
 pub use guardrails::{
     GuardrailError, GuardrailPhase, GuardrailResult, Guardrails, InputGuardrail, OutputGuardrail,
     ToolGuardrail,
@@ -62,9 +65,9 @@ pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Re
 pub use loader::{LoadError, load, load_async, load_from_string};
 pub use model::Prompty;
 pub use pipeline::{
-    AgentEvent, AsyncToolFn, EventCallback, ToolFn, ToolHandler, TurnOptions,
-    invoke as invoke_agent, invoke_from_path, prepare, process, register_defaults, render, run,
-    turn, turn_from_path, validate_inputs,
+    AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,
+    TurnOptions, TurnOptionsBuilder, invoke as invoke_agent, invoke_from_path, prepare, process,
+    register_defaults, render, run, turn, turn_from_path, validate_inputs,
 };
 pub use registry::{
     clear_cache, has_executor, has_parser, has_processor, has_renderer, invoke_executor,

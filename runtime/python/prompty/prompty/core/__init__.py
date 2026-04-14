@@ -5,7 +5,7 @@ from __future__ import annotations
 from .agent_events import AgentEvent, EventCallback, emit_event
 from .cancellation import CancellationToken, CancelledError
 from .connections import clear_connections, get_connection, register_connection
-from .context import estimate_chars, summarize_dropped, trim_to_context_window
+from .context import estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window
 from .discovery import (
     InvokerError,
     clear_cache,

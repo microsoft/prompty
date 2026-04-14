@@ -68,6 +68,31 @@ export function summarizeDropped(messages: Message[]): string {
 }
 
 /**
+ * Format dropped messages as a human-readable text block.
+ * Each message is rendered as `[role]: content`, with tool calls shown as
+ * `Called: name(args)`.
+ */
+export function formatDroppedMessages(messages: Message[]): string {
+  const lines: string[] = [];
+  for (const msg of messages) {
+    const msgText = msg.text.trim();
+    if (msgText) {
+      lines.push(`[${msg.role}]: ${msgText}`);
+    }
+    const toolCalls = msg.metadata?.tool_calls;
+    if (Array.isArray(toolCalls)) {
+      for (const tc of toolCalls) {
+        const tcObj = tc as Record<string, unknown>;
+        const name = (tcObj.name as string) ?? ((tcObj.function as Record<string, string>)?.name ?? "?");
+        const args = (tcObj.arguments as string) ?? ((tcObj.function as Record<string, string>)?.arguments ?? "");
+        lines.push(`Called: ${name}(${args})`);
+      }
+    }
+  }
+  return lines.join("\n");
+}
+
+/**
  * Trim messages in-place to fit within a character budget.
  * Returns [droppedCount, droppedMessages].
  */

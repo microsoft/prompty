@@ -80,6 +80,7 @@ export {
   estimateChars,
   summarizeDropped,
   trimToContextWindow,
+  formatDroppedMessages,
   type GuardrailResult,
   GuardrailError,
   type InputGuardrail,

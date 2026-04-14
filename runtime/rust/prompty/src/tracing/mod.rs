@@ -14,4 +14,6 @@ pub use console::console_tracer;
 #[cfg(feature = "otel")]
 pub use otel::{init_otel_stdout, otel_tracer};
 pub use prompty_tracer::PromptyTracer;
-pub use tracer::{Tracer, sanitize_value, trace, trace_async, trace_span, trace_span_async};
+pub use tracer::{
+    SpanEmitter, Tracer, sanitize_value, trace, trace_async, trace_span, trace_span_async,
+};

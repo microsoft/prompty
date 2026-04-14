@@ -32,7 +32,7 @@ export {
 } from "./tool-dispatch.js";
 export { type AgentEventType, type EventCallback, emitEvent } from "./agent-events.js";
 export { CancelledError, checkCancellation } from "./cancellation.js";
-export { estimateChars, summarizeDropped, trimToContextWindow } from "./context.js";
+export { estimateChars, summarizeDropped, trimToContextWindow, formatDroppedMessages } from "./context.js";
 export {
   type GuardrailResult,
   GuardrailError,

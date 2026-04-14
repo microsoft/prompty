@@ -119,6 +119,32 @@ public static class ContextWindow
         return (droppedCount, dropped);
     }
 
+    /// <summary>
+    /// Format dropped messages as readable text for compaction input.
+    /// Each message is rendered as "[role]: text" with tool calls shown as "Called: name(args)".
+    /// </summary>
+    public static string FormatDroppedMessages(List<Message> messages)
+    {
+        var lines = new List<string>();
+        foreach (var msg in messages)
+        {
+            if (msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
+            {
+                foreach (var tc in tcList)
+                {
+                    var name = tc?.GetType().GetProperty("Name")?.GetValue(tc)?.ToString() ?? "unknown";
+                    var args = tc?.GetType().GetProperty("Arguments")?.GetValue(tc)?.ToString() ?? "";
+                    lines.Add($"[{msg.Role}]: Called: {name}({args})");
+                }
+            }
+
+            var text = msg.Text.Trim();
+            if (text.Length > 0)
+                lines.Add($"[{msg.Role}]: {text}");
+        }
+        return string.Join("\n", lines);
+    }
+
     private static string Truncate(string text, int maxLen = 200)
         => text.Length <= maxLen ? text : text[..maxLen] + "…";
 }
