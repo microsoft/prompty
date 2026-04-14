@@ -50,7 +50,7 @@ class FoundryExecutor(_BaseExecutor):
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -66,7 +66,7 @@ class FoundryExecutor(_BaseExecutor):
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -117,7 +117,7 @@ class FoundryExecutor(_BaseExecutor):
         """Build a sync AzureOpenAI client from an ApiKeyConnection."""
         from openai import AzureOpenAI
 
-        if not conn.apiKey:
+        if not conn.api_key:
             raise ValueError(
                 "Foundry connection has kind 'key' but no apiKey. "
                 "Either provide an apiKey (e.g., apiKey: ${env:AZURE_OPENAI_API_KEY}), "
@@ -128,7 +128,7 @@ class FoundryExecutor(_BaseExecutor):
                 "Then call: prompty.register_connection('my-foundry', client=AzureOpenAI(...))"
             )
 
-        kwargs: dict[str, Any] = {"api_key": conn.apiKey, "api_version": "2024-12-01-preview"}
+        kwargs: dict[str, Any] = {"api_key": conn.api_key, "api_version": "2024-12-01-preview"}
         if conn.endpoint:
             kwargs["azure_endpoint"] = conn.endpoint
 
@@ -148,7 +148,7 @@ class FoundryExecutor(_BaseExecutor):
         """Build an async AsyncAzureOpenAI client from an ApiKeyConnection."""
         from openai import AsyncAzureOpenAI
 
-        if not conn.apiKey:
+        if not conn.api_key:
             raise ValueError(
                 "Foundry connection has kind 'key' but no apiKey. "
                 "Either provide an apiKey (e.g., apiKey: ${env:AZURE_OPENAI_API_KEY}), "
@@ -159,7 +159,7 @@ class FoundryExecutor(_BaseExecutor):
                 "Then call: prompty.register_connection('my-foundry', client=AsyncAzureOpenAI(...))"
             )
 
-        kwargs: dict[str, Any] = {"api_key": conn.apiKey, "api_version": "2024-12-01-preview"}
+        kwargs: dict[str, Any] = {"api_key": conn.api_key, "api_version": "2024-12-01-preview"}
         if conn.endpoint:
             kwargs["azure_endpoint"] = conn.endpoint
 
