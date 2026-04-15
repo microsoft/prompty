@@ -3,43 +3,18 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * Connection configuration for AI agents.
- * `provider`, `kind`, and `endpoint` are required properties here,
- * but this section can accept additional via options.
- *
- */
 export abstract class Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-   */
   kind: string = "";
-
-  /**
-   * The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
-   */
   authenticationMode?: string | undefined;
-
-  /**
-   * The usage description for the connection, providing context on how this connection will be used
-   */
   usageDescription?: string | undefined;
 
-  /**
-   * Initializes a new instance of Connection.
-   */
   constructor(init?: Partial<Connection>) {
     this.kind = init?.kind ?? "";
-
     if (init?.authenticationMode !== undefined) {
       this.authenticationMode = init.authenticationMode;
     }
-
     if (init?.usageDescription !== undefined) {
       this.usageDescription = init.usageDescription;
     }
@@ -47,18 +22,9 @@ export abstract class Connection {
 
   //#region Load Methods
 
-  /**
-   * Load a Connection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Connection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Connection {
+  static load(data: Record<string, unknown>, context?: LoadContext): Connection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Load polymorphic Connection instance
@@ -67,18 +33,10 @@ export abstract class Connection {
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
-    if (
-      data["authenticationMode"] !== undefined &&
-      data["authenticationMode"] !== null
-    ) {
+    if (data["authenticationMode"] !== undefined && data["authenticationMode"] !== null) {
       instance.authenticationMode = String(data["authenticationMode"]);
     }
-
-    if (
-      data["usageDescription"] !== undefined &&
-      data["usageDescription"] !== null
-    ) {
+    if (data["usageDescription"] !== undefined && data["usageDescription"] !== null) {
       instance.usageDescription = String(data["usageDescription"]);
     }
 
@@ -88,16 +46,7 @@ export abstract class Connection {
     return instance;
   }
 
-  /**
-   * Load polymorphic Connection based on discriminator.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Connection instance.
-   */
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Connection {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Connection {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -115,12 +64,9 @@ export abstract class Connection {
         case "oauth":
           return OAuthConnection.load(data, context);
         default:
-          throw new Error(
-            `Unknown Connection discriminator value: ${discriminator}`,
-          );
+          throw new Error(`Unknown Connection discriminator value: ${discriminator}`);
       }
     }
-
     throw new Error("Missing Connection discriminator property: 'kind'");
   }
 
@@ -128,27 +74,20 @@ export abstract class Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the Connection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Connection) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
-    if (
-      obj.authenticationMode !== undefined &&
-      obj.authenticationMode !== null
-    ) {
+    if (obj.authenticationMode !== undefined && obj.authenticationMode !== null) {
       result["authenticationMode"] = obj.authenticationMode;
     }
-
     if (obj.usageDescription !== undefined && obj.usageDescription !== null) {
       result["usageDescription"] = obj.usageDescription;
     }
@@ -156,94 +95,44 @@ export abstract class Connection {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the Connection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the Connection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a Connection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Connection instance.
-   */
   static fromJson(json: string, context?: LoadContext): Connection {
     const data = JSON.parse(json);
-
     return Connection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a Connection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Connection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): Connection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return Connection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Connection configuration for AI services using named connections.
- *
- */
 export class ReferenceConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-   */
   kind: string = "reference";
-
-  /**
-   * The name of the connection
-   */
   name: string = "";
-
-  /**
-   * The target resource or service that this connection refers to
-   */
   target?: string | undefined;
 
-  /**
-   * Initializes a new instance of ReferenceConnection.
-   */
   constructor(init?: Partial<ReferenceConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "reference";
-
     this.name = init?.name ?? "";
-
     if (init?.target !== undefined) {
       this.target = init.target;
     }
@@ -251,31 +140,19 @@ export class ReferenceConnection extends Connection {
 
   //#region Load Methods
 
-  /**
-   * Load a ReferenceConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ReferenceConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ReferenceConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): ReferenceConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ReferenceConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
     if (data["target"] !== undefined && data["target"] !== null) {
       instance.target = String(data["target"]);
     }
@@ -290,15 +167,11 @@ export class ReferenceConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the ReferenceConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as ReferenceConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -306,132 +179,68 @@ export class ReferenceConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.target !== undefined && obj.target !== null) {
       result["target"] = obj.target;
     }
-
     return result;
   }
 
-  /**
-   * Convert the ReferenceConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ReferenceConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ReferenceConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ReferenceConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): ReferenceConnection {
     const data = JSON.parse(json);
-
     return ReferenceConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ReferenceConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ReferenceConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ReferenceConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ReferenceConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Connection configuration for AI services using named connections.
- *
- */
 export class RemoteConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-   */
   kind: string = "remote";
-
-  /**
-   * The name of the connection
-   */
   name: string = "";
-
-  /**
-   * The endpoint URL for the AI service
-   */
   endpoint: string = "";
 
-  /**
-   * Initializes a new instance of RemoteConnection.
-   */
   constructor(init?: Partial<RemoteConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "remote";
-
     this.name = init?.name ?? "";
-
     this.endpoint = init?.endpoint ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a RemoteConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded RemoteConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RemoteConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): RemoteConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new RemoteConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
     if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
       instance.endpoint = String(data["endpoint"]);
     }
@@ -446,15 +255,11 @@ export class RemoteConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the RemoteConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as RemoteConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -462,132 +267,68 @@ export class RemoteConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-
     return result;
   }
 
-  /**
-   * Convert the RemoteConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the RemoteConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a RemoteConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded RemoteConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): RemoteConnection {
     const data = JSON.parse(json);
-
     return RemoteConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a RemoteConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded RemoteConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): RemoteConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return RemoteConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Connection configuration for AI services using API keys.
- *
- */
 export class ApiKeyConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-   */
   kind: string = "key";
-
-  /**
-   * The endpoint URL for the AI service
-   */
   endpoint: string = "";
-
-  /**
-   * The API key for authenticating with the AI service
-   */
   apiKey: string = "";
 
-  /**
-   * Initializes a new instance of ApiKeyConnection.
-   */
   constructor(init?: Partial<ApiKeyConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "key";
-
     this.endpoint = init?.endpoint ?? "";
-
     this.apiKey = init?.apiKey ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ApiKeyConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ApiKeyConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ApiKeyConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): ApiKeyConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ApiKeyConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
       instance.endpoint = String(data["endpoint"]);
     }
-
     if (data["apiKey"] !== undefined && data["apiKey"] !== null) {
       instance.apiKey = String(data["apiKey"]);
     }
@@ -602,15 +343,11 @@ export class ApiKeyConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the ApiKeyConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as ApiKeyConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -618,121 +355,63 @@ export class ApiKeyConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-
     if (obj.apiKey !== undefined && obj.apiKey !== null) {
       result["apiKey"] = obj.apiKey;
     }
-
     return result;
   }
 
-  /**
-   * Convert the ApiKeyConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ApiKeyConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ApiKeyConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ApiKeyConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): ApiKeyConnection {
     const data = JSON.parse(json);
-
     return ApiKeyConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ApiKeyConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ApiKeyConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ApiKeyConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ApiKeyConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- *
- *
- */
 export class AnonymousConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-   */
   kind: string = "anonymous";
-
-  /**
-   * The endpoint for authenticating with the AI service
-   */
   endpoint: string = "";
 
-  /**
-   * Initializes a new instance of AnonymousConnection.
-   */
   constructor(init?: Partial<AnonymousConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "anonymous";
-
     this.endpoint = init?.endpoint ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a AnonymousConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AnonymousConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): AnonymousConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): AnonymousConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new AnonymousConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
       instance.endpoint = String(data["endpoint"]);
     }
@@ -747,15 +426,11 @@ export class AnonymousConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the AnonymousConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as AnonymousConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -763,109 +438,51 @@ export class AnonymousConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-
     return result;
   }
 
-  /**
-   * Convert the AnonymousConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the AnonymousConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a AnonymousConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AnonymousConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): AnonymousConnection {
     const data = JSON.parse(json);
-
     return AnonymousConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a AnonymousConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AnonymousConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): AnonymousConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return AnonymousConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Connection configuration for Microsoft Foundry projects.
- * Provides project-scoped access to models, tools, and services
- * via Entra ID (DefaultAzureCredential) authentication.
- *
- */
 export class FoundryConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The connection kind for Foundry project access
-   */
   kind: string = "foundry";
-
-  /**
-   * The Foundry project endpoint URL
-   */
   endpoint: string = "";
-
-  /**
-   * The named connection within the Foundry project
-   */
   name?: string | undefined;
-
-  /**
-   * The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
-   */
   connectionType?: string | undefined;
 
-  /**
-   * Initializes a new instance of FoundryConnection.
-   */
   constructor(init?: Partial<FoundryConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "foundry";
-
     this.endpoint = init?.endpoint ?? "";
-
     if (init?.name !== undefined) {
       this.name = init.name;
     }
-
     if (init?.connectionType !== undefined) {
       this.connectionType = init.connectionType;
     }
@@ -873,39 +490,23 @@ export class FoundryConnection extends Connection {
 
   //#region Load Methods
 
-  /**
-   * Load a FoundryConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FoundryConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): FoundryConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): FoundryConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new FoundryConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
       instance.endpoint = String(data["endpoint"]);
     }
-
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
-    if (
-      data["connectionType"] !== undefined &&
-      data["connectionType"] !== null
-    ) {
+    if (data["connectionType"] !== undefined && data["connectionType"] !== null) {
       instance.connectionType = String(data["connectionType"]);
     }
 
@@ -919,15 +520,11 @@ export class FoundryConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the FoundryConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as FoundryConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -935,129 +532,59 @@ export class FoundryConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.connectionType !== undefined && obj.connectionType !== null) {
       result["connectionType"] = obj.connectionType;
     }
-
     return result;
   }
 
-  /**
-   * Convert the FoundryConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the FoundryConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a FoundryConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FoundryConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): FoundryConnection {
     const data = JSON.parse(json);
-
     return FoundryConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a FoundryConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FoundryConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): FoundryConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return FoundryConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Connection configuration using OAuth 2.0 client credentials.
- * Useful for tools and services that require OAuth authentication,
- * such as MCP servers, OpenAPI endpoints, or other REST APIs.
- *
- */
 export class OAuthConnection extends Connection {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The connection kind for OAuth authentication
-   */
   kind: string = "oauth";
-
-  /**
-   * The endpoint URL for the service
-   */
   endpoint: string = "";
-
-  /**
-   * The OAuth client ID
-   */
   clientId: string = "";
-
-  /**
-   * The OAuth client secret
-   */
   clientSecret: string = "";
-
-  /**
-   * The OAuth token endpoint URL
-   */
   tokenUrl: string = "";
-
-  /**
-   * OAuth scopes to request
-   */
   scopes?: string[] = [];
 
-  /**
-   * Initializes a new instance of OAuthConnection.
-   */
   constructor(init?: Partial<OAuthConnection>) {
     super(init);
-
     this.kind = init?.kind ?? "oauth";
-
     this.endpoint = init?.endpoint ?? "";
-
     this.clientId = init?.clientId ?? "";
-
     this.clientSecret = init?.clientSecret ?? "";
-
     this.tokenUrl = init?.tokenUrl ?? "";
-
     if (init?.scopes !== undefined) {
       this.scopes = init.scopes;
     }
@@ -1065,47 +592,30 @@ export class OAuthConnection extends Connection {
 
   //#region Load Methods
 
-  /**
-   * Load a OAuthConnection instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OAuthConnection instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): OAuthConnection {
+  static load(data: Record<string, unknown>, context?: LoadContext): OAuthConnection {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new OAuthConnection();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
       instance.endpoint = String(data["endpoint"]);
     }
-
     if (data["clientId"] !== undefined && data["clientId"] !== null) {
       instance.clientId = String(data["clientId"]);
     }
-
     if (data["clientSecret"] !== undefined && data["clientSecret"] !== null) {
       instance.clientSecret = String(data["clientSecret"]);
     }
-
     if (data["tokenUrl"] !== undefined && data["tokenUrl"] !== null) {
       instance.tokenUrl = String(data["tokenUrl"]);
     }
-
     if (data["scopes"] !== undefined && data["scopes"] !== null) {
-      instance.scopes = Array.isArray(data["scopes"])
-        ? (data["scopes"] as unknown[]).map((v) => String(v))
-        : [];
+      instance.scopes = (data["scopes"] as unknown[]).map(v => String(v));
     }
 
     if (context) {
@@ -1118,15 +628,11 @@ export class OAuthConnection extends Connection {
 
   //#region Save Methods
 
-  /**
-   * Save the OAuthConnection instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as OAuthConnection)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -1134,75 +640,45 @@ export class OAuthConnection extends Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-
     if (obj.clientId !== undefined && obj.clientId !== null) {
       result["clientId"] = obj.clientId;
     }
-
     if (obj.clientSecret !== undefined && obj.clientSecret !== null) {
       result["clientSecret"] = obj.clientSecret;
     }
-
     if (obj.tokenUrl !== undefined && obj.tokenUrl !== null) {
       result["tokenUrl"] = obj.tokenUrl;
     }
-
     if (obj.scopes !== undefined && obj.scopes !== null) {
       result["scopes"] = obj.scopes;
     }
-
     return result;
   }
 
-  /**
-   * Convert the OAuthConnection instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the OAuthConnection instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a OAuthConnection instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OAuthConnection instance.
-   */
   static fromJson(json: string, context?: LoadContext): OAuthConnection {
     const data = JSON.parse(json);
-
     return OAuthConnection.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a OAuthConnection instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OAuthConnection instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): OAuthConnection {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return OAuthConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

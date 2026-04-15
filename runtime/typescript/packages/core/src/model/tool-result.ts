@@ -4,53 +4,32 @@
 import { LoadContext, SaveContext } from "./context";
 import { ContentPart, TextPart } from "./content-part";
 
-/**
- * The result of a tool execution. Contains a list of content parts, enabling
- * rich tool results (text, images, files, audio) rather than just strings.
- *
- * Implementations MUST support conversion from a plain string to a ToolResult
- * containing a single TextPart for backward compatibility.
- *
- */
 export class ToolResult {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The content parts of the tool result
-   */
   parts: ContentPart[] = [];
 
-  /**
-   * Initializes a new instance of ToolResult.
-   */
   constructor(init?: Partial<ToolResult>) {
     this.parts = init?.parts ?? [];
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ToolResult instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolResult instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolResult {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ToolResult();
 
     if (data["parts"] !== undefined && data["parts"] !== null) {
-      instance.parts = ToolResult.loadParts(data["parts"], context);
+      instance.parts = ToolResult.loadParts(
+        data["parts"] as unknown[],
+        context,
+      );
     }
 
     if (context) {
@@ -59,40 +38,48 @@ export class ToolResult {
     return instance;
   }
 
-  /**
-   * Load a collection of ContentPart from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of ContentPart.
-   */
-  static loadParts(data: unknown, context?: LoadContext): ContentPart[] {
-    const result: ContentPart[] = [];
-
-    // This type doesn't have a 'name' property, always expect array format
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(
-            ContentPart.load(item as Record<string, unknown>, context),
-          );
+  static loadParts(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ContentPart[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, kind: v });
         }
       }
+      data = result;
+    }
+    return data.map((item) =>
+      ContentPart.load(item as Record<string, unknown>, context),
+    );
+  }
+
+  static saveParts(
+    items: ContentPart[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
 
   //#region Save Methods
 
-  /**
-   * Save the ToolResult instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ToolResult) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
@@ -103,92 +90,35 @@ export class ToolResult {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of ContentPart to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveParts(
-    items: ContentPart[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
-  }
-
-  /**
-   * Convert the ToolResult instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ToolResult instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ToolResult instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolResult instance.
-   */
   static fromJson(json: string, context?: LoadContext): ToolResult {
     const data = JSON.parse(json);
-
     return ToolResult.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ToolResult instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolResult instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ToolResult {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ToolResult.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 
-  //#region Factory Methods
-
-  /**
-   * Create a ToolResult with preset field values.
-   */
   static text(value: string): ToolResult {
     return new ToolResult({ parts: [new TextPart({ value: value })] });
   }
 
-  //#endregion
-
-  //#region Helpers — implement these in an extension file
-
-  /**
-   * Helper methods for ToolResult.
-   * These should be implemented as standalone functions in the runtime:
-   * - text(): string — Concatenate all TextPart values joined by newline
-   */
-
-  //#endregion
+  // @method text(): string — Concatenate all TextPart values joined by newline
 }

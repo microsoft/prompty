@@ -4,43 +4,23 @@
 import { LoadContext, SaveContext } from "./context";
 import { ToolCall } from "./tool-call";
 
-/**
- * A chunk of data from a streaming LLM response. Stream chunks are
- * discriminated on the `kind` field.
- *
- */
 export abstract class StreamChunk {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind of stream chunk
-   */
   kind: string = "";
 
-  /**
-   * Initializes a new instance of StreamChunk.
-   */
   constructor(init?: Partial<StreamChunk>) {
     this.kind = init?.kind ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a StreamChunk instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded StreamChunk instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): StreamChunk {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Load polymorphic StreamChunk instance
@@ -56,12 +36,6 @@ export abstract class StreamChunk {
     return instance;
   }
 
-  /**
-   * Load polymorphic StreamChunk based on discriminator.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded StreamChunk instance.
-   */
   private static loadKind(
     data: Record<string, unknown>,
     context?: LoadContext,
@@ -84,7 +58,6 @@ export abstract class StreamChunk {
           );
       }
     }
-
     throw new Error("Missing StreamChunk discriminator property: 'kind'");
   }
 
@@ -92,13 +65,11 @@ export abstract class StreamChunk {
 
   //#region Save Methods
 
-  /**
-   * Save the StreamChunk instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as StreamChunk) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
@@ -109,110 +80,57 @@ export abstract class StreamChunk {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the StreamChunk instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the StreamChunk instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a StreamChunk instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded StreamChunk instance.
-   */
   static fromJson(json: string, context?: LoadContext): StreamChunk {
     const data = JSON.parse(json);
-
     return StreamChunk.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a StreamChunk instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded StreamChunk instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): StreamChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return StreamChunk.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A text content chunk from the LLM response stream.
- *
- */
 export class TextChunk extends StreamChunk {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for text chunks
-   */
   kind: string = "text";
-
-  /**
-   * The text content of the chunk
-   */
   value: string = "";
 
-  /**
-   * Initializes a new instance of TextChunk.
-   */
   constructor(init?: Partial<TextChunk>) {
     super(init);
-
     this.kind = init?.kind ?? "text";
-
     this.value = init?.value ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a TextChunk instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextChunk instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): TextChunk {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new TextChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["value"] !== undefined && data["value"] !== null) {
       instance.value = String(data["value"]);
     }
@@ -227,13 +145,11 @@ export class TextChunk extends StreamChunk {
 
   //#region Save Methods
 
-  /**
-   * Save the TextChunk instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as TextChunk) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -241,117 +157,63 @@ export class TextChunk extends StreamChunk {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.value !== undefined && obj.value !== null) {
       result["value"] = obj.value;
     }
-
     return result;
   }
 
-  /**
-   * Convert the TextChunk instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the TextChunk instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a TextChunk instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextChunk instance.
-   */
   static fromJson(json: string, context?: LoadContext): TextChunk {
     const data = JSON.parse(json);
-
     return TextChunk.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a TextChunk instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextChunk instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): TextChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return TextChunk.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A thinking/reasoning content chunk from the LLM response stream.
- *
- */
 export class ThinkingChunk extends StreamChunk {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for thinking chunks
-   */
   kind: string = "thinking";
-
-  /**
-   * The thinking content of the chunk
-   */
   value: string = "";
 
-  /**
-   * Initializes a new instance of ThinkingChunk.
-   */
   constructor(init?: Partial<ThinkingChunk>) {
     super(init);
-
     this.kind = init?.kind ?? "thinking";
-
     this.value = init?.value ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ThinkingChunk instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ThinkingChunk instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ThinkingChunk {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ThinkingChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["value"] !== undefined && data["value"] !== null) {
       instance.value = String(data["value"]);
     }
@@ -366,13 +228,11 @@ export class ThinkingChunk extends StreamChunk {
 
   //#region Save Methods
 
-  /**
-   * Save the ThinkingChunk instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ThinkingChunk) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -380,114 +240,62 @@ export class ThinkingChunk extends StreamChunk {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.value !== undefined && obj.value !== null) {
       result["value"] = obj.value;
     }
-
     return result;
   }
 
-  /**
-   * Convert the ThinkingChunk instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ThinkingChunk instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ThinkingChunk instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ThinkingChunk instance.
-   */
   static fromJson(json: string, context?: LoadContext): ThinkingChunk {
     const data = JSON.parse(json);
-
     return ThinkingChunk.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ThinkingChunk instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ThinkingChunk instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ThinkingChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ThinkingChunk.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A tool call chunk from the LLM response stream.
- *
- */
 export class ToolChunk extends StreamChunk {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for tool chunks
-   */
   kind: string = "tool";
-
-  /**
-   * The tool call data
-   */
   toolCall: ToolCall;
 
-  /**
-   * Initializes a new instance of ToolChunk.
-   */
   constructor(init?: Partial<ToolChunk>) {
     super(init);
-
     this.kind = init?.kind ?? "tool";
-
-    this.toolCall = init?.toolCall ?? undefined!;
+    if (init?.toolCall !== undefined) {
+      this.toolCall = init.toolCall;
+    }
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ToolChunk instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolChunk instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): ToolChunk {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ToolChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["toolCall"] !== undefined && data["toolCall"] !== null) {
       instance.toolCall = ToolCall.load(
         data["toolCall"] as Record<string, unknown>,
@@ -505,13 +313,11 @@ export class ToolChunk extends StreamChunk {
 
   //#region Save Methods
 
-  /**
-   * Save the ToolChunk instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ToolChunk) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -519,117 +325,63 @@ export class ToolChunk extends StreamChunk {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.toolCall !== undefined && obj.toolCall !== null) {
-      result["toolCall"] = obj.toolCall?.save(context);
+      result["toolCall"] = obj.toolCall.save(context);
     }
-
     return result;
   }
 
-  /**
-   * Convert the ToolChunk instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ToolChunk instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ToolChunk instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolChunk instance.
-   */
   static fromJson(json: string, context?: LoadContext): ToolChunk {
     const data = JSON.parse(json);
-
     return ToolChunk.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ToolChunk instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ToolChunk instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ToolChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ToolChunk.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * An error chunk from the LLM response stream.
- *
- */
 export class ErrorChunk extends StreamChunk {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for error chunks
-   */
   kind: string = "error";
-
-  /**
-   * The error message
-   */
   message: string = "";
 
-  /**
-   * Initializes a new instance of ErrorChunk.
-   */
   constructor(init?: Partial<ErrorChunk>) {
     super(init);
-
     this.kind = init?.kind ?? "error";
-
     this.message = init?.message ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ErrorChunk instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ErrorChunk instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ErrorChunk {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ErrorChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["message"] !== undefined && data["message"] !== null) {
       instance.message = String(data["message"]);
     }
@@ -644,13 +396,11 @@ export class ErrorChunk extends StreamChunk {
 
   //#region Save Methods
 
-  /**
-   * Save the ErrorChunk instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ErrorChunk) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -658,57 +408,30 @@ export class ErrorChunk extends StreamChunk {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.message !== undefined && obj.message !== null) {
       result["message"] = obj.message;
     }
-
     return result;
   }
 
-  /**
-   * Convert the ErrorChunk instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ErrorChunk instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ErrorChunk instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ErrorChunk instance.
-   */
   static fromJson(json: string, context?: LoadContext): ErrorChunk {
     const data = JSON.parse(json);
-
     return ErrorChunk.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ErrorChunk instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ErrorChunk instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ErrorChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ErrorChunk.load(data as Record<string, unknown>, context);
   }
 

@@ -7,48 +7,20 @@ import { Connection } from "./connection";
 import { McpApprovalMode } from "./mcp-approval-mode";
 import { Property } from "./property";
 
-/**
- * Represents a tool that can be used in prompts.
- *
- */
 export abstract class Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * Name of the tool. If a function tool, this is the function name, otherwise it is the type
-   */
   name: string = "";
-
-  /**
-   * The kind identifier for the tool
-   */
   kind: string = "";
-
-  /**
-   * A short description of the tool for metadata purposes
-   */
   description?: string | undefined;
-
-  /**
-   * Tool argument bindings to input properties
-   */
   bindings?: Binding[] = [];
 
-  /**
-   * Initializes a new instance of Tool.
-   */
   constructor(init?: Partial<Tool>) {
     this.name = init?.name ?? "";
-
     this.kind = init?.kind ?? "";
-
     if (init?.description !== undefined) {
       this.description = init.description;
     }
-
     if (init?.bindings !== undefined) {
       this.bindings = init.bindings;
     }
@@ -56,15 +28,9 @@ export abstract class Tool {
 
   //#region Load Methods
 
-  /**
-   * Load a Tool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Tool instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): Tool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Load polymorphic Tool instance
@@ -73,17 +39,14 @@ export abstract class Tool {
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["description"] !== undefined && data["description"] !== null) {
       instance.description = String(data["description"]);
     }
-
     if (data["bindings"] !== undefined && data["bindings"] !== null) {
-      instance.bindings = Tool.loadBindings(data["bindings"], context);
+      instance.bindings = Tool.loadBindings(data["bindings"] as unknown[], context);
     }
 
     if (context) {
@@ -92,59 +55,7 @@ export abstract class Tool {
     return instance;
   }
 
-  /**
-   * Load a collection of Binding from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Binding.
-   */
-  static loadBindings(data: unknown, context?: LoadContext): Binding[] {
-    const result: Binding[] = [];
-
-    if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Convert named dictionary to array
-      for (const [key, value] of Object.entries(
-        data as Record<string, unknown>,
-      )) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `Invalid 'bindings' format: key '${key}' has an array value. ` +
-              `'bindings' must be a flat list of objects or a name-keyed dict — ` +
-              `not a nested { ${key}: [...] } structure.`,
-          );
-        }
-        if (value && typeof value === "object") {
-          // Value is an object, add name to it
-          (value as Record<string, unknown>)["name"] = key;
-          result.push(Binding.load(value as Record<string, unknown>, context));
-        } else {
-          // Value is a scalar — let Binding.load() infer kind from value
-          const prop = Binding.load(value as Record<string, unknown>, context);
-          prop.name = key;
-          result.push(prop);
-        }
-      }
-    } else if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Binding.load(item as Record<string, unknown>, context));
-        }
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Load polymorphic Tool based on discriminator.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Tool instance.
-   */
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Tool {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Tool {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -161,36 +72,80 @@ export abstract class Tool {
           return CustomTool.load(data, context);
       }
     }
-
     throw new Error("Missing Tool discriminator property: 'kind'");
+  }
+
+  static loadBindings(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Binding[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, "input": v });
+        }
+      }
+      data = result;
+    }
+    return data.map(item => Binding.load(item as Record<string, unknown>, context));
+  }
+
+  static saveBindings(items: Binding[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
+    }
+
+    if (context.collectionFormat === "array") {
+      return items.map(item => item.save(context));
+    }
+
+    // Object format: use name as key
+    const result: Record<string, unknown> = {};
+    for (const item of items) {
+      const itemData = item.save(context) as Record<string, unknown>;
+      const name = itemData["name"] as string | undefined;
+      delete itemData["name"];
+      if (name) {
+        // Check if we can use shorthand (only primary property set)
+        const shorthand = (item.constructor as typeof Binding).shorthandProperty;
+        if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+          result[name] = itemData[shorthand];
+          continue;
+        }
+        result[name] = itemData;
+      } else {
+        // No name, fall back to array format for this item
+        if (!result["_unnamed"]) {
+          result["_unnamed"] = [];
+        }
+        (result["_unnamed"] as unknown[]).push(itemData);
+      }
+    }
+    return result;
   }
 
   //#endregion
 
   //#region Save Methods
 
-  /**
-   * Save the Tool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Tool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.description !== undefined && obj.description !== null) {
       result["description"] = obj.description;
     }
-
     if (obj.bindings !== undefined && obj.bindings !== null) {
       result["bindings"] = Tool.saveBindings(obj.bindings, context);
     }
@@ -198,137 +153,44 @@ export abstract class Tool {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of Binding to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveBindings(
-    items: Binding[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context);
-      const name = itemData["name"] as string | undefined;
-      if (name) {
-        delete itemData["name"];
-
-        // Check if we can use shorthand
-        if (context.useShorthand && Binding.shorthandProperty) {
-          const shorthandProp = Binding.shorthandProperty;
-          const keys = Object.keys(itemData);
-          if (keys.length === 1 && keys[0] === shorthandProp) {
-            result[name] = itemData[shorthandProp];
-            continue;
-          }
-        }
-        result[name] = itemData;
-      } else {
-        throw new Error(
-          "Cannot save item in object format: missing 'name' property",
-        );
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Convert the Tool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the Tool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a Tool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Tool instance.
-   */
   static fromJson(json: string, context?: LoadContext): Tool {
     const data = JSON.parse(json);
-
     return Tool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a Tool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Tool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): Tool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return Tool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Represents a local function tool.
- *
- */
 export class FunctionTool extends Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for function tools
-   */
   kind: string = "function";
-
-  /**
-   * Parameters accepted by the function tool
-   */
   parameters: Property[] = [];
-
-  /**
-   * Indicates whether the function tool enforces strict validation on its parameters
-   */
   strict?: boolean | undefined;
 
-  /**
-   * Initializes a new instance of FunctionTool.
-   */
   constructor(init?: Partial<FunctionTool>) {
     super(init);
-
     this.kind = init?.kind ?? "function";
-
     this.parameters = init?.parameters ?? [];
-
     if (init?.strict !== undefined) {
       this.strict = init.strict;
     }
@@ -336,34 +198,19 @@ export class FunctionTool extends Tool {
 
   //#region Load Methods
 
-  /**
-   * Load a FunctionTool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FunctionTool instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): FunctionTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): FunctionTool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new FunctionTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["parameters"] !== undefined && data["parameters"] !== null) {
-      instance.parameters = FunctionTool.loadParameters(
-        data["parameters"],
-        context,
-      );
+      instance.parameters = FunctionTool.loadParameters(data["parameters"] as unknown[], context);
     }
-
     if (data["strict"] !== undefined && data["strict"] !== null) {
       instance.strict = Boolean(data["strict"]);
     }
@@ -374,38 +221,40 @@ export class FunctionTool extends Tool {
     return instance;
   }
 
-  /**
-   * Load a collection of Property from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Property.
-   */
-  static loadParameters(data: unknown, context?: LoadContext): Property[] {
-    const result: Property[] = [];
-
-    // This type doesn't have a 'name' property, always expect array format
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Property.load(item as Record<string, unknown>, context));
+  static loadParameters(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, "kind": v });
         }
       }
+      data = result;
+    }
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
+  }
+
+  static saveParameters(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map(item => item.save(context));
   }
 
   //#endregion
 
   //#region Save Methods
 
-  /**
-   * Save the FunctionTool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as FunctionTool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -413,158 +262,70 @@ export class FunctionTool extends Tool {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.parameters !== undefined && obj.parameters !== null) {
-      result["parameters"] = FunctionTool.saveParameters(
-        obj.parameters,
-        context,
-      );
+      result["parameters"] = FunctionTool.saveParameters(obj.parameters, context);
     }
-
     if (obj.strict !== undefined && obj.strict !== null) {
       result["strict"] = obj.strict;
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of Property to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveParameters(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
-  }
-
-  /**
-   * Convert the FunctionTool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the FunctionTool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a FunctionTool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FunctionTool instance.
-   */
   static fromJson(json: string, context?: LoadContext): FunctionTool {
     const data = JSON.parse(json);
-
     return FunctionTool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a FunctionTool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FunctionTool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): FunctionTool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return FunctionTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Represents a generic server tool that runs on a server
- * This tool kind is designed for operations that require server-side execution
- * It may include features such as authentication, data storage, and long-running processes
- * This tool kind is ideal for tasks that involve complex computations or access to secure resources
- * Server tools can be used to offload heavy processing from client applications
- *
- */
 export class CustomTool extends Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for server tools. This is a wildcard and can represent any server tool type not explicitly defined.
-   */
   kind: string = "*";
-
-  /**
-   * Connection configuration for the server tool
-   */
   connection: Connection;
-
-  /**
-   * Configuration options for the server tool
-   */
   options: Record<string, unknown> = {};
 
-  /**
-   * Initializes a new instance of CustomTool.
-   */
   constructor(init?: Partial<CustomTool>) {
     super(init);
-
     this.kind = init?.kind ?? "*";
-
-    this.connection = init?.connection ?? undefined!;
-
+    if (init?.connection !== undefined) {
+      this.connection = init.connection;
+    }
     this.options = init?.options ?? {};
   }
 
   //#region Load Methods
 
-  /**
-   * Load a CustomTool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded CustomTool instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): CustomTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): CustomTool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new CustomTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
-
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = data["options"] as Record<string, unknown>;
     }
@@ -579,13 +340,11 @@ export class CustomTool extends Tool {
 
   //#region Save Methods
 
-  /**
-   * Save the CustomTool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as CustomTool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -593,125 +352,62 @@ export class CustomTool extends Tool {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.connection !== undefined && obj.connection !== null) {
-      result["connection"] = obj.connection?.save(context);
+      result["connection"] = obj.connection.save(context);
     }
-
     if (obj.options !== undefined && obj.options !== null) {
       result["options"] = obj.options;
     }
-
     return result;
   }
 
-  /**
-   * Convert the CustomTool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the CustomTool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a CustomTool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded CustomTool instance.
-   */
   static fromJson(json: string, context?: LoadContext): CustomTool {
     const data = JSON.parse(json);
-
     return CustomTool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a CustomTool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded CustomTool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): CustomTool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return CustomTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * The MCP Server tool.
- *
- */
 export class McpTool extends Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for MCP tools
-   */
   kind: string = "mcp";
-
-  /**
-   * The connection configuration for the MCP tool
-   */
   connection: Connection;
-
-  /**
-   * The server name of the MCP tool
-   */
   serverName: string = "";
-
-  /**
-   * The description of the MCP tool
-   */
   serverDescription?: string | undefined;
-
-  /**
-   * The approval mode for the MCP tool
-   */
   approvalMode: McpApprovalMode;
-
-  /**
-   * List of allowed operations or resources for the MCP tool
-   */
   allowedTools?: string[] = [];
 
-  /**
-   * Initializes a new instance of McpTool.
-   */
   constructor(init?: Partial<McpTool>) {
     super(init);
-
     this.kind = init?.kind ?? "mcp";
-
-    this.connection = init?.connection ?? undefined!;
-
+    if (init?.connection !== undefined) {
+      this.connection = init.connection;
+    }
     this.serverName = init?.serverName ?? "";
-
     if (init?.serverDescription !== undefined) {
       this.serverDescription = init.serverDescription;
     }
-
-    this.approvalMode = init?.approvalMode ?? undefined!;
-
+    if (init?.approvalMode !== undefined) {
+      this.approvalMode = init.approvalMode;
+    }
     if (init?.allowedTools !== undefined) {
       this.allowedTools = init.allowedTools;
     }
@@ -719,53 +415,30 @@ export class McpTool extends Tool {
 
   //#region Load Methods
 
-  /**
-   * Load a McpTool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded McpTool instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): McpTool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new McpTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
-
     if (data["serverName"] !== undefined && data["serverName"] !== null) {
       instance.serverName = String(data["serverName"]);
     }
-
-    if (
-      data["serverDescription"] !== undefined &&
-      data["serverDescription"] !== null
-    ) {
+    if (data["serverDescription"] !== undefined && data["serverDescription"] !== null) {
       instance.serverDescription = String(data["serverDescription"]);
     }
-
     if (data["approvalMode"] !== undefined && data["approvalMode"] !== null) {
-      instance.approvalMode = McpApprovalMode.load(
-        data["approvalMode"] as Record<string, unknown>,
-        context,
-      );
+      instance.approvalMode = McpApprovalMode.load(data["approvalMode"] as Record<string, unknown>, context);
     }
-
     if (data["allowedTools"] !== undefined && data["allowedTools"] !== null) {
-      instance.allowedTools = Array.isArray(data["allowedTools"])
-        ? (data["allowedTools"] as unknown[]).map((v) => String(v))
-        : [];
+      instance.allowedTools = (data["allowedTools"] as unknown[]).map(v => String(v));
     }
 
     if (context) {
@@ -778,13 +451,11 @@ export class McpTool extends Tool {
 
   //#region Save Methods
 
-  /**
-   * Save the McpTool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as McpTool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -792,147 +463,79 @@ export class McpTool extends Tool {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.connection !== undefined && obj.connection !== null) {
-      result["connection"] = obj.connection?.save(context);
+      result["connection"] = obj.connection.save(context);
     }
-
     if (obj.serverName !== undefined && obj.serverName !== null) {
       result["serverName"] = obj.serverName;
     }
-
     if (obj.serverDescription !== undefined && obj.serverDescription !== null) {
       result["serverDescription"] = obj.serverDescription;
     }
-
     if (obj.approvalMode !== undefined && obj.approvalMode !== null) {
-      result["approvalMode"] = obj.approvalMode?.save(context);
+      result["approvalMode"] = obj.approvalMode.save(context);
     }
-
     if (obj.allowedTools !== undefined && obj.allowedTools !== null) {
       result["allowedTools"] = obj.allowedTools;
     }
-
     return result;
   }
 
-  /**
-   * Convert the McpTool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the McpTool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a McpTool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded McpTool instance.
-   */
   static fromJson(json: string, context?: LoadContext): McpTool {
     const data = JSON.parse(json);
-
     return McpTool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a McpTool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded McpTool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): McpTool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return McpTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- *
- *
- */
 export class OpenApiTool extends Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for OpenAPI tools
-   */
   kind: string = "openapi";
-
-  /**
-   * The connection configuration for the OpenAPI tool
-   */
   connection: Connection;
-
-  /**
-   * The full OpenAPI specification
-   */
   specification: string = "";
 
-  /**
-   * Initializes a new instance of OpenApiTool.
-   */
   constructor(init?: Partial<OpenApiTool>) {
     super(init);
-
     this.kind = init?.kind ?? "openapi";
-
-    this.connection = init?.connection ?? undefined!;
-
+    if (init?.connection !== undefined) {
+      this.connection = init.connection;
+    }
     this.specification = init?.specification ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a OpenApiTool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OpenApiTool instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): OpenApiTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): OpenApiTool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new OpenApiTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
-
     if (data["specification"] !== undefined && data["specification"] !== null) {
       instance.specification = String(data["specification"]);
     }
@@ -947,13 +550,11 @@ export class OpenApiTool extends Tool {
 
   //#region Save Methods
 
-  /**
-   * Save the OpenApiTool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as OpenApiTool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -961,135 +562,68 @@ export class OpenApiTool extends Tool {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.connection !== undefined && obj.connection !== null) {
-      result["connection"] = obj.connection?.save(context);
+      result["connection"] = obj.connection.save(context);
     }
-
     if (obj.specification !== undefined && obj.specification !== null) {
       result["specification"] = obj.specification;
     }
-
     return result;
   }
 
-  /**
-   * Convert the OpenApiTool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the OpenApiTool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a OpenApiTool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OpenApiTool instance.
-   */
   static fromJson(json: string, context?: LoadContext): OpenApiTool {
     const data = JSON.parse(json);
-
     return OpenApiTool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a OpenApiTool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded OpenApiTool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): OpenApiTool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return OpenApiTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A tool that references another .prompty file to be invoked as a tool.
- *
- * In `single` mode, the child prompty is executed with a single LLM call.
- * In `agentic` mode, the child prompty runs a full agent loop with its own tools.
- *
- */
 export class PromptyTool extends Tool {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for prompty tools
-   */
   kind: string = "prompty";
-
-  /**
-   * Path to the child .prompty file, relative to the parent
-   */
   path: string = "";
-
-  /**
-   * Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
-   */
   mode: string = "single";
 
-  /**
-   * Initializes a new instance of PromptyTool.
-   */
   constructor(init?: Partial<PromptyTool>) {
     super(init);
-
     this.kind = init?.kind ?? "prompty";
-
     this.path = init?.path ?? "";
-
     this.mode = init?.mode ?? "single";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a PromptyTool instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded PromptyTool instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): PromptyTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): PromptyTool {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new PromptyTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["path"] !== undefined && data["path"] !== null) {
       instance.path = String(data["path"]);
     }
-
     if (data["mode"] !== undefined && data["mode"] !== null) {
       instance.mode = String(data["mode"]);
     }
@@ -1104,13 +638,11 @@ export class PromptyTool extends Tool {
 
   //#region Save Methods
 
-  /**
-   * Save the PromptyTool instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as PromptyTool) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -1118,63 +650,36 @@ export class PromptyTool extends Tool {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.path !== undefined && obj.path !== null) {
       result["path"] = obj.path;
     }
-
     if (obj.mode !== undefined && obj.mode !== null) {
       result["mode"] = obj.mode;
     }
-
     return result;
   }
 
-  /**
-   * Convert the PromptyTool instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the PromptyTool instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a PromptyTool instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded PromptyTool instance.
-   */
   static fromJson(json: string, context?: LoadContext): PromptyTool {
     const data = JSON.parse(json);
-
     return PromptyTool.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a PromptyTool instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded PromptyTool instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): PromptyTool {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return PromptyTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

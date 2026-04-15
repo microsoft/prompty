@@ -4,40 +4,16 @@
 import { LoadContext, SaveContext } from "./context";
 import { ContentPart, TextPart } from "./content-part";
 
-/**
- * A message in a conversation. Messages have a role and a list of content parts
- * representing the different modalities of the message content.
- *
- */
 export class Message {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The role of the message sender
-   */
   role: string = "user";
-
-  /**
-   * The content parts of the message
-   */
   parts: ContentPart[] = [];
+  metadata?: Record<string, unknown> | undefined;
 
-  /**
-   * Optional metadata associated with the message
-   */
-  metadata?: Record<string, unknown> | undefined = {};
-
-  /**
-   * Initializes a new instance of Message.
-   */
   constructor(init?: Partial<Message>) {
     this.role = init?.role ?? "user";
-
     this.parts = init?.parts ?? [];
-
     if (init?.metadata !== undefined) {
       this.metadata = init.metadata;
     }
@@ -45,28 +21,19 @@ export class Message {
 
   //#region Load Methods
 
-  /**
-   * Load a Message instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Message instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): Message {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new Message();
 
     if (data["role"] !== undefined && data["role"] !== null) {
       instance.role = String(data["role"]);
     }
-
     if (data["parts"] !== undefined && data["parts"] !== null) {
-      instance.parts = Message.loadParts(data["parts"], context);
+      instance.parts = Message.loadParts(data["parts"] as unknown[], context);
     }
-
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
     }
@@ -77,51 +44,57 @@ export class Message {
     return instance;
   }
 
-  /**
-   * Load a collection of ContentPart from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of ContentPart.
-   */
-  static loadParts(data: unknown, context?: LoadContext): ContentPart[] {
-    const result: ContentPart[] = [];
-
-    // This type doesn't have a 'name' property, always expect array format
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(
-            ContentPart.load(item as Record<string, unknown>, context),
-          );
+  static loadParts(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ContentPart[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, kind: v });
         }
       }
+      data = result;
+    }
+    return data.map((item) =>
+      ContentPart.load(item as Record<string, unknown>, context),
+    );
+  }
+
+  static saveParts(
+    items: ContentPart[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
 
   //#region Save Methods
 
-  /**
-   * Save the Message instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Message) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.role !== undefined && obj.role !== null) {
       result["role"] = obj.role;
     }
-
     if (obj.parts !== undefined && obj.parts !== null) {
       result["parts"] = Message.saveParts(obj.parts, context);
     }
-
     if (obj.metadata !== undefined && obj.metadata !== null) {
       result["metadata"] = obj.metadata;
     }
@@ -129,79 +102,32 @@ export class Message {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of ContentPart to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveParts(
-    items: ContentPart[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
-  }
-
-  /**
-   * Convert the Message instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the Message instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a Message instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Message instance.
-   */
   static fromJson(json: string, context?: LoadContext): Message {
     const data = JSON.parse(json);
-
     return Message.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a Message instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Message instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): Message {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return Message.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 
-  //#region Factory Methods
-
-  /**
-   * Create a Message with preset field values.
-   */
   static assistant(text: string): Message {
     return new Message({
       role: "assistant",
@@ -209,9 +135,6 @@ export class Message {
     });
   }
 
-  /**
-   * Create a Message with preset field values.
-   */
   static system(text: string): Message {
     return new Message({
       role: "system",
@@ -219,9 +142,6 @@ export class Message {
     });
   }
 
-  /**
-   * Create a Message with preset field values.
-   */
   static user(text: string): Message {
     return new Message({
       role: "user",
@@ -229,15 +149,5 @@ export class Message {
     });
   }
 
-  //#endregion
-
-  //#region Helpers — implement these in an extension file
-
-  /**
-   * Helper methods for Message.
-   * These should be implemented as standalone functions in the runtime:
-   * - text(): string — Concatenate all TextPart values joined by newline
-   */
-
-  //#endregion
+  // @method text(): string — Concatenate all TextPart values joined by newline
 }

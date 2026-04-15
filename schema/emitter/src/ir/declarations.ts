@@ -309,8 +309,6 @@ export interface CollectionHelperDecl {
 export interface FactoryDecl {
   /** Original factory name from @factory decorator */
   name: string;
-  /** Safe method name (may be prefixed to avoid field collisions) */
-  safeName: string;
   /** Parameter name → type string mapping */
   params: Record<string, string>;
   /** Pre-resolved expression tree for the factory body */

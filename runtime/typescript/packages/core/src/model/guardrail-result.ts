@@ -3,43 +3,18 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * The result of a guardrail evaluation. Guardrails are safety checks that
- * run at specific phases of the agent loop and can allow, deny, or rewrite
- * content.
- *
- */
 export class GuardrailResult {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * Whether the content passed the guardrail check
-   */
   allowed: boolean = false;
-
-  /**
-   * Explanation of why the content was allowed or denied
-   */
   reason?: string | undefined;
-
-  /**
-   * Optional rewritten content to replace the original
-   */
   rewrite?: unknown | undefined;
 
-  /**
-   * Initializes a new instance of GuardrailResult.
-   */
   constructor(init?: Partial<GuardrailResult>) {
     this.allowed = init?.allowed ?? false;
-
     if (init?.reason !== undefined) {
       this.reason = init.reason;
     }
-
     if (init?.rewrite !== undefined) {
       this.rewrite = init.rewrite;
     }
@@ -47,31 +22,22 @@ export class GuardrailResult {
 
   //#region Load Methods
 
-  /**
-   * Load a GuardrailResult instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded GuardrailResult instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): GuardrailResult {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new GuardrailResult();
 
     if (data["allowed"] !== undefined && data["allowed"] !== null) {
       instance.allowed = Boolean(data["allowed"]);
     }
-
     if (data["reason"] !== undefined && data["reason"] !== null) {
       instance.reason = String(data["reason"]);
     }
-
     if (data["rewrite"] !== undefined && data["rewrite"] !== null) {
       instance.rewrite = data["rewrite"] as unknown;
     }
@@ -86,26 +52,20 @@ export class GuardrailResult {
 
   //#region Save Methods
 
-  /**
-   * Save the GuardrailResult instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as GuardrailResult)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.allowed !== undefined && obj.allowed !== null) {
       result["allowed"] = obj.allowed;
     }
-
     if (obj.reason !== undefined && obj.reason !== null) {
       result["reason"] = obj.reason;
     }
-
     if (obj.rewrite !== undefined && obj.rewrite !== null) {
       result["rewrite"] = obj.rewrite;
     }
@@ -113,80 +73,41 @@ export class GuardrailResult {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the GuardrailResult instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the GuardrailResult instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a GuardrailResult instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded GuardrailResult instance.
-   */
   static fromJson(json: string, context?: LoadContext): GuardrailResult {
     const data = JSON.parse(json);
-
     return GuardrailResult.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a GuardrailResult instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded GuardrailResult instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): GuardrailResult {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return GuardrailResult.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 
-  //#region Factory Methods
-
-  /**
-   * Create a GuardrailResult with preset field values.
-   */
   static rewrite(rewrite: unknown): GuardrailResult {
     return new GuardrailResult({ allowed: true, rewrite: rewrite });
   }
 
-  /**
-   * Create a GuardrailResult with preset field values.
-   */
   static deny(reason: string): GuardrailResult {
     return new GuardrailResult({ allowed: false, reason: reason });
   }
 
-  /**
-   * Create a GuardrailResult with preset field values.
-   */
   static allow(): GuardrailResult {
     return new GuardrailResult({ allowed: true });
   }
-
-  //#endregion
 }

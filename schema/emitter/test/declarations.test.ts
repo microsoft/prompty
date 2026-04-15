@@ -330,13 +330,13 @@ describe("lowerType", () => {
     const decl = lowerType(toolResult, registry, polyNames);
     assert.equal(decl.factories.length, 1);
     assert.equal(decl.factories[0].name, "text");
-    assert.equal(decl.factories[0].safeName, "text");
     assert.deepEqual(decl.factories[0].params, { value: "string" });
     assert.equal(decl.factories[0].body.kind, "construct");
   });
 
-  it("prefixes factory safeName when it collides with a field", () => {
-    // Create a type where factory name matches a field name
+  it("factory name is always the canonical name (no collision avoidance in IR)", () => {
+    // Collision avoidance is language-specific — the IR stores the canonical name.
+    // Python adds create_ prefix in its emitter; TS/Rust/C#/Go use name directly.
     const conflictType = makeType("Conflict", [
       makeProp("text", "string", { isScalar: true }),
     ], {
@@ -346,7 +346,7 @@ describe("lowerType", () => {
     });
     const conflictRegistry = TypeRegistry.fromTypeGraph([conflictType]);
     const decl = lowerType(conflictType, conflictRegistry, new Set());
-    assert.equal(decl.factories[0].safeName, "create_text");
+    assert.equal(decl.factories[0].name, "text");
   });
 
   it("lowers method stubs", () => {

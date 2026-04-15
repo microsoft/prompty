@@ -198,11 +198,9 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
   emitToYaml(name, lines);
   emitToJson(name, lines);
 
-  // fromJson / fromYaml (only on concrete types, not abstract bases)
-  if (!type.isAbstract) {
-    emitFromJson(name, type, lines);
-    emitFromYaml(name, type, lines);
-  }
+  // fromJson / fromYaml
+  emitFromJson(name, type, lines);
+  emitFromYaml(name, type, lines);
 
   lines.push("  //#endregion");
 
@@ -380,13 +378,11 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
   lines.push("      data = context.processInput(data) as Record<string, unknown>;");
   lines.push("    }");
 
-  // Coercion checks
+  // Coercion checks — group by JS typeof to handle int/float distinction
   if (type.load.coercions.length > 0) {
     lines.push("");
     lines.push("    // Handle alternate representations");
-    for (const c of type.load.coercions) {
-      emitCoercionBranch(name, c, type, lines);
-    }
+    emitCoercionBranches(name, type.load.coercions, type, lines);
   }
 
   lines.push("");
@@ -457,6 +453,63 @@ function emitLoadAssignment(a: LoadAssignment): string {
 }
 
 /**
+ * Emit coercion branches, grouping coercions that share the same JS typeof.
+ *
+ * In TypeScript, int32 and float64 both map to `typeof data === "number"`.
+ * When multiple coercions share a typeof, we emit a single outer `if` with
+ * `Number.isInteger()` sub-branches to disambiguate.
+ */
+function emitCoercionBranches(
+  typeName: string,
+  coercions: CoercionDecl[],
+  type: TypeDecl,
+  lines: string[],
+): void {
+  // Group coercions by JS typeof check
+  const groups = new Map<string, CoercionDecl[]>();
+  for (const c of coercions) {
+    const jsType = typeofCheck(c.scalarType);
+    if (!jsType) continue;
+    if (!groups.has(jsType)) groups.set(jsType, []);
+    groups.get(jsType)!.push(c);
+  }
+
+  for (const [jsType, group] of groups) {
+    if (group.length === 1) {
+      // Single coercion for this typeof — emit simple branch
+      emitCoercionBranch(typeName, group[0], type, lines);
+    } else {
+      // Multiple coercions sharing the same typeof (e.g., int32 + float64 → "number")
+      lines.push(`    if (typeof data === "${jsType}") {`);
+
+      // Find integer and float coercions
+      const intCoercion = group.find(c => isIntegerScalar(c.scalarType));
+      const floatCoercion = group.find(c => !isIntegerScalar(c.scalarType));
+
+      if (intCoercion && floatCoercion) {
+        // Use Number.isInteger to disambiguate
+        lines.push("      if (Number.isInteger(data)) {");
+        emitCoercionBody(typeName, intCoercion, type, lines, "        ");
+        lines.push("      } else {");
+        emitCoercionBody(typeName, floatCoercion, type, lines, "        ");
+        lines.push("      }");
+      } else {
+        // Fallback: just emit them sequentially (shouldn't happen)
+        for (const c of group) {
+          emitCoercionBody(typeName, c, type, lines, "      ");
+        }
+      }
+
+      lines.push("    }");
+    }
+  }
+}
+
+function isIntegerScalar(scalarType: string): boolean {
+  return scalarType === "int32" || scalarType === "int64" || scalarType === "integer";
+}
+
+/**
  * Emit a single coercion branch — typeof check with early return.
  */
 function emitCoercionBranch(
@@ -469,31 +522,42 @@ function emitCoercionBranch(
   if (!jsType) return;
 
   lines.push(`    if (typeof data === "${jsType}") {`);
+  emitCoercionBody(typeName, c, type, lines, "      ");
+  lines.push("    }");
+}
 
+/**
+ * Emit the body of a coercion branch (instance creation + property assignment).
+ */
+function emitCoercionBody(
+  typeName: string,
+  c: CoercionDecl,
+  type: TypeDecl,
+  lines: string[],
+  indent: string,
+): void {
   if (c.needsDispatch && type.polymorphicDispatch) {
     // Dynamic discriminator — must go through dispatch
     const dictFields = c.assignments.map(a => {
       const val = a.isInput ? "data" : `"${a.literalValue}"`;
       return `"${a.fieldName}": ${val}`;
     });
-    lines.push(`      return ${typeName}.loadKind({ ${dictFields.join(", ")} } as Record<string, unknown>, context);`);
+    lines.push(`${indent}return ${typeName}.loadKind({ ${dictFields.join(", ")} } as Record<string, unknown>, context);`);
   } else {
     // Direct property setting
-    lines.push(`      const instance = new ${typeName}();`);
+    lines.push(`${indent}const instance = new ${typeName}();`);
     for (const a of c.assignments) {
       if (a.isInput) {
-        lines.push(`      instance.${a.fieldName} = data as ${TYPE_MAP[c.scalarType] || "unknown"};`);
+        lines.push(`${indent}instance.${a.fieldName} = data as ${TYPE_MAP[c.scalarType] || "unknown"};`);
       } else {
-        lines.push(`      instance.${a.fieldName} = "${a.literalValue}";`);
+        lines.push(`${indent}instance.${a.fieldName} = "${a.literalValue}";`);
       }
     }
-    lines.push("      if (context) {");
-    lines.push(`        return context.processOutput(instance) as ${typeName};`);
-    lines.push("      }");
-    lines.push("      return instance;");
+    lines.push(`${indent}if (context) {`);
+    lines.push(`${indent}  return context.processOutput(instance) as ${typeName};`);
+    lines.push(`${indent}}`);
+    lines.push(`${indent}return instance;`);
   }
-
-  lines.push("    }");
 }
 
 // ============================================================================
@@ -709,18 +773,13 @@ function emitFromJson(name: string, type: TypeDecl, lines: string[]): void {
   lines.push(`  static fromJson(json: string, context?: LoadContext): ${name} {`);
   lines.push("    const data = JSON.parse(json);");
 
-  // Handle non-object types via coercion
   if (type.load.coercions.length > 0) {
-    lines.push("    if (typeof data !== \"object\" || data === null || Array.isArray(data)) {");
-    if (type.coercionProperty) {
-      lines.push(`      return ${name}.load({ "${type.coercionProperty}": data } as Record<string, unknown>, context);`);
-    } else {
-      lines.push(`      return ${name}.load({} as Record<string, unknown>, context);`);
-    }
-    lines.push("    }");
+    // Pass raw parsed value directly to load() — it handles typeof coercions
+    lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
+  } else {
+    lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
   }
 
-  lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
   lines.push("  }");
   lines.push("");
 }
@@ -730,18 +789,13 @@ function emitFromYaml(name: string, type: TypeDecl, lines: string[]): void {
   lines.push('    const { parse } = require("yaml");');
   lines.push("    const data = parse(yaml);");
 
-  // Handle non-object types via coercion
   if (type.load.coercions.length > 0) {
-    lines.push("    if (typeof data !== \"object\" || data === null || Array.isArray(data)) {");
-    if (type.coercionProperty) {
-      lines.push(`      return ${name}.load({ "${type.coercionProperty}": data } as Record<string, unknown>, context);`);
-    } else {
-      lines.push(`      return ${name}.load({} as Record<string, unknown>, context);`);
-    }
-    lines.push("    }");
+    // Pass raw parsed value directly to load() — it handles typeof coercions
+    lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
+  } else {
+    lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
   }
 
-  lines.push(`    return ${name}.load(data as Record<string, unknown>, context);`);
   lines.push("  }");
   lines.push("");
 }
@@ -755,7 +809,7 @@ function emitFactory(parentName: string, factory: FactoryDecl, visitor: ExprVisi
     .map(([pName, pType]) => `${pName}: ${paramType(pType)}`)
     .join(", ");
 
-  lines.push(`  static ${factory.safeName}(${params}): ${parentName} {`);
+  lines.push(`  static ${factory.name}(${params}): ${parentName} {`);
   lines.push(`    return ${visitor.visitExpr(factory.body)};`);
   lines.push("  }");
   lines.push("");

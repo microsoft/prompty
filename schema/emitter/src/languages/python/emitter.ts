@@ -188,9 +188,10 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
 
   // Factory methods
   if (type.factories.length > 0) {
+    const fieldNames = new Set(type.fields.map(f => f.name));
     lines.push("");
     for (const factory of type.factories) {
-      emitFactory(name, factory, visitor, lines);
+      emitFactory(name, factory, visitor, fieldNames, lines);
       lines.push("");
     }
   }
@@ -667,14 +668,18 @@ function emitToJson(name: string, lines: string[]): void {
 // Factory methods
 // ============================================================================
 
-function emitFactory(parentName: string, factory: FactoryDecl, visitor: ExprVisitor, lines: string[]): void {
+function emitFactory(parentName: string, factory: FactoryDecl, visitor: ExprVisitor, fieldNames: Set<string>, lines: string[]): void {
   const params = Object.entries(factory.params)
     .map(([pName, pType]) => `${toSnakeCase(pName)}: ${paramType(pType)}`)
     .join(", ");
   const paramStr = params ? `, ${params}` : "";
 
+  // In Python, a @classmethod with the same name as a dataclass field shadows
+  // the field's default. Prefix with create_ to avoid the collision.
+  const methodName = fieldNames.has(factory.name) ? `create_${factory.name}` : factory.name;
+
   lines.push("    @classmethod");
-  lines.push(`    def ${factory.safeName}(cls${paramStr}) -> "${parentName}":`);
+  lines.push(`    def ${methodName}(cls${paramStr}) -> "${parentName}":`);
   lines.push(`        """Create a ${parentName} with preset field values."""`);
   lines.push(`        return ${visitor.visitExpr(factory.body)}`);
 }

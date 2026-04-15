@@ -1,10 +1,11 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
-import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "../../ir/ast.js";
+import { enumerateTypes, TypeNode, BaseTestContext } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
-import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
+import { TypeRegistry } from "../../ir/expansion.js";
 import { TypeScriptExprVisitor } from "./visitor.js";
+import { emitTypeScriptFile as emitTypeScriptFileDecl } from "./emitter.js";
+import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import * as nunjucks from "nunjucks";
 import { buildBaseTestContext, typescriptTestOptions } from "../../legacy/test-context.js";
 import { toKebabCase } from "../../ir/utilities.js";
@@ -12,47 +13,6 @@ import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
-
-/**
- * TypeScript type mapper - converts TypeSpec types to TypeScript types.
- */
-const typescriptTypeMapper: Record<string, string> = {
-  "string": "string",
-  "number": "number",
-  "array": "[]",
-  "object": "object",
-  "boolean": "boolean",
-  "int64": "number",
-  "int32": "number",
-  "float64": "number",
-  "float32": "number",
-  "integer": "number",
-  "dictionary": "Record<string, unknown>",
-  "unknown": "unknown",
-};
-
-/**
- * TypeScript file context for rendering.
- */
-interface TypeScriptClassContext {
-  node: TypeNode;
-  typeMapper: Record<string, string>;
-  coercions: Array<{ scalar: string; alternate: string }>;
-  renderedCoercions: Array<{ scalar: string; expression: string }>;
-  renderedFactories: Array<{ name: string; params: Record<string, string>; body: string }>;
-  polymorphicTypes: any;
-  imports: string[];
-  collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
-  coercionProperty: string | null;
-  factoryTypeRefs: string[];
-}
-
-interface TypeScriptFileContext {
-  containsAbstract: boolean;
-  imports: Array<{ module: string; names: string[] }>;
-  classes: TypeScriptClassContext[];
-  typeMapper: Record<string, string>;
-}
 
 interface TypeScriptIndexContext {
   baseTypes: TypeNode[];
@@ -74,19 +34,13 @@ export const generateTypeScript = async (
   emitTarget: EmitTarget,
   options?: GeneratorOptions
 ) => {
-  // Set up template environment
+  // Set up template environment (still needed for context, index, test, eslint templates)
   const templatePath = path.resolve(templateDir, "typescript");
   const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath), {
     autoescape: false, // Disable HTML auto-escaping for code generation
   });
 
-  // Add custom filters
-  env.addFilter("isFloat", function (value: any) {
-    return value.toString().includes(".");
-  });
-
-  // Load templates
-  const fileTemplate = env.getTemplate("file.ts.njk", true);
+  // Load templates (file.ts.njk replaced by Declaration IR emitter)
   const contextTemplate = env.getTemplate("context.ts.njk", true);
   const indexTemplate = env.getTemplate("index.ts.njk", true);
   const testTemplate = env.getTemplate("test.ts.njk", true);
@@ -107,6 +61,14 @@ export const generateTypeScript = async (
   const contextCode = contextTemplate.render(buildContextContext(tsNamespace));
   await emitTypeScriptFile(context, "context.ts", contextCode, emitTarget["output-dir"]);
 
+  // Collect polymorphic type names once for the full type graph
+  const polymorphicTypeNames = new Set<string>();
+  for (const n of allTypes) {
+    for (const name of collectPolymorphicTypeNames(n, registry)) {
+      polymorphicTypeNames.add(name);
+    }
+  }
+
   // Emit each base type file (includes children in the same file)
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
@@ -114,19 +76,8 @@ export const generateTypeScript = async (
       continue;
     }
 
-    const fileContext = buildFileContext(n, registry, visitor);
-    const code = fileTemplate.render({
-      ...fileContext,
-      namespace: tsNamespace,
-      renderPropertyName,
-      renderName,
-      renderType,
-      renderSimpleType,
-      renderDefault,
-      renderLoadProperty: renderLoadProperty(nodes),
-      renderSaveProperty,
-      toKebabCase,
-    });
+    const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
+    const code = emitTypeScriptFileDecl(fileDecl, visitor, tsNamespace);
     await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.ts`, code, emitTarget["output-dir"]);
   }
 
@@ -230,102 +181,6 @@ function findTypeScriptProjectRoot(startDir: string): string | undefined {
 }
 
 /**
- * Build context for rendering a single TypeScript class.
- * Resolves factories and coercions via the expression IR.
- */
-function buildClassContext(
-  node: TypeNode,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): TypeScriptClassContext {
-  // Resolve factories via expression IR, collecting type refs for imports
-  const factoryTypeRefs: string[] = [];
-  const renderedFactories = (node.factories || []).map(f => {
-    const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
-    for (const ref of collectExprTypeRefs(expr)) {
-      factoryTypeRefs.push(ref.name);
-    }
-    return {
-      name: f.name,
-      params: f.params,
-      body: visitor.visitExpr(expr),
-    };
-  });
-
-  // Resolve coercions via expression IR — render as object literals for template insertion
-  const renderedCoercions = (node.coercions || []).map(c => {
-    const expr = resolveCoerceExpr(c.expansion, c.scalar, node, registry, "data");
-    return {
-      scalar: typescriptTypeMapper[c.scalar] || c.scalar,
-      expression: renderObjectLiteral(expr, visitor, "js"),
-    };
-  });
-
-  // Keep factory-referenced types for file-level import resolution
-  const baseImports = getUniqueImportTypes(node);
-
-  return {
-    node,
-    typeMapper: typescriptTypeMapper,
-    coercions: prepareCoercions(node),
-    renderedCoercions,
-    renderedFactories,
-    polymorphicTypes: node.retrievePolymorphicTypes(),
-    imports: baseImports,
-    collectionTypes: getCollectionTypes(node),
-    coercionProperty: getCoercionProperty(node),
-    factoryTypeRefs,
-  };
-}
-
-/**
- * Build context for rendering a TypeScript file with a base type and its children.
- */
-function buildFileContext(
-  node: TypeNode,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): TypeScriptFileContext {
-  const classes: TypeScriptClassContext[] = [
-    buildClassContext(node, registry, visitor),
-    ...node.childTypes.map((ct) => buildClassContext(ct, registry, visitor)),
-  ];
-
-  // Build grouped imports: module → set of type names
-  const childTypeNames = new Set([node.typeName.name, ...node.childTypes.map(ct => ct.typeName.name)]);
-  const importMap = new Map<string, Set<string>>();
-
-  const addImport = (typeName: string) => {
-    if (childTypeNames.has(typeName)) return;
-    const refNode = registry.get(typeName);
-    const module = refNode?.base ? refNode.base.name : typeName;
-    if (!importMap.has(module)) importMap.set(module, new Set());
-    importMap.get(module)!.add(typeName);
-  };
-
-  for (const name of getUniqueImportTypes(node)) {
-    addImport(name);
-  }
-
-  for (const cls of classes) {
-    for (const ref of cls.factoryTypeRefs) {
-      addImport(ref);
-    }
-  }
-
-  const imports = Array.from(importMap.entries())
-    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
-    .sort((a, b) => a.module.localeCompare(b.module));
-
-  return {
-    containsAbstract: node.isAbstract || node.childTypes.some((c) => c.isAbstract),
-    imports,
-    classes,
-    typeMapper: typescriptTypeMapper,
-  };
-}
-
-/**
  * Build context for rendering the index.ts file.
  */
 function buildIndexContext(nodes: TypeNode[]): TypeScriptIndexContext {
@@ -353,69 +208,6 @@ function buildContextContext(namespace?: string): TypeScriptContextContext {
 }
 
 /**
- * Prepare coercion representations for template rendering.
- */
-function prepareCoercions(node: TypeNode): Array<{ scalar: string; alternate: string }> {
-  if (!node.coercions || node.coercions.length === 0) {
-    return [];
-  }
-
-  return node.coercions.map((alt) => ({
-    scalar: typescriptTypeMapper[alt.scalar] || alt.scalar,
-    alternate: JSON.stringify(alt.expansion, null, "")
-      .replaceAll("\n", "")
-      .replaceAll('"{value}"', "data"),
-  }));
-}
-
-/**
- * Get coercion property name from coercions.
- */
-function getCoercionProperty(node: TypeNode): string | null {
-  if (!node.coercions || node.coercions.length === 0) {
-    return null;
-  }
-
-  for (const alt of node.coercions) {
-    for (const [key, value] of Object.entries(alt.expansion)) {
-      if (value === "{value}") {
-        return key;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Get collection properties with their nested type info.
- */
-function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }> {
-  return node.properties
-    .filter((p) => p.isCollection && !p.isScalar && !p.isDict)
-    .map((p) => ({
-      prop: p,
-      type: p.type?.properties.filter((t) => t.name !== "name").map((t) => t.name) || [],
-      hasNameProperty: p.type?.properties.some((t) => t.name === "name") || false,
-    }));
-}
-
-/**
- * Get unique import types needed from other modules.
- */
-function getUniqueImportTypes(node: TypeNode): string[] {
-  const imports = [
-    node.properties.filter((p) => !p.isScalar && !p.isDict).map((p) => p.typeName.name),
-    ...node.childTypes.flatMap((c) =>
-      c.properties.filter((p) => !p.isScalar && !p.isDict).map((p) => p.typeName.name)
-    ),
-  ]
-    .flat()
-    .filter((n) => n !== node.typeName.name && node.base?.name !== n);
-
-  return Array.from(new Set(imports)).sort();
-}
-
-/**
  * Write generated TypeScript content to file.
  */
 async function emitTypeScriptFile(
@@ -434,132 +226,9 @@ async function emitTypeScriptFile(
 }
 
 /**
- * Render property name (camelCase).
- */
-function renderPropertyName(prop: PropertyNode): string {
-  return prop.name;
-}
-
-/**
- * Render name in PascalCase.
+ * Render name in PascalCase (used by test template).
  */
 function renderName(name: string): string {
   const pascal = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   return pascal.charAt(0).toUpperCase() + pascal.slice(1);
-}
-
-/**
- * Render TypeScript type for a property.
- */
-function renderType(prop: PropertyNode): string {
-  const baseType = renderSimpleType(prop);
-  return prop.isOptional ? `${baseType} | undefined` : baseType;
-}
-
-/**
- * Render simple TypeScript type without optional modifier.
- */
-function renderSimpleType(prop: PropertyNode): string {
-  let type = prop.isScalar ? typescriptTypeMapper[prop.typeName.name] || "unknown" : prop.typeName.name;
-  if (prop.isDict) {
-    type = "Record<string, unknown>";
-  }
-  type = prop.isCollection ? `${type}[]` : type;
-  return type;
-}
-
-/**
- * Render default value for a property.
- */
-function renderDefault(prop: PropertyNode): string {
-  if (!prop.isOptional) {
-    if (prop.isCollection) {
-      return " = []";
-    } else if (prop.isScalar) {
-      return renderDefaultType(prop.typeName.name, prop.defaultValue);
-    } else if (prop.isDict) {
-      return " = {}";
-    }
-  }
-  return "";
-}
-
-/**
- * Render default value based on type.
- */
-function renderDefaultType(typeName: string, defaultValue: any): string {
-  if (defaultValue !== undefined && defaultValue !== null) {
-    if (typeof defaultValue === "string") {
-      return ` = "${defaultValue}"`;
-    }
-    return ` = ${defaultValue}`;
-  }
-
-  switch (typeName) {
-    case "string":
-      return ' = ""';
-    case "boolean":
-      return " = false";
-    case "number":
-    case "int32":
-    case "int64":
-    case "float32":
-    case "float64":
-    case "integer":
-      return " = 0";
-    default:
-      return "";
-  }
-}
-
-/**
- * Render load property logic.
- */
-function renderLoadProperty(nodes: TypeNode[]) {
-  return (prop: PropertyNode): string => {
-    const propName = prop.name;
-    const varName = `${propName}Value`;
-
-    if (prop.isCollection && !prop.isScalar && !prop.isDict) {
-      return `instance.${propName} = ${prop.typeName.name}.loadCollection(${varName}, context);`;
-    }
-
-    if (prop.isDict) {
-      return `instance.${propName} = ${varName} as Record<string, unknown>;`;
-    }
-
-    if (!prop.isScalar) {
-      return `instance.${propName} = ${prop.typeName.name}.load(${varName} as Record<string, unknown>, context);`;
-    }
-
-    // Scalar types
-    const tsType = typescriptTypeMapper[prop.typeName.name] || "unknown";
-    switch (tsType) {
-      case "string":
-        return `instance.${propName} = String(${varName});`;
-      case "number":
-        return `instance.${propName} = Number(${varName});`;
-      case "boolean":
-        return `instance.${propName} = Boolean(${varName});`;
-      default:
-        return `instance.${propName} = ${varName} as ${tsType};`;
-    }
-  };
-}
-
-/**
- * Render save property logic.
- */
-function renderSaveProperty(prop: PropertyNode): string {
-  const propName = prop.name;
-
-  if (prop.isCollection && !prop.isScalar && !prop.isDict) {
-    return `result["${propName}"] = ${prop.typeName.name}.saveCollection(this.${propName}, context);`;
-  }
-
-  if (!prop.isScalar && !prop.isDict) {
-    return `result["${propName}"] = this.${propName}?.save(context);`;
-  }
-
-  return `result["${propName}"] = this.${propName};`;
 }

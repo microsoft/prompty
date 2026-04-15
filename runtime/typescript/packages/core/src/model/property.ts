@@ -3,80 +3,32 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * Represents a single property.
- *
- * - This model defines the structure of properties that can be used in prompts,
- * including their type, description, whether they are required, and other attributes.
- * - It allows for the definition of dynamic inputs that can be filled with data
- * and processed to generate prompts for AI models.
- *
- */
 export class Property {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = "example";
 
-  /**
-   * Name of the property
-   */
   name: string = "";
-
-  /**
-   * The data type of the input property
-   */
   kind: string = "";
-
-  /**
-   * A short description of the input property
-   */
   description?: string | undefined;
-
-  /**
-   * Whether the property is required
-   */
   required?: boolean | undefined;
-
-  /**
-   * The default value of the property - this represents the default value if none is provided
-   */
   default?: unknown | undefined;
-
-  /**
-   * Example value used for either initialization or tooling
-   */
   example?: unknown | undefined;
-
-  /**
-   * Allowed enumeration values for the property
-   */
   enumValues?: unknown[] = [];
 
-  /**
-   * Initializes a new instance of Property.
-   */
   constructor(init?: Partial<Property>) {
     this.name = init?.name ?? "";
-
     this.kind = init?.kind ?? "";
-
     if (init?.description !== undefined) {
       this.description = init.description;
     }
-
     if (init?.required !== undefined) {
       this.required = init.required;
     }
-
     if (init?.default !== undefined) {
       this.default = init.default;
     }
-
     if (init?.example !== undefined) {
       this.example = init.example;
     }
-
     if (init?.enumValues !== undefined) {
       this.enumValues = init.enumValues;
     }
@@ -84,35 +36,48 @@ export class Property {
 
   //#region Load Methods
 
-  /**
-   * Load a Property instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Property instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): Property {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Handle alternate representations
+    if (typeof data === "boolean") {
+      const instance = new Property();
+      instance.kind = "boolean";
+      instance.example = data as boolean;
+      if (context) {
+        return context.processOutput(instance) as Property;
+      }
+      return instance;
+    }
+    if (typeof data === "number") {
+      if (Number.isInteger(data)) {
+        const instance = new Property();
+        instance.kind = "integer";
+        instance.example = data as number;
+        if (context) {
+          return context.processOutput(instance) as Property;
+        }
+        return instance;
+      } else {
+        const instance = new Property();
+        instance.kind = "float";
+        instance.example = data as number;
+        if (context) {
+          return context.processOutput(instance) as Property;
+        }
+        return instance;
+      }
+    }
     if (typeof data === "string") {
-      data = { kind: "string", example: data };
-    } else if (typeof data === "number") {
-      // Check if it's an integer or float
-      if (Number.isInteger(data)) {
-        data = { kind: "integer", example: data };
-      } else {
-        data = { kind: "float", example: data };
+      const instance = new Property();
+      instance.kind = "string";
+      instance.example = data as string;
+      if (context) {
+        return context.processOutput(instance) as Property;
       }
-      // Check if it's an integer or float
-      if (Number.isInteger(data)) {
-        data = { kind: "integer", example: data };
-      } else {
-        data = { kind: "float", example: data };
-      }
-    } else if (typeof data === "boolean") {
-      data = { kind: "boolean", example: data };
+      return instance;
     }
 
     // Load polymorphic Property instance
@@ -121,31 +86,23 @@ export class Property {
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["description"] !== undefined && data["description"] !== null) {
       instance.description = String(data["description"]);
     }
-
     if (data["required"] !== undefined && data["required"] !== null) {
       instance.required = Boolean(data["required"]);
     }
-
     if (data["default"] !== undefined && data["default"] !== null) {
       instance.default = data["default"] as unknown;
     }
-
     if (data["example"] !== undefined && data["example"] !== null) {
       instance.example = data["example"] as unknown;
     }
-
     if (data["enumValues"] !== undefined && data["enumValues"] !== null) {
-      instance.enumValues = Array.isArray(data["enumValues"])
-        ? (data["enumValues"] as unknown[]).map((v) => String(v))
-        : [];
+      instance.enumValues = data["enumValues"] as unknown[];
     }
 
     if (context) {
@@ -154,16 +111,7 @@ export class Property {
     return instance;
   }
 
-  /**
-   * Load polymorphic Property based on discriminator.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Property instance.
-   */
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Property {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Property {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -176,7 +124,6 @@ export class Property {
           return new Property();
       }
     }
-
     return new Property();
   }
 
@@ -184,40 +131,32 @@ export class Property {
 
   //#region Save Methods
 
-  /**
-   * Save the Property instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Property) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.description !== undefined && obj.description !== null) {
       result["description"] = obj.description;
     }
-
     if (obj.required !== undefined && obj.required !== null) {
       result["required"] = obj.required;
     }
-
     if (obj.default !== undefined && obj.default !== null) {
       result["default"] = obj.default;
     }
-
     if (obj.example !== undefined && obj.example !== null) {
       result["example"] = obj.example;
     }
-
     if (obj.enumValues !== undefined && obj.enumValues !== null) {
       result["enumValues"] = obj.enumValues;
     }
@@ -225,155 +164,61 @@ export class Property {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the Property instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the Property instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a Property instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Property instance.
-   */
   static fromJson(json: string, context?: LoadContext): Property {
     const data = JSON.parse(json);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return Property.load({ kind: "string", example: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-          return Property.load({ kind: "integer", example: data }, context);
-        } else {
-          return Property.load({ kind: "float", example: data }, context);
-        }
-      } else if (typeof data === "boolean") {
-        return Property.load({ kind: "boolean", example: data }, context);
-      }
-      // Fallback - shouldn't reach here
-      return Property.load({ kind: "boolean", example: data }, context);
-    }
-
     return Property.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a Property instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Property instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): Property {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return Property.load({ kind: "string", example: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-          return Property.load({ kind: "integer", example: data }, context);
-        } else {
-          return Property.load({ kind: "float", example: data }, context);
-        }
-      } else if (typeof data === "boolean") {
-        return Property.load({ kind: "boolean", example: data }, context);
-      }
-      // Fallback - shouldn't reach here
-      return Property.load({ kind: "boolean", example: data }, context);
-    }
-
     return Property.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Represents an array property.
- * This extends the base Property model to represent an array of items.
- *
- */
 export class ArrayProperty extends Property {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   *
-   */
   kind: string = "array";
-
-  /**
-   * The type of items contained in the array
-   */
   items: Property;
 
-  /**
-   * Initializes a new instance of ArrayProperty.
-   */
   constructor(init?: Partial<ArrayProperty>) {
     super(init);
-
     this.kind = init?.kind ?? "array";
-
-    this.items = init?.items ?? undefined!;
+    if (init?.items !== undefined) {
+      this.items = init.items;
+    }
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ArrayProperty instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ArrayProperty instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ArrayProperty {
+  static load(data: Record<string, unknown>, context?: LoadContext): ArrayProperty {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ArrayProperty();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["items"] !== undefined && data["items"] !== null) {
-      instance.items = Property.load(
-        data["items"] as Record<string, unknown>,
-        context,
-      );
+      instance.items = Property.load(data["items"] as Record<string, unknown>, context);
     }
 
     if (context) {
@@ -386,13 +231,11 @@ export class ArrayProperty extends Property {
 
   //#region Save Methods
 
-  /**
-   * Save the ArrayProperty instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ArrayProperty) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -400,123 +243,62 @@ export class ArrayProperty extends Property {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.items !== undefined && obj.items !== null) {
-      result["items"] = obj.items?.save(context);
+      result["items"] = obj.items.save(context);
     }
-
     return result;
   }
 
-  /**
-   * Convert the ArrayProperty instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ArrayProperty instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ArrayProperty instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ArrayProperty instance.
-   */
   static fromJson(json: string, context?: LoadContext): ArrayProperty {
     const data = JSON.parse(json);
-
     return ArrayProperty.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ArrayProperty instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ArrayProperty instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ArrayProperty {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ArrayProperty.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * Represents an object property.
- * This extends the base Property model to represent a structured object.
- *
- */
 export class ObjectProperty extends Property {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   *
-   */
   kind: string = "object";
-
-  /**
-   * The properties contained in the object
-   */
   properties: Property[] = [];
 
-  /**
-   * Initializes a new instance of ObjectProperty.
-   */
   constructor(init?: Partial<ObjectProperty>) {
     super(init);
-
     this.kind = init?.kind ?? "object";
-
     this.properties = init?.properties ?? [];
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ObjectProperty instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ObjectProperty instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ObjectProperty {
+  static load(data: Record<string, unknown>, context?: LoadContext): ObjectProperty {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ObjectProperty();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["properties"] !== undefined && data["properties"] !== null) {
-      instance.properties = ObjectProperty.loadProperties(
-        data["properties"],
-        context,
-      );
+      instance.properties = ObjectProperty.loadProperties(data["properties"] as unknown[], context);
     }
 
     if (context) {
@@ -525,40 +307,40 @@ export class ObjectProperty extends Property {
     return instance;
   }
 
-  /**
-   * Load a collection of Property from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Property.
-   */
-  static loadProperties(data: unknown, context?: LoadContext): Property[] {
-    const result: Property[] = [];
-
-    // This type doesn't have a 'name' property, always expect array format
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Property.load(item as Record<string, unknown>, context));
+  static loadProperties(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, "kind": v });
         }
       }
+      data = result;
+    }
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
+  }
+
+  static saveProperties(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map(item => item.save(context));
   }
 
   //#endregion
 
   //#region Save Methods
 
-  /**
-   * Save the ObjectProperty instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context
-      ? (context.processObject(this) as ObjectProperty)
-      : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -566,78 +348,33 @@ export class ObjectProperty extends Property {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.properties !== undefined && obj.properties !== null) {
-      result["properties"] = ObjectProperty.saveProperties(
-        obj.properties,
-        context,
-      );
+      result["properties"] = ObjectProperty.saveProperties(obj.properties, context);
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of Property to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveProperties(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
-  }
-
-  /**
-   * Convert the ObjectProperty instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ObjectProperty instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ObjectProperty instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ObjectProperty instance.
-   */
   static fromJson(json: string, context?: LoadContext): ObjectProperty {
     const data = JSON.parse(json);
-
     return ObjectProperty.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ObjectProperty instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ObjectProperty instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ObjectProperty {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ObjectProperty.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

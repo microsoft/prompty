@@ -3,43 +3,23 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * A part of a message's content. Content parts are discriminated on the `kind`
- * field and represent the different modalities that can appear in a message.
- *
- */
 export abstract class ContentPart {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind of content part
-   */
   kind: string = "";
 
-  /**
-   * Initializes a new instance of ContentPart.
-   */
   constructor(init?: Partial<ContentPart>) {
     this.kind = init?.kind ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a ContentPart instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ContentPart instance.
-   */
   static load(
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ContentPart {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Load polymorphic ContentPart instance
@@ -55,12 +35,6 @@ export abstract class ContentPart {
     return instance;
   }
 
-  /**
-   * Load polymorphic ContentPart based on discriminator.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ContentPart instance.
-   */
   private static loadKind(
     data: Record<string, unknown>,
     context?: LoadContext,
@@ -83,7 +57,6 @@ export abstract class ContentPart {
           );
       }
     }
-
     throw new Error("Missing ContentPart discriminator property: 'kind'");
   }
 
@@ -91,13 +64,11 @@ export abstract class ContentPart {
 
   //#region Save Methods
 
-  /**
-   * Save the ContentPart instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ContentPart) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
@@ -108,110 +79,57 @@ export abstract class ContentPart {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the ContentPart instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ContentPart instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ContentPart instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ContentPart instance.
-   */
   static fromJson(json: string, context?: LoadContext): ContentPart {
     const data = JSON.parse(json);
-
     return ContentPart.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ContentPart instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ContentPart instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ContentPart {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ContentPart.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A text content part.
- *
- */
 export class TextPart extends ContentPart {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for text content
-   */
   kind: string = "text";
-
-  /**
-   * The text content
-   */
   value: string = "";
 
-  /**
-   * Initializes a new instance of TextPart.
-   */
   constructor(init?: Partial<TextPart>) {
     super(init);
-
     this.kind = init?.kind ?? "text";
-
     this.value = init?.value ?? "";
   }
 
   //#region Load Methods
 
-  /**
-   * Load a TextPart instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextPart instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): TextPart {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new TextPart();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["value"] !== undefined && data["value"] !== null) {
       instance.value = String(data["value"]);
     }
@@ -226,13 +144,11 @@ export class TextPart extends ContentPart {
 
   //#region Save Methods
 
-  /**
-   * Save the TextPart instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as TextPart) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -240,107 +156,51 @@ export class TextPart extends ContentPart {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.value !== undefined && obj.value !== null) {
       result["value"] = obj.value;
     }
-
     return result;
   }
 
-  /**
-   * Convert the TextPart instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the TextPart instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a TextPart instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextPart instance.
-   */
   static fromJson(json: string, context?: LoadContext): TextPart {
     const data = JSON.parse(json);
-
     return TextPart.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a TextPart instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded TextPart instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): TextPart {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return TextPart.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * An image content part. The source may be a URL or base64-encoded data.
- *
- */
 export class ImagePart extends ContentPart {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for image content
-   */
   kind: string = "image";
-
-  /**
-   * URL or base64-encoded image data
-   */
   source: string = "";
-
-  /**
-   * Detail level hint for the model (e.g., 'auto', 'low', 'high')
-   */
   detail?: string | undefined;
-
-  /**
-   * MIME type of the image (e.g., 'image/png')
-   */
   mediaType?: string | undefined;
 
-  /**
-   * Initializes a new instance of ImagePart.
-   */
   constructor(init?: Partial<ImagePart>) {
     super(init);
-
     this.kind = init?.kind ?? "image";
-
     this.source = init?.source ?? "";
-
     if (init?.detail !== undefined) {
       this.detail = init.detail;
     }
-
     if (init?.mediaType !== undefined) {
       this.mediaType = init.mediaType;
     }
@@ -348,32 +208,22 @@ export class ImagePart extends ContentPart {
 
   //#region Load Methods
 
-  /**
-   * Load a ImagePart instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ImagePart instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): ImagePart {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ImagePart();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["source"] !== undefined && data["source"] !== null) {
       instance.source = String(data["source"]);
     }
-
     if (data["detail"] !== undefined && data["detail"] !== null) {
       instance.detail = String(data["detail"]);
     }
-
     if (data["mediaType"] !== undefined && data["mediaType"] !== null) {
       instance.mediaType = String(data["mediaType"]);
     }
@@ -388,13 +238,11 @@ export class ImagePart extends ContentPart {
 
   //#region Save Methods
 
-  /**
-   * Save the ImagePart instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ImagePart) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -402,106 +250,53 @@ export class ImagePart extends ContentPart {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.source !== undefined && obj.source !== null) {
       result["source"] = obj.source;
     }
-
     if (obj.detail !== undefined && obj.detail !== null) {
       result["detail"] = obj.detail;
     }
-
     if (obj.mediaType !== undefined && obj.mediaType !== null) {
       result["mediaType"] = obj.mediaType;
     }
-
     return result;
   }
 
-  /**
-   * Convert the ImagePart instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ImagePart instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ImagePart instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ImagePart instance.
-   */
   static fromJson(json: string, context?: LoadContext): ImagePart {
     const data = JSON.parse(json);
-
     return ImagePart.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ImagePart instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ImagePart instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ImagePart {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ImagePart.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * A file content part. The source may be a URL or base64-encoded data.
- *
- */
 export class FilePart extends ContentPart {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for file content
-   */
   kind: string = "file";
-
-  /**
-   * URL or base64-encoded file data
-   */
   source: string = "";
-
-  /**
-   * MIME type of the file (e.g., 'application/pdf')
-   */
   mediaType?: string | undefined;
 
-  /**
-   * Initializes a new instance of FilePart.
-   */
   constructor(init?: Partial<FilePart>) {
     super(init);
-
     this.kind = init?.kind ?? "file";
-
     this.source = init?.source ?? "";
-
     if (init?.mediaType !== undefined) {
       this.mediaType = init.mediaType;
     }
@@ -509,28 +304,19 @@ export class FilePart extends ContentPart {
 
   //#region Load Methods
 
-  /**
-   * Load a FilePart instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FilePart instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): FilePart {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new FilePart();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["source"] !== undefined && data["source"] !== null) {
       instance.source = String(data["source"]);
     }
-
     if (data["mediaType"] !== undefined && data["mediaType"] !== null) {
       instance.mediaType = String(data["mediaType"]);
     }
@@ -545,13 +331,11 @@ export class FilePart extends ContentPart {
 
   //#region Save Methods
 
-  /**
-   * Save the FilePart instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as FilePart) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -559,102 +343,50 @@ export class FilePart extends ContentPart {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.source !== undefined && obj.source !== null) {
       result["source"] = obj.source;
     }
-
     if (obj.mediaType !== undefined && obj.mediaType !== null) {
       result["mediaType"] = obj.mediaType;
     }
-
     return result;
   }
 
-  /**
-   * Convert the FilePart instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the FilePart instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a FilePart instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FilePart instance.
-   */
   static fromJson(json: string, context?: LoadContext): FilePart {
     const data = JSON.parse(json);
-
     return FilePart.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a FilePart instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FilePart instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): FilePart {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return FilePart.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
 
-/**
- * An audio content part. The source may be a URL or base64-encoded data.
- *
- */
 export class AudioPart extends ContentPart {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The kind identifier for audio content
-   */
   kind: string = "audio";
-
-  /**
-   * URL or base64-encoded audio data
-   */
   source: string = "";
-
-  /**
-   * MIME type of the audio (e.g., 'audio/wav')
-   */
   mediaType?: string | undefined;
 
-  /**
-   * Initializes a new instance of AudioPart.
-   */
   constructor(init?: Partial<AudioPart>) {
     super(init);
-
     this.kind = init?.kind ?? "audio";
-
     this.source = init?.source ?? "";
-
     if (init?.mediaType !== undefined) {
       this.mediaType = init.mediaType;
     }
@@ -662,28 +394,19 @@ export class AudioPart extends ContentPart {
 
   //#region Load Methods
 
-  /**
-   * Load a AudioPart instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AudioPart instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): AudioPart {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new AudioPart();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["source"] !== undefined && data["source"] !== null) {
       instance.source = String(data["source"]);
     }
-
     if (data["mediaType"] !== undefined && data["mediaType"] !== null) {
       instance.mediaType = String(data["mediaType"]);
     }
@@ -698,13 +421,11 @@ export class AudioPart extends ContentPart {
 
   //#region Save Methods
 
-  /**
-   * Save the AudioPart instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as AudioPart) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     // Start with parent class properties
     const result = super.save(context);
@@ -712,61 +433,33 @@ export class AudioPart extends ContentPart {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.source !== undefined && obj.source !== null) {
       result["source"] = obj.source;
     }
-
     if (obj.mediaType !== undefined && obj.mediaType !== null) {
       result["mediaType"] = obj.mediaType;
     }
-
     return result;
   }
 
-  /**
-   * Convert the AudioPart instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the AudioPart instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a AudioPart instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AudioPart instance.
-   */
   static fromJson(json: string, context?: LoadContext): AudioPart {
     const data = JSON.parse(json);
-
     return AudioPart.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a AudioPart instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded AudioPart instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): AudioPart {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return AudioPart.load(data as Record<string, unknown>, context);
   }
 

@@ -364,17 +364,11 @@ function lowerFactories(
 ): FactoryDecl[] {
   if (!node.factories || node.factories.length === 0) return [];
 
-  // Pre-compute safe names to avoid field/method collisions
-  const fieldNames = new Set(node.properties.map(p => p.name));
-
   return node.factories.map(f => {
     const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
-    // Compute safe name — prefix with create_ if it collides with a field
-    const safeName = fieldNames.has(f.name) ? `create_${f.name}` : f.name;
 
     return {
       name: f.name,
-      safeName,
       params: f.params,
       body: expr,
     };

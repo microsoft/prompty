@@ -3,82 +3,34 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * Information about a model available from a provider. Used by provider-level
- * model discovery to report which models are available and their capabilities.
- *
- * Not all providers return all fields — implementations SHOULD populate as
- * many fields as the provider's API supports and MAY enrich sparse results
- * from a built-in lookup table of known models.
- *
- */
 export class ModelInfo {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
-   */
   id: string = "";
-
-  /**
-   * Human-readable display name
-   */
   displayName?: string | undefined;
-
-  /**
-   * The organization or entity that owns the model
-   */
   ownedBy?: string | undefined;
-
-  /**
-   * Maximum context window size in tokens
-   */
   contextWindow?: number | undefined;
-
-  /**
-   * Input modalities the model accepts (e.g., 'text', 'image', 'audio')
-   */
   inputModalities?: string[] = [];
-
-  /**
-   * Output modalities the model can produce (e.g., 'text', 'audio')
-   */
   outputModalities?: string[] = [];
+  additionalProperties?: Record<string, unknown> | undefined;
 
-  /**
-   * Additional provider-specific properties
-   */
-  additionalProperties?: Record<string, unknown> | undefined = {};
-
-  /**
-   * Initializes a new instance of ModelInfo.
-   */
   constructor(init?: Partial<ModelInfo>) {
     this.id = init?.id ?? "";
-
     if (init?.displayName !== undefined) {
       this.displayName = init.displayName;
     }
-
     if (init?.ownedBy !== undefined) {
       this.ownedBy = init.ownedBy;
     }
-
     if (init?.contextWindow !== undefined) {
       this.contextWindow = init.contextWindow;
     }
-
     if (init?.inputModalities !== undefined) {
       this.inputModalities = init.inputModalities;
     }
-
     if (init?.outputModalities !== undefined) {
       this.outputModalities = init.outputModalities;
     }
-
     if (init?.additionalProperties !== undefined) {
       this.additionalProperties = init.additionalProperties;
     }
@@ -86,54 +38,41 @@ export class ModelInfo {
 
   //#region Load Methods
 
-  /**
-   * Load a ModelInfo instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ModelInfo instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): ModelInfo {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new ModelInfo();
 
     if (data["id"] !== undefined && data["id"] !== null) {
       instance.id = String(data["id"]);
     }
-
     if (data["displayName"] !== undefined && data["displayName"] !== null) {
       instance.displayName = String(data["displayName"]);
     }
-
     if (data["ownedBy"] !== undefined && data["ownedBy"] !== null) {
       instance.ownedBy = String(data["ownedBy"]);
     }
-
     if (data["contextWindow"] !== undefined && data["contextWindow"] !== null) {
       instance.contextWindow = Number(data["contextWindow"]);
     }
-
     if (
       data["inputModalities"] !== undefined &&
       data["inputModalities"] !== null
     ) {
-      instance.inputModalities = Array.isArray(data["inputModalities"])
-        ? (data["inputModalities"] as unknown[]).map((v) => String(v))
-        : [];
+      instance.inputModalities = (data["inputModalities"] as unknown[]).map(
+        (v) => String(v),
+      );
     }
-
     if (
       data["outputModalities"] !== undefined &&
       data["outputModalities"] !== null
     ) {
-      instance.outputModalities = Array.isArray(data["outputModalities"])
-        ? (data["outputModalities"] as unknown[]).map((v) => String(v))
-        : [];
+      instance.outputModalities = (data["outputModalities"] as unknown[]).map(
+        (v) => String(v),
+      );
     }
-
     if (
       data["additionalProperties"] !== undefined &&
       data["additionalProperties"] !== null
@@ -154,40 +93,32 @@ export class ModelInfo {
 
   //#region Save Methods
 
-  /**
-   * Save the ModelInfo instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ModelInfo) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.id !== undefined && obj.id !== null) {
       result["id"] = obj.id;
     }
-
     if (obj.displayName !== undefined && obj.displayName !== null) {
       result["displayName"] = obj.displayName;
     }
-
     if (obj.ownedBy !== undefined && obj.ownedBy !== null) {
       result["ownedBy"] = obj.ownedBy;
     }
-
     if (obj.contextWindow !== undefined && obj.contextWindow !== null) {
       result["contextWindow"] = obj.contextWindow;
     }
-
     if (obj.inputModalities !== undefined && obj.inputModalities !== null) {
       result["inputModalities"] = obj.inputModalities;
     }
-
     if (obj.outputModalities !== undefined && obj.outputModalities !== null) {
       result["outputModalities"] = obj.outputModalities;
     }
-
     if (
       obj.additionalProperties !== undefined &&
       obj.additionalProperties !== null
@@ -198,53 +129,27 @@ export class ModelInfo {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the ModelInfo instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ModelInfo instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ModelInfo instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ModelInfo instance.
-   */
   static fromJson(json: string, context?: LoadContext): ModelInfo {
     const data = JSON.parse(json);
-
     return ModelInfo.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ModelInfo instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ModelInfo instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ModelInfo {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return ModelInfo.load(data as Record<string, unknown>, context);
   }
 

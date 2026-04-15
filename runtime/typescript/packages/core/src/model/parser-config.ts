@@ -3,32 +3,14 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * Template parser definition
- *
- */
 export class ParserConfig {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = "kind";
 
-  /**
-   * Parser used to process the rendered template into API-compatible format
-   */
   kind: string = "*";
+  options?: Record<string, unknown> | undefined;
 
-  /**
-   * Options for the parser
-   */
-  options?: Record<string, unknown> | undefined = {};
-
-  /**
-   * Initializes a new instance of ParserConfig.
-   */
   constructor(init?: Partial<ParserConfig>) {
     this.kind = init?.kind ?? "*";
-
     if (init?.options !== undefined) {
       this.options = init.options;
     }
@@ -36,34 +18,26 @@ export class ParserConfig {
 
   //#region Load Methods
 
-  /**
-   * Load a ParserConfig instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ParserConfig instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ParserConfig {
+  static load(data: Record<string, unknown>, context?: LoadContext): ParserConfig {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Handle alternate representations
     if (typeof data === "string") {
-      data = { kind: data };
-    } else if (typeof data === "number") {
-    } else if (typeof data === "boolean") {
+      const instance = new ParserConfig();
+      instance.kind = data as string;
+      if (context) {
+        return context.processOutput(instance) as ParserConfig;
+      }
+      return instance;
     }
 
-    // Create new instance
     const instance = new ParserConfig();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = data["options"] as Record<string, unknown>;
     }
@@ -78,20 +52,17 @@ export class ParserConfig {
 
   //#region Save Methods
 
-  /**
-   * Save the ParserConfig instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as ParserConfig) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.options !== undefined && obj.options !== null) {
       result["options"] = obj.options;
     }
@@ -99,85 +70,30 @@ export class ParserConfig {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the ParserConfig instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the ParserConfig instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a ParserConfig instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ParserConfig instance.
-   */
   static fromJson(json: string, context?: LoadContext): ParserConfig {
     const data = JSON.parse(json);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return ParserConfig.load({ kind: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-        } else {
-        }
-      } else if (typeof data === "boolean") {
-      }
-      // Fallback - shouldn't reach here
-      return ParserConfig.load({ kind: data }, context);
-    }
-
     return ParserConfig.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a ParserConfig instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded ParserConfig instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): ParserConfig {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return ParserConfig.load({ kind: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-        } else {
-        }
-      } else if (typeof data === "boolean") {
-      }
-      // Fallback - shouldn't reach here
-      return ParserConfig.load({ kind: data }, context);
-    }
-
     return ParserConfig.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

@@ -3,41 +3,18 @@
 
 import { LoadContext, SaveContext } from "./context";
 
-/**
- * Template format definition
- *
- */
 export class FormatConfig {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = "kind";
 
-  /**
-   * Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
-   */
   kind: string = "*";
-
-  /**
-   * Whether the template can emit structural text for parsing output
-   */
   strict?: boolean | undefined;
+  options?: Record<string, unknown> | undefined;
 
-  /**
-   * Options for the template engine
-   */
-  options?: Record<string, unknown> | undefined = {};
-
-  /**
-   * Initializes a new instance of FormatConfig.
-   */
   constructor(init?: Partial<FormatConfig>) {
     this.kind = init?.kind ?? "*";
-
     if (init?.strict !== undefined) {
       this.strict = init.strict;
     }
-
     if (init?.options !== undefined) {
       this.options = init.options;
     }
@@ -45,38 +22,29 @@ export class FormatConfig {
 
   //#region Load Methods
 
-  /**
-   * Load a FormatConfig instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FormatConfig instance.
-   */
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): FormatConfig {
+  static load(data: Record<string, unknown>, context?: LoadContext): FormatConfig {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
     // Handle alternate representations
     if (typeof data === "string") {
-      data = { kind: data };
-    } else if (typeof data === "number") {
-    } else if (typeof data === "boolean") {
+      const instance = new FormatConfig();
+      instance.kind = data as string;
+      if (context) {
+        return context.processOutput(instance) as FormatConfig;
+      }
+      return instance;
     }
 
-    // Create new instance
     const instance = new FormatConfig();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-
     if (data["strict"] !== undefined && data["strict"] !== null) {
       instance.strict = Boolean(data["strict"]);
     }
-
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = data["options"] as Record<string, unknown>;
     }
@@ -91,24 +59,20 @@ export class FormatConfig {
 
   //#region Save Methods
 
-  /**
-   * Save the FormatConfig instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as FormatConfig) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-
     if (obj.strict !== undefined && obj.strict !== null) {
       result["strict"] = obj.strict;
     }
-
     if (obj.options !== undefined && obj.options !== null) {
       result["options"] = obj.options;
     }
@@ -116,85 +80,30 @@ export class FormatConfig {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Convert the FormatConfig instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the FormatConfig instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a FormatConfig instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FormatConfig instance.
-   */
   static fromJson(json: string, context?: LoadContext): FormatConfig {
     const data = JSON.parse(json);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return FormatConfig.load({ kind: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-        } else {
-        }
-      } else if (typeof data === "boolean") {
-      }
-      // Fallback - shouldn't reach here
-      return FormatConfig.load({ kind: data }, context);
-    }
-
     return FormatConfig.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a FormatConfig instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded FormatConfig instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): FormatConfig {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
-    // Handle alternate representations
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      if (typeof data === "string") {
-        return FormatConfig.load({ kind: data }, context);
-      } else if (typeof data === "number") {
-        // Check if it's an integer or float
-        if (Number.isInteger(data)) {
-        } else {
-        }
-      } else if (typeof data === "boolean") {
-      }
-      // Fallback - shouldn't reach here
-      return FormatConfig.load({ kind: data }, context);
-    }
-
     return FormatConfig.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

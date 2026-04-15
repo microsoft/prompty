@@ -1,7 +1,6 @@
 
 
 import json
-
 import yaml
 
 from prompty.model import FoundryConnection
