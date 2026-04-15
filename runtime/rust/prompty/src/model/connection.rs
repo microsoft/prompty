@@ -5,8 +5,6 @@
 use super::context::{LoadContext, SaveContext};
 
 
-
-
 /// Variant-specific data for [`Connection`], discriminated by `kind`.
 #[derive(Debug, Clone)]
 pub enum ConnectionKind {
@@ -170,60 +168,60 @@ impl Connection {
         match &self.kind {
             ConnectionKind::Reference { name, target,  .. } => {
                 if !name.is_empty() {
-            result.insert("name".to_string(), serde_json::Value::String(name.clone()));
-        }
+                    result.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                }
                 if let Some(val) = target {
-            result.insert("target".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("target".to_string(), serde_json::Value::String(val.clone()));
+                }
             }
             ConnectionKind::Remote { name, endpoint,  .. } => {
                 if !name.is_empty() {
-            result.insert("name".to_string(), serde_json::Value::String(name.clone()));
-        }
+                    result.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                }
                 if !endpoint.is_empty() {
-            result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-        }
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
             }
             ConnectionKind::ApiKey { endpoint, api_key,  .. } => {
                 if !endpoint.is_empty() {
-            result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-        }
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
                 if !api_key.is_empty() {
-            result.insert("apiKey".to_string(), serde_json::Value::String(api_key.clone()));
-        }
+                    result.insert("apiKey".to_string(), serde_json::Value::String(api_key.clone()));
+                }
             }
             ConnectionKind::Anonymous { endpoint,  .. } => {
                 if !endpoint.is_empty() {
-            result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-        }
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
             }
             ConnectionKind::Foundry { endpoint, name, connection_type,  .. } => {
                 if !endpoint.is_empty() {
-            result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-        }
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
                 if let Some(val) = name {
-            result.insert("name".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("name".to_string(), serde_json::Value::String(val.clone()));
+                }
                 if let Some(val) = connection_type {
-            result.insert("connectionType".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("connectionType".to_string(), serde_json::Value::String(val.clone()));
+                }
             }
             ConnectionKind::OAuth { endpoint, client_id, client_secret, token_url, scopes,  .. } => {
                 if !endpoint.is_empty() {
-            result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-        }
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
                 if !client_id.is_empty() {
-            result.insert("clientId".to_string(), serde_json::Value::String(client_id.clone()));
-        }
+                    result.insert("clientId".to_string(), serde_json::Value::String(client_id.clone()));
+                }
                 if !client_secret.is_empty() {
-            result.insert("clientSecret".to_string(), serde_json::Value::String(client_secret.clone()));
-        }
+                    result.insert("clientSecret".to_string(), serde_json::Value::String(client_secret.clone()));
+                }
                 if !token_url.is_empty() {
-            result.insert("tokenUrl".to_string(), serde_json::Value::String(token_url.clone()));
-        }
+                    result.insert("tokenUrl".to_string(), serde_json::Value::String(token_url.clone()));
+                }
                 if let Some(items) = scopes {
-            result.insert("scopes".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
-        }
+                    result.insert("scopes".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
+                }
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -239,14 +237,6 @@ impl Connection {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-
-
-
-
-
-
-
 
 
 

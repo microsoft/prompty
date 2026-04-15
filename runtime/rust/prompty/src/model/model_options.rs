@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// Options for configuring the behavior of the AI model.
 #[derive(Debug, Clone, Default)]
 pub struct ModelOptions {
@@ -55,13 +53,13 @@ impl ModelOptions {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
-            frequency_penalty: value.get("frequencyPenalty").and_then(|v| v.as_f64()).map(|n| n as f32),
-            max_output_tokens: value.get("maxOutputTokens").and_then(|v| v.as_i64()).map(|n| n as i32),
-            presence_penalty: value.get("presencePenalty").and_then(|v| v.as_f64()).map(|n| n as f32),
-            seed: value.get("seed").and_then(|v| v.as_i64()).map(|n| n as i32),
-            temperature: value.get("temperature").and_then(|v| v.as_f64()).map(|n| n as f32),
-            top_k: value.get("topK").and_then(|v| v.as_i64()).map(|n| n as i32),
-            top_p: value.get("topP").and_then(|v| v.as_f64()).map(|n| n as f32),
+            frequency_penalty: value.get("frequencyPenalty").and_then(|v| v.as_f64()).map(|v| v as f32),
+            max_output_tokens: value.get("maxOutputTokens").and_then(|v| v.as_i64()).map(|v| v as i32),
+            presence_penalty: value.get("presencePenalty").and_then(|v| v.as_f64()).map(|v| v as f32),
+            seed: value.get("seed").and_then(|v| v.as_i64()).map(|v| v as i32),
+            temperature: value.get("temperature").and_then(|v| v.as_f64()).map(|v| v as f32),
+            top_k: value.get("topK").and_then(|v| v.as_i64()).map(|v| v as i32),
+            top_p: value.get("topP").and_then(|v| v.as_f64()).map(|v| v as f32),
             stop_sequences: value.get("stopSequences").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
             allow_multiple_tool_calls: value.get("allowMultipleToolCalls").and_then(|v| v.as_bool()),
             additional_properties: value.get("additionalProperties").cloned().unwrap_or(serde_json::Value::Null),
@@ -73,26 +71,27 @@ impl ModelOptions {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
-        if let Some(ref val) = self.frequency_penalty {
-            result.insert("frequencyPenalty".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        // Write base fields
+        if let Some(val) = self.frequency_penalty {
+            result.insert("frequencyPenalty".to_string(), serde_json::Number::from_f64(val as f64).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null));
         }
-        if let Some(ref val) = self.max_output_tokens {
-            result.insert("maxOutputTokens".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.max_output_tokens {
+            result.insert("maxOutputTokens".to_string(), serde_json::Value::Number(serde_json::Number::from(val)));
         }
-        if let Some(ref val) = self.presence_penalty {
-            result.insert("presencePenalty".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.presence_penalty {
+            result.insert("presencePenalty".to_string(), serde_json::Number::from_f64(val as f64).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null));
         }
-        if let Some(ref val) = self.seed {
-            result.insert("seed".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.seed {
+            result.insert("seed".to_string(), serde_json::Value::Number(serde_json::Number::from(val)));
         }
-        if let Some(ref val) = self.temperature {
-            result.insert("temperature".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.temperature {
+            result.insert("temperature".to_string(), serde_json::Number::from_f64(val as f64).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null));
         }
-        if let Some(ref val) = self.top_k {
-            result.insert("topK".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.top_k {
+            result.insert("topK".to_string(), serde_json::Value::Number(serde_json::Number::from(val)));
         }
-        if let Some(ref val) = self.top_p {
-            result.insert("topP".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.top_p {
+            result.insert("topP".to_string(), serde_json::Number::from_f64(val as f64).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null));
         }
         if let Some(ref items) = self.stop_sequences {
             result.insert("stopSequences".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
@@ -120,6 +119,5 @@ impl ModelOptions {
     pub fn as_additional_properties_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.additional_properties.as_object()
     }
+
 }
-
-

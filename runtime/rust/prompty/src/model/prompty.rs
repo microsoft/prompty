@@ -4,25 +4,15 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::model::Model;
-
-
 
 use super::property::Property;
 
-
-
 use super::template::Template;
-
-
 
 use super::tool::Tool;
 
-
-
-
-/// A Prompty is a markdown file format for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions.  This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces a Prompty instance.
+/// A Prompty is a markdown file format for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions. This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces a Prompty instance.
 #[derive(Debug, Clone, Default)]
 pub struct Prompty {
     /// Human-readable name of the prompt
@@ -89,6 +79,7 @@ impl Prompty {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.name.is_empty() {
             result.insert("name".to_string(), serde_json::Value::String(self.name.clone()));
         }
@@ -143,6 +134,7 @@ impl Prompty {
         self.metadata.as_object()
     }
 
+
     /// Load a collection of Property from a JSON value.
     /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
     fn load_inputs(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
@@ -178,7 +170,7 @@ impl Prompty {
     fn save_inputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
 
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>());
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
@@ -211,7 +203,7 @@ impl Prompty {
     /// Save a collection of Property to a JSON value.
     fn save_outputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
 
-        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())
 
     }
 
@@ -250,7 +242,7 @@ impl Prompty {
     fn save_tools(items: &[Tool], ctx: &SaveContext) -> serde_json::Value {
 
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>());
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
@@ -267,5 +259,3 @@ impl Prompty {
 
     }
 }
-
-

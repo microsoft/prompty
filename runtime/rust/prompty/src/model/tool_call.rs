@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// A tool call requested by the LLM. Contains the function name and serialized arguments that should be dispatched to the appropriate tool handler.
 #[derive(Debug, Clone, Default)]
 pub struct ToolCall {
@@ -52,6 +50,7 @@ impl ToolCall {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.id.is_empty() {
             result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
         }
@@ -74,5 +73,3 @@ impl ToolCall {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-

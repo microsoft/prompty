@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// Template parser definition
 #[derive(Debug, Clone, Default)]
 pub struct ParserConfig {
@@ -53,6 +51,7 @@ impl ParserConfig {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.kind.is_empty() {
             result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
         }
@@ -76,6 +75,5 @@ impl ParserConfig {
     pub fn as_options_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.options.as_object()
     }
+
 }
-
-

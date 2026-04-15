@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// Represents a binding between an input property and a tool parameter.
 #[derive(Debug, Clone, Default)]
 pub struct Binding {
@@ -53,6 +51,7 @@ impl Binding {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.name.is_empty() {
             result.insert("name".to_string(), serde_json::Value::String(self.name.clone()));
         }
@@ -72,5 +71,3 @@ impl Binding {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-

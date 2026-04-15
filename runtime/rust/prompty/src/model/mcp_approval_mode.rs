@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// The approval mode for MCP server tools. When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools to control per-tool approval. For "always" and "never", those fields are ignored.
 #[derive(Debug, Clone, Default)]
 pub struct McpApprovalMode {
@@ -56,6 +54,7 @@ impl McpApprovalMode {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.kind.is_empty() {
             result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
         }
@@ -78,5 +77,3 @@ impl McpApprovalMode {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-

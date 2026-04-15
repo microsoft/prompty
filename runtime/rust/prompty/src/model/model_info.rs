@@ -4,9 +4,7 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
-/// Information about a model available from a provider. Used by provider-level model discovery to report which models are available and their capabilities.  Not all providers return all fields — implementations SHOULD populate as many fields as the provider's API supports and MAY enrich sparse results from a built-in lookup table of known models.
+/// Information about a model available from a provider. Used by provider-level model discovery to report which models are available and their capabilities. Not all providers return all fields — implementations SHOULD populate as many fields as the provider's API supports and MAY enrich sparse results from a built-in lookup table of known models.
 #[derive(Debug, Clone, Default)]
 pub struct ModelInfo {
     /// The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
@@ -52,7 +50,7 @@ impl ModelInfo {
             id: value.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             display_name: value.get("displayName").and_then(|v| v.as_str()).map(|s| s.to_string()),
             owned_by: value.get("ownedBy").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            context_window: value.get("contextWindow").and_then(|v| v.as_i64()).map(|n| n as i32),
+            context_window: value.get("contextWindow").and_then(|v| v.as_i64()).map(|v| v as i32),
             input_modalities: value.get("inputModalities").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
             output_modalities: value.get("outputModalities").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
             additional_properties: value.get("additionalProperties").cloned().unwrap_or(serde_json::Value::Null),
@@ -64,6 +62,7 @@ impl ModelInfo {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.id.is_empty() {
             result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
         }
@@ -73,8 +72,8 @@ impl ModelInfo {
         if let Some(ref val) = self.owned_by {
             result.insert("ownedBy".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(ref val) = self.context_window {
-            result.insert("contextWindow".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+        if let Some(val) = self.context_window {
+            result.insert("contextWindow".to_string(), serde_json::Value::Number(serde_json::Number::from(val)));
         }
         if let Some(ref items) = self.input_modalities {
             result.insert("inputModalities".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
@@ -102,6 +101,5 @@ impl ModelInfo {
     pub fn as_additional_properties_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.additional_properties.as_object()
     }
+
 }
-
-

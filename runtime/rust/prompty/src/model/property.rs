@@ -5,8 +5,6 @@
 use super::context::{LoadContext, SaveContext};
 
 
-
-
 /// Variant-specific data for [`Property`], discriminated by `kind`.
 #[derive(Debug, Clone)]
 pub enum PropertyKind {
@@ -34,7 +32,7 @@ impl Default for PropertyKind {
         }
     }
 }
-/// Represents a single property.  - This model defines the structure of properties that can be used in prompts, including their type, description, whether they are required, and other attributes. - It allows for the definition of dynamic inputs that can be filled with data and processed to generate prompts for AI models.
+/// Represents a single property. - This model defines the structure of properties that can be used in prompts, including their type, description, whether they are required, and other attributes. - It allows for the definition of dynamic inputs that can be filled with data and processed to generate prompts for AI models.
 #[derive(Debug, Clone, Default)]
 pub struct Property {
     /// Name of the property
@@ -78,9 +76,6 @@ impl Property {
         let value = ctx.process_input(value.clone());
         if let Some(value) = value.as_bool() {
             return Property { kind: PropertyKind::Custom { kind_name: "boolean".to_string() }, example: Some(value.into()), ..Default::default() };
-        }
-        if let Some(value) = value.as_f64() {
-            return Property { kind: PropertyKind::Custom { kind_name: "float".to_string() }, example: Some(value.into()), ..Default::default() };
         }
         if let Some(value) = value.as_i64() {
             return Property { kind: PropertyKind::Custom { kind_name: "integer".to_string() }, example: Some(value.into()), ..Default::default() };
@@ -139,10 +134,10 @@ impl Property {
             result.insert("required".to_string(), serde_json::Value::Bool(val));
         }
         if let Some(ref val) = self.default {
-            result.insert("default".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+            result.insert("default".to_string(), val.clone());
         }
         if let Some(ref val) = self.example {
-            result.insert("example".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+            result.insert("example".to_string(), val.clone());
         }
         if let Some(ref items) = self.enum_values {
             result.insert("enumValues".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
@@ -151,13 +146,13 @@ impl Property {
         match &self.kind {
             PropertyKind::Array { items,  .. } => {
                 if !items.is_null() {
-            result.insert("items".to_string(), items.clone());
-        }
+                    result.insert("items".to_string(), items.clone());
+                }
             }
             PropertyKind::Object { properties,  .. } => {
                 if !properties.is_empty() {
-            result.insert("properties".to_string(), serde_json::Value::Array(properties.iter().map(|item| item.to_value(ctx)).collect()));
-        }
+                    result.insert("properties".to_string(), serde_json::Value::Array(properties.iter().map(|item| item.to_value(ctx)).collect()));
+                }
             }
             PropertyKind::Custom { kind_name: _, .. } => {
             }
@@ -191,13 +186,9 @@ impl Property {
     /// Save a collection of Property to a JSON value.
     fn save_properties(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
 
-        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())
 
     }
 }
-
-
-
-
 
 

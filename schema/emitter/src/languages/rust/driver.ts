@@ -6,19 +6,20 @@ import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
-  PropertyNode,
   TypeNode,
 } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
-import { ExprVisitor } from "../../ir/visitor.js";
+import { TypeRegistry } from "../../ir/expansion.js";
 import { RustExprVisitor } from "./visitor.js";
 import { createTemplateEngine } from "../../legacy/template-engine.js";
 import { buildBaseTestContext, rustTestOptions } from "../../legacy/test-context.js";
 import { toSnakeCase } from "../../ir/utilities.js";
+import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
+import { emitRustFile as emitRustFileDecl } from "./emitter.js";
 
 /**
  * Type mapping from TypeSpec scalar types to Rust types.
+ * Retained for use by the test template context.
  */
 export const rustTypeMapper: Record<string, string> = {
   "string": "String",
@@ -36,64 +37,6 @@ export const rustTypeMapper: Record<string, string> = {
   "any": "serde_json::Value",
   "dictionary": "serde_json::Value",
 };
-
-/**
- * Data describing a polymorphic enum variant for Rust codegen.
- */
-interface PolymorphicVariant {
-  /** PascalCase variant name (e.g., "Function") */
-  variantName: string;
-  /** Discriminator value from TypeSpec (e.g., "function"), or "*" for wildcard */
-  kindValue: string;
-  /** Whether this is the wildcard/default variant (kind value "*") */
-  isWildcard: boolean;
-  /** Variant-only properties (excluding base properties and discriminator) */
-  properties: PropertyNode[];
-  /** Doc comment for this variant */
-  description: string;
-}
-
-/**
- * Rust context interfaces for template rendering
- */
-interface RenderedFactory {
-  name: string;
-  params: Record<string, string>;
-  body: string;
-}
-
-interface RenderedCoercion {
-  scalar: string;
-  expression: string;
-}
-
-interface RustClassContext {
-  node: TypeNode;
-  typeMapper: Record<string, string>;
-  coercions: Array<{ scalar: string; alternate: string }>;
-  renderedFactories: RenderedFactory[];
-  renderedCoercions: RenderedCoercion[];
-  factoryTypeRefs: string[];
-  polymorphicTypes: any;
-  imports: string[];
-  collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
-  coercionProperty: string | null;
-  // Polymorphic support
-  isPolymorphicBase: boolean;
-  isPolymorphicChild: boolean;
-  discriminatorField: string | undefined;
-  enumName: string | undefined;
-  variants: PolymorphicVariant[];
-  basePropertiesWithoutDiscriminator: PropertyNode[];
-}
-
-interface RustFileContext {
-  containsAbstract: boolean;
-  imports: Array<{ module: string; names: string[] }>;
-  classes: RustClassContext[];
-  typeMapper: Record<string, string>;
-  polymorphicTypeNames: string[];
-}
 
 interface RustContextContext {
   header: string;
@@ -123,13 +66,19 @@ export const generateRust = async (
 
   // Collect all polymorphic type names across all nodes
   const polymorphicTypeNames = new Set<string>();
-  const polymorphicChildNames = new Set<string>();
   for (const n of nodes) {
-    const polyTypes = n.retrievePolymorphicTypes();
-    if (polyTypes) {
-      polymorphicTypeNames.add(n.typeName.name);
+    for (const name of collectPolymorphicTypeNames(n, registry)) {
+      polymorphicTypeNames.add(name);
+    }
+  }
+  // Build a map from polymorphic child type names to their parent type names.
+  // In Rust, child types become enum variants, not standalone structs.
+  // When importing a child type, we need to import ParentKind instead.
+  const childToParent = new Map<string, string>();
+  for (const n of nodes) {
+    if (n.discriminator && n.childTypes.length > 0) {
       for (const child of n.childTypes) {
-        polymorphicChildNames.add(child.typeName.name);
+        childToParent.set(child.typeName.name, n.typeName.name);
       }
     }
   }
@@ -144,15 +93,15 @@ export const generateRust = async (
   const testModuleNames: string[] = [];
   for (const n of nodes) {
     if (!n.base) {
-      const fileContext = buildFileContext(n, polymorphicTypeNames, registry, visitor);
-      const fileContent = engine.render('file.rs.njk', fileContext);
+      const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
+      const fileContent = emitRustFileDecl(fileDecl, visitor, polymorphicTypeNames, childToParent);
       const fileName = toSnakeCase(n.typeName.name) + '.rs';
       await emitRustFile(context, fileName, fileContent, emitTarget["output-dir"]);
       moduleNames.push(toSnakeCase(n.typeName.name));
     }
 
     // Render test file — skip children of polymorphic hierarchies (they're enum variants now)
-    if (emitTarget["test-dir"] && !polymorphicChildNames.has(n.typeName.name)) {
+    if (emitTarget["test-dir"] && !childToParent.has(n.typeName.name)) {
       const importPath = emitTarget["import-path"] || "crate";
       const testContext = buildTestContext(n);
       const isPolymorphicBase = !!(n.discriminator && n.childTypes.length > 0);
@@ -207,169 +156,6 @@ function formatRustFiles(outputDir: string): void {
 }
 
 /**
- * Build context for rendering a single Rust struct.
- * Resolves factories and coercions via the expression IR.
- */
-function buildClassContext(
-  node: TypeNode,
-  polymorphicTypeNames: Set<string>,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): RustClassContext {
-  const isPolymorphicBase = !!(node.discriminator && node.childTypes.length > 0);
-  const isPolymorphicChild = !!(node.base && polymorphicTypeNames.has(node.base.name));
-
-  let discriminatorField: string | undefined;
-  let enumName: string | undefined;
-  let variants: PolymorphicVariant[] = [];
-  let basePropertiesWithoutDiscriminator: PropertyNode[] = [];
-
-  if (isPolymorphicBase) {
-    discriminatorField = node.discriminator!;
-    enumName = node.typeName.name + 'Kind';
-    basePropertiesWithoutDiscriminator = node.properties.filter(
-      p => p.name !== node.discriminator
-    );
-
-    const polyTypes = node.retrievePolymorphicTypes();
-    if (polyTypes) {
-      const basePropertyNames = new Set(node.properties.map(p => p.name));
-
-      // Named variants (non-wildcard)
-      for (const t of polyTypes.types) {
-        const childNode = t.instance as TypeNode;
-        const vName = childNode.typeName.name.replace(node.typeName.name, '') || childNode.typeName.name;
-        const variantProps = childNode.properties.filter(
-          (p: PropertyNode) => p.name !== node.discriminator && !basePropertyNames.has(p.name)
-        );
-        variants.push({
-          variantName: vName,
-          kindValue: t.value,
-          isWildcard: false,
-          properties: variantProps,
-          description: childNode.description || '',
-        });
-      }
-
-      // Wildcard/default variant
-      if (polyTypes.default) {
-        const defaultNode = polyTypes.default.instance as TypeNode;
-        const isSelfRef = defaultNode.typeName.name === node.typeName.name;
-        const defaultName = isSelfRef
-          ? 'Custom'
-          : (defaultNode.typeName.name.replace(node.typeName.name, '') || 'Custom');
-        const defaultProps = isSelfRef
-          ? []
-          : defaultNode.properties.filter(
-              (p: PropertyNode) => p.name !== node.discriminator && !basePropertyNames.has(p.name)
-            );
-        variants.push({
-          variantName: defaultName,
-          kindValue: polyTypes.default.value,
-          isWildcard: true,
-          properties: defaultProps,
-          description: defaultNode.description || 'Wildcard variant for unknown kinds.',
-        });
-      }
-    }
-  }
-
-  // Resolve factories via expression IR, collecting type refs for imports
-  const renderedFactories: RenderedFactory[] = [];
-  const factoryTypeRefs: string[] = [];
-  for (const f of node.factories || []) {
-    const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
-    renderedFactories.push({ name: f.name, params: f.params, body: visitor.visitExpr(expr) });
-    for (const ref of collectExprTypeRefs(expr)) {
-      factoryTypeRefs.push(ref.name);
-    }
-  }
-
-  // Resolve coercions via expression IR
-  const renderedCoercions: RenderedCoercion[] = (node.coercions || []).map(c => ({
-    scalar: rustTypeMapper[c.scalar] || c.scalar,
-    expression: visitor.visitExpr(resolveCoerceExpr(c.expansion, c.scalar, node, registry)),
-  }));
-
-  return {
-    node,
-    typeMapper: rustTypeMapper,
-    coercions: prepareCoercions(node),
-    renderedFactories,
-    renderedCoercions,
-    factoryTypeRefs,
-    polymorphicTypes: node.retrievePolymorphicTypes(),
-    imports: getUniqueImportTypes(node, polymorphicTypeNames),
-    collectionTypes: getCollectionTypes(node),
-    coercionProperty: getCoercionProperty(node),
-    isPolymorphicBase,
-    isPolymorphicChild,
-    discriminatorField,
-    enumName,
-    variants,
-    basePropertiesWithoutDiscriminator,
-  };
-}
-
-/**
- * Build context for rendering a Rust file with a base type and its children.
- */
-function buildFileContext(
-  node: TypeNode,
-  polymorphicTypeNames: Set<string>,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): RustFileContext {
-  const classes: RustClassContext[] = [
-    buildClassContext(node, polymorphicTypeNames, registry, visitor),
-    ...node.childTypes.map(ct => buildClassContext(ct, polymorphicTypeNames, registry, visitor))
-  ];
-
-  // Build grouped imports: module → set of type names
-  const definedInFile = new Set([node.typeName.name, ...node.childTypes.map(c => c.typeName.name)]);
-  const importMap = new Map<string, Set<string>>();
-
-  const addImport = (typeName: string, module?: string) => {
-    if (definedInFile.has(typeName)) return;
-    const mod = module || toSnakeCase(typeName);
-    if (!importMap.has(mod)) importMap.set(mod, new Set());
-    importMap.get(mod)!.add(typeName);
-  };
-
-  // Property-based imports
-  for (const cls of classes) {
-    if (cls.isPolymorphicChild) continue;
-    for (const imp of cls.imports) {
-      addImport(imp);
-    }
-  }
-
-  // Factory-referenced imports — for polymorphic types, also add the Kind enum
-  for (const cls of classes) {
-    if (cls.isPolymorphicChild) continue;
-    for (const ref of cls.factoryTypeRefs) {
-      if (definedInFile.has(ref)) continue;
-      if (polymorphicTypeNames.has(ref)) {
-        // ContentPartKind lives in the content_part module alongside ContentPart
-        addImport(ref + "Kind", toSnakeCase(ref));
-      }
-    }
-  }
-
-  const imports = Array.from(importMap.entries())
-    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
-    .sort((a, b) => a.module.localeCompare(b.module));
-
-  return {
-    containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
-    imports,
-    classes,
-    typeMapper: rustTypeMapper,
-    polymorphicTypeNames: Array.from(polymorphicTypeNames),
-  };
-}
-
-/**
  * Build context for rendering a test file.
  */
 function buildTestContext(node: TypeNode): BaseTestContext {
@@ -381,100 +167,6 @@ function buildTestContext(node: TypeNode): BaseTestContext {
  */
 function buildContextContext(): RustContextContext {
   return { header: "Prompty Context" };
-}
-
-/**
- * Prepare coercion representations for template rendering.
- */
-function prepareCoercions(node: TypeNode): Array<{ scalar: string; alternate: string }> {
-  if (!node.coercions || node.coercions.length === 0) {
-    return [];
-  }
-
-  return node.coercions.map(alt => ({
-    scalar: rustTypeMapper[alt.scalar] || alt.scalar,
-    alternate: JSON.stringify(alt.expansion, null, '')
-      .replaceAll('\n', '')
-      .replaceAll('"{value}"', 'value'),
-  }));
-}
-
-/**
- * Get the coercion property name from coercions.
- */
-function getCoercionProperty(node: TypeNode): string | null {
-  if (!node.coercions || node.coercions.length === 0) {
-    return null;
-  }
-  for (const alt of node.coercions) {
-    for (const [key, value] of Object.entries(alt.expansion)) {
-      if (value === "{value}") {
-        return key;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Get collection properties with their nested type info.
- */
-function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }> {
-  // Collect from base properties
-  const baseCollections = node.properties
-    .filter(p => p.isCollection && !p.isScalar && !p.isDict)
-    .map(p => ({
-      prop: p,
-      type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
-      hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
-    }));
-
-  // Also collect from child type variant-specific properties (for polymorphic types)
-  const childCollections = node.childTypes.flatMap(ct =>
-    ct.properties
-      .filter(p => p.isCollection && !p.isScalar && !p.isDict)
-      // Skip if already covered by a base property with the same name
-      .filter(p => !baseCollections.some(bc => bc.prop.name === p.name))
-      .map(p => ({
-        prop: p,
-        type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
-        hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
-      }))
-  );
-
-  // Deduplicate by property name (in case multiple child types have same-named collection)
-  const seen = new Set(baseCollections.map(c => c.prop.name));
-  const uniqueChildCollections = childCollections.filter(c => {
-    if (seen.has(c.prop.name)) return false;
-    seen.add(c.prop.name);
-    return true;
-  });
-
-  return [...baseCollections, ...uniqueChildCollections];
-}
-/**
- * Get unique import types needed from other modules.
- * Excludes polymorphic types that are not collection fields (stored as serde_json::Value
- * with no typed accessor method).
- */
-function getUniqueImportTypes(node: TypeNode, polymorphicTypeNames: Set<string>): string[] {
-  const imports = [
-    node.properties
-      .filter(p => !p.isScalar && !p.isDict)
-      // For polymorphic types: only import if it's a collection (needed for Vec<T>)
-      .filter(p => !polymorphicTypeNames.has(p.typeName.name) || p.isCollection)
-      .map(p => p.typeName.name),
-    ...node.childTypes.flatMap(c =>
-      c.properties
-        .filter(p => !p.isScalar && !p.isDict)
-        // Child properties in enum variants: polymorphic single refs are serde_json::Value
-        // but collections are now Vec<T> and need imports
-        .filter(p => !polymorphicTypeNames.has(p.typeName.name) || p.isCollection)
-        .map(p => p.typeName.name)
-    )
-  ].flat().filter(n => n !== node.typeName.name && node.base?.name !== n);
-
-  return Array.from(new Set(imports)).sort();
 }
 
 /**

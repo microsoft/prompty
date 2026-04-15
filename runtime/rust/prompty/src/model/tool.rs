@@ -4,19 +4,13 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::binding::Binding;
 
-
+use super::connection::Connection;
 
 use super::mcp_approval_mode::McpApprovalMode;
 
-
-
 use super::property::Property;
-
-
-
 
 
 /// Variant-specific data for [`Tool`], discriminated by `kind`.
@@ -179,55 +173,55 @@ impl Tool {
         match &self.kind {
             ToolKind::Function { parameters, strict,  .. } => {
                 if !parameters.is_empty() {
-            result.insert("parameters".to_string(), serde_json::Value::Array(parameters.iter().map(|item| item.to_value(ctx)).collect()));
-        }
+                    result.insert("parameters".to_string(), serde_json::Value::Array(parameters.iter().map(|item| item.to_value(ctx)).collect()));
+                }
                 if let Some(val) = strict {
-            result.insert("strict".to_string(), serde_json::Value::Bool(*val));
-        }
+                    result.insert("strict".to_string(), serde_json::Value::Bool(*val));
+                }
             }
             ToolKind::Mcp { connection, server_name, server_description, approval_mode, allowed_tools,  .. } => {
                 if !connection.is_null() {
-            result.insert("connection".to_string(), connection.clone());
-        }
+                    result.insert("connection".to_string(), connection.clone());
+                }
                 if !server_name.is_empty() {
-            result.insert("serverName".to_string(), serde_json::Value::String(server_name.clone()));
-        }
+                    result.insert("serverName".to_string(), serde_json::Value::String(server_name.clone()));
+                }
                 if let Some(val) = server_description {
-            result.insert("serverDescription".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("serverDescription".to_string(), serde_json::Value::String(val.clone()));
+                }
                 {
-            let nested = approval_mode.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("approvalMode".to_string(), nested);
-            }
-        }
+                    let nested = approval_mode.to_value(ctx);
+                    if !nested.is_null() {
+                        result.insert("approvalMode".to_string(), nested);
+                    }
+                }
                 if let Some(items) = allowed_tools {
-            result.insert("allowedTools".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
-        }
+                    result.insert("allowedTools".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
+                }
             }
             ToolKind::OpenApi { connection, specification,  .. } => {
                 if !connection.is_null() {
-            result.insert("connection".to_string(), connection.clone());
-        }
+                    result.insert("connection".to_string(), connection.clone());
+                }
                 if !specification.is_empty() {
-            result.insert("specification".to_string(), serde_json::Value::String(specification.clone()));
-        }
+                    result.insert("specification".to_string(), serde_json::Value::String(specification.clone()));
+                }
             }
             ToolKind::Prompty { path, mode,  .. } => {
                 if !path.is_empty() {
-            result.insert("path".to_string(), serde_json::Value::String(path.clone()));
-        }
+                    result.insert("path".to_string(), serde_json::Value::String(path.clone()));
+                }
                 if !mode.is_empty() {
-            result.insert("mode".to_string(), serde_json::Value::String(mode.clone()));
-        }
+                    result.insert("mode".to_string(), serde_json::Value::String(mode.clone()));
+                }
             }
             ToolKind::Custom { connection, options, kind_name: _, .. } => {
                 if !connection.is_null() {
-            result.insert("connection".to_string(), connection.clone());
-        }
+                    result.insert("connection".to_string(), connection.clone());
+                }
                 if !options.is_null() {
-            result.insert("options".to_string(), options.clone());
-        }
+                    result.insert("options".to_string(), options.clone());
+                }
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -278,7 +272,7 @@ impl Tool {
     fn save_bindings(items: &[Binding], ctx: &SaveContext) -> serde_json::Value {
 
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>());
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
@@ -311,17 +305,10 @@ impl Tool {
     /// Save a collection of Property to a JSON value.
     fn save_parameters(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
 
-        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())
 
     }
 }
-
-
-
-
-
-
-
 
 
 

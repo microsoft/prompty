@@ -5,8 +5,6 @@
 use super::context::{LoadContext, SaveContext};
 
 
-
-
 /// Variant-specific data for [`ContentPart`], discriminated by `kind`.
 #[derive(Debug, Clone)]
 pub enum ContentPartKind {
@@ -124,35 +122,35 @@ impl ContentPart {
         match &self.kind {
             ContentPartKind::TextPart { value,  .. } => {
                 if !value.is_empty() {
-            result.insert("value".to_string(), serde_json::Value::String(value.clone()));
-        }
+                    result.insert("value".to_string(), serde_json::Value::String(value.clone()));
+                }
             }
             ContentPartKind::ImagePart { source, detail, media_type,  .. } => {
                 if !source.is_empty() {
-            result.insert("source".to_string(), serde_json::Value::String(source.clone()));
-        }
+                    result.insert("source".to_string(), serde_json::Value::String(source.clone()));
+                }
                 if let Some(val) = detail {
-            result.insert("detail".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("detail".to_string(), serde_json::Value::String(val.clone()));
+                }
                 if let Some(val) = media_type {
-            result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
+                }
             }
             ContentPartKind::FilePart { source, media_type,  .. } => {
                 if !source.is_empty() {
-            result.insert("source".to_string(), serde_json::Value::String(source.clone()));
-        }
+                    result.insert("source".to_string(), serde_json::Value::String(source.clone()));
+                }
                 if let Some(val) = media_type {
-            result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
+                }
             }
             ContentPartKind::AudioPart { source, media_type,  .. } => {
                 if !source.is_empty() {
-            result.insert("source".to_string(), serde_json::Value::String(source.clone()));
-        }
+                    result.insert("source".to_string(), serde_json::Value::String(source.clone()));
+                }
                 if let Some(val) = media_type {
-            result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
-        }
+                    result.insert("mediaType".to_string(), serde_json::Value::String(val.clone()));
+                }
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -168,12 +166,6 @@ impl ContentPart {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-
-
-
-
-
 
 
 

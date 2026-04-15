@@ -4,17 +4,11 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::format_config::FormatConfig;
-
-
 
 use super::parser_config::ParserConfig;
 
-
-
-
-/// Template model for defining prompt templates.  This model specifies the rendering engine used for slot filling prompts, the parser used to process the rendered template into API-compatible format, and additional options for the template engine.  It allows for the creation of reusable templates that can be filled with dynamic data and processed to generate prompts for AI models.
+/// Template model for defining prompt templates. This model specifies the rendering engine used for slot filling prompts, the parser used to process the rendered template into API-compatible format, and additional options for the template engine. It allows for the creation of reusable templates that can be filled with dynamic data and processed to generate prompts for AI models.
 #[derive(Debug, Clone, Default)]
 pub struct Template {
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
@@ -57,6 +51,7 @@ impl Template {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         {
             let nested = self.format.to_value(ctx);
             if !nested.is_null() {
@@ -82,5 +77,3 @@ impl Template {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-

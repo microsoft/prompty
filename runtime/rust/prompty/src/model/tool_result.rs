@@ -4,13 +4,9 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::content_part::{ContentPart, ContentPartKind};
 
-
-
-
-/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings.  Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.
+/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings. Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.
 #[derive(Debug, Clone, Default)]
 pub struct ToolResult {
     /// The content parts of the tool result
@@ -50,6 +46,7 @@ impl ToolResult {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.parts.is_empty() {
             result.insert("parts".to_string(), Self::save_parts(&self.parts, ctx));
         }
@@ -82,7 +79,7 @@ impl ToolResult {
     /// Save a collection of ContentPart to a JSON value.
     fn save_parts(items: &[ContentPart], ctx: &SaveContext) -> serde_json::Value {
 
-        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())
 
     }
     /// Create a ToolResult with preset field values.
@@ -95,5 +92,3 @@ pub trait ToolResultHelpers {
     /// Concatenate all TextPart values joined by newline
     fn text(&self) -> String;
 }
-
-

@@ -100,8 +100,7 @@ export function emitRustFile(
 
   // Imports — post-process for Rust specifics
   // In Rust, polymorphic child types are enum variants (not standalone structs),
-  // so we import ParentKind instead. Polymorphic base types used as field types
-  // become serde_json::Value, so we skip their import entirely.
+  // so we import ParentKind instead.
   for (const imp of file.imports) {
     const processedNames: string[] = [];
 
@@ -113,11 +112,6 @@ export function emitRustFile(
         if (!processedNames.includes(kindName)) {
           processedNames.push(kindName);
         }
-        continue;
-      }
-      // Check if this name is a polymorphic base type used as a field reference
-      // These become serde_json::Value in Rust, so skip the import
-      if (polymorphicTypeNames.has(name)) {
         continue;
       }
       processedNames.push(name);
@@ -395,8 +389,20 @@ function emitImpl(
     }
   }
 
-  // Collection helpers
-  for (const helper of type.collectionHelpers) {
+  // Collection helpers — include both base type and child type helpers
+  // (in Rust, child types are enum variants, so their helpers live on the parent impl)
+  const emittedHelpers = new Set<string>();
+  const allHelpers = [...type.collectionHelpers];
+  for (const child of childTypes) {
+    for (const h of child.collectionHelpers) {
+      if (!emittedHelpers.has(h.propertyName)) {
+        allHelpers.push(h);
+      }
+    }
+  }
+  for (const helper of allHelpers) {
+    if (emittedHelpers.has(helper.propertyName)) continue;
+    emittedHelpers.add(helper.propertyName);
     emitCollectionLoadHelper(helper, polymorphicTypeNames, lines);
     emitCollectionSaveHelper(helper, lines);
   }
@@ -905,7 +911,7 @@ function emitCollectionSaveHelper(
   if (helper.hasNameProperty) {
     lines.push("");
     lines.push('        if ctx.collection_format == "array" {');
-    lines.push("            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());");
+    lines.push("            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>());");
     lines.push("        }");
     lines.push("        // Object format: use name as key");
     lines.push("        let mut result = serde_json::Map::new();");
@@ -921,7 +927,7 @@ function emitCollectionSaveHelper(
     lines.push("        serde_json::Value::Object(result)");
   } else {
     lines.push("");
-    lines.push("        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())");
+    lines.push("        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())");
   }
 
   lines.push("");
@@ -1012,8 +1018,9 @@ function fieldType(field: FieldDecl, polymorphicTypeNames: Set<string>): string 
     }
     case "complex": {
       // Polymorphic references and "unknown" become serde_json::Value
+      // Always non-optional — Value::Null serves as the "absent" sentinel
       if (polymorphicTypeNames.has(cat.typeName) || cat.typeName === "unknown") {
-        return field.isOptional ? "Option<serde_json::Value>" : "serde_json::Value";
+        return "serde_json::Value";
       }
       return field.isOptional ? `Option<${cat.typeName}>` : cat.typeName;
     }
@@ -1058,7 +1065,8 @@ function fieldDefault(field: FieldDecl, polymorphicTypeNames: Set<string>): stri
       return "Default::default()";
     }
     case "complex": {
-      if (polymorphicTypeNames.has(cat.typeName)) return field.isOptional ? "None" : "serde_json::Value::Null";
+      // Polymorphic refs are always serde_json::Value, Null is the "absent" sentinel
+      if (polymorphicTypeNames.has(cat.typeName)) return "serde_json::Value::Null";
       return field.isOptional ? "None" : "Default::default()";
     }
     case "collection_scalar":
@@ -1082,10 +1090,8 @@ function loadExpr(a: LoadAssignment, polymorphicTypeNames: Set<string>): string 
       return scalarLoadExpr(key, cat.scalarType, a.isOptional);
     case "complex": {
       if (polymorphicTypeNames.has(cat.typeName)) {
-        // Polymorphic ref → serde_json::Value (or Option<Value> if optional)
-        return a.isOptional
-          ? `value.get("${key}").cloned()`
-          : `value.get("${key}").cloned().unwrap_or(serde_json::Value::Null)`;
+        // Polymorphic ref → always serde_json::Value, Null is the "absent" sentinel
+        return `value.get("${key}").cloned().unwrap_or(serde_json::Value::Null)`;
       }
       if (a.isOptional) {
         return `value.get("${key}").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| ${cat.typeName}::load_from_value(v, ctx))`;
@@ -1222,16 +1228,10 @@ function emitSaveField(
       return;
     case "complex": {
       if (polymorphicTypeNames.has(cat.typeName)) {
-        // Polymorphic ref → serde_json::Value (or Option<Value> if optional)
-        if (a.isOptional) {
-          lines.push(`${indent}if let Some(ref val) = ${fieldRef} {`);
-          lines.push(`${indent}    result.insert("${key}".to_string(), val.clone());`);
-          lines.push(`${indent}}`);
-        } else {
-          lines.push(`${indent}if !${fieldRef}.is_null() {`);
-          lines.push(`${indent}    result.insert("${key}".to_string(), ${fieldRef}.clone());`);
-          lines.push(`${indent}}`);
-        }
+        // Polymorphic ref → always serde_json::Value, check .is_null()
+        lines.push(`${indent}if !${fieldRef}.is_null() {`);
+        lines.push(`${indent}    result.insert("${key}".to_string(), ${fieldRef}.clone());`);
+        lines.push(`${indent}}`);
         return;
       }
       if (a.isOptional) {

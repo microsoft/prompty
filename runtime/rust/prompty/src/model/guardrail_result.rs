@@ -4,8 +4,6 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
-
 /// The result of a guardrail evaluation. Guardrails are safety checks that run at specific phases of the agent loop and can allow, deny, or rewrite content.
 #[derive(Debug, Clone, Default)]
 pub struct GuardrailResult {
@@ -52,12 +50,13 @@ impl GuardrailResult {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         result.insert("allowed".to_string(), serde_json::Value::Bool(self.allowed));
         if let Some(ref val) = self.reason {
             result.insert("reason".to_string(), serde_json::Value::String(val.clone()));
         }
         if let Some(ref val) = self.rewrite {
-            result.insert("rewrite".to_string(), serde_json::to_value(val).unwrap_or(serde_json::Value::Null));
+            result.insert("rewrite".to_string(), val.clone());
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -84,5 +83,3 @@ impl GuardrailResult {
         GuardrailResult { allowed: true, ..Default::default() }
     }
 }
-
-

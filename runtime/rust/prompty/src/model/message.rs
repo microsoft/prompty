@@ -4,11 +4,7 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::content_part::{ContentPart, ContentPartKind};
-
-
-
 
 /// A message in a conversation. Messages have a role and a list of content parts representing the different modalities of the message content.
 #[derive(Debug, Clone, Default)]
@@ -56,6 +52,7 @@ impl Message {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.role.is_empty() {
             result.insert("role".to_string(), serde_json::Value::String(self.role.clone()));
         }
@@ -83,6 +80,7 @@ impl Message {
         self.metadata.as_object()
     }
 
+
     /// Load a collection of ContentPart from a JSON value.
     /// Handles both array format `[{...}]`.
     fn load_parts(data: &serde_json::Value, ctx: &LoadContext) -> Vec<ContentPart> {
@@ -99,7 +97,7 @@ impl Message {
     /// Save a collection of ContentPart to a JSON value.
     fn save_parts(items: &[ContentPart], ctx: &SaveContext) -> serde_json::Value {
 
-        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect::<Vec<_>>())
 
     }
     /// Create a Message with preset field values.
@@ -120,5 +118,3 @@ pub trait MessageHelpers {
     /// Concatenate all TextPart values joined by newline
     fn text(&self) -> String;
 }
-
-

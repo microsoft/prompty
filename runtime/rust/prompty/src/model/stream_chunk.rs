@@ -4,11 +4,7 @@
 
 use super::context::{LoadContext, SaveContext};
 
-
 use super::tool_call::ToolCall;
-
-
-
 
 
 /// Variant-specific data for [`StreamChunk`], discriminated by `kind`.
@@ -116,26 +112,26 @@ impl StreamChunk {
         match &self.kind {
             StreamChunkKind::TextChunk { value,  .. } => {
                 if !value.is_empty() {
-            result.insert("value".to_string(), serde_json::Value::String(value.clone()));
-        }
+                    result.insert("value".to_string(), serde_json::Value::String(value.clone()));
+                }
             }
             StreamChunkKind::ThinkingChunk { value,  .. } => {
                 if !value.is_empty() {
-            result.insert("value".to_string(), serde_json::Value::String(value.clone()));
-        }
+                    result.insert("value".to_string(), serde_json::Value::String(value.clone()));
+                }
             }
             StreamChunkKind::ToolChunk { tool_call,  .. } => {
                 {
-            let nested = tool_call.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("toolCall".to_string(), nested);
-            }
-        }
+                    let nested = tool_call.to_value(ctx);
+                    if !nested.is_null() {
+                        result.insert("toolCall".to_string(), nested);
+                    }
+                }
             }
             StreamChunkKind::ErrorChunk { message,  .. } => {
                 if !message.is_empty() {
-            result.insert("message".to_string(), serde_json::Value::String(message.clone()));
-        }
+                    result.insert("message".to_string(), serde_json::Value::String(message.clone()));
+                }
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -151,12 +147,6 @@ impl StreamChunk {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-
-
-
-
-
 
 
 

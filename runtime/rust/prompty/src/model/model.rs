@@ -4,11 +4,9 @@
 
 use super::context::{LoadContext, SaveContext};
 
+use super::connection::Connection;
 
 use super::model_options::ModelOptions;
-
-
-
 
 /// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements.
 #[derive(Debug, Clone, Default)]
@@ -66,6 +64,7 @@ impl Model {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write base fields
         if !self.id.is_empty() {
             result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
         }
@@ -97,5 +96,3 @@ impl Model {
         serde_yaml::to_string(&self.to_value(ctx))
     }
 }
-
-
