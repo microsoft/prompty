@@ -8,7 +8,7 @@
     "build": "npm run build:emitter && npm run generate"
   },
   "dependencies": {
-    "agentschema-emitter": "file:./emitter",
+    "prompty-emitter": "file:./emitter",
     "@typespec/compiler": "latest",
     "@typespec/json-schema": "latest"
   }

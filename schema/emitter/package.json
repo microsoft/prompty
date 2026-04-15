@@ -1,17 +1,17 @@
 {
-  "name": "agentschema-emitter",
+  "name": "prompty-emitter",
   "version": "0.2.0",
   "description": "TypeSpec emitter for generating Prompty runtime libraries",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/AgentSchema"
+    "url": "https://github.com/microsoft/prompty"
   },
   "type": "module",
   "main": "dist/src/index.js",
   "tspMain": "src/lib/main.tsp",
   "bin": {
-    "agentschema-generate": "./dist/src/cli.js"
+    "prompty-generate": "./dist/src/cli.js"
   },
   "exports": {
     ".": {

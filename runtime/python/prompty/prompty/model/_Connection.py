@@ -66,6 +66,7 @@ class Connection(ABC):
 
 
 
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Connection":
         # load polymorphic Connection instance
@@ -144,6 +145,7 @@ class Connection(ABC):
 
 
 
+
 @dataclass
 class ReferenceConnection(Connection):
     """Connection configuration for AI services using named connections.
@@ -219,7 +221,6 @@ class ReferenceConnection(Connection):
             result["name"] = obj.name
         if obj.target is not None:
             result["target"] = obj.target
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -246,6 +247,7 @@ class ReferenceConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -324,7 +326,6 @@ class RemoteConnection(Connection):
             result["name"] = obj.name
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -351,6 +352,7 @@ class RemoteConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -429,7 +431,6 @@ class ApiKeyConnection(Connection):
             result["endpoint"] = obj.endpoint
         if obj.api_key is not None:
             result["apiKey"] = obj.api_key
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -456,6 +457,7 @@ class ApiKeyConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -527,7 +529,6 @@ class AnonymousConnection(Connection):
             result["kind"] = obj.kind
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -554,6 +555,7 @@ class AnonymousConnection(Connection):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -641,7 +643,6 @@ class FoundryConnection(Connection):
             result["name"] = obj.name
         if obj.connection_type is not None:
             result["connectionType"] = obj.connection_type
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -671,6 +672,7 @@ class FoundryConnection(Connection):
 
 
 
+
 @dataclass
 class OAuthConnection(Connection):
     """Connection configuration using OAuth 2.0 client credentials.
@@ -689,7 +691,7 @@ class OAuthConnection(Connection):
         The OAuth client secret
     token_url : str
         The OAuth token endpoint URL
-    scopes : list[str]
+    scopes : Optional[list[str]]
         OAuth scopes to request
     """
 
@@ -769,7 +771,6 @@ class OAuthConnection(Connection):
             result["tokenUrl"] = obj.token_url
         if obj.scopes is not None:
             result["scopes"] = obj.scopes
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

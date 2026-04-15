@@ -1,4 +1,4 @@
-import "agentschema-emitter";
+import "prompty-emitter";
 import "./message.tsp";
 
 namespace Prompty;

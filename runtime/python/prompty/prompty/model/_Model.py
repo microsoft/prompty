@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from ._Connection import Connection
-from ._context import LoadContext, SaveContext
 from ._ModelOptions import ModelOptions
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -56,7 +56,11 @@ class Model:
         
         # handle alternate representations
         if isinstance(data, str):
-            data = {"id": data}
+            instance = Model()
+            instance.id = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Model: {data}")

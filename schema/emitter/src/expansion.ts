@@ -102,7 +102,7 @@ export interface FieldAssignment {
   /** Original property name from TypeSpec (camelCase). */
   propertyName: string;
   value: Expr;
-  /** Whether the target property is optional (needed for Rust Some() wrapping, etc.) */
+  /** Whether the target property is optional (emitters may need wrapping, e.g., Some(), null check) */
   isOptional: boolean;
 }
 

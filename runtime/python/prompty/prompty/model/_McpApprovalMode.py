@@ -20,9 +20,9 @@ class McpApprovalMode:
     ----------
     kind : str
         The approval mode: 'always', 'never', or 'specify'
-    always_require_approval_tools : list[str]
+    always_require_approval_tools : Optional[list[str]]
         List of tools that always require approval (only used when kind is 'specify')
-    never_require_approval_tools : list[str]
+    never_require_approval_tools : Optional[list[str]]
         List of tools that never require approval (only used when kind is 'specify')
     """
 
@@ -48,7 +48,11 @@ class McpApprovalMode:
         
         # handle alternate representations
         if isinstance(data, str):
-            data = {"kind": data}
+            instance = McpApprovalMode()
+            instance.kind = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpApprovalMode: {data}")

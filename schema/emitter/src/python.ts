@@ -19,6 +19,8 @@ import { GeneratorOptions, filterNodes } from "./emitter.js";
 import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
 import { createTemplateEngine } from "./template-engine.js";
 import { buildBaseTestContext, pythonTestOptions } from "./test-context.js";
+import { lowerFile, collectPolymorphicTypeNames } from "./lower.js";
+import { emitPythonFile as emitPythonFileDecl } from "./emit-python.js";
 import * as YAML from "yaml";
 
 /**
@@ -89,12 +91,20 @@ export const generatePython = async (
   const initContent = engine.render('init.py.njk', initContext);
   await emitPythonFile(context, '__init__.py', initContent, emitTarget["output-dir"]);
 
+  // Collect polymorphic type names once for the full type graph
+  const polymorphicTypeNames = new Set<string>();
+  for (const n of allTypes) {
+    for (const name of collectPolymorphicTypeNames(n, registry)) {
+      polymorphicTypeNames.add(name);
+    }
+  }
+
   // Render each base type and its children as a single file
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
-      const fileContext = buildFileContext(n, registry, visitor);
-      const fileContent = engine.render('file.py.njk', fileContext);
+      const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
+      const fileContent = emitPythonFileDecl(fileDecl, visitor);
       await emitPythonFile(context, `_${n.typeName.name}.py`, fileContent, emitTarget["output-dir"]);
     }
 

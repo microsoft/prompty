@@ -33,7 +33,7 @@ class Property:
         The default value of the property - this represents the default value if none is provided
     example : Optional[Any]
         Example value used for either initialization or tooling
-    enum_values : list[Any]
+    enum_values : Optional[list[Any]]
         Allowed enumeration values for the property
     """
 
@@ -63,13 +63,33 @@ class Property:
         
         # handle alternate representations
         if isinstance(data, bool):
-            data = {"kind":"boolean","example": data}
+            instance = Property()
+            instance.kind = "boolean"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, float):
-            data = {"kind":"float","example": data}
+            instance = Property()
+            instance.kind = "float"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, int):
-            data = {"kind":"integer","example": data}
+            instance = Property()
+            instance.kind = "integer"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, str):
-            data = {"kind":"string","example": data}
+            instance = Property()
+            instance.kind = "string"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Property: {data}")
@@ -98,6 +118,7 @@ class Property:
 
 
 
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Property":
         # load polymorphic Property instance
@@ -109,15 +130,12 @@ class Property:
                 return ObjectProperty.load(data, context)
 
             else:
-
                 # create new instance (stop recursion)
                 return Property()
-
-
         else:
-
             # create new instance
             return Property()
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Property instance to a dictionary.
@@ -177,6 +195,7 @@ class Property:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -249,7 +268,6 @@ class ArrayProperty(Property):
             result["kind"] = obj.kind
         if obj.items is not None:
             result["items"] = obj.items.save(context)
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -276,6 +294,7 @@ class ArrayProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -326,6 +345,7 @@ class ObjectProperty(Property):
         return instance
 
 
+
     @staticmethod
     def load_properties(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
@@ -337,7 +357,7 @@ class ObjectProperty(Property):
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -348,8 +368,6 @@ class ObjectProperty(Property):
 
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
-
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ObjectProperty instance to a dictionary.
@@ -372,7 +390,6 @@ class ObjectProperty(Property):
             result["kind"] = obj.kind
         if obj.properties is not None:
             result["properties"] = ObjectProperty.save_properties(obj.properties, context)
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

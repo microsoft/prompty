@@ -10,9 +10,9 @@ from typing import Any, ClassVar
 
 from ._Binding import Binding
 from ._Connection import Connection
-from ._context import LoadContext, SaveContext
 from ._McpApprovalMode import McpApprovalMode
 from ._Property import Property
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -27,7 +27,7 @@ class Tool(ABC):
         The kind identifier for the tool
     description : Optional[str]
         A short description of the tool for metadata purposes
-    bindings : list[Binding]
+    bindings : Optional[list[Binding]]
         Tool argument bindings to input properties
     """
 
@@ -72,6 +72,7 @@ class Tool(ABC):
         return instance
 
 
+
     @staticmethod
     def load_bindings(data: dict | list, context: LoadContext | None) -> list[Binding]:
         if isinstance(data, dict):
@@ -91,7 +92,6 @@ class Tool(ABC):
     def save_bindings(items: list[Binding], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
-
 
         if context.collection_format == "array":
             return [item.save(context) for item in items]
@@ -117,7 +117,6 @@ class Tool(ABC):
         return result
 
 
-
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Tool":
         # load polymorphic Tool instance
@@ -136,7 +135,6 @@ class Tool(ABC):
 
                 # load default instance
                 return CustomTool.load(data, context)
-
         else:
 
             raise ValueError("Missing Tool discriminator property: 'kind'")
@@ -197,6 +195,7 @@ class Tool(ABC):
 
 
 
+
 @dataclass
 class FunctionTool(Tool):
     """Represents a local function tool.
@@ -248,6 +247,7 @@ class FunctionTool(Tool):
         return instance
 
 
+
     @staticmethod
     def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
@@ -259,7 +259,7 @@ class FunctionTool(Tool):
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -270,8 +270,6 @@ class FunctionTool(Tool):
 
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
-
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.
@@ -296,7 +294,6 @@ class FunctionTool(Tool):
             result["parameters"] = FunctionTool.save_parameters(obj.parameters, context)
         if obj.strict is not None:
             result["strict"] = obj.strict
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -323,6 +320,7 @@ class FunctionTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -405,7 +403,6 @@ class CustomTool(Tool):
             result["connection"] = obj.connection.save(context)
         if obj.options is not None:
             result["options"] = obj.options
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -435,6 +432,7 @@ class CustomTool(Tool):
 
 
 
+
 @dataclass
 class McpTool(Tool):
     """The MCP Server tool.
@@ -451,7 +449,7 @@ class McpTool(Tool):
         The description of the MCP tool
     approval_mode : McpApprovalMode
         The approval mode for the MCP tool
-    allowed_tools : list[str]
+    allowed_tools : Optional[list[str]]
         List of allowed operations or resources for the MCP tool
     """
 
@@ -531,7 +529,6 @@ class McpTool(Tool):
             result["approvalMode"] = obj.approval_mode.save(context)
         if obj.allowed_tools is not None:
             result["allowedTools"] = obj.allowed_tools
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -558,6 +555,7 @@ class McpTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -636,7 +634,6 @@ class OpenApiTool(Tool):
             result["connection"] = obj.connection.save(context)
         if obj.specification is not None:
             result["specification"] = obj.specification
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -663,6 +660,7 @@ class OpenApiTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -744,7 +742,6 @@ class PromptyTool(Tool):
             result["path"] = obj.path
         if obj.mode is not None:
             result["mode"] = obj.mode
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

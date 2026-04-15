@@ -29,9 +29,9 @@ class ModelInfo:
         The organization or entity that owns the model
     context_window : Optional[int]
         Maximum context window size in tokens
-    input_modalities : list[str]
+    input_modalities : Optional[list[str]]
         Input modalities the model accepts (e.g., 'text', 'image', 'audio')
-    output_modalities : list[str]
+    output_modalities : Optional[list[str]]
         Output modalities the model can produce (e.g., 'text', 'audio')
     additional_properties : Optional[dict[str, Any]]
         Additional provider-specific properties

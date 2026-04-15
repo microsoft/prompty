@@ -30,7 +30,7 @@ class ModelOptions:
         The top-K sampling value
     top_p : Optional[float]
         The top-P sampling value
-    stop_sequences : list[str]
+    stop_sequences : Optional[list[str]]
         Stop sequences to end generation
     allow_multiple_tool_calls : Optional[bool]
         Whether to allow multiple tool calls in a single response

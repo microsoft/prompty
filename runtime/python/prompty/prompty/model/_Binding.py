@@ -43,7 +43,11 @@ class Binding:
         
         # handle alternate representations
         if isinstance(data, str):
-            data = {"input": data}
+            instance = Binding()
+            instance.input = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Binding: {data}")

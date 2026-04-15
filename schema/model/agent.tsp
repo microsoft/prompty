@@ -1,4 +1,4 @@
-import "agentschema-emitter";
+import "prompty-emitter";
 import "@typespec/json-schema";
 import "./core.tsp";
 import "./model.tsp";

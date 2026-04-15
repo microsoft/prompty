@@ -7,11 +7,11 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._Model import Model
 from ._Property import Property
 from ._Template import Template
 from ._Tool import Tool
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -33,13 +33,13 @@ class Prompty:
         Description of the prompt's purpose
     metadata : Optional[dict[str, Any]]
         Additional metadata including authors, tags, and other arbitrary properties
-    inputs : list[Property]
+    inputs : Optional[list[Property]]
         Input parameters that participate in template rendering
-    outputs : list[Property]
+    outputs : Optional[list[Property]]
         Expected output format and structure
     model : Model
         AI model configuration
-    tools : list[Tool]
+    tools : Optional[list[Tool]]
         Tools available for extended functionality
     template : Optional[Template]
         Template configuration for prompt rendering
@@ -105,6 +105,7 @@ class Prompty:
         return instance
 
 
+
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
@@ -124,7 +125,6 @@ class Prompty:
     def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
-
 
         if context.collection_format == "array":
             return [item.save(context) for item in items]
@@ -149,7 +149,6 @@ class Prompty:
                 result["_unnamed"].append(item_data)
         return result
 
-
     @staticmethod
     def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
@@ -161,7 +160,7 @@ class Prompty:
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -172,7 +171,6 @@ class Prompty:
 
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
-
 
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
@@ -194,7 +192,6 @@ class Prompty:
         if context is None:
             context = SaveContext()
 
-
         if context.collection_format == "array":
             return [item.save(context) for item in items]
 
@@ -217,8 +214,6 @@ class Prompty:
                     result["_unnamed"] = []
                 result["_unnamed"].append(item_data)
         return result
-
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Prompty instance to a dictionary.

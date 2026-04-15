@@ -56,6 +56,7 @@ class ToolResult:
         return instance
 
 
+
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
         if isinstance(data, dict):
@@ -78,8 +79,6 @@ class ToolResult:
 
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
-
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolResult instance to a dictionary.

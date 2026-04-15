@@ -48,7 +48,7 @@ export function $sample(context: DecoratorContext, target: ModelProperty, sample
     const serialized = serializeValueAsJson(context.program, sampleValue, sampleValue.type);
     if (!serialized) {
       context.program.reportDiagnostic({
-        code: "agentschema-emitter-sample-serialization",
+        code: "prompty-emitter-sample-serialization",
         message: `Failed to serialize sample value.`,
         severity: "error",
         target: sampleValue,
@@ -63,7 +63,7 @@ export function $sample(context: DecoratorContext, target: ModelProperty, sample
 
   if (!s.hasOwnProperty(target.name)) {
     context.program.reportDiagnostic({
-      code: "agentschema-emitter-sample-name-mismatch",
+      code: "prompty-emitter-sample-name-mismatch",
       message: `Sample object must have a property named '${target.name}' to match the target property.`,
       severity: "error",
       target: target,
@@ -85,7 +85,7 @@ export function $abstract(context: DecoratorContext, target: Model) {
 export function $coerce(context: DecoratorContext, target: Model, scalar: Type, expansion: ObjectValue | object, title?: string, description?: string, example?: string) {
   if (scalar.kind !== "Scalar") {
     context.program.reportDiagnostic({
-      code: "agentschema-emitter-coerce-scalar-type",
+      code: "prompty-emitter-coerce-scalar-type",
       message: `Coerce decorator requires a scalar type for the scalar representation.`,
       severity: "error",
       target: scalar,
@@ -99,7 +99,7 @@ export function $coerce(context: DecoratorContext, target: Model, scalar: Type, 
     const serialized = serializeValueAsJson(context.program, expansion as ObjectValue, (expansion as ObjectValue).type);
     if (!serialized) {
       context.program.reportDiagnostic({
-        code: "agentschema-emitter-coerce-serialization",
+        code: "prompty-emitter-coerce-serialization",
         message: `Failed to serialize expansion value.`,
         severity: "error",
         target: target,
@@ -213,7 +213,7 @@ export function $defaultFor(context: DecoratorContext, target: ModelProperty, de
     const serialized = serializeValueAsJson(context.program, defaultValue as ObjectValue, (defaultValue as ObjectValue).type);
     if (!serialized) {
       context.program.reportDiagnostic({
-        code: "agentschema-emitter-defaultfor-serialization",
+        code: "prompty-emitter-defaultfor-serialization",
         message: `Failed to serialize default value.`,
         severity: "error",
         target: target,

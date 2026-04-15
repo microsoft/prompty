@@ -1,4 +1,4 @@
-import "agentschema-emitter";
+import "prompty-emitter";
 
 namespace Prompty;
 

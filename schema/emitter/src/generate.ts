@@ -93,7 +93,7 @@ export interface GenerateResult {
  * 
  * @example
  * ```typescript
- * import { generate } from 'agentschema-emitter/generate';
+ * import { generate } from 'prompty-emitter/generate';
  * 
  * await generate({
  *   output: './generated',
@@ -131,9 +131,9 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
 
   // Create temporary tspconfig.yaml
   const tspConfig = {
-    emit: ["agentschema-emitter"],
+    emit: ["prompty-emitter"],
     options: {
-      "agentschema-emitter": {
+      "prompty-emitter": {
         "emitter-output-dir": outputDir,
         "root-object": rootObject,
         "root-namespace": namespace,

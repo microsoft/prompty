@@ -56,6 +56,7 @@ class StreamChunk(ABC):
 
 
 
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "StreamChunk":
         # load polymorphic StreamChunk instance
@@ -123,6 +124,7 @@ class StreamChunk(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -194,7 +196,6 @@ class TextChunk(StreamChunk):
             result["kind"] = obj.kind
         if obj.value is not None:
             result["value"] = obj.value
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -221,6 +222,7 @@ class TextChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -292,7 +294,6 @@ class ThinkingChunk(StreamChunk):
             result["kind"] = obj.kind
         if obj.value is not None:
             result["value"] = obj.value
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -319,6 +320,7 @@ class ThinkingChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -390,7 +392,6 @@ class ToolChunk(StreamChunk):
             result["kind"] = obj.kind
         if obj.tool_call is not None:
             result["toolCall"] = obj.tool_call.save(context)
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -417,6 +418,7 @@ class ToolChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -488,7 +490,6 @@ class ErrorChunk(StreamChunk):
             result["kind"] = obj.kind
         if obj.message is not None:
             result["message"] = obj.message
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

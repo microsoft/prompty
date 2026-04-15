@@ -55,6 +55,7 @@ class ContentPart(ABC):
 
 
 
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "ContentPart":
         # load polymorphic ContentPart instance
@@ -122,6 +123,7 @@ class ContentPart(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -193,7 +195,6 @@ class TextPart(ContentPart):
             result["kind"] = obj.kind
         if obj.value is not None:
             result["value"] = obj.value
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -220,6 +221,7 @@ class TextPart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -305,7 +307,6 @@ class ImagePart(ContentPart):
             result["detail"] = obj.detail
         if obj.media_type is not None:
             result["mediaType"] = obj.media_type
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -332,6 +333,7 @@ class ImagePart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -410,7 +412,6 @@ class FilePart(ContentPart):
             result["source"] = obj.source
         if obj.media_type is not None:
             result["mediaType"] = obj.media_type
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -437,6 +438,7 @@ class FilePart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
 
 
@@ -515,7 +517,6 @@ class AudioPart(ContentPart):
             result["source"] = obj.source
         if obj.media_type is not None:
             result["mediaType"] = obj.media_type
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
