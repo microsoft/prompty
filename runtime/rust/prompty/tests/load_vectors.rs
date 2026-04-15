@@ -391,22 +391,15 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 assert_eq!(*strict, Some(exp_strict), "[{vec_name}] tool[{idx}].strict");
             }
             if let Some(exp_params) = expected.get("parameters").and_then(Value::as_array) {
-                // Parameters may be stored as a JSON array of property objects
-                let params_arr = parameters.as_array().unwrap_or_else(|| {
-                    panic!("[{vec_name}] tool[{idx}].parameters is not an array")
-                });
                 assert_eq!(
-                    params_arr.len(),
+                    parameters.len(),
                     exp_params.len(),
                     "[{vec_name}] tool[{idx}].parameters count"
                 );
                 for (j, ep) in exp_params.iter().enumerate() {
                     if let Some(pname) = ep.get("name").and_then(Value::as_str) {
                         assert_eq!(
-                            params_arr[j]
-                                .get("name")
-                                .and_then(Value::as_str)
-                                .unwrap_or(""),
+                            parameters[j].name.as_str(),
                             pname,
                             "[{vec_name}] tool[{idx}].parameters[{j}].name"
                         );

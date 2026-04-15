@@ -26,6 +26,7 @@ options:
       - type: Go
         output-dir: "../runtime/go/prompty/model"
         test-dir: "../runtime/go/prompty/model"
+        import-path: "prompty/model"
       - type: Rust
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"

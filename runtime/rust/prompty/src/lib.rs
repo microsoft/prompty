@@ -41,6 +41,7 @@ pub mod guardrails;
 pub mod interfaces;
 pub mod loader;
 pub mod model;
+mod model_ext;
 pub mod parsers;
 pub mod pipeline;
 pub mod prelude;

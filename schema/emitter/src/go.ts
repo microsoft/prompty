@@ -115,7 +115,8 @@ export const generateGo = async (
 
     // Render test file for each type
     if (emitTarget["test-dir"]) {
-      const testContext = buildTestContext(n, packageName);
+      const importPath = emitTarget["import-path"] || packageName;
+      const testContext = { ...buildTestContext(n, packageName), importPath };
       const testContent = engine.render('test.go.njk', testContext);
       const testFileName = toSnakeCase(n.typeName.name) + '_test.go';
       await emitGoFile(context, testFileName, testContent, emitTarget["test-dir"]);

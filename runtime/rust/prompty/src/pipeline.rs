@@ -229,7 +229,7 @@ pub fn validate_inputs(
         .as_object_mut()
         .ok_or_else(|| InvokerError::Validation("inputs must be a JSON object".into()))?;
 
-    for prop in &props {
+    for prop in props {
         if prop.name.is_empty() {
             continue;
         }
@@ -1321,12 +1321,7 @@ pub async fn turn_from_path(
     turn(&agent, inputs, options).await
 }
 fn has_any_tools(agent: &Prompty) -> bool {
-    if let Some(arr) = agent.tools.as_array() {
-        if !arr.is_empty() {
-            return true;
-        }
-    }
-    false
+    !agent.tools.is_empty()
 }
 
 /// Execute a single LLM attempt (streaming or non-streaming).

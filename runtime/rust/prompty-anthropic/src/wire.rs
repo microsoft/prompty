@@ -246,7 +246,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for prop in &outputs {
+    for prop in outputs {
         let kind_str = prop.kind_str();
         let json_type = match kind_str {
             "float" | "number" => "number",
@@ -341,16 +341,14 @@ fn property_to_json_schema(prop: &Property) -> Value {
             }
         }
         PropertyKind::Object { properties } => {
-            if let Some(arr) = properties.as_array() {
-                let ctx = prompty::model::context::LoadContext::default();
+            if !properties.is_empty() {
                 let mut nested = Map::new();
                 let mut req = Vec::new();
-                for val in arr {
-                    let p = Property::load_from_value(val, &ctx);
+                for p in properties {
                     if p.name.is_empty() {
                         continue;
                     }
-                    nested.insert(p.name.clone(), property_to_json_schema(&p));
+                    nested.insert(p.name.clone(), property_to_json_schema(p));
                     req.push(json!(p.name));
                 }
                 schema.insert("properties".into(), Value::Object(nested));
@@ -367,23 +365,12 @@ fn property_to_json_schema(prop: &Property) -> Value {
     Value::Object(schema)
 }
 
-/// Convert tool parameters (stored as serde_json::Value) to JSON Schema for `input_schema`.
-fn parameters_to_json_schema(params_value: &Value) -> Value {
-    use prompty::model::context::LoadContext;
-
-    let ctx = LoadContext::default();
-    let params: Vec<Property> = if let Some(arr) = params_value.as_array() {
-        arr.iter()
-            .map(|v| Property::load_from_value(v, &ctx))
-            .collect()
-    } else {
-        return json!({"type": "object", "properties": {}});
-    };
-
+/// Convert tool parameters to JSON Schema for `input_schema`.
+fn parameters_to_json_schema(params: &[Property]) -> Value {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for param in &params {
+    for param in params {
         properties.insert(param.name.clone(), property_to_json_schema(param));
         if param.required.unwrap_or(false) {
             required.push(json!(param.name));
