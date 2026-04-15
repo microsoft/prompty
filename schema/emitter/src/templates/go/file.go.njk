@@ -60,10 +60,10 @@ func Load{{ class.node.typeName.name }}(data interface{}, ctx *LoadContext) ({{ 
 	}
 	{% endif -%}
 
-	{% if class.alternates.length > 0 -%}
+	{% if class.coercions.length > 0 -%}
 	// Handle alternate scalar representations
 	switch v := data.(type) {
-	{%- for alt in class.alternates %}
+	{%- for alt in class.coercions %}
 	case {{ alt.scalar }}:
 		// Shorthand: {{ alt.scalar }} -> {{ class.node.typeName.name }}
 		expansion := map[string]interface{}{{ alt.alternate }}

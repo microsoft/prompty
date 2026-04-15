@@ -16,7 +16,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
     /// <summary>
     /// The shorthand property name for this type, if any.
     /// </summary>
-    public {% if node.base %}new {% endif %}static string? ShorthandProperty => {% if shorthandProperty %}"{{ shorthandProperty }}"{% else %}null{% endif %};
+    public {% if node.base %}new {% endif %}static string? ShorthandProperty => {% if coercionProperty %}"{{ coercionProperty }}"{% else %}null{% endif %};
 
     /// <summary>
     /// Initializes a new instance of <see cref="{{ node.typeName.name }}"/>.
@@ -45,7 +45,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
         {
             data = context.ProcessInput(data);
         }
-        {% if alternates.length > 0 %}
+        {% if coercions.length > 0 %}
         // Note: Alternate (shorthand) representations are handled by the converter
         {% endif %}
         {% if polymorphicTypes %}
@@ -280,14 +280,14 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
 
-        {%- if alternates.length > 0 or numericAlternates.length > 0 %}
+        {%- if coercions.length > 0 or numericCoercions.length > 0 %}
         // Handle alternate representations
         if (doc.RootElement.ValueKind != JsonValueKind.Object)
         {
             var value = JsonUtils.GetJsonElementValue(doc.RootElement);
             dict = value switch
             {
-                {%- for alt in alternates %}
+                {%- for alt in coercions %}
                 {{ alt.scalar }} {{ alt.scalar | lower }}Value => new Dictionary<string, object?>
                 {
                     {%- for item in alt.expansion %}
@@ -295,7 +295,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
                     {%- endfor %}
                 },
                 {%- endfor %}
-                {%- for alt in numericAlternates %}
+                {%- for alt in numericCoercions %}
                 {{ alt.scalar }} {{ alt.scalar | lower }}Value => new Dictionary<string, object?>
                 {
                     {%- for item in alt.expansion %}
@@ -303,26 +303,26 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
                     {%- endfor %}
                 },
                 {%- endfor %}
-                {%- if intAlternate %}
+                {%- if intCoercion %}
                 long longValue => new Dictionary<string, object?>
                 {
-                    {%- for item in intAlternate.expansion %}
+                    {%- for item in intCoercion.expansion %}
                     ["{{ item.property | lower | replace(".", "") }}"] = {% if "Value" in item.value %}longValue{% else %}{{ item.value | safe }}{% endif %},
                     {%- endfor %}
                 },
                 {%- endif %}
-                {%- if floatAlternate %}
+                {%- if floatCoercion %}
                 double doubleValue => new Dictionary<string, object?>
                 {
-                    {%- for item in floatAlternate.expansion %}
+                    {%- for item in floatCoercion.expansion %}
                     ["{{ item.property | lower | replace(".", "") }}"] = {% if "Value" in item.value %}doubleValue{% else %}{{ item.value | safe }}{% endif %},
                     {%- endfor %}
                 },
                 {%- endif %}
-                {%- if shorthandProperty %}
+                {%- if coercionProperty %}
                 _ => new Dictionary<string, object?>
                 {
-                    ["{{ shorthandProperty }}"] = value
+                    ["{{ coercionProperty }}"] = value
                 }
                 {%- else %}
                 _ => throw new ArgumentException($"Cannot convert value of type {value?.GetType().Name} to {{ node.typeName.name }}")
@@ -334,13 +334,13 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
             dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
                 ?? throw new ArgumentException("Failed to parse JSON as dictionary");
         }
-        {%- elif shorthandProperty %}
+        {%- elif coercionProperty %}
         // Handle shorthand representation
         if (doc.RootElement.ValueKind != JsonValueKind.Object)
         {
             dict = new Dictionary<string, object?>
             {
-                ["{{ shorthandProperty }}"] = JsonUtils.GetJsonElementValue(doc.RootElement)
+                ["{{ coercionProperty }}"] = JsonUtils.GetJsonElementValue(doc.RootElement)
             };
         }
         else
@@ -364,7 +364,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
     /// <returns>The loaded {{ node.typeName.name }} instance.</returns>
     public {% if node.base %}new {% endif %}static {{ node.typeName.name }} FromYaml(string yaml, LoadContext? context = null)
     {
-        {%- if alternates.length > 0 or numericAlternates.length > 0 %}
+        {%- if coercions.length > 0 or numericCoercions.length > 0 %}
         // Handle alternate representations - try object first, fall back to scalar
         Dictionary<string, object?>? dictResult = null;
         try
@@ -387,7 +387,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
             var parsed = YamlUtils.ParseScalar(yaml);
             dict = parsed switch
             {
-                {%- for alt in alternates %}
+                {%- for alt in coercions %}
                 {{ alt.scalar }} {{ alt.scalar | lower }}Value => new Dictionary<string, object?>
                 {
                     {%- for item in alt.expansion %}
@@ -395,7 +395,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
                     {%- endfor %}
                 },
                 {%- endfor %}
-                {%- for alt in numericAlternates %}
+                {%- for alt in numericCoercions %}
                 {{ alt.scalar }} {{ alt.scalar | lower }}Value => new Dictionary<string, object?>
                 {
                     {%- for item in alt.expansion %}
@@ -403,33 +403,33 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
                     {%- endfor %}
                 },
                 {%- endfor %}
-                {%- if intAlternate %}
+                {%- if intCoercion %}
                 long longValue => new Dictionary<string, object?>
                 {
-                    {%- for item in intAlternate.expansion %}
+                    {%- for item in intCoercion.expansion %}
                     ["{{ item.property | lower | replace(".", "") }}"] = {% if "Value" in item.value %}longValue{% else %}{{ item.value | safe }}{% endif %},
                     {%- endfor %}
                 },
                 {%- endif %}
-                {%- if floatAlternate %}
+                {%- if floatCoercion %}
                 double doubleValue => new Dictionary<string, object?>
                 {
-                    {%- for item in floatAlternate.expansion %}
+                    {%- for item in floatCoercion.expansion %}
                     ["{{ item.property | lower | replace(".", "") }}"] = {% if "Value" in item.value %}doubleValue{% else %}{{ item.value | safe }}{% endif %},
                     {%- endfor %}
                 },
                 {%- endif %}
-                {%- if shorthandProperty %}
+                {%- if coercionProperty %}
                 _ => new Dictionary<string, object?>
                 {
-                    ["{{ shorthandProperty }}"] = parsed
+                    ["{{ coercionProperty }}"] = parsed
                 }
                 {%- else %}
                 _ => throw new ArgumentException($"Cannot convert value of type {parsed?.GetType().Name} to {{ node.typeName.name }}")
                 {%- endif %}
             };
         }
-        {%- elif shorthandProperty %}
+        {%- elif coercionProperty %}
         // Handle shorthand representation - try object first, fall back to scalar
         Dictionary<string, object?>? dictResult = null;
         try
@@ -451,7 +451,7 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
             // Shorthand representation - wrap the value with proper type inference
             dict = new Dictionary<string, object?>
             {
-                ["{{ shorthandProperty }}"] = YamlUtils.ParseScalar(yaml)
+                ["{{ coercionProperty }}"] = YamlUtils.ParseScalar(yaml)
             };
         }
         {%- else %}
@@ -486,12 +486,12 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
 {% endfor %}
     #endregion
 {%- endif %}
-{%- if node.helpers.length > 0 %}
+{%- if node.methods.length > 0 %}
 
     #region Helpers — implement these in a partial class extension
 
     // The following helpers should be implemented in a separate partial class file:
-{%- for helper in node.helpers %}
+{%- for helper in node.methods %}
     // - {{ helper.name }}(): {{ renderCsharpHelperReturnType(helper.returns) }} — {{ helper.description }}
 {%- endfor %}
 

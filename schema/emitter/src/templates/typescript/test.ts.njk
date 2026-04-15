@@ -7,7 +7,7 @@
     - node: TypeNode
     - isAbstract: boolean
     - examples: Array<{ json: string[], yaml: string[], validations: Array<{ key, value, delimiter, isOptional }> }>
-    - alternates: Array<{ title: string, scalarType: string, value: string, validations: Array<...> }>
+    - coercions: Array<{ title: string, scalarType: string, value: string, validations: Array<...> }>
     - renderName: function
     - namespace: string
 #}
@@ -77,10 +77,10 @@ describe("{{ node.typeName.name }}", () => {
     {% endfor %}
   });
   {% endif %}
-  {% if alternates.length > 0 %}
+  {% if coercions.length > 0 %}
 
   describe("alternate representations", () => {
-    {% for alt in alternates %}
+    {% for alt in coercions %}
     it("should handle {{ alt.title }} alternate representation", () => {
       const value = {{ alt.value }};
       const json = JSON.stringify(value);

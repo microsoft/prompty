@@ -7,7 +7,7 @@
     - node: TypeNode
     - namespace: string
     - examples: Array<{ json: string[], yaml: string[], validations: Array<{ key, value, startDelim, endDelim }> }>
-    - alternates: Array<{ title, scalar, value, validations: Array<{ key, value, delimiter }> }>
+    - coercions: Array<{ title, scalar, value, validations: Array<{ key, value, delimiter }> }>
 #}
 using Xunit;
 
@@ -159,8 +159,8 @@ public class {{ node.typeName.name }}ConversionTests
     }
     {%- endfor %}
 
-    {%- if alternates.length > 0 %}
-    {% for alt in alternates -%}
+    {%- if coercions.length > 0 %}
+    {% for alt in coercions -%}
     [Fact]
     public void LoadJsonFrom{{ alt.scalar | title }}()
     {

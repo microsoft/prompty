@@ -8,7 +8,7 @@
     - isAbstract: boolean
     - package: string
     - examples: Array<{ json: string[], yaml: string[], validations: Array<{ key, value, delimiter, isOptional }> }>
-    - alternates: Array<{ title, scalarType, value, validations: Array<{ key, value, delimiter, isOptional }> }>
+    - coercions: Array<{ title, scalarType, value, validations: Array<{ key, value, delimiter, isOptional }> }>
 #}
 {% import "_macros.njk" as py %}
 {%- if examples.length > 0 %}
@@ -100,8 +100,8 @@ def test_to_yaml_{{node.typeName.name | lower}}{% if not loop.first %}_{{loop.in
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 {% endfor %}
-{% if alternates.length > 0 %}
-{% for alt in alternates -%}
+{% if coercions.length > 0 %}
+{% for alt in coercions -%}
 def test_load_{{node.typeName.name | lower}}_from_{{ alt.scalarType }}():
     instance = {{node.typeName.name}}.load({{ alt.value }})
     assert instance is not None

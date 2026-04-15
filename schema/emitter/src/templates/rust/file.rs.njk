@@ -123,8 +123,8 @@ impl {{ class.node.typeName.name }} {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
-        {%- if class.alternates.length > 0 %}
-        {%- for alt in class.alternates %}
+        {%- if class.coercions.length > 0 %}
+        {%- for alt in class.coercions %}
         {%- if alt.scalar == "String" %}
         if let Some(s) = value.as_str() {
             let value = s.to_string();
@@ -338,8 +338,8 @@ impl {{ class.node.typeName.name }} {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
-        {%- if class.alternates.length > 0 %}
-        {%- for alt in class.alternates %}
+        {%- if class.coercions.length > 0 %}
+        {%- for alt in class.coercions %}
         {%- if alt.scalar == "String" %}
         if let Some(s) = value.as_str() {
             let value = s.to_string();
@@ -483,10 +483,10 @@ impl {{ class.node.typeName.name }} {
     HELPER TRAIT — stub declaration from @helper decorators.
     Implementation must be provided in a separate extension file.
     ================================================================ -#}
-{%- if class.node.helpers.length > 0 %}
+{%- if class.node.methods.length > 0 %}
 /// Helpers for [`{{ class.node.typeName.name }}`]. Implement in a separate file.
 pub trait {{ class.node.typeName.name }}Helpers {
-{%- for helper in class.node.helpers %}
+{%- for helper in class.node.methods %}
     /// {{ helper.description }}
     fn {{ helper.name | snakeCase }}(&self) -> {{ rust.helperReturnType(helper.returns) }};
 {%- endfor %}

@@ -23,7 +23,7 @@ import { {{ import }} } from "./{{ toKebabCase(import) }}";
 {% for classCtx in classes %}
 {%- set node = classCtx.node -%}
 {%- set typeMapper = classCtx.typeMapper -%}
-{%- set alternates = classCtx.alternates -%}
+{%- set coercions = classCtx.coercions -%}
 {%- set polymorphicTypes = classCtx.polymorphicTypes -%}
 {%- set collectionTypes = classCtx.collectionTypes %}
 
@@ -35,7 +35,7 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
   /**
    * The shorthand property name for this type, if any.
    */
-  static readonly shorthandProperty: string | undefined = {% if classCtx.shorthandProperty %}"{{ classCtx.shorthandProperty }}"{% else %}undefined{% endif %};
+  static readonly shorthandProperty: string | undefined = {% if classCtx.coercionProperty %}"{{ classCtx.coercionProperty }}"{% else %}undefined{% endif %};
 
   {% for prop in node.properties %}
   /**
@@ -72,27 +72,27 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
     if (context) {
       data = context.processInput(data);
     }
-    {% if alternates.length > 0 %}
+    {% if coercions.length > 0 %}
     // Handle alternate representations
     if (typeof data === "string") {
-      {%- for alt in alternates %}{% if alt.scalar == "string" %}
+      {%- for alt in coercions %}{% if alt.scalar == "string" %}
       data = {{ alt.alternate }};
       {%- endif %}{% endfor %}
     } else if (typeof data === "number") {
-      {%- for alt in alternates %}{% if alt.scalar == "number" %}
+      {%- for alt in coercions %}{% if alt.scalar == "number" %}
       // Check if it's an integer or float
       if (Number.isInteger(data)) {
-        {%- for intAlt in alternates %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
+        {%- for intAlt in coercions %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
         data = {{ intAlt.alternate }};
         {%- endif %}{% endfor %}
       } else {
-        {%- for floatAlt in alternates %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
+        {%- for floatAlt in coercions %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
         data = {{ floatAlt.alternate }};
         {%- endif %}{% endfor %}
       }
       {%- endif %}{% endfor %}
     } else if (typeof data === "boolean") {
-      {%- for alt in alternates %}{% if alt.scalar == "boolean" %}
+      {%- for alt in coercions %}{% if alt.scalar == "boolean" %}
       data = {{ alt.alternate }};
       {%- endif %}{% endfor %}
     }
@@ -309,31 +309,31 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
    */
   static fromJson(json: string, context?: LoadContext): {{ node.typeName.name }} {
     const data = JSON.parse(json);
-    {% if alternates.length > 0 %}
+    {% if coercions.length > 0 %}
     // Handle alternate representations
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       if (typeof data === "string") {
-        {%- for alt in alternates %}{% if alt.scalar == "string" %}
+        {%- for alt in coercions %}{% if alt.scalar == "string" %}
         return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
         {%- endif %}{% endfor %}
       } else if (typeof data === "number") {
         // Check if it's an integer or float
         if (Number.isInteger(data)) {
-          {%- for intAlt in alternates %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
+          {%- for intAlt in coercions %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
           return {{ node.typeName.name }}.load({{ intAlt.alternate }}, context);
           {%- endif %}{% endfor %}
         } else {
-          {%- for floatAlt in alternates %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
+          {%- for floatAlt in coercions %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
           return {{ node.typeName.name }}.load({{ floatAlt.alternate }}, context);
           {%- endif %}{% endfor %}
         }
       } else if (typeof data === "boolean") {
-        {%- for alt in alternates %}{% if alt.scalar == "boolean" %}
+        {%- for alt in coercions %}{% if alt.scalar == "boolean" %}
         return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
         {%- endif %}{% endfor %}
       }
       // Fallback - shouldn't reach here
-      {%- for alt in alternates %}{% if loop.first %}
+      {%- for alt in coercions %}{% if loop.first %}
       return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
       {%- endif %}{% endfor %}
     }
@@ -350,31 +350,31 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
   static fromYaml(yaml: string, context?: LoadContext): {{ node.typeName.name }} {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    {% if alternates.length > 0 %}
+    {% if coercions.length > 0 %}
     // Handle alternate representations
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       if (typeof data === "string") {
-        {%- for alt in alternates %}{% if alt.scalar == "string" %}
+        {%- for alt in coercions %}{% if alt.scalar == "string" %}
         return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
         {%- endif %}{% endfor %}
       } else if (typeof data === "number") {
         // Check if it's an integer or float
         if (Number.isInteger(data)) {
-          {%- for intAlt in alternates %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
+          {%- for intAlt in coercions %}{% if intAlt.scalar == "number" and "integer" in intAlt.alternate %}
           return {{ node.typeName.name }}.load({{ intAlt.alternate }}, context);
           {%- endif %}{% endfor %}
         } else {
-          {%- for floatAlt in alternates %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
+          {%- for floatAlt in coercions %}{% if floatAlt.scalar == "number" and "float" in floatAlt.alternate %}
           return {{ node.typeName.name }}.load({{ floatAlt.alternate }}, context);
           {%- endif %}{% endfor %}
         }
       } else if (typeof data === "boolean") {
-        {%- for alt in alternates %}{% if alt.scalar == "boolean" %}
+        {%- for alt in coercions %}{% if alt.scalar == "boolean" %}
         return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
         {%- endif %}{% endfor %}
       }
       // Fallback - shouldn't reach here
-      {%- for alt in alternates %}{% if loop.first %}
+      {%- for alt in coercions %}{% if loop.first %}
       return {{ node.typeName.name }}.load({{ alt.alternate }}, context);
       {%- endif %}{% endfor %}
     }
@@ -404,14 +404,14 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
 {% endfor %}
   //#endregion
 {%- endif %}
-{%- if node.helpers.length > 0 %}
+{%- if node.methods.length > 0 %}
 
   //#region Helpers — implement these in an extension file
 
   /**
    * Helper methods for {{ node.typeName.name }}.
    * These should be implemented as standalone functions in the runtime:
-{%- for helper in node.helpers %}
+{%- for helper in node.methods %}
    * - {{ helper.name }}(): {{ ts.helperReturnType(helper.returns) }} — {{ helper.description }}
 {%- endfor %}
    */

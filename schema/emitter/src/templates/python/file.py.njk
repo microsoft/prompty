@@ -30,7 +30,7 @@ from ._{{ import }} import {{ import }}
 {% for classCtx in classes %}
 {%- set node = classCtx.node -%}
 {%- set typeMapper = classCtx.typeMapper -%}
-{%- set alternates = classCtx.alternates -%}
+{%- set coercions = classCtx.coercions -%}
 {%- set polymorphicTypes = classCtx.polymorphicTypes -%}
 {%- set collectionTypes = classCtx.collectionTypes %}
 
@@ -64,9 +64,9 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
 
         if context is not None:
             data = context.process_input(data)
-        {% if alternates.length > 0 %}
+        {% if coercions.length > 0 %}
         # handle alternate representations
-{%- for alt in alternates %}
+{%- for alt in coercions %}
         if isinstance(data, {{ alt.scalar }}):
             data = {{ alt.alternate }}
 {%- endfor %}
@@ -238,12 +238,12 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         return instance
 {% endfor %}
 {%- endif %}
-{%- if node.helpers.length > 0 %}
+{%- if node.methods.length > 0 %}
     # =========================================================================
     # Helpers — implement these in an extension module
     # =========================================================================
     # The following helpers should be implemented as standalone functions:
-{%- for helper in node.helpers %}
+{%- for helper in node.methods %}
     # - {{ helper.name }}(instance) -> {{ py.helperReturnType(helper.returns) }}: {{ helper.description }}
 {%- endfor %}
 {%- endif %}
