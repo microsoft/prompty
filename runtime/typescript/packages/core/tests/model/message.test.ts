@@ -54,6 +54,29 @@ describe("Message", () => {
     });
   });
 
+  describe("factory methods", () => {
+    it("should create instance via assistant() factory", () => {
+      const instance = Message.assistant("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(Message);
+      expect(instance.role).toBe("assistant");
+    });
+
+    it("should create instance via system() factory", () => {
+      const instance = Message.system("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(Message);
+      expect(instance.role).toBe("system");
+    });
+
+    it("should create instance via user() factory", () => {
+      const instance = Message.user("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(Message);
+      expect(instance.role).toBe("user");
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
       const data: Record<string, unknown> = {};

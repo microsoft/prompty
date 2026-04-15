@@ -91,3 +91,12 @@ def test_to_yaml_toolresult():
     assert isinstance(parsed, dict)
 
 
+
+
+def test_factory_text_toolresult():
+    """Test that text() factory creates a valid instance."""
+    instance = ToolResult.text("test")
+    assert instance is not None
+    assert isinstance(instance, ToolResult)
+
+

@@ -127,4 +127,12 @@ parts:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void FactoryText()
+    {
+        var instance = ToolResult.Text("test");
+        Assert.NotNull(instance);
+    }
+
 }

@@ -2,7 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
 import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
 import * as nunjucks from "nunjucks";
 import { buildBaseTestContext, typescriptTestOptions } from "./test-context.js";
@@ -43,11 +43,12 @@ interface TypeScriptClassContext {
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
   coercionProperty: string | null;
+  factoryTypeRefs: string[];
 }
 
 interface TypeScriptFileContext {
   containsAbstract: boolean;
-  imports: string[];
+  imports: Array<{ module: string; names: string[] }>;
   classes: TypeScriptClassContext[];
   typeMapper: Record<string, string>;
 }
@@ -236,12 +237,19 @@ function buildClassContext(
   registry: TypeRegistry,
   visitor: ExprVisitor,
 ): TypeScriptClassContext {
-  // Resolve factories via expression IR
-  const renderedFactories = (node.factories || []).map(f => ({
-    name: f.name,
-    params: f.params,
-    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
-  }));
+  // Resolve factories via expression IR, collecting type refs for imports
+  const factoryTypeRefs: string[] = [];
+  const renderedFactories = (node.factories || []).map(f => {
+    const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
+    for (const ref of collectExprTypeRefs(expr)) {
+      factoryTypeRefs.push(ref.name);
+    }
+    return {
+      name: f.name,
+      params: f.params,
+      body: visitor.visitExpr(expr),
+    };
+  });
 
   // Resolve coercions via expression IR — render as object literals for template insertion
   const renderedCoercions = (node.coercions || []).map(c => {
@@ -252,6 +260,9 @@ function buildClassContext(
     };
   });
 
+  // Keep factory-referenced types for file-level import resolution
+  const baseImports = getUniqueImportTypes(node);
+
   return {
     node,
     typeMapper: typescriptTypeMapper,
@@ -259,9 +270,10 @@ function buildClassContext(
     renderedCoercions,
     renderedFactories,
     polymorphicTypes: node.retrievePolymorphicTypes(),
-    imports: getUniqueImportTypes(node),
+    imports: baseImports,
     collectionTypes: getCollectionTypes(node),
     coercionProperty: getCoercionProperty(node),
+    factoryTypeRefs,
   };
 }
 
@@ -278,9 +290,35 @@ function buildFileContext(
     ...node.childTypes.map((ct) => buildClassContext(ct, registry, visitor)),
   ];
 
+  // Build grouped imports: module → set of type names
+  const childTypeNames = new Set([node.typeName.name, ...node.childTypes.map(ct => ct.typeName.name)]);
+  const importMap = new Map<string, Set<string>>();
+
+  const addImport = (typeName: string) => {
+    if (childTypeNames.has(typeName)) return;
+    const refNode = registry.get(typeName);
+    const module = refNode?.base ? refNode.base.name : typeName;
+    if (!importMap.has(module)) importMap.set(module, new Set());
+    importMap.get(module)!.add(typeName);
+  };
+
+  for (const name of getUniqueImportTypes(node)) {
+    addImport(name);
+  }
+
+  for (const cls of classes) {
+    for (const ref of cls.factoryTypeRefs) {
+      addImport(ref);
+    }
+  }
+
+  const imports = Array.from(importMap.entries())
+    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
+    .sort((a, b) => a.module.localeCompare(b.module));
+
   return {
     containsAbstract: node.isAbstract || node.childTypes.some((c) => c.isAbstract),
-    imports: getUniqueImportTypes(node),
+    imports,
     classes,
     typeMapper: typescriptTypeMapper,
   };

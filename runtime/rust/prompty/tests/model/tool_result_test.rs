@@ -63,3 +63,9 @@ fn test_tool_result_roundtrip() {
 
 
 
+
+#[test]
+fn test_tool_result_factory_text() {
+    let instance = ToolResult::text("test".to_string());
+}
+

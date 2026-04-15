@@ -629,6 +629,8 @@ export interface PythonClassContext {
   renderedFactories: Array<{ name: string; safeName: string; params: Record<string, string>; body: string }>;
   /** Pre-rendered coercion expressions via expression IR */
   renderedCoercions: Array<{ scalar: string; expression: string }>;
+  /** Type names referenced in factory expressions (for file-level import resolution) */
+  factoryTypeRefs: string[];
 }
 
 /**
@@ -639,8 +641,8 @@ export interface PythonFileContext {
   containsAbstract: boolean;
   /** Python typing imports needed (e.g., "Any", "Callable", "Optional") */
   typings: string[];
-  /** Import types needed from other modules */
-  imports: string[];
+  /** Grouped imports: each entry maps a module name to the types imported from it */
+  imports: Array<{ module: string; names: string[] }>;
   /** Array of class contexts to render */
   classes: PythonClassContext[];
   /** Type mapping from TypeSpec types to Python types */

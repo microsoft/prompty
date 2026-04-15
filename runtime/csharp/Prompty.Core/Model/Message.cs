@@ -254,6 +254,34 @@ public partial class Message
 
     #endregion
 
+    #region Factory Methods
+
+    /// <summary>
+    /// Create a Message with preset field values.
+    /// </summary>
+    public static Message Assistant(string text)
+    {
+        return new Message { Role = "assistant", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+    }
+
+    /// <summary>
+    /// Create a Message with preset field values.
+    /// </summary>
+    public static Message System(string text)
+    {
+        return new Message { Role = "system", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+    }
+
+    /// <summary>
+    /// Create a Message with preset field values.
+    /// </summary>
+    public static Message User(string text)
+    {
+        return new Message { Role = "user", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+    }
+
+    #endregion
+
     #region Helpers — implement these in a partial class extension
 
     // The following helpers should be implemented in a separate partial class file:

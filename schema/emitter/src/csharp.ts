@@ -9,7 +9,7 @@ import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
 import { getVisitor, ExprVisitor } from "./render-expr.js";
 
 const csharpTypeMapper: Record<string, string> = {

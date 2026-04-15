@@ -4,7 +4,9 @@
 
 use super::context::{LoadContext, SaveContext};
 
-use super::content_part::ContentPart;
+
+use super::content_part::{ContentPart, ContentPartKind};
+
 
 
 
@@ -99,6 +101,18 @@ impl Message {
 
         serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
 
+    }
+    /// Create a Message with preset field values.
+    pub fn assistant(text: impl Into<String>) -> Self {
+        Message { role: "assistant".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
+    }
+    /// Create a Message with preset field values.
+    pub fn system(text: impl Into<String>) -> Self {
+        Message { role: "system".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
+    }
+    /// Create a Message with preset field values.
+    pub fn user(text: impl Into<String>) -> Self {
+        Message { role: "user".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
     }
 }
 /// Helpers for [`Message`]. Implement in a separate file.

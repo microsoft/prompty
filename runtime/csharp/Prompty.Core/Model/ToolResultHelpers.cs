@@ -19,7 +19,7 @@ public partial class ToolResult
     /// <summary>
     /// Concatenated text from all TextParts in this result.
     /// </summary>
-    public string Text => string.Join("", Parts.OfType<TextPart>().Select(p => p.Value));
+    public string TextContent => string.Join("", Parts.OfType<TextPart>().Select(p => p.Value));
 
     /// <summary>
     /// Implicit conversion from string for backward compatibility.

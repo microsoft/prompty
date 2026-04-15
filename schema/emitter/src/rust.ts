@@ -10,7 +10,7 @@ import {
   TypeNode,
 } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
 import { getVisitor, ExprVisitor } from "./render-expr.js";
 import { createTemplateEngine } from "./template-engine.js";
 import { buildBaseTestContext, rustTestOptions } from "./test-context.js";
@@ -72,6 +72,7 @@ interface RustClassContext {
   coercions: Array<{ scalar: string; alternate: string }>;
   renderedFactories: RenderedFactory[];
   renderedCoercions: RenderedCoercion[];
+  factoryTypeRefs: string[];
   polymorphicTypes: any;
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
@@ -87,7 +88,7 @@ interface RustClassContext {
 
 interface RustFileContext {
   containsAbstract: boolean;
-  imports: string[];
+  imports: Array<{ module: string; names: string[] }>;
   classes: RustClassContext[];
   typeMapper: Record<string, string>;
   polymorphicTypeNames: string[];
@@ -272,12 +273,16 @@ function buildClassContext(
     }
   }
 
-  // Resolve factories via expression IR
-  const renderedFactories: RenderedFactory[] = (node.factories || []).map(f => ({
-    name: f.name,
-    params: f.params,
-    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
-  }));
+  // Resolve factories via expression IR, collecting type refs for imports
+  const renderedFactories: RenderedFactory[] = [];
+  const factoryTypeRefs: string[] = [];
+  for (const f of node.factories || []) {
+    const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
+    renderedFactories.push({ name: f.name, params: f.params, body: visitor.visitExpr(expr) });
+    for (const ref of collectExprTypeRefs(expr)) {
+      factoryTypeRefs.push(ref.name);
+    }
+  }
 
   // Resolve coercions via expression IR
   const renderedCoercions: RenderedCoercion[] = (node.coercions || []).map(c => ({
@@ -291,6 +296,7 @@ function buildClassContext(
     coercions: prepareCoercions(node),
     renderedFactories,
     renderedCoercions,
+    factoryTypeRefs,
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node, polymorphicTypeNames),
     collectionTypes: getCollectionTypes(node),
@@ -318,22 +324,44 @@ function buildFileContext(
     ...node.childTypes.map(ct => buildClassContext(ct, polymorphicTypeNames, registry, visitor))
   ];
 
-  // Collect unique imports from all classes, excluding types defined in this file
-  // and skipping child classes (they're inline enum variants, not rendered as structs)
+  // Build grouped imports: module → set of type names
   const definedInFile = new Set([node.typeName.name, ...node.childTypes.map(c => c.typeName.name)]);
-  const allImports = new Set<string>();
+  const importMap = new Map<string, Set<string>>();
+
+  const addImport = (typeName: string, module?: string) => {
+    if (definedInFile.has(typeName)) return;
+    const mod = module || toSnakeCase(typeName);
+    if (!importMap.has(mod)) importMap.set(mod, new Set());
+    importMap.get(mod)!.add(typeName);
+  };
+
+  // Property-based imports
   for (const cls of classes) {
     if (cls.isPolymorphicChild) continue;
     for (const imp of cls.imports) {
-      if (!definedInFile.has(imp)) {
-        allImports.add(imp);
+      addImport(imp);
+    }
+  }
+
+  // Factory-referenced imports — for polymorphic types, also add the Kind enum
+  for (const cls of classes) {
+    if (cls.isPolymorphicChild) continue;
+    for (const ref of cls.factoryTypeRefs) {
+      if (definedInFile.has(ref)) continue;
+      if (polymorphicTypeNames.has(ref)) {
+        // ContentPartKind lives in the content_part module alongside ContentPart
+        addImport(ref + "Kind", toSnakeCase(ref));
       }
     }
   }
 
+  const imports = Array.from(importMap.entries())
+    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
+    .sort((a, b) => a.module.localeCompare(b.module));
+
   return {
     containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
-    imports: Array.from(allImports).sort(),
+    imports,
     classes,
     typeMapper: rustTypeMapper,
     polymorphicTypeNames: Array.from(polymorphicTypeNames),

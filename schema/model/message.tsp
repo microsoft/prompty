@@ -91,6 +91,9 @@ model AudioPart extends ContentPart {
  * A message in a conversation. Messages have a role and a list of content parts
  * representing the different modalities of the message content.
  */
+@factory("user", #{ role: "user", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
+@factory("system", #{ role: "system", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
+@factory("assistant", #{ role: "assistant", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
 @method("text", "string", "Concatenate all TextPart values joined by newline")
 model Message {
   @doc("The role of the message sender")
@@ -131,6 +134,7 @@ model ToolCall {
  * Implementations MUST support conversion from a plain string to a ToolResult
  * containing a single TextPart for backward compatibility.
  */
+@factory("text", #{ parts: #[#{ kind: "text", value: "{value}" }] }, #{ value: "string" })
 @method("text", "string", "Concatenate all TextPart values joined by newline")
 model ToolResult {
   @doc("The content parts of the tool result")

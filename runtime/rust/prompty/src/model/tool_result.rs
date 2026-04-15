@@ -4,7 +4,9 @@
 
 use super::context::{LoadContext, SaveContext};
 
-use super::content_part::ContentPart;
+
+use super::content_part::{ContentPart, ContentPartKind};
+
 
 
 
@@ -82,6 +84,10 @@ impl ToolResult {
 
         serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
 
+    }
+    /// Create a ToolResult with preset field values.
+    pub fn text(value: impl Into<String>) -> Self {
+        ToolResult { parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: value.into() }, ..Default::default() }], ..Default::default() }
     }
 }
 /// Helpers for [`ToolResult`]. Implement in a separate file.

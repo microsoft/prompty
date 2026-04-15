@@ -226,6 +226,18 @@ public partial class ToolResult
 
     #endregion
 
+    #region Factory Methods
+
+    /// <summary>
+    /// Create a ToolResult with preset field values.
+    /// </summary>
+    public static ToolResult Text(string value)
+    {
+        return new ToolResult { Parts = new List<ContentPart> { new TextPart { Value = value } } };
+    }
+
+    #endregion
+
     #region Helpers — implement these in a partial class extension
 
     // The following helpers should be implemented in a separate partial class file:

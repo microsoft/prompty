@@ -46,6 +46,14 @@ describe("ToolResult", () => {
     });
   });
 
+  describe("factory methods", () => {
+    it("should create instance via text() factory", () => {
+      const instance = ToolResult.text("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(ToolResult);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
       const data: Record<string, unknown> = {};

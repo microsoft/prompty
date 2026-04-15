@@ -152,4 +152,29 @@ metadata:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void FactoryAssistant()
+    {
+        var instance = Message.Assistant("test");
+        Assert.NotNull(instance);
+        Assert.Equal("assistant", instance.Role);
+    }
+
+    [Fact]
+    public void FactorySystem()
+    {
+        var instance = Message.System("test");
+        Assert.NotNull(instance);
+        Assert.Equal("system", instance.Role);
+    }
+
+    [Fact]
+    public void FactoryUser()
+    {
+        var instance = Message.User("test");
+        Assert.NotNull(instance);
+        Assert.Equal("user", instance.Role);
+    }
+
 }

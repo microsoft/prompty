@@ -7,7 +7,7 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._ContentPart import ContentPart
+from ._ContentPart import ContentPart, TextPart
 from ._context import LoadContext, SaveContext
 
 
@@ -127,6 +127,12 @@ class ToolResult:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
+    @classmethod
+    def text(cls, value: str) -> "ToolResult":
+        """Create a ToolResult with preset field values."""
+        return ToolResult(parts=[TextPart(value=value)])
 
     # =========================================================================
     # Helpers — implement these in an extension module

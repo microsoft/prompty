@@ -74,3 +74,21 @@ fn test_message_roundtrip() {
 
 
 
+
+#[test]
+fn test_message_factory_assistant() {
+    let instance = Message::assistant("test".to_string());
+}
+
+
+#[test]
+fn test_message_factory_system() {
+    let instance = Message::system("test".to_string());
+}
+
+
+#[test]
+fn test_message_factory_user() {
+    let instance = Message::user("test".to_string());
+}
+

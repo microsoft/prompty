@@ -23,8 +23,8 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Optional
 
 from ._context import LoadContext, SaveContext
-{%- for import in imports %}
-from ._{{ import }} import {{ import }}
+{%- for imp in imports %}
+from ._{{ imp.module }} import {{ imp.names | join(", ") }}
 {%- endfor %}
 
 {% for classCtx in classes %}

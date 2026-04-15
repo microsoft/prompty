@@ -120,6 +120,48 @@ export type Expr =
   | FieldRead;
 
 // ============================================================================
+// Type reference collection — for factory import resolution
+// ============================================================================
+
+/**
+ * Recursively collect all TypeName references from an Expr tree.
+ * Used by emitters to determine which additional types need importing
+ * when factory/coercion expressions reference types from other modules.
+ */
+export function collectExprTypeRefs(expr: Expr): TypeName[] {
+  const refs: TypeName[] = [];
+  function walk(e: Expr) {
+    switch (e.kind) {
+      case "construct":
+        refs.push(e.typeName);
+        e.fields.forEach(f => walk(f.value));
+        break;
+      case "variant":
+        refs.push(e.baseTypeName);
+        refs.push(e.variantTypeName);
+        e.fields.forEach(f => walk(f.value));
+        break;
+      case "array":
+        refs.push(e.elementTypeName);
+        e.items.forEach(walk);
+        break;
+      case "dict":
+        e.entries.forEach(ent => walk(ent.value));
+        break;
+      case "string":
+      case "number":
+      case "boolean":
+      case "null":
+      case "param":
+      case "field_read":
+        break;
+    }
+  }
+  walk(expr);
+  return refs;
+}
+
+// ============================================================================
 // Type Registry — flat lookup for type-directed resolution
 // ============================================================================
 

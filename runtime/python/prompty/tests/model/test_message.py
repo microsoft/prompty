@@ -113,3 +113,29 @@ def test_to_yaml_message():
     assert isinstance(parsed, dict)
 
 
+
+
+def test_factory_assistant_message():
+    """Test that assistant() factory creates a valid instance."""
+    instance = Message.assistant("test")
+    assert instance is not None
+    assert isinstance(instance, Message)
+    assert instance.role == "assistant"
+
+
+def test_factory_system_message():
+    """Test that system() factory creates a valid instance."""
+    instance = Message.system("test")
+    assert instance is not None
+    assert isinstance(instance, Message)
+    assert instance.role == "system"
+
+
+def test_factory_user_message():
+    """Test that user() factory creates a valid instance."""
+    instance = Message.user("test")
+    assert instance is not None
+    assert isinstance(instance, Message)
+    assert instance.role == "user"
+
+

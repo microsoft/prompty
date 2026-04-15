@@ -13,7 +13,7 @@ import {
   PythonLoadContextContext,
   BaseTestContext
 } from "./ast.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
 import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
 import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
@@ -197,12 +197,19 @@ function buildClassContext(
   }
 
   // Resolve factories via expression IR (when registry+visitor available)
-  const renderedFactories = (registry && visitor) ? (node.factories || []).map(f => ({
-    name: f.name,
-    safeName: factoryNameMap[f.name],
-    params: f.params,
-    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
-  })) : [];
+  const factoryTypeRefs: string[] = [];
+  const renderedFactories = (registry && visitor) ? (node.factories || []).map(f => {
+    const expr = resolveFactoryExpr(f.sets, f.params, node, registry);
+    for (const ref of collectExprTypeRefs(expr)) {
+      factoryTypeRefs.push(ref.name);
+    }
+    return {
+      name: f.name,
+      safeName: factoryNameMap[f.name],
+      params: f.params,
+      body: visitor.visitExpr(expr),
+    };
+  }) : [];
 
   // Resolve coercions via expression IR
   const renderedCoercions = (registry && visitor) ? (node.coercions || []).map(c => {
@@ -213,17 +220,22 @@ function buildClassContext(
     };
   }) : [];
 
+  // Keep factory-referenced types for file-level import resolution
+  // Don't merge into class imports — the file template handles imports
+  const baseImports = getUniqueImportTypes(node);
+
   return {
     node,
     typeMapper: pythonTypeMapper,
     coercions: prepareCoercions(node),
     polymorphicTypes: node.retrievePolymorphicTypes(),
-    imports: getUniqueImportTypes(node),
+    imports: baseImports,
     collectionTypes: getCollectionTypes(node),
     coercionProperty: getCoercionProperty(node),
     factoryNameMap,
     renderedFactories,
     renderedCoercions,
+    factoryTypeRefs,
   };
 }
 
@@ -235,16 +247,45 @@ function buildFileContext(
   registry: TypeRegistry,
   visitor: ExprVisitor,
 ): PythonFileContext {
-  // Build class contexts for this node and all its children
   const classes: PythonClassContext[] = [
     buildClassContext(node, registry, visitor),
     ...node.childTypes.map(ct => buildClassContext(ct, registry, visitor))
   ];
 
+  // Build grouped imports: module → set of type names to import from that module
+  // This handles both base types (module == type) and child types (module == parent type)
+  const childTypeNames = new Set([node.typeName.name, ...node.childTypes.map(ct => ct.typeName.name)]);
+  const importMap = new Map<string, Set<string>>();
+
+  const addImport = (typeName: string) => {
+    if (childTypeNames.has(typeName)) return; // Skip types defined in this file
+    // Find which module this type lives in
+    const refNode = registry.get(typeName);
+    const module = refNode?.base ? refNode.base.name : typeName;
+    if (!importMap.has(module)) importMap.set(module, new Set());
+    importMap.get(module)!.add(typeName);
+  };
+
+  // Property-based imports (base types referenced by properties)
+  for (const name of getUniqueImportTypes(node)) {
+    addImport(name);
+  }
+
+  // Factory-referenced imports (may include child types like TextPart)
+  for (const cls of classes) {
+    for (const ref of cls.factoryTypeRefs) {
+      addImport(ref);
+    }
+  }
+
+  const imports = Array.from(importMap.entries())
+    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
+    .sort((a, b) => a.module.localeCompare(b.module));
+
   return {
     containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
     typings: ["Any", "Callable", "Optional"],
-    imports: getUniqueImportTypes(node),
+    imports,
     classes,
     typeMapper: pythonTypeMapper,
   };

@@ -7,7 +7,7 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._ContentPart import ContentPart
+from ._ContentPart import ContentPart, TextPart
 from ._context import LoadContext, SaveContext
 
 
@@ -138,6 +138,22 @@ class Message:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
+    @classmethod
+    def assistant(cls, text: str) -> "Message":
+        """Create a Message with preset field values."""
+        return Message(role="assistant", parts=[TextPart(value=text)])
+
+    @classmethod
+    def system(cls, text: str) -> "Message":
+        """Create a Message with preset field values."""
+        return Message(role="system", parts=[TextPart(value=text)])
+
+    @classmethod
+    def user(cls, text: str) -> "Message":
+        """Create a Message with preset field values."""
+        return Message(role="user", parts=[TextPart(value=text)])
 
     # =========================================================================
     # Helpers — implement these in an extension module
