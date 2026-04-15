@@ -23,14 +23,14 @@ import { AnthropicProcessor, processResponse } from "../src/processor.js";
 import { buildChatArgs, messageToWire, toolsToWire, outputSchemaToWire } from "../src/wire.js";
 import { registerExecutor, registerProcessor } from "@prompty/core";
 import { Message } from "@prompty/core";
-import type { TextPart } from "@prompty/core";
+import { TextPart } from "@prompty/core";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 
 /** Helper: create a Message with a single text part. */
 function textMsg(role: "system" | "user" | "assistant" | "tool", text: string, metadata: Record<string, unknown> = {}): Message {
-  return new Message(role, [{ kind: "text", value: text } as TextPart], metadata);
+  return new Message({ role, parts: [new TextPart({ value: text })], metadata });
 }
 
 // ---------------------------------------------------------------------------
