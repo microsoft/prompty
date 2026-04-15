@@ -8,10 +8,13 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A Prompty is a markdown file format for LLM prompts. The frontmatter defines
+/// 
 /// structured metadata including model configuration, input/output schemas, tools,
+/// 
 /// and template settings. The markdown body becomes the instructions.
 /// 
 /// This is the single root type for the Prompty schema — there is no abstract base
+/// 
 /// class or kind discriminator. A .prompty file always produces a Prompty instance.
 /// </summary>
 public partial class Prompty
@@ -79,6 +82,7 @@ public partial class Prompty
     /// Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
     /// </summary>
     public string? Instructions { get; set; }
+
 
 
     #region Load Methods
@@ -299,7 +303,7 @@ public partial class Prompty
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        [""] = kvp.Value
+                        ["kind"] = kvp.Value
                     };
                     result.Add(Tool.Load(newDict, context));
                 }
@@ -319,7 +323,6 @@ public partial class Prompty
 
         return result;
     }
-
 
 
     #endregion
@@ -343,9 +346,7 @@ public partial class Prompty
         var result = new Dictionary<string, object?>();
 
 
-
         result["name"] = obj.Name;
-
 
 
         if (obj.DisplayName is not null)
@@ -354,12 +355,10 @@ public partial class Prompty
         }
 
 
-
         if (obj.Description is not null)
         {
             result["description"] = obj.Description;
         }
-
 
 
         if (obj.Metadata is not null)
@@ -368,12 +367,10 @@ public partial class Prompty
         }
 
 
-
         if (obj.Inputs is not null)
         {
             result["inputs"] = SaveInputs(obj.Inputs, context);
         }
-
 
 
         if (obj.Outputs is not null)
@@ -382,9 +379,7 @@ public partial class Prompty
         }
 
 
-
         result["model"] = obj.Model?.Save(context);
-
 
 
         if (obj.Tools is not null)
@@ -393,19 +388,16 @@ public partial class Prompty
         }
 
 
-
         if (obj.Template is not null)
         {
             result["template"] = obj.Template?.Save(context);
         }
 
 
-
         if (obj.Instructions is not null)
         {
             result["instructions"] = obj.Instructions;
         }
-
 
 
         if (context is not null)
@@ -468,39 +460,8 @@ public partial class Prompty
     {
         context ??= new SaveContext();
 
-
-        if (context.CollectionFormat == "array")
-        {
-            return items.Select(item => item.Save(context)).ToList();
-        }
-
-        // Object format: use name as key
-        var result = new Dictionary<string, object?>();
-        foreach (var item in items)
-        {
-            var itemData = item.Save(context);
-            if (itemData.TryGetValue("name", out var nameValue) && nameValue is string name)
-            {
-                itemData.Remove("name");
-
-                // Check if we can use shorthand
-                if (context.UseShorthand && Property.ShorthandProperty is string shorthandProp)
-                {
-                    if (itemData.Count == 1 && itemData.ContainsKey(shorthandProp))
-                    {
-                        result[name] = itemData[shorthandProp];
-                        continue;
-                    }
-                }
-                result[name] = itemData;
-            }
-            else
-            {
-                // No name, can't use object format for this item
-                throw new InvalidOperationException("Cannot save item in object format: missing 'name' property");
-            }
-        }
-        return result;
+        // This collection type does not have a 'name' property, only array format is supported
+        return items.Select(item => item.Save(context)).ToList();
 
     }
 

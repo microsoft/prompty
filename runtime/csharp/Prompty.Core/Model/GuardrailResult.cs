@@ -8,7 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// The result of a guardrail evaluation. Guardrails are safety checks that
+/// 
 /// run at specific phases of the agent loop and can allow, deny, or rewrite
+/// 
 /// content.
 /// </summary>
 public partial class GuardrailResult
@@ -41,6 +43,7 @@ public partial class GuardrailResult
     /// Optional rewritten content to replace the original
     /// </summary>
     public object? Rewrite { get; set; }
+
 
 
     #region Load Methods
@@ -86,7 +89,6 @@ public partial class GuardrailResult
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -108,9 +110,7 @@ public partial class GuardrailResult
         var result = new Dictionary<string, object?>();
 
 
-
         result["allowed"] = obj.Allowed;
-
 
 
         if (obj.Reason is not null)
@@ -119,12 +119,10 @@ public partial class GuardrailResult
         }
 
 
-
         if (obj.Rewrite is not null)
         {
             result["rewrite"] = obj.Rewrite;
         }
-
 
 
         if (context is not null)

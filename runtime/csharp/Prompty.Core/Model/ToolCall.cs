@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A tool call requested by the LLM. Contains the function name and serialized
+/// 
 /// arguments that should be dispatched to the appropriate tool handler.
 /// </summary>
 public partial class ToolCall
@@ -40,6 +41,7 @@ public partial class ToolCall
     /// The serialized JSON arguments for the tool call
     /// </summary>
     public string Arguments { get; set; } = string.Empty;
+
 
 
     #region Load Methods
@@ -85,7 +87,6 @@ public partial class ToolCall
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -107,17 +108,13 @@ public partial class ToolCall
         var result = new Dictionary<string, object?>();
 
 
-
         result["id"] = obj.Id;
-
 
 
         result["name"] = obj.Name;
 
 
-
         result["arguments"] = obj.Arguments;
-
 
 
         if (context is not null)

@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A chunk of data from a streaming LLM response. Stream chunks are
+/// 
 /// discriminated on the `kind` field.
 /// </summary>
 public abstract partial class StreamChunk
@@ -30,6 +31,7 @@ public abstract partial class StreamChunk
     /// The kind of stream chunk
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
+
 
 
     #region Load Methods
@@ -63,7 +65,6 @@ public abstract partial class StreamChunk
         }
         return instance;
     }
-
 
 
     /// <summary>
@@ -110,9 +111,7 @@ public abstract partial class StreamChunk
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (context is not null)

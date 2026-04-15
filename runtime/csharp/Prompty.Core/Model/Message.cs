@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A message in a conversation. Messages have a role and a list of content parts
+/// 
 /// representing the different modalities of the message content.
 /// </summary>
 public partial class Message
@@ -40,6 +41,7 @@ public partial class Message
     /// Optional metadata associated with the message
     /// </summary>
     public IDictionary<string, object>? Metadata { get; set; }
+
 
 
     #region Load Methods
@@ -117,7 +119,7 @@ public partial class Message
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        [""] = kvp.Value
+                        ["kind"] = kvp.Value
                     };
                     result.Add(ContentPart.Load(newDict, context));
                 }
@@ -137,7 +139,6 @@ public partial class Message
 
         return result;
     }
-
 
 
     #endregion
@@ -161,20 +162,16 @@ public partial class Message
         var result = new Dictionary<string, object?>();
 
 
-
         result["role"] = obj.Role;
 
 
-
         result["parts"] = SaveParts(obj.Parts, context);
-
 
 
         if (obj.Metadata is not null)
         {
             result["metadata"] = obj.Metadata;
         }
-
 
 
         if (context is not null)

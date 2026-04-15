@@ -41,6 +41,7 @@ public partial class RemoteConnection : Connection
     public string Endpoint { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -84,7 +85,6 @@ public partial class RemoteConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -107,17 +107,13 @@ public partial class RemoteConnection : Connection
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         result["name"] = obj.Name;
 
 
-
         result["endpoint"] = obj.Endpoint;
-
 
 
         return result;

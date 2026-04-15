@@ -76,6 +76,7 @@ public partial class ModelOptions
     public IDictionary<string, object>? AdditionalProperties { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -154,7 +155,6 @@ public partial class ModelOptions
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -176,12 +176,10 @@ public partial class ModelOptions
         var result = new Dictionary<string, object?>();
 
 
-
         if (obj.FrequencyPenalty is not null)
         {
             result["frequencyPenalty"] = obj.FrequencyPenalty;
         }
-
 
 
         if (obj.MaxOutputTokens is not null)
@@ -190,12 +188,10 @@ public partial class ModelOptions
         }
 
 
-
         if (obj.PresencePenalty is not null)
         {
             result["presencePenalty"] = obj.PresencePenalty;
         }
-
 
 
         if (obj.Seed is not null)
@@ -204,12 +200,10 @@ public partial class ModelOptions
         }
 
 
-
         if (obj.Temperature is not null)
         {
             result["temperature"] = obj.Temperature;
         }
-
 
 
         if (obj.TopK is not null)
@@ -218,12 +212,10 @@ public partial class ModelOptions
         }
 
 
-
         if (obj.TopP is not null)
         {
             result["topP"] = obj.TopP;
         }
-
 
 
         if (obj.StopSequences is not null)
@@ -232,19 +224,16 @@ public partial class ModelOptions
         }
 
 
-
         if (obj.AllowMultipleToolCalls is not null)
         {
             result["allowMultipleToolCalls"] = obj.AllowMultipleToolCalls;
         }
 
 
-
         if (obj.AdditionalProperties is not null)
         {
             result["additionalProperties"] = obj.AdditionalProperties;
         }
-
 
 
         if (context is not null)

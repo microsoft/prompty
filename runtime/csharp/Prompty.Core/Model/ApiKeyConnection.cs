@@ -41,6 +41,7 @@ public partial class ApiKeyConnection : Connection
     public string ApiKey { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -84,7 +85,6 @@ public partial class ApiKeyConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -107,17 +107,13 @@ public partial class ApiKeyConnection : Connection
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         result["endpoint"] = obj.Endpoint;
 
 
-
         result["apiKey"] = obj.ApiKey;
-
 
 
         return result;

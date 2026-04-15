@@ -46,6 +46,7 @@ public partial class ImagePart : ContentPart
     public string? MediaType { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -94,7 +95,6 @@ public partial class ImagePart : ContentPart
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -117,13 +117,10 @@ public partial class ImagePart : ContentPart
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["source"] = obj.Source;
-
 
 
         if (obj.Detail is not null)
@@ -132,12 +129,10 @@ public partial class ImagePart : ContentPart
         }
 
 
-
         if (obj.MediaType is not null)
         {
             result["mediaType"] = obj.MediaType;
         }
-
 
 
         return result;

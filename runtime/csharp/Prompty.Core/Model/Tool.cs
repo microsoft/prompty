@@ -46,6 +46,7 @@ public abstract partial class Tool
     public IList<Binding>? Bindings { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -148,7 +149,6 @@ public abstract partial class Tool
     }
 
 
-
     /// <summary>
     /// Load polymorphic Tool based on discriminator.
     /// </summary>
@@ -193,13 +193,10 @@ public abstract partial class Tool
         var result = new Dictionary<string, object?>();
 
 
-
         result["name"] = obj.Name;
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (obj.Description is not null)
@@ -208,12 +205,10 @@ public abstract partial class Tool
         }
 
 
-
         if (obj.Bindings is not null)
         {
             result["bindings"] = SaveBindings(obj.Bindings, context);
         }
-
 
 
         if (context is not null)

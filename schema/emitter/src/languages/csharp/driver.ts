@@ -12,6 +12,8 @@ import { existsSync, readdirSync } from "fs";
 import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
 import { ExprVisitor } from "../../ir/visitor.js";
 import { CSharpExprVisitor } from "./visitor.js";
+import { lowerType, collectPolymorphicTypeNames } from "../../ir/lower.js";
+import { emitCSharpClass } from "./emitter.js";
 
 const csharpTypeMapper: Record<string, string> = {
   "string": "string",
@@ -99,7 +101,13 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
 
   for (const n of nodes) {
-    await emitCsharpFile(context, n, renderCSharp(nodes, n, classTemplate, csharpNamespace, registry, visitor), `${n.typeName.name}.cs`, emitTarget["output-dir"]);
+    // Build Declaration IR and emit via the new emitter
+    const polyNames = collectPolymorphicTypeNames(allTypes[0], registry);
+    const allTypeDecls = nodes.map(nd => lowerType(nd, registry, polyNames));
+    const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
+    const typeDecl = lowerType(n, registry, polyNames);
+    const classCode = emitCSharpClass(typeDecl, csharpNamespace, visitor, allTypeDecls, findTypeDecl);
+    await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, emitTarget["output-dir"]);
     if (emitTarget["test-dir"]) {
       await emitCsharpFile(context, n, renderTests(n, testTemplate, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
     }

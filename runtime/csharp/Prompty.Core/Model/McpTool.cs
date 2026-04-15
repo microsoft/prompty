@@ -56,6 +56,7 @@ public partial class McpTool : Tool
     public IList<string>? AllowedTools { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -114,7 +115,6 @@ public partial class McpTool : Tool
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -137,17 +137,13 @@ public partial class McpTool : Tool
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         result["connection"] = obj.Connection?.Save(context);
 
 
-
         result["serverName"] = obj.ServerName;
-
 
 
         if (obj.ServerDescription is not null)
@@ -156,16 +152,13 @@ public partial class McpTool : Tool
         }
 
 
-
         result["approvalMode"] = obj.ApprovalMode?.Save(context);
-
 
 
         if (obj.AllowedTools is not null)
         {
             result["allowedTools"] = obj.AllowedTools;
         }
-
 
 
         return result;

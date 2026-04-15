@@ -36,6 +36,7 @@ public partial class ToolChunk : StreamChunk
     public ToolCall ToolCall { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -74,7 +75,6 @@ public partial class ToolChunk : StreamChunk
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -97,13 +97,10 @@ public partial class ToolChunk : StreamChunk
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["toolCall"] = obj.ToolCall?.Save(context);
-
 
 
         return result;

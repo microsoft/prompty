@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A part of a message's content. Content parts are discriminated on the `kind`
+/// 
 /// field and represent the different modalities that can appear in a message.
 /// </summary>
 public abstract partial class ContentPart
@@ -30,6 +31,7 @@ public abstract partial class ContentPart
     /// The kind of content part
     /// </summary>
     public virtual string Kind { get; set; } = string.Empty;
+
 
 
     #region Load Methods
@@ -63,7 +65,6 @@ public abstract partial class ContentPart
         }
         return instance;
     }
-
 
 
     /// <summary>
@@ -110,9 +111,7 @@ public abstract partial class ContentPart
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (context is not null)

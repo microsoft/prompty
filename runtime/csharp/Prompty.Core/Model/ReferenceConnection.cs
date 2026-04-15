@@ -41,6 +41,7 @@ public partial class ReferenceConnection : Connection
     public string? Target { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -84,7 +85,6 @@ public partial class ReferenceConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -107,20 +107,16 @@ public partial class ReferenceConnection : Connection
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["name"] = obj.Name;
-
 
 
         if (obj.Target is not null)
         {
             result["target"] = obj.Target;
         }
-
 
 
         return result;

@@ -8,9 +8,11 @@ namespace Prompty.Core;
 
 /// <summary>
 /// The result of a tool execution. Contains a list of content parts, enabling
+/// 
 /// rich tool results (text, images, files, audio) rather than just strings.
 /// 
 /// Implementations MUST support conversion from a plain string to a ToolResult
+/// 
 /// containing a single TextPart for backward compatibility.
 /// </summary>
 public partial class ToolResult
@@ -33,6 +35,7 @@ public partial class ToolResult
     /// The content parts of the tool result
     /// </summary>
     public IList<ContentPart> Parts { get; set; } = [];
+
 
 
     #region Load Methods
@@ -100,7 +103,7 @@ public partial class ToolResult
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        [""] = kvp.Value
+                        ["kind"] = kvp.Value
                     };
                     result.Add(ContentPart.Load(newDict, context));
                 }
@@ -120,7 +123,6 @@ public partial class ToolResult
 
         return result;
     }
-
 
 
     #endregion
@@ -144,9 +146,7 @@ public partial class ToolResult
         var result = new Dictionary<string, object?>();
 
 
-
         result["parts"] = SaveParts(obj.Parts, context);
-
 
 
         if (context is not null)

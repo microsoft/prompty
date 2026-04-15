@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Represents an object property.
+/// 
 /// This extends the base Property model to represent a structured object.
 /// </summary>
 public partial class ObjectProperty : Property
@@ -27,7 +28,7 @@ public partial class ObjectProperty : Property
 #pragma warning restore CS8618
 
     /// <summary>
-    /// 
+    /// Kind
     /// </summary>
     public override string Kind { get; set; } = "object";
 
@@ -35,6 +36,7 @@ public partial class ObjectProperty : Property
     /// The properties contained in the object
     /// </summary>
     public IList<Property> Properties { get; set; } = [];
+
 
 
     #region Load Methods
@@ -129,7 +131,6 @@ public partial class ObjectProperty : Property
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -152,13 +153,10 @@ public partial class ObjectProperty : Property
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["properties"] = SaveProperties(obj.Properties, context);
-
 
 
         return result;

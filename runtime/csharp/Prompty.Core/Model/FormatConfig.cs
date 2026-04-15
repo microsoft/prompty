@@ -41,6 +41,7 @@ public partial class FormatConfig
     public IDictionary<string, object>? Options { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -57,7 +58,6 @@ public partial class FormatConfig
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new FormatConfig();
@@ -86,7 +86,6 @@ public partial class FormatConfig
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -108,9 +107,7 @@ public partial class FormatConfig
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (obj.Strict is not null)
@@ -119,12 +116,10 @@ public partial class FormatConfig
         }
 
 
-
         if (obj.Options is not null)
         {
             result["options"] = obj.Options;
         }
-
 
 
         if (context is not null)

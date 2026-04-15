@@ -8,7 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration for AI agents.
+/// 
 /// `provider`, `kind`, and `endpoint` are required properties here,
+/// 
 /// but this section can accept additional via options.
 /// </summary>
 public abstract partial class Connection
@@ -41,6 +43,7 @@ public abstract partial class Connection
     /// The usage description for the connection, providing context on how this connection will be used
     /// </summary>
     public string? UsageDescription { get; set; }
+
 
 
     #region Load Methods
@@ -84,7 +87,6 @@ public abstract partial class Connection
         }
         return instance;
     }
-
 
 
     /// <summary>
@@ -133,9 +135,7 @@ public abstract partial class Connection
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (obj.AuthenticationMode is not null)
@@ -144,12 +144,10 @@ public abstract partial class Connection
         }
 
 
-
         if (obj.UsageDescription is not null)
         {
             result["usageDescription"] = obj.UsageDescription;
         }
-
 
 
         if (context is not null)

@@ -36,6 +36,7 @@ public partial class ParserConfig
     public IDictionary<string, object>? Options { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -52,7 +53,6 @@ public partial class ParserConfig
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new ParserConfig();
@@ -76,7 +76,6 @@ public partial class ParserConfig
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -98,16 +97,13 @@ public partial class ParserConfig
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (obj.Options is not null)
         {
             result["options"] = obj.Options;
         }
-
 
 
         if (context is not null)

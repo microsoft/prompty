@@ -8,7 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Model for defining the structure and behavior of AI agents.
+/// 
 /// This model includes properties for specifying the model's provider, connection details, and various options.
+/// 
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
 public partial class Model
@@ -53,6 +55,7 @@ public partial class Model
     public ModelOptions? Options { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -69,7 +72,6 @@ public partial class Model
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new Model();
@@ -108,7 +110,6 @@ public partial class Model
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -130,9 +131,7 @@ public partial class Model
         var result = new Dictionary<string, object?>();
 
 
-
         result["id"] = obj.Id;
-
 
 
         if (obj.Provider is not null)
@@ -141,12 +140,10 @@ public partial class Model
         }
 
 
-
         if (obj.ApiType is not null)
         {
             result["apiType"] = obj.ApiType;
         }
-
 
 
         if (obj.Connection is not null)
@@ -155,12 +152,10 @@ public partial class Model
         }
 
 
-
         if (obj.Options is not null)
         {
             result["options"] = obj.Options?.Save(context);
         }
-
 
 
         if (context is not null)

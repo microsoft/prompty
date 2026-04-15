@@ -36,6 +36,7 @@ public partial class TextChunk : StreamChunk
     public string Value { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -74,7 +75,6 @@ public partial class TextChunk : StreamChunk
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -97,13 +97,10 @@ public partial class TextChunk : StreamChunk
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["value"] = obj.Value;
-
 
 
         return result;

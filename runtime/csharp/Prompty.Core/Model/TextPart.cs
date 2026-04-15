@@ -36,6 +36,7 @@ public partial class TextPart : ContentPart
     public string Value { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -74,7 +75,6 @@ public partial class TextPart : ContentPart
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -97,13 +97,10 @@ public partial class TextPart : ContentPart
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["value"] = obj.Value;
-
 
 
         return result;

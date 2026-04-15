@@ -7,7 +7,6 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
 /// </summary>
 public partial class OpenApiTool : Tool
 {
@@ -39,6 +38,7 @@ public partial class OpenApiTool : Tool
     /// The full OpenAPI specification
     /// </summary>
     public string Specification { get; set; } = string.Empty;
+
 
 
     #region Load Methods
@@ -84,7 +84,6 @@ public partial class OpenApiTool : Tool
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -107,17 +106,13 @@ public partial class OpenApiTool : Tool
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         result["connection"] = obj.Connection?.Save(context);
 
 
-
         result["specification"] = obj.Specification;
-
 
 
         return result;

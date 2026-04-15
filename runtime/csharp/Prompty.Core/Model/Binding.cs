@@ -36,6 +36,7 @@ public partial class Binding
     public string Input { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -52,7 +53,6 @@ public partial class Binding
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new Binding();
@@ -76,7 +76,6 @@ public partial class Binding
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -98,13 +97,10 @@ public partial class Binding
         var result = new Dictionary<string, object?>();
 
 
-
         result["name"] = obj.Name;
 
 
-
         result["input"] = obj.Input;
-
 
 
         if (context is not null)

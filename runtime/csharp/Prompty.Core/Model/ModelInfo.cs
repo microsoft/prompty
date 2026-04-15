@@ -8,10 +8,13 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Information about a model available from a provider. Used by provider-level
+/// 
 /// model discovery to report which models are available and their capabilities.
 /// 
 /// Not all providers return all fields — implementations SHOULD populate as
+/// 
 /// many fields as the provider's API supports and MAY enrich sparse results
+/// 
 /// from a built-in lookup table of known models.
 /// </summary>
 public partial class ModelInfo
@@ -64,6 +67,7 @@ public partial class ModelInfo
     /// Additional provider-specific properties
     /// </summary>
     public IDictionary<string, object>? AdditionalProperties { get; set; }
+
 
 
     #region Load Methods
@@ -129,7 +133,6 @@ public partial class ModelInfo
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -151,9 +154,7 @@ public partial class ModelInfo
         var result = new Dictionary<string, object?>();
 
 
-
         result["id"] = obj.Id;
-
 
 
         if (obj.DisplayName is not null)
@@ -162,12 +163,10 @@ public partial class ModelInfo
         }
 
 
-
         if (obj.OwnedBy is not null)
         {
             result["ownedBy"] = obj.OwnedBy;
         }
-
 
 
         if (obj.ContextWindow is not null)
@@ -176,12 +175,10 @@ public partial class ModelInfo
         }
 
 
-
         if (obj.InputModalities is not null)
         {
             result["inputModalities"] = obj.InputModalities;
         }
-
 
 
         if (obj.OutputModalities is not null)
@@ -190,12 +187,10 @@ public partial class ModelInfo
         }
 
 
-
         if (obj.AdditionalProperties is not null)
         {
             result["additionalProperties"] = obj.AdditionalProperties;
         }
-
 
 
         if (context is not null)

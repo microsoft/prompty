@@ -8,6 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Represents an array property.
+/// 
 /// This extends the base Property model to represent an array of items.
 /// </summary>
 public partial class ArrayProperty : Property
@@ -27,7 +28,7 @@ public partial class ArrayProperty : Property
 #pragma warning restore CS8618
 
     /// <summary>
-    /// 
+    /// Kind
     /// </summary>
     public override string Kind { get; set; } = "array";
 
@@ -35,6 +36,7 @@ public partial class ArrayProperty : Property
     /// The type of items contained in the array
     /// </summary>
     public Property Items { get; set; }
+
 
 
     #region Load Methods
@@ -75,7 +77,6 @@ public partial class ArrayProperty : Property
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -98,13 +99,10 @@ public partial class ArrayProperty : Property
         var result = base.Save(context);
 
 
-
         result["kind"] = obj.Kind;
 
 
-
         result["items"] = obj.Items?.Save(context);
-
 
 
         return result;

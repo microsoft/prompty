@@ -8,7 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// The approval mode for MCP server tools.
+/// 
 /// When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
+/// 
 /// to control per-tool approval. For "always" and "never", those fields are ignored.
 /// </summary>
 public partial class McpApprovalMode
@@ -43,6 +45,7 @@ public partial class McpApprovalMode
     public IList<string>? NeverRequireApprovalTools { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -59,7 +62,6 @@ public partial class McpApprovalMode
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new McpApprovalMode();
@@ -88,7 +90,6 @@ public partial class McpApprovalMode
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -110,9 +111,7 @@ public partial class McpApprovalMode
         var result = new Dictionary<string, object?>();
 
 
-
         result["kind"] = obj.Kind;
-
 
 
         if (obj.AlwaysRequireApprovalTools is not null)
@@ -121,12 +120,10 @@ public partial class McpApprovalMode
         }
 
 
-
         if (obj.NeverRequireApprovalTools is not null)
         {
             result["neverRequireApprovalTools"] = obj.NeverRequireApprovalTools;
         }
-
 
 
         if (context is not null)
