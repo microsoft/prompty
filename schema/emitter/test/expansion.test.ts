@@ -175,6 +175,7 @@ describe("resolveFactoryExpr", () => {
     assert.deepStrictEqual(expr.fields[0], {
       propertyName: "allowed",
       value: { kind: "boolean", value: true },
+      isOptional: false,
     });
   });
 
@@ -191,11 +192,13 @@ describe("resolveFactoryExpr", () => {
     assert.deepStrictEqual(expr.fields[0], {
       propertyName: "allowed",
       value: { kind: "boolean", value: false },
+      isOptional: false,
     });
-    // reason = ParamRef
+    // reason = ParamRef (optional field!)
     assert.deepStrictEqual(expr.fields[1], {
       propertyName: "reason",
       value: { kind: "param", name: "reason", paramType: "string" },
+      isOptional: true,
     });
   });
 
@@ -270,6 +273,7 @@ describe("resolveFactoryExpr", () => {
         assert.equal(item.variantTypeName.name, "TextPart");
         assert.equal(item.fields.length, 1);
         assert.equal(item.fields[0].propertyName, "value");
+        assert.equal(item.fields[0].isOptional, false);
         assert.deepStrictEqual(item.fields[0].value, {
           kind: "param", name: "val", paramType: "string",
         });
@@ -331,6 +335,7 @@ describe("resolveShorthandExpr", () => {
     assert.deepStrictEqual(expr.fields[0], {
       propertyName: "id",
       value: { kind: "param", name: "value", paramType: "string" },
+      isOptional: false,
     });
   });
 
@@ -399,7 +404,7 @@ describe("RustExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "GuardrailResult" },
       fields: [
-        { propertyName: "allowed", value: { kind: "boolean", value: true } },
+        { propertyName: "allowed", value: { kind: "boolean", value: true }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "GuardrailResult { allowed: true, ..Default::default() }");
@@ -414,6 +419,21 @@ describe("RustExprVisitor", () => {
     assert.equal(v.visitExpr(expr), "GuardrailResult { ..Default::default() }");
   });
 
+  it("renders optional field with Some() wrapper", () => {
+    const expr: Expr = {
+      kind: "construct",
+      typeName: { namespace: "Test", name: "GuardrailResult" },
+      fields: [
+        { propertyName: "allowed", value: { kind: "boolean", value: false }, isOptional: false },
+        { propertyName: "reason", value: { kind: "param", name: "reason", paramType: "string" }, isOptional: true },
+      ],
+    };
+    assert.equal(
+      v.visitExpr(expr),
+      "GuardrailResult { allowed: false, reason: Some(reason.into()), ..Default::default() }",
+    );
+  });
+
   it("renders VariantConstruct", () => {
     const expr: Expr = {
       kind: "variant",
@@ -422,7 +442,7 @@ describe("RustExprVisitor", () => {
       discriminatorValue: "text",
       variantTypeName: { namespace: "Test", name: "TextPart" },
       fields: [
-        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" } },
+        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" }, isOptional: false },
       ],
     };
     assert.equal(
@@ -454,7 +474,7 @@ describe("RustExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "Model" },
       fields: [
-        { propertyName: "apiType", value: { kind: "string", value: "chat" } },
+        { propertyName: "apiType", value: { kind: "string", value: "chat" }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), 'Model { api_type: "chat".to_string(), ..Default::default() }');
@@ -493,7 +513,7 @@ describe("TypeScriptExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "GuardrailResult" },
       fields: [
-        { propertyName: "allowed", value: { kind: "boolean", value: true } },
+        { propertyName: "allowed", value: { kind: "boolean", value: true }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "new GuardrailResult({ allowed: true })");
@@ -516,7 +536,7 @@ describe("TypeScriptExprVisitor", () => {
       discriminatorValue: "text",
       variantTypeName: { namespace: "Test", name: "TextPart" },
       fields: [
-        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" } },
+        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "new TextPart({ value: val })");
@@ -564,7 +584,7 @@ describe("PythonExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "GuardrailResult" },
       fields: [
-        { propertyName: "allowed", value: { kind: "boolean", value: true } },
+        { propertyName: "allowed", value: { kind: "boolean", value: true }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "GuardrailResult(allowed=True)");
@@ -578,7 +598,7 @@ describe("PythonExprVisitor", () => {
       discriminatorValue: "text",
       variantTypeName: { namespace: "Test", name: "TextPart" },
       fields: [
-        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" } },
+        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "TextPart(value=val)");
@@ -618,7 +638,7 @@ describe("CSharpExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "GuardrailResult" },
       fields: [
-        { propertyName: "allowed", value: { kind: "boolean", value: true } },
+        { propertyName: "allowed", value: { kind: "boolean", value: true }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "new GuardrailResult { Allowed = true }");
@@ -641,7 +661,7 @@ describe("CSharpExprVisitor", () => {
       discriminatorValue: "text",
       variantTypeName: { namespace: "Test", name: "TextPart" },
       fields: [
-        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" } },
+        { propertyName: "value", value: { kind: "param", name: "val", paramType: "string" }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "new TextPart { Value = val }");
@@ -681,7 +701,7 @@ describe("GoExprVisitor", () => {
       kind: "construct",
       typeName: { namespace: "Test", name: "GuardrailResult" },
       fields: [
-        { propertyName: "allowed", value: { kind: "boolean", value: true } },
+        { propertyName: "allowed", value: { kind: "boolean", value: true }, isOptional: false },
       ],
     };
     assert.equal(v.visitExpr(expr), "GuardrailResult{ Allowed: true }");
@@ -762,7 +782,7 @@ describe("Integration: GuardrailResult factories", () => {
   it("deny(reason) → Rust", () => {
     const expr = resolveFactoryExpr({ allowed: false }, { reason: "string" }, guardrailResult, registry);
     const code = new RustExprVisitor().visitExpr(expr);
-    assert.equal(code, "GuardrailResult { allowed: false, reason: reason.into(), ..Default::default() }");
+    assert.equal(code, "GuardrailResult { allowed: false, reason: Some(reason.into()), ..Default::default() }");
   });
 
   it("deny(reason) → TypeScript", () => {

@@ -86,6 +86,8 @@ export interface FieldAssignment {
   /** Original property name from TypeSpec (camelCase). */
   propertyName: string;
   value: Expr;
+  /** Whether the target property is optional (needed for Rust Some() wrapping, etc.) */
+  isOptional: boolean;
 }
 
 /** The Expression IR — a tagged union with exhaustive pattern matching. */
@@ -186,6 +188,7 @@ export function resolveFactoryExpr(
     fields.push({
       propertyName: fieldName,
       value: resolveValue(value, prop, params, registry),
+      isOptional: prop.isOptional,
     });
   }
 
@@ -204,6 +207,7 @@ export function resolveFactoryExpr(
     fields.push({
       propertyName: paramName,
       value: { kind: "param", name: paramName, paramType },
+      isOptional: prop.isOptional,
     });
   }
 
@@ -438,6 +442,7 @@ function resolveVariantConstruct(
     fields.push({
       propertyName: fieldName,
       value: resolveValue(value, prop, params, registry),
+      isOptional: prop.isOptional,
     });
   }
 
@@ -472,6 +477,7 @@ function resolveConstruct(
     fields.push({
       propertyName: fieldName,
       value: resolveValue(value, prop, params, registry),
+      isOptional: prop.isOptional,
     });
   }
 

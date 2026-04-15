@@ -110,8 +110,9 @@ export class RustExprVisitor implements ExprVisitor {
    */
   private wrapFieldValue(field: FieldAssignment): string {
     const inner = this.visitExpr(field.value);
-    // For param refs with string type, the .into() is already added
-    // For other values, emit as-is (Option wrapping is handled by template context)
+    if (field.isOptional) {
+      return `Some(${inner})`;
+    }
     return inner;
   }
 
