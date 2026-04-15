@@ -86,35 +86,8 @@ export class Message {
   static loadParts(data: unknown, context?: LoadContext): ContentPart[] {
     const result: ContentPart[] = [];
 
-    if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Convert named dictionary to array
-      for (const [key, value] of Object.entries(
-        data as Record<string, unknown>,
-      )) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `Invalid 'parts' format: key '${key}' has an array value. ` +
-              `'parts' must be a flat list of objects or a name-keyed dict — ` +
-              `not a nested { ${key}: [...] } structure.`,
-          );
-        }
-        if (value && typeof value === "object") {
-          // Value is an object, add name to it
-          (value as Record<string, unknown>)["name"] = key;
-          result.push(
-            ContentPart.load(value as Record<string, unknown>, context),
-          );
-        } else {
-          // Value is a scalar — let ContentPart.load() infer kind from value
-          const prop = ContentPart.load(
-            value as Record<string, unknown>,
-            context,
-          );
-          prop.name = key;
-          result.push(prop);
-        }
-      }
-    } else if (Array.isArray(data)) {
+    // This type doesn't have a 'name' property, always expect array format
+    if (Array.isArray(data)) {
       for (const item of data) {
         if (item && typeof item === "object") {
           result.push(

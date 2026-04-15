@@ -125,6 +125,7 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
   static load{{ ts.pascalCase(collection.prop.name) }}(data: unknown, context?: LoadContext): {{ collection.prop.typeName.name }}[] {
     const result: {{ collection.prop.typeName.name }}[] = [];
 
+{% if collection.hasNameProperty %}
     if (data && typeof data === "object" && !Array.isArray(data)) {
       // Convert named dictionary to array
       for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
@@ -153,6 +154,16 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
         }
       }
     }
+{% else %}
+    // This type doesn't have a 'name' property, always expect array format
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        if (item && typeof item === "object") {
+          result.push({{ collection.prop.typeName.name }}.load(item as Record<string, unknown>, context));
+        }
+      }
+    }
+{% endif %}
 
     return result;
   }
