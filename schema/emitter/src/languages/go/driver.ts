@@ -1,12 +1,10 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
-import { existsSync } from "fs";
-import { dirname, resolve } from "path";
+import { resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
-  PropertyNode,
   TypeNode,
 } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
@@ -14,9 +12,10 @@ import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import { createTemplateEngine } from "../../legacy/template-engine.js";
 import { buildBaseTestContext, goTestOptions } from "../../legacy/test-context.js";
 import { toSnakeCase } from "../../ir/utilities.js";
-import { resolveCoerceExpr, TypeRegistry } from "../../ir/expansion.js";
-import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
+import { TypeRegistry } from "../../ir/expansion.js";
 import { GoExprVisitor } from "./visitor.js";
+import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
+import { emitGoFileContent } from "./emitter.js";
 
 
 /**
@@ -39,28 +38,6 @@ export const goTypeMapper: Record<string, string> = {
   "dictionary": "map[string]interface{}",
 };
 
-/**
- * Go context interfaces for template rendering
- */
-interface GoClassContext {
-  node: TypeNode;
-  typeMapper: Record<string, string>;
-  coercions: Array<{ scalar: string; alternate: string }>;
-  renderedCoercions: Array<{ scalar: string; expression: string }>;
-  polymorphicTypes: any;
-  imports: string[];
-  collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
-  coercionProperty: string | null;
-}
-
-interface GoFileContext {
-  containsAbstract: boolean;
-  imports: string[];
-  classes: GoClassContext[];
-  typeMapper: Record<string, string>;
-  packageName: string;
-  polymorphicTypeNames: string[];
-}
 
 interface GoContextContext {
   header: string;
@@ -108,8 +85,8 @@ export const generateGo = async (
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
-      const fileContext = buildFileContext(n, packageName, polymorphicTypeNames, registry, visitor);
-      const fileContent = engine.render('file.go.njk', fileContext);
+      const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
+      const fileContent = emitGoFileContent(fileDecl.types, packageName, visitor, polymorphicTypeNames);
       const fileName = toSnakeCase(n.typeName.name) + '.go';
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
     }
@@ -167,60 +144,6 @@ function formatGoFiles(outputDir: string, testDir?: string): void {
 }
 
 /**
- * Build context for rendering a single Go struct.
- */
-function buildClassContext(
-  node: TypeNode,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): GoClassContext {
-  // Resolve coercions via expression IR — Go uses "v" as param name
-  const renderedCoercions = (node.coercions || []).map(c => {
-    const expr = resolveCoerceExpr(c.expansion, c.scalar, node, registry, "v");
-    return {
-      scalar: goTypeMapper[c.scalar] || c.scalar,
-      expression: renderObjectLiteral(expr, visitor, "js"),
-    };
-  });
-
-  return {
-    node,
-    typeMapper: goTypeMapper,
-    coercions: prepareCoercions(node),
-    renderedCoercions,
-    polymorphicTypes: node.retrievePolymorphicTypes(),
-    imports: getUniqueImportTypes(node),
-    collectionTypes: getCollectionTypes(node),
-    coercionProperty: getCoercionProperty(node),
-  };
-}
-
-/**
- * Build context for rendering a Go file with a base type and its children.
- */
-function buildFileContext(
-  node: TypeNode,
-  packageName: string,
-  polymorphicTypeNames: Set<string>,
-  registry: TypeRegistry,
-  visitor: ExprVisitor,
-): GoFileContext {
-  const classes: GoClassContext[] = [
-    buildClassContext(node, registry, visitor),
-    ...node.childTypes.map(ct => buildClassContext(ct, registry, visitor))
-  ];
-
-  return {
-    containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
-    imports: getUniqueImportTypes(node),
-    classes,
-    typeMapper: goTypeMapper,
-    packageName,
-    polymorphicTypeNames: Array.from(polymorphicTypeNames),
-  };
-}
-
-/**
  * Build context for rendering a test file.
  */
 function buildTestContext(node: TypeNode, packageName: string): BaseTestContext {
@@ -235,66 +158,6 @@ function buildContextContext(packageName: string): GoContextContext {
     header: "Prompty Context",
     packageName,
   };
-}
-
-/**
- * Prepare coercion representations for template rendering.
- */
-function prepareCoercions(node: TypeNode): Array<{ scalar: string; alternate: string }> {
-  if (!node.coercions || node.coercions.length === 0) {
-    return [];
-  }
-
-  return node.coercions.map(alt => ({
-    scalar: goTypeMapper[alt.scalar],
-    alternate: JSON.stringify(alt.expansion, null, '')
-      .replaceAll('\n', '')
-      .replaceAll('"{value}"', 'v'),
-  }));
-}
-
-/**
- * Get the coercion property name from coercions.
- */
-function getCoercionProperty(node: TypeNode): string | null {
-  if (!node.coercions || node.coercions.length === 0) {
-    return null;
-  }
-
-  for (const alt of node.coercions) {
-    for (const [key, value] of Object.entries(alt.expansion)) {
-      if (value === "{value}") {
-        return key;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Get collection properties with their nested type info.
- */
-function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }> {
-  return node.properties
-    .filter(p => p.isCollection && !p.isScalar && !p.isDict)
-    .map(p => ({
-      prop: p,
-      type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
-      hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
-    }));
-}
-/**
- * Get unique import types needed from other modules.
- */
-function getUniqueImportTypes(node: TypeNode): string[] {
-  const imports = [
-    node.properties.filter(p => !p.isScalar && !p.isDict).map(p => p.typeName.name),
-    ...node.childTypes.flatMap(c =>
-      c.properties.filter(p => !p.isScalar && !p.isDict).map(p => p.typeName.name)
-    )
-  ].flat().filter(n => n !== node.typeName.name && node.base?.name !== n);
-
-  return Array.from(new Set(imports)).sort();
 }
 
 /**
