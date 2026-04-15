@@ -35,9 +35,9 @@ import {
   FactoryDecl,
   CoercionDecl,
   PropertyCategory,
-} from "./declarations.js";
-import { ExprVisitor } from "./render-expr.js";
-import { toSnakeCase } from "./utilities.js";
+} from "../../ir/declarations.js";
+import { ExprVisitor } from "../../ir/visitor.js";
+import { toSnakeCase } from "../../ir/utilities.js";
 
 /**
  * Type mapping from TypeSpec scalar types to Python types.

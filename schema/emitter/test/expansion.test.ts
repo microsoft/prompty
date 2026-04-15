@@ -19,16 +19,28 @@ import {
   resolveFactoryExpr,
   resolveCoerceExpr,
   Expr,
-} from "../src/expansion.js";
-import {
-  RustExprVisitor,
-  TypeScriptExprVisitor,
-  PythonExprVisitor,
-  CSharpExprVisitor,
-  GoExprVisitor,
-  getVisitor,
-} from "../src/render-expr.js";
-import { TypeNode, PropertyNode, TypeName } from "../src/ast.js";
+} from "../src/ir/expansion.js";
+import { RustExprVisitor } from "../src/languages/rust/visitor.js";
+import { TypeScriptExprVisitor } from "../src/languages/typescript/visitor.js";
+import { PythonExprVisitor } from "../src/languages/python/visitor.js";
+import { CSharpExprVisitor } from "../src/languages/csharp/visitor.js";
+import { GoExprVisitor } from "../src/languages/go/visitor.js";
+import { ExprVisitor } from "../src/ir/visitor.js";
+import { TypeNode, PropertyNode, TypeName } from "../src/ir/ast.js";
+
+// Local visitor lookup — replaces the old getVisitor() from render-expr.ts
+const visitors: Record<string, (registry?: TypeRegistry) => ExprVisitor> = {
+  rust: (r) => new RustExprVisitor(r),
+  typescript: (r) => new TypeScriptExprVisitor(r),
+  python: (r) => new PythonExprVisitor(r),
+  csharp: (r) => new CSharpExprVisitor(r),
+  go: (r) => new GoExprVisitor(r),
+};
+function getVisitor(lang: string, registry?: TypeRegistry): ExprVisitor {
+  const factory = visitors[lang];
+  if (!factory) throw new Error(`No ExprVisitor for language '${lang}'.`);
+  return factory(registry);
+}
 
 // ============================================================================
 // Test fixtures — minimal TypeNode/PropertyNode construction

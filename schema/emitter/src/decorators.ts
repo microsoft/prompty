@@ -1,6 +1,6 @@
 import { type DecoratorContext, type Model, Program, Type, ModelProperty, ObjectValue, serializeValueAsJson, StringValue } from "@typespec/compiler";
 import { StateKeys } from "./lib.js";
-import { Coercion } from "./ast.js";
+import { Coercion } from "./ir/ast.js";
 
 export const appendStateValue = <T>(context: DecoratorContext, key: symbol, target: Type, value: T | T[]) => {
   const state = context.program.stateMap(key).get(target) || [];

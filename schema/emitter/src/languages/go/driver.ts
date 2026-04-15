@@ -2,20 +2,21 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, resolve } from "path";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
   PropertyNode,
   TypeNode,
-} from "./ast.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
+} from "../../ir/ast.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
 
-import { createTemplateEngine } from "./template-engine.js";
-import { buildBaseTestContext, goTestOptions } from "./test-context.js";
-import { toSnakeCase } from "./utilities.js";
-import { resolveCoerceExpr, TypeRegistry } from "./expansion.js";
-import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
+import { createTemplateEngine } from "../../legacy/template-engine.js";
+import { buildBaseTestContext, goTestOptions } from "../../legacy/test-context.js";
+import { toSnakeCase } from "../../ir/utilities.js";
+import { resolveCoerceExpr, TypeRegistry } from "../../ir/expansion.js";
+import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
+import { GoExprVisitor } from "./visitor.js";
 
 
 /**
@@ -84,7 +85,7 @@ export const generateGo = async (
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
-  const visitor = getVisitor("go", registry);
+  const visitor = new GoExprVisitor(registry);
 
   // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase().replace(/\./g, '');

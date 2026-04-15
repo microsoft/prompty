@@ -1,16 +1,17 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "./ast.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
+import { enumerateTypes, PropertyNode, TypeNode } from "../../ir/ast.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import * as nunjucks from "nunjucks";
-import { getCombinations, scalarValue } from "./utilities.js";
+import { getCombinations, scalarValue } from "../../ir/utilities.js";
 import * as YAML from "yaml";
 import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
-import { getVisitor, ExprVisitor } from "./render-expr.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
+import { ExprVisitor } from "../../ir/visitor.js";
+import { CSharpExprVisitor } from "./visitor.js";
 
 const csharpTypeMapper: Record<string, string> = {
   "string": "string",
@@ -79,7 +80,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
-  const visitor = getVisitor("csharp", registry);
+  const visitor = new CSharpExprVisitor(registry);
 
   // Determine namespace: use explicit override from config, or fall back to TypeSpec namespace
   const originalNamespace = node.typeName.namespace;

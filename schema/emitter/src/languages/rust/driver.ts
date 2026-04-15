@@ -2,19 +2,20 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
   BaseTestContext,
   enumerateTypes,
   PropertyNode,
   TypeNode,
-} from "./ast.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
-import { getVisitor, ExprVisitor } from "./render-expr.js";
-import { createTemplateEngine } from "./template-engine.js";
-import { buildBaseTestContext, rustTestOptions } from "./test-context.js";
-import { toSnakeCase } from "./utilities.js";
+} from "../../ir/ast.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
+import { ExprVisitor } from "../../ir/visitor.js";
+import { RustExprVisitor } from "./visitor.js";
+import { createTemplateEngine } from "../../legacy/template-engine.js";
+import { buildBaseTestContext, rustTestOptions } from "../../legacy/test-context.js";
+import { toSnakeCase } from "../../ir/utilities.js";
 
 /**
  * Type mapping from TypeSpec scalar types to Rust types.
@@ -118,7 +119,7 @@ export const generateRust = async (
 
   // Build the expression IR infrastructure for this compilation
   const registry = TypeRegistry.fromTypeGraph(allTypes);
-  const visitor = getVisitor("rust", registry);
+  const visitor = new RustExprVisitor(registry);
 
   // Collect all polymorphic type names across all nodes
   const polymorphicTypeNames = new Set<string>();

@@ -1,12 +1,13 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "./ast.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
-import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
+import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "../../ir/ast.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
+import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
+import { TypeScriptExprVisitor } from "./visitor.js";
 import * as nunjucks from "nunjucks";
-import { buildBaseTestContext, typescriptTestOptions } from "./test-context.js";
-import { toKebabCase } from "./utilities.js";
+import { buildBaseTestContext, typescriptTestOptions } from "../../legacy/test-context.js";
+import { toKebabCase } from "../../ir/utilities.js";
 import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
@@ -96,7 +97,7 @@ export const generateTypeScript = async (
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
-  const visitor = getVisitor("typescript", registry);
+  const visitor = new TypeScriptExprVisitor(registry);
 
   // Determine namespace: use override or default
   const originalNamespace = node.typeName.namespace;

@@ -2,7 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, resolve } from "path";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
   enumerateTypes,
   PropertyNode,
@@ -12,15 +12,16 @@ import {
   PythonInitContext,
   PythonLoadContextContext,
   BaseTestContext
-} from "./ast.js";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "./expansion.js";
-import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
-import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
-import { createTemplateEngine } from "./template-engine.js";
-import { buildBaseTestContext, pythonTestOptions } from "./test-context.js";
-import { lowerFile, collectPolymorphicTypeNames } from "./lower.js";
-import { emitPythonFile as emitPythonFileDecl } from "./emit-python.js";
+} from "../../ir/ast.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
+import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
+import { PythonExprVisitor } from "./visitor.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
+import { getCombinations, scalarValue, toSnakeCase } from "../../ir/utilities.js";
+import { createTemplateEngine } from "../../legacy/template-engine.js";
+import { buildBaseTestContext, pythonTestOptions } from "../../legacy/test-context.js";
+import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
+import { emitPythonFile as emitPythonFileDecl } from "./emitter.js";
 import * as YAML from "yaml";
 
 /**
@@ -63,7 +64,7 @@ export const generatePython = async (
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
-  const visitor = getVisitor("python", registry);
+  const visitor = new PythonExprVisitor(registry);
 
   // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase();

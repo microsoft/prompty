@@ -1,7 +1,7 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
-import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "./ast.js";
-import { GeneratorOptions, filterNodes } from "./emitter.js";
+import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
+import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "../../ir/ast.js";
+import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import * as nunjucks from "nunjucks";
 import * as YAML from 'yaml';
 import path from "path";

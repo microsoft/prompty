@@ -11,8 +11,8 @@ import {
   getNamespaceFullName,
   getDiscriminator,
 } from "@typespec/compiler";
-import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, MethodEntry } from "./decorators.js";
-import { StateKeys } from "./lib.js";
+import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, MethodEntry } from "../decorators.js";
+import { StateKeys } from "../lib.js";
 
 
 export interface TypeName {

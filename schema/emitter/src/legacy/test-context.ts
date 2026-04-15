@@ -5,8 +5,8 @@
  * This ensures consistency in how tests are generated from @sample decorators.
  */
 
-import { TypeNode, PropertyValidation, TestExample, CoercionTest, BaseTestContext } from "./ast.js";
-import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
+import { TypeNode, PropertyValidation, TestExample, CoercionTest, BaseTestContext } from "../ir/ast.js";
+import { getCombinations, scalarValue, toSnakeCase } from "../ir/utilities.js";
 import * as YAML from "yaml";
 
 /**

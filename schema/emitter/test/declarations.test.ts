@@ -12,14 +12,14 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Model, ModelProperty } from "@typespec/compiler";
 
-import { TypeRegistry } from "../src/expansion.js";
-import { TypeNode, PropertyNode } from "../src/ast.js";
+import { TypeRegistry } from "../src/ir/expansion.js";
+import { TypeNode, PropertyNode } from "../src/ir/ast.js";
 import {
   classifyProperty,
   lowerFile,
   lowerType,
   collectPolymorphicTypeNames,
-} from "../src/lower.js";
+} from "../src/ir/lower.js";
 
 // ============================================================================
 // Test fixtures (same as expansion.test.ts)

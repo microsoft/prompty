@@ -6,14 +6,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 import { EmitContext, emitFile, resolvePath, Namespace } from "@typespec/compiler";
-import { resolveModel, TypeNode, enumerateTypes } from "./ast.js";
+import { resolveModel, TypeNode, enumerateTypes } from "./ir/ast.js";
 import { PromptyEmitterOptions, EmitTarget } from "./lib.js";
-import { generateMarkdown } from "./markdown.js";
-import { generatePython } from "./python.js";
-import { generateCsharp } from "./csharp.js";
-import { generateTypeScript } from "./typescript.js";
-import { generateGo } from "./go.js";
-import { generateRust } from "./rust.js";
+import { generateMarkdown } from "./languages/markdown/driver.js";
+import { generatePython } from "./languages/python/driver.js";
+import { generateCsharp } from "./languages/csharp/driver.js";
+import { generateTypeScript } from "./languages/typescript/driver.js";
+import { generateGo } from "./languages/go/driver.js";
+import { generateRust } from "./languages/rust/driver.js";
 
 // Generator options passed to each generator
 export interface GeneratorOptions {
