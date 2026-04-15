@@ -626,10 +626,10 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
 /// Format tool call results back into messages for the conversation.
 ///
 /// Produces: one assistant message with `tool_calls` metadata, then one
-/// `tool` role message per result.
+/// `tool` role message per result with rich content parts.
 pub fn format_tool_messages(
     tool_calls: &[prompty::types::ToolCall],
-    results: &[String],
+    results: &[prompty::types::ToolResult],
 ) -> Vec<Message> {
     let mut messages = Vec::new();
 
@@ -654,9 +654,9 @@ pub fn format_tool_messages(
         .insert("tool_calls".to_string(), Value::Array(wire_calls));
     messages.push(assistant);
 
-    // One tool result message per call
+    // One tool result message per call — using rich content parts
     for (tc, result) in tool_calls.iter().zip(results) {
-        let mut msg = Message::tool_result(&tc.id, result);
+        let mut msg = Message::tool_result_rich(&tc.id, result);
         msg.metadata
             .insert("name".to_string(), Value::String(tc.name.clone()));
         messages.push(msg);
@@ -769,7 +769,7 @@ mod tests {
             name: "get_weather".to_string(),
             arguments: r#"{"city":"SF"}"#.to_string(),
         }];
-        let results = vec!["72°F".to_string()];
+        let results = vec![prompty::ToolResult::from_text("72°F")];
         let msgs = format_tool_messages(&tool_calls, &results);
         assert_eq!(msgs.len(), 2);
         assert_eq!(msgs[0].role.to_string(), "assistant");

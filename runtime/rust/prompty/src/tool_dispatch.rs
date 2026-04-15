@@ -17,7 +17,7 @@ use std::sync::{Arc, OnceLock, RwLock};
 
 use crate::model::tool::{Tool, ToolKind};
 use crate::model::Prompty;
-use crate::types::ToolCall;
+use crate::types::{ToolCall, ToolResult};
 
 // ---------------------------------------------------------------------------
 // ToolHandler trait — for kind-based dispatch
@@ -28,7 +28,7 @@ use crate::types::ToolCall;
 /// Matches TypeScript's `ToolHandler` interface.
 #[async_trait::async_trait]
 pub trait ToolHandlerTrait: Send + Sync {
-    /// Execute a tool call, returning the result as a string.
+    /// Execute a tool call, returning the result as a `ToolResult`.
     ///
     /// # Arguments
     /// - `tool_def`: The tool definition from `agent.tools`
@@ -41,7 +41,7 @@ pub trait ToolHandlerTrait: Send + Sync {
         args: serde_json::Value,
         agent: &Prompty,
         parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError>;
+    ) -> Result<ToolResult, ToolHandlerError>;
 }
 
 /// Error type for tool handler failures.
@@ -57,13 +57,13 @@ pub enum ToolHandlerError {
 // Callable tool function types
 // ---------------------------------------------------------------------------
 
-/// A callable tool function: takes JSON arguments, returns a string.
+/// A callable tool function: takes JSON arguments, returns a ToolResult.
 pub type ToolCallable = Box<
     dyn Fn(
             serde_json::Value,
         ) -> Pin<
             Box<
-                dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>>
+                dyn Future<Output = Result<ToolResult, Box<dyn std::error::Error + Send + Sync>>>
                     + Send,
             >,
         > + Send
@@ -93,10 +93,14 @@ fn kind_handlers() -> &'static RwLock<HashMap<String, Arc<dyn ToolHandlerTrait>>
 /// Register a callable tool function by name.
 ///
 /// This takes priority over kind handlers in `dispatch_tool()`.
+/// The handler can return `Result<ToolResult, ...>`. For backward compatibility,
+/// use `ToolResult::from("text")` or `"text".into()` for string results.
 pub fn register_tool<F, Fut>(name: impl Into<String>, handler: F)
 where
     F: Fn(serde_json::Value) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send + 'static,
+    Fut: Future<Output = Result<ToolResult, Box<dyn std::error::Error + Send + Sync>>>
+        + Send
+        + 'static,
 {
     let name = name.into();
     let boxed: ToolCallable = Box::new(move |args| Box::pin(handler(args)));
@@ -301,10 +305,10 @@ pub async fn dispatch_tool(
     user_tools: &HashMap<String, crate::pipeline::ToolHandler>,
     agent: &Prompty,
     parent_inputs: Option<&serde_json::Value>,
-) -> String {
+) -> ToolResult {
     let mut args = match resilient_json_parse(&tool_call.arguments) {
         Ok(a) => a,
-        Err(e) => return format!("Error: Invalid tool arguments JSON: {e}"),
+        Err(e) => return format!("Error: Invalid tool arguments JSON: {e}").into(),
     };
 
     // Resolve bindings: inject parent_inputs into args per tool.bindings
@@ -318,7 +322,7 @@ pub async fn dispatch_tool(
     if let Some(handler) = user_tools.get(&tool_call.name) {
         return match execute_user_handler(handler, args).await {
             Ok(r) => r,
-            Err(e) => format!("Error: {e}"),
+            Err(e) => format!("Error: {e}").into(),
         };
     }
 
@@ -334,7 +338,7 @@ pub async fn dispatch_tool(
         if let Some(fut) = fut {
             return match fut.await {
                 Ok(r) => r,
-                Err(e) => format!("Error: {e}"),
+                Err(e) => format!("Error: {e}").into(),
             };
         }
     }
@@ -359,13 +363,13 @@ pub async fn dispatch_tool(
         if let Some(handler) = handler {
             return match handler.execute_tool(def, args, agent, parent_inputs).await {
                 Ok(r) => r,
-                Err(e) => format!("Error: {e}"),
+                Err(e) => format!("Error: {e}").into(),
             };
         }
     }
 
     // No handler found — return error string (non-fatal)
-    format!("Error: No handler registered for tool '{}'", tool_call.name)
+    format!("Error: No handler registered for tool '{}'", tool_call.name).into()
 }
 
 /// Find a tool definition in `agent.tools` by name.
@@ -378,7 +382,7 @@ fn find_tool_def<'a>(agent: &'a Prompty, name: &str) -> Option<&'a Tool> {
 async fn execute_user_handler(
     handler: &crate::pipeline::ToolHandler,
     args: serde_json::Value,
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<ToolResult, Box<dyn std::error::Error + Send + Sync>> {
     match handler {
         crate::pipeline::ToolHandler::Sync(f) => {
             match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(args))) {
@@ -431,7 +435,7 @@ impl ToolHandlerTrait for FunctionToolHandler {
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
+    ) -> Result<ToolResult, ToolHandlerError> {
         // Function tools delegate to user-provided callables — if the tool
         // wasn't found in layers 1-2, it won't be here either.
         Err(ToolHandlerError::NotFound(
@@ -441,10 +445,7 @@ impl ToolHandlerTrait for FunctionToolHandler {
 }
 
 /// Handler for `kind: "prompty"` tools — loads a child `.prompty` file
-/// relative to the parent agent and executes it.
-///
-/// - `mode === "single"` (default): `prepare()` → `run()` (via `invoke()`)
-/// - `mode === "agentic"`: `turn()`
+/// relative to the parent agent and executes it via single-shot `invoke()`.
 pub struct PromptyToolHandler;
 
 #[async_trait::async_trait]
@@ -455,7 +456,7 @@ impl ToolHandlerTrait for PromptyToolHandler {
         args: serde_json::Value,
         agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
+    ) -> Result<ToolResult, ToolHandlerError> {
         let tool_name = &tool_def.name;
 
         // Get parent source path from metadata
@@ -469,9 +470,9 @@ impl ToolHandlerTrait for PromptyToolHandler {
                 ))
             })?;
 
-        // Get the child path and mode from tool_def.kind
-        let (child_relative, mode) = match &tool_def.kind {
-            ToolKind::Prompty { path, mode } => (path.as_str(), mode.as_deref().unwrap_or("single")),
+        // Get the child path from tool_def.kind
+        let child_relative = match &tool_def.kind {
+            ToolKind::Prompty { path } => path.as_str(),
             _ => {
                 return Err(ToolHandlerError::Execution(format!(
                     "PromptyTool '{tool_name}' is missing 'path' field"
@@ -539,21 +540,17 @@ impl ToolHandlerTrait for PromptyToolHandler {
             );
         }
 
-        let result = if mode == "agentic" {
-            crate::pipeline::turn(&child, Some(&args), None)
-                .await
-                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
-        } else {
-            crate::pipeline::invoke(&child, Some(&args))
-                .await
-                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
-        };
+        // Always single-shot invoke — agentic orchestration is app-level
+        let result = crate::pipeline::invoke(&child, Some(&args))
+            .await
+            .map_err(|e| ToolHandlerError::Execution(e.to_string()))?;
 
-        Ok(if let Some(s) = result.as_str() {
+        let text = if let Some(s) = result.as_str() {
             s.to_string()
         } else {
             serde_json::to_string(&result).unwrap_or_default()
-        })
+        };
+        Ok(text.into())
     }
 }
 
@@ -569,7 +566,7 @@ impl ToolHandlerTrait for McpToolHandler {
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
+    ) -> Result<ToolResult, ToolHandlerError> {
         Err(ToolHandlerError::Execution(
             "MCP tool dispatch is not yet implemented".into(),
         ))
@@ -588,7 +585,7 @@ impl ToolHandlerTrait for OpenApiToolHandler {
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
+    ) -> Result<ToolResult, ToolHandlerError> {
         Err(ToolHandlerError::Execution(
             "OpenAPI tool dispatch is not yet implemented".into(),
         ))
@@ -607,7 +604,7 @@ impl ToolHandlerTrait for CustomToolHandler {
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
+    ) -> Result<ToolResult, ToolHandlerError> {
         let kind = tool_def.kind_str();
         let kind = if kind.is_empty() { "unknown" } else { kind };
         Err(ToolHandlerError::Execution(format!(
@@ -671,12 +668,12 @@ mod tests {
         let mut user_tools = HashMap::new();
         user_tools.insert(
             "get_weather".into(),
-            PipelineToolHandler::Sync(Box::new(|_args| Ok("72°F".to_string()))),
+            PipelineToolHandler::Sync(Box::new(|_args| Ok("72°F".into()))),
         );
 
         let tc = make_tool_call("get_weather", r#"{"city":"NY"}"#);
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
-        assert_eq!(result, "72°F");
+        assert_eq!(result.text(), "72°F");
     }
 
     #[tokio::test]
@@ -685,13 +682,13 @@ mod tests {
         clear_tools();
         clear_tool_handlers();
         register_tool("global_tool", |_args| async {
-            Ok("global result".to_string())
+            Ok("global result".into())
         });
 
         let user_tools = HashMap::new();
         let tc = make_tool_call("global_tool", "{}");
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
-        assert_eq!(result, "global result");
+        assert_eq!(result.text(), "global result");
     }
 
     #[tokio::test]
@@ -702,8 +699,8 @@ mod tests {
         let user_tools = HashMap::new();
         let tc = make_tool_call("nonexistent", "{}");
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
-        assert!(result.starts_with("Error:"));
-        assert!(result.contains("nonexistent"));
+        assert!(result.text().starts_with("Error:"));
+        assert!(result.text().contains("nonexistent"));
     }
 
     #[tokio::test]
@@ -713,8 +710,8 @@ mod tests {
         let user_tools = HashMap::new();
         let tc = make_tool_call("test", "not json");
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
-        assert!(result.starts_with("Error:"));
-        assert!(result.contains("Invalid tool arguments JSON"));
+        assert!(result.text().starts_with("Error:"));
+        assert!(result.text().contains("Invalid tool arguments JSON"));
     }
 
     #[tokio::test]
@@ -729,8 +726,8 @@ mod tests {
 
         let tc = make_tool_call("fail_tool", "{}");
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
-        assert!(result.starts_with("Error:"));
-        assert!(result.contains("tool exploded"));
+        assert!(result.text().starts_with("Error:"));
+        assert!(result.text().contains("tool exploded"));
     }
 
     #[test]
@@ -935,7 +932,7 @@ mod tests {
 
         // Register a tool that returns its args as JSON
         register_tool("get_weather", |args| async move {
-            Ok(serde_json::to_string(&args).unwrap())
+            Ok(serde_json::to_string(&args).unwrap().into())
         });
 
         let agent = agent_with_tools(serde_json::json!([{
@@ -950,7 +947,7 @@ mod tests {
         let parent_inputs = serde_json::json!({ "temperatureUnit": "celsius" });
         let result = dispatch_tool(&tc, &HashMap::new(), &agent, Some(&parent_inputs)).await;
 
-        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&result.text()).unwrap();
         assert_eq!(parsed["city"], "Paris");
         assert_eq!(parsed["unit"], "celsius");
     }
@@ -1064,8 +1061,8 @@ mod tests {
         let tc = make_tool_call("my_mcp_tool", "{}");
         let result = dispatch_tool(&tc, &HashMap::new(), &agent, None).await;
         // MCP handler returns "Error: MCP tool dispatch is not yet implemented"
-        assert!(result.contains("MCP"));
-        assert!(result.starts_with("Error:"));
+        assert!(result.text().contains("MCP"));
+        assert!(result.text().starts_with("Error:"));
     }
 
     #[tokio::test]
@@ -1084,8 +1081,8 @@ mod tests {
         let tc = make_tool_call("my_exotic_tool", "{}");
         let result = dispatch_tool(&tc, &HashMap::new(), &agent, None).await;
         // CustomToolHandler (*) should catch it
-        assert!(result.contains("exotic_provider"));
-        assert!(result.starts_with("Error:"));
+        assert!(result.text().contains("exotic_provider"));
+        assert!(result.text().starts_with("Error:"));
     }
 
     // --- Resilient JSON parsing tests (§9.8) ---
@@ -1166,15 +1163,16 @@ mod tests {
 
         // Should NOT panic — should return error string
         let result = dispatch_tool(&tc, &user_tools, &default_agent(), None).await;
+        let text = result.text();
         assert!(
-            result.contains("Error"),
+            text.contains("Error"),
             "Expected error string, got: {}",
-            result
+            text
         );
         assert!(
-            result.contains("panic"),
+            text.contains("panic"),
             "Expected panic mention, got: {}",
-            result
+            text
         );
     }
 }

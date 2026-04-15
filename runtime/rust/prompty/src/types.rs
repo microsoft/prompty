@@ -103,6 +103,93 @@ pub struct AudioPart {
 pub use crate::model::ToolCall;
 
 // ---------------------------------------------------------------------------
+// ToolResult — re-exported from generated model with From conversions
+// ---------------------------------------------------------------------------
+
+pub use crate::model::ToolResult;
+
+impl From<String> for ToolResult {
+    fn from(s: String) -> Self {
+        use crate::model::content_part::{ContentPart as ModelContentPart, ContentPartKind};
+        Self {
+            parts: vec![ModelContentPart {
+                kind: ContentPartKind::TextPart { value: s },
+            }],
+        }
+    }
+}
+
+impl From<&str> for ToolResult {
+    fn from(s: &str) -> Self {
+        use crate::model::content_part::{ContentPart as ModelContentPart, ContentPartKind};
+        Self {
+            parts: vec![ModelContentPart {
+                kind: ContentPartKind::TextPart {
+                    value: s.to_string(),
+                },
+            }],
+        }
+    }
+}
+
+impl ToolResult {
+    /// Create a `ToolResult` from a plain text string.
+    pub fn from_text(s: impl Into<String>) -> Self {
+        use crate::model::content_part::{ContentPart as ModelContentPart, ContentPartKind};
+        Self {
+            parts: vec![ModelContentPart {
+                kind: ContentPartKind::TextPart { value: s.into() },
+            }],
+        }
+    }
+
+    /// Get the concatenated text content from all TextParts.
+    pub fn text(&self) -> String {
+        use crate::model::content_part::ContentPartKind;
+        self.parts
+            .iter()
+            .filter_map(|p| match &p.kind {
+                ContentPartKind::TextPart { value } => Some(value.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// Convert model ContentParts to pipeline ContentParts for use in Messages.
+    pub fn to_message_parts(&self) -> Vec<ContentPart> {
+        use crate::model::content_part::ContentPartKind;
+        self.parts
+            .iter()
+            .map(|p| match &p.kind {
+                ContentPartKind::TextPart { value } => ContentPart::Text(TextPart {
+                    value: value.clone(),
+                }),
+                ContentPartKind::ImagePart {
+                    source,
+                    detail,
+                    media_type,
+                } => ContentPart::Image(ImagePart {
+                    source: source.clone(),
+                    detail: detail.clone(),
+                    media_type: media_type.clone(),
+                }),
+                ContentPartKind::FilePart { source, media_type } => ContentPart::File(FilePart {
+                    source: source.clone(),
+                    media_type: media_type.clone(),
+                }),
+                ContentPartKind::AudioPart { source, media_type } => {
+                    ContentPart::Audio(AudioPart {
+                        source: source.clone(),
+                        media_type: media_type.clone(),
+                    })
+                }
+            })
+            .collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // ThreadMarker
 // ---------------------------------------------------------------------------
 
@@ -151,6 +238,20 @@ impl Message {
             parts: vec![ContentPart::Text(TextPart {
                 value: content.into(),
             })],
+            metadata,
+        }
+    }
+
+    /// Create a tool-result message from a `ToolResult` with rich content parts.
+    pub fn tool_result_rich(tool_call_id: impl Into<String>, result: &ToolResult) -> Self {
+        let mut metadata = serde_json::Map::new();
+        metadata.insert(
+            "tool_call_id".to_string(),
+            serde_json::Value::String(tool_call_id.into()),
+        );
+        Self {
+            role: Role::Tool,
+            parts: result.to_message_parts(),
             metadata,
         }
     }

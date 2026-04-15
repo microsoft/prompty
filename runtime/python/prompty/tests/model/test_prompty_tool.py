@@ -10,8 +10,7 @@ def test_load_json_promptytool():
     json_data = r'''
     {
       "kind": "prompty",
-      "path": "./summarize.prompty",
-      "mode": "single"
+      "path": "./summarize.prompty"
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -19,14 +18,12 @@ def test_load_json_promptytool():
     assert instance is not None
     assert instance.kind == "prompty"
     assert instance.path == "./summarize.prompty"
-    assert instance.mode == "single"
     
 
 def test_load_yaml_promptytool():
     yaml_data = r'''
     kind: prompty
     path: ./summarize.prompty
-    mode: single
     
     '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -34,15 +31,13 @@ def test_load_yaml_promptytool():
     assert instance is not None
     assert instance.kind == "prompty"
     assert instance.path == "./summarize.prompty"
-    assert instance.mode == "single"
 
 def test_roundtrip_json_promptytool():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r'''
     {
       "kind": "prompty",
-      "path": "./summarize.prompty",
-      "mode": "single"
+      "path": "./summarize.prompty"
     }
     '''
     original_data = json.loads(json_data, strict=False)
@@ -52,15 +47,13 @@ def test_roundtrip_json_promptytool():
     assert reloaded is not None
     assert reloaded.kind == "prompty"
     assert reloaded.path == "./summarize.prompty"
-    assert reloaded.mode == "single"
 
 def test_to_json_promptytool():
     """Test that to_json produces valid JSON."""
     json_data = r'''
     {
       "kind": "prompty",
-      "path": "./summarize.prompty",
-      "mode": "single"
+      "path": "./summarize.prompty"
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -75,8 +68,7 @@ def test_to_yaml_promptytool():
     json_data = r'''
     {
       "kind": "prompty",
-      "path": "./summarize.prompty",
-      "mode": "single"
+      "path": "./summarize.prompty"
     }
     '''
     data = json.loads(json_data, strict=False)

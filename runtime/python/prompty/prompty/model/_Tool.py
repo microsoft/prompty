@@ -670,9 +670,9 @@ class OpenApiTool(Tool):
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
     
-    In `single` mode (default), the child prompty is loaded, rendered, and
-    executed with a single LLM call (invoke). In `agentic` mode, the child
-    runs as a sub-agent via `turn()` with its own tool-calling loop.
+    The child prompty is loaded, rendered, and executed with a single LLM call
+    (invoke). Apps that want agentic sub-agents should use `kind: function` tools
+    and call `turn()` themselves.
     
     Attributes
     ----------
@@ -680,15 +680,12 @@ class PromptyTool(Tool):
         The kind identifier for prompty tools
     path : str
         Path to the child .prompty file, relative to the parent
-    mode : Optional[str]
-        Execution mode — 'single' for single-shot invoke (default) or 'agentic' for sub-agent turn
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="prompty")
     path: str = field(default="")
-    mode: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PromptyTool":
@@ -714,8 +711,6 @@ class PromptyTool(Tool):
             instance.kind = data["kind"]
         if data is not None and "path" in data:
             instance.path = data["path"]
-        if data is not None and "mode" in data:
-            instance.mode = data["mode"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -743,8 +738,6 @@ class PromptyTool(Tool):
             result["kind"] = obj.kind
         if obj.path is not None:
             result["path"] = obj.path
-        if obj.mode is not None:
-            result["mode"] = obj.mode
 
         return result
 

@@ -6,9 +6,9 @@ slug: "reference/promptytool"
 
 A tool that references another .prompty file to be invoked as a tool.
 
-In `single` mode (default), the child prompty is loaded, rendered, and
-executed with a single LLM call (invoke). In `agentic` mode, the child
-runs as a sub-agent via `turn()` with its own tool-calling loop.
+The child prompty is loaded, rendered, and executed with a single LLM call
+(invoke). Apps that want agentic sub-agents should use `kind: function` tools
+and call `turn()` themselves.
 
 ## Class Diagram
 
@@ -33,7 +33,6 @@ classDiagram
       
         +string kind
         +string path
-        +string mode
     }
 ```
 
@@ -42,7 +41,6 @@ classDiagram
 ```yaml
 kind: prompty
 path: ./summarize.prompty
-mode: single
 ```
 
 ## Properties
@@ -51,4 +49,3 @@ mode: single
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for prompty tools |
 | path | string | Path to the child .prompty file, relative to the parent |
-| mode | string | Execution mode — &#39;single&#39; for single-shot invoke (default) or &#39;agentic&#39; for sub-agent turn |

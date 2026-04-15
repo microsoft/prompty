@@ -67,7 +67,7 @@ impl Executor for AnthropicExecutor {
         &self,
         raw_response: &Value,
         tool_calls: &[prompty::types::ToolCall],
-        tool_results: &[String],
+        tool_results: &[prompty::ToolResult],
         _text_content: Option<&str>,
     ) -> Vec<Message> {
         wire::format_tool_messages(raw_response, tool_calls, tool_results)

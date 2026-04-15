@@ -397,7 +397,7 @@ fn parameters_to_json_schema(params: &[Property]) -> Value {
 pub fn format_tool_messages(
     raw_response: &Value,
     tool_calls: &[ToolCall],
-    tool_results: &[String],
+    tool_results: &[prompty::ToolResult],
 ) -> Vec<Message> {
     let mut messages = Vec::new();
 
@@ -417,10 +417,48 @@ pub fn format_tool_messages(
         .iter()
         .zip(tool_results.iter())
         .map(|(tc, result)| {
+            // Convert ToolResult parts to Anthropic content blocks
+            use prompty::model::content_part::ContentPartKind;
+            let content_blocks: Vec<Value> = result
+                .parts
+                .iter()
+                .map(|p| match &p.kind {
+                    ContentPartKind::TextPart { value } => json!({
+                        "type": "text",
+                        "text": value,
+                    }),
+                    ContentPartKind::ImagePart {
+                        source,
+                        media_type,
+                        ..
+                    } => json!({
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type.as_deref().unwrap_or("image/png"),
+                            "data": source,
+                        }
+                    }),
+                    _ => json!({
+                        "type": "text",
+                        "text": format!("[unsupported content part]"),
+                    }),
+                })
+                .collect();
+            // If single text part, use simple string content; otherwise use array
+            if content_blocks.len() == 1 {
+                if let Some(text) = content_blocks[0].get("text") {
+                    return json!({
+                        "type": "tool_result",
+                        "tool_use_id": tc.id,
+                        "content": text,
+                    });
+                }
+            }
             json!({
                 "type": "tool_result",
                 "tool_use_id": tc.id,
-                "content": result,
+                "content": content_blocks,
             })
         })
         .collect();
@@ -610,7 +648,7 @@ mod tests {
             name: "get_weather".to_string(),
             arguments: r#"{"city":"Paris"}"#.to_string(),
         }];
-        let tool_results = vec!["Sunny, 22°C".to_string()];
+        let tool_results = vec![prompty::ToolResult::from_text("Sunny, 22°C")];
 
         let msgs = format_tool_messages(&raw_response, &tool_calls, &tool_results);
         assert_eq!(msgs.len(), 2);

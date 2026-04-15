@@ -11,7 +11,7 @@ use std::pin::Pin;
 use async_trait::async_trait;
 
 use crate::model::Prompty;
-use crate::types::Message;
+use crate::types::{Message, ToolResult};
 
 /// Errors returned by pipeline stages.
 #[derive(Debug, thiserror::Error)]
@@ -161,7 +161,7 @@ pub trait Executor: Send + Sync {
         &self,
         _raw_response: &serde_json::Value,
         tool_calls: &[crate::types::ToolCall],
-        tool_results: &[String],
+        tool_results: &[ToolResult],
         _text_content: Option<&str>,
     ) -> Vec<Message> {
         let mut messages = Vec::new();
@@ -191,7 +191,7 @@ pub trait Executor: Send + Sync {
 
         // Tool result messages
         for (tc, result) in tool_calls.iter().zip(tool_results.iter()) {
-            messages.push(Message::tool_result(&tc.id, result));
+            messages.push(Message::tool_result_rich(&tc.id, result));
         }
 
         messages
@@ -261,7 +261,7 @@ mod tests {
             name: "get_weather".into(),
             arguments: r#"{"city":"NYC"}"#.into(),
         }];
-        let results = vec!["72°F".to_string()];
+        let results = vec![crate::ToolResult::from_text("72°F")];
 
         let msgs =
             executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);
@@ -301,7 +301,7 @@ mod tests {
                 arguments: "{}".into(),
             },
         ];
-        let results = vec!["3".to_string(), "1".to_string()];
+        let results = vec![crate::ToolResult::from_text("3"), crate::ToolResult::from_text("1")];
 
         let msgs =
             executor.format_tool_messages(&serde_json::json!({}), &tool_calls, &results, None);

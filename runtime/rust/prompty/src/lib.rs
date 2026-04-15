@@ -92,5 +92,5 @@ pub use tracing::{
 pub use tracing::{init_otel_stdout, otel_tracer};
 pub use types::{
     AudioPart, ContentPart, FilePart, ImagePart, Message, PromptyStream, Role, StreamChunk,
-    TextPart, ThreadMarker, ToolCall, consume_stream_chunks,
+    TextPart, ThreadMarker, ToolCall, ToolResult, consume_stream_chunks,
 };

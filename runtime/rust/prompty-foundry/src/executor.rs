@@ -80,7 +80,7 @@ impl Executor for FoundryExecutor {
         &self,
         _raw_response: &Value,
         tool_calls: &[prompty::types::ToolCall],
-        tool_results: &[String],
+        tool_results: &[prompty::ToolResult],
         _text_content: Option<&str>,
     ) -> Vec<Message> {
         wire::format_tool_messages(tool_calls, tool_results)

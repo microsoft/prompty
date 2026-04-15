@@ -369,7 +369,7 @@ async fn test_agent_tool_calling() {
                 .get("city")
                 .and_then(|c| c.as_str())
                 .unwrap_or("unknown");
-            Ok(format!("72°F and sunny in {city}"))
+            Ok(format!("72°F and sunny in {city}").into())
         })),
     );
 

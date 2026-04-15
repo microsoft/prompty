@@ -24,7 +24,7 @@ use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{Tracer, sanitize_value};
 use crate::types::{
-    ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall,
+    ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall, ToolResult,
     consume_stream_chunks,
 };
 
@@ -552,7 +552,7 @@ pub enum AgentEvent {
     /// A tool call is about to be dispatched.
     ToolCallStart { name: String, arguments: String },
     /// A tool call has completed with a result.
-    ToolResult { name: String, result: String },
+    ToolResult { name: String, result: ToolResult },
     /// Status update from the agent loop.
     Status(String),
     /// The message list was updated (e.g., tool results appended).
@@ -575,20 +575,20 @@ pub type EventCallback = Box<dyn Fn(AgentEvent) + Send + Sync>;
 // Tool function types
 // ---------------------------------------------------------------------------
 
-/// A synchronous tool function: takes JSON arguments, returns a string result.
+/// A synchronous tool function: takes JSON arguments, returns a ToolResult.
 pub type ToolFn = Box<
-    dyn Fn(serde_json::Value) -> Result<String, Box<dyn std::error::Error + Send + Sync>>
+    dyn Fn(serde_json::Value) -> Result<ToolResult, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync,
 >;
 
-/// An async tool function: takes JSON arguments, returns a string result.
+/// An async tool function: takes JSON arguments, returns a ToolResult.
 pub type AsyncToolFn = Box<
     dyn Fn(
             serde_json::Value,
         ) -> Pin<
             Box<
-                dyn Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>>
+                dyn Future<Output = Result<ToolResult, Box<dyn std::error::Error + Send + Sync>>>
                     + Send,
             >,
         > + Send
@@ -1239,7 +1239,10 @@ pub async fn turn(
             dispatch_tools_sequential(&tool_calls, &opts, agent, inputs).await?
         };
 
-        tool_span.emit("result", &json!(tool_results));
+        tool_span.emit(
+            "result",
+            &json!(tool_results.iter().map(|r| r.text()).collect::<Vec<_>>()),
+        );
         tool_span.end();
 
         // Extract text content for formatToolMessages (some providers need it)
@@ -1388,8 +1391,8 @@ async fn dispatch_tools_sequential(
     opts: &TurnOptions,
     agent: &Prompty,
     parent_inputs: Option<&serde_json::Value>,
-) -> Result<Vec<String>, InvokerError> {
-    let mut tool_results = Vec::new();
+) -> Result<Vec<ToolResult>, InvokerError> {
+    let mut tool_results: Vec<ToolResult> = Vec::new();
     for tc in tool_calls {
         // Check cancellation before each tool call
         if opts.is_cancelled() {
@@ -1403,11 +1406,13 @@ async fn dispatch_tools_sequential(
             let gr = guardrails.check_tool(&tc.name, &args, agent).await;
             if !gr.allowed {
                 let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
+                let denied_result: ToolResult =
+                    format!("Error: Tool guardrail denied: {reason}").into();
                 opts.emit(AgentEvent::ToolResult {
                     name: tc.name.clone(),
-                    result: format!("Error: Tool guardrail denied: {reason}"),
+                    result: denied_result.clone(),
                 });
-                tool_results.push(format!("Error: Tool guardrail denied: {reason}"));
+                tool_results.push(denied_result);
                 continue;
             }
         }
@@ -1418,7 +1423,7 @@ async fn dispatch_tools_sequential(
         });
 
         // §9.9: Wrap dispatch in catch_unwind for panic safety
-        let result = {
+        let result: ToolResult = {
             let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
                 tc,
                 &opts.tools,
@@ -1439,7 +1444,7 @@ async fn dispatch_tools_sequential(
                         "Tool '{}' panicked: {}",
                         tc.name, msg
                     )));
-                    format!("Error: Tool '{}' panicked: {}", tc.name, msg)
+                    format!("Error: Tool '{}' panicked: {}", tc.name, msg).into()
                 }
             }
         };
@@ -1459,7 +1464,7 @@ async fn dispatch_tools_parallel(
     opts: &TurnOptions,
     agent: &Prompty,
     parent_inputs: Option<&serde_json::Value>,
-) -> Vec<String> {
+) -> Vec<ToolResult> {
     // Emit start events synchronously before dispatching
     for tc in tool_calls {
         opts.emit(AgentEvent::ToolCallStart {
@@ -1481,7 +1486,9 @@ async fn dispatch_tools_parallel(
                     let gr = guardrails.check_tool(&tc.name, &args, agent).await;
                     if !gr.allowed {
                         let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
-                        return format!("Error: Tool guardrail denied: {reason}");
+                        let r: ToolResult =
+                            format!("Error: Tool guardrail denied: {reason}").into();
+                        return r;
                     }
                 }
                 let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
@@ -1504,14 +1511,14 @@ async fn dispatch_tools_parallel(
                             "Tool '{}' panicked: {}",
                             tc.name, msg
                         )));
-                        format!("Error: Tool '{}' panicked: {}", tc.name, msg)
+                        format!("Error: Tool '{}' panicked: {}", tc.name, msg).into()
                     }
                 }
             }
         })
         .collect();
 
-    let results = futures::future::join_all(futures).await;
+    let results: Vec<ToolResult> = futures::future::join_all(futures).await;
 
     // Emit result events
     for (tc, result) in tool_calls.iter().zip(results.iter()) {
@@ -1847,7 +1854,7 @@ mod tests {
             "greet".to_string(),
             ToolHandler::Sync(Box::new(|args| {
                 let name = args.get("name").and_then(|v| v.as_str()).unwrap_or("World");
-                Ok(format!("Hello, {name}!"))
+                Ok(format!("Hello, {name}!").into())
             })),
         );
 
@@ -1859,7 +1866,7 @@ mod tests {
 
         let agent = Prompty::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
-        assert_eq!(result, "Hello, Rust!");
+        assert_eq!(result.text(), "Hello, Rust!");
     }
 
     #[tokio::test]
@@ -1870,7 +1877,7 @@ mod tests {
             ToolHandler::Async(Box::new(|args| {
                 Box::pin(async move {
                     let name = args.get("name").and_then(|v| v.as_str()).unwrap_or("World");
-                    Ok(format!("Hello, {name}!"))
+                    Ok(format!("Hello, {name}!").into())
                 })
             })),
         );
@@ -1883,7 +1890,7 @@ mod tests {
 
         let agent = Prompty::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
-        assert_eq!(result, "Hello, Async!");
+        assert_eq!(result.text(), "Hello, Async!");
     }
 
     #[tokio::test]
@@ -1898,8 +1905,8 @@ mod tests {
         let agent = Prompty::default();
         // Missing tool returns error string (non-fatal), matching TypeScript behavior
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
-        assert!(result.contains("nonexistent"));
-        assert!(result.contains("Error"));
+        assert!(result.text().contains("nonexistent"));
+        assert!(result.text().contains("Error"));
     }
 
     #[test]
@@ -2154,7 +2161,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "get_weather".to_string(),
-            ToolHandler::Sync(Box::new(|_args| Ok("72°F and sunny".to_string()))),
+            ToolHandler::Sync(Box::new(|_args| Ok("72°F and sunny".into()))),
         );
 
         let opts = TurnOptions::with_tools(tools);
@@ -2186,7 +2193,7 @@ mod tests {
             ToolHandler::Sync(Box::new(|args| {
                 let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
                 let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
-                Ok(format!("{}", a + b))
+                Ok(format!("{}", a + b).into())
             })),
         );
         tools.insert(
@@ -2194,7 +2201,7 @@ mod tests {
             ToolHandler::Sync(Box::new(|args| {
                 let a = args.get("a").and_then(|v| v.as_i64()).unwrap_or(0);
                 let b = args.get("b").and_then(|v| v.as_i64()).unwrap_or(0);
-                Ok(format!("{}", a * b))
+                Ok(format!("{}", a * b).into())
             })),
         );
 
@@ -2217,7 +2224,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "ticker".to_string(),
-            ToolHandler::Sync(Box::new(|_| Ok("tick".to_string()))),
+            ToolHandler::Sync(Box::new(|_| Ok("tick".into()))),
         );
 
         let events = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -2263,7 +2270,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "test".to_string(),
-            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
         );
 
         let opts = TurnOptions {
@@ -2302,7 +2309,7 @@ mod tests {
                     // Cancel after second tool dispatch
                     cancel_in_tool.store(true, Ordering::Relaxed);
                 }
-                Ok("tick".to_string())
+                Ok("tick".to_string().into())
             })),
         );
 
@@ -2342,7 +2349,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "get_weather".to_string(),
-            ToolHandler::Sync(Box::new(|_| Ok("sunny".to_string()))),
+            ToolHandler::Sync(Box::new(|_| Ok("sunny".into()))),
         );
 
         let opts = TurnOptions {
@@ -2414,7 +2421,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "other_tool".to_string(),
-            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
         );
 
         let opts = TurnOptions::with_tools(tools);
@@ -2428,7 +2435,7 @@ mod tests {
         let mut tools = HashMap::new();
         tools.insert(
             "test".to_string(),
-            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".into()))),
         );
 
         let tc = ToolCall {
@@ -2439,8 +2446,8 @@ mod tests {
 
         let agent = Prompty::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
-        assert!(result.contains("Error"));
-        assert!(result.contains("Invalid tool arguments"));
+        assert!(result.text().contains("Error"));
+        assert!(result.text().contains("Invalid tool arguments"));
     }
 
     // -----------------------------------------------------------------------
@@ -2677,7 +2684,7 @@ mod tests {
 
     #[test]
     fn test_builder_tool_method() {
-        let handler = ToolHandler::Sync(Box::new(|_args| Ok("result".to_string())));
+        let handler = ToolHandler::Sync(Box::new(|_args| Ok("result".into())));
         let opts = TurnOptions::builder().tool("my_tool", handler).build();
         assert!(opts.tools.contains_key("my_tool"));
         assert_eq!(opts.tools.len(), 1);
@@ -2685,8 +2692,8 @@ mod tests {
 
     #[test]
     fn test_builder_multiple_tools() {
-        let h1 = ToolHandler::Sync(Box::new(|_| Ok("a".to_string())));
-        let h2 = ToolHandler::Sync(Box::new(|_| Ok("b".to_string())));
+        let h1 = ToolHandler::Sync(Box::new(|_| Ok("a".into())));
+        let h2 = ToolHandler::Sync(Box::new(|_| Ok("b".into())));
         let opts = TurnOptions::builder()
             .tool("tool_a", h1)
             .tool("tool_b", h2)
