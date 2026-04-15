@@ -14,6 +14,7 @@ public class PromptyToolConversionTests
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
+mode: single
 
 """;
 
@@ -22,6 +23,7 @@ path: ./summarize.prompty
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
         Assert.Equal("./summarize.prompty", instance.Path);
+        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -30,7 +32,8 @@ path: ./summarize.prompty
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty"
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
@@ -38,6 +41,7 @@ path: ./summarize.prompty
         Assert.NotNull(instance);
         Assert.Equal("prompty", instance.Kind);
         Assert.Equal("./summarize.prompty", instance.Path);
+        Assert.Equal("single", instance.Mode);
     }
 
     [Fact]
@@ -47,7 +51,8 @@ path: ./summarize.prompty
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty"
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
@@ -61,6 +66,7 @@ path: ./summarize.prompty
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
         Assert.Equal("./summarize.prompty", reloaded.Path);
+        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -70,6 +76,7 @@ path: ./summarize.prompty
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
+mode: single
 
 """;
 
@@ -83,6 +90,7 @@ path: ./summarize.prompty
         Assert.NotNull(reloaded);
         Assert.Equal("prompty", reloaded.Kind);
         Assert.Equal("./summarize.prompty", reloaded.Path);
+        Assert.Equal("single", reloaded.Mode);
     }
 
     [Fact]
@@ -91,7 +99,8 @@ path: ./summarize.prompty
         string jsonData = """
 {
   "kind": "prompty",
-  "path": "./summarize.prompty"
+  "path": "./summarize.prompty",
+  "mode": "single"
 }
 """;
 
@@ -109,6 +118,7 @@ path: ./summarize.prompty
         string yamlData = """
 kind: prompty
 path: ./summarize.prompty
+mode: single
 
 """;
 

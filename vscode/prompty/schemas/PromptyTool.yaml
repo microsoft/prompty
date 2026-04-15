@@ -9,14 +9,22 @@ properties:
   path:
     type: string
     description: Path to the child .prompty file, relative to the parent
+  mode:
+    anyOf:
+      - type: string
+        const: single
+      - type: string
+        const: agentic
+    default: single
+    description: "Execution mode: 'single' for one LLM call, 'agentic' for full agent loop"
 required:
   - kind
   - path
+  - mode
 allOf:
   - $ref: Tool.yaml
 description: |-
   A tool that references another .prompty file to be invoked as a tool.
 
-  The child prompty is loaded, rendered, and executed with a single LLM call
-  (invoke). Apps that want agentic sub-agents should use `kind: function` tools
-  and call `turn()` themselves.
+  In `single` mode, the child prompty is executed with a single LLM call.
+  In `agentic` mode, the child prompty runs a full agent loop with its own tools.

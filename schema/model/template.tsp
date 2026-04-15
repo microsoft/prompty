@@ -28,7 +28,7 @@ model Template {
  * Template format definition
  */
 @discriminator("kind")
-@shorthand(
+@coerce(
   string,
   #{ kind: "{value}" },
   "format",
@@ -52,7 +52,7 @@ model FormatConfig {
  * Template parser definition
  */
 @discriminator("kind")
-@shorthand(
+@coerce(
   string,
   #{ kind: "{value}" },
   "parser",

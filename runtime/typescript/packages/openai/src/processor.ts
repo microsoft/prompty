@@ -8,7 +8,7 @@
 
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
-import { ToolCall } from "@prompty/core";
+import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
@@ -162,11 +162,11 @@ function processResponsesApi(
   const funcCalls: ToolCall[] = [];
   for (const item of output) {
     if (item.type === "function_call") {
-      funcCalls.push(new ToolCall({
+      funcCalls.push({
         id: (item.call_id ?? item.id ?? "") as string,
         name: item.name as string,
         arguments: item.arguments as string,
-      }));
+      });
     }
   }
 
@@ -238,11 +238,11 @@ function processChatCompletion(
   if (toolCalls && toolCalls.length > 0) {
     return toolCalls.map((tc): ToolCall => {
       const fn = tc.function as Record<string, unknown>;
-      return new ToolCall({
+      return {
         id: tc.id as string,
         name: fn.name as string,
         arguments: fn.arguments as string,
-      });
+      };
     });
   }
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, Protocol, runtime_checkable
 
 from ..model import Prompty
-from .types import Message, ToolResult
+from .types import Message
 
 __all__ = [
     "RendererProtocol",
@@ -108,7 +108,7 @@ class ExecutorProtocol(Protocol):
         self,
         raw_response: Any,
         tool_calls: list[Any],
-        tool_results: list[ToolResult],
+        tool_results: list[str],
         text_content: str = "",
     ) -> list[Message]:
         """Format tool call results into messages for the next loop iteration.

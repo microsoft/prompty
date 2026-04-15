@@ -50,9 +50,11 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
     apply_options(agent, &mut body);
 
     // Tools
-    if !agent.tools.is_empty() {
-        let wire_tools: Vec<Value> = agent.tools.iter().map(tool_to_wire).collect();
-        body.insert("tools".into(), json!(wire_tools));
+    if let Some(tools) = agent.as_tools() {
+        if !tools.is_empty() {
+            let wire_tools: Vec<Value> = tools.iter().map(tool_to_wire).collect();
+            body.insert("tools".into(), json!(wire_tools));
+        }
     }
 
     // Structured output (outputSchema → output_config)
@@ -236,14 +238,15 @@ fn f32_to_json(v: f32) -> Value {
 ///
 /// Anthropic uses: `output_config: { format: { type: "json_schema", schema: {...} } }`
 fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
-    if agent.outputs.is_empty() {
+    let outputs = agent.as_outputs()?;
+    if outputs.is_empty() {
         return None;
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for prop in &agent.outputs {
+    for prop in &outputs {
         let kind_str = prop.kind_str();
         let json_type = match kind_str {
             "float" | "number" => "number",
@@ -338,14 +341,16 @@ fn property_to_json_schema(prop: &Property) -> Value {
             }
         }
         PropertyKind::Object { properties } => {
-            if !properties.is_empty() {
+            if let Some(arr) = properties.as_array() {
+                let ctx = prompty::model::context::LoadContext::default();
                 let mut nested = Map::new();
                 let mut req = Vec::new();
-                for p in properties {
+                for val in arr {
+                    let p = Property::load_from_value(val, &ctx);
                     if p.name.is_empty() {
                         continue;
                     }
-                    nested.insert(p.name.clone(), property_to_json_schema(p));
+                    nested.insert(p.name.clone(), property_to_json_schema(&p));
                     req.push(json!(p.name));
                 }
                 schema.insert("properties".into(), Value::Object(nested));
@@ -362,12 +367,23 @@ fn property_to_json_schema(prop: &Property) -> Value {
     Value::Object(schema)
 }
 
-/// Convert tool parameters to JSON Schema for `input_schema`.
-fn parameters_to_json_schema(params: &[Property]) -> Value {
+/// Convert tool parameters (stored as serde_json::Value) to JSON Schema for `input_schema`.
+fn parameters_to_json_schema(params_value: &Value) -> Value {
+    use prompty::model::context::LoadContext;
+
+    let ctx = LoadContext::default();
+    let params: Vec<Property> = if let Some(arr) = params_value.as_array() {
+        arr.iter()
+            .map(|v| Property::load_from_value(v, &ctx))
+            .collect()
+    } else {
+        return json!({"type": "object", "properties": {}});
+    };
+
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for param in params {
+    for param in &params {
         properties.insert(param.name.clone(), property_to_json_schema(param));
         if param.required.unwrap_or(false) {
             required.push(json!(param.name));
@@ -397,7 +413,7 @@ fn parameters_to_json_schema(params: &[Property]) -> Value {
 pub fn format_tool_messages(
     raw_response: &Value,
     tool_calls: &[ToolCall],
-    tool_results: &[prompty::ToolResult],
+    tool_results: &[String],
 ) -> Vec<Message> {
     let mut messages = Vec::new();
 
@@ -417,48 +433,10 @@ pub fn format_tool_messages(
         .iter()
         .zip(tool_results.iter())
         .map(|(tc, result)| {
-            // Convert ToolResult parts to Anthropic content blocks
-            use prompty::model::content_part::ContentPartKind;
-            let content_blocks: Vec<Value> = result
-                .parts
-                .iter()
-                .map(|p| match &p.kind {
-                    ContentPartKind::TextPart { value } => json!({
-                        "type": "text",
-                        "text": value,
-                    }),
-                    ContentPartKind::ImagePart {
-                        source,
-                        media_type,
-                        ..
-                    } => json!({
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type.as_deref().unwrap_or("image/png"),
-                            "data": source,
-                        }
-                    }),
-                    _ => json!({
-                        "type": "text",
-                        "text": format!("[unsupported content part]"),
-                    }),
-                })
-                .collect();
-            // If single text part, use simple string content; otherwise use array
-            if content_blocks.len() == 1 {
-                if let Some(text) = content_blocks[0].get("text") {
-                    return json!({
-                        "type": "tool_result",
-                        "tool_use_id": tc.id,
-                        "content": text,
-                    });
-                }
-            }
             json!({
                 "type": "tool_result",
                 "tool_use_id": tc.id,
-                "content": content_blocks,
+                "content": result,
             })
         })
         .collect();
@@ -648,7 +626,7 @@ mod tests {
             name: "get_weather".to_string(),
             arguments: r#"{"city":"Paris"}"#.to_string(),
         }];
-        let tool_results = vec![prompty::ToolResult::from_text("Sunny, 22°C")];
+        let tool_results = vec!["Sunny, 22°C".to_string()];
 
         let msgs = format_tool_messages(&raw_response, &tool_calls, &tool_results);
         assert_eq!(msgs.len(), 2);

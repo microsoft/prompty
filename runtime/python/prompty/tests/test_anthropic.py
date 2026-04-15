@@ -570,7 +570,7 @@ class TestPromptyFileLoad:
 
         agent = load(PROMPTS_DIR / "anthropic_chat.prompty")
         assert agent.model.provider == "anthropic"
-        assert agent.model.api_type == "chat"
+        assert agent.model.apiType == "chat"
         assert agent.model.id == "claude-sonnet-4-5-20250929"
 
     def test_load_tools_prompty(self):

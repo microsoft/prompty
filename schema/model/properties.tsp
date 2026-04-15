@@ -12,26 +12,26 @@ namespace Prompty;
  *   and processed to generate prompts for AI models.
  */
 @discriminator("kind")
-@shorthand(
+@coerce(
   string,
   #{ kind: "string", example: "{value}" },
   "input",
   "Simple construction with just a kind of string"
 )
-@shorthand(
+@coerce(
   integer,
   #{ kind: "integer", example: "{value}" },
   "input",
   "Simple construction with just a kind of integer",
   4
 )
-@shorthand(
+@coerce(
   float32,
   #{ kind: "float", example: "{value}" },
   "input",
   "Simple construction with just a kind of float"
 )
-@shorthand(
+@coerce(
   boolean,
   #{ kind: "boolean", example: "{value}" },
   "input",

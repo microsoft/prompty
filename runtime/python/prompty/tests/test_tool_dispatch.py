@@ -35,7 +35,6 @@ from prompty.core.tool_dispatch import (
     register_tool,
     register_tool_handler,
 )
-from prompty.core.types import tool_result_text
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
@@ -177,7 +176,7 @@ class TestDispatchPriority:
             agent=_make_agent(),
             parent_inputs={},
         )
-        assert tool_result_text(result) == "from_user_tools"
+        assert result == "from_user_tools"
 
     def test_name_registry_wins_over_kind_handler(self):
         """Global name registry overrides kind handler."""
@@ -191,7 +190,7 @@ class TestDispatchPriority:
             agent=agent,
             parent_inputs={},
         )
-        assert tool_result_text(result) == "from_name_registry"
+        assert result == "from_name_registry"
 
     def test_kind_handler_fallback(self):
         """Kind handler used when neither user_tools nor name registry has it."""
@@ -222,9 +221,8 @@ class TestDispatchPriority:
             agent=_make_agent(),
             parent_inputs={},
         )
-        text = tool_result_text(result)
-        assert "Error" in text
-        assert "nonexistent" in text
+        assert "Error" in result
+        assert "nonexistent" in result
 
 
 # ===========================================================================
@@ -237,9 +235,8 @@ class TestDispatchTool:
 
     def test_invalid_json(self):
         result = dispatch_tool("fn", "not valid json", user_tools={}, agent=_make_agent(), parent_inputs={})
-        text = tool_result_text(result)
-        assert "Error" in text
-        assert "Invalid JSON" in text
+        assert "Error" in result
+        assert "Invalid JSON" in result
 
     def test_empty_arguments(self):
         result = dispatch_tool(
@@ -249,7 +246,7 @@ class TestDispatchTool:
             agent=_make_agent(),
             parent_inputs={},
         )
-        assert tool_result_text(result) == "ok"
+        assert result == "ok"
 
     def test_user_tool_error_caught(self):
         def bad_fn(**kw):
@@ -262,9 +259,8 @@ class TestDispatchTool:
             agent=_make_agent(),
             parent_inputs={},
         )
-        text = tool_result_text(result)
-        assert "Error" in text
-        assert "boom" in text
+        assert "Error" in result
+        assert "boom" in result
 
     def test_async_fn_in_sync_dispatch_errors(self):
         async def async_fn(**kw):
@@ -277,9 +273,8 @@ class TestDispatchTool:
             agent=_make_agent(),
             parent_inputs={},
         )
-        text = tool_result_text(result)
-        assert "Error" in text
-        assert "async" in text.lower()
+        assert "Error" in result
+        assert "async" in result.lower()
 
 
 class TestDispatchToolAsync:
@@ -298,7 +293,7 @@ class TestDispatchToolAsync:
                 parent_inputs={},
             )
         )
-        assert tool_result_text(result) == "result_42"
+        assert result == "result_42"
 
     def test_sync_fn_works_in_async_dispatch(self):
         result = asyncio.get_event_loop().run_until_complete(
@@ -310,7 +305,7 @@ class TestDispatchToolAsync:
                 parent_inputs={},
             )
         )
-        assert tool_result_text(result) == "sync_1"
+        assert result == "sync_1"
 
     def test_async_name_registry(self):
         async def async_fn(**kw):
@@ -326,7 +321,7 @@ class TestDispatchToolAsync:
                 parent_inputs={},
             )
         )
-        assert tool_result_text(result) == "from_async_registry"
+        assert result == "from_async_registry"
 
 
 # ===========================================================================
@@ -348,9 +343,8 @@ class TestFunctionToolHandler:
         tool_def = _make_tool_def(name="calc", kind="function")
         agent = _make_agent(tools=[tool_def])
         result = dispatch_tool("calc", json.dumps({}), user_tools={}, agent=agent, parent_inputs={})
-        text = tool_result_text(result)
-        assert "Error" in text
-        assert "no callable provided" in text
+        assert "Error" in result
+        assert "no callable provided" in result
 
 
 class TestPromptyToolHandler:
@@ -373,7 +367,7 @@ class TestPromptyToolHandler:
     def test_execute_tool_loads_and_runs(self):
         """PromptyToolHandler.execute_tool loads child and runs prepare+run."""
         handler = PromptyToolHandler()
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty")
+        tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty", mode="single")
         agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
 
         mock_child = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "summarize_child.prompty")})
@@ -384,7 +378,7 @@ class TestPromptyToolHandler:
         ):
             result = handler.execute_tool(tool, {"text": "hello world"}, agent, {})
 
-        assert tool_result_text(result) == "Summary of the text"
+        assert result == "Summary of the text"
         mock_load.assert_called_once()
         mock_prepare.assert_called_once()
         mock_run.assert_called_once()
@@ -392,17 +386,17 @@ class TestPromptyToolHandler:
     def test_execute_tool_error_returns_string(self):
         """Errors during execution are caught and returned as strings."""
         handler = PromptyToolHandler()
-        tool = _make_tool_def(name="broken", kind="prompty", path="./nonexistent.prompty")
+        tool = _make_tool_def(name="broken", kind="prompty", path="./nonexistent.prompty", mode="single")
         agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
         result = handler.execute_tool(tool, {}, agent, {})
-        assert "Error executing PromptyTool" in tool_result_text(result)
+        assert "Error executing PromptyTool" in result
 
     def test_circular_reference_detected(self):
         """Circular A → B → A is caught before infinite recursion."""
         handler = PromptyToolHandler()
         parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
         child_path = str(PROMPTS_DIR / "summarize_child.prompty")
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./tools_prompty.prompty")
+        tool = _make_tool_def(name="summarize", kind="prompty", path="./tools_prompty.prompty", mode="single")
         # Simulate agent that's already in a chain: child loaded from parent
         agent = _make_agent(
             metadata={
@@ -411,18 +405,16 @@ class TestPromptyToolHandler:
             }
         )
         result = handler.execute_tool(tool, {}, agent, {})
-        text = tool_result_text(result)
-        assert "circular reference" in text.lower() or "RecursionError" in text
+        assert "circular reference" in result.lower() or "RecursionError" in result
 
     def test_circular_self_reference(self):
         """A .prompty that references itself is caught."""
         handler = PromptyToolHandler()
         parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
-        tool = _make_tool_def(name="self_ref", kind="prompty", path="./tools_prompty.prompty")
+        tool = _make_tool_def(name="self_ref", kind="prompty", path="./tools_prompty.prompty", mode="single")
         agent = _make_agent(metadata={"__source_path": parent_path})
         result = handler.execute_tool(tool, {}, agent, {})
-        text = tool_result_text(result)
-        assert "circular reference" in text.lower() or "RecursionError" in text
+        assert "circular reference" in result.lower() or "RecursionError" in result
 
 
 class TestPlaceholderHandlers:

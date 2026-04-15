@@ -1025,9 +1025,8 @@ export class OpenApiTool extends Tool {
 /**
  * A tool that references another .prompty file to be invoked as a tool.
  *
- * The child prompty is loaded, rendered, and executed with a single LLM call
- * (invoke). Apps that want agentic sub-agents should use `kind: function` tools
- * and call `turn()` themselves.
+ * In `single` mode, the child prompty is executed with a single LLM call.
+ * In `agentic` mode, the child prompty runs a full agent loop with its own tools.
  *
  */
 export class PromptyTool extends Tool {
@@ -1047,6 +1046,11 @@ export class PromptyTool extends Tool {
   path: string = "";
 
   /**
+   * Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+   */
+  mode: string = "single";
+
+  /**
    * Initializes a new instance of PromptyTool.
    */
   constructor(init?: Partial<PromptyTool>) {
@@ -1055,6 +1059,8 @@ export class PromptyTool extends Tool {
     this.kind = init?.kind ?? "prompty";
 
     this.path = init?.path ?? "";
+
+    this.mode = init?.mode ?? "single";
   }
 
   //#region Load Methods
@@ -1084,6 +1090,10 @@ export class PromptyTool extends Tool {
       instance.path = String(data["path"]);
     }
 
+    if (data["mode"] !== undefined && data["mode"] !== null) {
+      instance.mode = String(data["mode"]);
+    }
+
     if (context) {
       return context.processOutput(instance) as PromptyTool;
     }
@@ -1111,6 +1121,10 @@ export class PromptyTool extends Tool {
 
     if (obj.path !== undefined && obj.path !== null) {
       result["path"] = obj.path;
+    }
+
+    if (obj.mode !== undefined && obj.mode !== null) {
+      result["mode"] = obj.mode;
     }
 
     return result;

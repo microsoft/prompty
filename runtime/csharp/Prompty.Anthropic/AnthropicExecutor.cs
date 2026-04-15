@@ -147,7 +147,7 @@ public class AnthropicExecutor : IExecutor
         // Handle tool results
         if (msg.Role == Roles.Tool)
         {
-            var toolCallId = msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id)
+            var toolCallId = msg.Metadata.TryGetValue("tool_call_id", out var id)
                 ? id?.ToString() ?? ""
                 : "";
             return new Dictionary<string, object?>
@@ -303,7 +303,7 @@ public class AnthropicExecutor : IExecutor
     public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<ToolResult> toolResults,
+        List<string> toolResults,
         string? textContent = null)
     {
         var messages = new List<Message>();
@@ -342,14 +342,14 @@ public class AnthropicExecutor : IExecutor
             {
                 ["type"] = "tool_result",
                 ["tool_use_id"] = toolCalls[i].Id,
-                ["content"] = toolResults[i].Text,
+                ["content"] = toolResults[i],
             });
         }
 
         messages.Add(new Message
         {
             Role = Roles.User,
-            Parts = toolResults.SelectMany(r => r.Parts).ToList(),
+            Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
             Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });
 

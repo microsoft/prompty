@@ -228,9 +228,9 @@ fn build_tool_handlers(vector: &Value) -> HashMap<String, ToolHandler> {
             ToolHandler::Sync(Box::new(move |_args: Value| {
                 let i = idx.fetch_add(1, Ordering::SeqCst);
                 if i < queue.len() {
-                    Ok(queue[i].clone().into())
+                    Ok(queue[i].clone())
                 } else {
-                    Ok(format!("(mock result #{i} for {name_clone})").into())
+                    Ok(format!("(mock result #{i} for {name_clone})"))
                 }
             })),
         );
@@ -417,7 +417,7 @@ async fn test_tool_not_registered_error() {
     let mut tools: HashMap<String, ToolHandler> = HashMap::new();
     tools.insert(
         "get_weather".to_string(),
-        ToolHandler::Sync(Box::new(|_| Ok("72°F".into()))),
+        ToolHandler::Sync(Box::new(|_| Ok("72°F".to_string()))),
     );
 
     let opts = TurnOptions {
@@ -499,7 +499,7 @@ async fn test_async_tool_function() {
     tools.insert(
         "lookup".to_string(),
         ToolHandler::Async(Box::new(|_args| {
-            Box::pin(async move { Ok("found: test data".into()) })
+            Box::pin(async move { Ok("found: test data".to_string()) })
         })),
     );
 
@@ -708,7 +708,7 @@ async fn test_cancellation_between_iterations() {
             if n == 0 {
                 cancel_clone.store(true, Ordering::SeqCst);
             }
-            Ok("72°F sunny".into())
+            Ok("72°F sunny".to_string())
         })),
     );
 
@@ -787,7 +787,7 @@ async fn test_cancellation_between_tools() {
             if n == 0 {
                 cancel_clone.store(true, Ordering::SeqCst);
             }
-            Ok("72°F sunny".into())
+            Ok("72°F sunny".to_string())
         })),
     );
 

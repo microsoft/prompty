@@ -339,13 +339,13 @@ public class SpecVectorAgentTests : IDisposable
             {
                 var action = ig.TryGetProperty("action", out var actProp) ? actProp.GetString() : "allow";
                 var reason = ig.TryGetProperty("reason", out var rp) ? rp.GetString() : null;
-                inputGuard = _ => new GuardrailResult { Allowed = action != "deny", Reason = reason };
+                inputGuard = _ => new GuardrailResult(action != "deny", reason);
             }
             if (guardProp.TryGetProperty("output", out var og))
             {
                 var action = og.TryGetProperty("action", out var actProp) ? actProp.GetString() : "allow";
                 var reason = og.TryGetProperty("reason", out var rp) ? rp.GetString() : null;
-                outputGuard = _ => new GuardrailResult { Allowed = action != "deny", Reason = reason };
+                outputGuard = _ => new GuardrailResult(action != "deny", reason);
             }
             if (guardProp.TryGetProperty("tool", out var tg))
             {
@@ -355,8 +355,8 @@ public class SpecVectorAgentTests : IDisposable
                         denyTools.Add(d.GetString()!);
                 var reason = tg.TryGetProperty("reason", out var rp) ? rp.GetString() : "Tool denied";
                 toolGuard = (name, _) => denyTools.Contains(name)
-                    ? GuardrailResult.Deny(reason ?? "Tool denied")
-                    : GuardrailResult.Allow();
+                    ? new GuardrailResult(false, reason)
+                    : new GuardrailResult(true);
             }
 
             guardrails = new Guardrails(input: inputGuard, output: outputGuard, tool: toolGuard);
@@ -644,10 +644,10 @@ public class SpecVectorAgentTests : IDisposable
     /// Build tool function delegates from vector input and pre-built result queues.
     /// Handles "raises RuntimeError('...')" tool function descriptions.
     /// </summary>
-    private static Dictionary<string, Func<string, Task<ToolResult>>> BuildToolFunctions(
+    private static Dictionary<string, Func<string, Task<string>>> BuildToolFunctions(
         JsonElement input, Dictionary<string, Queue<string>> toolResultMap)
     {
-        var toolFunctions = new Dictionary<string, Func<string, Task<ToolResult>>>();
+        var toolFunctions = new Dictionary<string, Func<string, Task<string>>>();
 
         if (!input.TryGetProperty("tool_functions", out var toolFuncs))
             return toolFunctions;
@@ -663,7 +663,7 @@ public class SpecVectorAgentTests : IDisposable
                 var msg = desc.Contains('(')
                     ? desc.Split('(')[1].TrimEnd(')').Trim('\'', '"')
                     : desc;
-                toolFunctions[toolName] = _ => Task.FromResult<ToolResult>($"Error: {msg}");
+                toolFunctions[toolName] = _ => Task.FromResult($"Error: {msg}");
             }
             else
             {
@@ -673,10 +673,10 @@ public class SpecVectorAgentTests : IDisposable
                     {
                         if (queue.Count > 0)
                         {
-                            return Task.FromResult<ToolResult>(queue.Dequeue());
+                            return Task.FromResult(queue.Dequeue());
                         }
                     }
-                    return Task.FromResult<ToolResult>("");
+                    return Task.FromResult("");
                 };
             }
         }
@@ -718,18 +718,15 @@ public class SpecVectorAgentTests : IDisposable
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(fn(messages));
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
         {
             var messages = new List<Message>
             {
-                new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
+                new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
             };
             for (var i = 0; i < toolCalls.Count; i++)
-                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
             return messages;
         }
     }
 }
-
-
-

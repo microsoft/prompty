@@ -3,7 +3,7 @@
  * @module
  */
 
-import { Message, TextPart, messageText } from "./types.js";
+import { Message } from "./types.js";
 
 /**
  * Estimate the character cost of a message list.
@@ -16,7 +16,7 @@ export function estimateChars(messages: Message[]): number {
     total += msg.role.length + 4;
     for (const part of msg.parts) {
       if (part.kind === "text") {
-        total += (part as TextPart).value.length;
+        total += (part as { value: string }).value.length;
       } else {
         total += 200;
       }
@@ -39,7 +39,7 @@ function truncate(text: string, maxLen = 200): string {
 export function summarizeDropped(messages: Message[]): string {
   const lines: string[] = [];
   for (const msg of messages) {
-    const msgText = messageText(msg).trim();
+    const msgText = msg.text.trim();
     if (msg.role === "user" && msgText) {
       lines.push(`User asked: ${truncate(msgText)}`);
     } else if (msg.role === "assistant") {
@@ -75,7 +75,7 @@ export function summarizeDropped(messages: Message[]): string {
 export function formatDroppedMessages(messages: Message[]): string {
   const lines: string[] = [];
   for (const msg of messages) {
-    const msgText = messageText(msg).trim();
+    const msgText = msg.text.trim();
     if (msgText) {
       lines.push(`[${msg.role}]: ${msgText}`);
     }
@@ -132,7 +132,7 @@ export function trimToContextWindow(
   if (droppedCount > 0) {
     const summaryText = summarizeDropped(dropped);
     if (summaryText) {
-      messages.push(new Message({ role: "user", parts: [new TextPart({ value: summaryText })] }));
+      messages.push(new Message("user", [{ kind: "text", value: summaryText }]));
     }
   }
 

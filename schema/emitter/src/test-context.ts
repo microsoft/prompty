@@ -5,7 +5,7 @@
  * This ensures consistency in how tests are generated from @sample decorators.
  */
 
-import { TypeNode, PropertyValidation, TestExample, AlternateTest, BaseTestContext } from "./ast.js";
+import { TypeNode, PropertyValidation, TestExample, CoercionTest, BaseTestContext } from "./ast.js";
 import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
 import * as YAML from "yaml";
 
@@ -48,7 +48,7 @@ export function buildBaseTestContext(
   options: TestContextOptions
 ): BaseTestContext {
   const examples = buildExamples(node, options);
-  const alternates = buildAlternates(node, options);
+  const coercions = buildCoercions(node, options);
   const isAbstract = node.isAbstract || (node.discriminator !== undefined && node.discriminator.length > 0);
 
   return {
@@ -56,7 +56,7 @@ export function buildBaseTestContext(
     isAbstract,
     package: packageName,
     examples,
-    alternates,
+    coercions,
     factories: node.factories,
   };
 }
@@ -144,14 +144,14 @@ function buildValidations(
 }
 
 /**
- * Build alternate/shorthand test cases from node alternates.
+ * Build coercion (scalar-to-object) test cases from node coercions.
  */
-function buildAlternates(node: TypeNode, options: TestContextOptions): AlternateTest[] {
-  if (!node.alternates || node.alternates.length === 0) {
+function buildCoercions(node: TypeNode, options: TestContextOptions): CoercionTest[] {
+  if (!node.coercions || node.coercions.length === 0) {
     return [];
   }
 
-  return node.alternates.map(alt => {
+  return node.coercions.map(alt => {
     // Get example value - use provided example or default scalar value
     const example = alt.example
       ? (typeof alt.example === "string" ? '"' + alt.example + '"' : alt.example.toString())

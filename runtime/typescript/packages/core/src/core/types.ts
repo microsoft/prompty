@@ -1,101 +1,124 @@
 /**
  * Core message types for the Prompty pipeline.
  *
- * Re-exports generated model types and provides standalone utility
- * functions that operate on them. No prototype mutation — the emitted
- * types are used as-is.
+ * These types are protocol-agnostic — they represent the abstract
+ * message format that executors translate to provider-specific
+ * wire formats (e.g., OpenAI JSON).
  *
  * @module
  */
 
 // ---------------------------------------------------------------------------
-// Re-export generated model types
+// Content Parts (discriminated union by `kind`)
 // ---------------------------------------------------------------------------
 
-export { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
-export { Message } from "../model/message.js";
-export { ToolResult } from "../model/tool-result.js";
-
-import { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
-import { Message } from "../model/message.js";
-import { ToolResult } from "../model/tool-result.js";
-
-// ---------------------------------------------------------------------------
-// Message utilities (standalone functions, no augmentation)
-// ---------------------------------------------------------------------------
-
-/** Concatenate all TextPart values from a Message into a single string. */
-export function messageText(msg: Message): string {
-  return msg.parts
-    .filter((p): p is TextPart => p.kind === "text")
-    .map((p) => p.value)
-    .join("");
+/** Base shape shared by all content parts. */
+interface ContentPartBase {
+  kind: string;
 }
 
+/** Plain text content. */
+export interface TextPart extends ContentPartBase {
+  kind: "text";
+  value: string;
+}
+
+/** Image reference (URL or base64 data URI). */
+export interface ImagePart extends ContentPartBase {
+  kind: "image";
+  source: string;
+  detail?: string;
+  mediaType?: string;
+}
+
+/** File reference. */
+export interface FilePart extends ContentPartBase {
+  kind: "file";
+  source: string;
+  mediaType?: string;
+}
+
+/** Audio reference (URL or base64 data URI). */
+export interface AudioPart extends ContentPartBase {
+  kind: "audio";
+  source: string;
+  mediaType?: string;
+}
+
+/** Discriminated union of all content part types. */
+export type ContentPart = TextPart | ImagePart | FilePart | AudioPart;
+
+// ---------------------------------------------------------------------------
+// Message
+// ---------------------------------------------------------------------------
+
+/** Valid message roles. */
+export type Role = "system" | "user" | "assistant" | "developer" | "tool";
+
 /**
- * Return Message content in a format suitable for wire serialization:
- * - If all parts are text, return a single string.
- * - If multimodal, return an array of content objects.
+ * An abstract message in the Prompty pipeline.
+ *
+ * Executors convert this to provider-specific wire format.
+ * Parsers produce this from rendered template text.
  */
-export function messageToTextContent(msg: Message): string | Record<string, unknown>[] {
-  if (msg.parts.length === 1 && msg.parts[0].kind === "text") {
-    return (msg.parts[0] as TextPart).value;
+export class Message {
+  role: Role;
+  parts: ContentPart[];
+  metadata: Record<string, unknown>;
+
+  constructor(
+    role: Role,
+    parts: ContentPart[] = [],
+    metadata: Record<string, unknown> = {},
+  ) {
+    this.role = role;
+    this.parts = parts;
+    this.metadata = metadata;
   }
-  return msg.parts.map(partToWireContent);
+
+  /** Concatenate all TextPart values into a single string. */
+  get text(): string {
+    return this.parts
+      .filter((p): p is TextPart => p.kind === "text")
+      .map((p) => p.value)
+      .join("");
+  }
+
+  /**
+   * Return content in a format suitable for wire serialization:
+   * - If all parts are text, return a single string.
+   * - If multimodal, return an array of content objects.
+   */
+  toTextContent(): string | Record<string, unknown>[] {
+    if (this.parts.length === 1 && this.parts[0].kind === "text") {
+      return (this.parts[0] as TextPart).value;
+    }
+    return this.parts.map(partToWireContent);
+  }
 }
 
 /** Convert a ContentPart to a generic wire-format object. */
 function partToWireContent(part: ContentPart): Record<string, unknown> {
   switch (part.kind) {
     case "text":
-      return { type: "text", text: (part as TextPart).value };
-    case "image": {
-      const img = part as ImagePart;
+      return { type: "text", text: part.value };
+    case "image":
       return {
         type: "image_url",
-        image_url: { url: img.source, ...(img.detail && { detail: img.detail }) },
+        image_url: { url: part.source, ...(part.detail && { detail: part.detail }) },
       };
-    }
     case "file":
-      return { type: "file", file: { url: (part as FilePart).source } };
-    case "audio": {
-      const audio = part as AudioPart;
+      return { type: "file", file: { url: part.source } };
+    case "audio":
       return {
         type: "input_audio",
         input_audio: {
-          data: audio.source,
-          ...(audio.mediaType && { format: audio.mediaType }),
+          data: part.source,
+          ...(part.mediaType && { format: part.mediaType }),
         },
       };
-    }
-    default:
-      return { type: "text", text: String(part) };
   }
 }
-
-// ---------------------------------------------------------------------------
-// ToolResult utilities (standalone functions, no augmentation)
-// ---------------------------------------------------------------------------
-
-/** Concatenate all TextPart values from a ToolResult into a single string. */
-export function toolResultText(result: ToolResult): string {
-  return (result.parts ?? [])
-    .filter((p): p is TextPart => p.kind === "text")
-    .map((p) => p.value)
-    .join("");
-}
-
-/** Create a ToolResult containing a single TextPart. */
-export function textToolResult(value: string): ToolResult {
-  return new ToolResult({ parts: [new TextPart({ value })] });
-}
-
-// ---------------------------------------------------------------------------
-// Role type
-// ---------------------------------------------------------------------------
-
-/** Valid message roles. */
-export type Role = "system" | "user" | "assistant" | "developer" | "tool";
 
 // ---------------------------------------------------------------------------
 // Thread Marker
@@ -116,10 +139,15 @@ export class ThreadMarker {
 }
 
 // ---------------------------------------------------------------------------
-// ToolCall (re-exported from generated model)
+// ToolCall
 // ---------------------------------------------------------------------------
 
-export { ToolCall } from "../model/tool-call.js";
+/** Represents a tool call extracted from an LLM response. */
+export interface ToolCall {
+  id: string;
+  name: string;
+  arguments: string;
+}
 
 // ---------------------------------------------------------------------------
 // Rich Input Kinds
@@ -143,6 +171,8 @@ export const ROLES = new Set<Role>(["system", "user", "assistant", "developer", 
  *
  * Accumulates all chunks as they are yielded. When the async iterator
  * is exhausted, the accumulated items are flushed to the tracer.
+ *
+ * Matches the Python PromptyStream / AsyncPromptyStream pattern.
  */
 export class PromptyStream implements AsyncIterable<unknown> {
   readonly name: string;
@@ -155,13 +185,16 @@ export class PromptyStream implements AsyncIterable<unknown> {
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<unknown> {
+    // Lazy import to avoid circular deps
     const { Tracer } = await import("../tracing/tracer.js");
+
     try {
       for await (const chunk of this.inner) {
         this.items.push(chunk);
         yield chunk;
       }
     } finally {
+      // Flush accumulated items to tracer when stream is exhausted
       if (this.items.length > 0) {
         const span = Tracer.start("PromptyStream");
         span("signature", `${this.name}.PromptyStream`);
@@ -179,24 +212,27 @@ export class PromptyStream implements AsyncIterable<unknown> {
 
 /** Create a TextPart. */
 export function text(value: string): TextPart {
-  return new TextPart({ value });
+  return { kind: "text", value };
 }
 
 /** Create a Message with a single text part. */
 export function textMessage(role: Role, value: string, metadata: Record<string, unknown> = {}): Message {
-  return new Message({ role, parts: [text(value)], metadata });
+  return new Message(role, [text(value)], metadata);
 }
 
 /** Convert a plain dict `{role, content, ...}` to a Message. */
 export function dictToMessage(d: Record<string, unknown>): Message {
-  const role = (d.role as string) ?? "user";
+  const role = (d.role as Role) ?? "user";
   const metadata: Record<string, unknown> = {};
   const parts: ContentPart[] = [];
+
+  // Copy non-role, non-content keys to metadata
   for (const [k, v] of Object.entries(d)) {
     if (k !== "role" && k !== "content") {
       metadata[k] = v;
     }
   }
+
   const content = d.content;
   if (typeof content === "string") {
     parts.push(text(content));
@@ -209,7 +245,8 @@ export function dictToMessage(d: Record<string, unknown>): Message {
       }
     }
   }
-  return new Message({ role, parts, metadata });
+
+  return new Message(role, parts, metadata);
 }
 
 /** Convert a content dict to a ContentPart. */
@@ -217,30 +254,33 @@ export function dictContentToPart(d: Record<string, unknown>): ContentPart {
   const type = (d.type as string) ?? (d.kind as string) ?? "text";
   switch (type) {
     case "text":
-      return new TextPart({ value: (d.text ?? d.value ?? "") as string });
+      return { kind: "text", value: (d.text ?? d.value ?? "") as string };
     case "image_url":
     case "image": {
       const img = (d.image_url ?? d) as Record<string, unknown>;
-      return new ImagePart({
+      return {
+        kind: "image",
         source: (img.url ?? img.source ?? "") as string,
         detail: img.detail as string | undefined,
         mediaType: img.media_type as string | undefined,
-      });
+      };
     }
     case "file":
-      return new FilePart({
+      return {
+        kind: "file",
         source: (d.url ?? d.source ?? "") as string,
         mediaType: d.media_type as string | undefined,
-      });
+      };
     case "input_audio":
     case "audio": {
       const audio = (d.input_audio ?? d) as Record<string, unknown>;
-      return new AudioPart({
+      return {
+        kind: "audio",
         source: (audio.data ?? audio.source ?? "") as string,
         mediaType: (audio.format ?? audio.media_type) as string | undefined,
-      });
+      };
     }
     default:
-      return new TextPart({ value: JSON.stringify(d) });
+      return { kind: "text", value: JSON.stringify(d) };
   }
 }

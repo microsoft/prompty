@@ -5,7 +5,7 @@
  */
 
 import type { Prompty } from "@prompty/core";
-import { type ContentPart, type Message, TextPart, ImagePart, AudioPart, FilePart, messageToTextContent, messageText } from "@prompty/core";
+import type { ContentPart, Message } from "@prompty/core";
 import { load as loadPrompty } from "@prompty/core";
 import { dirname, resolve } from "node:path";
 
@@ -16,13 +16,13 @@ export function messageToWire(msg: Message): Record<string, unknown> {
   const wire: Record<string, unknown> = { role: msg.role };
 
   // Include metadata fields (e.g., name, tool_call_id, tool_calls)
-  for (const [k, v] of Object.entries(msg.metadata ?? {})) {
+  for (const [k, v] of Object.entries(msg.metadata)) {
     if (k !== "role" && k !== "content") {
       wire[k] = v;
     }
   }
 
-  const content = messageToTextContent(msg);
+  const content = msg.toTextContent();
   if (typeof content === "string") {
     wire.content = content;
   } else {
@@ -39,27 +39,22 @@ export function messageToWire(msg: Message): Record<string, unknown> {
 function partToWire(part: ContentPart): Record<string, unknown> {
   switch (part.kind) {
     case "text":
-      return { type: "text", text: (part as TextPart).value };
+      return { type: "text", text: part.value };
     case "image": {
-      const img = part as ImagePart;
-      const imageUrl: Record<string, unknown> = { url: img.source };
-      if (img.detail) imageUrl.detail = img.detail;
+      const imageUrl: Record<string, unknown> = { url: part.source };
+      if (part.detail) imageUrl.detail = part.detail;
       return { type: "image_url", image_url: imageUrl };
     }
-    case "audio": {
-      const audio = part as AudioPart;
+    case "audio":
       return {
         type: "input_audio",
         input_audio: {
-          data: audio.source,
-          ...(audio.mediaType && { format: mimeToAudioFormat(audio.mediaType) }),
+          data: part.source,
+          ...(part.mediaType && { format: mimeToAudioFormat(part.mediaType) }),
         },
       };
-    }
     case "file":
-      return { type: "file", file: { url: (part as FilePart).source } };
-    default:
-      return { type: "text", text: String(part) };
+      return { type: "file", file: { url: part.source } };
   }
 }
 
@@ -125,12 +120,10 @@ export function buildEmbeddingArgs(
   if (Array.isArray(data)) {
     const texts = data.map((item: unknown) => {
       if (typeof item === "string") return item;
-      // Message objects have .parts with TextParts
-      if (item && typeof item === "object" && "parts" in item) {
-        const parts = (item as { parts: { kind: string; value: string }[] }).parts;
-        if (Array.isArray(parts)) {
-          return parts.filter((p) => p.kind === "text").map((p) => p.value).join("");
-        }
+      if (item && typeof item === "object" && "text" in item) return (item as { text: string }).text;
+      if (item && typeof item === "object" && "toTextContent" in item) {
+        const content = (item as { toTextContent: () => unknown }).toTextContent();
+        return typeof content === "string" ? content : String(content);
       }
       return String(item);
     });
@@ -167,9 +160,10 @@ export function buildImageArgs(
   if (typeof data === "string") {
     prompt = data;
   } else if (Array.isArray(data)) {
-    // Messages have .parts[].value for text content
+    // Messages have .parts[].value for text content, or a .text getter
     prompt = data
-      .map((m: { parts?: { kind: string; value: string }[] }) => {
+      .map((m: { text?: string; parts?: { kind: string; value: string }[] }) => {
+        if (typeof m.text === "string") return m.text;
         if (Array.isArray(m.parts)) {
           return m.parts
             .filter((p) => p.kind === "text")
@@ -440,7 +434,7 @@ export function buildResponsesArgs(
 
   for (const msg of messages) {
     if (msg.role === "system" || msg.role === "developer") {
-      systemParts.push(messageText(msg));
+      systemParts.push(msg.text);
     } else {
       inputMessages.push(messageToResponsesInput(msg));
     }
@@ -477,19 +471,18 @@ export function buildResponsesArgs(
 
 /** Convert a Message to Responses API EasyInputMessage format. */
 function messageToResponsesInput(msg: Message): Record<string, unknown> {
-  const content = messageToTextContent(msg);
-  const meta = msg.metadata ?? {};
+  const content = msg.toTextContent();
 
   // Pass-through original function_call items from the agent loop
-  if (meta.responses_function_call) {
-    return meta.responses_function_call as Record<string, unknown>;
+  if (msg.metadata.responses_function_call) {
+    return msg.metadata.responses_function_call as Record<string, unknown>;
   }
 
   // Tool result messages → function_call_output
-  if (meta.tool_call_id) {
+  if (msg.metadata.tool_call_id) {
     return {
       type: "function_call_output",
-      call_id: meta.tool_call_id,
+      call_id: msg.metadata.tool_call_id,
       output: typeof content === "string" ? content : JSON.stringify(content),
     };
   }

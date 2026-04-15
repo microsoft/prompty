@@ -13,9 +13,7 @@ import {
   registerExecutor,
   registerProcessor,
 } from "../src/core/registry.js";
-import { Message, text, messageText } from "../src/core/types.js";
-import { ToolResult } from "../src/model/tool-result.js";
-import { toolResultText } from "../src/core/types.js";
+import { Message, text } from "../src/core/types.js";
 import { Prompty } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 
@@ -137,7 +135,7 @@ class MockRenderer implements Renderer {
 
 class MockParser implements Parser {
   async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
-    return [new Message({ role: "user", parts: [text(rendered)] })];
+    return [new Message("user", [text(rendered)])];
   }
 }
 
@@ -204,16 +202,16 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: ToolResult[],
+        toolResults: string[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       },
@@ -240,7 +238,7 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: ToolResult[],
+        toolResults: string[],
         textContent = "",
       ): Message[] {
         return [];
@@ -293,16 +291,16 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: ToolResult[],
+        toolResults: string[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       },
@@ -417,16 +415,16 @@ describe("Tool Execution Error Safety (§9.9)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: ToolResult[],
+        toolResults: string[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       },
@@ -486,22 +484,22 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         // The tool result with the error message gets sent back to LLM
         const lastMsg = messages[messages.length - 1];
         expect(lastMsg.role).toBe("tool");
-        expect(messageText(lastMsg)).toContain("Error");
+        expect(lastMsg.text).toContain("Error");
         return { choices: [{ message: { role: "assistant", content: "Handled error" } }] };
       },
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: ToolResult[],
+        toolResults: string[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
+        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       },

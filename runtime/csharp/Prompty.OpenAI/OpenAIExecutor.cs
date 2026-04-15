@@ -174,7 +174,7 @@ public class OpenAIExecutor : IExecutor
     public virtual List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<ToolResult> toolResults,
+        List<string> toolResults,
         string? textContent = null)
     {
         var messages = new List<Message>();
@@ -203,7 +203,7 @@ public class OpenAIExecutor : IExecutor
                 messages.Add(new Message
                 {
                     Role = Roles.Tool,
-                    Parts = toolResults[i].Parts.ToList(),
+                    Parts = [new TextPart { Value = toolResults[i] }],
                     Metadata = new Dictionary<string, object?>
                     {
                         ["tool_call_id"] = toolCalls[i].Id,
@@ -233,7 +233,7 @@ public class OpenAIExecutor : IExecutor
             messages.Add(new Message
             {
                 Role = Roles.Tool,
-                Parts = toolResults[i].Parts.ToList(),
+                Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?>
                 {
                     ["tool_call_id"] = toolCalls[i].Id,

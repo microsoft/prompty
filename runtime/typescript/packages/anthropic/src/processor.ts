@@ -12,7 +12,7 @@
 
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
-import { ToolCall } from "@prompty/core";
+import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
@@ -119,7 +119,7 @@ async function* streamGenerator(
   const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
   for (const idx of sortedIndices) {
     const tc = toolCallAcc.get(idx)!;
-    yield new ToolCall({ id: tc.id, name: tc.name, arguments: tc.arguments });
+    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
   }
 }
 
@@ -155,14 +155,14 @@ function processMessages(
 
   for (const block of content) {
     if (block.type === "tool_use") {
-      toolCalls.push(new ToolCall({
+      toolCalls.push({
         id: block.id as string,
         name: block.name as string,
         arguments:
           typeof block.input === "string"
             ? (block.input as string)
             : JSON.stringify(block.input),
-      }));
+      });
     } else if (block.type === "text") {
       textParts.push(block.text as string);
     }

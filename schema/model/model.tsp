@@ -59,7 +59,7 @@ model ModelOptions {
  * This model includes properties for specifying the model's provider, connection details, and various options.
  * It allows for flexible configuration of AI models to suit different use cases and requirements.
  */
-@shorthand(
+@coerce(
   string,
   #{ id: "{value}" },
   "model",

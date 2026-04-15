@@ -11,7 +11,7 @@
  */
 
 import type { Prompty } from "@prompty/core";
-import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPart, messageToTextContent, messageText } from "@prompty/core";
+import type { ContentPart, Message } from "@prompty/core";
 
 // ---------------------------------------------------------------------------
 // Message conversion
@@ -23,32 +23,31 @@ import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPar
  */
 export function messageToWire(msg: Message): Record<string, unknown> {
   const wire: Record<string, unknown> = { role: msg.role };
-  const meta = msg.metadata ?? {};
 
   // Batched tool results → single user message with all tool_result blocks
-  if (meta.tool_results && Array.isArray(meta.tool_results)) {
+  if (msg.metadata.tool_results && Array.isArray(msg.metadata.tool_results)) {
     wire.role = "user";
-    wire.content = meta.tool_results;
+    wire.content = msg.metadata.tool_results;
     return wire;
   }
 
   // Legacy single tool result messages (backward compat)
-  if (meta.tool_use_id || meta.tool_call_id) {
-    const toolUseId = (meta.tool_use_id ?? meta.tool_call_id) as string;
+  if (msg.metadata.tool_use_id || msg.metadata.tool_call_id) {
+    const toolUseId = (msg.metadata.tool_use_id ?? msg.metadata.tool_call_id) as string;
     wire.role = "user";
     wire.content = [
       {
         type: "tool_result",
         tool_use_id: toolUseId,
-        content: messageToTextContent(msg),
+        content: msg.toTextContent(),
       },
     ];
     return wire;
   }
 
   // Assistant messages with raw content blocks (tool_use) — preserve them
-  if (msg.role === "assistant" && meta.content && Array.isArray(meta.content)) {
-    wire.content = meta.content;
+  if (msg.role === "assistant" && msg.metadata.content && Array.isArray(msg.metadata.content)) {
+    wire.content = msg.metadata.content;
     return wire;
   }
 
@@ -64,46 +63,43 @@ export function messageToWire(msg: Message): Record<string, unknown> {
 function partToWire(part: ContentPart): Record<string, unknown> {
   switch (part.kind) {
     case "text":
-      return { type: "text", text: (part as TextPart).value };
+      return { type: "text", text: part.value };
     case "image": {
-      const img = part as ImagePart;
       // Anthropic uses base64 source blocks or URL
-      if (img.mediaType) {
+      if (part.mediaType) {
         // mediaType present → treat source as base64 data
         return {
           type: "image",
           source: {
             type: "base64",
-            media_type: img.mediaType,
-            data: img.source,
+            media_type: part.mediaType,
+            data: part.source,
           },
         };
       }
-      if (img.source.startsWith("data:")) {
+      if (part.source.startsWith("data:")) {
         // Data URL — extract base64 payload and MIME type
-        const [header, data] = img.source.split(",", 2);
+        const [header, data] = part.source.split(",", 2);
         const mediaType = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
         return {
           type: "image",
           source: {
             type: "base64",
             media_type: mediaType,
-            data: data ?? img.source,
+            data: data ?? part.source,
           },
         };
       }
       // URL
       return {
         type: "image",
-        source: { type: "url", url: img.source },
+        source: { type: "url", url: part.source },
       };
     }
     case "file":
-      return { type: "text", text: `[file: ${(part as FilePart).source}]` };
+      return { type: "text", text: `[file: ${part.source}]` };
     case "audio":
-      return { type: "text", text: `[audio: ${(part as AudioPart).source}]` };
-    default:
-      return { type: "text", text: String(part) };
+      return { type: "text", text: `[audio: ${part.source}]` };
   }
 }
 
@@ -128,7 +124,7 @@ export function buildChatArgs(
 
   for (const msg of messages) {
     if (msg.role === "system") {
-      systemParts.push(messageText(msg));
+      systemParts.push(msg.text);
     } else {
       conversationMessages.push(messageToWire(msg));
     }

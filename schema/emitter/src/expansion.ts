@@ -2,7 +2,7 @@
  * Expression IR — Type-directed lowering for the emitter.
  *
  * This module implements the "lowering" pass of the transpiler:
- * given an untyped data literal (from @factory sets or @shorthand expansion)
+ * given an untyped data literal (from @factory sets or @coerce expansion)
  * and a target type (TypeNode/PropertyNode), produce a typed Expr tree.
  *
  * The Expr tree is language-agnostic. Per-language visitors in render-expr.ts
@@ -41,7 +41,7 @@ export interface NullLiteral {
   kind: "null";
 }
 
-/** Reference to a factory/shorthand parameter (substituted at runtime). */
+/** Reference to a factory/coercion parameter (substituted at runtime). */
 export interface ParamRef {
   kind: "param";
   name: string;
@@ -81,6 +81,22 @@ export interface DictLiteral {
   entries: { key: string; value: Expr }[];
 }
 
+/**
+ * A field read from a source object. Used in wire format mapping
+ * to read fields from core types (e.g., `opts.maxOutputTokens`).
+ */
+export interface FieldRead {
+  kind: "field_read";
+  /** Source object/variable name (e.g., "opts") */
+  objectName: string;
+  /** Field name on the source object (e.g., "maxOutputTokens") */
+  fieldName: string;
+  /** Type of the field (e.g., "int32", "string") */
+  fieldType: string;
+  /** Whether the field is optional on the source object */
+  isOptional: boolean;
+}
+
 /** A field assignment within a Construct or VariantConstruct. */
 export interface FieldAssignment {
   /** Original property name from TypeSpec (camelCase). */
@@ -100,7 +116,8 @@ export type Expr =
   | Construct
   | VariantConstruct
   | ArrayLiteral
-  | DictLiteral;
+  | DictLiteral
+  | FieldRead;
 
 // ============================================================================
 // Type Registry — flat lookup for type-directed resolution
@@ -219,24 +236,24 @@ export function resolveFactoryExpr(
 }
 
 /**
- * Resolve a @shorthand decorator into a typed Expr tree.
+ * Resolve a @coerce decorator into a typed Expr tree.
  *
- * A shorthand is essentially a factory with a single implicit parameter named "value".
+ * A coercion is essentially a factory with a single implicit parameter named "value".
  * The expansion dict maps property names to values, where "{value}" is the parameter ref.
  *
  * @param expansion - The expansion dict (e.g., { id: "{value}" })
  * @param scalarType - The scalar type string (e.g., "string")
- * @param targetType - The TypeNode this shorthand constructs
+ * @param targetType - The TypeNode this coercion constructs
  * @param registry - Type registry for resolving nested types
- * @returns A Construct expression representing the shorthand expansion
+ * @returns A Construct expression representing the coercion expansion
  */
-export function resolveShorthandExpr(
+export function resolveCoerceExpr(
   expansion: Record<string, unknown>,
   scalarType: string,
   targetType: TypeNode,
   registry: TypeRegistry,
 ): Construct {
-  // A shorthand is a factory with implicit param { value: scalarType }
+  // A coercion is a factory with implicit param { value: scalarType }
   return resolveFactoryExpr(expansion, { value: scalarType }, targetType, registry);
 }
 

@@ -1,7 +1,7 @@
 """OpenAI executor — calls OpenAI APIs (chat, embedding, image).
 
 Maps abstract ``Message`` objects to the OpenAI wire format
-and sends them to the API. Dispatches on ``agent.model.api_type``.
+and sends them to the API. Dispatches on ``agent.model.apiType``.
 
 Registered as ``openai`` in ``prompty.executors``.
 
@@ -23,7 +23,6 @@ from ...core.types import (
     Message,
     PromptyStream,
     TextPart,
-    ToolResult,
 )
 from ...model import (
     ApiKeyConnection,
@@ -205,8 +204,8 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
 
     if prop.description:
         schema["description"] = prop.description
-    if prop.enum_values:
-        schema["enum"] = prop.enum_values
+    if prop.enumValues:
+        schema["enum"] = prop.enumValues
 
     # Array items — default to string if unspecified
     if prop.kind == "array":
@@ -279,22 +278,22 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 
     if mo.temperature is not None:
         opts["temperature"] = mo.temperature
-    if mo.max_output_tokens is not None:
-        opts["max_completion_tokens"] = mo.max_output_tokens
-    if mo.top_p is not None:
-        opts["top_p"] = mo.top_p
-    if mo.frequency_penalty is not None:
-        opts["frequency_penalty"] = mo.frequency_penalty
-    if mo.presence_penalty is not None:
-        opts["presence_penalty"] = mo.presence_penalty
+    if mo.maxOutputTokens is not None:
+        opts["max_completion_tokens"] = mo.maxOutputTokens
+    if mo.topP is not None:
+        opts["top_p"] = mo.topP
+    if mo.frequencyPenalty is not None:
+        opts["frequency_penalty"] = mo.frequencyPenalty
+    if mo.presencePenalty is not None:
+        opts["presence_penalty"] = mo.presencePenalty
     if mo.seed is not None:
         opts["seed"] = mo.seed
-    if mo.stop_sequences:
-        opts["stop"] = mo.stop_sequences
+    if mo.stopSequences:
+        opts["stop"] = mo.stopSequences
 
     # Pass through additional properties
-    if mo.additional_properties:
-        for k, v in mo.additional_properties.items():
+    if mo.additionalProperties:
+        for k, v in mo.additionalProperties.items():
             if k not in opts:
                 opts[k] = v
 
@@ -316,14 +315,14 @@ def _build_responses_options(agent: Prompty) -> dict[str, Any]:
 
     if mo.temperature is not None:
         opts["temperature"] = mo.temperature
-    if mo.max_output_tokens is not None:
-        opts["max_output_tokens"] = mo.max_output_tokens
-    if mo.top_p is not None:
-        opts["top_p"] = mo.top_p
+    if mo.maxOutputTokens is not None:
+        opts["max_output_tokens"] = mo.maxOutputTokens
+    if mo.topP is not None:
+        opts["top_p"] = mo.topP
 
     # Pass through additional properties
-    if mo.additional_properties:
-        for k, v in mo.additional_properties.items():
+    if mo.additionalProperties:
+        for k, v in mo.additionalProperties.items():
             if k not in opts:
                 opts[k] = v
 
@@ -553,8 +552,8 @@ class _BaseExecutor:
         }
         # Only pass through additional properties — standard chat options
         # (temperature, top_p, etc.) are not valid for the embeddings API.
-        if agent.model.options and agent.model.options.additional_properties:
-            for k, v in agent.model.options.additional_properties.items():
+        if agent.model.options and agent.model.options.additionalProperties:
+            for k, v in agent.model.options.additionalProperties.items():
                 args[k] = v
         return args
 
@@ -567,8 +566,8 @@ class _BaseExecutor:
         }
         # Only pass through additional properties — standard chat options
         # (temperature, top_p, etc.) are not valid for the images API.
-        if agent.model.options and agent.model.options.additional_properties:
-            for k, v in agent.model.options.additional_properties.items():
+        if agent.model.options and agent.model.options.additionalProperties:
+            for k, v in agent.model.options.additionalProperties.items():
                 args[k] = v
         return args
 
@@ -648,7 +647,7 @@ class _BaseExecutor:
         self,
         raw_response: Any,
         tool_calls: list[Any],
-        tool_results: list[ToolResult],
+        tool_results: list[str],
         text_content: str = "",
     ) -> list[Message]:
         """Format tool messages in OpenAI wire format.
@@ -687,11 +686,10 @@ class _BaseExecutor:
                 )
             for i, tc in enumerate(tool_calls):
                 call_id = getattr(tc, "call_id", tc.id)
-                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=list(tr.parts) if tr.parts else [TextPart(value="")],
+                        parts=[TextPart(value=tool_results[i])],
                         metadata={"tool_call_id": call_id, "name": tc.name},
                     )
                 )
@@ -709,11 +707,10 @@ class _BaseExecutor:
                 )
             )
             for i, tc in enumerate(tool_calls):
-                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=list(tr.parts) if tr.parts else [TextPart(value="")],
+                        parts=[TextPart(value=tool_results[i])],
                         metadata={"tool_call_id": tc.id, "name": tc.name},
                     )
                 )
@@ -740,7 +737,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.api_type or "chat"
+        api_type = agent.model.apiType or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -756,7 +753,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.api_type or "chat"
+        api_type = agent.model.apiType or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -818,8 +815,8 @@ class OpenAIExecutor(_BaseExecutor):
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection
         if conn and isinstance(conn, ApiKeyConnection):
-            if conn.api_key:
-                kwargs["api_key"] = conn.api_key
+            if conn.apiKey:
+                kwargs["api_key"] = conn.apiKey
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
         elif conn:

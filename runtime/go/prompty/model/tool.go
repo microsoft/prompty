@@ -549,13 +549,13 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 
 // PromptyTool represents A tool that references another .prompty file to be invoked as a tool.
 //
-// The child prompty is loaded, rendered, and executed with a single LLM call
-// (invoke). Apps that want agentic sub-agents should use `kind: function` tools
-// and call `turn()` themselves.
+// In `single` mode, the child prompty is executed with a single LLM call.
+// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
 
 type PromptyTool struct {
 	Kind string `json:"kind" yaml:"kind"`
 	Path string `json:"path" yaml:"path"`
+	Mode string `json:"mode" yaml:"mode"`
 }
 
 // LoadPromptyTool creates a PromptyTool from a map[string]interface{}
@@ -570,6 +570,9 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 		if val, ok := m["path"]; ok && val != nil {
 			result.Path = val.(string)
 		}
+		if val, ok := m["mode"]; ok && val != nil {
+			result.Mode = val.(string)
+		}
 	}
 
 	return result, nil
@@ -580,6 +583,7 @@ func (obj *PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["path"] = obj.Path
+	result["mode"] = obj.Mode
 
 	return result
 }

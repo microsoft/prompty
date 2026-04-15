@@ -271,7 +271,7 @@ pub fn invoke_format_tool_messages(
     key: &str,
     raw_response: &serde_json::Value,
     tool_calls: &[crate::types::ToolCall],
-    tool_results: &[crate::types::ToolResult],
+    tool_results: &[String],
     text_content: Option<&str>,
 ) -> Result<Vec<crate::types::Message>, InvokerError> {
     let executor = {
@@ -502,7 +502,7 @@ mod tests {
             name: "get_weather".into(),
             arguments: r#"{"city":"NY"}"#.into(),
         }];
-        let results = vec![crate::ToolResult::from_text("72°F sunny")];
+        let results = vec!["72°F sunny".to_string()];
         let msgs = invoke_format_tool_messages(
             "test_ftm",
             &serde_json::json!({}),

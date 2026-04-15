@@ -12,7 +12,7 @@ import {
   InvokerError,
 } from "../src/core/registry.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
-import { Message, TextPart, messageText } from "../src/core/types.js";
+import { Message } from "../src/core/types.js";
 import type { Prompty } from "@prompty/core";
 
 const mockRenderer: Renderer = {
@@ -23,13 +23,13 @@ const mockRenderer: Renderer = {
 
 const mockParser: Parser = {
   async parse(_agent, rendered) {
-    return [new Message({ role: "user", parts: [new TextPart({ value: rendered })] })];
+    return [new Message("user", [{ kind: "text", value: rendered }])];
   },
 };
 
 const mockExecutor: Executor = {
   async execute(_agent, messages) {
-    return { choices: [{ message: { content: `Response to: ${messageText(messages[0])}` } }] };
+    return { choices: [{ message: { content: `Response to: ${messages[0]?.text}` } }] };
   },
 };
 

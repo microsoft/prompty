@@ -78,7 +78,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
       renderType: renderType,
       renderChildTypes: renderChildTypes,
       compositionTypes: getCompositionTypes(node),
-      alternateCtors: generateAlternates(node),
+      alternateCtors: generateCoercions(node),
       parent: node.base ? findNodeByName(node.base) : undefined,
     });
 
@@ -137,10 +137,10 @@ const typeExampleMapper: Record<string, string> = {
   "numeric": "3.14",
 };
 
-export const generateAlternates = (node: TypeNode): { title: string; description: string; scalar: string; simple: string, expanded: string }[] => {
-  if (node.alternates && node.alternates.length > 0) {
+export const generateCoercions = (node: TypeNode): { title: string; description: string; scalar: string; simple: string, expanded: string }[] => {
+  if (node.coercions && node.coercions.length > 0) {
     const alts: { title: string; description: string; scalar: string; simple: string, expanded: string }[] = [];
-    for (const alt of node.alternates) {
+    for (const alt of node.coercions) {
       const scalar = alt.scalar;
       const sample = typeExampleMapper[scalar] ? typeExampleMapper[scalar] : "example";
 

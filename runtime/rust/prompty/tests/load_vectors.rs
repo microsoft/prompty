@@ -208,11 +208,13 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
         let exp_inputs = expected.get("inputs").unwrap();
         if exp_inputs.is_null() {
             assert!(
-                agent.inputs.is_empty(),
+                agent.as_inputs().is_none(),
                 "[{vec_name}] expected null inputs"
             );
         } else if let Some(arr) = exp_inputs.as_array() {
-            let agent_inputs = &agent.inputs;
+            let agent_inputs = agent
+                .as_inputs()
+                .unwrap_or_else(|| panic!("[{vec_name}] expected inputs but got None"));
             assert_eq!(
                 agent_inputs.len(),
                 arr.len(),
@@ -242,7 +244,7 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
         let exp_outputs = expected.get("outputs").unwrap();
         if exp_outputs.is_null() {
             assert!(
-                agent.outputs.is_empty(),
+                agent.as_outputs().is_none(),
                 "[{vec_name}] expected null outputs"
             );
         }
@@ -253,11 +255,13 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
         let exp_tools = expected.get("tools").unwrap();
         if exp_tools.is_null() {
             assert!(
-                agent.tools.is_empty(),
+                agent.as_tools().is_none(),
                 "[{vec_name}] expected null tools"
             );
         } else if let Some(arr) = exp_tools.as_array() {
-            let agent_tools = &agent.tools;
+            let agent_tools = agent
+                .as_tools()
+                .unwrap_or_else(|| panic!("[{vec_name}] expected tools but got None"));
             assert_eq!(
                 agent_tools.len(),
                 arr.len(),
@@ -387,16 +391,22 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 assert_eq!(*strict, Some(exp_strict), "[{vec_name}] tool[{idx}].strict");
             }
             if let Some(exp_params) = expected.get("parameters").and_then(Value::as_array) {
-                // Parameters are now Vec<Property>
+                // Parameters may be stored as a JSON array of property objects
+                let params_arr = parameters.as_array().unwrap_or_else(|| {
+                    panic!("[{vec_name}] tool[{idx}].parameters is not an array")
+                });
                 assert_eq!(
-                    parameters.len(),
+                    params_arr.len(),
                     exp_params.len(),
                     "[{vec_name}] tool[{idx}].parameters count"
                 );
                 for (j, ep) in exp_params.iter().enumerate() {
                     if let Some(pname) = ep.get("name").and_then(Value::as_str) {
                         assert_eq!(
-                            parameters[j].name.as_str(),
+                            params_arr[j]
+                                .get("name")
+                                .and_then(Value::as_str)
+                                .unwrap_or(""),
                             pname,
                             "[{vec_name}] tool[{idx}].parameters[{j}].name"
                         );
@@ -417,9 +427,12 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 );
             }
         }
-        prompty::model::tool::ToolKind::Prompty { path, .. } => {
+        prompty::model::tool::ToolKind::Prompty { path, mode, .. } => {
             if let Some(p) = expected.get("path").and_then(Value::as_str) {
                 assert_eq!(path, p, "[{vec_name}] tool[{idx}].path");
+            }
+            if let Some(m) = expected.get("mode").and_then(Value::as_str) {
+                assert_eq!(mode, m, "[{vec_name}] tool[{idx}].mode");
             }
         }
         prompty::model::tool::ToolKind::Custom { .. } => {

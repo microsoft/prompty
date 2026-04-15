@@ -580,11 +580,11 @@ public class TracingTests : IDisposable
         public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
             => Task.FromResult(response);
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
         {
             var msgs = new List<Message> { new() { Role = Roles.Assistant, Parts = [] } };
             for (var i = 0; i < toolCalls.Count; i++)
-                msgs.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }] });
+                msgs.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }] });
             return msgs;
         }
     }
@@ -640,6 +640,3 @@ public class TracingTests : IDisposable
         Assert.Equal("world", result);
     }
 }
-
-
-

@@ -9,7 +9,8 @@
  * over Expr.kind — TypeScript enforces completeness via `never`.
  */
 
-import { Expr, FieldAssignment, Construct, VariantConstruct, ArrayLiteral } from "./expansion.js";
+import { Expr, FieldAssignment, Construct, VariantConstruct, ArrayLiteral, FieldRead } from "./expansion.js";
+import { TypeRegistry } from "./expansion.js";
 import { toSnakeCase } from "./utilities.js";
 
 // ============================================================================
@@ -18,6 +19,8 @@ import { toSnakeCase } from "./utilities.js";
 
 export interface ExprVisitor {
   visitExpr(expr: Expr): string;
+  /** Optional type registry for wire format generation and type-aware codegen. */
+  registry?: TypeRegistry;
 }
 
 // ============================================================================
@@ -45,6 +48,12 @@ function assertNever(x: never): never {
 // ============================================================================
 
 export class RustExprVisitor implements ExprVisitor {
+  registry?: TypeRegistry;
+
+  constructor(registry?: TypeRegistry) {
+    this.registry = registry;
+  }
+
   visitExpr(expr: Expr): string {
     switch (expr.kind) {
       case "string":
@@ -67,6 +76,8 @@ export class RustExprVisitor implements ExprVisitor {
         return this.visitArray(expr);
       case "dict":
         return `serde_json::json!({${expr.entries.map(e => `"${e.key}": ${this.visitExpr(e.value)}`).join(", ")}})`;
+      case "field_read":
+        return this.visitFieldRead(expr);
       default:
         return assertNever(expr);
     }
@@ -119,6 +130,10 @@ export class RustExprVisitor implements ExprVisitor {
   private escapeString(s: string): string {
     return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
+
+  private visitFieldRead(expr: FieldRead): string {
+    return `${toSnakeCase(expr.objectName)}.${toSnakeCase(expr.fieldName)}`;
+  }
 }
 
 // ============================================================================
@@ -126,6 +141,12 @@ export class RustExprVisitor implements ExprVisitor {
 // ============================================================================
 
 export class TypeScriptExprVisitor implements ExprVisitor {
+  registry?: TypeRegistry;
+
+  constructor(registry?: TypeRegistry) {
+    this.registry = registry;
+  }
+
   visitExpr(expr: Expr): string {
     switch (expr.kind) {
       case "string":
@@ -137,7 +158,7 @@ export class TypeScriptExprVisitor implements ExprVisitor {
       case "null":
         return "undefined";
       case "param":
-        return expr.name; // camelCase as-is (TypeSpec names are already camelCase)
+        return expr.name;
       case "construct":
         return this.visitConstruct(expr);
       case "variant":
@@ -146,6 +167,8 @@ export class TypeScriptExprVisitor implements ExprVisitor {
         return this.visitArray(expr);
       case "dict":
         return `{ ${expr.entries.map(e => `${e.key}: ${this.visitExpr(e.value)}`).join(", ")} }`;
+      case "field_read":
+        return `${expr.objectName}.${expr.fieldName}`;
       default:
         return assertNever(expr);
     }
@@ -192,6 +215,12 @@ export class TypeScriptExprVisitor implements ExprVisitor {
 // ============================================================================
 
 export class PythonExprVisitor implements ExprVisitor {
+  registry?: TypeRegistry;
+
+  constructor(registry?: TypeRegistry) {
+    this.registry = registry;
+  }
+
   visitExpr(expr: Expr): string {
     switch (expr.kind) {
       case "string":
@@ -203,7 +232,7 @@ export class PythonExprVisitor implements ExprVisitor {
       case "null":
         return "None";
       case "param":
-        return toSnakeCase(expr.name); // Python uses snake_case
+        return toSnakeCase(expr.name);
       case "construct":
         return this.visitConstruct(expr);
       case "variant":
@@ -212,6 +241,8 @@ export class PythonExprVisitor implements ExprVisitor {
         return this.visitArray(expr);
       case "dict":
         return `{${expr.entries.map(e => `"${e.key}": ${this.visitExpr(e.value)}`).join(", ")}}`;
+      case "field_read":
+        return `${toSnakeCase(expr.objectName)}.${toSnakeCase(expr.fieldName)}`;
       default:
         return assertNever(expr);
     }
@@ -258,6 +289,12 @@ export class PythonExprVisitor implements ExprVisitor {
 // ============================================================================
 
 export class CSharpExprVisitor implements ExprVisitor {
+  registry?: TypeRegistry;
+
+  constructor(registry?: TypeRegistry) {
+    this.registry = registry;
+  }
+
   visitExpr(expr: Expr): string {
     switch (expr.kind) {
       case "string":
@@ -269,7 +306,7 @@ export class CSharpExprVisitor implements ExprVisitor {
       case "null":
         return "null";
       case "param":
-        return expr.name; // camelCase param names in C#
+        return expr.name;
       case "construct":
         return this.visitConstruct(expr);
       case "variant":
@@ -278,6 +315,8 @@ export class CSharpExprVisitor implements ExprVisitor {
         return this.visitArray(expr);
       case "dict":
         return `new Dictionary<string, object?> { ${expr.entries.map(e => `{ "${e.key}", ${this.visitExpr(e.value)} }`).join(", ")} }`;
+      case "field_read":
+        return `${expr.objectName}.${toPascalCase(expr.fieldName)}`;
       default:
         return assertNever(expr);
     }
@@ -326,6 +365,12 @@ export class CSharpExprVisitor implements ExprVisitor {
 // ============================================================================
 
 export class GoExprVisitor implements ExprVisitor {
+  registry?: TypeRegistry;
+
+  constructor(registry?: TypeRegistry) {
+    this.registry = registry;
+  }
+
   visitExpr(expr: Expr): string {
     switch (expr.kind) {
       case "string":
@@ -337,7 +382,7 @@ export class GoExprVisitor implements ExprVisitor {
       case "null":
         return "nil";
       case "param":
-        return expr.name; // Go uses camelCase for local params
+        return expr.name;
       case "construct":
         return this.visitConstruct(expr);
       case "variant":
@@ -346,6 +391,8 @@ export class GoExprVisitor implements ExprVisitor {
         return this.visitArray(expr);
       case "dict":
         return `map[string]interface{}{${expr.entries.map(e => `"${e.key}": ${this.visitExpr(e.value)}`).join(", ")}}`;
+      case "field_read":
+        return `${expr.objectName}.${toPascalCase(expr.fieldName)}`;
       default:
         return assertNever(expr);
     }
@@ -404,11 +451,16 @@ const visitors: Record<string, () => ExprVisitor> = {
 /**
  * Get an ExprVisitor instance for the given target language.
  * @param language - Target language name (rust, typescript, python, csharp, go)
+ * @param registry - Optional type registry for wire format generation
  */
-export function getVisitor(language: string): ExprVisitor {
+export function getVisitor(language: string, registry?: TypeRegistry): ExprVisitor {
   const factory = visitors[language];
   if (!factory) {
     throw new Error(`No ExprVisitor for language '${language}'. Available: [${Object.keys(visitors).join(", ")}]`);
   }
-  return factory();
+  const visitor = factory();
+  if (registry) {
+    visitor.registry = registry;
+  }
+  return visitor;
 }

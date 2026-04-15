@@ -151,10 +151,6 @@ from .core.types import (
     PromptyStream,
     TextPart,
     ThreadMarker,
-    ToolResult,
-    text_tool_result,
-    to_tool_result,
-    tool_result_text,
 )
 
 # Pipeline (via backward-compat shim)
@@ -207,7 +203,6 @@ from .model import (
     SaveContext,
     Template,
     Tool,
-    ToolCall,
 )
 
 # Concrete invokers
@@ -219,7 +214,7 @@ from .providers.anthropic.processor import AnthropicProcessor
 from .providers.foundry.executor import FoundryExecutor
 from .providers.foundry.processor import FoundryProcessor
 from .providers.openai.executor import OpenAIExecutor
-from .providers.openai.processor import OpenAIProcessor
+from .providers.openai.processor import OpenAIProcessor, ToolCall
 from .renderers import Jinja2Renderer, MustacheRenderer
 
 # Tracing

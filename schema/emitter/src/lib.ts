@@ -108,10 +108,13 @@ export const $lib = createTypeSpecLibrary({
   emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     samples: { description: "Sample values for properties" },
-    shorthands: { description: "Shorthand models creation" },
+    coercions: { description: "Scalar-to-object implicit conversions" },
     abstracts: { description: "Abstract models" },
     factories: { description: "Factory methods for model construction" },
-    helpers: { description: "Helper method stubs for model types" }
+    methods: { description: "Method stubs for model types" },
+    knownAs: { description: "Wire field name mappings per target system" },
+    defaultFor: { description: "Per-target required default values" },
+    protocols: { description: "Pipeline interface markers" }
   }
 });
 

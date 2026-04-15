@@ -15,14 +15,13 @@
 
 export {
   // Types
-  ContentPart,
-  TextPart,
-  ImagePart,
-  FilePart,
-  AudioPart,
+  type ContentPart,
+  type TextPart,
+  type ImagePart,
+  type FilePart,
+  type AudioPart,
   type Role,
-  ToolCall,
-  ToolResult,
+  type ToolCall,
   Message,
   ThreadMarker,
   PromptyStream,
@@ -32,10 +31,6 @@ export {
   textMessage,
   dictToMessage,
   dictContentToPart,
-  messageText,
-  messageToTextContent,
-  toolResultText,
-  textToolResult,
 
   // Interfaces
   type Renderer,
@@ -86,7 +81,7 @@ export {
   summarizeDropped,
   trimToContextWindow,
   formatDroppedMessages,
-  GuardrailResult,
+  type GuardrailResult,
   GuardrailError,
   type InputGuardrail,
   type OutputGuardrail,

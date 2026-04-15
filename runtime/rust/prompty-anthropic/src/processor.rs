@@ -96,7 +96,7 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
         .join("");
 
     // Check for structured output
-    let has_outputs = !agent.outputs.is_empty();
+    let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
 
     if has_outputs {
         // Per spec §8.1: try JSON parse, fall back to raw string on failure

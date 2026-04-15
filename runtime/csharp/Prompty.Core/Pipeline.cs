@@ -222,7 +222,7 @@ public static class Pipeline
     public static async Task<object> TurnAsync(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<ToolResult>>>? tools = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
         bool raw = false,
         int? turnNumber = null,
@@ -358,12 +358,12 @@ public static class Pipeline
                 if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
                 {
                     // Dispatch tool calls (parallel or sequential)
-                    var toolResults = new List<ToolResult>();
+                    var toolResults = new List<string>();
 
                     if (parallelToolCalls && toolResult.ToolCalls.Count > 1)
                     {
                         // Parallel dispatch via Task.WhenAll
-                        var tasks = new List<Task<(int Index, ToolResult Result)>>();
+                        var tasks = new List<Task<(int Index, string Result)>>();
                         for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
                         {
                             var call = toolResult.ToolCalls[ti];
@@ -379,7 +379,7 @@ public static class Pipeline
                                     var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
                                     AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
                                         new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
-                                    tasks.Add(Task.FromResult((capturedIndex, ToolResult.FromText(deniedMsg))));
+                                    tasks.Add(Task.FromResult((capturedIndex, deniedMsg)));
                                     continue;
                                 }
                                 if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
@@ -393,10 +393,10 @@ public static class Pipeline
 
                             tasks.Add(Task.Run(async () =>
                             {
-                                ToolResult toolResponse;
+                                string toolResponse;
                                 try
                                 {
-                                    toolResponse = await Trace.TraceAsync<ToolResult>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                    toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
                                     {
                                         toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
                                         return await ToolDispatch.DispatchAsync(agent, call, tools);
@@ -404,7 +404,7 @@ public static class Pipeline
                                 }
                                 catch (Exception ex) when (ex is not OperationCanceledException)
                                 {
-                                    toolResponse = ToolResult.FromText($"Error: Tool '{call.Name}' failed: {ex.Message}");
+                                    toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
                                     AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
                                         new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
                                 }
@@ -414,7 +414,7 @@ public static class Pipeline
 
                         var completed = await Task.WhenAll(tasks);
                         // Maintain order
-                        var ordered = new ToolResult[toolResult.ToolCalls.Count];
+                        var ordered = new string[toolResult.ToolCalls.Count];
                         foreach (var (index, res) in completed)
                         {
                             ordered[index] = res;
@@ -424,7 +424,7 @@ public static class Pipeline
                         for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
                         {
                             AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                new Dictionary<string, object?> { ["tool"] = toolResult.ToolCalls[ti].Name, ["result"] = toolResults[ti].Text });
+                                new Dictionary<string, object?> { ["tool"] = toolResult.ToolCalls[ti].Name, ["result"] = toolResults[ti] });
                         }
                     }
                     else
@@ -442,7 +442,7 @@ public static class Pipeline
                                     var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
                                     AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
                                         new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
-                                    toolResults.Add(ToolResult.FromText(deniedMsg));
+                                    toolResults.Add(deniedMsg);
                                     continue;
                                 }
                                 if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
@@ -454,10 +454,10 @@ public static class Pipeline
                             AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
                                 new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
 
-                            ToolResult toolResponse;
+                            string toolResponse;
                             try
                             {
-                                toolResponse = await Trace.TraceAsync<ToolResult>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
+                                toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
                                 {
                                     toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
                                     return await ToolDispatch.DispatchAsync(agent, call, tools);
@@ -465,14 +465,14 @@ public static class Pipeline
                             }
                             catch (Exception ex) when (ex is not OperationCanceledException)
                             {
-                                toolResponse = ToolResult.FromText($"Error: Tool '{call.Name}' failed: {ex.Message}");
+                                toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
                                 AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
                                     new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
                             }
                             toolResults.Add(toolResponse);
 
                             AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = toolResponse.Text });
+                                new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = toolResponse });
                         }
                     }
 
@@ -532,7 +532,7 @@ public static class Pipeline
     public static async Task<object> TurnAsync(
         string path,
         Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<ToolResult>>>? tools = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
         bool raw = false,
         int? turnNumber = null,
@@ -578,7 +578,7 @@ public static class Pipeline
     public static async Task<T> TurnAsync<T>(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<ToolResult>>>? tools = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
         bool raw = false,
         int? turnNumber = null,
@@ -602,7 +602,7 @@ public static class Pipeline
     public static async Task<T> TurnAsync<T>(
         string path,
         Dictionary<string, object?>? inputs = null,
-        Dictionary<string, Func<string, Task<ToolResult>>>? tools = null,
+        Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
         bool raw = false,
         int? turnNumber = null,
@@ -769,7 +769,7 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = before }],
-                    Metadata = msg.Metadata is not null ? new Dictionary<string, object?>(msg.Metadata) : null,
+                    Metadata = new Dictionary<string, object?>(msg.Metadata),
                 });
             }
 
@@ -783,13 +783,23 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = after }],
-                    Metadata = msg.Metadata is not null ? new Dictionary<string, object?>(msg.Metadata) : null,
+                    Metadata = new Dictionary<string, object?>(msg.Metadata),
                 });
             }
         }
 
         return result;
     }
+}
+
+/// <summary>
+/// Represents a tool call requested by the LLM.
+/// </summary>
+public class ToolCall
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Arguments { get; set; } = "";
 }
 
 /// <summary>

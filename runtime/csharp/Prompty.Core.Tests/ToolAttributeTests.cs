@@ -162,10 +162,10 @@ public class ToolAttributeTests : IDisposable
         var tools = ToolAttribute.DiscoverTools(service);
 
         var result = await tools["get_weather"]("{\"city\": \"Seattle\"}");
-        Assert.Contains("Seattle", result.Text);
+        Assert.Contains("Seattle", result);
 
         var noArgsResult = await tools["NoArgs"]("{}");
-        Assert.Equal("no args result", noArgsResult.Text);
+        Assert.Equal("no args result", noArgsResult);
     }
 
     // ─── MapTypeToKind (tested indirectly via BuildFromMethod) ───
@@ -347,14 +347,12 @@ public class ToolAttributeTests : IDisposable
         var result = ToolAttribute.BindTools(agent, service);
 
         var weather = await result["get_weather"]("{\"city\": \"Seattle\"}");
-        Assert.Contains("Seattle", weather.Text);
+        Assert.Contains("Seattle", weather);
 
         var noArgs = await result["NoArgs"]("{}");
-        Assert.Equal("no args result", noArgs.Text);
+        Assert.Equal("no args result", noArgs);
 
         var sum = await result["add_numbers"]("{\"a\": 3, \"b\": 5}");
-        Assert.Equal("8", sum.Text);
+        Assert.Equal("8", sum);
     }
 }
-
-

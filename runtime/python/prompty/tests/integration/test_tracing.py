@@ -304,9 +304,9 @@ class TestFoundryStreamingTracing:
             agent = make_foundry_agent(options={"temperature": 0, "maxOutputTokens": 50})
             assert agent.model is not None
             assert agent.model.options is not None
-            if agent.model.options.additional_properties is None:
-                agent.model.options.additional_properties = {}
-            agent.model.options.additional_properties["stream"] = True
+            if agent.model.options.additionalProperties is None:
+                agent.model.options.additionalProperties = {}
+            agent.model.options.additionalProperties["stream"] = True
 
             messages = _chat_messages()
             response = self.executor.execute(agent, messages)

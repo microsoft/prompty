@@ -61,7 +61,7 @@ function makeAgent(overrides?: {
 describe("buildChatArgs", () => {
   it("produces model and messages", () => {
     const agent = makeAgent();
-    const msgs = [new Message({ role: "user", parts: [text("Hello")] })];
+    const msgs = [new Message("user", [text("Hello")])];
     const args = buildChatArgs(agent, msgs);
 
     expect(args.model).toBe("gpt-4o");
@@ -210,7 +210,7 @@ describe("buildChatArgs prompty tools", () => {
     const agent = load(fixturePath);
     // Override apiType for responses
     agent.model!.apiType = "responses";
-    const msgs = [new Message({ role: "user", parts: [text("summarize this")] })];
+    const msgs = [new Message("user", [text("summarize this")])];
     const args = buildResponsesArgs(agent, msgs);
 
     const tools = args.tools as Record<string, unknown>[];
@@ -606,8 +606,8 @@ describe("buildResponsesArgs", () => {
   it("separates system messages into instructions", () => {
     const agent = makeAgent({ apiType: "responses" });
     const msgs = [
-      new Message({ role: "system", parts: [text("You are helpful.")] }),
-      new Message({ role: "user", parts: [text("Hello")] }),
+      new Message("system", [text("You are helpful.")]),
+      new Message("user", [text("Hello")]),
     ];
     const args = buildResponsesArgs(agent, msgs);
 
@@ -703,9 +703,9 @@ describe("buildResponsesArgs", () => {
   it("combines multiple system messages", () => {
     const agent = makeAgent({ apiType: "responses" });
     const msgs = [
-      new Message({ role: "system", parts: [text("Rule 1.")] }),
-      new Message({ role: "developer", parts: [text("Rule 2.")] }),
-      new Message({ role: "user", parts: [text("Hello")] }),
+      new Message("system", [text("Rule 1.")]),
+      new Message("developer", [text("Rule 2.")]),
+      new Message("user", [text("Hello")]),
     ];
     const args = buildResponsesArgs(agent, msgs);
 
@@ -716,7 +716,7 @@ describe("buildResponsesArgs", () => {
   it("converts tool result messages to function_call_output", () => {
     const agent = makeAgent({ apiType: "responses" });
     const msgs = [
-      new Message({ role: "tool", parts: [text("72°F")], metadata: { tool_call_id: "call_123" } }),
+      new Message("tool", [text("72°F")], { tool_call_id: "call_123" }),
     ];
     const args = buildResponsesArgs(agent, msgs);
 

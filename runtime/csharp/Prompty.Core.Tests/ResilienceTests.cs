@@ -40,7 +40,7 @@ file class ThrowingMockExecutor : IExecutor
     public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<ToolResult> toolResults,
+        List<string> toolResults,
         string? textContent = null)
     {
         var msgs = new List<Message>();
@@ -55,7 +55,7 @@ file class ThrowingMockExecutor : IExecutor
             msgs.Add(new Message
             {
                 Role = Roles.Tool,
-                Parts = [new TextPart { Value = toolResults[i].Text }],
+                Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
@@ -270,7 +270,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             new FunctionTool { Name = "bad_tool", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["bad_tool"] = _ => throw new InvalidOperationException("boom")
         };
@@ -296,7 +296,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             new FunctionTool { Name = "failing_tool", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["failing_tool"] = _ => throw new InvalidOperationException("tool went wrong")
         };
@@ -326,7 +326,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             new FunctionTool { Name = "err_tool", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["err_tool"] = _ => throw new InvalidOperationException("kaboom")
         };
@@ -363,9 +363,9 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             new FunctionTool { Name = "some_tool", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["some_tool"] = args => Task.FromResult<ToolResult>("should not reach")
+            ["some_tool"] = args => Task.FromResult("should not reach")
         };
 
         var result = await Pipeline.TurnAsync(agent, tools: tools);
@@ -401,9 +401,9 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             new FunctionTool { Name = "bad_tool", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["good_tool"] = _ => Task.FromResult<ToolResult>("ok"),
+            ["good_tool"] = _ => Task.FromResult("ok"),
             ["bad_tool"] = _ => throw new InvalidOperationException("parallel boom")
         };
 
@@ -451,9 +451,9 @@ public class LlmCallRetryTests : IDisposable
         // Need tools or agent features to enter agent loop path
         agent.Tools = [new FunctionTool { Name = "dummy", Kind = "function" }];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["dummy"] = s => Task.FromResult<ToolResult>("ok")
+            ["dummy"] = s => Task.FromResult("ok")
         };
 
         var result = await Pipeline.TurnAsync(agent, tools: tools, maxLlmRetries: 3);
@@ -477,9 +477,9 @@ public class LlmCallRetryTests : IDisposable
         var agent = ResilienceHelper.CreateAgent();
         agent.Tools = [new FunctionTool { Name = "dummy", Kind = "function" }];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["dummy"] = s => Task.FromResult<ToolResult>("ok")
+            ["dummy"] = s => Task.FromResult("ok")
         };
 
         var events = new List<(AgentEventType Type, Dictionary<string, object?> Data)>();
@@ -510,9 +510,9 @@ public class LlmCallRetryTests : IDisposable
         var agent = ResilienceHelper.CreateAgent();
         agent.Tools = [new FunctionTool { Name = "dummy", Kind = "function" }];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["dummy"] = s => Task.FromResult<ToolResult>("ok")
+            ["dummy"] = s => Task.FromResult("ok")
         };
 
         var ex = await Assert.ThrowsAsync<ExecuteError>(() =>
@@ -537,9 +537,9 @@ public class LlmCallRetryTests : IDisposable
         var agent = ResilienceHelper.CreateAgent("My prompt");
         agent.Tools = [new FunctionTool { Name = "dummy", Kind = "function" }];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["dummy"] = s => Task.FromResult<ToolResult>("ok")
+            ["dummy"] = s => Task.FromResult("ok")
         };
 
         var ex = await Assert.ThrowsAsync<ExecuteError>(() =>
@@ -568,9 +568,9 @@ public class LlmCallRetryTests : IDisposable
         var agent = ResilienceHelper.CreateAgent();
         agent.Tools = [new FunctionTool { Name = "dummy", Kind = "function" }];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["dummy"] = s => Task.FromResult<ToolResult>("ok")
+            ["dummy"] = s => Task.FromResult("ok")
         };
 
         var cts = new CancellationTokenSource();
@@ -603,6 +603,3 @@ public class LlmCallRetryTests : IDisposable
             Pipeline.TurnAsync(agent));
     }
 }
-
-
-

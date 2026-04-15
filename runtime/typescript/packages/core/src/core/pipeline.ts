@@ -35,14 +35,9 @@ import { Prompty } from "../model/prompty.js";
 import {
   type ToolCall,
   Message,
-  ToolResult,
-  TextPart,
   RICH_KINDS,
   dictToMessage,
   text,
-  messageText,
-  toolResultText,
-  textToolResult,
 } from "./types.js";
 import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
@@ -215,7 +210,7 @@ function serializeAgent(agent: Prompty): Record<string, unknown> {
 function serializeMessages(messages: Message[]): unknown[] {
   return messages.map(m => ({
     role: m.role,
-    content: messageText(m),
+    content: m.text,
   }));
 }
 
@@ -570,11 +565,11 @@ function replaceSummaryMessage(messages: Message[], summary: string): void {
     (m) =>
       m.role === "user" &&
       m.parts.some(
-        (p) => p.kind === "text" && (p as TextPart).value.includes("[Context summary:"),
+        (p) => p.kind === "text" && (p as { value: string }).value.includes("[Context summary:"),
       ),
   );
   if (idx >= 0) {
-    messages[idx] = new Message({ role: "user", parts: [text(`[Context summary: ${summary}]`)] });
+    messages[idx] = new Message("user", [text(`[Context summary: ${summary}]`)]);
   }
 }
 
@@ -704,7 +699,7 @@ export async function turn<T = unknown>(
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
-        if (result.rewrite) messages = result.rewrite as Message[];
+        if (result.rewrite) messages = result.rewrite;
       }
 
       // §13.2 — Check cancellation before LLM call
@@ -723,7 +718,7 @@ export async function turn<T = unknown>(
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
         const contentStr = typeof processed === "string" ? processed : JSON.stringify(processed);
-        const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
+        const assistantMsg = new Message("assistant", [text(contentStr)]);
         const gr = options.guardrails.checkOutput(assistantMsg);
         if (!gr.allowed) {
           emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -797,7 +792,7 @@ export async function turn<T = unknown>(
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
-        if (result.rewrite) messages = result.rewrite as Message[];
+        if (result.rewrite) messages = result.rewrite;
       }
 
       // §13.2 — Check cancellation before LLM call
@@ -817,7 +812,7 @@ export async function turn<T = unknown>(
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
-          const assistantMsg = new Message({ role: "assistant", parts: [text(content)] });
+          const assistantMsg = new Message("assistant", [text(content)]);
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -847,7 +842,7 @@ export async function turn<T = unknown>(
             toolCalls, content, tools, agent, parentInputs, toolEmit,
             { onEvent, signal, guardrails, parallel: parallelToolCalls },
           );
-          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as TextPart).value ?? "").join(""), metadata: m.metadata })));
+          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
           return result;
         });
 
@@ -861,7 +856,7 @@ export async function turn<T = unknown>(
         const finalResult = options?.raw ? response : await process(agent, response);
         if (guardrails) {
           const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
-          const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
+          const assistantMsg = new Message("assistant", [text(contentStr)]);
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -884,7 +879,7 @@ export async function turn<T = unknown>(
       if (guardrails) {
         const { textContent } = extractToolInfo(response);
         if (textContent) {
-          const assistantMsg = new Message({ role: "assistant", parts: [text(textContent)] });
+          const assistantMsg = new Message("assistant", [text(textContent)]);
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -908,7 +903,7 @@ export async function turn<T = unknown>(
           response, tools, agent, parentInputs, toolEmit,
           { onEvent, signal, guardrails, parallel: parallelToolCalls },
         );
-        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as TextPart).value ?? "").join(""), metadata: m.metadata })));
+        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
         return result;
       });
 
@@ -1037,14 +1032,13 @@ function expandThreads(
       if (part.kind !== "text") continue;
 
       for (const [nonce, name] of nonceToName) {
-        if ((part as TextPart).value.includes(nonce)) {
+        if (part.value.includes(nonce)) {
           // Split text around the nonce
-          const val = (part as TextPart).value;
-          const before = val.slice(0, val.indexOf(nonce)).trim();
-          const after = val.slice(val.indexOf(nonce) + nonce.length).trim();
+          const before = part.value.slice(0, part.value.indexOf(nonce)).trim();
+          const after = part.value.slice(part.value.indexOf(nonce) + nonce.length).trim();
 
           if (before) {
-            result.push(new Message({ role: msg.role, parts: [text(before)], metadata: { ...msg.metadata } }));
+            result.push(new Message(msg.role, [text(before)], { ...msg.metadata }));
           }
 
           // Insert thread messages from input
@@ -1060,7 +1054,7 @@ function expandThreads(
           }
 
           if (after) {
-            result.push(new Message({ role: msg.role, parts: [text(after)], metadata: { ...msg.metadata } }));
+            result.push(new Message(msg.role, [text(after)], { ...msg.metadata }));
           }
 
           expanded = true;
@@ -1201,7 +1195,7 @@ async function dispatchOneToolWithExtensions(
   agent: Prompty,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
-): Promise<ToolResult> {
+): Promise<string> {
   const { onEvent, signal, guardrails } = ext;
 
   // §13.2 — Check cancellation before each tool
@@ -1222,7 +1216,7 @@ async function dispatchOneToolWithExtensions(
     if (!gr.allowed) {
       const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
       emitEvent(onEvent, "tool_result", { name: tc.name, result: deniedMsg });
-      return textToolResult(deniedMsg);
+      return deniedMsg;
     }
     if (gr.rewrite !== undefined) {
       tc = { ...tc, arguments: typeof gr.rewrite === "string" ? gr.rewrite : JSON.stringify(gr.rewrite) };
@@ -1230,15 +1224,15 @@ async function dispatchOneToolWithExtensions(
   }
 
   // Execute tool
-  let result: ToolResult;
+  let result: string;
   let parsedArgs: unknown;
   try {
     // §9.8 — Resilient JSON parsing for tool arguments
     parsedArgs = resilientJsonParse(tc.arguments);
     if (parsedArgs === null) {
-      result = textToolResult(`Error: Tool '${tc.name}' received unparseable arguments`);
+      result = `Error: Tool '${tc.name}' received unparseable arguments`;
       emitEvent(onEvent, "error", { tool: tc.name, error: "Unparseable tool arguments" });
-      emitEvent(onEvent, "tool_result", { name: tc.name, result: toolResultText(result) });
+      emitEvent(onEvent, "tool_result", { name: tc.name, result });
       return result;
     }
     if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
@@ -1249,25 +1243,24 @@ async function dispatchOneToolWithExtensions(
       toolEmit("description", `Execute tool: ${tc.name}`);
       toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
       const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs);
-      toolEmit("result", toolResultText(r));
+      toolEmit("result", r);
       return r;
-    }) as ToolResult;
+    }) as string;
   } catch (err) {
     // Re-throw cancellation errors
     if (err instanceof CancelledError) throw err;
     const errorMsg = err instanceof Error ? err.message : String(err);
     // §9.9 — Emit error event on tool execution failure
     emitEvent(onEvent, "error", { tool: tc.name, error: errorMsg });
-    result = textToolResult(`Error: Tool '${tc.name}' failed: ${errorMsg}`);
+    result = `Error: Tool '${tc.name}' failed: ${errorMsg}`;
   }
 
   // §13.1 — Emit tool_result
-  emitEvent(onEvent, "tool_result", { name: tc.name, result: toolResultText(result) });
+  emitEvent(onEvent, "tool_result", { name: tc.name, result });
 
   // §9.9 — Emit error event when tool result indicates failure
-  const resultStr = toolResultText(result);
-  if (resultStr.startsWith("Error:")) {
-    emitEvent(onEvent, "error", { tool: tc.name, error: resultStr });
+  if (result.startsWith("Error:")) {
+    emitEvent(onEvent, "error", { tool: tc.name, error: result });
   }
   return result;
 }
@@ -1281,7 +1274,7 @@ async function dispatchToolsWithExtensions(
   agent: Prompty,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
-): Promise<ToolResult[]> {
+): Promise<string[]> {
   if (ext.parallel && toolCalls.length > 1) {
     // §13.6 — Parallel tool execution via Promise.all
     return Promise.all(
@@ -1290,7 +1283,7 @@ async function dispatchToolsWithExtensions(
   }
 
   // Sequential execution
-  const results: ToolResult[] = [];
+  const results: string[] = [];
   for (const tc of toolCalls) {
     results.push(await dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext));
   }
@@ -1314,7 +1307,7 @@ async function buildToolResultMessagesWithExtensions(
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResultText(toolResults[i]) })),
+      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
     });
   }
 
@@ -1341,7 +1334,7 @@ async function buildToolMessagesFromCallsWithExtensions(
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResultText(toolResults[i]) })),
+      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
     });
   }
 

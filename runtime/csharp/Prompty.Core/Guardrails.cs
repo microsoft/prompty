@@ -2,6 +2,9 @@
 
 namespace Prompty.Core;
 
+/// <summary>§13.4 Result of a guardrail check.</summary>
+public record GuardrailResult(bool Allowed, string? Reason = null, object? Rewrite = null);
+
 /// <summary>Error thrown when a guardrail denies the operation.</summary>
 public class GuardrailError : Exception
 {
@@ -30,11 +33,11 @@ public class Guardrails
     }
 
     public GuardrailResult CheckInput(List<Message> messages)
-        => _inputHook?.Invoke(messages) ?? GuardrailResult.Allow();
+        => _inputHook?.Invoke(messages) ?? new GuardrailResult(true);
 
     public GuardrailResult CheckOutput(Message message)
-        => _outputHook?.Invoke(message) ?? GuardrailResult.Allow();
+        => _outputHook?.Invoke(message) ?? new GuardrailResult(true);
 
     public GuardrailResult CheckTool(string name, Dictionary<string, object?> args)
-        => _toolHook?.Invoke(name, args) ?? GuardrailResult.Allow();
+        => _toolHook?.Invoke(name, args) ?? new GuardrailResult(true);
 }

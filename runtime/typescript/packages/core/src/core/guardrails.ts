@@ -4,10 +4,13 @@
  */
 
 import { Message } from "./types.js";
-import { GuardrailResult } from "../model/guardrail-result.js";
 
-// Re-export so existing imports from this module still work.
-export { GuardrailResult };
+/** Result of a guardrail check. */
+export interface GuardrailResult {
+  allowed: boolean;
+  reason?: string;
+  rewrite?: any;
+}
 
 /** Error thrown when a guardrail denies the operation. */
 export class GuardrailError extends Error {
@@ -49,17 +52,17 @@ export class Guardrails {
   }
 
   checkInput(messages: Message[]): GuardrailResult {
-    if (!this.inputHook) return GuardrailResult.allow();
+    if (!this.inputHook) return { allowed: true };
     return this.inputHook(messages);
   }
 
   checkOutput(message: Message): GuardrailResult {
-    if (!this.outputHook) return GuardrailResult.allow();
+    if (!this.outputHook) return { allowed: true };
     return this.outputHook(message);
   }
 
   checkTool(name: string, args: Record<string, unknown>): GuardrailResult {
-    if (!this.toolHook) return GuardrailResult.allow();
+    if (!this.toolHook) return { allowed: true };
     return this.toolHook(name, args);
   }
 }

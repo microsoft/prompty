@@ -19,7 +19,7 @@ public static class ContextWindow
                 else
                     total += 200;
             }
-            if (msg.Metadata is not null && msg.Metadata.TryGetValue("tool_calls", out var tc) && tc is not null)
+            if (msg.Metadata.TryGetValue("tool_calls", out var tc) && tc is not null)
                 total += System.Text.Json.JsonSerializer.Serialize(tc).Length;
         }
         return total;
@@ -36,7 +36,7 @@ public static class ContextWindow
                 lines.Add($"User asked: {Truncate(msgText)}");
             else if (msg.Role == "assistant")
             {
-                if (msg.Metadata is not null && msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
+                if (msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
                 {
                     var names = new List<string>();
                     foreach (var tc in tcList)
@@ -128,7 +128,7 @@ public static class ContextWindow
         var lines = new List<string>();
         foreach (var msg in messages)
         {
-            if (msg.Metadata is not null && msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
+            if (msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
             {
                 foreach (var tc in tcList)
                 {

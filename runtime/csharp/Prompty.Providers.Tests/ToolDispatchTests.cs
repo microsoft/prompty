@@ -30,7 +30,7 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public void RegisterTool_AndGetTool_Works()
     {
-        ToolDispatch.RegisterTool("my_tool", args => Task.FromResult<ToolResult>("result"));
+        ToolDispatch.RegisterTool("my_tool", args => Task.FromResult("result"));
 
         var fn = ToolDispatch.GetTool("my_tool");
         Assert.NotNull(fn);
@@ -45,8 +45,8 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public void ClearTools_RemovesAllRegistrations()
     {
-        ToolDispatch.RegisterTool("tool_a", _ => Task.FromResult<ToolResult>("a"));
-        ToolDispatch.RegisterTool("tool_b", _ => Task.FromResult<ToolResult>("b"));
+        ToolDispatch.RegisterTool("tool_a", _ => Task.FromResult("a"));
+        ToolDispatch.RegisterTool("tool_b", _ => Task.FromResult("b"));
 
         ToolDispatch.ClearTools();
 
@@ -61,7 +61,7 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public void RegisterToolHandler_AndGetToolHandler_Works()
     {
-        ToolHandler handler = (agent, tool, args) => Task.FromResult<ToolResult>("handled");
+        ToolHandler handler = (agent, tool, args) => Task.FromResult("handled");
         ToolDispatch.RegisterToolHandler("custom_kind", handler);
 
         var retrieved = ToolDispatch.GetToolHandler("custom_kind");
@@ -78,7 +78,7 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public void ClearToolHandlers_RemovesAll()
     {
-        ToolDispatch.RegisterToolHandler("kind_a", (a, t, args) => Task.FromResult<ToolResult>("a"));
+        ToolDispatch.RegisterToolHandler("kind_a", (a, t, args) => Task.FromResult("a"));
         ToolDispatch.ClearToolHandlers();
 
         Assert.Null(ToolDispatch.GetToolHandler("kind_a"));
@@ -92,7 +92,7 @@ public class ToolDispatchTests : IDisposable
     public async Task Dispatch_UserToolsHaveHighestPriority()
     {
         // Register in global name registry
-        ToolDispatch.RegisterTool("greet", _ => Task.FromResult<ToolResult>("global"));
+        ToolDispatch.RegisterTool("greet", _ => Task.FromResult("global"));
 
         var agent = new Core.Prompty
         {
@@ -105,19 +105,19 @@ public class ToolDispatchTests : IDisposable
         var call = new ToolCall { Id = "c1", Name = "greet", Arguments = """{}""" };
 
         // User tool should win over global
-        var userTools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var userTools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["greet"] = _ => Task.FromResult<ToolResult>("user-level"),
+            ["greet"] = _ => Task.FromResult("user-level"),
         };
 
         var result = await ToolDispatch.DispatchAsync(agent, call, userTools);
-        Assert.Equal("user-level", result.Text);
+        Assert.Equal("user-level", result);
     }
 
     [Fact]
     public async Task Dispatch_GlobalNameRegistry_SecondPriority()
     {
-        ToolDispatch.RegisterTool("greet", _ => Task.FromResult<ToolResult>("global-registered"));
+        ToolDispatch.RegisterTool("greet", _ => Task.FromResult("global-registered"));
 
         var agent = new Core.Prompty
         {
@@ -127,14 +127,14 @@ public class ToolDispatchTests : IDisposable
         var call = new ToolCall { Id = "c1", Name = "greet", Arguments = """{}""" };
 
         var result = await ToolDispatch.DispatchAsync(agent, call);
-        Assert.Equal("global-registered", result.Text);
+        Assert.Equal("global-registered", result);
     }
 
     [Fact]
     public async Task Dispatch_KindHandler_ThirdPriority()
     {
         ToolDispatch.RegisterToolHandler("custom_kind",
-            (agent, tool, args) => Task.FromResult<ToolResult>($"kind-handler:{tool.Name}"));
+            (agent, tool, args) => Task.FromResult($"kind-handler:{tool.Name}"));
 
         var agent = new Core.Prompty
         {
@@ -144,14 +144,14 @@ public class ToolDispatchTests : IDisposable
         var call = new ToolCall { Id = "c1", Name = "my_tool", Arguments = """{}""" };
 
         var result = await ToolDispatch.DispatchAsync(agent, call);
-        Assert.Equal("kind-handler:my_tool", result.Text);
+        Assert.Equal("kind-handler:my_tool", result);
     }
 
     [Fact]
     public async Task Dispatch_WildcardHandler_FallbackPriority()
     {
         ToolDispatch.RegisterToolHandler("*",
-            (agent, tool, args) => Task.FromResult<ToolResult>("wildcard-handled"));
+            (agent, tool, args) => Task.FromResult("wildcard-handled"));
 
         var agent = new Core.Prompty
         {
@@ -161,7 +161,7 @@ public class ToolDispatchTests : IDisposable
         var call = new ToolCall { Id = "c1", Name = "exotic", Arguments = """{}""" };
 
         var result = await ToolDispatch.DispatchAsync(agent, call);
-        Assert.Equal("wildcard-handled", result.Text);
+        Assert.Equal("wildcard-handled", result);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class ToolDispatchTests : IDisposable
     public async Task BuiltinFunctionHandler_WithRegisteredCallable_NameRegistryWins()
     {
         ToolDispatch.RegisterBuiltins();
-        ToolDispatch.RegisterTool("my_func", args => Task.FromResult<ToolResult>("called!"));
+        ToolDispatch.RegisterTool("my_func", args => Task.FromResult("called!"));
 
         var agent = new Core.Prompty
         {
@@ -257,7 +257,7 @@ public class ToolDispatchTests : IDisposable
         var call = new ToolCall { Id = "c1", Name = "my_func", Arguments = """{}""" };
 
         var result = await ToolDispatch.DispatchAsync(agent, call);
-        Assert.Equal("called!", result.Text);
+        Assert.Equal("called!", result);
     }
 
     // -----------------------------------------------------------------------
@@ -272,7 +272,7 @@ public class ToolDispatchTests : IDisposable
             {
                 // Should have the binding value injected
                 var location = args.GetValueOrDefault("location")?.ToString();
-                return Task.FromResult<ToolResult>($"location={location}");
+                return Task.FromResult($"location={location}");
             });
 
         var agent = new Core.Prompty
@@ -290,7 +290,7 @@ public class ToolDispatchTests : IDisposable
 
         var call = new ToolCall { Id = "c1", Name = "bound_tool", Arguments = """{}""" };
         var result = await ToolDispatch.DispatchAsync(agent, call);
-        Assert.Equal("location=Seattle", result.Text);
+        Assert.Equal("location=Seattle", result);
     }
 
     // -----------------------------------------------------------------------
@@ -360,6 +360,3 @@ public class ToolDispatchTests : IDisposable
         Assert.NotNull(ToolDispatch.GetToolHandler("prompty"));
     }
 }
-
-
-

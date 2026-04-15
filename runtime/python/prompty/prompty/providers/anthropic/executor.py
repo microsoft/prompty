@@ -22,7 +22,6 @@ from ...core.types import (
     Message,
     PromptyStream,
     TextPart,
-    ToolResult,
 )
 from ...model import (
     ApiKeyConnection,
@@ -135,16 +134,16 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 
     if opts.temperature is not None:
         result["temperature"] = opts.temperature
-    if opts.top_p is not None:
-        result["top_p"] = opts.top_p
-    if opts.top_k is not None:
-        result["top_k"] = opts.top_k
-    if opts.stop_sequences:
-        result["stop_sequences"] = opts.stop_sequences
+    if opts.topP is not None:
+        result["top_p"] = opts.topP
+    if opts.topK is not None:
+        result["top_k"] = opts.topK
+    if opts.stopSequences:
+        result["stop_sequences"] = opts.stopSequences
 
-    # Pass through additional_properties
-    if opts.additional_properties:
-        for k, v in opts.additional_properties.items():
+    # Pass through additionalProperties
+    if opts.additionalProperties:
+        for k, v in opts.additionalProperties.items():
             if k not in result and k != "max_tokens":
                 result[k] = v
 
@@ -171,8 +170,8 @@ def _property_to_json_schema(prop: Any) -> dict[str, Any]:
 
     if hasattr(prop, "description") and prop.description:
         schema["description"] = prop.description
-    if hasattr(prop, "enum_values") and prop.enum_values:
-        schema["enum"] = prop.enum_values
+    if hasattr(prop, "enumValues") and prop.enumValues:
+        schema["enum"] = prop.enumValues
 
     if getattr(prop, "kind", None) == "array":
         items = getattr(prop, "items", None)
@@ -291,8 +290,8 @@ def _build_chat_args(agent: Prompty, messages: list[Message]) -> dict[str, Any]:
             conversation.append(_message_to_wire(msg))
 
     max_tokens = DEFAULT_MAX_TOKENS
-    if agent.model.options and agent.model.options.max_output_tokens is not None:
-        max_tokens = agent.model.options.max_output_tokens
+    if agent.model.options and agent.model.options.maxOutputTokens is not None:
+        max_tokens = agent.model.options.maxOutputTokens
 
     args: dict[str, Any] = {
         "model": model,
@@ -334,7 +333,7 @@ class AnthropicExecutor:
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.api_type or "chat"
+        api_type = agent.model.apiType or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -346,7 +345,7 @@ class AnthropicExecutor:
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.api_type or "chat"
+        api_type = agent.model.apiType or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -359,8 +358,8 @@ class AnthropicExecutor:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
-            and agent.model.options.additional_properties
-            and agent.model.options.additional_properties.get("stream", False)
+            and agent.model.options.additionalProperties
+            and agent.model.options.additionalProperties.get("stream", False)
         )
 
         if is_streaming:
@@ -374,8 +373,8 @@ class AnthropicExecutor:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
-            and agent.model.options.additional_properties
-            and agent.model.options.additional_properties.get("stream", False)
+            and agent.model.options.additionalProperties
+            and agent.model.options.additionalProperties.get("stream", False)
         )
 
         if is_streaming:
@@ -414,8 +413,8 @@ class AnthropicExecutor:
         conn = agent.model.connection
 
         if isinstance(conn, ApiKeyConnection):
-            if conn.api_key:
-                kwargs["api_key"] = conn.api_key
+            if conn.apiKey:
+                kwargs["api_key"] = conn.apiKey
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
         elif conn:
@@ -433,7 +432,7 @@ class AnthropicExecutor:
         self,
         raw_response: Any,
         tool_calls: list[Any],
-        tool_results: list[ToolResult],
+        tool_results: list[str],
         text_content: str = "",
     ) -> list[Message]:
         """Format tool messages in Anthropic wire format.
@@ -445,7 +444,7 @@ class AnthropicExecutor:
         """
         import json
 
-        from ...core.types import Message, TextPart, tool_result_text
+        from ...core.types import Message, TextPart
 
         result_messages: list[Message] = []
 
@@ -472,21 +471,18 @@ class AnthropicExecutor:
 
         # --- Single user message with batched tool_result blocks ---
         tool_result_blocks: list[dict[str, Any]] = []
-        all_parts: list[ContentPart] = []
         for i, tc in enumerate(tool_calls):
-            tr = tool_results[i]
             tool_result_blocks.append(
                 {
                     "type": "tool_result",
                     "tool_use_id": tc.id,
-                    "content": tool_result_text(tr),
+                    "content": tool_results[i],
                 }
             )
-            all_parts.extend(tr.parts)
         result_messages.append(
             Message(
                 role="tool",
-                parts=all_parts if all_parts else [],
+                parts=[TextPart(value=r) for r in tool_results],
                 metadata={"tool_results": tool_result_blocks},
             )
         )

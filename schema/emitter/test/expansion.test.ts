@@ -5,7 +5,7 @@
  *
  * Test organization:
  *   1. Type graph fixtures (TypeNode/PropertyNode construction)
- *   2. Resolver tests (resolveFactoryExpr, resolveShorthandExpr)
+ *   2. Resolver tests (resolveFactoryExpr, resolveCoerceExpr)
  *   3. Visitor tests (one suite per language × expr kind)
  *   4. Integration tests (resolve → render, verified against known output)
  */
@@ -17,7 +17,7 @@ import { Model, ModelProperty } from "@typespec/compiler";
 import {
   TypeRegistry,
   resolveFactoryExpr,
-  resolveShorthandExpr,
+  resolveCoerceExpr,
   Expr,
 } from "../src/expansion.js";
 import {
@@ -316,14 +316,14 @@ describe("resolveFactoryExpr", () => {
 });
 
 // ============================================================================
-// Resolver tests — resolveShorthandExpr
+// Resolver tests — resolveCoerceExpr
 // ============================================================================
 
-describe("resolveShorthandExpr", () => {
+describe("resolveCoerceExpr", () => {
   const registry = buildTestRegistry();
 
-  it("resolves a simple shorthand (Model with id shorthand)", () => {
-    const expr = resolveShorthandExpr(
+  it("resolves a simple coercion (Model with id coercion)", () => {
+    const expr = resolveCoerceExpr(
       { id: "{value}" },
       "string",
       modelType,
@@ -339,8 +339,8 @@ describe("resolveShorthandExpr", () => {
     });
   });
 
-  it("resolves a shorthand with mixed literal and param", () => {
-    const expr = resolveShorthandExpr(
+  it("resolves a coercion with mixed literal and param", () => {
+    const expr = resolveCoerceExpr(
       { role: "system", parts: "{value}" },
       "string",
       message,
@@ -866,29 +866,29 @@ describe("Integration: nested factory — ToolResult.text(val)", () => {
   });
 });
 
-describe("Integration: shorthand — Model from string", () => {
+describe("Integration: coercion — Model from string", () => {
   const registry = buildTestRegistry();
 
-  it("Model shorthand → Rust", () => {
-    const expr = resolveShorthandExpr({ id: "{value}" }, "string", modelType, registry);
+  it("Model coercion → Rust", () => {
+    const expr = resolveCoerceExpr({ id: "{value}" }, "string", modelType, registry);
     const code = new RustExprVisitor().visitExpr(expr);
     assert.equal(code, 'Model { id: value.into(), ..Default::default() }');
   });
 
-  it("Model shorthand → TypeScript", () => {
-    const expr = resolveShorthandExpr({ id: "{value}" }, "string", modelType, registry);
+  it("Model coercion → TypeScript", () => {
+    const expr = resolveCoerceExpr({ id: "{value}" }, "string", modelType, registry);
     const code = new TypeScriptExprVisitor().visitExpr(expr);
     assert.equal(code, "new Model({ id: value })");
   });
 
-  it("Model shorthand → Python", () => {
-    const expr = resolveShorthandExpr({ id: "{value}" }, "string", modelType, registry);
+  it("Model coercion → Python", () => {
+    const expr = resolveCoerceExpr({ id: "{value}" }, "string", modelType, registry);
     const code = new PythonExprVisitor().visitExpr(expr);
     assert.equal(code, "Model(id=value)");
   });
 
-  it("Model shorthand → C#", () => {
-    const expr = resolveShorthandExpr({ id: "{value}" }, "string", modelType, registry);
+  it("Model coercion → C#", () => {
+    const expr = resolveCoerceExpr({ id: "{value}" }, "string", modelType, registry);
     const code = new CSharpExprVisitor().visitExpr(expr);
     assert.equal(code, "new Model { Id = value }");
   });
@@ -926,5 +926,72 @@ describe("Integration: Message.user(text) nested factory", () => {
       const code = getVisitor(lang).visitExpr(expr);
       assert.equal(code, expectedCode, `${lang} output mismatch`);
     }
+  });
+});
+
+// ============================================================================
+// FieldRead tests — wire format field access per language
+// ============================================================================
+
+describe("FieldRead visitor output", () => {
+  const fieldRead: Expr = {
+    kind: "field_read",
+    objectName: "opts",
+    fieldName: "maxOutputTokens",
+    fieldType: "int32",
+    isOptional: true,
+  };
+
+  it("Rust → snake_case field access", () => {
+    const code = new RustExprVisitor().visitExpr(fieldRead);
+    assert.equal(code, "opts.max_output_tokens");
+  });
+
+  it("TypeScript → camelCase field access", () => {
+    const code = new TypeScriptExprVisitor().visitExpr(fieldRead);
+    assert.equal(code, "opts.maxOutputTokens");
+  });
+
+  it("Python → snake_case field access", () => {
+    const code = new PythonExprVisitor().visitExpr(fieldRead);
+    assert.equal(code, "opts.max_output_tokens");
+  });
+
+  it("C# → PascalCase field access", () => {
+    const code = new CSharpExprVisitor().visitExpr(fieldRead);
+    assert.equal(code, "opts.MaxOutputTokens");
+  });
+
+  it("Go → PascalCase field access", () => {
+    const code = new GoExprVisitor().visitExpr(fieldRead);
+    assert.equal(code, "opts.MaxOutputTokens");
+  });
+
+  it("simple non-camelCase field", () => {
+    const simple: Expr = {
+      kind: "field_read",
+      objectName: "model",
+      fieldName: "id",
+      fieldType: "string",
+      isOptional: false,
+    };
+    assert.equal(new RustExprVisitor().visitExpr(simple), "model.id");
+    assert.equal(new TypeScriptExprVisitor().visitExpr(simple), "model.id");
+    assert.equal(new PythonExprVisitor().visitExpr(simple), "model.id");
+    assert.equal(new CSharpExprVisitor().visitExpr(simple), "model.Id");
+    assert.equal(new GoExprVisitor().visitExpr(simple), "model.Id");
+  });
+});
+
+describe("getVisitor with registry", () => {
+  it("passes registry to visitor", () => {
+    const registry = new TypeRegistry();
+    const visitor = getVisitor("rust", registry);
+    assert.equal(visitor.registry, registry);
+  });
+
+  it("works without registry", () => {
+    const visitor = getVisitor("rust");
+    assert.equal(visitor.registry, undefined);
   });
 });

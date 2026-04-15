@@ -9,9 +9,8 @@ namespace Prompty.Core;
 /// <summary>
 /// A tool that references another .prompty file to be invoked as a tool.
 /// 
-/// The child prompty is loaded, rendered, and executed with a single LLM call
-/// (invoke). Apps that want agentic sub-agents should use `kind: function` tools
-/// and call `turn()` themselves.
+/// In `single` mode, the child prompty is executed with a single LLM call.
+/// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
 /// </summary>
 public partial class PromptyTool : Tool
 {
@@ -38,6 +37,11 @@ public partial class PromptyTool : Tool
     /// Path to the child .prompty file, relative to the parent
     /// </summary>
     public string Path { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+    /// </summary>
+    public string Mode { get; set; } = "single";
 
 
     #region Load Methods
@@ -68,6 +72,11 @@ public partial class PromptyTool : Tool
         if (data.TryGetValue("path", out var pathValue) && pathValue is not null)
         {
             instance.Path = pathValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
+        {
+            instance.Mode = modeValue?.ToString()!;
         }
 
         if (context is not null)
@@ -107,6 +116,10 @@ public partial class PromptyTool : Tool
 
 
         result["path"] = obj.Path;
+
+
+
+        result["mode"] = obj.Mode;
 
 
 

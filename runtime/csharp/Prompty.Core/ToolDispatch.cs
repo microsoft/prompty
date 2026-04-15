@@ -7,9 +7,9 @@ namespace Prompty.Core;
 /// <summary>
 /// Delegate type for tool handlers that execute tools by kind.
 /// Receives the agent, tool definition, and parsed arguments.
-/// Returns the tool result.
+/// Returns the tool result as a string.
 /// </summary>
-public delegate Task<ToolResult> ToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments);
+public delegate Task<string> ToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments);
 
 /// <summary>
 /// Exception thrown when no handler is registered for a tool kind.
@@ -35,7 +35,7 @@ public class ToolHandlerError : InvalidOperationException
 public static class ToolDispatch
 {
     // Layer 1: Name → callable
-    private static readonly Dictionary<string, Func<string, Task<ToolResult>>> _nameRegistry = [];
+    private static readonly Dictionary<string, Func<string, Task<string>>> _nameRegistry = [];
 
     // Layer 2: Kind → handler
     private static readonly Dictionary<string, ToolHandler> _kindHandlers = [];
@@ -47,13 +47,13 @@ public static class ToolDispatch
     // -----------------------------------------------------------------------
 
     /// <summary>Register a tool callable by name.</summary>
-    public static void RegisterTool(string name, Func<string, Task<ToolResult>> handler)
+    public static void RegisterTool(string name, Func<string, Task<string>> handler)
     {
         lock (_lock) { _nameRegistry[name] = handler; }
     }
 
     /// <summary>Get a tool callable by name, or null if not registered.</summary>
-    public static Func<string, Task<ToolResult>>? GetTool(string name)
+    public static Func<string, Task<string>>? GetTool(string name)
     {
         lock (_lock) { return _nameRegistry.GetValueOrDefault(name); }
     }
@@ -106,7 +106,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="function".
     /// Function tools require a callable registered in the name registry.
     /// </summary>
-    private static Task<ToolResult> FunctionToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> FunctionToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
     {
         // Function tools are dispatched via name registry — if we reach the kind handler,
         // it means no callable was registered for this function name.
@@ -119,7 +119,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="prompty".
     /// Loads and executes a child .prompty file as a tool.
     /// </summary>
-    private static async Task<ToolResult> PromptyToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static async Task<string> PromptyToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
     {
         if (tool is not PromptyTool promptyTool || string.IsNullOrEmpty(promptyTool.Path))
             throw new ToolHandlerError($"Prompty tool '{tool.Name}' has no path.");
@@ -131,16 +131,16 @@ public static class ToolDispatch
         var childPath = System.IO.Path.Combine(parentDir ?? ".", promptyTool.Path);
         var childAgent = PromptyLoader.Load(childPath);
 
-        // Execute as single-shot (always invoke, no mode branch)
+        // Execute as single-shot by default
         var result = await Pipeline.InvokeAsync(childAgent, arguments);
-        return ToolResult.FromText(result?.ToString() ?? "");
+        return result?.ToString() ?? "";
     }
 
     /// <summary>
     /// Built-in handler for kind="mcp".
     /// MCP tool execution requires an external MCP server connection, which is not yet implemented.
     /// </summary>
-    private static Task<ToolResult> McpToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> McpToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
     {
         throw new ToolHandlerError(
             $"MCP tool '{tool.Name}' cannot be executed in-process. " +
@@ -151,7 +151,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="openapi".
     /// OpenAPI tool execution requires parsing an OpenAPI specification and making HTTP calls, which is not yet implemented.
     /// </summary>
-    private static Task<ToolResult> OpenApiToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> OpenApiToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
     {
         throw new ToolHandlerError(
             $"OpenAPI tool '{tool.Name}' cannot be executed in-process. " +
@@ -169,17 +169,17 @@ public static class ToolDispatch
     /// <param name="agent">The parent agent (for tool definitions and context).</param>
     /// <param name="call">The tool call from the LLM.</param>
     /// <param name="userTools">Per-call tool overrides (highest priority).</param>
-    public static async Task<ToolResult> DispatchAsync(
+    public static async Task<string> DispatchAsync(
         Prompty agent,
         ToolCall call,
-        Dictionary<string, Func<string, Task<ToolResult>>>? userTools = null)
+        Dictionary<string, Func<string, Task<string>>>? userTools = null)
     {
         var arguments = ParseArguments(call.Arguments);
 
         // If all parse strategies failed, return error to LLM (§9.8)
         if (arguments.ContainsKey("_error"))
         {
-            return ToolResult.FromText($"Error: Invalid JSON in tool arguments for '{call.Name}': {arguments["_error"]}");
+            return $"Error: Invalid JSON in tool arguments for '{call.Name}': {arguments["_error"]}";
         }
 
         // Apply bindings from the tool definition

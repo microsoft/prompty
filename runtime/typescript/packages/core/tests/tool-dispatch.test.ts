@@ -11,9 +11,6 @@ import {
   dispatchTool,
 } from "../src/core/tool-dispatch.js";
 import { Prompty } from "../src/model/prompty.js";
-import { ToolResult } from "../src/model/tool-result.js";
-import { TextPart } from "../src/model/content-part.js";
-import { toolResultText } from "../src/core/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -129,7 +126,7 @@ describe("Kind Handler Registry", () => {
     expect(() => getToolHandler("prompty")).toThrow(ToolHandlerError);
     registerToolHandler("prompty", {
       async executeTool() {
-        return new ToolResult({ parts: [new TextPart({ value: "re-registered" })] });
+        return "re-registered";
       },
     });
     expect(getToolHandler("prompty")).toBeDefined();
@@ -138,7 +135,7 @@ describe("Kind Handler Registry", () => {
   it("accepts custom handler", () => {
     const myHandler: ToolHandler = {
       async executeTool() {
-        return new ToolResult({ parts: [new TextPart({ value: "custom_result" })] });
+        return "custom_result";
       },
     };
     registerToolHandler("my_kind", myHandler);
@@ -166,8 +163,7 @@ describe("Dispatch Priority", () => {
       makeAgent(),
       {},
     );
-    expect(result).toBeInstanceOf(ToolResult);
-    expect(toolResultText(result)).toBe("from_user_tools");
+    expect(result).toBe("from_user_tools");
   });
 
   it("name registry wins over kind handler", async () => {
@@ -176,26 +172,26 @@ describe("Dispatch Priority", () => {
       tools: [{ name: "my_func", kind: "function" }],
     });
     const result = await dispatchTool("my_func", {}, {}, agent, {});
-    expect(toolResultText(result)).toBe("from_name_registry");
+    expect(result).toBe("from_name_registry");
   });
 
   it("kind handler used as fallback", async () => {
     registerToolHandler("test_kind", {
       async executeTool(_tool, _args, _agent, _parentInputs) {
-        return new ToolResult({ parts: [new TextPart({ value: "from_kind_handler" })] });
+        return "from_kind_handler";
       },
     });
     const agent = makeAgent({
       tools: [{ name: "my_tool", kind: "test_kind" }],
     });
     const result = await dispatchTool("my_tool", {}, {}, agent, {});
-    expect(toolResultText(result)).toBe("from_kind_handler");
+    expect(result).toBe("from_kind_handler");
   });
 
   it("returns error when nothing matches", async () => {
     const result = await dispatchTool("nonexistent", {}, {}, makeAgent(), {});
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("nonexistent");
+    expect(result).toContain("Error");
+    expect(result).toContain("nonexistent");
   });
 
   it("error message includes available user tools", async () => {
@@ -206,8 +202,8 @@ describe("Dispatch Priority", () => {
       makeAgent(),
       {},
     );
-    expect(toolResultText(result)).toContain("bar");
-    expect(toolResultText(result)).toContain("foo");
+    expect(result).toContain("bar");
+    expect(result).toContain("foo");
   });
 });
 
@@ -224,14 +220,14 @@ describe("Wildcard Fallback", () => {
   it("falls back to * handler when kind handler missing", async () => {
     registerToolHandler("*", {
       async executeTool(_tool, _args, _agent, _parentInputs) {
-        return new ToolResult({ parts: [new TextPart({ value: "wildcard_handled" })] });
+        return "wildcard_handled";
       },
     });
     const agent = makeAgent({
       tools: [{ name: "exotic", kind: "some_unknown_kind" }],
     });
     const result = await dispatchTool("exotic", {}, {}, agent, {});
-    expect(toolResultText(result)).toBe("wildcard_handled");
+    expect(result).toBe("wildcard_handled");
   });
 
   it("returns error when no wildcard handler either", async () => {
@@ -240,20 +236,20 @@ describe("Wildcard Fallback", () => {
       tools: [{ name: "exotic", kind: "some_unknown_kind" }],
     });
     const result = await dispatchTool("exotic", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("Error");
+    expect(result).toContain("Error");
   });
 
   it("defaults falsy kind to *", async () => {
     registerToolHandler("*", {
       async executeTool() {
-        return new ToolResult({ parts: [new TextPart({ value: "wildcard_default" })] });
+        return "wildcard_default";
       },
     });
     const agent = makeAgent({
       tools: [{ name: "noKind", kind: "" }],
     });
     const result = await dispatchTool("noKind", {}, {}, agent, {});
-    expect(toolResultText(result)).toBe("wildcard_default");
+    expect(result).toBe("wildcard_default");
   });
 });
 
@@ -280,8 +276,8 @@ describe("dispatchTool edge cases", () => {
       makeAgent(),
       {},
     );
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("boom");
+    expect(result).toContain("Error");
+    expect(result).toContain("boom");
   });
 
   it("async user tool works", async () => {
@@ -292,7 +288,7 @@ describe("dispatchTool edge cases", () => {
       makeAgent(),
       {},
     );
-    expect(toolResultText(result)).toBe("result_42");
+    expect(result).toBe("result_42");
   });
 
   it("sync user tool works", async () => {
@@ -303,13 +299,13 @@ describe("dispatchTool edge cases", () => {
       makeAgent(),
       {},
     );
-    expect(toolResultText(result)).toBe("sync_1");
+    expect(result).toBe("sync_1");
   });
 
   it("async registered tool works", async () => {
     registerTool("areg", async (args: Record<string, unknown>) => `async_${args.v}`);
     const result = await dispatchTool("areg", { v: "hello" }, {}, makeAgent(), {});
-    expect(toolResultText(result)).toBe("async_hello");
+    expect(result).toBe("async_hello");
   });
 
   it("handles non-string result from user tool", async () => {
@@ -320,7 +316,7 @@ describe("dispatchTool edge cases", () => {
       makeAgent(),
       {},
     );
-    expect(toolResultText(result)).toBe('{"key":"value"}');
+    expect(result).toBe('{"key":"value"}');
   });
 });
 
@@ -340,8 +336,8 @@ describe("FunctionToolHandler", () => {
       tools: [{ name: "calc", kind: "function" }],
     });
     const result = await dispatchTool("calc", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("no callable provided");
+    expect(result).toContain("Error");
+    expect(result).toContain("no callable provided");
   });
 });
 
@@ -357,8 +353,8 @@ describe("Placeholder handlers", () => {
       tools: [{ name: "fs", kind: "mcp" }],
     });
     const result = await dispatchTool("fs", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("MCP");
+    expect(result).toContain("Error");
+    expect(result).toContain("MCP");
   });
 
   it("openapi handler returns not implemented error", async () => {
@@ -366,8 +362,8 @@ describe("Placeholder handlers", () => {
       tools: [{ name: "api", kind: "openapi" }],
     });
     const result = await dispatchTool("api", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("OpenAPI");
+    expect(result).toContain("Error");
+    expect(result).toContain("OpenAPI");
   });
 
   it("custom (* wildcard) handler returns not implemented error", async () => {
@@ -375,8 +371,8 @@ describe("Placeholder handlers", () => {
       tools: [{ name: "custom", kind: "*" }],
     });
     const result = await dispatchTool("custom", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("Error");
-    expect(toolResultText(result)).toContain("Custom");
+    expect(result).toContain("Error");
+    expect(result).toContain("Custom");
   });
 });
 
@@ -429,7 +425,7 @@ describe("PromptyToolHandler circular reference", () => {
       },
     });
     const result = await mod.dispatchTool("self", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("circular reference");
+    expect(result).toContain("circular reference");
   });
 
   it("detects A → B → A chain", async () => {
@@ -458,6 +454,6 @@ describe("PromptyToolHandler circular reference", () => {
       },
     });
     const result = await mod.dispatchTool("a_tool", {}, {}, agent, {});
-    expect(toolResultText(result)).toContain("circular reference");
+    expect(result).toContain("circular reference");
   });
 });

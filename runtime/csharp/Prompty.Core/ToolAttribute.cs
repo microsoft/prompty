@@ -60,9 +60,9 @@ public class ToolAttribute : Attribute
     /// Discover all [Tool]-decorated methods on an object and register them
     /// in the global tool name registry.
     /// </summary>
-    public static Dictionary<string, Func<string, Task<ToolResult>>> DiscoverTools(object instance)
+    public static Dictionary<string, Func<string, Task<string>>> DiscoverTools(object instance)
     {
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>();
+        var tools = new Dictionary<string, Func<string, Task<string>>>();
         var methods = instance.GetType()
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => m.GetCustomAttribute<ToolAttribute>() is not null);
@@ -72,7 +72,7 @@ public class ToolAttribute : Attribute
             var toolDef = BuildFromMethod(method);
             var captured = method;
 
-            Func<string, Task<ToolResult>> handler = async (argsJson) =>
+            Func<string, Task<string>> handler = async (argsJson) =>
             {
                 var args = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(argsJson)
                     ?? new Dictionary<string, object?>();
@@ -98,16 +98,14 @@ public class ToolAttribute : Attribute
                 }
 
                 var result = captured.Invoke(instance, invokeArgs);
-                if (result is Task<ToolResult> taskTr)
-                    return await taskTr;
                 if (result is Task<string> taskStr)
-                    return ToolResult.FromText(await taskStr);
+                    return await taskStr;
                 if (result is Task task)
                 {
                     await task;
-                    return ToolResult.FromText("");
+                    return "";
                 }
-                return ToolResult.FromText(result?.ToString() ?? "");
+                return result?.ToString() ?? "";
             };
 
             tools[toolDef.Name] = handler;
@@ -127,11 +125,11 @@ public class ToolAttribute : Attribute
     /// <exception cref="InvalidOperationException">
     /// If a handler has no matching declaration or duplicate handlers exist.
     /// </exception>
-    public static Dictionary<string, Func<string, Task<ToolResult>>> BindTools(
+    public static Dictionary<string, Func<string, Task<string>>> BindTools(
         Prompty agent,
         object instance)
     {
-        var handlers = new Dictionary<string, Func<string, Task<ToolResult>>>();
+        var handlers = new Dictionary<string, Func<string, Task<string>>>();
 
         var methods = instance.GetType()
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -142,7 +140,7 @@ public class ToolAttribute : Attribute
             var toolDef = BuildFromMethod(method);
             var captured = method;
 
-            Func<string, Task<ToolResult>> handler = async (argsJson) =>
+            Func<string, Task<string>> handler = async (argsJson) =>
             {
                 var args = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(argsJson)
                     ?? new Dictionary<string, object?>();
@@ -167,16 +165,14 @@ public class ToolAttribute : Attribute
                 }
 
                 var result = captured.Invoke(instance, invokeArgs);
-                if (result is Task<ToolResult> taskTr)
-                    return await taskTr;
                 if (result is Task<string> taskStr)
-                    return ToolResult.FromText(await taskStr);
+                    return await taskStr;
                 if (result is Task task)
                 {
                     await task;
-                    return ToolResult.FromText("");
+                    return "";
                 }
-                return ToolResult.FromText(result?.ToString() ?? "");
+                return result?.ToString() ?? "";
             };
 
             if (handlers.ContainsKey(toolDef.Name))

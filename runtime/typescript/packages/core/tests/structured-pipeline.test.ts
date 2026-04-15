@@ -46,7 +46,7 @@ class MockRenderer implements Renderer {
 
 class MockParser implements Parser {
   async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
-    return [new Message({ role: "user", parts: [text(rendered)] })];
+    return [new Message("user", [text(rendered)])];
   }
 }
 
@@ -83,16 +83,16 @@ class StructuredExecutor implements Executor {
       function: { name: tc.name, arguments: tc.arguments },
     }));
     messages.push(
-      new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: {
+      new Message("assistant", textContent ? [text(textContent)] : [], {
         tool_calls: rawToolCalls,
-      } }),
+      }),
     );
     for (let i = 0; i < toolCalls.length; i++) {
       messages.push(
-        new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
+        new Message("tool", [text(toolResults[i])], {
           tool_call_id: toolCalls[i].id,
           name: toolCalls[i].name,
-        } }),
+        }),
       );
     }
     return messages;
@@ -252,7 +252,7 @@ describe("Structured output through pipeline", () => {
   describe("run() with structured output", () => {
     it("returns a StructuredResult with accessible data fields", async () => {
       const agent = makeStructuredAgent();
-      const messages = [new Message({ role: "user", parts: [text("What is the weather?")] })];
+      const messages = [new Message("user", [text("What is the weather?")])];
 
       const result = await run(agent, messages);
 
@@ -265,7 +265,7 @@ describe("Structured output through pipeline", () => {
 
     it("cast<T>() works on run() result", async () => {
       const agent = makeStructuredAgent();
-      const messages = [new Message({ role: "user", parts: [text("What is the weather?")] })];
+      const messages = [new Message("user", [text("What is the weather?")])];
 
       const result = await run(agent, messages);
 
@@ -281,7 +281,7 @@ describe("Structured output through pipeline", () => {
 
     it("run() with raw=true returns executor envelope, not StructuredResult", async () => {
       const agent = makeStructuredAgent();
-      const messages = [new Message({ role: "user", parts: [text("What is the weather?")] })];
+      const messages = [new Message("user", [text("What is the weather?")])];
 
       const result = await run(agent, messages, { raw: true }) as Record<string, unknown>;
 

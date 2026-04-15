@@ -294,7 +294,7 @@ public abstract class IntegrationTestBase
     /// <summary>
     /// Standard weather tool function for agent loop tests.
     /// </summary>
-    protected static Task<ToolResult> GetWeatherAsync(string args)
+    protected static Task<string> GetWeatherAsync(string args)
     {
         // Parse simple JSON to extract city name
         var city = "unknown";
@@ -308,7 +308,7 @@ public abstract class IntegrationTestBase
         {
             // Fallback if args isn't valid JSON
         }
-        return Task.FromResult<ToolResult>($"72°F and sunny in {city}");
+        return Task.FromResult($"72°F and sunny in {city}");
     }
 
     /// <summary>
@@ -321,5 +321,3 @@ public abstract class IntegrationTestBase
         new Property { Name = "country", Kind = "string", Description = "The country" },
     ];
 }
-
-

@@ -170,7 +170,6 @@ class TestDispatchIntegration:
 
     def test_dispatch_via_name_registry(self):
         from prompty.core.tool_dispatch import dispatch_tool
-        from prompty.core.types import tool_result_text
 
         @tool
         def multiply(x: int, y: int) -> int:
@@ -178,7 +177,7 @@ class TestDispatchIntegration:
             return x * y
 
         result = dispatch_tool("multiply", '{"x": 3, "y": 7}', {}, None, {})
-        assert tool_result_text(result) == "21"
+        assert result == "21"
 
     def test_tool_definition_matches_schema(self):
         @tool

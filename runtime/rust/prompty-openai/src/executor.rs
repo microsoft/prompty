@@ -86,7 +86,7 @@ impl Executor for OpenAIExecutor {
         &self,
         _raw_response: &serde_json::Value,
         tool_calls: &[prompty::types::ToolCall],
-        tool_results: &[prompty::types::ToolResult],
+        tool_results: &[String],
         _text_content: Option<&str>,
     ) -> Vec<Message> {
         wire::format_tool_messages(tool_calls, tool_results)

@@ -249,11 +249,11 @@ class TestGuardrails:
     """Guardrail hooks at input, output, and tool check points."""
 
     def test_guardrail_result_allowed(self):
-        r = GuardrailResult.allow()
+        r = GuardrailResult(allowed=True)
         assert r.allowed
 
     def test_guardrail_result_denied(self):
-        r = GuardrailResult.deny("PII detected")
+        r = GuardrailResult(allowed=False, reason="PII detected")
         assert not r.allowed
         assert r.reason == "PII detected"
 
@@ -268,7 +268,7 @@ class TestGuardrails:
     def test_input_guardrail_blocks(self, mock_prepare, mock_exec):
         mock_exec.return_value = _mock_tool_call_response()
         agent = _make_agent()
-        g = Guardrails(input=lambda msgs: GuardrailResult.deny("blocked"))
+        g = Guardrails(input=lambda msgs: GuardrailResult(allowed=False, reason="blocked"))
 
         with pytest.raises(GuardrailError, match="blocked"):
             turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
@@ -285,7 +285,7 @@ class TestGuardrails:
         agent = _make_agent()
 
         # Output guardrail denies after tool iteration
-        g = Guardrails(output=lambda msg: GuardrailResult.deny("toxic"))
+        g = Guardrails(output=lambda msg: GuardrailResult(allowed=False, reason="toxic"))
 
         with pytest.raises(GuardrailError, match="toxic"):
             turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
@@ -299,7 +299,7 @@ class TestGuardrails:
         agent = _make_agent()
         events: list[tuple[str, Any]] = []
 
-        g = Guardrails(tool=lambda name, args: GuardrailResult.deny("disallowed"))
+        g = Guardrails(tool=lambda name, args: GuardrailResult(allowed=False, reason="disallowed"))
 
         turn(
             agent,
@@ -474,7 +474,7 @@ class TestAgentLoopExtensions:
         """Input guardrail denying on the FIRST turn raises GuardrailError
         before the executor is ever called."""
         agent = _make_agent()
-        g = Guardrails(input=lambda msgs: GuardrailResult.deny("first-turn block"))
+        g = Guardrails(input=lambda msgs: GuardrailResult(allowed=False, reason="first-turn block"))
 
         with pytest.raises(GuardrailError, match="first-turn block"):
             turn(agent, {}, tools={"get_weather": lambda **kw: "sunny"}, guardrails=g)
@@ -562,7 +562,7 @@ class TestAgentLoopExtensions:
 
         mock_exec.side_effect = capturing_executor
 
-        g = Guardrails(input=lambda msgs: GuardrailResult.create_rewrite(rewritten))
+        g = Guardrails(input=lambda msgs: GuardrailResult(allowed=True, rewrite=rewritten))
         agent = _make_agent()
 
         turn(agent, {}, tools={}, guardrails=g)
@@ -582,7 +582,7 @@ class TestAgentLoopExtensions:
         raises GuardrailError."""
         mock_exec.return_value = _mock_final_response("bad output")
         agent = _make_agent()
-        g = Guardrails(output=lambda msg: GuardrailResult.deny("toxic content"))
+        g = Guardrails(output=lambda msg: GuardrailResult(allowed=False, reason="toxic content"))
 
         with pytest.raises(GuardrailError, match="toxic content"):
             turn(agent, {}, tools={}, guardrails=g)
@@ -595,7 +595,7 @@ class TestAgentLoopExtensions:
         to be returned instead of the original."""
         mock_exec.return_value = _mock_final_response("original response")
         agent = _make_agent()
-        g = Guardrails(output=lambda msg: GuardrailResult.create_rewrite("sanitized response"))
+        g = Guardrails(output=lambda msg: GuardrailResult(allowed=True, rewrite="sanitized response"))
 
         result = turn(agent, {}, tools={}, guardrails=g)
         assert result == "sanitized response"
@@ -617,7 +617,12 @@ class TestAgentLoopExtensions:
             received_args.append(kwargs)
             return "Sunny"
 
-        g = Guardrails(tool=lambda name, args: GuardrailResult.create_rewrite({"location": "REWRITTEN_CITY"}))
+        g = Guardrails(
+            tool=lambda name, args: GuardrailResult(
+                allowed=True,
+                rewrite={"location": "REWRITTEN_CITY"},
+            )
+        )
 
         turn(
             agent,

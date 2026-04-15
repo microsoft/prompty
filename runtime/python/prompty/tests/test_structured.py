@@ -199,7 +199,7 @@ class TestProcessorStructuredResult:
         agent = MagicMock()
         agent.outputs = [MagicMock()]
         agent.model = MagicMock()
-        agent.model.api_type = "chat"
+        agent.model.apiType = "chat"
 
         # Create a mock ChatCompletion
         mock_choice = MagicMock()

@@ -63,12 +63,12 @@ public class AgentLoopTests : IDisposable
         var agent = CreateTestAgent(
             tools: [new FunctionTool { Name = "get_weather", Kind = "function" }]);
 
-        var userTools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var userTools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["get_weather"] = args =>
             {
                 callCount++;
-                return Task.FromResult<ToolResult>("72°F and sunny");
+                return Task.FromResult("72°F and sunny");
             },
         };
 
@@ -103,10 +103,10 @@ public class AgentLoopTests : IDisposable
             new FunctionTool { Name = "get_time", Kind = "function" },
         ]);
 
-        var userTools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var userTools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["get_weather"] = _ => Task.FromResult<ToolResult>("72°F"),
-            ["get_time"] = _ => Task.FromResult<ToolResult>("3:00 PM EST"),
+            ["get_weather"] = _ => Task.FromResult("72°F"),
+            ["get_time"] = _ => Task.FromResult("3:00 PM EST"),
         };
 
         var result = await Pipeline.TurnAsync(agent, tools: userTools);
@@ -142,10 +142,10 @@ public class AgentLoopTests : IDisposable
             new FunctionTool { Name = "step2", Kind = "function" },
         ]);
 
-        var userTools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var userTools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["step1"] = _ => Task.FromResult<ToolResult>("step1-result"),
-            ["step2"] = _ => Task.FromResult<ToolResult>("step2-result"),
+            ["step1"] = _ => Task.FromResult("step1-result"),
+            ["step2"] = _ => Task.FromResult("step2-result"),
         };
 
         var result = await Pipeline.TurnAsync(agent, tools: userTools);
@@ -165,9 +165,9 @@ public class AgentLoopTests : IDisposable
         var agent = CreateTestAgent(tools:
             [new FunctionTool { Name = "loop_fn", Kind = "function" }]);
 
-        var userTools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var userTools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["loop_fn"] = _ => Task.FromResult<ToolResult>("looping"),
+            ["loop_fn"] = _ => Task.FromResult("looping"),
         };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -204,7 +204,7 @@ public class AgentLoopTests : IDisposable
     [Fact]
     public async Task TurnAsync_GlobalRegisteredTool_Works()
     {
-        ToolDispatch.RegisterTool("global_fn", _ => Task.FromResult<ToolResult>("global-result"));
+        ToolDispatch.RegisterTool("global_fn", _ => Task.FromResult("global-result"));
 
         var executor = new SequenceExecutor(
         [
@@ -272,7 +272,7 @@ public class AgentLoopTests : IDisposable
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(response);
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
             => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
     }
 
@@ -303,7 +303,7 @@ public class AgentLoopTests : IDisposable
             return Task.FromResult(responses[_index++]);
         }
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
             => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
     }
 
@@ -318,22 +318,19 @@ public class AgentLoopTests : IDisposable
             });
         }
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
             => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
     }
 
     /// <summary>Default OpenAI-style format for mock executors.</summary>
-    private static List<Message> DefaultFormatToolMessages(List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent)
+    private static List<Message> DefaultFormatToolMessages(List<ToolCall> toolCalls, List<string> toolResults, string? textContent)
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
+            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new() { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
         return messages;
     }
 }
-
-
-

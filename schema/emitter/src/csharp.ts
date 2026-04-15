@@ -116,30 +116,30 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
   const findType = (typeName: string): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === typeName);
   }
-  const alternates = generateAlternates(node).filter(alt => alt.scalar !== "float" && alt.scalar !== "int");
-  const numericAlternates = generateAlternates(node).filter(alt => alt.scalar === "float" || alt.scalar === "int");
+  const coercions = generateCoercions(node).filter(alt => alt.scalar !== "float" && alt.scalar !== "int");
+  const numericCoercions = generateCoercions(node).filter(alt => alt.scalar === "float" || alt.scalar === "int");
 
-  // Separate int and float alternates for proper long/double mapping
-  const intAlternate = numericAlternates.find(alt => alt.scalar === "int") || null;
-  const floatAlternate = numericAlternates.find(alt => alt.scalar === "float") || null;
+  // Separate int and float coercions for proper long/double mapping
+  const intCoercion = numericCoercions.find(alt => alt.scalar === "int") || null;
+  const floatCoercion = numericCoercions.find(alt => alt.scalar === "float") || null;
 
-  // Determine shorthand property (first property in first alternate expansion)
-  let shorthandProperty: string | null = null;
-  if (node.alternates && node.alternates.length > 0) {
-    const firstAlt = node.alternates[0];
+  // Determine coercion property (first property in first coercion expansion)
+  let coercionProperty: string | null = null;
+  if (node.coercions && node.coercions.length > 0) {
+    const firstAlt = node.coercions[0];
     if (firstAlt.expansion) {
       const keys = Object.keys(firstAlt.expansion);
       // Find the key that uses {value}
       for (const key of keys) {
         if (firstAlt.expansion[key] === "{value}") {
-          shorthandProperty = key;
+          coercionProperty = key;
           break;
         }
       }
     }
   }
 
-  // Collection types with their primary property for shorthand
+  // Collection types with their primary property for coercion
   // Filter out dictionary collections since they don't have Load methods
   const collectionTypes = node.properties.filter(p => p.isCollection && !p.isScalar && !p.isDict).map(p => {
     const itemType = findType(p.typeName.name);
@@ -150,8 +150,8 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
       // Check if item type has a 'name' property (supports object format)
       hasNameProperty = itemType.properties.some(prop => prop.name === "name");
 
-      if (itemType.alternates && itemType.alternates.length > 0) {
-        const firstAlt = itemType.alternates[0];
+      if (itemType.coercions && itemType.coercions.length > 0) {
+        const firstAlt = itemType.coercions[0];
         if (firstAlt.expansion) {
           for (const key of Object.keys(firstAlt.expansion)) {
             if (firstAlt.expansion[key] === "{value}") {
@@ -189,11 +189,11 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
     polymorphicTypes: polymorphicTypes,
     collectionTypes: collectionTypes,
-    alternates: alternates,
-    numericAlternates: numericAlternates,
-    intAlternate: intAlternate,
-    floatAlternate: floatAlternate,
-    shorthandProperty: shorthandProperty,
+    coercions: coercions,
+    numericCoercions: numericCoercions,
+    intCoercion: intCoercion,
+    floatCoercion: floatCoercion,
+    coercionProperty: coercionProperty,
     namespace: namespace,
   });
 
@@ -246,7 +246,7 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace:
     };
   });
 
-  const alternates = node.alternates.map(alt => {
+  const coercions = node.coercions.map(alt => {
     const example = alt.example ? (typeof (alt.example) === "string" ? '"' + alt.example + '"' : alt.example.toString()) : scalarValue[alt.scalar] || "None";
     return {
       title: alt.title || alt.scalar,
@@ -268,7 +268,7 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace:
     node: node,
     // replace control characters in samples
     examples: examples,
-    alternates: alternates,
+    coercions: coercions,
     factories: node.factories,
     renderName: renderName,
     renderCsharpFactoryMethodName: (factoryName: string) => renderCsharpFactoryMethodName(factoryName, node),
@@ -380,13 +380,13 @@ const recursiveExpand = (obj: any): any => {
   return obj;
 };
 
-const generateAlternates = (node: TypeNode): { scalar: string; expansion: { property: string, value: string }[] }[] => {
-  if (node.alternates && node.alternates.length > 0) {
-    const alternates: { scalar: string; expansion: { property: string, value: string }[] }[] = [];
-    for (const alt of node.alternates) {
+const generateCoercions = (node: TypeNode): { scalar: string; expansion: { property: string, value: string }[] }[] => {
+  if (node.coercions && node.coercions.length > 0) {
+    const coercions: { scalar: string; expansion: { property: string, value: string }[] }[] = [];
+    for (const alt of node.coercions) {
       const scalar = csharpTypeMapper[alt.scalar] || "object";
 
-      // Process each alternate
+      // Process each coercion
       const expansion: { property: string, value: string }[] = [];
       for (const key in alt.expansion) {
         const value = alt.expansion[key];
@@ -401,12 +401,12 @@ const generateAlternates = (node: TypeNode): { scalar: string; expansion: { prop
           }
         }
       }
-      alternates.push({
+      coercions.push({
         scalar: scalar,
         expansion: expansion,
       });
     }
-    return alternates;
+    return coercions;
   } else {
     return [];
   }

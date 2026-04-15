@@ -42,11 +42,11 @@ export const goTypeMapper: Record<string, string> = {
 interface GoClassContext {
   node: TypeNode;
   typeMapper: Record<string, string>;
-  alternates: Array<{ scalar: string; alternate: string }>;
+  coercions: Array<{ scalar: string; alternate: string }>;
   polymorphicTypes: any;
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
-  shorthandProperty: string | null;
+  coercionProperty: string | null;
 }
 
 interface GoFileContext {
@@ -163,11 +163,11 @@ function buildClassContext(node: TypeNode): GoClassContext {
   return {
     node,
     typeMapper: goTypeMapper,
-    alternates: prepareAlternates(node),
+    coercions: prepareCoercions(node),
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node),
     collectionTypes: getCollectionTypes(node),
-    shorthandProperty: getShorthandProperty(node),
+    coercionProperty: getCoercionProperty(node),
   };
 }
 
@@ -208,14 +208,14 @@ function buildContextContext(packageName: string): GoContextContext {
 }
 
 /**
- * Prepare alternate representations for template rendering.
+ * Prepare coercion representations for template rendering.
  */
-function prepareAlternates(node: TypeNode): Array<{ scalar: string; alternate: string }> {
-  if (!node.alternates || node.alternates.length === 0) {
+function prepareCoercions(node: TypeNode): Array<{ scalar: string; alternate: string }> {
+  if (!node.coercions || node.coercions.length === 0) {
     return [];
   }
 
-  return node.alternates.map(alt => ({
+  return node.coercions.map(alt => ({
     scalar: goTypeMapper[alt.scalar],
     alternate: JSON.stringify(alt.expansion, null, '')
       .replaceAll('\n', '')
@@ -224,14 +224,14 @@ function prepareAlternates(node: TypeNode): Array<{ scalar: string; alternate: s
 }
 
 /**
- * Get the shorthand property name from alternates.
+ * Get the coercion property name from coercions.
  */
-function getShorthandProperty(node: TypeNode): string | null {
-  if (!node.alternates || node.alternates.length === 0) {
+function getCoercionProperty(node: TypeNode): string | null {
+  if (!node.coercions || node.coercions.length === 0) {
     return null;
   }
 
-  for (const alt of node.alternates) {
+  for (const alt of node.coercions) {
     for (const [key, value] of Object.entries(alt.expansion)) {
       if (value === "{value}") {
         return key;

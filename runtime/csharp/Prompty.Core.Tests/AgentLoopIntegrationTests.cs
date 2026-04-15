@@ -74,7 +74,7 @@ file class MockExecutor : IExecutor
     public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<ToolResult> toolResults,
+        List<string> toolResults,
         string? textContent = null)
     {
         var msgs = new List<Message>();
@@ -91,7 +91,7 @@ file class MockExecutor : IExecutor
             msgs.Add(new Message
             {
                 Role = Roles.Tool,
-                Parts = [new TextPart { Value = toolResults[i].Text }],
+                Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
@@ -198,7 +198,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            input: _ => GuardrailResult.Deny("blocked by policy"));
+            input: _ => new GuardrailResult(false, "blocked by policy"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
             Pipeline.TurnAsync(agent, guardrails: guardrails));
@@ -282,7 +282,7 @@ public class AgentLoopIntegrationTests : IDisposable
         };
 
         var guardrails = new Guardrails(
-            input: _ => GuardrailResult.CreateRewrite(rewritten));
+            input: _ => new GuardrailResult(true, Rewrite: rewritten));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -307,7 +307,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            output: msg => GuardrailResult.Deny("output policy violation"));
+            output: msg => new GuardrailResult(false, "output policy violation"));
 
         var ex = await Assert.ThrowsAsync<GuardrailError>(() =>
             Pipeline.TurnAsync(agent, guardrails: guardrails));
@@ -327,7 +327,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            output: _ => GuardrailResult.CreateRewrite("redacted answer"));
+            output: _ => new GuardrailResult(true, Rewrite: "redacted answer"));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -356,18 +356,18 @@ public class AgentLoopIntegrationTests : IDisposable
         ];
 
         string? capturedArgs = null;
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["get_weather"] = args =>
             {
                 capturedArgs = args;
-                return Task.FromResult<ToolResult>("72°F");
+                return Task.FromResult("72°F");
             }
         };
 
         var rewrittenArgs = new Dictionary<string, object?> { ["city"] = "Seattle" };
         var guardrails = new Guardrails(
-            tool: (name, args) => GuardrailResult.CreateRewrite(rewrittenArgs));
+            tool: (name, args) => new GuardrailResult(true, Rewrite: rewrittenArgs));
 
         var result = await Pipeline.TurnAsync(agent, tools: tools, guardrails: guardrails);
 
@@ -400,13 +400,13 @@ public class AgentLoopIntegrationTests : IDisposable
             new FunctionTool { Name = "do_work", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
             ["do_work"] = _ =>
             {
                 // Cancel after the first tool execution
                 cts.Cancel();
-                return Task.FromResult<ToolResult>("done");
+                return Task.FromResult("done");
             }
         };
 
@@ -440,9 +440,9 @@ public class AgentLoopIntegrationTests : IDisposable
             new FunctionTool { Name = "repeat", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
+        var tools = new Dictionary<string, Func<string, Task<string>>>
         {
-            ["repeat"] = _ => Task.FromResult<ToolResult>("again")
+            ["repeat"] = _ => Task.FromResult("again")
         };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -451,6 +451,3 @@ public class AgentLoopIntegrationTests : IDisposable
         Assert.Contains($"{maxIter}", ex.Message);
     }
 }
-
-
-
