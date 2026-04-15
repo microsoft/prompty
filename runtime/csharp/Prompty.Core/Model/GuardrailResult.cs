@@ -198,11 +198,7 @@ public partial class GuardrailResult
     /// </summary>
     public static GuardrailResult CreateRewrite(object? rewrite)
     {
-        return new GuardrailResult
-        {
-            Allowed = true,
-            Rewrite = rewrite,
-        };
+        return new GuardrailResult { Allowed = true, Rewrite = rewrite };
     }
 
     /// <summary>
@@ -210,11 +206,7 @@ public partial class GuardrailResult
     /// </summary>
     public static GuardrailResult Deny(string reason)
     {
-        return new GuardrailResult
-        {
-            Allowed = false,
-            Reason = reason,
-        };
+        return new GuardrailResult { Allowed = false, Reason = reason };
     }
 
     /// <summary>
@@ -222,10 +214,7 @@ public partial class GuardrailResult
     /// </summary>
     public static GuardrailResult Allow()
     {
-        return new GuardrailResult
-        {
-            Allowed = true,
-        };
+        return new GuardrailResult { Allowed = true };
     }
 
     #endregion

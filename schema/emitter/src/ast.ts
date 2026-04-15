@@ -625,6 +625,10 @@ export interface PythonClassContext {
   coercionProperty: string | null;
   /** Maps factory.name → safe Python method name (prefixed with create_ on field collision) */
   factoryNameMap: Record<string, string>;
+  /** Pre-rendered factory method bodies via expression IR */
+  renderedFactories: Array<{ name: string; safeName: string; params: Record<string, string>; body: string }>;
+  /** Pre-rendered coercion expressions via expression IR */
+  renderedCoercions: Array<{ scalar: string; expression: string }>;
 }
 
 /**

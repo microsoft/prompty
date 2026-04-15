@@ -385,17 +385,17 @@ describe("RustExprVisitor", () => {
     );
   });
 
-  it("renders non-string param ref without .into()", () => {
+  it("renders non-string param ref with .into()", () => {
     assert.equal(
       v.visitExpr({ kind: "param", name: "count", paramType: "integer" }),
-      "count",
+      "count.into()",
     );
   });
 
-  it("renders camelCase param as snake_case", () => {
+  it("renders camelCase param as snake_case with .into()", () => {
     assert.equal(
       v.visitExpr({ kind: "param", name: "maxTokens", paramType: "integer" }),
-      "max_tokens",
+      "max_tokens.into()",
     );
   });
 

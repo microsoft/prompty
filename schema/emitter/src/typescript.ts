@@ -2,6 +2,8 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "./lib.js";
 import { enumerateTypes, PropertyNode, TypeNode, BaseTestContext } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
 import * as nunjucks from "nunjucks";
 import { buildBaseTestContext, typescriptTestOptions } from "./test-context.js";
 import { toKebabCase } from "./utilities.js";
@@ -35,6 +37,8 @@ interface TypeScriptClassContext {
   node: TypeNode;
   typeMapper: Record<string, string>;
   coercions: Array<{ scalar: string; alternate: string }>;
+  renderedCoercions: Array<{ scalar: string; expression: string }>;
+  renderedFactories: Array<{ name: string; params: Record<string, string>; body: string }>;
   polymorphicTypes: any;
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
@@ -86,7 +90,12 @@ export const generateTypeScript = async (
   const testTemplate = env.getTemplate("test.ts.njk", true);
   const eslintConfigTemplate = env.getTemplate("eslint.config.js.njk", true);
 
-  const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
+  const allTypes = Array.from(enumerateTypes(node));
+  const nodes = filterNodes(allTypes, options);
+
+  // Build the expression IR infrastructure
+  const registry = TypeRegistry.fromTypeGraph(allTypes);
+  const visitor = getVisitor("typescript", registry);
 
   // Determine namespace: use override or default
   const originalNamespace = node.typeName.namespace;
@@ -103,7 +112,7 @@ export const generateTypeScript = async (
       continue;
     }
 
-    const fileContext = buildFileContext(n);
+    const fileContext = buildFileContext(n, registry, visitor);
     const code = fileTemplate.render({
       ...fileContext,
       namespace: tsNamespace,
@@ -220,12 +229,35 @@ function findTypeScriptProjectRoot(startDir: string): string | undefined {
 
 /**
  * Build context for rendering a single TypeScript class.
+ * Resolves factories and coercions via the expression IR.
  */
-function buildClassContext(node: TypeNode): TypeScriptClassContext {
+function buildClassContext(
+  node: TypeNode,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): TypeScriptClassContext {
+  // Resolve factories via expression IR
+  const renderedFactories = (node.factories || []).map(f => ({
+    name: f.name,
+    params: f.params,
+    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
+  }));
+
+  // Resolve coercions via expression IR — render as object literals for template insertion
+  const renderedCoercions = (node.coercions || []).map(c => {
+    const expr = resolveCoerceExpr(c.expansion, c.scalar, node, registry, "data");
+    return {
+      scalar: typescriptTypeMapper[c.scalar] || c.scalar,
+      expression: renderObjectLiteral(expr, visitor, "js"),
+    };
+  });
+
   return {
     node,
     typeMapper: typescriptTypeMapper,
     coercions: prepareCoercions(node),
+    renderedCoercions,
+    renderedFactories,
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node),
     collectionTypes: getCollectionTypes(node),
@@ -236,10 +268,14 @@ function buildClassContext(node: TypeNode): TypeScriptClassContext {
 /**
  * Build context for rendering a TypeScript file with a base type and its children.
  */
-function buildFileContext(node: TypeNode): TypeScriptFileContext {
+function buildFileContext(
+  node: TypeNode,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): TypeScriptFileContext {
   const classes: TypeScriptClassContext[] = [
-    buildClassContext(node),
-    ...node.childTypes.map((ct) => buildClassContext(ct)),
+    buildClassContext(node, registry, visitor),
+    ...node.childTypes.map((ct) => buildClassContext(ct, registry, visitor)),
   ];
 
   return {

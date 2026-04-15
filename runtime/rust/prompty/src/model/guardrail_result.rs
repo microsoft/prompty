@@ -73,27 +73,15 @@ impl GuardrailResult {
     }
     /// Create a GuardrailResult with preset field values.
     pub fn rewrite(rewrite: impl Into<serde_json::Value>) -> Self {
-        Self {
-            allowed: true,
-            reason: None,
-            rewrite: Some(rewrite.into()),
-        }
+        GuardrailResult { allowed: true, rewrite: Some(rewrite.into()), ..Default::default() }
     }
     /// Create a GuardrailResult with preset field values.
     pub fn deny(reason: impl Into<String>) -> Self {
-        Self {
-            allowed: false,
-            reason: Some(reason.into()),
-            rewrite: None,
-        }
+        GuardrailResult { allowed: false, reason: Some(reason.into()), ..Default::default() }
     }
     /// Create a GuardrailResult with preset field values.
     pub fn allow() -> Self {
-        Self {
-            allowed: true,
-            reason: None,
-            rewrite: None,
-        }
+        GuardrailResult { allowed: true, ..Default::default() }
     }
 }
 

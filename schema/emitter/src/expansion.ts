@@ -252,9 +252,47 @@ export function resolveCoerceExpr(
   scalarType: string,
   targetType: TypeNode,
   registry: TypeRegistry,
+  paramName: string = "value",
 ): Construct {
-  // A coercion is a factory with implicit param { value: scalarType }
-  return resolveFactoryExpr(expansion, { value: scalarType }, targetType, registry);
+  // The expansion uses {value} as the fixed placeholder. Resolve with "value" as param,
+  // then rename the ParamRef to the caller's desired paramName.
+  const expr = resolveFactoryExpr(expansion, { value: scalarType }, targetType, registry);
+  if (paramName !== "value") {
+    renameParam(expr, "value", paramName);
+  }
+  return expr;
+}
+
+/** Recursively rename a ParamRef in an Expr tree. */
+function renameParam(expr: Expr, from: string, to: string): void {
+  switch (expr.kind) {
+    case "param":
+      if (expr.name === from) expr.name = to;
+      break;
+    case "construct":
+      for (const f of expr.fields) renameParam(f.value, from, to);
+      break;
+    case "variant":
+      for (const f of expr.fields) renameParam(f.value, from, to);
+      break;
+    case "array":
+      for (const item of expr.items) renameParam(item, from, to);
+      break;
+    case "dict":
+      for (const entry of expr.entries) renameParam(entry.value, from, to);
+      break;
+    // Literals and field reads don't contain params
+    case "string":
+    case "number":
+    case "boolean":
+    case "null":
+    case "field_read":
+      break;
+    default: {
+      const _exhaustive: never = expr;
+      throw new Error(`Unknown expr kind: ${(_exhaustive as Expr).kind}`);
+    }
+  }
 }
 
 // ============================================================================

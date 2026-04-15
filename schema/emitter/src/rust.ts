@@ -10,6 +10,8 @@ import {
   TypeNode,
 } from "./ast.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { getVisitor, ExprVisitor } from "./render-expr.js";
 import { createTemplateEngine } from "./template-engine.js";
 import { buildBaseTestContext, rustTestOptions } from "./test-context.js";
 import { toSnakeCase } from "./utilities.js";
@@ -53,10 +55,23 @@ interface PolymorphicVariant {
 /**
  * Rust context interfaces for template rendering
  */
+interface RenderedFactory {
+  name: string;
+  params: Record<string, string>;
+  body: string;
+}
+
+interface RenderedCoercion {
+  scalar: string;
+  expression: string;
+}
+
 interface RustClassContext {
   node: TypeNode;
   typeMapper: Record<string, string>;
   coercions: Array<{ scalar: string; alternate: string }>;
+  renderedFactories: RenderedFactory[];
+  renderedCoercions: RenderedCoercion[];
   polymorphicTypes: any;
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
@@ -97,7 +112,12 @@ export const generateRust = async (
   options?: GeneratorOptions
 ): Promise<void> => {
   const engine = createTemplateEngine(templateDir, 'rust');
-  const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
+  const allTypes = Array.from(enumerateTypes(node));
+  const nodes = filterNodes(allTypes, options);
+
+  // Build the expression IR infrastructure for this compilation
+  const registry = TypeRegistry.fromTypeGraph(allTypes);
+  const visitor = getVisitor("rust", registry);
 
   // Collect all polymorphic type names across all nodes
   const polymorphicTypeNames = new Set<string>();
@@ -122,7 +142,7 @@ export const generateRust = async (
   const testModuleNames: string[] = [];
   for (const n of nodes) {
     if (!n.base) {
-      const fileContext = buildFileContext(n, polymorphicTypeNames);
+      const fileContext = buildFileContext(n, polymorphicTypeNames, registry, visitor);
       const fileContent = engine.render('file.rs.njk', fileContext);
       const fileName = toSnakeCase(n.typeName.name) + '.rs';
       await emitRustFile(context, fileName, fileContent, emitTarget["output-dir"]);
@@ -186,8 +206,14 @@ function formatRustFiles(outputDir: string): void {
 
 /**
  * Build context for rendering a single Rust struct.
+ * Resolves factories and coercions via the expression IR.
  */
-function buildClassContext(node: TypeNode, polymorphicTypeNames: Set<string>): RustClassContext {
+function buildClassContext(
+  node: TypeNode,
+  polymorphicTypeNames: Set<string>,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): RustClassContext {
   const isPolymorphicBase = !!(node.discriminator && node.childTypes.length > 0);
   const isPolymorphicChild = !!(node.base && polymorphicTypeNames.has(node.base.name));
 
@@ -246,10 +272,25 @@ function buildClassContext(node: TypeNode, polymorphicTypeNames: Set<string>): R
     }
   }
 
+  // Resolve factories via expression IR
+  const renderedFactories: RenderedFactory[] = (node.factories || []).map(f => ({
+    name: f.name,
+    params: f.params,
+    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
+  }));
+
+  // Resolve coercions via expression IR
+  const renderedCoercions: RenderedCoercion[] = (node.coercions || []).map(c => ({
+    scalar: rustTypeMapper[c.scalar] || c.scalar,
+    expression: visitor.visitExpr(resolveCoerceExpr(c.expansion, c.scalar, node, registry)),
+  }));
+
   return {
     node,
     typeMapper: rustTypeMapper,
     coercions: prepareCoercions(node),
+    renderedFactories,
+    renderedCoercions,
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node, polymorphicTypeNames),
     collectionTypes: getCollectionTypes(node),
@@ -266,10 +307,15 @@ function buildClassContext(node: TypeNode, polymorphicTypeNames: Set<string>): R
 /**
  * Build context for rendering a Rust file with a base type and its children.
  */
-function buildFileContext(node: TypeNode, polymorphicTypeNames: Set<string>): RustFileContext {
+function buildFileContext(
+  node: TypeNode,
+  polymorphicTypeNames: Set<string>,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): RustFileContext {
   const classes: RustClassContext[] = [
-    buildClassContext(node, polymorphicTypeNames),
-    ...node.childTypes.map(ct => buildClassContext(ct, polymorphicTypeNames))
+    buildClassContext(node, polymorphicTypeNames, registry, visitor),
+    ...node.childTypes.map(ct => buildClassContext(ct, polymorphicTypeNames, registry, visitor))
   ];
 
   // Collect unique imports from all classes, excluding types defined in this file

@@ -222,20 +222,12 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-{% if node.factories.length > 0 %}
-{% for factory in node.factories %}
+{% if classCtx.renderedFactories.length > 0 %}
+{% for factory in classCtx.renderedFactories %}
     @classmethod
-    def {{ classCtx.factoryNameMap[factory.name] }}(cls{% for pName, pType in factory.params %}, {{ pName | snakeCase }}: {{ py.factoryParamType(pType) }}{% endfor %}) -> "{{ node.typeName.name }}":
+    def {{ factory.safeName }}(cls{% for pName, pType in factory.params %}, {{ pName | snakeCase }}: {{ py.factoryParamType(pType) }}{% endfor %}) -> "{{ node.typeName.name }}":
         """Create a {{ node.typeName.name }} with preset field values."""
-        instance = cls()
-{%- for prop in node.properties %}
-{%- if factory.sets[prop.name] is defined %}
-        instance.{{ prop.name | snakeCase }} = {{ py.factoryFieldValue(prop, factory.sets[prop.name]) }}
-{%- elif prop.name in factory.params %}
-        instance.{{ prop.name | snakeCase }} = {{ prop.name | snakeCase }}
-{%- endif %}
-{%- endfor %}
-        return instance
+        return {{ factory.body }}
 {% endfor %}
 {%- endif %}
 {%- if node.methods.length > 0 %}

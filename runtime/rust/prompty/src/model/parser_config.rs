@@ -40,8 +40,7 @@ impl ParserConfig {
         let value = ctx.process_input(value.clone());
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({"kind":value});
-            return Self::load_from_value(&expansion, ctx);
+            return ParserConfig { kind: value.into(), ..Default::default() };
         }
         Self {
             kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),

@@ -119,24 +119,16 @@ class GuardrailResult:
     @classmethod
     def create_rewrite(cls, rewrite: Any) -> "GuardrailResult":
         """Create a GuardrailResult with preset field values."""
-        instance = cls()
-        instance.allowed = True
-        instance.rewrite = rewrite
-        return instance
+        return GuardrailResult(allowed=True, rewrite=rewrite)
 
     @classmethod
     def deny(cls, reason: str) -> "GuardrailResult":
         """Create a GuardrailResult with preset field values."""
-        instance = cls()
-        instance.allowed = False
-        instance.reason = reason
-        return instance
+        return GuardrailResult(allowed=False, reason=reason)
 
     @classmethod
     def allow(cls) -> "GuardrailResult":
         """Create a GuardrailResult with preset field values."""
-        instance = cls()
-        instance.allowed = True
-        return instance
+        return GuardrailResult(allowed=True)
 
 

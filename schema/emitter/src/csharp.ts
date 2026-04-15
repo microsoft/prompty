@@ -9,6 +9,8 @@ import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { getVisitor, ExprVisitor } from "./render-expr.js";
 
 const csharpTypeMapper: Record<string, string> = {
   "string": "string",
@@ -72,7 +74,12 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const testTemplate = env.getTemplate('test.cs.njk', true);
   const contextTemplate = env.getTemplate('context.cs.njk', true);
 
-  const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
+  const allTypes = Array.from(enumerateTypes(node));
+  const nodes = filterNodes(allTypes, options);
+
+  // Build the expression IR infrastructure
+  const registry = TypeRegistry.fromTypeGraph(allTypes);
+  const visitor = getVisitor("csharp", registry);
 
   // Determine namespace: use explicit override from config, or fall back to TypeSpec namespace
   const originalNamespace = node.typeName.namespace;
@@ -91,7 +98,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
 
   for (const n of nodes) {
-    await emitCsharpFile(context, n, renderCSharp(nodes, n, classTemplate, csharpNamespace), `${n.typeName.name}.cs`, emitTarget["output-dir"]);
+    await emitCsharpFile(context, n, renderCSharp(nodes, n, classTemplate, csharpNamespace, registry, visitor), `${n.typeName.name}.cs`, emitTarget["output-dir"]);
     if (emitTarget["test-dir"]) {
       await emitCsharpFile(context, n, renderTests(n, testTemplate, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
     }
@@ -111,7 +118,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 };
 
 
-const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks.Template, namespace: string): string => {
+const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks.Template, namespace: string, registry: TypeRegistry, visitor: ExprVisitor): string => {
   const polymorphicTypes = node.retrievePolymorphicTypes();
   const findType = (typeName: string): TypeNode | undefined => {
     return nodes.find(n => n.typeName.name === typeName);
@@ -138,6 +145,14 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
       }
     }
   }
+
+  // Resolve factories via expression IR
+  const renderedFactories = (node.factories || []).map(f => ({
+    name: f.name,
+    methodName: renderCsharpFactoryMethodName(f.name, node),
+    params: f.params,
+    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
+  }));
 
   // Collection types with their primary property for coercion
   // Filter out dictionary collections since they don't have Load methods
@@ -195,6 +210,7 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     floatCoercion: floatCoercion,
     coercionProperty: coercionProperty,
     namespace: namespace,
+    renderedFactories: renderedFactories,
   });
 
   return csharp;

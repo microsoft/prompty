@@ -14,16 +14,23 @@ from ._Connection import (
   ReferenceConnection,
   RemoteConnection,
 )
+from ._ContentPart import AudioPart, ContentPart, FilePart, ImagePart, TextPart
 from ._context import LoadContext, SaveContext
 from ._FormatConfig import FormatConfig
+from ._GuardrailResult import GuardrailResult
 from ._McpApprovalMode import McpApprovalMode
+from ._Message import Message
 from ._Model import Model
+from ._ModelInfo import ModelInfo
 from ._ModelOptions import ModelOptions
 from ._ParserConfig import ParserConfig
 from ._Prompty import Prompty
 from ._Property import ArrayProperty, ObjectProperty, Property
+from ._StreamChunk import ErrorChunk, StreamChunk, TextChunk, ThinkingChunk, ToolChunk
 from ._Template import Template
 from ._Tool import CustomTool, FunctionTool, McpTool, OpenApiTool, PromptyTool, Tool
+from ._ToolCall import ToolCall
+from ._ToolResult import ToolResult
 
 __all__ = [
     "LoadContext",
@@ -52,4 +59,19 @@ __all__ = [
     "ParserConfig",
     "Template",
     "Prompty",
+    "ContentPart",
+    "TextPart",
+    "ImagePart",
+    "FilePart",
+    "AudioPart",
+    "Message",
+    "ToolCall",
+    "ToolResult",
+    "GuardrailResult",
+    "StreamChunk",
+    "TextChunk",
+    "ThinkingChunk",
+    "ToolChunk",
+    "ErrorChunk",
+    "ModelInfo",
 ]

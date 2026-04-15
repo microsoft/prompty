@@ -23,6 +23,35 @@ export interface ExprVisitor {
   registry?: TypeRegistry;
 }
 
+/**
+ * Render a Construct expression's fields as a plain object literal.
+ * Used by TypeScript, Python, C#, Go coercions where the template wraps
+ * the literal in language-specific loading logic (e.g., `TypeName.load({...}, ctx)`).
+ *
+ * @param expr - A Construct or VariantConstruct expression
+ * @param visitor - The language-specific visitor for rendering field values
+ * @param format - How to format the fields:
+ *   - "js": `{ field: value }` (TypeScript, Go)
+ *   - "py": `{"field": value}` (Python)
+ *   - "pairs": array of `{ property, value }` objects (C#)
+ */
+export function renderObjectLiteral(
+  expr: Construct | VariantConstruct,
+  visitor: ExprVisitor,
+  format: "js" | "py" = "js",
+): string {
+  const fields = expr.fields.map(f => {
+    const val = visitor.visitExpr(f.value);
+    switch (format) {
+      case "js":
+        return `${f.propertyName}: ${val}`;
+      case "py":
+        return `"${f.propertyName}": ${val}`;
+    }
+  });
+  return `{ ${fields.join(", ")} }`;
+}
+
 // ============================================================================
 // Naming helpers — reusable across visitors
 // ============================================================================
@@ -65,9 +94,8 @@ export class RustExprVisitor implements ExprVisitor {
       case "null":
         return "None";
       case "param":
-        return expr.paramType === "string"
-          ? `${toSnakeCase(expr.name)}.into()`
-          : toSnakeCase(expr.name);
+        // Always use .into() in Rust — handles String→String, bool→Value, i64→Value, etc.
+        return `${toSnakeCase(expr.name)}.into()`;
       case "construct":
         return this.visitConstruct(expr);
       case "variant":
@@ -85,6 +113,13 @@ export class RustExprVisitor implements ExprVisitor {
 
   private visitConstruct(expr: Construct): string {
     const typeName = expr.typeName.name;
+
+    // Check if this is a polymorphic type — discriminator fields need enum variant wrapping
+    const typeNode = this.registry?.get(typeName);
+    if (typeNode?.discriminator && typeNode.childTypes.length > 0) {
+      return this.visitPolymorphicConstruct(expr, typeNode);
+    }
+
     if (expr.fields.length === 0) {
       return `${typeName} { ..Default::default() }`;
     }
@@ -92,6 +127,60 @@ export class RustExprVisitor implements ExprVisitor {
       `${toSnakeCase(f.propertyName)}: ${this.wrapFieldValue(f)}`
     ).join(", ");
     return `${typeName} { ${fields}, ..Default::default() }`;
+  }
+
+  /**
+   * Handle Construct on a polymorphic type — the discriminator field becomes an enum variant.
+   * E.g., Property { kind: "boolean", example: v } → Property { kind: PropertyKind::Custom { kind_name: "boolean".to_string() }, example: Some(v.into()), ..Default::default() }
+   */
+  private visitPolymorphicConstruct(expr: Construct, typeNode: import("./ast.js").TypeNode): string {
+    const typeName = expr.typeName.name;
+    const enumName = `${typeName}Kind`;
+    const discFieldName = typeNode.discriminator!;
+
+    // Find the discriminator field assignment
+    const discField = expr.fields.find(f => f.propertyName === discFieldName);
+    const discValue = discField?.value;
+
+    // If no discriminator field or not a string literal, fall back to normal construction
+    if (!discField || discValue?.kind !== "string") {
+      const fields = expr.fields.map(f =>
+        `${toSnakeCase(f.propertyName)}: ${this.wrapFieldValue(f)}`
+      ).join(", ");
+      return fields.length > 0
+        ? `${typeName} { ${fields}, ..Default::default() }`
+        : `${typeName} { ..Default::default() }`;
+    }
+
+    const discValueStr = discValue.value;
+
+    // Find matching named child type
+    const childType = typeNode.childTypes.find(child => {
+      const dp = child.properties.find((p: any) => p.name === discFieldName);
+      return dp?.defaultValue === discValueStr;
+    });
+
+    let kindValue: string;
+    if (childType) {
+      // Named variant (e.g., PropertyKind::Array)
+      const variantName = childType.typeName.name.replace(typeName, '') || childType.typeName.name;
+      kindValue = `${enumName}::${variantName}`;
+    } else {
+      // Wildcard/Custom variant — carries kind_name field
+      kindValue = `${enumName}::Custom { kind_name: "${discValueStr}".to_string() }`;
+    }
+
+    // Non-discriminator fields
+    const baseFields = expr.fields
+      .filter(f => f.propertyName !== discFieldName)
+      .map(f => `${toSnakeCase(f.propertyName)}: ${this.wrapFieldValue(f)}`);
+
+    const allFields = [
+      `${toSnakeCase(discFieldName)}: ${kindValue}`,
+      ...baseFields,
+    ];
+
+    return `${typeName} { ${allFields.join(", ")}, ..Default::default() }`;
   }
 
   private visitVariant(expr: VariantConstruct): string {

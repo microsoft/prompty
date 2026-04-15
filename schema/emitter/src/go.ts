@@ -14,6 +14,8 @@ import { GeneratorOptions, filterNodes } from "./emitter.js";
 import { createTemplateEngine } from "./template-engine.js";
 import { buildBaseTestContext, goTestOptions } from "./test-context.js";
 import { toSnakeCase } from "./utilities.js";
+import { resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
 
 
 /**
@@ -43,6 +45,7 @@ interface GoClassContext {
   node: TypeNode;
   typeMapper: Record<string, string>;
   coercions: Array<{ scalar: string; alternate: string }>;
+  renderedCoercions: Array<{ scalar: string; expression: string }>;
   polymorphicTypes: any;
   imports: string[];
   collectionTypes: Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }>;
@@ -76,7 +79,12 @@ export const generateGo = async (
   // Create template engine with Go templates + shared macros
   const engine = createTemplateEngine(templateDir, 'go');
 
-  const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
+  const allTypes = Array.from(enumerateTypes(node));
+  const nodes = filterNodes(allTypes, options);
+
+  // Build the expression IR infrastructure
+  const registry = TypeRegistry.fromTypeGraph(allTypes);
+  const visitor = getVisitor("go", registry);
 
   // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase().replace(/\./g, '');
@@ -99,7 +107,7 @@ export const generateGo = async (
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
-      const fileContext = buildFileContext(n, packageName, polymorphicTypeNames);
+      const fileContext = buildFileContext(n, packageName, polymorphicTypeNames, registry, visitor);
       const fileContent = engine.render('file.go.njk', fileContext);
       const fileName = toSnakeCase(n.typeName.name) + '.go';
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
@@ -159,11 +167,25 @@ function formatGoFiles(outputDir: string, testDir?: string): void {
 /**
  * Build context for rendering a single Go struct.
  */
-function buildClassContext(node: TypeNode): GoClassContext {
+function buildClassContext(
+  node: TypeNode,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): GoClassContext {
+  // Resolve coercions via expression IR — Go uses "v" as param name
+  const renderedCoercions = (node.coercions || []).map(c => {
+    const expr = resolveCoerceExpr(c.expansion, c.scalar, node, registry, "v");
+    return {
+      scalar: goTypeMapper[c.scalar] || c.scalar,
+      expression: renderObjectLiteral(expr, visitor, "js"),
+    };
+  });
+
   return {
     node,
     typeMapper: goTypeMapper,
     coercions: prepareCoercions(node),
+    renderedCoercions,
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node),
     collectionTypes: getCollectionTypes(node),
@@ -174,10 +196,16 @@ function buildClassContext(node: TypeNode): GoClassContext {
 /**
  * Build context for rendering a Go file with a base type and its children.
  */
-function buildFileContext(node: TypeNode, packageName: string, polymorphicTypeNames: Set<string>): GoFileContext {
+function buildFileContext(
+  node: TypeNode,
+  packageName: string,
+  polymorphicTypeNames: Set<string>,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): GoFileContext {
   const classes: GoClassContext[] = [
-    buildClassContext(node),
-    ...node.childTypes.map(ct => buildClassContext(ct))
+    buildClassContext(node, registry, visitor),
+    ...node.childTypes.map(ct => buildClassContext(ct, registry, visitor))
   ];
 
   return {

@@ -40,8 +40,7 @@ impl Binding {
         let value = ctx.process_input(value.clone());
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({"input":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Binding { input: value.into(), ..Default::default() };
         }
         Self {
             name: value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string(),

@@ -48,8 +48,7 @@ impl Model {
         let value = ctx.process_input(value.clone());
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({"id":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Model { id: value.into(), ..Default::default() };
         }
         Self {
             id: value.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string(),

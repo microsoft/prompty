@@ -77,21 +77,17 @@ impl Property {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         if let Some(value) = value.as_bool() {
-            let expansion = serde_json::json!({"kind":"boolean","example":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Property { kind: PropertyKind::Custom { kind_name: "boolean".to_string() }, example: Some(value.into()), ..Default::default() };
         }
         if let Some(value) = value.as_f64() {
-            let expansion = serde_json::json!({"kind":"float","example":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Property { kind: PropertyKind::Custom { kind_name: "float".to_string() }, example: Some(value.into()), ..Default::default() };
         }
         if let Some(value) = value.as_i64() {
-            let expansion = serde_json::json!({"kind":"integer","example":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Property { kind: PropertyKind::Custom { kind_name: "integer".to_string() }, example: Some(value.into()), ..Default::default() };
         }
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({"kind":"string","example":value});
-            return Self::load_from_value(&expansion, ctx);
+            return Property { kind: PropertyKind::Custom { kind_name: "string".to_string() }, example: Some(value.into()), ..Default::default() };
         }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {

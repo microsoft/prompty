@@ -13,6 +13,8 @@ import {
   PythonLoadContextContext,
   BaseTestContext
 } from "./ast.js";
+import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry } from "./expansion.js";
+import { getVisitor, ExprVisitor, renderObjectLiteral } from "./render-expr.js";
 import { GeneratorOptions, filterNodes } from "./emitter.js";
 import { getCombinations, scalarValue, toSnakeCase } from "./utilities.js";
 import { createTemplateEngine } from "./template-engine.js";
@@ -54,7 +56,12 @@ export const generatePython = async (
   // Create template engine with Python templates + shared macros
   const engine = createTemplateEngine(templateDir, 'python');
 
-  const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
+  const allTypes = Array.from(enumerateTypes(node));
+  const nodes = filterNodes(allTypes, options);
+
+  // Build the expression IR infrastructure
+  const registry = TypeRegistry.fromTypeGraph(allTypes);
+  const visitor = getVisitor("python", registry);
 
   // Determine package name from root node namespace (e.g., "Prompty" -> "prompty")
   const packageName = node.typeName.namespace.toLowerCase();
@@ -86,7 +93,7 @@ export const generatePython = async (
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
-      const fileContext = buildFileContext(n);
+      const fileContext = buildFileContext(n, registry, visitor);
       const fileContent = engine.render('file.py.njk', fileContext);
       await emitPythonFile(context, `_${n.typeName.name}.py`, fileContent, emitTarget["output-dir"]);
     }
@@ -174,17 +181,37 @@ function findPythonProjectRoot(startDir: string): string | undefined {
 
 /**
  * Build context for rendering a single Python class.
+ * Resolves factories and coercions via the expression IR when registry/visitor provided.
  */
-function buildClassContext(node: TypeNode): PythonClassContext {
+function buildClassContext(
+  node: TypeNode,
+  registry?: TypeRegistry,
+  visitor?: ExprVisitor,
+): PythonClassContext {
   // Pre-compute safe factory method names to avoid field/classmethod collisions.
-  // In Python, a @classmethod with the same name as a dataclass field shadows the
-  // field's default value. If collision detected, prefix with "create_".
   const fieldNames = new Set(node.properties.map(p => toSnakeCase(p.name)));
   const factoryNameMap: Record<string, string> = {};
   for (const factory of node.factories) {
     const snakeName = toSnakeCase(factory.name);
     factoryNameMap[factory.name] = fieldNames.has(snakeName) ? `create_${snakeName}` : snakeName;
   }
+
+  // Resolve factories via expression IR (when registry+visitor available)
+  const renderedFactories = (registry && visitor) ? (node.factories || []).map(f => ({
+    name: f.name,
+    safeName: factoryNameMap[f.name],
+    params: f.params,
+    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
+  })) : [];
+
+  // Resolve coercions via expression IR
+  const renderedCoercions = (registry && visitor) ? (node.coercions || []).map(c => {
+    const expr = resolveCoerceExpr(c.expansion, c.scalar, node, registry, "data");
+    return {
+      scalar: pythonTypeMapper[c.scalar] || c.scalar,
+      expression: renderObjectLiteral(expr, visitor, "py"),
+    };
+  }) : [];
 
   return {
     node,
@@ -195,17 +222,23 @@ function buildClassContext(node: TypeNode): PythonClassContext {
     collectionTypes: getCollectionTypes(node),
     coercionProperty: getCoercionProperty(node),
     factoryNameMap,
+    renderedFactories,
+    renderedCoercions,
   };
 }
 
 /**
  * Build context for rendering a Python file with a base type and its children.
  */
-function buildFileContext(node: TypeNode): PythonFileContext {
+function buildFileContext(
+  node: TypeNode,
+  registry: TypeRegistry,
+  visitor: ExprVisitor,
+): PythonFileContext {
   // Build class contexts for this node and all its children
   const classes: PythonClassContext[] = [
-    buildClassContext(node),
-    ...node.childTypes.map(ct => buildClassContext(ct))
+    buildClassContext(node, registry, visitor),
+    ...node.childTypes.map(ct => buildClassContext(ct, registry, visitor))
   ];
 
   return {

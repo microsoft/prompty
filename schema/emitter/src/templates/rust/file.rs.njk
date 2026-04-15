@@ -123,28 +123,24 @@ impl {{ class.node.typeName.name }} {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
-        {%- if class.coercions.length > 0 %}
-        {%- for alt in class.coercions %}
+        {%- if class.renderedCoercions.length > 0 %}
+        {%- for alt in class.renderedCoercions %}
         {%- if alt.scalar == "String" %}
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar == "bool" %}
         if let Some(value) = value.as_bool() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar in ["i64", "i32"] %}
         if let Some(value) = value.as_i64() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar in ["f64", "f32"] %}
         if let Some(value) = value.as_f64() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- endif %}
         {%- endfor %}
@@ -338,28 +334,24 @@ impl {{ class.node.typeName.name }} {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
-        {%- if class.coercions.length > 0 %}
-        {%- for alt in class.coercions %}
+        {%- if class.renderedCoercions.length > 0 %}
+        {%- for alt in class.renderedCoercions %}
         {%- if alt.scalar == "String" %}
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar == "bool" %}
         if let Some(value) = value.as_bool() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar in ["i64", "i32"] %}
         if let Some(value) = value.as_i64() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- elif alt.scalar in ["f64", "f32"] %}
         if let Some(value) = value.as_f64() {
-            let expansion = serde_json::json!({{ alt.alternate }});
-            return Self::load_from_value(&expansion, ctx);
+            return {{ alt.expression }};
         }
         {%- endif %}
         {%- endfor %}
@@ -459,22 +451,12 @@ impl {{ class.node.typeName.name }} {
 {%- endfor %}
 
 {#- ================================================================
-    FACTORY METHODS — fully generated from @factory decorators
+    FACTORY METHODS — resolved via expression IR, body pre-rendered
     ================================================================ -#}
-{%- for factory in class.node.factories %}
+{%- for factory in class.renderedFactories %}
     /// Create a {{ class.node.typeName.name }} with preset field values.
     pub fn {{ factory.name | snakeCase }}({% for pName, pType in factory.params %}{{ pName | snakeCase }}: {{ rust.factoryParamType(pType) }}{% if not loop.last %}, {% endif %}{% endfor %}) -> Self {
-        Self {
-{%- for prop in class.node.properties %}
-{%- if factory.sets[prop.name] is defined %}
-            {{ prop.name | snakeCase }}: {{ rust.factoryFieldValue(prop, factory.sets[prop.name], factory.params) }},
-{%- elif prop.name in factory.params %}
-            {{ prop.name | snakeCase }}: {{ rust.factoryParamConvert(prop, prop.name) }},
-{%- else %}
-            {{ prop.name | snakeCase }}: {{ rust.defaultValue(prop, typeMapper, polymorphicTypeNames) | trim }},
-{%- endif %}
-{%- endfor %}
-        }
+        {{ factory.body }}
     }
 {%- endfor %}
 }
