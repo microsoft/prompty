@@ -617,9 +617,7 @@ class TestAgentLoopExtensions:
             received_args.append(kwargs)
             return "Sunny"
 
-        g = Guardrails(
-            tool=lambda name, args: GuardrailResult.create_rewrite({"location": "REWRITTEN_CITY"})
-        )
+        g = Guardrails(tool=lambda name, args: GuardrailResult.create_rewrite({"location": "REWRITTEN_CITY"}))
 
         turn(
             agent,

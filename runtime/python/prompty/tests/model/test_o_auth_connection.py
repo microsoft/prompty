@@ -1,4 +1,3 @@
-
 import json
 
 import yaml
@@ -7,7 +6,7 @@ from prompty.model import OAuthConnection
 
 
 def test_load_json_oauthconnection():
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "oauth",
       "endpoint": "https://api.example.com",
@@ -18,7 +17,7 @@ def test_load_json_oauthconnection():
         "https://cognitiveservices.azure.com/.default"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = OAuthConnection.load(data)
     assert instance is not None
@@ -27,10 +26,10 @@ def test_load_json_oauthconnection():
     assert instance.client_id == "your-client-id"
     assert instance.client_secret == "your-client-secret"
     assert instance.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-    
+
 
 def test_load_yaml_oauthconnection():
-    yaml_data = r'''
+    yaml_data = r"""
     kind: oauth
     endpoint: "https://api.example.com"
     clientId: your-client-id
@@ -39,7 +38,7 @@ def test_load_yaml_oauthconnection():
     scopes:
       - "https://cognitiveservices.azure.com/.default"
     
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = OAuthConnection.load(data)
     assert instance is not None
@@ -49,9 +48,10 @@ def test_load_yaml_oauthconnection():
     assert instance.client_secret == "your-client-secret"
     assert instance.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
+
 def test_roundtrip_json_oauthconnection():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "oauth",
       "endpoint": "https://api.example.com",
@@ -62,7 +62,7 @@ def test_roundtrip_json_oauthconnection():
         "https://cognitiveservices.azure.com/.default"
       ]
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = OAuthConnection.load(original_data)
     saved_data = instance.save()
@@ -74,9 +74,10 @@ def test_roundtrip_json_oauthconnection():
     assert reloaded.client_secret == "your-client-secret"
     assert reloaded.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
+
 def test_to_json_oauthconnection():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "oauth",
       "endpoint": "https://api.example.com",
@@ -87,7 +88,7 @@ def test_to_json_oauthconnection():
         "https://cognitiveservices.azure.com/.default"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = OAuthConnection.load(data)
     json_output = instance.to_json()
@@ -95,9 +96,10 @@ def test_to_json_oauthconnection():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_oauthconnection():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "oauth",
       "endpoint": "https://api.example.com",
@@ -108,12 +110,10 @@ def test_to_yaml_oauthconnection():
         "https://cognitiveservices.azure.com/.default"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = OAuthConnection.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
-

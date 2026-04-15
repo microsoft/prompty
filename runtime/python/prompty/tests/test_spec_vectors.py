@@ -1065,10 +1065,11 @@ def test_agent_vector(vec: dict):
                 )
             )
             for i, tc in enumerate(tool_calls):
+                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=[TextPart(value=tool_results[i])],
+                        parts=list(tr.parts),
                         metadata={"tool_call_id": tc.id, "name": tc.name},
                     )
                 )
@@ -1346,10 +1347,11 @@ def _setup_agent_ext_common(vec: dict):
                 )
             )
             for i, tc in enumerate(tool_calls):
+                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=[TextPart(value=tool_results[i])],
+                        parts=list(tr.parts),
                         metadata={"tool_call_id": tc.id, "name": tc.name},
                     )
                 )

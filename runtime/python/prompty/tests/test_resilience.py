@@ -14,6 +14,7 @@ from prompty.core.tool_dispatch import (
     dispatch_tool,
     dispatch_tool_async,
 )
+from prompty.core.types import ToolResult, tool_result_text
 
 # ---------------------------------------------------------------------------
 # §9.8: Resilient JSON parsing
@@ -128,7 +129,7 @@ class TestDispatchToolResilience:
             MagicMock(),
             {},
         )
-        assert "Weather in NY" in result
+        assert "Weather in NY" in tool_result_text(result)
 
     def test_dispatch_with_garbage_args(self):
         def my_tool(**kwargs: object) -> str:
@@ -141,8 +142,9 @@ class TestDispatchToolResilience:
             MagicMock(),
             {},
         )
-        assert "Error" in result
-        assert "all parse strategies failed" in result
+        text = tool_result_text(result)
+        assert "Error" in text
+        assert "all parse strategies failed" in text
 
 
 # ---------------------------------------------------------------------------
@@ -166,8 +168,9 @@ class TestToolErrorSafety:
             MagicMock(),
             {},
         )
-        assert "Error" in result
-        assert "exploded" in result
+        text = tool_result_text(result)
+        assert "Error" in text
+        assert "exploded" in text
 
     @pytest.mark.asyncio
     async def test_async_tool_exception_returns_error_string(self):
@@ -183,11 +186,12 @@ class TestToolErrorSafety:
             MagicMock(),
             {},
         )
-        assert "Error" in result
-        assert "async boom" in result
+        text = tool_result_text(result)
+        assert "Error" in text
+        assert "async boom" in text
 
     def test_tool_error_does_not_propagate(self):
-        """dispatch_tool should never raise — always returns str."""
+        """dispatch_tool should never raise — always returns ToolResult."""
 
         def exploding_tool(**kwargs: object) -> str:
             raise ValueError("kaboom")
@@ -200,8 +204,8 @@ class TestToolErrorSafety:
             MagicMock(),
             {},
         )
-        assert isinstance(result, str)
-        assert "kaboom" in result
+        assert isinstance(result, ToolResult)
+        assert "kaboom" in tool_result_text(result)
 
 
 # ---------------------------------------------------------------------------

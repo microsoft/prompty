@@ -18,7 +18,7 @@ from ._Property import Property
 @dataclass
 class Tool(ABC):
     """Represents a tool that can be used in prompts.
-    
+
     Attributes
     ----------
     name : str
@@ -51,13 +51,12 @@ class Tool(ABC):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Tool: {data}")
 
         # load polymorphic Tool instance
         instance = Tool.load_kind(data, context)
-
 
         if data is not None and "name" in data:
             instance.name = data["name"]
@@ -70,7 +69,6 @@ class Tool(ABC):
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
 
     @staticmethod
     def load_bindings(data: dict | list, context: LoadContext | None) -> list[Binding]:
@@ -92,7 +90,6 @@ class Tool(ABC):
         if context is None:
             context = SaveContext()
 
-
         if context.collection_format == "array":
             return [item.save(context) for item in items]
 
@@ -103,7 +100,7 @@ class Tool(ABC):
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -115,8 +112,6 @@ class Tool(ABC):
                     result["_unnamed"] = []
                 result["_unnamed"].append(item_data)
         return result
-
-
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Tool":
@@ -133,14 +128,11 @@ class Tool(ABC):
                 return PromptyTool.load(data, context)
 
             else:
-
                 # load default instance
                 return CustomTool.load(data, context)
 
         else:
-
             raise ValueError("Missing Tool discriminator property: 'kind'")
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Tool instance to a dictionary.
@@ -153,7 +145,6 @@ class Tool(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -196,11 +187,10 @@ class Tool(ABC):
         return context.to_json(self.save(context), indent)
 
 
-
 @dataclass
 class FunctionTool(Tool):
     """Represents a local function tool.
-    
+
     Attributes
     ----------
     kind : str
@@ -230,7 +220,7 @@ class FunctionTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FunctionTool: {data}")
 
@@ -246,7 +236,6 @@ class FunctionTool(Tool):
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
 
     @staticmethod
     def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
@@ -271,8 +260,6 @@ class FunctionTool(Tool):
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.
         Args:
@@ -285,10 +272,8 @@ class FunctionTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -325,7 +310,6 @@ class FunctionTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
-
 @dataclass
 class CustomTool(Tool):
     """Represents a generic server tool that runs on a server
@@ -333,7 +317,7 @@ class CustomTool(Tool):
     It may include features such as authentication, data storage, and long-running processes
     This tool kind is ideal for tasks that involve complex computations or access to secure resources
     Server tools can be used to offload heavy processing from client applications
-    
+
     Attributes
     ----------
     kind : str
@@ -363,7 +347,7 @@ class CustomTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for CustomTool: {data}")
 
@@ -380,8 +364,6 @@ class CustomTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the CustomTool instance to a dictionary.
         Args:
@@ -394,10 +376,8 @@ class CustomTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -434,11 +414,10 @@ class CustomTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
-
 @dataclass
 class McpTool(Tool):
     """The MCP Server tool.
-    
+
     Attributes
     ----------
     kind : str
@@ -477,7 +456,7 @@ class McpTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpTool: {data}")
 
@@ -500,8 +479,6 @@ class McpTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the McpTool instance to a dictionary.
         Args:
@@ -514,10 +491,8 @@ class McpTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -560,11 +535,10 @@ class McpTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
-
 @dataclass
 class OpenApiTool(Tool):
     """
-    
+
     Attributes
     ----------
     kind : str
@@ -594,7 +568,7 @@ class OpenApiTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for OpenApiTool: {data}")
 
@@ -611,8 +585,6 @@ class OpenApiTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the OpenApiTool instance to a dictionary.
         Args:
@@ -625,10 +597,8 @@ class OpenApiTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -665,15 +635,14 @@ class OpenApiTool(Tool):
         return context.to_json(self.save(context), indent)
 
 
-
 @dataclass
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
-    
+
     The child prompty is loaded, rendered, and executed with a single LLM call
     (invoke). Apps that want agentic sub-agents should use `kind: function` tools
     and call `turn()` themselves.
-    
+
     Attributes
     ----------
     kind : str
@@ -700,7 +669,7 @@ class PromptyTool(Tool):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for PromptyTool: {data}")
 
@@ -715,8 +684,6 @@ class PromptyTool(Tool):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the PromptyTool instance to a dictionary.
         Args:
@@ -729,10 +696,8 @@ class PromptyTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -765,5 +730,3 @@ class PromptyTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

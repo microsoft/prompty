@@ -1,4 +1,3 @@
-
 import json
 
 import yaml
@@ -7,44 +6,45 @@ from prompty.model import ToolCall
 
 
 def test_load_json_toolcall():
-    json_data = r'''
+    json_data = r"""
     {
       "id": "call_abc123",
       "name": "get_weather",
       "arguments": "{\"city\": \"Paris\"}"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolCall.load(data)
     assert instance is not None
     assert instance.id == "call_abc123"
     assert instance.name == "get_weather"
-    assert instance.arguments == "{\"city\": \"Paris\"}"
-    
+    assert instance.arguments == '{"city": "Paris"}'
+
 
 def test_load_yaml_toolcall():
-    yaml_data = r'''
+    yaml_data = r"""
     id: call_abc123
     name: get_weather
     arguments: "{\"city\": \"Paris\"}"
     
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolCall.load(data)
     assert instance is not None
     assert instance.id == "call_abc123"
     assert instance.name == "get_weather"
-    assert instance.arguments == "{\"city\": \"Paris\"}"
+    assert instance.arguments == '{"city": "Paris"}'
+
 
 def test_roundtrip_json_toolcall():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "call_abc123",
       "name": "get_weather",
       "arguments": "{\"city\": \"Paris\"}"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ToolCall.load(original_data)
     saved_data = instance.save()
@@ -52,17 +52,18 @@ def test_roundtrip_json_toolcall():
     assert reloaded is not None
     assert reloaded.id == "call_abc123"
     assert reloaded.name == "get_weather"
-    assert reloaded.arguments == "{\"city\": \"Paris\"}"
+    assert reloaded.arguments == '{"city": "Paris"}'
+
 
 def test_to_json_toolcall():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "call_abc123",
       "name": "get_weather",
       "arguments": "{\"city\": \"Paris\"}"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolCall.load(data)
     json_output = instance.to_json()
@@ -70,20 +71,19 @@ def test_to_json_toolcall():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_toolcall():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "call_abc123",
       "name": "get_weather",
       "arguments": "{\"city\": \"Paris\"}"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolCall.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
-

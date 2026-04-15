@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class ModelOptions:
     """Options for configuring the behavior of the AI model.
-    
+
     Attributes
     ----------
     frequency_penalty : Optional[float]
@@ -64,7 +64,7 @@ class ModelOptions:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelOptions: {data}")
 
@@ -95,8 +95,6 @@ class ModelOptions:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelOptions instance to a dictionary.
         Args:
@@ -108,7 +106,6 @@ class ModelOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -161,5 +158,3 @@ class ModelOptions:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

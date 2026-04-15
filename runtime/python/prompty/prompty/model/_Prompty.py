@@ -19,10 +19,10 @@ class Prompty:
     """A Prompty is a markdown file format for LLM prompts. The frontmatter defines
     structured metadata including model configuration, input/output schemas, tools,
     and template settings. The markdown body becomes the instructions.
-    
+
     This is the single root type for the Prompty schema — there is no abstract base
     class or kind discriminator. A .prompty file always produces a Prompty instance.
-    
+
     Attributes
     ----------
     name : str
@@ -73,7 +73,7 @@ class Prompty:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Prompty: {data}")
 
@@ -104,7 +104,6 @@ class Prompty:
             instance = context.process_output(instance)
         return instance
 
-
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
@@ -125,7 +124,6 @@ class Prompty:
         if context is None:
             context = SaveContext()
 
-
         if context.collection_format == "array":
             return [item.save(context) for item in items]
 
@@ -136,7 +134,7 @@ class Prompty:
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -148,7 +146,6 @@ class Prompty:
                     result["_unnamed"] = []
                 result["_unnamed"].append(item_data)
         return result
-
 
     @staticmethod
     def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
@@ -173,7 +170,6 @@ class Prompty:
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
 
-
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
         if isinstance(data, dict):
@@ -194,7 +190,6 @@ class Prompty:
         if context is None:
             context = SaveContext()
 
-
         if context.collection_format == "array":
             return [item.save(context) for item in items]
 
@@ -205,7 +200,7 @@ class Prompty:
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -218,8 +213,6 @@ class Prompty:
                 result["_unnamed"].append(item_data)
         return result
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Prompty instance to a dictionary.
         Args:
@@ -231,7 +224,6 @@ class Prompty:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -284,5 +276,3 @@ class Prompty:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

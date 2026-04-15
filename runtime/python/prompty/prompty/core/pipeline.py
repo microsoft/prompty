@@ -50,7 +50,7 @@ from .guardrails import GuardrailError, Guardrails
 from .steering import Steering
 from .structured import cast
 from .tool_dispatch import dispatch_tool, dispatch_tool_async
-from .types import RICH_KINDS, ContentPart, Message, TextPart, ThreadMarker
+from .types import RICH_KINDS, ContentPart, Message, TextPart, ThreadMarker, ToolResult, tool_result_text
 
 __all__ = [
     "validate_inputs",
@@ -1557,7 +1557,7 @@ def _build_tool_result_messages(
     tool_calls, text_content = _extract_tool_info(response)
 
     # Dispatch tools
-    tool_results: list[str] = []
+    tool_results: list[ToolResult] = []
     for tc in tool_calls:
         result = dispatch_tool(tc.name, tc.arguments, tools, agent, parent_inputs or {})
         tool_results.append(result)
@@ -1582,7 +1582,7 @@ async def _build_tool_result_messages_async(
     tool_calls, text_content = _extract_tool_info(response)
 
     # Dispatch tools (async)
-    tool_results: list[str] = []
+    tool_results: list[ToolResult] = []
     for tc in tool_calls:
         result = await dispatch_tool_async(tc.name, tc.arguments, tools, agent, parent_inputs or {})
         tool_results.append(result)
@@ -1683,7 +1683,7 @@ def _build_tool_messages_from_calls(
     from .discovery import get_executor
 
     # Dispatch tools
-    tool_results: list[str] = []
+    tool_results: list[ToolResult] = []
     for tc in tool_calls:
         result = dispatch_tool(tc.name, tc.arguments, tools, agent, parent_inputs or {})
         tool_results.append(result)
@@ -1705,7 +1705,7 @@ async def _build_tool_messages_from_calls_async(
     from .discovery import get_executor
 
     # Dispatch tools (async)
-    tool_results: list[str] = []
+    tool_results: list[ToolResult] = []
     for tc in tool_calls:
         result = await dispatch_tool_async(tc.name, tc.arguments, tools, agent, parent_inputs or {})
         tool_results.append(result)
@@ -1858,10 +1858,11 @@ def _dispatch_tools_with_extensions(
     cancel: CancellationToken | None = None,
     guardrails: Guardrails | None = None,
     parallel: bool = False,
-) -> list[str]:
+) -> list[ToolResult]:
     """Dispatch tool calls with events, cancellation, guardrails, and optional parallelism."""
+    from .types import text_tool_result
 
-    def _dispatch_one(tc: Any) -> str:
+    def _dispatch_one(tc: Any) -> ToolResult:
         name = getattr(tc, "name", "")
         arguments = getattr(tc, "arguments", "{}")
 
@@ -1880,7 +1881,7 @@ def _dispatch_tools_with_extensions(
             if not gr.allowed:
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
-                return denied_msg
+                return text_tool_result(denied_msg)
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
@@ -1888,11 +1889,11 @@ def _dispatch_tools_with_extensions(
         try:
             result = dispatch_tool(name, arguments, tools, agent, parent_inputs)
         except Exception as e:
-            result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
+            result = text_tool_result(f"Error: Tool '{name}' failed: {type(e).__name__}: {e}")
             emit_event(on_event, "error", {"tool": name, "error": str(e)})
 
         # §13.1 — Emit tool_result
-        emit_event(on_event, "tool_result", {"name": name, "result": result})
+        emit_event(on_event, "tool_result", {"name": name, "result": tool_result_text(result)})
         return result
 
     # §13.6 — Parallel tool execution
@@ -1914,10 +1915,11 @@ async def _dispatch_tools_with_extensions_async(
     cancel: CancellationToken | None = None,
     guardrails: Guardrails | None = None,
     parallel: bool = False,
-) -> list[str]:
+) -> list[ToolResult]:
     """Async dispatch tool calls with events, cancellation, guardrails, and optional parallelism."""
+    from .types import text_tool_result
 
-    async def _dispatch_one(tc: Any) -> str:
+    async def _dispatch_one(tc: Any) -> ToolResult:
         name = getattr(tc, "name", "")
         arguments = getattr(tc, "arguments", "{}")
 
@@ -1936,7 +1938,7 @@ async def _dispatch_tools_with_extensions_async(
             if not gr.allowed:
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
-                return denied_msg
+                return text_tool_result(denied_msg)
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
 
@@ -1944,11 +1946,11 @@ async def _dispatch_tools_with_extensions_async(
         try:
             result = await dispatch_tool_async(name, arguments, tools, agent, parent_inputs)
         except Exception as e:
-            result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
+            result = text_tool_result(f"Error: Tool '{name}' failed: {type(e).__name__}: {e}")
             emit_event(on_event, "error", {"tool": name, "error": str(e)})
 
         # §13.1 — Emit tool_result
-        emit_event(on_event, "tool_result", {"name": name, "result": result})
+        emit_event(on_event, "tool_result", {"name": name, "result": tool_result_text(result)})
         return result
 
     # §13.6 — Parallel tool execution
@@ -1956,7 +1958,7 @@ async def _dispatch_tools_with_extensions_async(
         tasks = [_dispatch_one(tc) for tc in tool_calls]
         return list(await asyncio.gather(*tasks))
     else:
-        results: list[str] = []
+        results: list[ToolResult] = []
         for tc in tool_calls:
             results.append(await _dispatch_one(tc))
         return results

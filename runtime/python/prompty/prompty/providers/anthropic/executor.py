@@ -22,6 +22,7 @@ from ...core.types import (
     Message,
     PromptyStream,
     TextPart,
+    ToolResult,
 )
 from ...model import (
     ApiKeyConnection,
@@ -432,7 +433,7 @@ class AnthropicExecutor:
         self,
         raw_response: Any,
         tool_calls: list[Any],
-        tool_results: list[str],
+        tool_results: list[ToolResult],
         text_content: str = "",
     ) -> list[Message]:
         """Format tool messages in Anthropic wire format.
@@ -444,7 +445,7 @@ class AnthropicExecutor:
         """
         import json
 
-        from ...core.types import Message, TextPart
+        from ...core.types import Message, TextPart, tool_result_text
 
         result_messages: list[Message] = []
 
@@ -471,18 +472,21 @@ class AnthropicExecutor:
 
         # --- Single user message with batched tool_result blocks ---
         tool_result_blocks: list[dict[str, Any]] = []
+        all_parts: list[ContentPart] = []
         for i, tc in enumerate(tool_calls):
+            tr = tool_results[i]
             tool_result_blocks.append(
                 {
                     "type": "tool_result",
                     "tool_use_id": tc.id,
-                    "content": tool_results[i],
+                    "content": tool_result_text(tr),
                 }
             )
+            all_parts.extend(tr.parts)
         result_messages.append(
             Message(
                 role="tool",
-                parts=[TextPart(value=r) for r in tool_results],
+                parts=all_parts if all_parts else [],
                 metadata={"tool_results": tool_result_blocks},
             )
         )

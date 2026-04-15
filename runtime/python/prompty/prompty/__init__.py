@@ -151,6 +151,10 @@ from .core.types import (
     PromptyStream,
     TextPart,
     ThreadMarker,
+    ToolResult,
+    text_tool_result,
+    to_tool_result,
+    tool_result_text,
 )
 
 # Pipeline (via backward-compat shim)

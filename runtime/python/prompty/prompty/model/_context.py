@@ -1,5 +1,3 @@
-
-
 # Prompty LoadContext
 import json
 from collections.abc import Callable

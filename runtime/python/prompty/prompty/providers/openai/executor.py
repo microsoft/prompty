@@ -23,6 +23,7 @@ from ...core.types import (
     Message,
     PromptyStream,
     TextPart,
+    ToolResult,
 )
 from ...model import (
     ApiKeyConnection,
@@ -647,7 +648,7 @@ class _BaseExecutor:
         self,
         raw_response: Any,
         tool_calls: list[Any],
-        tool_results: list[str],
+        tool_results: list[ToolResult],
         text_content: str = "",
     ) -> list[Message]:
         """Format tool messages in OpenAI wire format.
@@ -686,10 +687,11 @@ class _BaseExecutor:
                 )
             for i, tc in enumerate(tool_calls):
                 call_id = getattr(tc, "call_id", tc.id)
+                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=[TextPart(value=tool_results[i])],
+                        parts=list(tr.parts) if tr.parts else [TextPart(value="")],
                         metadata={"tool_call_id": call_id, "name": tc.name},
                     )
                 )
@@ -707,10 +709,11 @@ class _BaseExecutor:
                 )
             )
             for i, tc in enumerate(tool_calls):
+                tr = tool_results[i]
                 result_messages.append(
                     Message(
                         role="tool",
-                        parts=[TextPart(value=tool_results[i])],
+                        parts=list(tr.parts) if tr.parts else [TextPart(value="")],
                         metadata={"tool_call_id": tc.id, "name": tc.name},
                     )
                 )

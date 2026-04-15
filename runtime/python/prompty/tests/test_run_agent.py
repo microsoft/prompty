@@ -19,7 +19,7 @@ from prompty.core.pipeline import (
     turn_async,
 )
 from prompty.core.tool_dispatch import dispatch_tool, dispatch_tool_async
-from prompty.core.types import Message, TextPart
+from prompty.core.types import Message, TextPart, tool_result_text
 from prompty.model import Prompty
 
 # ---------------------------------------------------------------------------
@@ -113,13 +113,14 @@ class TestExecuteTool:
     def test_success(self):
         tools = {"get_weather": lambda city: f"Sunny in {city}"}
         result = dispatch_tool("get_weather", '{"city": "Seattle"}', tools, None, {})
-        assert result == "Sunny in Seattle"
+        assert tool_result_text(result) == "Sunny in Seattle"
 
     def test_bad_json(self):
         tools = {"fn": lambda: None}
         result = dispatch_tool("fn", "not json", tools, None, {})
-        assert "Invalid JSON" in result
-        assert "fn" in result
+        text = tool_result_text(result)
+        assert "Invalid JSON" in text
+        assert "fn" in text
 
     def test_tool_exception(self):
         def failing_fn():
@@ -127,14 +128,15 @@ class TestExecuteTool:
 
         tools = {"fn": failing_fn}
         result = dispatch_tool("fn", "{}", tools, None, {})
-        assert "Error calling 'fn'" in result
-        assert "RuntimeError" in result
-        assert "oops" in result
+        text = tool_result_text(result)
+        assert "Error calling 'fn'" in text
+        assert "RuntimeError" in text
+        assert "oops" in text
 
     def test_result_is_stringified(self):
         tools = {"fn": lambda: {"temp": 72}}
         result = dispatch_tool("fn", "{}", tools, None, {})
-        assert result == "{'temp': 72}"
+        assert tool_result_text(result) == "{'temp': 72}"
 
 
 class TestExecuteToolAsync:
@@ -143,7 +145,7 @@ class TestExecuteToolAsync:
         result = asyncio.get_event_loop().run_until_complete(
             dispatch_tool_async("fn", '{"city": "London"}', tools, None, {})
         )
-        assert result == "Rainy in London"
+        assert tool_result_text(result) == "Rainy in London"
 
     def test_success_async_fn(self):
         async def async_fn(city: str) -> str:
@@ -153,12 +155,12 @@ class TestExecuteToolAsync:
         result = asyncio.get_event_loop().run_until_complete(
             dispatch_tool_async("fn", '{"city": "Paris"}', tools, None, {})
         )
-        assert result == "Cloudy in Paris"
+        assert tool_result_text(result) == "Cloudy in Paris"
 
     def test_bad_json(self):
         tools = {"fn": lambda: None}
         result = asyncio.get_event_loop().run_until_complete(dispatch_tool_async("fn", "{bad}", tools, None, {}))
-        assert "Invalid JSON" in result
+        assert "Invalid JSON" in tool_result_text(result)
 
 
 # ---------------------------------------------------------------------------

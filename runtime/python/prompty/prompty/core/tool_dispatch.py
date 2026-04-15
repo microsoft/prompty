@@ -27,7 +27,10 @@ import re
 import warnings
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from .types import ToolResult
 
 __all__ = [
     "ToolHandler",
@@ -70,10 +73,10 @@ class ToolHandler(Protocol):
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Execute *tool* synchronously with the given *args*.
 
-        Returns the tool result as a string.
+        Returns the tool result as a :class:`ToolResult`.
         """
         ...
 
@@ -83,7 +86,7 @@ class ToolHandler(Protocol):
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Async variant of :meth:`execute_tool`."""
         ...
 
@@ -171,7 +174,7 @@ class FunctionToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Error — function tool callable was not provided."""
         name = getattr(tool, "name", "unknown")
         raise ValueError(
@@ -185,7 +188,7 @@ class FunctionToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Error — function tool callable was not provided."""
         name = getattr(tool, "name", "unknown")
         raise ValueError(
@@ -198,8 +201,8 @@ class PromptyToolHandler:
     """Handler for ``kind: "prompty"`` tools.
 
     Resolves a child ``.prompty`` file relative to the parent agent's
-    ``__source_path`` metadata, loads it, and runs it in either
-    ``"single"`` or ``"agentic"`` mode.
+    ``__source_path`` metadata, loads it, and runs it via single-shot
+    invoke (prepare + run).
 
     Tracks loaded paths via ``__prompty_tool_stack`` metadata to detect
     and prevent circular references (A → B → A).
@@ -211,11 +214,12 @@ class PromptyToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Load and execute a child .prompty file synchronously."""
         # Lazy imports to avoid circular dependency with pipeline.py
         from .loader import load
-        from .pipeline import prepare, run, turn
+        from .pipeline import prepare, run
+        from .types import text_tool_result
 
         try:
             child_path = self._resolve_child_path(tool, agent)
@@ -228,16 +232,12 @@ class PromptyToolHandler:
                 child.metadata = {}
             child.metadata["__prompty_tool_stack"] = stack
 
-            mode = getattr(tool, "mode", "single")
-            if mode == "agentic":
-                result = turn(child, args)
-            else:
-                messages = prepare(child, args)
-                result = run(child, messages)
+            messages = prepare(child, args)
+            result = run(child, messages)
         except Exception as e:
-            return f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}")
 
-        return str(result)
+        return text_tool_result(str(result))
 
     async def execute_tool_async(
         self,
@@ -245,10 +245,11 @@ class PromptyToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Load and execute a child .prompty file asynchronously."""
         from .loader import load
-        from .pipeline import prepare_async, run_async, turn_async
+        from .pipeline import prepare_async, run_async
+        from .types import text_tool_result
 
         try:
             child_path = self._resolve_child_path(tool, agent)
@@ -261,16 +262,12 @@ class PromptyToolHandler:
                 child.metadata = {}
             child.metadata["__prompty_tool_stack"] = stack
 
-            mode = getattr(tool, "mode", "single")
-            if mode == "agentic":
-                result = await turn_async(child, args)
-            else:
-                messages = await prepare_async(child, args)
-                result = await run_async(child, messages)
+            messages = await prepare_async(child, args)
+            result = await run_async(child, messages)
         except Exception as e:
-            return f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}")
 
-        return str(result)
+        return text_tool_result(str(result))
 
     @staticmethod
     def _resolve_child_path(tool: Any, agent: Any) -> str:
@@ -309,7 +306,7 @@ class McpToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("MCP tool dispatch is not yet implemented")
 
@@ -319,7 +316,7 @@ class McpToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("MCP tool dispatch is not yet implemented")
 
@@ -333,7 +330,7 @@ class OpenApiToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("OpenAPI tool dispatch is not yet implemented")
 
@@ -343,7 +340,7 @@ class OpenApiToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("OpenAPI tool dispatch is not yet implemented")
 
@@ -357,7 +354,7 @@ class CustomToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("Custom tool dispatch is not yet implemented")
 
@@ -367,7 +364,7 @@ class CustomToolHandler:
         args: dict[str, Any],
         agent: Any,
         parent_inputs: dict[str, Any],
-    ) -> str:
+    ) -> ToolResult:
         """Not yet implemented."""
         raise NotImplementedError("Custom tool dispatch is not yet implemented")
 
@@ -481,7 +478,7 @@ def dispatch_tool(
     user_tools: dict[str, Callable[..., Any]],
     agent: Any,
     parent_inputs: dict[str, Any],
-) -> str:
+) -> ToolResult:
     """Dispatch a tool call synchronously.
 
     Resolution order:
@@ -508,13 +505,15 @@ def dispatch_tool(
 
     Returns
     -------
-    str
-        The tool result, or an error message string on failure.
+    ToolResult
+        The tool result, or an error wrapped in a ToolResult on failure.
     """
+    from .types import text_tool_result, to_tool_result
+
     # 1. Parse arguments (resilient per §9.8)
     parsed = _resilient_json_parse(arguments_json) if arguments_json else {}
     if parsed is None:
-        return f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed"
+        return text_tool_result(f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed")
     args = parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
     # 2. Resolve bindings
@@ -525,21 +524,21 @@ def dispatch_tool(
     fn = user_tools.get(tool_name)
     if fn is not None:
         if inspect.iscoroutinefunction(fn):
-            return f"Error: async tool '{tool_name}' cannot be called in sync mode"
+            return text_tool_result(f"Error: async tool '{tool_name}' cannot be called in sync mode")
         try:
-            return str(fn(**args))
+            return to_tool_result(fn(**args))
         except Exception as e:
-            return f"Error calling '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error calling '{tool_name}': {type(e).__name__}: {e}")
 
     # 4. Check global name registry (spec §11.2 Layer 1)
     registered_fn = get_tool(tool_name)
     if registered_fn is not None:
         if inspect.iscoroutinefunction(registered_fn):
-            return f"Error: async tool '{tool_name}' cannot be called in sync mode"
+            return text_tool_result(f"Error: async tool '{tool_name}' cannot be called in sync mode")
         try:
-            return str(registered_fn(**args))
+            return to_tool_result(registered_fn(**args))
         except Exception as e:
-            return f"Error calling '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error calling '{tool_name}': {type(e).__name__}: {e}")
 
     # 5. Search agent.tools for a matching definition → kind handler (Layer 2)
     tool_def = _find_tool_by_name(agent, tool_name)
@@ -552,17 +551,19 @@ def dispatch_tool(
             try:
                 handler = get_tool_handler("*")
             except ToolHandlerError:
-                return f"Error: no handler registered for tool kind '{kind}' (tool '{tool_name}')"
+                return text_tool_result(f"Error: no handler registered for tool kind '{kind}' (tool '{tool_name}')")
         try:
             return handler.execute_tool(tool_def, args, agent, parent_inputs)
         except NotImplementedError as e:
-            return f"Error: {e}"
+            return text_tool_result(f"Error: {e}")
         except Exception as e:
-            return f"Error dispatching tool '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error dispatching tool '{tool_name}': {type(e).__name__}: {e}")
 
     # 6. Nothing matched
     available = ", ".join(sorted(user_tools)) if user_tools else "(none)"
-    return f"Error: tool '{tool_name}' not found in user_tools or agent.tools. Available user tools: {available}"
+    return text_tool_result(
+        f"Error: tool '{tool_name}' not found in user_tools or agent.tools. Available user tools: {available}"
+    )
 
 
 async def dispatch_tool_async(
@@ -571,17 +572,19 @@ async def dispatch_tool_async(
     user_tools: dict[str, Callable[..., Any]],
     agent: Any,
     parent_inputs: dict[str, Any],
-) -> str:
+) -> ToolResult:
     """Async variant of :func:`dispatch_tool`.
 
     Same resolution order as the sync version, but awaits async user
     functions and calls ``handler.execute_tool_async()`` for registered
     handlers.
     """
+    from .types import text_tool_result, to_tool_result
+
     # 1. Parse arguments (resilient per §9.8)
     parsed = _resilient_json_parse(arguments_json) if arguments_json else {}
     if parsed is None:
-        return f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed"
+        return text_tool_result(f"Error: Invalid JSON in tool arguments for '{tool_name}': all parse strategies failed")
     args = parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
     # 2. Resolve bindings
@@ -593,22 +596,22 @@ async def dispatch_tool_async(
     if fn is not None:
         try:
             if inspect.iscoroutinefunction(fn):
-                return str(await fn(**args))
+                return to_tool_result(await fn(**args))
             else:
-                return str(fn(**args))
+                return to_tool_result(fn(**args))
         except Exception as e:
-            return f"Error calling '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error calling '{tool_name}': {type(e).__name__}: {e}")
 
     # 4. Check global name registry (spec §11.2 Layer 1)
     registered_fn = get_tool(tool_name)
     if registered_fn is not None:
         try:
             if inspect.iscoroutinefunction(registered_fn):
-                return str(await registered_fn(**args))
+                return to_tool_result(await registered_fn(**args))
             else:
-                return str(registered_fn(**args))
+                return to_tool_result(registered_fn(**args))
         except Exception as e:
-            return f"Error calling '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error calling '{tool_name}': {type(e).__name__}: {e}")
 
     # 5. Search agent.tools for a matching definition → kind handler (Layer 2)
     tool_def = _find_tool_by_name(agent, tool_name)
@@ -620,17 +623,19 @@ async def dispatch_tool_async(
             try:
                 handler = get_tool_handler("*")
             except ToolHandlerError:
-                return f"Error: no handler registered for tool kind '{kind}' (tool '{tool_name}')"
+                return text_tool_result(f"Error: no handler registered for tool kind '{kind}' (tool '{tool_name}')")
         try:
             return await handler.execute_tool_async(tool_def, args, agent, parent_inputs)
         except NotImplementedError as e:
-            return f"Error: {e}"
+            return text_tool_result(f"Error: {e}")
         except Exception as e:
-            return f"Error dispatching tool '{tool_name}': {type(e).__name__}: {e}"
+            return text_tool_result(f"Error dispatching tool '{tool_name}': {type(e).__name__}: {e}")
 
     # 6. Nothing matched
     available = ", ".join(sorted(user_tools)) if user_tools else "(none)"
-    return f"Error: tool '{tool_name}' not found in user_tools or agent.tools. Available user tools: {available}"
+    return text_tool_result(
+        f"Error: tool '{tool_name}' not found in user_tools or agent.tools. Available user tools: {available}"
+    )
 
 
 # ---------------------------------------------------------------------------

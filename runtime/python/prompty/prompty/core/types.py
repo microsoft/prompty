@@ -27,6 +27,7 @@ from ..model._ContentPart import (  # noqa: F401
     TextPart,
 )
 from ..model._Message import Message  # noqa: F401
+from ..model._ToolResult import ToolResult  # noqa: F401
 
 __all__ = [
     "AsyncPromptyStream",
@@ -36,10 +37,13 @@ __all__ = [
     "AudioPart",
     "TextPart",
     "Message",
+    "ToolResult",
     "PromptyStream",
     "ThreadMarker",
     "RICH_KINDS",
     "ROLES",
+    "tool_result_text",
+    "text_tool_result",
 ]
 
 # Rich input kinds that the renderer handles structurally (not as text).
@@ -106,6 +110,28 @@ def _message_init(self: Message, *args: Any, **kwargs: Any) -> None:
 
 
 Message.__init__ = _message_init  # type: ignore[method-assign]
+
+
+# ---------------------------------------------------------------------------
+# ToolResult standalone helpers
+# ---------------------------------------------------------------------------
+
+
+def text_tool_result(text: str) -> ToolResult:
+    """Create a ToolResult containing a single TextPart."""
+    return ToolResult(parts=[TextPart(value=text)])
+
+
+def tool_result_text(result: ToolResult) -> str:
+    """Extract concatenated text from a ToolResult's TextParts."""
+    return "".join(p.value for p in result.parts if isinstance(p, TextPart))
+
+
+def to_tool_result(value: str | ToolResult) -> ToolResult:
+    """Normalize a string or ToolResult into a ToolResult."""
+    if isinstance(value, ToolResult):
+        return value
+    return text_tool_result(str(value))
 
 
 # ---------------------------------------------------------------------------
