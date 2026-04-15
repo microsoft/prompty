@@ -37,7 +37,7 @@ class MockRenderer implements Renderer {
 
 class MockParser implements Parser {
   async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
-    return [new Message("user", [text(rendered)])];
+    return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
 
@@ -63,15 +63,21 @@ class MockExecutor implements Executor {
       function: { name: tc.name, arguments: tc.arguments },
     }));
     messages.push(
-      new Message("assistant", textContent ? [text(textContent)] : [], {
-        tool_calls: rawToolCalls,
+      new Message({
+        role: "assistant",
+        parts: textContent ? [text(textContent)] : [],
+        metadata: { tool_calls: rawToolCalls },
       }),
     );
     for (let i = 0; i < toolCalls.length; i++) {
       messages.push(
-        new Message("tool", [text(toolResults[i])], {
-          tool_call_id: toolCalls[i].id,
-          name: toolCalls[i].name,
+        new Message({
+          role: "tool",
+          parts: [text(toolResults[i])],
+          metadata: {
+            tool_call_id: toolCalls[i].id,
+            name: toolCalls[i].name,
+          },
         }),
       );
     }
@@ -174,7 +180,7 @@ describe("Pipeline", () => {
       const agent = makeAgent();
       (agent as any).model = { provider: "mock" };
 
-      const messages = [new Message("user", [text("Hello")])];
+      const messages = [new Message({ role: "user", parts: [text("Hello")] })];
       const result = await run(agent, messages);
       expect(result).toBe("Mock response");
     });
@@ -183,7 +189,7 @@ describe("Pipeline", () => {
       const agent = makeAgent();
       (agent as any).model = { provider: "mock" };
 
-      const messages = [new Message("user", [text("Hello")])];
+      const messages = [new Message({ role: "user", parts: [text("Hello")] })];
       const result = await run(agent, messages, { raw: true }) as Record<string, unknown>;
       expect(result.choices).toBeDefined();
     });
@@ -235,9 +241,9 @@ describe("Pipeline", () => {
           const rawToolCalls = toolCalls.map((tc) => ({
             id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
           }));
-          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
           for (let i = 0; i < toolCalls.length; i++) {
-            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+            messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
           }
           return messages;
         }
@@ -288,9 +294,9 @@ describe("Pipeline", () => {
           const rawToolCalls = toolCalls.map((tc) => ({
             id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
           }));
-          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
           for (let i = 0; i < toolCalls.length; i++) {
-            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+            messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
           }
           return messages;
         }
