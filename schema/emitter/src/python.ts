@@ -230,8 +230,10 @@ function buildInitContext(nodes: TypeNode[]): PythonInitContext {
 /**
  * Build context for rendering a test file using the standardized shared helper.
  */
-function buildTestContext(node: TypeNode, packageName: string): BaseTestContext {
-  return buildBaseTestContext(node, packageName, pythonTestOptions);
+function buildTestContext(node: TypeNode, packageName: string): BaseTestContext & { classCtx: PythonClassContext } {
+  const base = buildBaseTestContext(node, packageName, pythonTestOptions);
+  const classCtx = buildClassContext(node);
+  return { ...base, classCtx };
 }
 
 /**

@@ -130,10 +130,8 @@ model ToolCall {
  *
  * Implementations MUST support conversion from a plain string to a ToolResult
  * containing a single TextPart for backward compatibility.
- *
- * Each language runtime SHOULD provide a static `fromText(string) -> ToolResult`
- * factory in its extension file.
  */
+@helper("text", "string", "Concatenate all TextPart values joined by newline")
 model ToolResult {
   @doc("The content parts of the tool result")
   @sample(#{ parts: #[#{ kind: "text", value: "72°F and sunny" }] })

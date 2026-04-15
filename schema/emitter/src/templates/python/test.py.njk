@@ -10,6 +10,7 @@
     - examples: Array<{ json: string[], yaml: string[], validations: Array<{ key, value, delimiter, isOptional }> }>
     - alternates: Array<{ title, scalarType, value, validations: Array<{ key, value, delimiter, isOptional }> }>
 #}
+{% import "_macros.njk" as py %}
 {%- if examples.length > 0 %}
 import json
 import yaml
@@ -111,5 +112,26 @@ def test_load_{{node.typeName.name | lower}}_from_{{ alt.scalarType }}():
     assert instance.{{ item.key }} == {{ item.delimiter }}{{ item.value }}{{ item.delimiter }}
     {%- endif %}
     {%- endfor %}
+{% endfor %}
+{% endif %}
+{% if factories.length > 0 %}
+{% for factory in factories %}
+def test_factory_{{ factory.name | snakeCase }}_{{ node.typeName.name | lower }}():
+    """Test that {{ factory.name }}() factory creates a valid instance."""
+    instance = {{ node.typeName.name }}.{{ classCtx.factoryNameMap[factory.name] }}({% for pName, pType in factory.params %}{{ py.factoryParamTestValue(pType) }}{% if not loop.last %}, {% endif %}{% endfor %})
+    assert instance is not None
+    assert isinstance(instance, {{ node.typeName.name }})
+{%- for propName, value in factory.sets %}
+{%- if value == true %}
+    assert instance.{{ propName | snakeCase }}
+{%- elif value == false %}
+    assert not instance.{{ propName | snakeCase }}
+{%- elif value is number %}
+    assert instance.{{ propName | snakeCase }} == {{ value }}
+{%- elif value is string %}
+    assert instance.{{ propName | snakeCase }} == "{{ value }}"
+{%- endif %}
+{%- endfor %}
+
 {% endfor %}
 {% endif %}

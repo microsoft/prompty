@@ -404,5 +404,19 @@ export {% if node.isAbstract %}abstract {% endif %}class {{ node.typeName.name }
 {% endfor %}
   //#endregion
 {%- endif %}
+{%- if node.helpers.length > 0 %}
+
+  //#region Helpers — implement these in an extension file
+
+  /**
+   * Helper methods for {{ node.typeName.name }}.
+   * These should be implemented as standalone functions in the runtime:
+{%- for helper in node.helpers %}
+   * - {{ helper.name }}(): {{ ts.helperReturnType(helper.returns) }} — {{ helper.description }}
+{%- endfor %}
+   */
+
+  //#endregion
+{%- endif %}
 }
 {% endfor %}

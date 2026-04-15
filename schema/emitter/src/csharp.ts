@@ -60,7 +60,9 @@ const numberTypes = [
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   // set up template environment
   const templatePath = path.resolve(templateDir, 'csharp');
-  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
+  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath), {
+    autoescape: false, // Disable HTML auto-escaping for code generation
+  });
   env.addFilter('isFloat', function (value: any) {
     const isFloat = value.toString().includes('.');
     return isFloat;
@@ -183,6 +185,7 @@ const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks
     renderCsharpFactoryParamType: renderCsharpFactoryParamType,
     renderCsharpFactoryFieldValue: renderCsharpFactoryFieldValue,
     renderCsharpFactoryMethodName: (factoryName: string) => renderCsharpFactoryMethodName(factoryName, node),
+    renderCsharpHelperReturnType: renderCsharpHelperReturnType,
     converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
     polymorphicTypes: polymorphicTypes,
     collectionTypes: collectionTypes,
@@ -266,7 +269,11 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace:
     // replace control characters in samples
     examples: examples,
     alternates: alternates,
+    factories: node.factories,
     renderName: renderName,
+    renderCsharpFactoryMethodName: (factoryName: string) => renderCsharpFactoryMethodName(factoryName, node),
+    renderCsharpFactoryParamType: renderCsharpFactoryParamType,
+    renderCsharpFactoryTestValue: renderCsharpFactoryTestValue,
     namespace: namespace,
   });
   return test;
@@ -313,6 +320,31 @@ const renderCsharpFactoryFieldValue = (prop: { name: string; isOptional?: boolea
   if (typeof setValue === "number") return String(setValue);
   if (typeof setValue === "string") return `"${setValue}"`;
   return "null";
+};
+
+const renderCsharpHelperReturnType = (typeStr: string): string => {
+  switch (typeStr) {
+    case "string": return "string";
+    case "boolean": return "bool";
+    case "integer": case "int32": return "int";
+    case "int64": return "long";
+    case "float": case "float32": return "float";
+    case "float64": return "double";
+    default: return typeStr;
+  }
+};
+
+const renderCsharpFactoryTestValue = (typeStr: string): string => {
+  switch (typeStr) {
+    case "string": return '"test"';
+    case "boolean": return "true";
+    case "integer": case "int32": return "42";
+    case "int64": return "42L";
+    case "float": case "float32": return "3.14f";
+    case "float64": return "3.14";
+    case "unknown": return '"test"';
+    default: return '"test"';
+  }
 };
 
 /**

@@ -566,3 +566,24 @@ f64
 serde_json::Value
 {%- endif -%}
 {%- endmacro %}
+
+{#
+  Provide a test value for a factory parameter type.
+#}
+{% macro factoryParamTestValue(typeStr) -%}
+{%- if typeStr == "string" -%}
+"test".to_string()
+{%- elif typeStr == "boolean" -%}
+true
+{%- elif typeStr == "integer" or typeStr == "int32" -%}
+42
+{%- elif typeStr == "int64" -%}
+42i64
+{%- elif typeStr == "float" or typeStr == "float64" -%}
+3.14
+{%- elif typeStr == "unknown" -%}
+serde_json::json!("test")
+{%- else -%}
+serde_json::json!("test")
+{%- endif -%}
+{%- endmacro %}

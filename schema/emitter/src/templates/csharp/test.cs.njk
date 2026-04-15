@@ -215,4 +215,25 @@ public class {{ node.typeName.name }}ConversionTests
     }
     {% endfor %}
     {%- endif %}
+    {%- if factories.length > 0 %}
+    {% for factory in factories %}
+    [Fact]
+    public void Factory{{ renderCsharpFactoryMethodName(factory.name) }}()
+    {
+        var instance = {{ node.typeName.name }}.{{ renderCsharpFactoryMethodName(factory.name) }}({% for pName, pType in factory.params %}{{ renderCsharpFactoryTestValue(pType) | safe }}{% if not loop.last %}, {% endif %}{% endfor %});
+        Assert.NotNull(instance);
+{%- for propName, value in factory.sets %}
+{%- if value == true %}
+        Assert.True(instance.{{ renderName(propName) }});
+{%- elif value == false %}
+        Assert.False(instance.{{ renderName(propName) }});
+{%- elif value is number %}
+        Assert.Equal({{ value }}, instance.{{ renderName(propName) }});
+{%- elif value is string %}
+        Assert.Equal("{{ value }}", instance.{{ renderName(propName) }});
+{%- endif %}
+{%- endfor %}
+    }
+    {% endfor %}
+    {%- endif %}
 }

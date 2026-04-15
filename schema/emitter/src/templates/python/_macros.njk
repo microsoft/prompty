@@ -335,3 +335,43 @@ False
 None
 {%- endif -%}
 {%- endmacro %}
+
+{# ============================================================================
+   Helper Helpers — macros for @helper-generated stubs
+   ============================================================================ #}
+
+{#
+  Map a helper return type string to Python type.
+#}
+{% macro helperReturnType(typeStr) -%}
+{%- if typeStr == "string" -%}
+str
+{%- elif typeStr == "boolean" -%}
+bool
+{%- elif typeStr == "integer" or typeStr == "int32" or typeStr == "int64" -%}
+int
+{%- elif typeStr == "float" or typeStr == "float64" or typeStr == "float32" -%}
+float
+{%- else -%}
+{{ typeStr }}
+{%- endif -%}
+{%- endmacro %}
+
+{#
+  Provide a test value for a factory parameter type.
+#}
+{% macro factoryParamTestValue(typeStr) -%}
+{%- if typeStr == "string" -%}
+"test"
+{%- elif typeStr == "boolean" -%}
+True
+{%- elif typeStr == "integer" or typeStr == "int32" or typeStr == "int64" -%}
+42
+{%- elif typeStr == "float" or typeStr == "float64" or typeStr == "float32" -%}
+3.14
+{%- elif typeStr == "unknown" -%}
+"test"
+{%- else -%}
+"test"
+{%- endif -%}
+{%- endmacro %}

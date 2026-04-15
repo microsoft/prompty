@@ -486,4 +486,15 @@ public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeNam
 {% endfor %}
     #endregion
 {%- endif %}
+{%- if node.helpers.length > 0 %}
+
+    #region Helpers — implement these in a partial class extension
+
+    // The following helpers should be implemented in a separate partial class file:
+{%- for helper in node.helpers %}
+    // - {{ helper.name }}(): {{ renderCsharpHelperReturnType(helper.returns) }} — {{ helper.description }}
+{%- endfor %}
+
+    #endregion
+{%- endif %}
 }

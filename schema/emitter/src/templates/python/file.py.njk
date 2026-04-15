@@ -238,4 +238,13 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
         return instance
 {% endfor %}
 {%- endif %}
+{%- if node.helpers.length > 0 %}
+    # =========================================================================
+    # Helpers — implement these in an extension module
+    # =========================================================================
+    # The following helpers should be implemented as standalone functions:
+{%- for helper in node.helpers %}
+    # - {{ helper.name }}(instance) -> {{ py.helperReturnType(helper.returns) }}: {{ helper.description }}
+{%- endfor %}
+{%- endif %}
 {% endfor %}
