@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// Useful for tools and services that require OAuth authentication,
 /// such as MCP servers, OpenAPI endpoints, or other REST APIs.
 /// </summary>
-public class OAuthConnection : Connection
+public partial class OAuthConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -139,35 +139,32 @@ public class OAuthConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.ClientId is not null)
-        {
-            result["clientId"] = obj.ClientId;
-        }
 
-        if (obj.ClientSecret is not null)
-        {
-            result["clientSecret"] = obj.ClientSecret;
-        }
 
-        if (obj.TokenUrl is not null)
-        {
-            result["tokenUrl"] = obj.TokenUrl;
-        }
+        result["endpoint"] = obj.Endpoint;
+
+
+
+        result["clientId"] = obj.ClientId;
+
+
+
+        result["clientSecret"] = obj.ClientSecret;
+
+
+
+        result["tokenUrl"] = obj.TokenUrl;
+
+
 
         if (obj.Scopes is not null)
         {
             result["scopes"] = obj.Scopes;
         }
+
 
 
         return result;

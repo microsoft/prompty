@@ -230,10 +230,69 @@ impl {{ class.node.typeName.name }} {
     }
 
 {%- for prop in class.basePropertiesWithoutDiscriminator %}
-{%- if (prop.isCollection and not prop.isScalar and not prop.isDict) or prop.isDict %}
+{%- if prop.isDict %}
     {{ rust.typedAccessor(prop) | trim }}
 
 {%- endif %}
+{%- endfor %}
+{%- for collection in class.collectionTypes %}
+{%- set propNameRust = collection.prop.name | snakeCase %}
+
+    /// Load a collection of {{ collection.prop.typeName.name }} from a JSON value.
+    /// Handles both array format `[{...}]`{% if collection.hasNameProperty %} and dict format `{"name": {...}}`{% endif %}.
+    fn load_{{ propNameRust }}(data: &serde_json::Value, ctx: &LoadContext) -> Vec<{{ collection.prop.typeName.name }}> {
+        match data {
+            serde_json::Value::Array(arr) => {
+                arr.iter().map(|v| {{ collection.prop.typeName.name }}::load_from_value(v, ctx)).collect()
+            }
+{% if collection.hasNameProperty %}
+            serde_json::Value::Object(obj) => {
+                obj.iter()
+                    .filter_map(|(name, value)| {
+                        if value.is_array() {
+                            return None;
+                        }
+                        let mut v = if value.is_object() {
+                            value.clone()
+                        } else {
+                            serde_json::json!({ "{{ collection.type[0] | default("value") }}": value })
+                        };
+                        if let serde_json::Value::Object(ref mut m) = v {
+                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
+                        }
+                        Some({{ collection.prop.typeName.name }}::load_from_value(&v, ctx))
+                    })
+                    .collect()
+            }
+            _ => Vec::new(),
+{% else %}
+            _ => Vec::new(),
+{% endif %}
+        }
+    }
+
+    /// Save a collection of {{ collection.prop.typeName.name }} to a JSON value.
+    fn save_{{ propNameRust }}(items: &[{{ collection.prop.typeName.name }}], ctx: &SaveContext) -> serde_json::Value {
+{% if collection.hasNameProperty %}
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => { let mut m = serde_json::Map::new(); m.insert("value".to_string(), other); m },
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+{% else %}
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+{% endif %}
+    }
 {%- endfor %}
 }
 
@@ -334,10 +393,69 @@ impl {{ class.node.typeName.name }} {
     }
 
 {%- for prop in class.node.properties %}
-{%- if (prop.isCollection and not prop.isScalar and not prop.isDict) or prop.isDict %}
+{%- if prop.isDict %}
     {{ rust.typedAccessor(prop) | trim }}
 
 {%- endif %}
+{%- endfor %}
+{%- for collection in class.collectionTypes %}
+{%- set propNameRust = collection.prop.name | snakeCase %}
+
+    /// Load a collection of {{ collection.prop.typeName.name }} from a JSON value.
+    /// Handles both array format `[{...}]`{% if collection.hasNameProperty %} and dict format `{"name": {...}}`{% endif %}.
+    fn load_{{ propNameRust }}(data: &serde_json::Value, ctx: &LoadContext) -> Vec<{{ collection.prop.typeName.name }}> {
+        match data {
+            serde_json::Value::Array(arr) => {
+                arr.iter().map(|v| {{ collection.prop.typeName.name }}::load_from_value(v, ctx)).collect()
+            }
+{% if collection.hasNameProperty %}
+            serde_json::Value::Object(obj) => {
+                obj.iter()
+                    .filter_map(|(name, value)| {
+                        if value.is_array() {
+                            return None;
+                        }
+                        let mut v = if value.is_object() {
+                            value.clone()
+                        } else {
+                            serde_json::json!({ "{{ collection.type[0] | default("value") }}": value })
+                        };
+                        if let serde_json::Value::Object(ref mut m) = v {
+                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
+                        }
+                        Some({{ collection.prop.typeName.name }}::load_from_value(&v, ctx))
+                    })
+                    .collect()
+            }
+            _ => Vec::new(),
+{% else %}
+            _ => Vec::new(),
+{% endif %}
+        }
+    }
+
+    /// Save a collection of {{ collection.prop.typeName.name }} to a JSON value.
+    fn save_{{ propNameRust }}(items: &[{{ collection.prop.typeName.name }}], ctx: &SaveContext) -> serde_json::Value {
+{% if collection.hasNameProperty %}
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => { let mut m = serde_json::Map::new(); m.insert("value".to_string(), other); m },
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+{% else %}
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+{% endif %}
+    }
 {%- endfor %}
 
 {#- ================================================================

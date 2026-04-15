@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Template format definition
 /// </summary>
-public class FormatConfig
+public partial class FormatConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -108,20 +108,23 @@ public class FormatConfig
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.Strict is not null)
         {
             result["strict"] = obj.Strict;
         }
 
+
+
         if (obj.Options is not null)
         {
             result["options"] = obj.Options;
         }
+
 
 
         if (context is not null)

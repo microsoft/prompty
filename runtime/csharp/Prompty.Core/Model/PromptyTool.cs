@@ -13,7 +13,7 @@ namespace Prompty.Core;
 /// executed with a single LLM call (invoke). In `agentic` mode, the child
 /// runs as a sub-agent via `turn()` with its own tool-calling loop.
 /// </summary>
-public class PromptyTool : Tool
+public partial class PromptyTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -111,20 +111,20 @@ public class PromptyTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Path is not null)
-        {
-            result["path"] = obj.Path;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["path"] = obj.Path;
+
+
 
         if (obj.Mode is not null)
         {
             result["mode"] = obj.Mode;
         }
+
 
 
         return result;

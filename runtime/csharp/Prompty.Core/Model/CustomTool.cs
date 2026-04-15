@@ -13,7 +13,7 @@ namespace Prompty.Core;
 /// This tool kind is ideal for tasks that involve complex computations or access to secure resources
 /// Server tools can be used to offload heavy processing from client applications
 /// </summary>
-public class CustomTool : Tool
+public partial class CustomTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -111,20 +111,17 @@ public class CustomTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Connection is not null)
-        {
-            result["connection"] = obj.Connection?.Save(context);
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Options is not null)
-        {
-            result["options"] = obj.Options;
-        }
+
+
+        result["connection"] = obj.Connection?.Save(context);
+
+
+
+        result["options"] = obj.Options;
+
 
 
         return result;

@@ -26,13 +26,13 @@ pub struct Prompty {
     /// Additional metadata including authors, tags, and other arbitrary properties
     pub metadata: serde_json::Value,
     /// Input parameters that participate in template rendering
-    pub inputs: serde_json::Value,
+    pub inputs: Vec<Property>,
     /// Expected output format and structure
-    pub outputs: serde_json::Value,
+    pub outputs: Vec<Property>,
     /// AI model configuration
     pub model: Model,
     /// Tools available for extended functionality
-    pub tools: serde_json::Value,
+    pub tools: Vec<Tool>,
     /// Template configuration for prompt rendering
     pub template: Option<Template>,
     /// Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
@@ -67,10 +67,10 @@ impl Prompty {
             display_name: value.get("displayName").and_then(|v| v.as_str()).map(|s| s.to_string()),
             description: value.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
             metadata: value.get("metadata").cloned().unwrap_or(serde_json::Value::Null),
-            inputs: value.get("inputs").cloned().unwrap_or(serde_json::Value::Null),
-            outputs: value.get("outputs").cloned().unwrap_or(serde_json::Value::Null),
+            inputs: value.get("inputs").map(|v| Self::load_inputs(v, ctx)).unwrap_or_default(),
+            outputs: value.get("outputs").map(|v| Self::load_outputs(v, ctx)).unwrap_or_default(),
             model: value.get("model").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| Model::load_from_value(v, ctx)).unwrap_or_default(),
-            tools: value.get("tools").cloned().unwrap_or(serde_json::Value::Null),
+            tools: value.get("tools").map(|v| Self::load_tools(v, ctx)).unwrap_or_default(),
             template: value.get("template").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| Template::load_from_value(v, ctx)),
             instructions: value.get("instructions").and_then(|v| v.as_str()).map(|s| s.to_string()),
         }
@@ -93,11 +93,11 @@ impl Prompty {
         if !self.metadata.is_null() {
             result.insert("metadata".to_string(), self.metadata.clone());
         }
-        if !self.inputs.is_null() {
-            result.insert("inputs".to_string(), self.inputs.clone());
+        if !self.inputs.is_empty() {
+            result.insert("inputs".to_string(), Self::save_inputs(&self.inputs, ctx));
         }
-        if !self.outputs.is_null() {
-            result.insert("outputs".to_string(), self.outputs.clone());
+        if !self.outputs.is_empty() {
+            result.insert("outputs".to_string(), Self::save_outputs(&self.outputs, ctx));
         }
         {
             let nested = self.model.to_value(ctx);
@@ -105,8 +105,8 @@ impl Prompty {
                 result.insert("model".to_string(), nested);
             }
         }
-        if !self.tools.is_null() {
-            result.insert("tools".to_string(), self.tools.clone());
+        if !self.tools.is_empty() {
+            result.insert("tools".to_string(), Self::save_tools(&self.tools, ctx));
         }
         if let Some(ref val) = self.template {
             let nested = val.to_value(ctx);
@@ -134,104 +134,129 @@ impl Prompty {
     pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.metadata.as_object()
     }
-    /// Returns typed `Vec<Property>` by parsing the stored JSON value.
+
+    /// Load a collection of Property from a JSON value.
     /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_inputs(&self) -> Option<Vec<Property>> {
-        match &self.inputs {
+    fn load_inputs(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| Property::load_from_value(v, &LoadContext::default())).collect())
+                arr.iter().map(|v| Property::load_from_value(v, ctx)).collect()
             }
+
             serde_json::Value::Object(obj) => {
-                let result: Vec<Property> = obj
-                    .iter()
+                obj.iter()
                     .filter_map(|(name, value)| {
                         if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'inputs' must be a flat list or name-keyed dict.
                             return None;
                         }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
-                            serde_json::json!({ "value": value })
+                            serde_json::json!({ "kind": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
                         }
-                        Some(Property::load_from_value(&v, &LoadContext::default()))
+                        Some(Property::load_from_value(&v, ctx))
                     })
-                    .collect();
-                Some(result)
+                    .collect()
             }
-            _ => None,
+            _ => Vec::new(),
+
         }
     }
-    /// Returns typed `Vec<Property>` by parsing the stored JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_outputs(&self) -> Option<Vec<Property>> {
-        match &self.outputs {
+
+    /// Save a collection of Property to a JSON value.
+    fn save_inputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => { let mut m = serde_json::Map::new(); m.insert("value".to_string(), other); m },
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+
+    }
+
+    /// Load a collection of Property from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_outputs(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| Property::load_from_value(v, &LoadContext::default())).collect())
+                arr.iter().map(|v| Property::load_from_value(v, ctx)).collect()
             }
-            serde_json::Value::Object(obj) => {
-                let result: Vec<Property> = obj
-                    .iter()
-                    .filter_map(|(name, value)| {
-                        if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'outputs' must be a flat list or name-keyed dict.
-                            return None;
-                        }
-                        let mut v = if value.is_object() {
-                            value.clone()
-                        } else {
-                            serde_json::json!({ "value": value })
-                        };
-                        if let serde_json::Value::Object(ref mut m) = v {
-                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
-                        }
-                        Some(Property::load_from_value(&v, &LoadContext::default()))
-                    })
-                    .collect();
-                Some(result)
-            }
-            _ => None,
+
+            _ => Vec::new(),
+
         }
     }
-    /// Returns typed `Vec<Tool>` by parsing the stored JSON value.
+
+    /// Save a collection of Property to a JSON value.
+    fn save_outputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+
+    }
+
+    /// Load a collection of Tool from a JSON value.
     /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_tools(&self) -> Option<Vec<Tool>> {
-        match &self.tools {
+    fn load_tools(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Tool> {
+        match data {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| Tool::load_from_value(v, &LoadContext::default())).collect())
+                arr.iter().map(|v| Tool::load_from_value(v, ctx)).collect()
             }
+
             serde_json::Value::Object(obj) => {
-                let result: Vec<Tool> = obj
-                    .iter()
+                obj.iter()
                     .filter_map(|(name, value)| {
                         if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'tools' must be a flat list or name-keyed dict.
                             return None;
                         }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
-                            serde_json::json!({ "value": value })
+                            serde_json::json!({ "kind": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
                         }
-                        Some(Tool::load_from_value(&v, &LoadContext::default()))
+                        Some(Tool::load_from_value(&v, ctx))
                     })
-                    .collect();
-                Some(result)
+                    .collect()
             }
-            _ => None,
+            _ => Vec::new(),
+
         }
+    }
+
+    /// Save a collection of Tool to a JSON value.
+    fn save_tools(items: &[Tool], ctx: &SaveContext) -> serde_json::Value {
+
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => { let mut m = serde_json::Map::new(); m.insert("value".to_string(), other); m },
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+
     }
 }
 

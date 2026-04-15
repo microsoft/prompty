@@ -8,6 +8,8 @@ use super::binding::Binding;
 
 use super::mcp_approval_mode::McpApprovalMode;
 
+use super::property::Property;
+
 
 
 
@@ -17,7 +19,7 @@ pub enum ToolKind {
     /// `kind` = `"function"`
     Function {
         /// Parameters accepted by the function tool
-        parameters: serde_json::Value,
+        parameters: Vec<Property>,
         /// Indicates whether the function tool enforces strict validation on its parameters
         strict: Option<bool>,
     },
@@ -76,7 +78,7 @@ pub struct Tool {
     /// A short description of the tool for metadata purposes
     pub description: Option<String>,
     /// Tool argument bindings to input properties
-    pub bindings: serde_json::Value,
+    pub bindings: Vec<Binding>,
     /// Variant-specific data, discriminated by `kind`.
     pub kind: ToolKind,
 }
@@ -107,7 +109,7 @@ impl Tool {
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "function" => ToolKind::Function {
-                parameters: value.get("parameters").cloned().unwrap_or(serde_json::Value::Null),
+                parameters: value.get("parameters").map(|v| Self::load_parameters(v, ctx)).unwrap_or_default(),
                 strict: value.get("strict").and_then(|v| v.as_bool()),
             },
             "mcp" => ToolKind::Mcp {
@@ -134,7 +136,7 @@ impl Tool {
         Self {
             name: value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             description: value.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            bindings: value.get("bindings").cloned().unwrap_or(serde_json::Value::Null),
+            bindings: value.get("bindings").map(|v| Self::load_bindings(v, ctx)).unwrap_or_default(),
             kind: kind,
         }
     }
@@ -164,14 +166,14 @@ impl Tool {
         if let Some(ref val) = self.description {
             result.insert("description".to_string(), serde_json::Value::String(val.clone()));
         }
-        if !self.bindings.is_null() {
-            result.insert("bindings".to_string(), self.bindings.clone());
+        if !self.bindings.is_empty() {
+            result.insert("bindings".to_string(), Self::save_bindings(&self.bindings, ctx));
         }
         // Write variant-specific fields
         match &self.kind {
             ToolKind::Function { parameters, strict,  .. } => {
-                if !parameters.is_null() {
-            result.insert("parameters".to_string(), parameters.clone());
+                if !parameters.is_empty() {
+            result.insert("parameters".to_string(), serde_json::Value::Array(parameters.iter().map(|item| item.to_value(ctx)).collect()));
         }
                 if let Some(val) = strict {
             result.insert("strict".to_string(), serde_json::Value::Bool(*val));
@@ -234,38 +236,77 @@ impl Tool {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
-    /// Returns typed `Vec<Binding>` by parsing the stored JSON value.
+
+    /// Load a collection of Binding from a JSON value.
     /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_bindings(&self) -> Option<Vec<Binding>> {
-        match &self.bindings {
+    fn load_bindings(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Binding> {
+        match data {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| Binding::load_from_value(v, &LoadContext::default())).collect())
+                arr.iter().map(|v| Binding::load_from_value(v, ctx)).collect()
             }
+
             serde_json::Value::Object(obj) => {
-                let result: Vec<Binding> = obj
-                    .iter()
+                obj.iter()
                     .filter_map(|(name, value)| {
                         if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'bindings' must be a flat list or name-keyed dict.
                             return None;
                         }
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
-                            serde_json::json!({ "value": value })
+                            serde_json::json!({ "input": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
                         }
-                        Some(Binding::load_from_value(&v, &LoadContext::default()))
+                        Some(Binding::load_from_value(&v, ctx))
                     })
-                    .collect();
-                Some(result)
+                    .collect()
             }
-            _ => None,
+            _ => Vec::new(),
+
         }
+    }
+
+    /// Save a collection of Binding to a JSON value.
+    fn save_bindings(items: &[Binding], ctx: &SaveContext) -> serde_json::Value {
+
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect());
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => { let mut m = serde_json::Map::new(); m.insert("value".to_string(), other); m },
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+
+    }
+
+    /// Load a collection of Property from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_parameters(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
+            serde_json::Value::Array(arr) => {
+                arr.iter().map(|v| Property::load_from_value(v, ctx)).collect()
+            }
+
+            _ => Vec::new(),
+
+        }
+    }
+
+    /// Save a collection of Property to a JSON value.
+    fn save_parameters(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+
     }
 }
 

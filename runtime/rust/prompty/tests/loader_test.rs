@@ -108,7 +108,7 @@ fn test_basic_load() {
     assert!(instructions.contains("{{question}}"));
 
     // Inputs
-    let inputs = agent.as_inputs().unwrap();
+    let inputs = &agent.inputs;
     assert_eq!(inputs.len(), 3);
     assert_eq!(inputs[0].name, "firstName");
     assert_eq!(inputs[0].kind_str(), "string");
@@ -124,9 +124,9 @@ fn test_minimal_load() {
     assert_eq!(agent.name, "minimal");
     assert_eq!(agent.model.id, "gpt-4");
     assert_eq!(agent.instructions.as_deref(), Some("system:\nHello world."));
-    assert!(agent.as_inputs().is_none());
-    assert!(agent.as_outputs().is_none());
-    assert!(agent.as_tools().is_none());
+    assert!(agent.inputs.is_empty());
+    assert!(agent.outputs.is_empty());
+    assert!(agent.tools.is_empty());
 }
 
 #[test]
@@ -250,7 +250,7 @@ fn test_tools_function_load() {
     assert_eq!(agent.name, "function-tools");
     assert_eq!(agent.model.api_type.as_deref(), Some("chat"));
 
-    let tools = agent.as_tools().unwrap();
+    let tools = &agent.tools;
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "get_weather");
     assert_eq!(tools[0].kind_str(), "function");
@@ -281,8 +281,8 @@ fn test_empty_frontmatter_body_only() {
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
     assert_eq!(agent.name, "empty-fm");
-    assert!(agent.as_inputs().is_none());
-    assert!(agent.as_tools().is_none());
+    assert!(agent.inputs.is_empty());
+    assert!(agent.tools.is_empty());
 }
 
 #[test]
@@ -316,7 +316,7 @@ fn test_input_scalar_shorthand() {
         ]
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let inputs = agent.as_inputs().unwrap();
+    let inputs = &agent.inputs;
     assert_eq!(inputs.len(), 2);
     assert_eq!(inputs[0].name, "topic");
     assert_eq!(inputs[0].kind_str(), "string");
@@ -340,7 +340,7 @@ fn test_tools_mcp_load() {
         ]
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let tools = agent.as_tools().unwrap();
+    let tools = &agent.tools;
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "filesystem");
     assert_eq!(tools[0].kind_str(), "mcp");
@@ -362,7 +362,7 @@ fn test_tools_openapi_load() {
         ]
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let tools = agent.as_tools().unwrap();
+    let tools = &agent.tools;
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "weather_api");
     assert_eq!(tools[0].kind_str(), "openapi");
@@ -383,7 +383,7 @@ fn test_tools_custom_load() {
         ]
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let tools = agent.as_tools().unwrap();
+    let tools = &agent.tools;
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "my_tool");
     assert_eq!(tools[0].kind_str(), "my_provider");
@@ -415,7 +415,7 @@ fn test_threaded_load() {
     let agent = load_fixture("threaded.prompty", &[]).unwrap();
     assert_eq!(agent.name, "threaded-chat");
 
-    let inputs = agent.as_inputs().unwrap();
+    let inputs = &agent.inputs;
     // Should have a thread-type input
     let thread_input = inputs.iter().find(|i| i.kind_str() == "thread");
     assert!(thread_input.is_some(), "Expected a thread-kind input");

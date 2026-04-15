@@ -13,7 +13,7 @@
 {#
   Render Rust type for a property.
   - Dict fields -> serde_json::Value
-  - Non-scalar collection fields -> serde_json::Value (can be array OR dict in JSON)
+  - Non-scalar collection fields -> Vec<T> (loaded/saved via load_X/save_X helpers)
   - Scalar collections -> Vec<T> or Option<Vec<T>> if optional
   - Polymorphic fields -> serde_json::Value (never Optional, Null represents absence)
   - Optional non-polymorphic non-Value fields -> Option<T>
@@ -25,7 +25,7 @@
 {%- if prop.isDict -%}
 serde_json::Value
 {%- elif prop.isCollection and not prop.isScalar -%}
-serde_json::Value
+Vec<{{ prop.typeName.name }}>
 {%- elif prop.isCollection and prop.isScalar -%}
 {%- if prop.isOptional -%}
 Option<Vec<{{ typeMapper[prop.typeName.name] or "serde_json::Value" }}>>
@@ -50,7 +50,7 @@ Option<{{ baseType }}>
 {%- if prop.isDict -%}
 serde_json::Value::Null
 {%- elif prop.isCollection and not prop.isScalar -%}
-serde_json::Value::Null
+Vec::new()
 {%- elif prop.isCollection and prop.isScalar -%}
 {%- if prop.isOptional -%}
 None
@@ -86,7 +86,7 @@ Default::default()
 {%- set propNameRust = prop.name | snakeCase -%}
 {%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
         if let Some(val) = {{ varName }}.get("{{ prop.name }}") {
-            result.{{ propNameRust }} = val.clone();
+            result.{{ propNameRust }} = Self::load_{{ propNameRust }}(val, ctx);
         }
 {%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
         if let Some(arr) = {{ varName }}.get("{{ prop.name }}").and_then(|v| v.as_array()) {
@@ -214,8 +214,8 @@ Default::default()
 {% macro saveProperty(prop, polymorphicTypeNames) -%}
 {%- set propNameRust = prop.name | snakeCase -%}
 {%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
-        if !self.{{ propNameRust }}.is_null() {
-            result.insert("{{ prop.name }}".to_string(), self.{{ propNameRust }}.clone());
+        if !self.{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), Self::save_{{ propNameRust }}(&self.{{ propNameRust }}, ctx));
         }
 {%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
 {%- if prop.isOptional %}
@@ -295,8 +295,8 @@ Default::default()
 {% macro saveVariantField(prop, polymorphicTypeNames) -%}
 {%- set propNameRust = prop.name | snakeCase -%}
 {%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
-        if !{{ propNameRust }}.is_null() {
-            result.insert("{{ prop.name }}".to_string(), {{ propNameRust }}.clone());
+        if !{{ propNameRust }}.is_empty() {
+            result.insert("{{ prop.name }}".to_string(), serde_json::Value::Array({{ propNameRust }}.iter().map(|item| item.to_value(ctx)).collect()));
         }
 {%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
 {%- if prop.isOptional %}
@@ -367,47 +367,13 @@ Default::default()
 
 
 {#
-  Generate a typed accessor method for a non-scalar collection or dict field.
-  Non-scalar collection fields are stored as serde_json::Value (can be array OR dict in JSON).
-  This accessor parses them into typed Vec<T>.
+  Generate a typed accessor method for a dict field.
+  Dict fields are stored as serde_json::Value.
+  Non-scalar collections are now stored as Vec<T> directly — no accessor needed.
 #}
 {% macro typedAccessor(prop) -%}
 {%- set propNameRust = prop.name | snakeCase -%}
-{%- if prop.isCollection and not prop.isScalar and not prop.isDict %}
-    /// Returns typed `Vec<{{ prop.typeName.name }}>` by parsing the stored JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_{{ propNameRust }}(&self) -> Option<Vec<{{ prop.typeName.name }}>> {
-        match &self.{{ propNameRust }} {
-            serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| {{ prop.typeName.name }}::load_from_value(v, &LoadContext::default())).collect())
-            }
-            serde_json::Value::Object(obj) => {
-                let result: Vec<{{ prop.typeName.name }}> = obj
-                    .iter()
-                    .filter_map(|(name, value)| {
-                        if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // '{{ prop.name }}' must be a flat list or name-keyed dict.
-                            return None;
-                        }
-                        let mut v = if value.is_object() {
-                            value.clone()
-                        } else {
-                            serde_json::json!({ "value": value })
-                        };
-                        if let serde_json::Value::Object(ref mut m) = v {
-                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
-                        }
-                        Some({{ prop.typeName.name }}::load_from_value(&v, &LoadContext::default()))
-                    })
-                    .collect();
-                Some(result)
-            }
-            _ => None,
-        }
-    }
-{%- elif prop.isDict %}
+{%- if prop.isDict %}
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_{{ propNameRust }}_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
@@ -424,7 +390,7 @@ Default::default()
 {% macro fieldInitializer(prop, varName, typeMapper, polymorphicTypeNames) -%}
 {%- set propNameRust = prop.name | snakeCase -%}
 {%- if prop.isCollection and not prop.isDict and not prop.isScalar %}
-{{ varName }}.get("{{ prop.name }}").cloned().unwrap_or(serde_json::Value::Null)
+{{ varName }}.get("{{ prop.name }}").map(|v| Self::load_{{ propNameRust }}(v, ctx)).unwrap_or_default()
 {%- elif prop.isCollection and not prop.isDict and prop.isScalar %}
 {%- if prop.typeName.name == "string" %}
 {%- if prop.isOptional %}

@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a local function tool.
 /// </summary>
-public class FunctionTool : Tool
+public partial class FunctionTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -161,20 +161,20 @@ public class FunctionTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Parameters is not null)
-        {
-            result["parameters"] = SaveParameters(obj.Parameters, context);
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["parameters"] = SaveParameters(obj.Parameters, context);
+
+
 
         if (obj.Strict is not null)
         {
             result["strict"] = obj.Strict;
         }
+
 
 
         return result;

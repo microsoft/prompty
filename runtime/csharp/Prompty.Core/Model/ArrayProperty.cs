@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// Represents an array property.
 /// This extends the base Property model to represent an array of items.
 /// </summary>
-public class ArrayProperty : Property
+public partial class ArrayProperty : Property
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -98,15 +98,13 @@ public class ArrayProperty : Property
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Items is not null)
-        {
-            result["items"] = obj.Items?.Save(context);
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["items"] = obj.Items?.Save(context);
+
 
 
         return result;

@@ -251,11 +251,11 @@ fn apply_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
 
 /// Convert agent's tools to OpenAI wire format.
 pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
-    let Some(tools) = agent.as_tools() else {
+    if agent.tools.is_empty() {
         return Vec::new();
-    };
+    }
 
-    tools
+    agent.tools
         .iter()
         .filter(|tool| matches!(tool.kind, ToolKind::Function { .. }))
         .map(function_tool_to_wire)
@@ -277,20 +277,17 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
 
     // Collect bound parameter names to strip from wire format (§7.1.3)
     let bound_names: std::collections::HashSet<String> = tool
-        .as_bindings()
-        .unwrap_or_default()
+        .bindings
         .iter()
         .map(|b| b.name.clone())
         .collect();
 
     // Parameters → JSON Schema, filtering out bound params
-    if let Some(params) = parameters.as_array() {
-        use prompty::model::context::LoadContext;
-        let ctx = LoadContext::default();
-        let typed_params: Vec<Property> = params
+    if !parameters.is_empty() {
+        let typed_params: Vec<Property> = parameters
             .iter()
-            .map(|v| Property::load_from_value(v, &ctx))
             .filter(|p| !bound_names.contains(&p.name))
+            .cloned()
             .collect();
         let schema = parameters_to_json_schema(&typed_params);
         func_def.insert("parameters".to_string(), schema);
@@ -336,23 +333,19 @@ fn property_to_json_schema(prop: &Property) -> Value {
             // When items is null/unspecified, emit bare {"type": "array"}
         }
         PropertyKind::Object { properties } => {
-            if let Some(arr) = properties.as_array() {
-                if !arr.is_empty() {
-                    let ctx = prompty::model::context::LoadContext::default();
-                    let mut nested = Map::new();
-                    let mut req = Vec::new();
-                    for val in arr {
-                        let p = Property::load_from_value(val, &ctx);
-                        if p.name.is_empty() {
-                            continue;
-                        }
-                        nested.insert(p.name.clone(), property_to_json_schema(&p));
-                        req.push(Value::String(p.name.clone()));
+            if !properties.is_empty() {
+                let mut nested = Map::new();
+                let mut req = Vec::new();
+                for p in properties {
+                    if p.name.is_empty() {
+                        continue;
                     }
-                    schema.insert("properties".to_string(), Value::Object(nested));
-                    schema.insert("required".to_string(), Value::Array(req));
-                    schema.insert("additionalProperties".to_string(), Value::Bool(false));
+                    nested.insert(p.name.clone(), property_to_json_schema(p));
+                    req.push(Value::String(p.name.clone()));
                 }
+                schema.insert("properties".to_string(), Value::Object(nested));
+                schema.insert("required".to_string(), Value::Array(req));
+                schema.insert("additionalProperties".to_string(), Value::Bool(false));
             }
             // When properties is empty or absent, emit bare {"type": "object"}
         }
@@ -400,15 +393,14 @@ fn kind_to_json_type(kind: &str) -> String {
 // ---------------------------------------------------------------------------
 
 fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
-    if outputs.is_empty() {
+    if agent.outputs.is_empty() {
         return None;
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for prop in &outputs {
+    for prop in &agent.outputs {
         properties.insert(prop.name.clone(), property_to_json_schema(prop));
         if prop.required.unwrap_or(false) {
             required.push(Value::String(prop.name.clone()));
@@ -545,11 +537,11 @@ fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOpt
 }
 
 fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
-    let Some(tools) = agent.as_tools() else {
+    if agent.tools.is_empty() {
         return Vec::new();
-    };
+    }
 
-    tools
+    agent.tools
         .iter()
         .filter(|tool| matches!(tool.kind, ToolKind::Function { .. }))
         .map(responses_function_tool_to_wire)
@@ -573,19 +565,16 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
 
     // Collect bound parameter names to strip (§7.1.3)
     let bound_names: std::collections::HashSet<String> = tool
-        .as_bindings()
-        .unwrap_or_default()
+        .bindings
         .iter()
         .map(|b| b.name.clone())
         .collect();
 
-    if let Some(params) = parameters.as_array() {
-        use prompty::model::context::LoadContext;
-        let ctx = LoadContext::default();
-        let typed_params: Vec<Property> = params
+    if !parameters.is_empty() {
+        let typed_params: Vec<Property> = parameters
             .iter()
-            .map(|v| Property::load_from_value(v, &ctx))
             .filter(|p| !bound_names.contains(&p.name))
+            .cloned()
             .collect();
         let schema = parameters_to_json_schema(&typed_params);
         obj.insert("parameters".to_string(), schema);
@@ -602,15 +591,14 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
 }
 
 fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
-    if outputs.is_empty() {
+    if agent.outputs.is_empty() {
         return None;
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for prop in &outputs {
+    for prop in &agent.outputs {
         properties.insert(prop.name.clone(), property_to_json_schema(prop));
         required.push(Value::String(prop.name.clone()));
     }

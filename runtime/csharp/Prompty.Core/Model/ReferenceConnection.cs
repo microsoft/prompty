@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using named connections.
 /// </summary>
-public class ReferenceConnection : Connection
+public partial class ReferenceConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,20 @@ public class ReferenceConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["name"] = obj.Name;
+
+
 
         if (obj.Target is not null)
         {
             result["target"] = obj.Target;
         }
+
 
 
         return result;

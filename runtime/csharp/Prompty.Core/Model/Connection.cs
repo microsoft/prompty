@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// `provider`, `kind`, and `endpoint` are required properties here,
 /// but this section can accept additional via options.
 /// </summary>
-public abstract class Connection
+public abstract partial class Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -133,20 +133,23 @@ public abstract class Connection
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.AuthenticationMode is not null)
         {
             result["authenticationMode"] = obj.AuthenticationMode;
         }
 
+
+
         if (obj.UsageDescription is not null)
         {
             result["usageDescription"] = obj.UsageDescription;
         }
+
 
 
         if (context is not null)

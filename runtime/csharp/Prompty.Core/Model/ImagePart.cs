@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// An image content part. The source may be a URL or base64-encoded data.
 /// </summary>
-public class ImagePart : ContentPart
+public partial class ImagePart : ContentPart
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -117,25 +117,27 @@ public class ImagePart : ContentPart
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Source is not null)
-        {
-            result["source"] = obj.Source;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["source"] = obj.Source;
+
+
 
         if (obj.Detail is not null)
         {
             result["detail"] = obj.Detail;
         }
 
+
+
         if (obj.MediaType is not null)
         {
             result["mediaType"] = obj.MediaType;
         }
+
 
 
         return result;

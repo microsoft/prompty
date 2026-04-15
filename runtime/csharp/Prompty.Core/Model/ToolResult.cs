@@ -16,7 +16,7 @@ namespace Prompty.Core;
 /// Each language runtime SHOULD provide a static `fromText(string) -&gt; ToolResult`
 /// factory in its extension file.
 /// </summary>
-public class ToolResult
+public partial class ToolResult
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -147,10 +147,9 @@ public class ToolResult
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Parts is not null)
-        {
-            result["parts"] = SaveParts(obj.Parts, context);
-        }
+
+        result["parts"] = SaveParts(obj.Parts, context);
+
 
 
         if (context is not null)

@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// run at specific phases of the agent loop and can allow, deny, or rewrite
 /// content.
 /// </summary>
-public class GuardrailResult
+public partial class GuardrailResult
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -108,20 +108,23 @@ public class GuardrailResult
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Allowed is not null)
-        {
-            result["allowed"] = obj.Allowed;
-        }
+
+        result["allowed"] = obj.Allowed;
+
+
 
         if (obj.Reason is not null)
         {
             result["reason"] = obj.Reason;
         }
 
+
+
         if (obj.Rewrite is not null)
         {
             result["rewrite"] = obj.Rewrite;
         }
+
 
 
         if (context is not null)

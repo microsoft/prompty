@@ -18,7 +18,7 @@ pub enum PropertyKind {
     /// `kind` = `"object"`
     Object {
         /// The properties contained in the object
-        properties: serde_json::Value,
+        properties: Vec<Property>,
     },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
@@ -99,7 +99,7 @@ impl Property {
                 items: value.get("items").cloned().unwrap_or(serde_json::Value::Null),
             },
             "object" => PropertyKind::Object {
-                properties: value.get("properties").cloned().unwrap_or(serde_json::Value::Null),
+                properties: value.get("properties").map(|v| Self::load_properties(v, ctx)).unwrap_or_default(),
             },
             _ => PropertyKind::Custom {
                 kind_name: kind_str.to_string(),
@@ -159,8 +159,8 @@ impl Property {
         }
             }
             PropertyKind::Object { properties,  .. } => {
-                if !properties.is_null() {
-            result.insert("properties".to_string(), properties.clone());
+                if !properties.is_empty() {
+            result.insert("properties".to_string(), serde_json::Value::Array(properties.iter().map(|item| item.to_value(ctx)).collect()));
         }
             }
             PropertyKind::Custom { kind_name: _, .. } => {
@@ -177,6 +177,26 @@ impl Property {
     /// Serialize Property to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+
+    /// Load a collection of Property from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_properties(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
+            serde_json::Value::Array(arr) => {
+                arr.iter().map(|v| Property::load_from_value(v, ctx)).collect()
+            }
+
+            _ => Vec::new(),
+
+        }
+    }
+
+    /// Save a collection of Property to a JSON value.
+    fn save_properties(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+
     }
 }
 

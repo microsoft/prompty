@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// 
 /// </summary>
-public class AnonymousConnection : Connection
+public partial class AnonymousConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -97,15 +97,13 @@ public class AnonymousConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["endpoint"] = obj.Endpoint;
+
 
 
         return result;

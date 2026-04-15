@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// A file content part. The source may be a URL or base64-encoded data.
 /// </summary>
-public class FilePart : ContentPart
+public partial class FilePart : ContentPart
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,20 @@ public class FilePart : ContentPart
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Source is not null)
-        {
-            result["source"] = obj.Source;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["source"] = obj.Source;
+
+
 
         if (obj.MediaType is not null)
         {
             result["mediaType"] = obj.MediaType;
         }
+
 
 
         return result;

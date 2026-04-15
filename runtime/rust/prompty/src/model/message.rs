@@ -14,7 +14,7 @@ pub struct Message {
     /// The role of the message sender
     pub role: String,
     /// The content parts of the message
-    pub parts: serde_json::Value,
+    pub parts: Vec<ContentPart>,
     /// Optional metadata associated with the message
     pub metadata: serde_json::Value,
 }
@@ -44,7 +44,7 @@ impl Message {
         let value = ctx.process_input(value.clone());
         Self {
             role: value.get("role").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            parts: value.get("parts").cloned().unwrap_or(serde_json::Value::Null),
+            parts: value.get("parts").map(|v| Self::load_parts(v, ctx)).unwrap_or_default(),
             metadata: value.get("metadata").cloned().unwrap_or(serde_json::Value::Null),
         }
     }
@@ -57,8 +57,8 @@ impl Message {
         if !self.role.is_empty() {
             result.insert("role".to_string(), serde_json::Value::String(self.role.clone()));
         }
-        if !self.parts.is_null() {
-            result.insert("parts".to_string(), self.parts.clone());
+        if !self.parts.is_empty() {
+            result.insert("parts".to_string(), Self::save_parts(&self.parts, ctx));
         }
         if !self.metadata.is_null() {
             result.insert("metadata".to_string(), self.metadata.clone());
@@ -75,43 +75,30 @@ impl Message {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
-    /// Returns typed `Vec<ContentPart>` by parsing the stored JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_parts(&self) -> Option<Vec<ContentPart>> {
-        match &self.parts {
-            serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| ContentPart::load_from_value(v, &LoadContext::default())).collect())
-            }
-            serde_json::Value::Object(obj) => {
-                let result: Vec<ContentPart> = obj
-                    .iter()
-                    .filter_map(|(name, value)| {
-                        if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'parts' must be a flat list or name-keyed dict.
-                            return None;
-                        }
-                        let mut v = if value.is_object() {
-                            value.clone()
-                        } else {
-                            serde_json::json!({ "value": value })
-                        };
-                        if let serde_json::Value::Object(ref mut m) = v {
-                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
-                        }
-                        Some(ContentPart::load_from_value(&v, &LoadContext::default()))
-                    })
-                    .collect();
-                Some(result)
-            }
-            _ => None,
-        }
-    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.metadata.as_object()
+    }
+
+    /// Load a collection of ContentPart from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_parts(data: &serde_json::Value, ctx: &LoadContext) -> Vec<ContentPart> {
+        match data {
+            serde_json::Value::Array(arr) => {
+                arr.iter().map(|v| ContentPart::load_from_value(v, ctx)).collect()
+            }
+
+            _ => Vec::new(),
+
+        }
+    }
+
+    /// Save a collection of ContentPart to a JSON value.
+    fn save_parts(items: &[ContentPart], ctx: &SaveContext) -> serde_json::Value {
+
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+
     }
 }
 /// Helpers for [`Message`]. Implement in a separate file.

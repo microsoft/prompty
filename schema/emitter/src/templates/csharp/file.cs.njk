@@ -11,7 +11,7 @@ namespace {{ namespace }};
 /// {{ line }}
 {%- endfor %}
 /// </summary>
-public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }}{% if node.base %} : {{ node.base.name }}{% endif %}
+public{% if node.isAbstract %} abstract{% endif %} partial class {{ node.typeName.name }}{% if node.base %} : {{ node.base.name }}{% endif %}
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -180,10 +180,14 @@ public{% if node.isAbstract %} abstract{% endif %} class {{ node.typeName.name }
         var result = new Dictionary<string, object?>();
         {% endif %}
         {% for prop in node.properties %}
+        {% if prop.isOptional %}
         if (obj.{{ renderPropertyName(prop) }} is not null)
         {
             {{ renderSaveProperty(prop) | safe }}
         }
+        {% else %}
+        {{ renderSaveProperty(prop) | safe }}
+        {% endif %}
         {% endfor %}
         {% if not node.base %}
         if (context is not null)

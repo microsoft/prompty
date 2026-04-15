@@ -107,13 +107,11 @@ fn process_chat_completion(agent: &Prompty, choices: &[Value]) -> Result<Value, 
 
     // Structured output: if agent has outputs, try to parse as JSON.
     // Falls back to raw string gracefully if parsing fails.
-    if let Some(outputs) = agent.as_outputs() {
-        if !outputs.is_empty() {
-            if let Ok(parsed) = serde_json::from_str::<Value>(content_str) {
-                return Ok(parsed);
-            }
-            // Fall through to return raw string
+    if !agent.outputs.is_empty() {
+        if let Ok(parsed) = serde_json::from_str::<Value>(content_str) {
+            return Ok(parsed);
         }
+        // Fall through to return raw string
     }
 
     Ok(Value::String(content_str.to_string()))
@@ -150,11 +148,9 @@ fn process_responses_api(agent: &Prompty, response: &Value) -> Result<Value, Inv
         .unwrap_or("");
 
     // Structured output
-    if let Some(outputs) = agent.as_outputs() {
-        if !outputs.is_empty() {
-            if let Ok(parsed) = serde_json::from_str::<Value>(output_text) {
-                return Ok(parsed);
-            }
+    if !agent.outputs.is_empty() {
+        if let Ok(parsed) = serde_json::from_str::<Value>(output_text) {
+            return Ok(parsed);
         }
     }
 

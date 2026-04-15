@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// An error chunk from the LLM response stream.
 /// </summary>
-public class ErrorChunk : StreamChunk
+public partial class ErrorChunk : StreamChunk
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -97,15 +97,13 @@ public class ErrorChunk : StreamChunk
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Message is not null)
-        {
-            result["message"] = obj.Message;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["message"] = obj.Message;
+
 
 
         return result;

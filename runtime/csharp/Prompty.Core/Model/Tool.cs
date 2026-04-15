@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a tool that can be used in prompts.
 /// </summary>
-public abstract class Tool
+public abstract partial class Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -193,25 +193,27 @@ public abstract class Tool
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["name"] = obj.Name;
+
+
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.Description is not null)
         {
             result["description"] = obj.Description;
         }
 
+
+
         if (obj.Bindings is not null)
         {
             result["bindings"] = SaveBindings(obj.Bindings, context);
         }
+
 
 
         if (context is not null)

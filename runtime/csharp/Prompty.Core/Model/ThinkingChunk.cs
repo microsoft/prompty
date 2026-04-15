@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// A thinking/reasoning content chunk from the LLM response stream.
 /// </summary>
-public class ThinkingChunk : StreamChunk
+public partial class ThinkingChunk : StreamChunk
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -97,15 +97,13 @@ public class ThinkingChunk : StreamChunk
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Value is not null)
-        {
-            result["value"] = obj.Value;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["value"] = obj.Value;
+
 
 
         return result;

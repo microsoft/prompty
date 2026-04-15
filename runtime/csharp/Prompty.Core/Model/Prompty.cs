@@ -14,7 +14,7 @@ namespace Prompty.Core;
 /// This is the single root type for the Prompty schema — there is no abstract base
 /// class or kind discriminator. A .prompty file always produces a Prompty instance.
 /// </summary>
-public class Prompty
+public partial class Prompty
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -343,55 +343,69 @@ public class Prompty
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+
+        result["name"] = obj.Name;
+
+
 
         if (obj.DisplayName is not null)
         {
             result["displayName"] = obj.DisplayName;
         }
 
+
+
         if (obj.Description is not null)
         {
             result["description"] = obj.Description;
         }
+
+
 
         if (obj.Metadata is not null)
         {
             result["metadata"] = obj.Metadata;
         }
 
+
+
         if (obj.Inputs is not null)
         {
             result["inputs"] = SaveInputs(obj.Inputs, context);
         }
+
+
 
         if (obj.Outputs is not null)
         {
             result["outputs"] = SaveOutputs(obj.Outputs, context);
         }
 
-        if (obj.Model is not null)
-        {
-            result["model"] = obj.Model?.Save(context);
-        }
+
+
+        result["model"] = obj.Model?.Save(context);
+
+
 
         if (obj.Tools is not null)
         {
             result["tools"] = SaveTools(obj.Tools, context);
         }
 
+
+
         if (obj.Template is not null)
         {
             result["template"] = obj.Template?.Save(context);
         }
 
+
+
         if (obj.Instructions is not null)
         {
             result["instructions"] = obj.Instructions;
         }
+
 
 
         if (context is not null)

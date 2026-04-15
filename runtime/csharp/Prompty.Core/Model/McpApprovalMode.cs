@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// When kind is &quot;specify&quot;, use alwaysRequireApprovalTools and neverRequireApprovalTools
 /// to control per-tool approval. For &quot;always&quot; and &quot;never&quot;, those fields are ignored.
 /// </summary>
-public class McpApprovalMode
+public partial class McpApprovalMode
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -110,20 +110,23 @@ public class McpApprovalMode
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.AlwaysRequireApprovalTools is not null)
         {
             result["alwaysRequireApprovalTools"] = obj.AlwaysRequireApprovalTools;
         }
 
+
+
         if (obj.NeverRequireApprovalTools is not null)
         {
             result["neverRequireApprovalTools"] = obj.NeverRequireApprovalTools;
         }
+
 
 
         if (context is not null)

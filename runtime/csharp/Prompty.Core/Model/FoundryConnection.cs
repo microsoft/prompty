@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// Provides project-scoped access to models, tools, and services
 /// via Entra ID (DefaultAzureCredential) authentication.
 /// </summary>
-public class FoundryConnection : Connection
+public partial class FoundryConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -119,25 +119,27 @@ public class FoundryConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["endpoint"] = obj.Endpoint;
+
+
 
         if (obj.Name is not null)
         {
             result["name"] = obj.Name;
         }
 
+
+
         if (obj.ConnectionType is not null)
         {
             result["connectionType"] = obj.ConnectionType;
         }
+
 
 
         return result;

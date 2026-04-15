@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Options for configuring the behavior of the AI model.
 /// </summary>
-public class ModelOptions
+public partial class ModelOptions
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -176,55 +176,75 @@ public class ModelOptions
         var result = new Dictionary<string, object?>();
 
 
+
         if (obj.FrequencyPenalty is not null)
         {
             result["frequencyPenalty"] = obj.FrequencyPenalty;
         }
+
+
 
         if (obj.MaxOutputTokens is not null)
         {
             result["maxOutputTokens"] = obj.MaxOutputTokens;
         }
 
+
+
         if (obj.PresencePenalty is not null)
         {
             result["presencePenalty"] = obj.PresencePenalty;
         }
+
+
 
         if (obj.Seed is not null)
         {
             result["seed"] = obj.Seed;
         }
 
+
+
         if (obj.Temperature is not null)
         {
             result["temperature"] = obj.Temperature;
         }
+
+
 
         if (obj.TopK is not null)
         {
             result["topK"] = obj.TopK;
         }
 
+
+
         if (obj.TopP is not null)
         {
             result["topP"] = obj.TopP;
         }
+
+
 
         if (obj.StopSequences is not null)
         {
             result["stopSequences"] = obj.StopSequences;
         }
 
+
+
         if (obj.AllowMultipleToolCalls is not null)
         {
             result["allowMultipleToolCalls"] = obj.AllowMultipleToolCalls;
         }
 
+
+
         if (obj.AdditionalProperties is not null)
         {
             result["additionalProperties"] = obj.AdditionalProperties;
         }
+
 
 
         if (context is not null)

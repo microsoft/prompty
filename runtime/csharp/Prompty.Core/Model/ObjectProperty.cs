@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// Represents an object property.
 /// This extends the base Property model to represent a structured object.
 /// </summary>
-public class ObjectProperty : Property
+public partial class ObjectProperty : Property
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -152,15 +152,13 @@ public class ObjectProperty : Property
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Properties is not null)
-        {
-            result["properties"] = SaveProperties(obj.Properties, context);
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["properties"] = SaveProperties(obj.Properties, context);
+
 
 
         return result;

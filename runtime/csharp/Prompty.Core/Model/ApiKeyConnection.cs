@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using API keys.
 /// </summary>
-public class ApiKeyConnection : Connection
+public partial class ApiKeyConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,17 @@ public class ApiKeyConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.ApiKey is not null)
-        {
-            result["apiKey"] = obj.ApiKey;
-        }
+
+
+        result["endpoint"] = obj.Endpoint;
+
+
+
+        result["apiKey"] = obj.ApiKey;
+
 
 
         return result;

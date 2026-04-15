@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// A chunk of data from a streaming LLM response. Stream chunks are
 /// discriminated on the `kind` field.
 /// </summary>
-public abstract class StreamChunk
+public abstract partial class StreamChunk
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -110,10 +110,9 @@ public abstract class StreamChunk
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
 
 
         if (context is not null)

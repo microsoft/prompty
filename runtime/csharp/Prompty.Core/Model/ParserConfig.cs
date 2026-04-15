@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Template parser definition
 /// </summary>
-public class ParserConfig
+public partial class ParserConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -98,15 +98,16 @@ public class ParserConfig
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.Options is not null)
         {
             result["options"] = obj.Options;
         }
+
 
 
         if (context is not null)

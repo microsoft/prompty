@@ -14,7 +14,7 @@ namespace Prompty.Core;
 /// many fields as the provider&#39;s API supports and MAY enrich sparse results
 /// from a built-in lookup table of known models.
 /// </summary>
-public class ModelInfo
+public partial class ModelInfo
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -151,40 +151,51 @@ public class ModelInfo
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Id is not null)
-        {
-            result["id"] = obj.Id;
-        }
+
+        result["id"] = obj.Id;
+
+
 
         if (obj.DisplayName is not null)
         {
             result["displayName"] = obj.DisplayName;
         }
 
+
+
         if (obj.OwnedBy is not null)
         {
             result["ownedBy"] = obj.OwnedBy;
         }
+
+
 
         if (obj.ContextWindow is not null)
         {
             result["contextWindow"] = obj.ContextWindow;
         }
 
+
+
         if (obj.InputModalities is not null)
         {
             result["inputModalities"] = obj.InputModalities;
         }
+
+
 
         if (obj.OutputModalities is not null)
         {
             result["outputModalities"] = obj.OutputModalities;
         }
 
+
+
         if (obj.AdditionalProperties is not null)
         {
             result["additionalProperties"] = obj.AdditionalProperties;
         }
+
 
 
         if (context is not null)

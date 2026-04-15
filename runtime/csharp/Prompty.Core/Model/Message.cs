@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// A message in a conversation. Messages have a role and a list of content parts
 /// representing the different modalities of the message content.
 /// </summary>
-public class Message
+public partial class Message
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -161,20 +161,20 @@ public class Message
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Role is not null)
-        {
-            result["role"] = obj.Role;
-        }
 
-        if (obj.Parts is not null)
-        {
-            result["parts"] = SaveParts(obj.Parts, context);
-        }
+        result["role"] = obj.Role;
+
+
+
+        result["parts"] = SaveParts(obj.Parts, context);
+
+
 
         if (obj.Metadata is not null)
         {
             result["metadata"] = obj.Metadata;
         }
+
 
 
         if (context is not null)

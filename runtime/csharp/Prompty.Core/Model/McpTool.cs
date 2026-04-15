@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// The MCP Server tool.
 /// </summary>
-public class McpTool : Tool
+public partial class McpTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -137,35 +137,35 @@ public class McpTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Connection is not null)
-        {
-            result["connection"] = obj.Connection?.Save(context);
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.ServerName is not null)
-        {
-            result["serverName"] = obj.ServerName;
-        }
+
+
+        result["connection"] = obj.Connection?.Save(context);
+
+
+
+        result["serverName"] = obj.ServerName;
+
+
 
         if (obj.ServerDescription is not null)
         {
             result["serverDescription"] = obj.ServerDescription;
         }
 
-        if (obj.ApprovalMode is not null)
-        {
-            result["approvalMode"] = obj.ApprovalMode?.Save(context);
-        }
+
+
+        result["approvalMode"] = obj.ApprovalMode?.Save(context);
+
+
 
         if (obj.AllowedTools is not null)
         {
             result["allowedTools"] = obj.AllowedTools;
         }
+
 
 
         return result;

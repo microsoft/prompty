@@ -44,7 +44,7 @@ const DEFAULT_PROVIDER: &str = "openai";
 /// and the result is a JSON object or array (i.e., structured data).
 /// This preserves raw JSON for `cast()` while keeping processors clean.
 fn wrap_structured_if_needed(agent: &Prompty, result: Value) -> Value {
-    let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
+    let has_outputs = !agent.outputs.is_empty();
     if has_outputs && (result.is_object() || result.is_array()) {
         // The raw_json is the serialized form of the parsed result
         let raw_json = result.to_string();
@@ -123,51 +123,39 @@ fn serialize_agent(agent: &Prompty) -> Value {
         .unwrap_or(Value::Null);
 
     let inputs: Vec<Value> = agent
-        .as_inputs()
-        .map(|props| {
-            props
-                .iter()
-                .map(|p| {
-                    json!({
-                        "name": p.name,
-                        "kind": p.kind_str(),
-                        "description": p.description,
-                        "required": p.required.unwrap_or(false),
-                    })
-                })
-                .collect()
+        .inputs
+        .iter()
+        .map(|p| {
+            json!({
+                "name": p.name,
+                "kind": p.kind_str(),
+                "description": p.description,
+                "required": p.required.unwrap_or(false),
+            })
         })
-        .unwrap_or_default();
+        .collect();
 
     let outputs: Vec<Value> = agent
-        .as_outputs()
-        .map(|props| {
-            props
-                .iter()
-                .map(|p| {
-                    json!({
-                        "name": p.name,
-                        "kind": p.kind_str(),
-                    })
-                })
-                .collect()
+        .outputs
+        .iter()
+        .map(|p| {
+            json!({
+                "name": p.name,
+                "kind": p.kind_str(),
+            })
         })
-        .unwrap_or_default();
+        .collect();
 
     let tools: Vec<Value> = agent
-        .as_tools()
-        .map(|tools| {
-            tools
-                .iter()
-                .map(|t| {
-                    json!({
-                        "name": t.name,
-                        "kind": t.kind_str(),
-                    })
-                })
-                .collect()
+        .tools
+        .iter()
+        .map(|t| {
+            json!({
+                "name": t.name,
+                "kind": t.kind_str(),
+            })
         })
-        .unwrap_or_default();
+        .collect();
 
     sanitize_value(
         "agent",
@@ -220,16 +208,15 @@ pub fn validate_inputs(
 ) -> Result<serde_json::Value, InvokerError> {
     let mut result = inputs.clone();
 
-    let props = match agent.as_inputs() {
-        Some(p) => p,
-        None => return Ok(result),
-    };
+    if agent.inputs.is_empty() {
+        return Ok(result);
+    }
 
     let obj = result
         .as_object_mut()
         .ok_or_else(|| InvokerError::Validation("inputs must be a JSON object".into()))?;
 
-    for prop in &props {
+    for prop in &agent.inputs {
         if prop.name.is_empty() {
             continue;
         }
@@ -1321,12 +1308,7 @@ pub async fn turn_from_path(
     turn(&agent, inputs, options).await
 }
 fn has_any_tools(agent: &Prompty) -> bool {
-    if let Some(arr) = agent.tools.as_array() {
-        if !arr.is_empty() {
-            return true;
-        }
-    }
-    false
+    !agent.tools.is_empty()
 }
 
 /// Execute a single LLM attempt (streaming or non-streaming).
@@ -2108,12 +2090,10 @@ mod tests {
                         // Text content
                         if let Some(content) = message.get("content").and_then(|c| c.as_str()) {
                             // Structured output
-                            if let Some(outputs) = agent.as_outputs() {
-                                if !outputs.is_empty() {
-                                    let parsed: serde_json::Value = serde_json::from_str(content)
-                                        .unwrap_or(serde_json::Value::String(content.to_string()));
-                                    return Ok(parsed);
-                                }
+                            if !agent.outputs.is_empty() {
+                                let parsed: serde_json::Value = serde_json::from_str(content)
+                                    .unwrap_or(serde_json::Value::String(content.to_string()));
+                                return Ok(parsed);
                             }
                             return Ok(serde_json::Value::String(content.to_string()));
                         }

@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// A tool call requested by the LLM. Contains the function name and serialized
 /// arguments that should be dispatched to the appropriate tool handler.
 /// </summary>
-public class ToolCall
+public partial class ToolCall
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,17 @@ public class ToolCall
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Id is not null)
-        {
-            result["id"] = obj.Id;
-        }
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+        result["id"] = obj.Id;
 
-        if (obj.Arguments is not null)
-        {
-            result["arguments"] = obj.Arguments;
-        }
+
+
+        result["name"] = obj.Name;
+
+
+
+        result["arguments"] = obj.Arguments;
+
 
 
         if (context is not null)

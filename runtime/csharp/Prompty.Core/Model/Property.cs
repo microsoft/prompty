@@ -14,7 +14,7 @@ namespace Prompty.Core;
 /// - It allows for the definition of dynamic inputs that can be filled with data
 /// and processed to generate prompts for AI models.
 /// </summary>
-public class Property
+public partial class Property
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -174,40 +174,48 @@ public class Property
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["name"] = obj.Name;
+
+
+
+        result["kind"] = obj.Kind;
+
+
 
         if (obj.Description is not null)
         {
             result["description"] = obj.Description;
         }
 
+
+
         if (obj.Required is not null)
         {
             result["required"] = obj.Required;
         }
+
+
 
         if (obj.Default is not null)
         {
             result["default"] = obj.Default;
         }
 
+
+
         if (obj.Example is not null)
         {
             result["example"] = obj.Example;
         }
 
+
+
         if (obj.EnumValues is not null)
         {
             result["enumValues"] = obj.EnumValues;
         }
+
 
 
         if (context is not null)

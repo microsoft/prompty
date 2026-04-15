@@ -15,6 +15,7 @@ use std::path::Path;
 use std::pin::Pin;
 use std::sync::{Arc, OnceLock, RwLock};
 
+use crate::model::tool::{Tool, ToolKind};
 use crate::model::Prompty;
 use crate::types::ToolCall;
 
@@ -30,13 +31,13 @@ pub trait ToolHandlerTrait: Send + Sync {
     /// Execute a tool call, returning the result as a string.
     ///
     /// # Arguments
-    /// - `tool_def`: The tool definition from `agent.tools` (as JSON value)
+    /// - `tool_def`: The tool definition from `agent.tools`
     /// - `args`: The parsed arguments from the LLM
     /// - `agent`: The current Prompty agent
     /// - `parent_inputs`: The original inputs to the pipeline (for binding resolution)
     async fn execute_tool(
         &self,
-        tool_def: &serde_json::Value,
+        tool_def: &Tool,
         args: serde_json::Value,
         agent: &Prompty,
         parent_inputs: Option<&serde_json::Value>,
@@ -172,11 +173,7 @@ pub fn resolve_bindings(
         return args;
     };
 
-    let Some(bindings) = tool_def.get("bindings").and_then(|b| b.as_array()) else {
-        return args;
-    };
-
-    if bindings.is_empty() {
+    if tool_def.bindings.is_empty() {
         return args;
     }
 
@@ -185,14 +182,13 @@ pub fn resolve_bindings(
         None => return args,
     };
 
-    for binding in bindings {
-        let Some(target_name) = binding.get("name").and_then(|n| n.as_str()) else {
+    for binding in &tool_def.bindings {
+        let target_name = &binding.name;
+        let source_input = &binding.input;
+        if target_name.is_empty() || source_input.is_empty() {
             continue;
-        };
-        let Some(source_input) = binding.get("input").and_then(|i| i.as_str()) else {
-            continue;
-        };
-        if let Some(value) = parent_obj.get(source_input) {
+        }
+        if let Some(value) = parent_obj.get(source_input.as_str()) {
             args_obj.insert(target_name.to_string(), value.clone());
         }
     }
@@ -345,11 +341,9 @@ pub async fn dispatch_tool(
 
     // Layer 3: kind handler — look up tool definition in agent.tools
     let tool_def = find_tool_def(agent, &tool_call.name);
-    if let Some(def) = &tool_def {
-        let kind = def
-            .get("kind")
-            .and_then(|k| k.as_str())
-            .unwrap_or("function");
+    if let Some(def) = tool_def {
+        let kind = def.kind_str();
+        let kind = if kind.is_empty() { "function" } else { kind };
 
         // Try specific kind handler, then fallback to "*" wildcard
         // Clone the Arc before dropping the read guard to avoid holding it across .await
@@ -375,15 +369,8 @@ pub async fn dispatch_tool(
 }
 
 /// Find a tool definition in `agent.tools` by name.
-fn find_tool_def(agent: &Prompty, name: &str) -> Option<serde_json::Value> {
-    let tools = agent.tools.as_array()?;
-    for tool in tools {
-        let tool_name = tool.get("name").and_then(|n| n.as_str());
-        if tool_name == Some(name) {
-            return Some(tool.clone());
-        }
-    }
-    None
+fn find_tool_def<'a>(agent: &'a Prompty, name: &str) -> Option<&'a Tool> {
+    agent.tools.iter().find(|tool| tool.name == name)
 }
 
 /// Execute a user-provided tool handler (from TurnOptions.tools).
@@ -440,7 +427,7 @@ pub struct FunctionToolHandler;
 impl ToolHandlerTrait for FunctionToolHandler {
     async fn execute_tool(
         &self,
-        _tool_def: &serde_json::Value,
+        _tool_def: &Tool,
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
@@ -464,15 +451,12 @@ pub struct PromptyToolHandler;
 impl ToolHandlerTrait for PromptyToolHandler {
     async fn execute_tool(
         &self,
-        tool_def: &serde_json::Value,
+        tool_def: &Tool,
         args: serde_json::Value,
         agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
-        let tool_name = tool_def
-            .get("name")
-            .and_then(|n| n.as_str())
-            .unwrap_or("<unknown>");
+        let tool_name = &tool_def.name;
 
         // Get parent source path from metadata
         let parent_path = agent
@@ -485,15 +469,21 @@ impl ToolHandlerTrait for PromptyToolHandler {
                 ))
             })?;
 
-        // Get the child path from tool_def.path
-        let child_relative = tool_def
-            .get("path")
-            .and_then(|p| p.as_str())
-            .ok_or_else(|| {
-                ToolHandlerError::Execution(format!(
+        // Get the child path and mode from tool_def.kind
+        let (child_relative, mode) = match &tool_def.kind {
+            ToolKind::Prompty { path, mode } => (path.as_str(), mode.as_deref().unwrap_or("single")),
+            _ => {
+                return Err(ToolHandlerError::Execution(format!(
                     "PromptyTool '{tool_name}' is missing 'path' field"
-                ))
-            })?;
+                )));
+            }
+        };
+
+        if child_relative.is_empty() {
+            return Err(ToolHandlerError::Execution(format!(
+                "PromptyTool '{tool_name}' is missing 'path' field"
+            )));
+        }
 
         let parent_dir = Path::new(parent_path).parent().unwrap_or(Path::new("."));
         let child_path = parent_dir.join(child_relative);
@@ -549,11 +539,6 @@ impl ToolHandlerTrait for PromptyToolHandler {
             );
         }
 
-        let mode = tool_def
-            .get("mode")
-            .and_then(|m| m.as_str())
-            .unwrap_or("single");
-
         let result = if mode == "agentic" {
             crate::pipeline::turn(&child, Some(&args), None)
                 .await
@@ -580,7 +565,7 @@ pub struct McpToolHandler;
 impl ToolHandlerTrait for McpToolHandler {
     async fn execute_tool(
         &self,
-        _tool_def: &serde_json::Value,
+        _tool_def: &Tool,
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
@@ -599,7 +584,7 @@ pub struct OpenApiToolHandler;
 impl ToolHandlerTrait for OpenApiToolHandler {
     async fn execute_tool(
         &self,
-        _tool_def: &serde_json::Value,
+        _tool_def: &Tool,
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
@@ -618,15 +603,13 @@ pub struct CustomToolHandler;
 impl ToolHandlerTrait for CustomToolHandler {
     async fn execute_tool(
         &self,
-        tool_def: &serde_json::Value,
+        tool_def: &Tool,
         _args: serde_json::Value,
         _agent: &Prompty,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
-        let kind = tool_def
-            .get("kind")
-            .and_then(|k| k.as_str())
-            .unwrap_or("unknown");
+        let kind = tool_def.kind_str();
+        let kind = if kind.is_empty() { "unknown" } else { kind };
         Err(ToolHandlerError::Execution(format!(
             "Custom tool dispatch for kind '{kind}' is not yet implemented"
         )))
@@ -668,7 +651,15 @@ mod tests {
 
     fn agent_with_tools(tools: serde_json::Value) -> Prompty {
         let mut agent = Prompty::default();
-        agent.tools = tools;
+        let ctx = crate::model::context::LoadContext::default();
+        agent.tools = tools
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .map(|v| Tool::load_from_value(v, &ctx))
+                    .collect()
+            })
+            .unwrap_or_default();
         agent
     }
 
@@ -880,13 +871,19 @@ mod tests {
 
     // --- Kind handler tests ---
 
+    fn make_tool_from_json(json: serde_json::Value) -> Tool {
+        let ctx = crate::model::context::LoadContext::default();
+        Tool::load_from_value(&json, &ctx)
+    }
+
     #[tokio::test]
     #[serial]
     async fn test_mcp_handler_not_implemented() {
         let handler = McpToolHandler;
+        let tool = make_tool_from_json(serde_json::json!({"kind": "mcp", "name": "test"}));
         let result = handler
             .execute_tool(
-                &serde_json::json!({"kind": "mcp", "name": "test"}),
+                &tool,
                 serde_json::json!({}),
                 &default_agent(),
                 None,
@@ -900,9 +897,10 @@ mod tests {
     #[serial]
     async fn test_openapi_handler_not_implemented() {
         let handler = OpenApiToolHandler;
+        let tool = make_tool_from_json(serde_json::json!({"kind": "openapi", "name": "test"}));
         let result = handler
             .execute_tool(
-                &serde_json::json!({"kind": "openapi", "name": "test"}),
+                &tool,
                 serde_json::json!({}),
                 &default_agent(),
                 None,
@@ -916,9 +914,10 @@ mod tests {
     #[serial]
     async fn test_custom_handler_not_implemented() {
         let handler = CustomToolHandler;
+        let tool = make_tool_from_json(serde_json::json!({"kind": "my_custom", "name": "test"}));
         let result = handler
             .execute_tool(
-                &serde_json::json!({"kind": "my_custom", "name": "test"}),
+                &tool,
                 serde_json::json!({}),
                 &default_agent(),
                 None,
@@ -964,10 +963,11 @@ mod tests {
         let handler = PromptyToolHandler;
         // Agent without __source_path metadata
         let agent = default_agent();
-        let tool_def =
-            serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"});
+        let tool = make_tool_from_json(
+            serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"}),
+        );
         let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .execute_tool(&tool, serde_json::json!({}), &agent, None)
             .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("__source_path"));
@@ -979,10 +979,10 @@ mod tests {
         let handler = PromptyToolHandler;
         let mut agent = default_agent();
         agent.metadata = serde_json::json!({"__source_path": "/fake/parent.prompty"});
-        // tool_def missing 'path' field
-        let tool_def = serde_json::json!({"kind": "prompty", "name": "child"});
+        // tool_def missing 'path' field — loads as Prompty { path: "" }
+        let tool = make_tool_from_json(serde_json::json!({"kind": "prompty", "name": "child"}));
         let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .execute_tool(&tool, serde_json::json!({}), &agent, None)
             .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("missing 'path'"));
@@ -1006,14 +1006,14 @@ mod tests {
         });
 
         // The tool "path" resolves to the same as __source_path → circular
-        let tool_def = serde_json::json!({
+        let tool = make_tool_from_json(serde_json::json!({
             "kind": "prompty",
             "name": "self_ref",
             "path": "parent.prompty"  // resolves to same dir as parent
-        });
+        }));
 
         let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .execute_tool(&tool, serde_json::json!({}), &agent, None)
             .await;
         // This will either detect circular reference or fail to load the file.
         // Either way it should be an error, not a hang.
@@ -1033,13 +1033,13 @@ mod tests {
             "__source_path": parent_path.to_string_lossy()
         });
 
-        let tool_def = serde_json::json!({
+        let tool = make_tool_from_json(serde_json::json!({
             "kind": "prompty",
             "name": "missing",
             "path": "does_not_exist.prompty"
-        });
+        }));
         let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
+            .execute_tool(&tool, serde_json::json!({}), &agent, None)
             .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("failed to load"));

@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// A tool call chunk from the LLM response stream.
 /// </summary>
-public class ToolChunk : StreamChunk
+public partial class ToolChunk : StreamChunk
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -97,15 +97,13 @@ public class ToolChunk : StreamChunk
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.ToolCall is not null)
-        {
-            result["toolCall"] = obj.ToolCall?.Save(context);
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["toolCall"] = obj.ToolCall?.Save(context);
+
 
 
         return result;

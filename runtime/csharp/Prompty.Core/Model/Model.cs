@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// This model includes properties for specifying the model&#39;s provider, connection details, and various options.
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
-public class Model
+public partial class Model
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -130,30 +130,37 @@ public class Model
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Id is not null)
-        {
-            result["id"] = obj.Id;
-        }
+
+        result["id"] = obj.Id;
+
+
 
         if (obj.Provider is not null)
         {
             result["provider"] = obj.Provider;
         }
 
+
+
         if (obj.ApiType is not null)
         {
             result["apiType"] = obj.ApiType;
         }
+
+
 
         if (obj.Connection is not null)
         {
             result["connection"] = obj.Connection?.Save(context);
         }
 
+
+
         if (obj.Options is not null)
         {
             result["options"] = obj.Options?.Save(context);
         }
+
 
 
         if (context is not null)

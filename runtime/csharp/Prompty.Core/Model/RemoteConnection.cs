@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Connection configuration for AI services using named connections.
 /// </summary>
-public class RemoteConnection : Connection
+public partial class RemoteConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,17 @@ public class RemoteConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+
+
+        result["name"] = obj.Name;
+
+
+
+        result["endpoint"] = obj.Endpoint;
+
 
 
         return result;

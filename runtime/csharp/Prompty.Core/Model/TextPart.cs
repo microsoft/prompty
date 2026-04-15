@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// A text content part.
 /// </summary>
-public class TextPart : ContentPart
+public partial class TextPart : ContentPart
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -97,15 +97,13 @@ public class TextPart : ContentPart
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Value is not null)
-        {
-            result["value"] = obj.Value;
-        }
+        result["kind"] = obj.Kind;
+
+
+
+        result["value"] = obj.Value;
+
 
 
         return result;

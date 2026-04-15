@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// 
 /// </summary>
-public class OpenApiTool : Tool
+public partial class OpenApiTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -107,20 +107,17 @@ public class OpenApiTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
 
-        if (obj.Connection is not null)
-        {
-            result["connection"] = obj.Connection?.Save(context);
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Specification is not null)
-        {
-            result["specification"] = obj.Specification;
-        }
+
+
+        result["connection"] = obj.Connection?.Save(context);
+
+
+
+        result["specification"] = obj.Specification;
+
 
 
         return result;

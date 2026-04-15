@@ -37,15 +37,13 @@ pub fn prepare_render_inputs(
     let mut nonces = HashMap::new();
 
     // Get the agent's input definitions to determine rich kinds
-    if let Some(input_defs) = agent.as_inputs() {
-        for prop in &input_defs {
-            if RICH_KINDS.contains(&prop.kind_str()) {
-                let nonce = generate_nonce(&prop.name);
-                if let Some(obj) = modified.as_object_mut() {
-                    obj.insert(prop.name.clone(), serde_json::Value::String(nonce.clone()));
-                }
-                nonces.insert(prop.name.clone(), nonce);
+    for prop in &agent.inputs {
+        if RICH_KINDS.contains(&prop.kind_str()) {
+            let nonce = generate_nonce(&prop.name);
+            if let Some(obj) = modified.as_object_mut() {
+                obj.insert(prop.name.clone(), serde_json::Value::String(nonce.clone()));
             }
+            nonces.insert(prop.name.clone(), nonce);
         }
     }
 

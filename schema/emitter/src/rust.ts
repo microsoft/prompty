@@ -345,13 +345,37 @@ function getShorthandProperty(node: TypeNode): string | null {
  * Get collection properties with their nested type info.
  */
 function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: string[]; hasNameProperty: boolean }> {
-  return node.properties
+  // Collect from base properties
+  const baseCollections = node.properties
     .filter(p => p.isCollection && !p.isScalar && !p.isDict)
     .map(p => ({
       prop: p,
       type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
       hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
     }));
+
+  // Also collect from child type variant-specific properties (for polymorphic types)
+  const childCollections = node.childTypes.flatMap(ct =>
+    ct.properties
+      .filter(p => p.isCollection && !p.isScalar && !p.isDict)
+      // Skip if already covered by a base property with the same name
+      .filter(p => !baseCollections.some(bc => bc.prop.name === p.name))
+      .map(p => ({
+        prop: p,
+        type: p.type?.properties.filter(t => t.name !== "name").map(t => t.name) || [],
+        hasNameProperty: p.type?.properties.some(t => t.name === "name") || false,
+      }))
+  );
+
+  // Deduplicate by property name (in case multiple child types have same-named collection)
+  const seen = new Set(baseCollections.map(c => c.prop.name));
+  const uniqueChildCollections = childCollections.filter(c => {
+    if (seen.has(c.prop.name)) return false;
+    seen.add(c.prop.name);
+    return true;
+  });
+
+  return [...baseCollections, ...uniqueChildCollections];
 }
 /**
  * Get unique import types needed from other modules.
@@ -359,20 +383,18 @@ function getCollectionTypes(node: TypeNode): Array<{ prop: PropertyNode; type: s
  * with no typed accessor method).
  */
 function getUniqueImportTypes(node: TypeNode, polymorphicTypeNames: Set<string>): string[] {
-  const isPolyBase = !!(node.discriminator && node.childTypes.length > 0);
   const imports = [
     node.properties
       .filter(p => !p.isScalar && !p.isDict)
-      // For polymorphic types: only import if it's a collection (needed for typed accessor)
+      // For polymorphic types: only import if it's a collection (needed for Vec<T>)
       .filter(p => !polymorphicTypeNames.has(p.typeName.name) || p.isCollection)
       .map(p => p.typeName.name),
     ...node.childTypes.flatMap(c =>
       c.properties
         .filter(p => !p.isScalar && !p.isDict)
-        // Child properties in enum variants: non-scalar collections and polymorphic types
-        // become serde_json::Value, so skip those imports
-        .filter(p => !polymorphicTypeNames.has(p.typeName.name))
-        .filter(p => !isPolyBase || !p.isCollection)
+        // Child properties in enum variants: polymorphic single refs are serde_json::Value
+        // but collections are now Vec<T> and need imports
+        .filter(p => !polymorphicTypeNames.has(p.typeName.name) || p.isCollection)
         .map(p => p.typeName.name)
     )
   ].flat().filter(n => n !== node.typeName.name && node.base?.name !== n);

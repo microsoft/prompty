@@ -12,7 +12,7 @@ use super::content_part::ContentPart;
 #[derive(Debug, Clone, Default)]
 pub struct ToolResult {
     /// The content parts of the tool result
-    pub parts: serde_json::Value,
+    pub parts: Vec<ContentPart>,
 }
 
 impl ToolResult {
@@ -39,7 +39,7 @@ impl ToolResult {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
-            parts: value.get("parts").cloned().unwrap_or(serde_json::Value::Null),
+            parts: value.get("parts").map(|v| Self::load_parts(v, ctx)).unwrap_or_default(),
         }
     }
 
@@ -48,8 +48,8 @@ impl ToolResult {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
-        if !self.parts.is_null() {
-            result.insert("parts".to_string(), self.parts.clone());
+        if !self.parts.is_empty() {
+            result.insert("parts".to_string(), Self::save_parts(&self.parts, ctx));
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -63,38 +63,25 @@ impl ToolResult {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
-    /// Returns typed `Vec<ContentPart>` by parsing the stored JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
-    /// Returns `None` if the field is null or cannot be parsed.
-    pub fn as_parts(&self) -> Option<Vec<ContentPart>> {
-        match &self.parts {
+
+    /// Load a collection of ContentPart from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_parts(data: &serde_json::Value, ctx: &LoadContext) -> Vec<ContentPart> {
+        match data {
             serde_json::Value::Array(arr) => {
-                Some(arr.iter().map(|v| ContentPart::load_from_value(v, &LoadContext::default())).collect())
+                arr.iter().map(|v| ContentPart::load_from_value(v, ctx)).collect()
             }
-            serde_json::Value::Object(obj) => {
-                let result: Vec<ContentPart> = obj
-                    .iter()
-                    .filter_map(|(name, value)| {
-                        if value.is_array() {
-                            // Invalid format: skip entries with array values.
-                            // 'parts' must be a flat list or name-keyed dict.
-                            return None;
-                        }
-                        let mut v = if value.is_object() {
-                            value.clone()
-                        } else {
-                            serde_json::json!({ "value": value })
-                        };
-                        if let serde_json::Value::Object(ref mut m) = v {
-                            m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
-                        }
-                        Some(ContentPart::load_from_value(&v, &LoadContext::default()))
-                    })
-                    .collect();
-                Some(result)
-            }
-            _ => None,
+
+            _ => Vec::new(),
+
         }
+    }
+
+    /// Save a collection of ContentPart to a JSON value.
+    fn save_parts(items: &[ContentPart], ctx: &SaveContext) -> serde_json::Value {
+
+        serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
+
     }
 }
 
