@@ -108,10 +108,7 @@ public class GuardrailResult
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Allowed is not null)
-        {
-            result["allowed"] = obj.Allowed;
-        }
+        result["allowed"] = obj.Allowed;
 
         if (obj.Reason is not null)
         {

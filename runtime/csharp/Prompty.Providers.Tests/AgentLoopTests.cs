@@ -327,10 +327,10 @@ public class AgentLoopTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new() { ["tool_calls"] = toolCalls } },
+            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
         return messages;
     }
 }

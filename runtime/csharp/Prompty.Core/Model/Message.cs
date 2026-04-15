@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// A message in a conversation. Messages have a role and a list of content parts
 /// representing the different modalities of the message content.
 /// </summary>
-public class Message
+public partial class Message
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -29,7 +29,7 @@ public class Message
     /// <summary>
     /// The role of the message sender
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; set; } = "user";
 
     /// <summary>
     /// The content parts of the message
@@ -39,7 +39,7 @@ public class Message
     /// <summary>
     /// Optional metadata associated with the message
     /// </summary>
-    public IDictionary<string, object>? Metadata { get; set; }
+    public IDictionary<string, object?> Metadata { get; set; } = new Dictionary<string, object?>();
 
 
     #region Load Methods

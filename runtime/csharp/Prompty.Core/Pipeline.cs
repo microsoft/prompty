@@ -793,16 +793,6 @@ public static class Pipeline
 }
 
 /// <summary>
-/// Represents a tool call requested by the LLM.
-/// </summary>
-public class ToolCall
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Arguments { get; set; } = "";
-}
-
-/// <summary>
 /// Result from a processor indicating the LLM wants to call tools.
 /// Processors return this instead of a plain string when tool_calls are present.
 /// </summary>

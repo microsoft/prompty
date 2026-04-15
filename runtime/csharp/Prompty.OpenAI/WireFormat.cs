@@ -43,7 +43,7 @@ public static class WireFormat
         };
     }
 
-    private static IEnumerable<ChatMessageContentPart> BuildContentParts(List<ContentPart> parts)
+    private static IEnumerable<ChatMessageContentPart> BuildContentParts(IList<ContentPart> parts)
     {
         foreach (var part in parts)
         {
