@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { messageToWire, buildChatArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
-import { Message, text } from "@prompty/core";
+import { Message, text, TextPart, ImagePart } from "@prompty/core";
 import { Prompty } from "@prompty/core";
 
 describe("messageToWire", () => {
   it("converts a simple text message", () => {
-    const msg = new Message("user", [{ kind: "text", value: "Hello" }]);
+    const msg = new Message({ role: "user", parts: [new TextPart({ value: "Hello" })] });
     const wire = messageToWire(msg);
     expect(wire).toEqual({ role: "user", content: "Hello" });
   });
 
   it("converts a multimodal message", () => {
-    const msg = new Message("user", [
-      { kind: "text", value: "Look" },
-      { kind: "image", source: "https://img.png" },
-    ]);
+    const msg = new Message({ role: "user", parts: [
+      new TextPart({ value: "Look" }),
+      new ImagePart({ source: "https://img.png" }),
+    ] });
     const wire = messageToWire(msg);
     expect(wire.role).toBe("user");
     expect(Array.isArray(wire.content)).toBe(true);
@@ -25,10 +25,10 @@ describe("messageToWire", () => {
   });
 
   it("includes metadata as top-level keys", () => {
-    const msg = new Message("tool", [text("result")], {
+    const msg = new Message({ role: "tool", parts: [text("result")], metadata: {
       tool_call_id: "call_123",
       name: "get_weather",
-    });
+    } });
     const wire = messageToWire(msg);
     expect(wire.tool_call_id).toBe("call_123");
     expect(wire.name).toBe("get_weather");
@@ -121,7 +121,7 @@ describe("buildChatArgs nested tool schemas", () => {
       ],
     });
 
-    const msgs = [new Message("user", [text("test")])];
+    const msgs = [new Message({ role: "user", parts: [text("test")] })];
     const args = buildChatArgs(agent, msgs);
     const tools = args.tools as Record<string, unknown>[];
     expect(tools).toHaveLength(1);
@@ -166,7 +166,7 @@ describe("buildChatArgs nested tool schemas", () => {
       ],
     });
 
-    const msgs = [new Message("user", [text("test")])];
+    const msgs = [new Message({ role: "user", parts: [text("test")] })];
     const args = buildChatArgs(agent, msgs);
     const tools = args.tools as Record<string, unknown>[];
     const func = (tools[0] as Record<string, unknown>).function as Record<string, unknown>;
@@ -210,7 +210,7 @@ describe("buildChatArgs nested tool schemas", () => {
       ],
     });
 
-    const msgs = [new Message("user", [text("test")])];
+    const msgs = [new Message({ role: "user", parts: [text("test")] })];
     const args = buildChatArgs(agent, msgs);
     const tools = args.tools as Record<string, unknown>[];
     const func = (tools[0] as Record<string, unknown>).function as Record<string, unknown>;
