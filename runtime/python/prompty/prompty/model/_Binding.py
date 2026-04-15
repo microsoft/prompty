@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class Binding:
     """Represents a binding between an input property and a tool parameter.
-
+    
     Attributes
     ----------
     name : str
@@ -40,11 +40,11 @@ class Binding:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         # handle alternate representations
         if isinstance(data, str):
             data = {"input": data}
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Binding: {data}")
 
@@ -59,6 +59,8 @@ class Binding:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Binding instance to a dictionary.
         Args:
@@ -70,6 +72,7 @@ class Binding:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -106,3 +109,5 @@ class Binding:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

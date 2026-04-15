@@ -12,9 +12,6 @@ namespace Prompty.Core;
 /// 
 /// Implementations MUST support conversion from a plain string to a ToolResult
 /// containing a single TextPart for backward compatibility.
-/// 
-/// Each language runtime SHOULD provide a static `fromText(string) -&gt; ToolResult`
-/// factory in its extension file.
 /// </summary>
 public partial class ToolResult
 {
@@ -226,6 +223,13 @@ public partial class ToolResult
 
         return Load(dict, context);
     }
+
+    #endregion
+
+    #region Helpers — implement these in a partial class extension
+
+    // The following helpers should be implemented in a separate partial class file:
+    // - text(): string — Concatenate all TextPart values joined by newline
 
     #endregion
 }

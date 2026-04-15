@@ -1,3 +1,5 @@
+
+
 import json
 
 import yaml
@@ -6,7 +8,7 @@ from prompty.model import Message
 
 
 def test_load_json_message():
-    json_data = r"""
+    json_data = r'''
     {
       "role": "user",
       "parts": [
@@ -19,15 +21,15 @@ def test_load_json_message():
         "source": "user-input"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Message.load(data)
     assert instance is not None
     assert instance.role == "user"
-
+    
 
 def test_load_yaml_message():
-    yaml_data = r"""
+    yaml_data = r'''
     role: user
     parts:
       - kind: text
@@ -35,16 +37,15 @@ def test_load_yaml_message():
     metadata:
       source: user-input
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Message.load(data)
     assert instance is not None
     assert instance.role == "user"
 
-
 def test_roundtrip_json_message():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "role": "user",
       "parts": [
@@ -57,7 +58,7 @@ def test_roundtrip_json_message():
         "source": "user-input"
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Message.load(original_data)
     saved_data = instance.save()
@@ -65,10 +66,9 @@ def test_roundtrip_json_message():
     assert reloaded is not None
     assert reloaded.role == "user"
 
-
 def test_to_json_message():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "role": "user",
       "parts": [
@@ -81,7 +81,7 @@ def test_to_json_message():
         "source": "user-input"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Message.load(data)
     json_output = instance.to_json()
@@ -89,10 +89,9 @@ def test_to_json_message():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_message():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "role": "user",
       "parts": [
@@ -105,10 +104,12 @@ def test_to_yaml_message():
         "source": "user-input"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Message.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+

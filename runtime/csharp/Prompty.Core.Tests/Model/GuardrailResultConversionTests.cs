@@ -120,4 +120,29 @@ reason: Content is safe
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void FactoryCreateRewrite()
+    {
+        var instance = GuardrailResult.CreateRewrite("test");
+        Assert.NotNull(instance);
+        Assert.True(instance.Allowed);
+    }
+
+    [Fact]
+    public void FactoryDeny()
+    {
+        var instance = GuardrailResult.Deny("test");
+        Assert.NotNull(instance);
+        Assert.False(instance.Allowed);
+    }
+
+    [Fact]
+    public void FactoryAllow()
+    {
+        var instance = GuardrailResult.Allow();
+        Assert.NotNull(instance);
+        Assert.True(instance.Allowed);
+    }
+
 }

@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class FormatConfig:
     """Template format definition
-
+    
     Attributes
     ----------
     kind : str
@@ -43,11 +43,11 @@ class FormatConfig:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         # handle alternate representations
         if isinstance(data, str):
             data = {"kind": data}
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FormatConfig: {data}")
 
@@ -64,6 +64,8 @@ class FormatConfig:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FormatConfig instance to a dictionary.
         Args:
@@ -75,6 +77,7 @@ class FormatConfig:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -113,3 +116,5 @@ class FormatConfig:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

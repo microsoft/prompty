@@ -11,9 +11,6 @@ import { ContentPart } from "./content-part";
  * Implementations MUST support conversion from a plain string to a ToolResult
  * containing a single TextPart for backward compatibility.
  *
- * Each language runtime SHOULD provide a static `fromText(string) -> ToolResult`
- * factory in its extension file.
- *
  */
 export class ToolResult {
   /**
@@ -171,6 +168,16 @@ export class ToolResult {
 
     return ToolResult.load(data as Record<string, unknown>, context);
   }
+
+  //#endregion
+
+  //#region Helpers — implement these in an extension file
+
+  /**
+   * Helper methods for ToolResult.
+   * These should be implemented as standalone functions in the runtime:
+   * - text(): string — Concatenate all TextPart values joined by newline
+   */
 
   //#endregion
 }

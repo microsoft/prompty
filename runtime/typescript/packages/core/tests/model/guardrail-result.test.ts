@@ -62,6 +62,29 @@ describe("GuardrailResult", () => {
     });
   });
 
+  describe("factory methods", () => {
+    it("should create instance via rewrite() factory", () => {
+      const instance = GuardrailResult.rewrite("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(GuardrailResult);
+      expect(instance.allowed).toBe(true);
+    });
+
+    it("should create instance via deny() factory", () => {
+      const instance = GuardrailResult.deny("test");
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(GuardrailResult);
+      expect(instance.allowed).toBe(false);
+    });
+
+    it("should create instance via allow() factory", () => {
+      const instance = GuardrailResult.allow();
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(GuardrailResult);
+      expect(instance.allowed).toBe(true);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
       const data: Record<string, unknown> = {};

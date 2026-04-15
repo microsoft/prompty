@@ -253,4 +253,11 @@ public partial class Message
     }
 
     #endregion
+
+    #region Helpers — implement these in a partial class extension
+
+    // The following helpers should be implemented in a separate partial class file:
+    // - text(): string — Concatenate all TextPart values joined by newline
+
+    #endregion
 }

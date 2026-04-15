@@ -8,8 +8,8 @@ namespace Prompty.Core;
 
 /// <summary>
 /// The approval mode for MCP server tools.
-/// When kind is &quot;specify&quot;, use alwaysRequireApprovalTools and neverRequireApprovalTools
-/// to control per-tool approval. For &quot;always&quot; and &quot;never&quot;, those fields are ignored.
+/// When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
+/// to control per-tool approval. For "always" and "never", those fields are ignored.
 /// </summary>
 public partial class McpApprovalMode
 {

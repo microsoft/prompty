@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// model discovery to report which models are available and their capabilities.
 /// 
 /// Not all providers return all fields — implementations SHOULD populate as
-/// many fields as the provider&#39;s API supports and MAY enrich sparse results
+/// many fields as the provider's API supports and MAY enrich sparse results
 /// from a built-in lookup table of known models.
 /// </summary>
 public partial class ModelInfo

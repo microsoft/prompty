@@ -13,9 +13,6 @@ import (
 //
 // Implementations MUST support conversion from a plain string to a ToolResult
 // containing a single TextPart for backward compatibility.
-//
-// Each language runtime SHOULD provide a static `fromText(string) -> ToolResult`
-// factory in its extension file.
 
 type ToolResult struct {
 	Parts []interface{} `json:"parts" yaml:"parts"`

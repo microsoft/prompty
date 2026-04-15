@@ -14,11 +14,11 @@ from ._context import LoadContext, SaveContext
 class ModelInfo:
     """Information about a model available from a provider. Used by provider-level
     model discovery to report which models are available and their capabilities.
-
+    
     Not all providers return all fields — implementations SHOULD populate as
     many fields as the provider's API supports and MAY enrich sparse results
     from a built-in lookup table of known models.
-
+    
     Attributes
     ----------
     id : str
@@ -60,7 +60,7 @@ class ModelInfo:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelInfo: {data}")
 
@@ -85,6 +85,8 @@ class ModelInfo:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelInfo instance to a dictionary.
         Args:
@@ -96,6 +98,7 @@ class ModelInfo:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -142,3 +145,5 @@ class ModelInfo:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

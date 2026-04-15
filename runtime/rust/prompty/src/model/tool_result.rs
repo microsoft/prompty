@@ -8,7 +8,7 @@ use super::content_part::ContentPart;
 
 
 
-/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings.  Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.  Each language runtime SHOULD provide a static `fromText(string) -> ToolResult` factory in its extension file.
+/// The result of a tool execution. Contains a list of content parts, enabling rich tool results (text, images, files, audio) rather than just strings.  Implementations MUST support conversion from a plain string to a ToolResult containing a single TextPart for backward compatibility.
 #[derive(Debug, Clone, Default)]
 pub struct ToolResult {
     /// The content parts of the tool result
@@ -83,6 +83,11 @@ impl ToolResult {
         serde_json::Value::Array(items.iter().map(|item| item.to_value(ctx)).collect())
 
     }
+}
+/// Helpers for [`ToolResult`]. Implement in a separate file.
+pub trait ToolResultHelpers {
+    /// Concatenate all TextPart values joined by newline
+    fn text(&self) -> String;
 }
 
 

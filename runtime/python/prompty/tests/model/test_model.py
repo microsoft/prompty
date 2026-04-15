@@ -1,3 +1,5 @@
+
+
 import json
 
 import yaml
@@ -6,7 +8,7 @@ from prompty.model import Model
 
 
 def test_load_json_model():
-    json_data = r"""
+    json_data = r'''
     {
       "id": "gpt-35-turbo",
       "provider": "foundry",
@@ -22,17 +24,17 @@ def test_load_json_model():
         "maxOutputTokens": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Model.load(data)
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
     assert instance.provider == "foundry"
     assert instance.api_type == "chat"
-
+    
 
 def test_load_yaml_model():
-    yaml_data = r"""
+    yaml_data = r'''
     id: gpt-35-turbo
     provider: foundry
     apiType: chat
@@ -45,7 +47,7 @@ def test_load_yaml_model():
       temperature: 0.7
       maxOutputTokens: 1000
     
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Model.load(data)
     assert instance is not None
@@ -53,10 +55,9 @@ def test_load_yaml_model():
     assert instance.provider == "foundry"
     assert instance.api_type == "chat"
 
-
 def test_roundtrip_json_model():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "gpt-35-turbo",
       "provider": "foundry",
@@ -72,7 +73,7 @@ def test_roundtrip_json_model():
         "maxOutputTokens": 1000
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Model.load(original_data)
     saved_data = instance.save()
@@ -82,10 +83,9 @@ def test_roundtrip_json_model():
     assert reloaded.provider == "foundry"
     assert reloaded.api_type == "chat"
 
-
 def test_to_json_model():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "gpt-35-turbo",
       "provider": "foundry",
@@ -101,7 +101,7 @@ def test_to_json_model():
         "maxOutputTokens": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Model.load(data)
     json_output = instance.to_json()
@@ -109,10 +109,9 @@ def test_to_json_model():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_model():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "gpt-35-turbo",
       "provider": "foundry",
@@ -128,7 +127,7 @@ def test_to_yaml_model():
         "maxOutputTokens": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Model.load(data)
     yaml_output = instance.to_yaml()
@@ -141,3 +140,5 @@ def test_load_model_from_str():
     instance = Model.load("example")
     assert instance is not None
     assert instance.id == "example"
+
+

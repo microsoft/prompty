@@ -15,13 +15,10 @@ from ._context import LoadContext, SaveContext
 class ToolResult:
     """The result of a tool execution. Contains a list of content parts, enabling
     rich tool results (text, images, files, audio) rather than just strings.
-
+    
     Implementations MUST support conversion from a plain string to a ToolResult
     containing a single TextPart for backward compatibility.
-
-    Each language runtime SHOULD provide a static `fromText(string) -> ToolResult`
-    factory in its extension file.
-
+    
     Attributes
     ----------
     parts : list[ContentPart]
@@ -45,7 +42,7 @@ class ToolResult:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolResult: {data}")
 
@@ -57,6 +54,7 @@ class ToolResult:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
 
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
@@ -81,6 +79,8 @@ class ToolResult:
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolResult instance to a dictionary.
         Args:
@@ -92,6 +92,7 @@ class ToolResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -126,3 +127,10 @@ class ToolResult:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+    # =========================================================================
+    # Helpers — implement these in an extension module
+    # =========================================================================
+    # The following helpers should be implemented as standalone functions:
+    # - text(instance) -> str: Concatenate all TextPart values joined by newline
+

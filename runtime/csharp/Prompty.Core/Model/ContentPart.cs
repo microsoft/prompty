@@ -7,7 +7,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// A part of a message&#39;s content. Content parts are discriminated on the `kind`
+/// A part of a message's content. Content parts are discriminated on the `kind`
 /// field and represent the different modalities that can appear in a message.
 /// </summary>
 public abstract partial class ContentPart

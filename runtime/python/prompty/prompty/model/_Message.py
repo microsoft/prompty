@@ -15,7 +15,7 @@ from ._context import LoadContext, SaveContext
 class Message:
     """A message in a conversation. Messages have a role and a list of content parts
     representing the different modalities of the message content.
-
+    
     Attributes
     ----------
     role : str
@@ -45,7 +45,7 @@ class Message:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Message: {data}")
 
@@ -61,6 +61,7 @@ class Message:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
 
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
@@ -85,6 +86,8 @@ class Message:
         # This type doesn't have a 'name' property, so always use array format
         return [item.save(context) for item in items]
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Message instance to a dictionary.
         Args:
@@ -96,6 +99,7 @@ class Message:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -134,3 +138,10 @@ class Message:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+    # =========================================================================
+    # Helpers — implement these in an extension module
+    # =========================================================================
+    # The following helpers should be implemented as standalone functions:
+    # - text(instance) -> str: Concatenate all TextPart values joined by newline
+

@@ -196,4 +196,14 @@ export class Message {
   }
 
   //#endregion
+
+  //#region Helpers — implement these in an extension file
+
+  /**
+   * Helper methods for Message.
+   * These should be implemented as standalone functions in the runtime:
+   * - text(): string — Concatenate all TextPart values joined by newline
+   */
+
+  //#endregion
 }
