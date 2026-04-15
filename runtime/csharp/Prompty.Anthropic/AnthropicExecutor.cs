@@ -303,7 +303,7 @@ public class AnthropicExecutor : IExecutor
     public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<string> toolResults,
+        List<ToolResult> toolResults,
         string? textContent = null)
     {
         var messages = new List<Message>();
@@ -342,14 +342,14 @@ public class AnthropicExecutor : IExecutor
             {
                 ["type"] = "tool_result",
                 ["tool_use_id"] = toolCalls[i].Id,
-                ["content"] = toolResults[i],
+                ["content"] = toolResults[i].Text,
             });
         }
 
         messages.Add(new Message
         {
             Role = Roles.User,
-            Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
+            Parts = toolResults.SelectMany(r => r.Parts).ToList(),
             Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });
 

@@ -116,7 +116,7 @@ public class ResponsesApiTests : IntegrationTestBase
             tools: [WeatherTool()]);
         agent.Instructions = "system:\nYou are a helpful assistant. Use tools when needed. Be brief.\nuser:\nWhat is the weather in Seattle?";
 
-        var toolFunctions = new Dictionary<string, Func<string, Task<string>>>
+        var toolFunctions = new Dictionary<string, Func<string, Task<ToolResult>>>
         {
             ["get_weather"] = GetWeatherAsync,
         };
@@ -132,3 +132,4 @@ public class ResponsesApiTests : IntegrationTestBase
             $"Expected weather info in response, got: {text}");
     }
 }
+

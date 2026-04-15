@@ -50,7 +50,7 @@ public interface IExecutor
     List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<string> toolResults,
+        List<ToolResult> toolResults,
         string? textContent = null);
 }
 

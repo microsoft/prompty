@@ -396,9 +396,9 @@ public class PipelineTests : IDisposable
 
         var agent = CreateAgent();
         agent.Tools = [new FunctionTool { Name = "get_weather", Kind = "function" }];
-        var tools = new Dictionary<string, Func<string, Task<string>>>
+        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
         {
-            ["get_weather"] = args => Task.FromResult("72°F and sunny")
+            ["get_weather"] = args => Task.FromResult<ToolResult>("72°F and sunny")
         };
 
         var result = await Pipeline.TurnAsync(agent, tools: tools);
@@ -604,14 +604,14 @@ internal class MockExecutor : IExecutor
     public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
         => Task.FromResult<object>("mock-response");
 
-    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
             new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -639,14 +639,14 @@ internal class ToolCallingExecutor : IExecutor
         return Task.FromResult<object>("final_response");
     }
 
-    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
             new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -674,3 +674,6 @@ internal class ToolCallingProcessor : IProcessor
         return Task.FromResult<object>("The weather is 72°F and sunny");
     }
 }
+
+
+

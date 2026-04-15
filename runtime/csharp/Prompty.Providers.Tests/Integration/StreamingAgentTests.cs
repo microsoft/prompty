@@ -34,7 +34,7 @@ public class StreamingAgentTests : IntegrationTestBase
             InvokerRegistry.RegisterProcessor("anthropic", new AnthropicProcessor());
     }
 
-    private static Dictionary<string, Func<string, Task<string>>> WeatherToolFunctions() =>
+    private static Dictionary<string, Func<string, Task<ToolResult>>> WeatherToolFunctions() =>
         new() { ["get_weather"] = GetWeatherAsync };
 
     private static Dictionary<string, object> StreamingMetadata() =>
@@ -184,3 +184,4 @@ public class StreamingAgentTests : IntegrationTestBase
         Assert.Contains("72", text, StringComparison.OrdinalIgnoreCase);
     }
 }
+

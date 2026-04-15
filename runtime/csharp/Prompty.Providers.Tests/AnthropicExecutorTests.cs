@@ -111,7 +111,7 @@ public class AnthropicExecutorTests
             new() { Id = "call_1", Name = "get_weather", Arguments = """{"city":"Seattle"}""" },
             new() { Id = "call_2", Name = "get_time", Arguments = """{"tz":"PST"}""" },
         };
-        var toolResults = new List<string> { "72°F", "3:00 PM" };
+        var toolResults = new List<ToolResult> { ToolResult.FromText("72°F"), ToolResult.FromText("3:00 PM") };
 
         var messages = executor.FormatToolMessages("raw", toolCalls, toolResults, "Let me check.");
 
@@ -147,7 +147,7 @@ public class AnthropicExecutorTests
         {
             new() { Id = "call_1", Name = "fn", Arguments = "{}" },
         };
-        var toolResults = new List<string> { "result" };
+        var toolResults = new List<ToolResult> { ToolResult.FromText("result") };
 
         var messages = executor.FormatToolMessages("raw", toolCalls, toolResults);
 

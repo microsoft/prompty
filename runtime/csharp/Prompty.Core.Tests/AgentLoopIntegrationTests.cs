@@ -74,7 +74,7 @@ file class MockExecutor : IExecutor
     public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
-        List<string> toolResults,
+        List<ToolResult> toolResults,
         string? textContent = null)
     {
         var msgs = new List<Message>();
@@ -91,7 +91,7 @@ file class MockExecutor : IExecutor
             msgs.Add(new Message
             {
                 Role = Roles.Tool,
-                Parts = [new TextPart { Value = toolResults[i] }],
+                Parts = [new TextPart { Value = toolResults[i].Text }],
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
@@ -356,12 +356,12 @@ public class AgentLoopIntegrationTests : IDisposable
         ];
 
         string? capturedArgs = null;
-        var tools = new Dictionary<string, Func<string, Task<string>>>
+        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
         {
             ["get_weather"] = args =>
             {
                 capturedArgs = args;
-                return Task.FromResult("72°F");
+                return Task.FromResult<ToolResult>("72°F");
             }
         };
 
@@ -400,13 +400,13 @@ public class AgentLoopIntegrationTests : IDisposable
             new FunctionTool { Name = "do_work", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<string>>>
+        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
         {
             ["do_work"] = _ =>
             {
                 // Cancel after the first tool execution
                 cts.Cancel();
-                return Task.FromResult("done");
+                return Task.FromResult<ToolResult>("done");
             }
         };
 
@@ -440,9 +440,9 @@ public class AgentLoopIntegrationTests : IDisposable
             new FunctionTool { Name = "repeat", Kind = "function" }
         ];
 
-        var tools = new Dictionary<string, Func<string, Task<string>>>
+        var tools = new Dictionary<string, Func<string, Task<ToolResult>>>
         {
-            ["repeat"] = _ => Task.FromResult("again")
+            ["repeat"] = _ => Task.FromResult<ToolResult>("again")
         };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -451,3 +451,6 @@ public class AgentLoopIntegrationTests : IDisposable
         Assert.Contains($"{maxIter}", ex.Message);
     }
 }
+
+
+

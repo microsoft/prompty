@@ -644,10 +644,10 @@ public class SpecVectorAgentTests : IDisposable
     /// Build tool function delegates from vector input and pre-built result queues.
     /// Handles "raises RuntimeError('...')" tool function descriptions.
     /// </summary>
-    private static Dictionary<string, Func<string, Task<string>>> BuildToolFunctions(
+    private static Dictionary<string, Func<string, Task<ToolResult>>> BuildToolFunctions(
         JsonElement input, Dictionary<string, Queue<string>> toolResultMap)
     {
-        var toolFunctions = new Dictionary<string, Func<string, Task<string>>>();
+        var toolFunctions = new Dictionary<string, Func<string, Task<ToolResult>>>();
 
         if (!input.TryGetProperty("tool_functions", out var toolFuncs))
             return toolFunctions;
@@ -663,7 +663,7 @@ public class SpecVectorAgentTests : IDisposable
                 var msg = desc.Contains('(')
                     ? desc.Split('(')[1].TrimEnd(')').Trim('\'', '"')
                     : desc;
-                toolFunctions[toolName] = _ => Task.FromResult($"Error: {msg}");
+                toolFunctions[toolName] = _ => Task.FromResult<ToolResult>($"Error: {msg}");
             }
             else
             {
@@ -673,10 +673,10 @@ public class SpecVectorAgentTests : IDisposable
                     {
                         if (queue.Count > 0)
                         {
-                            return Task.FromResult(queue.Dequeue());
+                            return Task.FromResult<ToolResult>(queue.Dequeue());
                         }
                     }
-                    return Task.FromResult("");
+                    return Task.FromResult<ToolResult>("");
                 };
             }
         }
@@ -718,15 +718,18 @@ public class SpecVectorAgentTests : IDisposable
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(fn(messages));
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<ToolResult> toolResults, string? textContent = null)
         {
             var messages = new List<Message>
             {
                 new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object?>() { ["tool_calls"] = toolCalls } },
             };
             for (var i = 0; i < toolCalls.Count; i++)
-                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i].Text }], Metadata = new Dictionary<string, object?>() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
             return messages;
         }
     }
 }
+
+
+
