@@ -23,7 +23,7 @@ arguments: "{\"city\": \"Paris\"}"
         Assert.NotNull(instance);
         Assert.Equal("call_abc123", instance.Id);
         Assert.Equal("get_weather", instance.Name);
-        Assert.Equal("{"city": "Paris"}", instance.Arguments);
+        Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), instance.Arguments);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ arguments: "{\"city\": \"Paris\"}"
         Assert.NotNull(instance);
         Assert.Equal("call_abc123", instance.Id);
         Assert.Equal("get_weather", instance.Name);
-        Assert.Equal("{"city": "Paris"}", instance.Arguments);
+        Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), instance.Arguments);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ arguments: "{\"city\": \"Paris\"}"
         Assert.NotNull(reloaded);
         Assert.Equal("call_abc123", reloaded.Id);
         Assert.Equal("get_weather", reloaded.Name);
-        Assert.Equal("{"city": "Paris"}", reloaded.Arguments);
+        Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), reloaded.Arguments);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ arguments: "{\"city\": \"Paris\"}"
         Assert.NotNull(reloaded);
         Assert.Equal("call_abc123", reloaded.Id);
         Assert.Equal("get_weather", reloaded.Name);
-        Assert.Equal("{"city": "Paris"}", reloaded.Arguments);
+        Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), reloaded.Arguments);
     }
 
     [Fact]

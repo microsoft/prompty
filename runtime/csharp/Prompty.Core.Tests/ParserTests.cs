@@ -157,7 +157,7 @@ public class PromptyChatParserTests
         var messages = await parser.ParseAsync(CreateAgent(), sanitized);
         Assert.Equal(2, messages.Count);
         // Nonce should NOT be in metadata
-        Assert.False(messages[0].Metadata.ContainsKey("nonce"));
+        Assert.False(messages[0].Metadata?.ContainsKey("nonce") ?? false);
     }
 
     // -----------------------------------------------------------------------

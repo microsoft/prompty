@@ -147,7 +147,7 @@ public class AnthropicExecutor : IExecutor
         // Handle tool results
         if (msg.Role == Roles.Tool)
         {
-            var toolCallId = msg.Metadata.TryGetValue("tool_call_id", out var id)
+            var toolCallId = msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id)
                 ? id?.ToString() ?? ""
                 : "";
             return new Dictionary<string, object?>

@@ -228,13 +228,18 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace:
       json: JSON.stringify(sample, null, 2).split('\n'),
       yaml: doc.toString({ indent: 2, lineWidth: 0 }).split('\n'),
       // get all scalars in the sample - using 'validations' (plural) for consistency across languages
-      validations: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => ({
-        key: renderName(key),
-        value: typeof sample[key] === 'boolean' ? (sample[key] ? "True" : "False") : sample[key],
-        startDelim: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '@"' : '"') : '',
-        endDelim: typeof sample[key] === 'string' ? (sample[key].includes('\n') ? '"' : '"') :
-          typeof sample[key] === 'number' && !Number.isInteger(sample[key]) ? 'f' : '',
-      })),
+      validations: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => {
+        const val = sample[key];
+        const needsVerbatim = typeof val === 'string' && (val.includes('\n') || val.includes('"'));
+        return {
+          key: renderName(key),
+          value: typeof val === 'boolean' ? (val ? "True" : "False") :
+            (needsVerbatim ? (val as string).replace(/"/g, '""') : val),
+          startDelim: typeof val === 'string' ? (needsVerbatim ? '@"' : '"') : '',
+          endDelim: typeof val === 'string' ? '"' :
+            typeof val === 'number' && !Number.isInteger(val) ? 'f' : '',
+        };
+      }),
     };
   });
 

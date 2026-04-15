@@ -29,7 +29,7 @@ public partial class Message
     /// <summary>
     /// The role of the message sender
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; set; } = "user";
 
     /// <summary>
     /// The content parts of the message

@@ -28,7 +28,7 @@ class Message:
 
     _shorthand_property: ClassVar[str | None] = None
 
-    role: str = field(default="")
+    role: str = field(default="user")
     parts: list[ContentPart] = field(default_factory=list)
     metadata: dict[str, Any] | None = None
 

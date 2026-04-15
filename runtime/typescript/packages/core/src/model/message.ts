@@ -18,7 +18,7 @@ export class Message {
   /**
    * The role of the message sender
    */
-  role: string = "";
+  role: string = "user";
 
   /**
    * The content parts of the message
@@ -34,7 +34,7 @@ export class Message {
    * Initializes a new instance of Message.
    */
   constructor(init?: Partial<Message>) {
-    this.role = init?.role ?? "";
+    this.role = init?.role ?? "user";
 
     this.parts = init?.parts ?? [];
 

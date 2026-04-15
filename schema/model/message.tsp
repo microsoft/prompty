@@ -95,7 +95,7 @@ model AudioPart extends ContentPart {
 model Message {
   @doc("The role of the message sender")
   @sample(#{ role: "user" })
-  role: Role;
+  role: Role = "user";
 
   @doc("The content parts of the message")
   @sample(#{ parts: #[#{ kind: "text", value: "Hello!" }] })

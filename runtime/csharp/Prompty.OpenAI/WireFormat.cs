@@ -37,7 +37,7 @@ public static class WireFormat
             },
             Roles.Assistant => BuildAssistantMessage(msg),
             Roles.Tool => new ToolChatMessage(
-                msg.Metadata.TryGetValue("tool_call_id", out var id) ? id?.ToString() ?? "" : "",
+                msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id) ? id?.ToString() ?? "" : "",
                 msg.Text),
             _ => new UserChatMessage(msg.Text),
         };
@@ -71,7 +71,7 @@ public static class WireFormat
         var assistant = new AssistantChatMessage(msg.Text);
 
         // Attach tool calls from metadata if present
-        if (msg.Metadata.TryGetValue("tool_calls", out var tcObj) && tcObj is List<ToolCall> toolCalls)
+        if (msg.Metadata is not null && msg.Metadata.TryGetValue("tool_calls", out var tcObj) && tcObj is List<ToolCall> toolCalls)
         {
             foreach (var tc in toolCalls)
             {
@@ -251,11 +251,11 @@ public static class WireFormat
     public static ResponseItem? MessageToResponsesInput(Message msg)
     {
         // Pass through function call items stored in metadata
-        if (msg.Metadata.TryGetValue("responses_function_call", out var fcObj) && fcObj is ResponseItem fcItem)
+        if (msg.Metadata is not null && msg.Metadata.TryGetValue("responses_function_call", out var fcObj) && fcObj is ResponseItem fcItem)
             return fcItem;
 
         // Tool result → function_call_output
-        if (msg.Role == Roles.Tool && msg.Metadata.TryGetValue("tool_call_id", out var tcId))
+        if (msg.Role == Roles.Tool && msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var tcId))
         {
             return ResponseItem.CreateFunctionCallOutputItem(
                 tcId?.ToString() ?? "",
