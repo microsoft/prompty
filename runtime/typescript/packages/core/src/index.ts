@@ -22,6 +22,7 @@ export {
   AudioPart,
   type Role,
   ToolCall,
+  ToolResult,
   Message,
   ThreadMarker,
   PromptyStream,
@@ -31,6 +32,10 @@ export {
   textMessage,
   dictToMessage,
   dictContentToPart,
+  messageText,
+  messageToTextContent,
+  toolResultText,
+  textToolResult,
 
   // Interfaces
   type Renderer,

@@ -10,6 +10,7 @@
 
 import type { Prompty } from "../model/prompty.js";
 import type { Message } from "./types.js";
+import type { ToolResult } from "../model/tool-result.js";
 
 // ---------------------------------------------------------------------------
 // Renderer
@@ -62,12 +63,12 @@ export interface Executor {
   /**
    * Format tool call results into provider-specific message format.
    * Called after tool dispatch; the pipeline provides extracted tool calls
-   * and their string results.
+   * and their ToolResult results.
    */
   formatToolMessages(
     rawResponse: unknown,
     toolCalls: { id: string; name: string; arguments: string }[],
-    toolResults: string[],
+    toolResults: ToolResult[],
     textContent?: string,
   ): Message[];
 }

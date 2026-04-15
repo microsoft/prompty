@@ -11,7 +11,7 @@
  */
 
 import type { Prompty } from "@prompty/core";
-import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPart } from "@prompty/core";
+import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPart, messageToTextContent, messageText } from "@prompty/core";
 
 // ---------------------------------------------------------------------------
 // Message conversion
@@ -23,31 +23,32 @@ import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPar
  */
 export function messageToWire(msg: Message): Record<string, unknown> {
   const wire: Record<string, unknown> = { role: msg.role };
+  const meta = msg.metadata ?? {};
 
   // Batched tool results → single user message with all tool_result blocks
-  if (msg.metadata.tool_results && Array.isArray(msg.metadata.tool_results)) {
+  if (meta.tool_results && Array.isArray(meta.tool_results)) {
     wire.role = "user";
-    wire.content = msg.metadata.tool_results;
+    wire.content = meta.tool_results;
     return wire;
   }
 
   // Legacy single tool result messages (backward compat)
-  if (msg.metadata.tool_use_id || msg.metadata.tool_call_id) {
-    const toolUseId = (msg.metadata.tool_use_id ?? msg.metadata.tool_call_id) as string;
+  if (meta.tool_use_id || meta.tool_call_id) {
+    const toolUseId = (meta.tool_use_id ?? meta.tool_call_id) as string;
     wire.role = "user";
     wire.content = [
       {
         type: "tool_result",
         tool_use_id: toolUseId,
-        content: msg.toTextContent(),
+        content: messageToTextContent(msg),
       },
     ];
     return wire;
   }
 
   // Assistant messages with raw content blocks (tool_use) — preserve them
-  if (msg.role === "assistant" && msg.metadata.content && Array.isArray(msg.metadata.content)) {
-    wire.content = msg.metadata.content;
+  if (msg.role === "assistant" && meta.content && Array.isArray(meta.content)) {
+    wire.content = meta.content;
     return wire;
   }
 
@@ -101,6 +102,8 @@ function partToWire(part: ContentPart): Record<string, unknown> {
       return { type: "text", text: `[file: ${(part as FilePart).source}]` };
     case "audio":
       return { type: "text", text: `[audio: ${(part as AudioPart).source}]` };
+    default:
+      return { type: "text", text: String(part) };
   }
 }
 
@@ -125,7 +128,7 @@ export function buildChatArgs(
 
   for (const msg of messages) {
     if (msg.role === "system") {
-      systemParts.push(msg.text);
+      systemParts.push(messageText(msg));
     } else {
       conversationMessages.push(messageToWire(msg));
     }

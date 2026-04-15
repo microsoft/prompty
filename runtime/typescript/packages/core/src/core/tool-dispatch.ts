@@ -23,6 +23,8 @@
 
 import { dirname, resolve } from "node:path";
 import type { Prompty } from "../model/prompty.js";
+import { ToolResult } from "../model/tool-result.js";
+import { textToolResult } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // ToolHandler interface
@@ -40,7 +42,7 @@ export interface ToolHandler {
     args: Record<string, unknown>,
     agent: Prompty,
     parentInputs: Record<string, unknown>,
-  ): Promise<string>;
+  ): Promise<ToolResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +151,7 @@ class FunctionToolHandler implements ToolHandler {
     _args: Record<string, unknown>,
     _agent: Prompty,
     _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     const name = (tool.name as string) ?? "unknown";
     throw new Error(
       `Function tool '${name}' declared but no callable provided. ` +
@@ -160,10 +162,7 @@ class FunctionToolHandler implements ToolHandler {
 
 /**
  * Handles `kind: "prompty"` tools by loading a child `.prompty` file
- * relative to the parent agent and executing it.
- *
- * - `mode === "single"` (default): `prepare()` → `run()`
- * - `mode === "agentic"`: `turn()`
+ * relative to the parent agent and executing it via single-shot invoke.
  */
 class PromptyToolHandler implements ToolHandler {
   async executeTool(
@@ -171,14 +170,14 @@ class PromptyToolHandler implements ToolHandler {
     args: Record<string, unknown>,
     agent: Prompty,
     _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     // Dynamic imports to break circular dependency with pipeline.ts
     const { load } = await import("./loader.js");
-    const { prepare, run, turn } = await import("./pipeline.js");
+    const { prepare, run } = await import("./pipeline.js");
 
     const parentPath = (agent.metadata ?? {}).__source_path as string | undefined;
     if (!parentPath) {
-      return `Error: cannot resolve PromptyTool '${tool.name}': parent has no __source_path`;
+      return textToolResult(`Error: cannot resolve PromptyTool '${tool.name}': parent has no __source_path`);
     }
 
     const childPath = resolve(dirname(parentPath), tool.path as string);
@@ -189,7 +188,7 @@ class PromptyToolHandler implements ToolHandler {
     const visited = new Set([...stack.map((p) => resolve(p)), resolve(parentPath)]);
     if (visited.has(normalizedChild)) {
       const chain = [...stack, parentPath, childPath].join(" → ");
-      return `Error executing PromptyTool '${tool.name}': circular reference detected: ${chain}`;
+      return textToolResult(`Error executing PromptyTool '${tool.name}': circular reference detected: ${chain}`);
     }
 
     try {
@@ -198,18 +197,13 @@ class PromptyToolHandler implements ToolHandler {
       if (!child.metadata) child.metadata = {};
       child.metadata.__prompty_tool_stack = [...stack, parentPath];
 
-      const mode = (tool.mode as string) ?? "single";
-
-      if (mode === "agentic") {
-        const result = await turn(child, args);
-        return typeof result === "string" ? result : JSON.stringify(result);
-      } else {
-        const messages = await prepare(child, args);
-        const result = await run(child, messages);
-        return typeof result === "string" ? result : JSON.stringify(result);
-      }
+      // Always single-shot: prepare + run
+      const messages = await prepare(child, args);
+      const result = await run(child, messages);
+      const text = typeof result === "string" ? result : JSON.stringify(result);
+      return textToolResult(text);
     } catch (err) {
-      return `Error executing PromptyTool '${tool.name}': ${err instanceof Error ? err.message : String(err)}`;
+      return textToolResult(`Error executing PromptyTool '${tool.name}': ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }
@@ -224,7 +218,7 @@ class McpToolHandler implements ToolHandler {
     _args: Record<string, unknown>,
     _agent: Prompty,
     _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     throw new Error("MCP tool dispatch is not yet implemented");
   }
 }
@@ -239,7 +233,7 @@ class OpenApiToolHandler implements ToolHandler {
     _args: Record<string, unknown>,
     _agent: Prompty,
     _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     throw new Error("OpenAPI tool dispatch is not yet implemented");
   }
 }
@@ -254,7 +248,7 @@ class CustomToolHandler implements ToolHandler {
     _args: Record<string, unknown>,
     _agent: Prompty,
     _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     throw new Error("Custom tool dispatch is not yet implemented");
   }
 }
@@ -379,27 +373,33 @@ export async function dispatchTool(
   userTools: Record<string, (...args: unknown[]) => unknown>,
   agent: Prompty,
   parentInputs: Record<string, unknown>,
-): Promise<string> {
+): Promise<ToolResult> {
+  const toToolResult = (value: unknown): ToolResult => {
+    if (value instanceof ToolResult) return value;
+    const text = typeof value === "string" ? value : JSON.stringify(value);
+    return textToolResult(text);
+  };
+
   try {
     // 1. Check user-supplied tool functions first (per-call override)
     const userFn = userTools[toolName];
     if (userFn) {
       const result = await userFn(args);
-      return typeof result === "string" ? result : JSON.stringify(result);
+      return toToolResult(result);
     }
 
     // 2. Check global name registry (spec §11.2 Layer 1)
     const registeredFn = getTool(toolName);
     if (registeredFn) {
       const result = await registeredFn(args);
-      return typeof result === "string" ? result : JSON.stringify(result);
+      return toToolResult(result);
     }
 
     // 3. Look up declarative tool on agent.tools by name → kind handler (Layer 2)
     const tool = agent.tools?.find((t) => t.name === toolName);
     if (!tool) {
       const available = Object.keys(userTools).sort().join(", ") || "(none)";
-      return `Error: tool "${toolName}" not found in userTools or agent.tools. Available user tools: ${available}`;
+      return textToolResult(`Error: tool "${toolName}" not found in userTools or agent.tools. Available user tools: ${available}`);
     }
 
     const kind = tool.kind || "*";
@@ -411,17 +411,17 @@ export async function dispatchTool(
       try {
         handler = getToolHandler("*");
       } catch {
-        return `Error: no handler registered for tool kind '${kind}' (tool '${toolName}')`;
+        return textToolResult(`Error: no handler registered for tool kind '${kind}' (tool '${toolName}')`);
       }
     }
-    return await handler.executeTool(
+    return toToolResult(await handler.executeTool(
       tool as unknown as Record<string, unknown>,
       args,
       agent,
       parentInputs,
-    );
+    ));
   } catch (err) {
-    return `Error: ${err instanceof Error ? err.message : String(err)}`;
+    return textToolResult(`Error: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

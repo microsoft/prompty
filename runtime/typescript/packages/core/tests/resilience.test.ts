@@ -13,7 +13,9 @@ import {
   registerExecutor,
   registerProcessor,
 } from "../src/core/registry.js";
-import { Message, text } from "../src/core/types.js";
+import { Message, text, messageText } from "../src/core/types.js";
+import { ToolResult } from "../src/model/tool-result.js";
+import { toolResultText } from "../src/core/types.js";
 import { Prompty } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 
@@ -202,7 +204,7 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: string[],
+        toolResults: ToolResult[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
@@ -211,7 +213,7 @@ describe("LLM Call Retry (§9.10)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -238,7 +240,7 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: string[],
+        toolResults: ToolResult[],
         textContent = "",
       ): Message[] {
         return [];
@@ -291,7 +293,7 @@ describe("LLM Call Retry (§9.10)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: string[],
+        toolResults: ToolResult[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
@@ -300,7 +302,7 @@ describe("LLM Call Retry (§9.10)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -415,7 +417,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: string[],
+        toolResults: ToolResult[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
@@ -424,7 +426,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -484,13 +486,13 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         // The tool result with the error message gets sent back to LLM
         const lastMsg = messages[messages.length - 1];
         expect(lastMsg.role).toBe("tool");
-        expect(lastMsg.text).toContain("Error");
+        expect(messageText(lastMsg)).toContain("Error");
         return { choices: [{ message: { role: "assistant", content: "Handled error" } }] };
       },
       formatToolMessages(
         _rawResponse: unknown,
         toolCalls: { id: string; name: string; arguments: string }[],
-        toolResults: string[],
+        toolResults: ToolResult[],
         textContent = "",
       ): Message[] {
         const messages: Message[] = [];
@@ -499,7 +501,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResultText(toolResults[i]))], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },

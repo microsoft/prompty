@@ -3,7 +3,7 @@
  * @module
  */
 
-import { Message, TextPart } from "./types.js";
+import { Message, TextPart, messageText } from "./types.js";
 
 /**
  * Estimate the character cost of a message list.
@@ -39,7 +39,7 @@ function truncate(text: string, maxLen = 200): string {
 export function summarizeDropped(messages: Message[]): string {
   const lines: string[] = [];
   for (const msg of messages) {
-    const msgText = msg.text.trim();
+    const msgText = messageText(msg).trim();
     if (msg.role === "user" && msgText) {
       lines.push(`User asked: ${truncate(msgText)}`);
     } else if (msg.role === "assistant") {
@@ -75,7 +75,7 @@ export function summarizeDropped(messages: Message[]): string {
 export function formatDroppedMessages(messages: Message[]): string {
   const lines: string[] = [];
   for (const msg of messages) {
-    const msgText = msg.text.trim();
+    const msgText = messageText(msg).trim();
     if (msgText) {
       lines.push(`[${msg.role}]: ${msgText}`);
     }

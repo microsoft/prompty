@@ -8,6 +8,8 @@ import {
   textMessage,
   dictToMessage,
   dictContentToPart,
+  messageText,
+  messageToTextContent,
   RICH_KINDS,
   ROLES,
 } from "../src/core/types.js";
@@ -16,7 +18,7 @@ describe("Message", () => {
   it("creates a message with text parts", () => {
     const msg = new Message({ role: "user", parts: [new TextPart({ value: "Hello" })] });
     expect(msg.role).toBe("user");
-    expect(msg.text).toBe("Hello");
+    expect(messageText(msg)).toBe("Hello");
     expect(msg.parts).toHaveLength(1);
   });
 
@@ -28,15 +30,15 @@ describe("Message", () => {
         new TextPart({ value: "world" }),
       ],
     });
-    expect(msg.text).toBe("Hello world");
+    expect(messageText(msg)).toBe("Hello world");
   });
 
-  it("returns string for single text part in toTextContent", () => {
+  it("returns string for single text part in messageToTextContent", () => {
     const msg = new Message({ role: "user", parts: [new TextPart({ value: "Hello" })] });
-    expect(msg.toTextContent()).toBe("Hello");
+    expect(messageToTextContent(msg)).toBe("Hello");
   });
 
-  it("returns array for multimodal content in toTextContent", () => {
+  it("returns array for multimodal content in messageToTextContent", () => {
     const msg = new Message({
       role: "user",
       parts: [
@@ -44,7 +46,7 @@ describe("Message", () => {
         new ImagePart({ source: "https://example.com/img.png" }),
       ],
     });
-    const content = msg.toTextContent();
+    const content = messageToTextContent(msg);
     expect(Array.isArray(content)).toBe(true);
     expect(content).toHaveLength(2);
   });
@@ -74,7 +76,7 @@ describe("textMessage helper", () => {
   it("creates a Message with one text part", () => {
     const msg = textMessage("user", "Hello");
     expect(msg.role).toBe("user");
-    expect(msg.text).toBe("Hello");
+    expect(messageText(msg)).toBe("Hello");
     expect(msg.parts).toHaveLength(1);
   });
 });
@@ -83,7 +85,7 @@ describe("dictToMessage", () => {
   it("converts a simple dict", () => {
     const msg = dictToMessage({ role: "user", content: "Hi" });
     expect(msg.role).toBe("user");
-    expect(msg.text).toBe("Hi");
+    expect(messageText(msg)).toBe("Hi");
   });
 
   it("preserves metadata", () => {

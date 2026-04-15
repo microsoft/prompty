@@ -11,7 +11,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Prompty } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
+import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text, ToolResult, toolResultText } from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
@@ -90,7 +90,7 @@ export class AnthropicExecutor implements Executor {
   formatToolMessages(
     _rawResponse: unknown,
     toolCalls: { id: string; name: string; arguments: string }[],
-    toolResults: string[],
+    toolResults: ToolResult[],
     textContent = "",
   ): Message[] {
     const messages: Message[] = [];
@@ -114,7 +114,7 @@ export class AnthropicExecutor implements Executor {
     const toolResultBlocks = toolCalls.map((tc, i) => ({
       type: "tool_result",
       tool_use_id: tc.id,
-      content: toolResults[i],
+      content: toolResultText(toolResults[i]),
     }));
     messages.push(new Message({ role: "user", parts: [], metadata: { tool_results: toolResultBlocks } }));
 

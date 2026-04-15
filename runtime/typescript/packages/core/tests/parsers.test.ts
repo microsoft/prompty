@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
 import { Prompty } from "@prompty/core";
+import { messageText } from "../src/core/types.js";
 
 const parser = new PromptyChatParser();
 const agent = new Prompty({ name: "test", model: "gpt-4o" });
@@ -16,16 +17,16 @@ Hello!`;
     const messages = await parser.parse(agent, rendered);
     expect(messages).toHaveLength(2);
     expect(messages[0].role).toBe("system");
-    expect(messages[0].text).toContain("You are a helpful assistant");
+    expect(messageText(messages[0])).toContain("You are a helpful assistant");
     expect(messages[1].role).toBe("user");
-    expect(messages[1].text).toBe("Hello!");
+    expect(messageText(messages[1])).toBe("Hello!");
   });
 
   it("handles text without role markers as system", async () => {
     const messages = await parser.parse(agent, "Just some text");
     expect(messages).toHaveLength(1);
     expect(messages[0].role).toBe("system");
-    expect(messages[0].text).toBe("Just some text");
+    expect(messageText(messages[0])).toBe("Just some text");
   });
 
   it("parses multiple roles", async () => {
@@ -67,7 +68,7 @@ Look at this ![photo](https://example.com/img.png)`;
     expect(messages).toHaveLength(1);
     expect(messages[0].parts).toHaveLength(1);
     expect(messages[0].parts[0].kind).toBe("text");
-    expect(messages[0].text).toContain("![photo](https://example.com/img.png)");
+    expect(messageText(messages[0])).toContain("![photo](https://example.com/img.png)");
   });
 
   it("implements preRender for strict mode", () => {

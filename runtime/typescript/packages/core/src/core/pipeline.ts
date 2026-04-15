@@ -35,10 +35,14 @@ import { Prompty } from "../model/prompty.js";
 import {
   type ToolCall,
   Message,
+  ToolResult,
   TextPart,
   RICH_KINDS,
   dictToMessage,
   text,
+  messageText,
+  toolResultText,
+  textToolResult,
 } from "./types.js";
 import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
@@ -211,7 +215,7 @@ function serializeAgent(agent: Prompty): Record<string, unknown> {
 function serializeMessages(messages: Message[]): unknown[] {
   return messages.map(m => ({
     role: m.role,
-    content: m.text,
+    content: messageText(m),
   }));
 }
 
@@ -1197,7 +1201,7 @@ async function dispatchOneToolWithExtensions(
   agent: Prompty,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
-): Promise<string> {
+): Promise<ToolResult> {
   const { onEvent, signal, guardrails } = ext;
 
   // §13.2 — Check cancellation before each tool
@@ -1218,7 +1222,7 @@ async function dispatchOneToolWithExtensions(
     if (!gr.allowed) {
       const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
       emitEvent(onEvent, "tool_result", { name: tc.name, result: deniedMsg });
-      return deniedMsg;
+      return textToolResult(deniedMsg);
     }
     if (gr.rewrite !== undefined) {
       tc = { ...tc, arguments: typeof gr.rewrite === "string" ? gr.rewrite : JSON.stringify(gr.rewrite) };
@@ -1226,15 +1230,15 @@ async function dispatchOneToolWithExtensions(
   }
 
   // Execute tool
-  let result: string;
+  let result: ToolResult;
   let parsedArgs: unknown;
   try {
     // §9.8 — Resilient JSON parsing for tool arguments
     parsedArgs = resilientJsonParse(tc.arguments);
     if (parsedArgs === null) {
-      result = `Error: Tool '${tc.name}' received unparseable arguments`;
+      result = textToolResult(`Error: Tool '${tc.name}' received unparseable arguments`);
       emitEvent(onEvent, "error", { tool: tc.name, error: "Unparseable tool arguments" });
-      emitEvent(onEvent, "tool_result", { name: tc.name, result });
+      emitEvent(onEvent, "tool_result", { name: tc.name, result: toolResultText(result) });
       return result;
     }
     if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
@@ -1245,24 +1249,25 @@ async function dispatchOneToolWithExtensions(
       toolEmit("description", `Execute tool: ${tc.name}`);
       toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
       const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs);
-      toolEmit("result", r);
+      toolEmit("result", toolResultText(r));
       return r;
-    }) as string;
+    }) as ToolResult;
   } catch (err) {
     // Re-throw cancellation errors
     if (err instanceof CancelledError) throw err;
     const errorMsg = err instanceof Error ? err.message : String(err);
     // §9.9 — Emit error event on tool execution failure
     emitEvent(onEvent, "error", { tool: tc.name, error: errorMsg });
-    result = `Error: Tool '${tc.name}' failed: ${errorMsg}`;
+    result = textToolResult(`Error: Tool '${tc.name}' failed: ${errorMsg}`);
   }
 
   // §13.1 — Emit tool_result
-  emitEvent(onEvent, "tool_result", { name: tc.name, result });
+  emitEvent(onEvent, "tool_result", { name: tc.name, result: toolResultText(result) });
 
   // §9.9 — Emit error event when tool result indicates failure
-  if (result.startsWith("Error:")) {
-    emitEvent(onEvent, "error", { tool: tc.name, error: result });
+  const resultStr = toolResultText(result);
+  if (resultStr.startsWith("Error:")) {
+    emitEvent(onEvent, "error", { tool: tc.name, error: resultStr });
   }
   return result;
 }
@@ -1276,7 +1281,7 @@ async function dispatchToolsWithExtensions(
   agent: Prompty,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
-): Promise<string[]> {
+): Promise<ToolResult[]> {
   if (ext.parallel && toolCalls.length > 1) {
     // §13.6 — Parallel tool execution via Promise.all
     return Promise.all(
@@ -1285,7 +1290,7 @@ async function dispatchToolsWithExtensions(
   }
 
   // Sequential execution
-  const results: string[] = [];
+  const results: ToolResult[] = [];
   for (const tc of toolCalls) {
     results.push(await dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext));
   }
@@ -1309,7 +1314,7 @@ async function buildToolResultMessagesWithExtensions(
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResultText(toolResults[i]) })),
     });
   }
 
@@ -1336,7 +1341,7 @@ async function buildToolMessagesFromCallsWithExtensions(
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResultText(toolResults[i]) })),
     });
   }
 

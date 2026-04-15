@@ -4,7 +4,7 @@ import { checkCancellation, CancelledError } from "../src/core/cancellation.js";
 import { estimateChars, summarizeDropped, trimToContextWindow } from "../src/core/context.js";
 import { Guardrails, GuardrailError, GuardrailResult } from "../src/core/guardrails.js";
 import { Steering } from "../src/core/steering.js";
-import { Message, text, ImagePart } from "../src/core/types.js";
+import { Message, text, ImagePart, messageText } from "../src/core/types.js";
 import { turn } from "../src/core/pipeline.js";
 import {
   registerRenderer,
@@ -196,7 +196,7 @@ describe("Guardrails", () => {
   it("checkInput calls input hook and returns result", () => {
     const g = new Guardrails({
       input: (msgs) => {
-        if (msgs.some((m) => m.text.includes("bad"))) {
+        if (msgs.some((m) => messageText(m).includes("bad"))) {
           return GuardrailResult.deny("bad input");
         }
         return GuardrailResult.allow();
@@ -211,7 +211,7 @@ describe("Guardrails", () => {
   it("checkOutput calls output hook and returns result", () => {
     const g = new Guardrails({
       output: (msg) => {
-        if (msg.text.includes("secret")) {
+        if (messageText(msg).includes("secret")) {
           return GuardrailResult.deny("leaked secret");
         }
         return GuardrailResult.allow();
@@ -262,7 +262,7 @@ describe("Steering", () => {
     expect(drained).toHaveLength(1);
     expect(drained[0]).toBeInstanceOf(Message);
     expect(drained[0].role).toBe("user");
-    expect(drained[0].text).toBe("Hello agent");
+    expect(messageText(drained[0])).toBe("Hello agent");
   });
 
   it("drain empties the queue", () => {
@@ -292,9 +292,9 @@ describe("Steering", () => {
     steering.send("third");
     const drained = steering.drain();
     expect(drained).toHaveLength(3);
-    expect(drained[0].text).toBe("first");
-    expect(drained[1].text).toBe("second");
-    expect(drained[2].text).toBe("third");
+    expect(messageText(drained[0])).toBe("first");
+    expect(messageText(drained[1])).toBe("second");
+    expect(messageText(drained[2])).toBe("third");
   });
 });
 
@@ -450,7 +450,7 @@ describe("turn integration", () => {
 
     // The prepared message is "Hello Bob" from template, then steering appends
     expect(capturedMessages.length).toBeGreaterThanOrEqual(2);
-    const allText = capturedMessages.map((m) => m.text).join(" | ");
+    const allText = capturedMessages.map((m) => messageText(m)).join(" | ");
     expect(allText).toContain("Extra context from steering");
   });
 
@@ -488,7 +488,7 @@ describe("turn integration", () => {
     expect(capturedMessages[0].role).toBe("system");
     // Total characters should be reduced
     const totalChars = capturedMessages.reduce(
-      (sum, m) => sum + m.text.length,
+      (sum, m) => sum + messageText(m).length,
       0,
     );
     expect(totalChars).toBeLessThan(8000 + 14);
@@ -505,14 +505,14 @@ describe("turn integration", () => {
     await turn(agent, { name: "Carol" }, { guardrails });
 
     expect(capturedMessages).toHaveLength(1);
-    expect(capturedMessages[0].text).toBe("Rewritten input");
+    expect(messageText(capturedMessages[0])).toBe("Rewritten input");
   });
 
   // ---- §13.4 Output guardrail: denial on final response ----
   it("output guardrail denies final response", async () => {
     const guardrails = new Guardrails({
       output: (msg) => {
-        if (msg.text.includes("42")) {
+        if (messageText(msg).includes("42")) {
           return GuardrailResult.deny("forbidden number");
         }
         return GuardrailResult.allow();

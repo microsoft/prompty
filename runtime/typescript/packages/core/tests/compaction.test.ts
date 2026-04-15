@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Message, text } from "../src/core/types.js";
+import { Message, text, messageText } from "../src/core/types.js";
 import { formatDroppedMessages, trimToContextWindow } from "../src/core/context.js";
 import { turn } from "../src/core/pipeline.js";
 import { emitEvent, type AgentEventType, type EventCallback } from "../src/core/agent-events.js";
@@ -161,10 +161,10 @@ describe("Context Compaction", () => {
     expect(compactionFn).toHaveBeenCalled();
     // The summary message in capturedMessages should contain our custom summary
     const summaryMsg = capturedMessages.find(
-      (m) => m.role === "user" && m.text.includes("[Context summary:"),
+      (m) => m.role === "user" && messageText(m).includes("[Context summary:"),
     );
     expect(summaryMsg).toBeDefined();
-    expect(summaryMsg!.text).toContain("LLM-quality summary of prior conversation");
+    expect(messageText(summaryMsg!)).toContain("LLM-quality summary of prior conversation");
   });
 
   it("async function compaction works", async () => {
@@ -192,10 +192,10 @@ describe("Context Compaction", () => {
 
     expect(compactionFn).toHaveBeenCalled();
     const summaryMsg = capturedMessages.find(
-      (m) => m.role === "user" && m.text.includes("[Context summary:"),
+      (m) => m.role === "user" && messageText(m).includes("[Context summary:"),
     );
     expect(summaryMsg).toBeDefined();
-    expect(summaryMsg!.text).toContain("Async compacted summary");
+    expect(messageText(summaryMsg!)).toContain("Async compacted summary");
   });
 
   it("compaction failure preserves default summary", async () => {
@@ -227,11 +227,11 @@ describe("Context Compaction", () => {
 
     // Default summary should still be present (not replaced)
     const summaryMsg = capturedMessages.find(
-      (m) => m.role === "user" && m.text.includes("[Context summary:"),
+      (m) => m.role === "user" && messageText(m).includes("[Context summary:"),
     );
     expect(summaryMsg).toBeDefined();
     // Should NOT contain our custom text since it failed
-    expect(summaryMsg!.text).not.toContain("Compaction service down");
+    expect(messageText(summaryMsg!)).not.toContain("Compaction service down");
 
     // compaction_failed event should have been emitted
     const failedEvent = events.find((e) => e.type === "compaction_failed");
@@ -296,7 +296,7 @@ describe("Context Compaction", () => {
 
     // Default summarizeDropped summary should be present
     const summaryMsg = capturedMessages.find(
-      (m) => m.role === "user" && m.text.includes("[Context summary:"),
+      (m) => m.role === "user" && messageText(m).includes("[Context summary:"),
     );
     expect(summaryMsg).toBeDefined();
 

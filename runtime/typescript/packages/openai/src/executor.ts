@@ -12,6 +12,7 @@ import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } f
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
+import { ToolResult, TextPart, ContentPart, ImagePart } from "@prompty/core";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
@@ -117,7 +118,7 @@ export class OpenAIExecutor implements Executor {
   formatToolMessages(
     rawResponse: unknown,
     toolCalls: { id: string; name: string; arguments: string }[],
-    toolResults: string[],
+    toolResults: ToolResult[],
     textContent = "",
   ): Message[] {
     const messages: Message[] = [];
@@ -142,7 +143,7 @@ export class OpenAIExecutor implements Executor {
       }
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
+          new Message({ role: "tool", parts: toolResultToParts(toolResults[i]), metadata: {
             tool_call_id: toolCalls[i].id,
             name: toolCalls[i].name,
           } }),
@@ -162,7 +163,7 @@ export class OpenAIExecutor implements Executor {
       );
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
+          new Message({ role: "tool", parts: toolResultToParts(toolResults[i]), metadata: {
             tool_call_id: toolCalls[i].id,
             name: toolCalls[i].name,
           } }),
@@ -200,4 +201,15 @@ export class OpenAIExecutor implements Executor {
 
     return kwargs;
   }
+}
+
+/**
+ * Convert a ToolResult's ContentPart[] to Message-compatible ContentPart[].
+ * Uses the model ContentPart types directly since ToolResult.parts already are ContentParts.
+ */
+function toolResultToParts(result: ToolResult): ContentPart[] {
+  if (result.parts.length === 0) {
+    return [new TextPart({ value: "" })];
+  }
+  return result.parts;
 }

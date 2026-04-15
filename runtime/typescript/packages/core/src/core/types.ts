@@ -1,9 +1,9 @@
 /**
  * Core message types for the Prompty pipeline.
  *
- * Re-exports generated model types (ContentPart, TextPart, ImagePart,
- * FilePart, AudioPart, Message) and augments Message with helper
- * methods (`text` getter, `toTextContent()`).
+ * Re-exports generated model types and provides standalone utility
+ * functions that operate on them. No prototype mutation — the emitted
+ * types are used as-is.
  *
  * @module
  */
@@ -14,43 +14,35 @@
 
 export { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
 export { Message } from "../model/message.js";
+export { ToolResult } from "../model/tool-result.js";
 
 import { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
 import { Message } from "../model/message.js";
+import { ToolResult } from "../model/tool-result.js";
 
 // ---------------------------------------------------------------------------
-// Augment Message with helper methods
+// Message utilities (standalone functions, no augmentation)
 // ---------------------------------------------------------------------------
 
-declare module "../model/message.js" {
-  interface Message {
-    /** Concatenate all TextPart values into a single string. */
-    readonly text: string;
-    /**
-     * Return content in a format suitable for wire serialization:
-     * - If all parts are text, return a single string.
-     * - If multimodal, return an array of content objects.
-     */
-    toTextContent(): string | Record<string, unknown>[];
-  }
+/** Concatenate all TextPart values from a Message into a single string. */
+export function messageText(msg: Message): string {
+  return msg.parts
+    .filter((p): p is TextPart => p.kind === "text")
+    .map((p) => p.value)
+    .join("");
 }
 
-Object.defineProperty(Message.prototype, "text", {
-  get(this: Message): string {
-    return this.parts
-      .filter((p): p is TextPart => p.kind === "text")
-      .map((p) => p.value)
-      .join("");
-  },
-  configurable: true,
-});
-
-Message.prototype.toTextContent = function (this: Message): string | Record<string, unknown>[] {
-  if (this.parts.length === 1 && this.parts[0].kind === "text") {
-    return (this.parts[0] as TextPart).value;
+/**
+ * Return Message content in a format suitable for wire serialization:
+ * - If all parts are text, return a single string.
+ * - If multimodal, return an array of content objects.
+ */
+export function messageToTextContent(msg: Message): string | Record<string, unknown>[] {
+  if (msg.parts.length === 1 && msg.parts[0].kind === "text") {
+    return (msg.parts[0] as TextPart).value;
   }
-  return this.parts.map(partToWireContent);
-};
+  return msg.parts.map(partToWireContent);
+}
 
 /** Convert a ContentPart to a generic wire-format object. */
 function partToWireContent(part: ContentPart): Record<string, unknown> {
@@ -82,7 +74,24 @@ function partToWireContent(part: ContentPart): Record<string, unknown> {
 }
 
 // ---------------------------------------------------------------------------
-// Message
+// ToolResult utilities (standalone functions, no augmentation)
+// ---------------------------------------------------------------------------
+
+/** Concatenate all TextPart values from a ToolResult into a single string. */
+export function toolResultText(result: ToolResult): string {
+  return (result.parts ?? [])
+    .filter((p): p is TextPart => p.kind === "text")
+    .map((p) => p.value)
+    .join("");
+}
+
+/** Create a ToolResult containing a single TextPart. */
+export function textToolResult(value: string): ToolResult {
+  return new ToolResult({ parts: [new TextPart({ value })] });
+}
+
+// ---------------------------------------------------------------------------
+// Role type
 // ---------------------------------------------------------------------------
 
 /** Valid message roles. */
@@ -134,8 +143,6 @@ export const ROLES = new Set<Role>(["system", "user", "assistant", "developer", 
  *
  * Accumulates all chunks as they are yielded. When the async iterator
  * is exhausted, the accumulated items are flushed to the tracer.
- *
- * Matches the Python PromptyStream / AsyncPromptyStream pattern.
  */
 export class PromptyStream implements AsyncIterable<unknown> {
   readonly name: string;
@@ -148,16 +155,13 @@ export class PromptyStream implements AsyncIterable<unknown> {
   }
 
   async *[Symbol.asyncIterator](): AsyncIterableIterator<unknown> {
-    // Lazy import to avoid circular deps
     const { Tracer } = await import("../tracing/tracer.js");
-
     try {
       for await (const chunk of this.inner) {
         this.items.push(chunk);
         yield chunk;
       }
     } finally {
-      // Flush accumulated items to tracer when stream is exhausted
       if (this.items.length > 0) {
         const span = Tracer.start("PromptyStream");
         span("signature", `${this.name}.PromptyStream`);
@@ -188,14 +192,11 @@ export function dictToMessage(d: Record<string, unknown>): Message {
   const role = (d.role as string) ?? "user";
   const metadata: Record<string, unknown> = {};
   const parts: ContentPart[] = [];
-
-  // Copy non-role, non-content keys to metadata
   for (const [k, v] of Object.entries(d)) {
     if (k !== "role" && k !== "content") {
       metadata[k] = v;
     }
   }
-
   const content = d.content;
   if (typeof content === "string") {
     parts.push(text(content));
@@ -208,7 +209,6 @@ export function dictToMessage(d: Record<string, unknown>): Message {
       }
     }
   }
-
   return new Message({ role, parts, metadata });
 }
 
