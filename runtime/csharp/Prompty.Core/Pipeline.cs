@@ -769,7 +769,7 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = before }],
-                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : null,
                 });
             }
 
@@ -783,23 +783,13 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = after }],
-                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : null,
                 });
             }
         }
 
         return result;
     }
-}
-
-/// <summary>
-/// Represents a tool call requested by the LLM.
-/// </summary>
-public class ToolCall
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Arguments { get; set; } = "";
 }
 
 /// <summary>

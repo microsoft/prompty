@@ -160,6 +160,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
 
         if (attrs is not null && attrs.Count > 0)
         {
+            message.Metadata ??= new Dictionary<string, object>();
             foreach (var kvp in attrs)
                 message.Metadata[kvp.Key] = kvp.Value;
         }
