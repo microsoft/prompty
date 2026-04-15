@@ -5,7 +5,7 @@ import { existsSync, unlinkSync, readdirSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
+import { EmitContext, emitFile, resolvePath, Namespace } from "@typespec/compiler";
 import { resolveModel, TypeNode, enumerateTypes } from "./ast.js";
 import { PromptyEmitterOptions, EmitTarget } from "./lib.js";
 import { generateMarkdown } from "./markdown.js";
@@ -100,11 +100,13 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     }
   }
 
-  // Resolve additional root types that are not reachable from the main root.
-  // These are standalone types (e.g., Message, ToolResult, ModelInfo) that
-  // should be generated alongside the main schema.
-  const additionalRoots = options["additional-roots"] || [];
+  // Discover additional models not reachable from the root.
+  // If root-namespace is specified, resolve all models in that namespace
+  // so new types are automatically emitted without manual additional-roots.
+  const rootNamespace = options["root-namespace"] || "Prompty";
+  const additionalModels: TypeNode[] = [];
   const visited = new Set<string>();
+
   // Collect names already in the main model tree to avoid duplicates
   const collectNames = (node: TypeNode) => {
     visited.add(`${node.typeName.namespace}.${node.typeName.name}`);
@@ -122,24 +124,46 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
   };
   collectNames(model);
 
-  const additionalModels: TypeNode[] = [];
-  for (const rootName of additionalRoots) {
-    const fullName = `${rootName}`;
-    if (visited.has(fullName)) continue;
+  // Resolve the namespace and iterate all models
+  const nsRef = context.program.resolveTypeReference(rootNamespace);
+  if (nsRef[0] && nsRef[0].kind === "Namespace") {
+    const ns = nsRef[0] as Namespace;
+    for (const [, nsModel] of ns.models) {
+      const fullName = `${rootNamespace}.${nsModel.name}`;
+      if (visited.has(fullName)) continue;
 
+      // Skip uninstantiated template declarations (e.g., Named<T>, Id<T>)
+      if (nsModel.node && 'templateParameters' in nsModel.node &&
+          nsModel.node.templateParameters.length > 0 && !nsModel.templateMapper) {
+        continue;
+      }
+
+      const additionalNode = resolveModel(
+        context.program, nsModel, new Set(),
+        rootNamespace,
+        options["root-alias"] || "Prompty"
+      );
+      additionalModels.push(additionalNode);
+      visited.add(fullName);
+    }
+  }
+
+  // Also process any explicit additional-roots (for types outside the namespace)
+  const additionalRoots = options["additional-roots"] || [];
+  for (const rootName of additionalRoots) {
+    if (visited.has(rootName)) continue;
     const ref = context.program.resolveTypeReference(rootName);
     if (!ref[0] || ref[0].kind !== "Model") {
       console.warn(`Warning: additional-root '${rootName}' not found or is not a model type. Skipping.`);
       continue;
     }
-
     const additionalNode = resolveModel(
       context.program, ref[0], new Set(),
-      options["root-namespace"] || "Prompty",
+      rootNamespace,
       options["root-alias"] || "Prompty"
     );
     additionalModels.push(additionalNode);
-    visited.add(`${additionalNode.typeName.namespace}.${additionalNode.typeName.name}`);
+    visited.add(rootName);
   }
 
   const targets = options["emit-targets"] || [];
