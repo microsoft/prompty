@@ -3,7 +3,7 @@
  * @module
  */
 
-import { Message } from "./types.js";
+import { Message, TextPart } from "./types.js";
 
 /**
  * Estimate the character cost of a message list.
@@ -16,7 +16,7 @@ export function estimateChars(messages: Message[]): number {
     total += msg.role.length + 4;
     for (const part of msg.parts) {
       if (part.kind === "text") {
-        total += (part as { value: string }).value.length;
+        total += (part as TextPart).value.length;
       } else {
         total += 200;
       }
@@ -132,7 +132,7 @@ export function trimToContextWindow(
   if (droppedCount > 0) {
     const summaryText = summarizeDropped(dropped);
     if (summaryText) {
-      messages.push(new Message("user", [{ kind: "text", value: summaryText }]));
+      messages.push(new Message({ role: "user", parts: [new TextPart({ value: summaryText })] }));
     }
   }
 

@@ -14,7 +14,7 @@ import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import type { Prompty } from "../model/prompty.js";
 import {
-  type TextPart,
+  TextPart,
   Message,
   ROLES,
 } from "../core/types.js";
@@ -135,7 +135,7 @@ export class PromptyChatParser implements Parser {
       }
     }
 
-    const parts: TextPart[] = [{ kind: "text", value: content }];
+    const parts: TextPart[] = [new TextPart({ value: content })];
 
     // Remaining attrs become metadata
     const metadata: Record<string, unknown> = {};
@@ -143,7 +143,7 @@ export class PromptyChatParser implements Parser {
       if (k !== "nonce") metadata[k] = v;
     }
 
-    return new Message(role as Message["role"], parts, metadata);
+    return new Message({ role: role as Message["role"], parts, metadata });
   }
 
   private parseAttrs(raw: string): Record<string, unknown> {

@@ -3,7 +3,7 @@
  * @module
  */
 
-import { Message } from "./types.js";
+import { Message, TextPart } from "./types.js";
 
 /**
  * A handle for injecting user messages into a running agent loop.
@@ -20,7 +20,7 @@ export class Steering {
   /** Remove and return all queued messages as Message objects. */
   drain(): Message[] {
     const items = this.queue.splice(0);
-    return items.map((text) => new Message("user", [{ kind: "text", value: text }]));
+    return items.map((text) => new Message({ role: "user", parts: [new TextPart({ value: text })] }));
   }
 
   /** Whether there are pending messages without consuming them. */

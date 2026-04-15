@@ -130,22 +130,22 @@ export class OpenAIExecutor implements Executor {
       // Responses API: individual function_call items
       for (const tc of toolCalls) {
         messages.push(
-          new Message("assistant", [], {
+          new Message({ role: "assistant", parts: [], metadata: {
             responses_function_call: {
               type: "function_call",
               call_id: tc.id,
               name: tc.name,
               arguments: tc.arguments,
             },
-          }),
+          } }),
         );
       }
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message("tool", [text(toolResults[i])], {
+          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
             tool_call_id: toolCalls[i].id,
             name: toolCalls[i].name,
-          }),
+          } }),
         );
       }
     } else {
@@ -156,16 +156,16 @@ export class OpenAIExecutor implements Executor {
         function: { name: tc.name, arguments: tc.arguments },
       }));
       messages.push(
-        new Message("assistant", textContent ? [text(textContent)] : [], {
+        new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: {
           tool_calls: rawToolCalls,
-        }),
+        } }),
       );
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message("tool", [text(toolResults[i])], {
+          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
             tool_call_id: toolCalls[i].id,
             name: toolCalls[i].name,
-          }),
+          } }),
         );
       }
     }

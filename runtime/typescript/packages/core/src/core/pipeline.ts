@@ -35,6 +35,7 @@ import { Prompty } from "../model/prompty.js";
 import {
   type ToolCall,
   Message,
+  TextPart,
   RICH_KINDS,
   dictToMessage,
   text,
@@ -565,11 +566,11 @@ function replaceSummaryMessage(messages: Message[], summary: string): void {
     (m) =>
       m.role === "user" &&
       m.parts.some(
-        (p) => p.kind === "text" && (p as { value: string }).value.includes("[Context summary:"),
+        (p) => p.kind === "text" && (p as TextPart).value.includes("[Context summary:"),
       ),
   );
   if (idx >= 0) {
-    messages[idx] = new Message("user", [text(`[Context summary: ${summary}]`)]);
+    messages[idx] = new Message({ role: "user", parts: [text(`[Context summary: ${summary}]`)] });
   }
 }
 
@@ -718,7 +719,7 @@ export async function turn<T = unknown>(
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
         const contentStr = typeof processed === "string" ? processed : JSON.stringify(processed);
-        const assistantMsg = new Message("assistant", [text(contentStr)]);
+        const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
         const gr = options.guardrails.checkOutput(assistantMsg);
         if (!gr.allowed) {
           emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -812,7 +813,7 @@ export async function turn<T = unknown>(
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
-          const assistantMsg = new Message("assistant", [text(content)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(content)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -842,7 +843,7 @@ export async function turn<T = unknown>(
             toolCalls, content, tools, agent, parentInputs, toolEmit,
             { onEvent, signal, guardrails, parallel: parallelToolCalls },
           );
-          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as TextPart).value ?? "").join(""), metadata: m.metadata })));
           return result;
         });
 
@@ -856,7 +857,7 @@ export async function turn<T = unknown>(
         const finalResult = options?.raw ? response : await process(agent, response);
         if (guardrails) {
           const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
-          const assistantMsg = new Message("assistant", [text(contentStr)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -879,7 +880,7 @@ export async function turn<T = unknown>(
       if (guardrails) {
         const { textContent } = extractToolInfo(response);
         if (textContent) {
-          const assistantMsg = new Message("assistant", [text(textContent)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(textContent)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -903,7 +904,7 @@ export async function turn<T = unknown>(
           response, tools, agent, parentInputs, toolEmit,
           { onEvent, signal, guardrails, parallel: parallelToolCalls },
         );
-        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as TextPart).value ?? "").join(""), metadata: m.metadata })));
         return result;
       });
 
@@ -1032,13 +1033,14 @@ function expandThreads(
       if (part.kind !== "text") continue;
 
       for (const [nonce, name] of nonceToName) {
-        if (part.value.includes(nonce)) {
+        if ((part as TextPart).value.includes(nonce)) {
           // Split text around the nonce
-          const before = part.value.slice(0, part.value.indexOf(nonce)).trim();
-          const after = part.value.slice(part.value.indexOf(nonce) + nonce.length).trim();
+          const val = (part as TextPart).value;
+          const before = val.slice(0, val.indexOf(nonce)).trim();
+          const after = val.slice(val.indexOf(nonce) + nonce.length).trim();
 
           if (before) {
-            result.push(new Message(msg.role, [text(before)], { ...msg.metadata }));
+            result.push(new Message({ role: msg.role, parts: [text(before)], metadata: { ...msg.metadata } }));
           }
 
           // Insert thread messages from input
@@ -1054,7 +1056,7 @@ function expandThreads(
           }
 
           if (after) {
-            result.push(new Message(msg.role, [text(after)], { ...msg.metadata }));
+            result.push(new Message({ role: msg.role, parts: [text(after)], metadata: { ...msg.metadata } }));
           }
 
           expanded = true;

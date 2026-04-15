@@ -1,52 +1,85 @@
 /**
  * Core message types for the Prompty pipeline.
  *
- * These types are protocol-agnostic — they represent the abstract
- * message format that executors translate to provider-specific
- * wire formats (e.g., OpenAI JSON).
+ * Re-exports generated model types (ContentPart, TextPart, ImagePart,
+ * FilePart, AudioPart, Message) and augments Message with helper
+ * methods (`text` getter, `toTextContent()`).
  *
  * @module
  */
 
 // ---------------------------------------------------------------------------
-// Content Parts (discriminated union by `kind`)
+// Re-export generated model types
 // ---------------------------------------------------------------------------
 
-/** Base shape shared by all content parts. */
-interface ContentPartBase {
-  kind: string;
+export { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
+export { Message } from "../model/message.js";
+
+import { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "../model/content-part.js";
+import { Message } from "../model/message.js";
+
+// ---------------------------------------------------------------------------
+// Augment Message with helper methods
+// ---------------------------------------------------------------------------
+
+declare module "../model/message.js" {
+  interface Message {
+    /** Concatenate all TextPart values into a single string. */
+    readonly text: string;
+    /**
+     * Return content in a format suitable for wire serialization:
+     * - If all parts are text, return a single string.
+     * - If multimodal, return an array of content objects.
+     */
+    toTextContent(): string | Record<string, unknown>[];
+  }
 }
 
-/** Plain text content. */
-export interface TextPart extends ContentPartBase {
-  kind: "text";
-  value: string;
-}
+Object.defineProperty(Message.prototype, "text", {
+  get(this: Message): string {
+    return this.parts
+      .filter((p): p is TextPart => p.kind === "text")
+      .map((p) => p.value)
+      .join("");
+  },
+  configurable: true,
+});
 
-/** Image reference (URL or base64 data URI). */
-export interface ImagePart extends ContentPartBase {
-  kind: "image";
-  source: string;
-  detail?: string;
-  mediaType?: string;
-}
+Message.prototype.toTextContent = function (this: Message): string | Record<string, unknown>[] {
+  if (this.parts.length === 1 && this.parts[0].kind === "text") {
+    return (this.parts[0] as TextPart).value;
+  }
+  return this.parts.map(partToWireContent);
+};
 
-/** File reference. */
-export interface FilePart extends ContentPartBase {
-  kind: "file";
-  source: string;
-  mediaType?: string;
+/** Convert a ContentPart to a generic wire-format object. */
+function partToWireContent(part: ContentPart): Record<string, unknown> {
+  switch (part.kind) {
+    case "text":
+      return { type: "text", text: (part as TextPart).value };
+    case "image": {
+      const img = part as ImagePart;
+      return {
+        type: "image_url",
+        image_url: { url: img.source, ...(img.detail && { detail: img.detail }) },
+      };
+    }
+    case "file":
+      return { type: "file", file: { url: (part as FilePart).source } };
+    case "audio": {
+      const audio = part as AudioPart;
+      return {
+        type: "input_audio",
+        input_audio: {
+          data: audio.source,
+          ...(audio.mediaType && { format: audio.mediaType }),
+        },
+      };
+    }
+    default:
+      return { type: "text", text: String(part) };
+  }
 }
-
-/** Audio reference (URL or base64 data URI). */
-export interface AudioPart extends ContentPartBase {
-  kind: "audio";
-  source: string;
-  mediaType?: string;
-}
-
-/** Discriminated union of all content part types. */
-export type ContentPart = TextPart | ImagePart | FilePart | AudioPart;
 
 // ---------------------------------------------------------------------------
 // Message
@@ -54,71 +87,6 @@ export type ContentPart = TextPart | ImagePart | FilePart | AudioPart;
 
 /** Valid message roles. */
 export type Role = "system" | "user" | "assistant" | "developer" | "tool";
-
-/**
- * An abstract message in the Prompty pipeline.
- *
- * Executors convert this to provider-specific wire format.
- * Parsers produce this from rendered template text.
- */
-export class Message {
-  role: Role;
-  parts: ContentPart[];
-  metadata: Record<string, unknown>;
-
-  constructor(
-    role: Role,
-    parts: ContentPart[] = [],
-    metadata: Record<string, unknown> = {},
-  ) {
-    this.role = role;
-    this.parts = parts;
-    this.metadata = metadata;
-  }
-
-  /** Concatenate all TextPart values into a single string. */
-  get text(): string {
-    return this.parts
-      .filter((p): p is TextPart => p.kind === "text")
-      .map((p) => p.value)
-      .join("");
-  }
-
-  /**
-   * Return content in a format suitable for wire serialization:
-   * - If all parts are text, return a single string.
-   * - If multimodal, return an array of content objects.
-   */
-  toTextContent(): string | Record<string, unknown>[] {
-    if (this.parts.length === 1 && this.parts[0].kind === "text") {
-      return (this.parts[0] as TextPart).value;
-    }
-    return this.parts.map(partToWireContent);
-  }
-}
-
-/** Convert a ContentPart to a generic wire-format object. */
-function partToWireContent(part: ContentPart): Record<string, unknown> {
-  switch (part.kind) {
-    case "text":
-      return { type: "text", text: part.value };
-    case "image":
-      return {
-        type: "image_url",
-        image_url: { url: part.source, ...(part.detail && { detail: part.detail }) },
-      };
-    case "file":
-      return { type: "file", file: { url: part.source } };
-    case "audio":
-      return {
-        type: "input_audio",
-        input_audio: {
-          data: part.source,
-          ...(part.mediaType && { format: part.mediaType }),
-        },
-      };
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Thread Marker
@@ -207,17 +175,17 @@ export class PromptyStream implements AsyncIterable<unknown> {
 
 /** Create a TextPart. */
 export function text(value: string): TextPart {
-  return { kind: "text", value };
+  return new TextPart({ value });
 }
 
 /** Create a Message with a single text part. */
 export function textMessage(role: Role, value: string, metadata: Record<string, unknown> = {}): Message {
-  return new Message(role, [text(value)], metadata);
+  return new Message({ role, parts: [text(value)], metadata });
 }
 
 /** Convert a plain dict `{role, content, ...}` to a Message. */
 export function dictToMessage(d: Record<string, unknown>): Message {
-  const role = (d.role as Role) ?? "user";
+  const role = (d.role as string) ?? "user";
   const metadata: Record<string, unknown> = {};
   const parts: ContentPart[] = [];
 
@@ -241,7 +209,7 @@ export function dictToMessage(d: Record<string, unknown>): Message {
     }
   }
 
-  return new Message(role, parts, metadata);
+  return new Message({ role, parts, metadata });
 }
 
 /** Convert a content dict to a ContentPart. */
@@ -249,33 +217,30 @@ export function dictContentToPart(d: Record<string, unknown>): ContentPart {
   const type = (d.type as string) ?? (d.kind as string) ?? "text";
   switch (type) {
     case "text":
-      return { kind: "text", value: (d.text ?? d.value ?? "") as string };
+      return new TextPart({ value: (d.text ?? d.value ?? "") as string });
     case "image_url":
     case "image": {
       const img = (d.image_url ?? d) as Record<string, unknown>;
-      return {
-        kind: "image",
+      return new ImagePart({
         source: (img.url ?? img.source ?? "") as string,
         detail: img.detail as string | undefined,
         mediaType: img.media_type as string | undefined,
-      };
+      });
     }
     case "file":
-      return {
-        kind: "file",
+      return new FilePart({
         source: (d.url ?? d.source ?? "") as string,
         mediaType: d.media_type as string | undefined,
-      };
+      });
     case "input_audio":
     case "audio": {
       const audio = (d.input_audio ?? d) as Record<string, unknown>;
-      return {
-        kind: "audio",
+      return new AudioPart({
         source: (audio.data ?? audio.source ?? "") as string,
         mediaType: (audio.format ?? audio.media_type) as string | undefined,
-      };
+      });
     }
     default:
-      return { kind: "text", value: JSON.stringify(d) };
+      return new TextPart({ value: JSON.stringify(d) });
   }
 }

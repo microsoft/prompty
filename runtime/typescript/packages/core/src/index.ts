@@ -15,11 +15,11 @@
 
 export {
   // Types
-  type ContentPart,
-  type TextPart,
-  type ImagePart,
-  type FilePart,
-  type AudioPart,
+  ContentPart,
+  TextPart,
+  ImagePart,
+  FilePart,
+  AudioPart,
   type Role,
   ToolCall,
   Message,

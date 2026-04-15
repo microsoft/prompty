@@ -5,7 +5,7 @@
  */
 
 import type { Prompty } from "@prompty/core";
-import type { ContentPart, Message } from "@prompty/core";
+import { type ContentPart, type Message, TextPart, ImagePart, AudioPart, FilePart } from "@prompty/core";
 import { load as loadPrompty } from "@prompty/core";
 import { dirname, resolve } from "node:path";
 
@@ -39,22 +39,25 @@ export function messageToWire(msg: Message): Record<string, unknown> {
 function partToWire(part: ContentPart): Record<string, unknown> {
   switch (part.kind) {
     case "text":
-      return { type: "text", text: part.value };
+      return { type: "text", text: (part as TextPart).value };
     case "image": {
-      const imageUrl: Record<string, unknown> = { url: part.source };
-      if (part.detail) imageUrl.detail = part.detail;
+      const img = part as ImagePart;
+      const imageUrl: Record<string, unknown> = { url: img.source };
+      if (img.detail) imageUrl.detail = img.detail;
       return { type: "image_url", image_url: imageUrl };
     }
-    case "audio":
+    case "audio": {
+      const audio = part as AudioPart;
       return {
         type: "input_audio",
         input_audio: {
-          data: part.source,
-          ...(part.mediaType && { format: mimeToAudioFormat(part.mediaType) }),
+          data: audio.source,
+          ...(audio.mediaType && { format: mimeToAudioFormat(audio.mediaType) }),
         },
       };
+    }
     case "file":
-      return { type: "file", file: { url: part.source } };
+      return { type: "file", file: { url: (part as FilePart).source } };
   }
 }
 

@@ -11,7 +11,7 @@
  */
 
 import type { Prompty } from "@prompty/core";
-import type { ContentPart, Message } from "@prompty/core";
+import { type ContentPart, type Message, TextPart, ImagePart, FilePart, AudioPart } from "@prompty/core";
 
 // ---------------------------------------------------------------------------
 // Message conversion
@@ -63,43 +63,44 @@ export function messageToWire(msg: Message): Record<string, unknown> {
 function partToWire(part: ContentPart): Record<string, unknown> {
   switch (part.kind) {
     case "text":
-      return { type: "text", text: part.value };
+      return { type: "text", text: (part as TextPart).value };
     case "image": {
+      const img = part as ImagePart;
       // Anthropic uses base64 source blocks or URL
-      if (part.mediaType) {
+      if (img.mediaType) {
         // mediaType present → treat source as base64 data
         return {
           type: "image",
           source: {
             type: "base64",
-            media_type: part.mediaType,
-            data: part.source,
+            media_type: img.mediaType,
+            data: img.source,
           },
         };
       }
-      if (part.source.startsWith("data:")) {
+      if (img.source.startsWith("data:")) {
         // Data URL — extract base64 payload and MIME type
-        const [header, data] = part.source.split(",", 2);
+        const [header, data] = img.source.split(",", 2);
         const mediaType = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
         return {
           type: "image",
           source: {
             type: "base64",
             media_type: mediaType,
-            data: data ?? part.source,
+            data: data ?? img.source,
           },
         };
       }
       // URL
       return {
         type: "image",
-        source: { type: "url", url: part.source },
+        source: { type: "url", url: img.source },
       };
     }
     case "file":
-      return { type: "text", text: `[file: ${part.source}]` };
+      return { type: "text", text: `[file: ${(part as FilePart).source}]` };
     case "audio":
-      return { type: "text", text: `[audio: ${part.source}]` };
+      return { type: "text", text: `[audio: ${(part as AudioPart).source}]` };
   }
 }
 
