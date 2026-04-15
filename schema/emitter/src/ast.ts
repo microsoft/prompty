@@ -11,7 +11,7 @@ import {
   getNamespaceFullName,
   getDiscriminator,
 } from "@typespec/compiler";
-import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, HelperEntry } from "./decorators.js";
+import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, MethodEntry } from "./decorators.js";
 import { StateKeys } from "./lib.js";
 
 
@@ -47,7 +47,7 @@ const getModelType = (model: Model, rootNamespace: string, rootAlias: string): T
   };
 };
 
-export interface Alternative {
+export interface Coercion {
   scalar: string;
   expansion: {
     [key: string]: any;
@@ -66,12 +66,13 @@ export class TypeNode {
   public description: string;
   public base: TypeName | null = null;
   public childTypes: TypeNode[] = [];
-  public alternates: Alternative[] = [];
+  public coercions: Coercion[] = [];
   public properties: PropertyNode[] = [];
   public isAbstract: boolean = false;
+  public isProtocol: boolean = false;
   public discriminator: string | undefined = undefined;
   public factories: FactoryEntry[] = [];
-  public helpers: HelperEntry[] = [];
+  public methods: MethodEntry[] = [];
 
   constructor(public model: Model, description: string) {
     this.model = model;
@@ -107,10 +108,11 @@ export class TypeNode {
       description: this.description,
       base: this.base || {},
       isAbstract: this.isAbstract,
+      isProtocol: this.isProtocol,
       discriminator: this.discriminator,
-      alternates: this.alternates,
+      coercions: this.coercions,
       factories: this.factories,
-      helpers: this.helpers,
+      methods: this.methods,
       childTypes: this.childTypes.map(ct => ct.getSanitizedObject()),
       properties: this.properties.map(prop => prop.getSanitizedObject()),
     };
@@ -215,25 +217,27 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     node.childTypes = resolveModelChildren(program, innerModel, visited, rootNamespace, rootAlias);
     node.description = getDoc(program, innerModel) || "";
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, innerModel) || false;
+    node.isProtocol = getStateScalar<boolean>(program, StateKeys.protocols, innerModel) || false;
     const discriminator = getDiscriminator(program, innerModel);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
-    // shorthand .ctor
-    node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, innerModel);
-    // factory and helper methods
+    // coercion .ctor
+    node.coercions = getStateValue<Coercion>(program, StateKeys.coercions, innerModel);
+    // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, innerModel);
-    node.helpers = getStateValue<HelperEntry>(program, StateKeys.helpers, innerModel);
+    node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, innerModel);
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace, rootAlias);
     node.childTypes = resolveModelChildren(program, model, visited, rootNamespace, rootAlias);
     node.isAbstract = getStateScalar<boolean>(program, StateKeys.abstracts, model) || false;
+    node.isProtocol = getStateScalar<boolean>(program, StateKeys.protocols, model) || false;
     const discriminator = getDiscriminator(program, model);
     node.discriminator = discriminator ? discriminator.propertyName : undefined;
-    // shorthand .ctor
-    node.alternates = getStateValue<Alternative>(program, StateKeys.shorthands, model);
-    // factory and helper methods
+    // coercion .ctor
+    node.coercions = getStateValue<Coercion>(program, StateKeys.coercions, model);
+    // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, model);
-    node.helpers = getStateValue<HelperEntry>(program, StateKeys.helpers, model);
+    node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, model);
     visited.add(model.name);
   }
 
@@ -609,16 +613,16 @@ export interface PythonClassContext {
   node: TypeNode;
   /** Type mapping from TypeSpec types to Python types */
   typeMapper: Record<string, string>;
-  /** Processed alternate representations for shorthand constructors */
-  alternates: Array<{ scalar: string; alternate: string }>;
+  /** Processed coercion representations for scalar-to-object constructors */
+  coercions: Array<{ scalar: string; alternate: string }>;
   /** Polymorphic type information if this is a discriminated type */
   polymorphicTypes: ReturnType<TypeNode['retrievePolymorphicTypes']> | undefined;
   /** Import types needed from other modules */
   imports: string[];
   /** Collection properties with their nested type info for load_* methods */
   collectionTypes: Array<{ prop: PropertyNode; type: string[] }>;
-  /** The property name that can be used as a shorthand scalar representation */
-  shorthandProperty: string | null;
+  /** The property name that receives the scalar value in a coercion expansion */
+  coercionProperty: string | null;
   /** Maps factory.name → safe Python method name (prefixed with create_ on field collision) */
   factoryNameMap: Record<string, string>;
 }
@@ -661,8 +665,8 @@ export interface PythonTestContext {
     yaml: string[];
     validation: Array<{ key: string; value: any; delimeter: string }>;
   }>;
-  /** Alternate representation tests */
-  alternates: Array<{
+  /** Coercion representation tests */
+  coercions: Array<{
     title: string;
     scalar: string;
     value: string;
@@ -722,9 +726,9 @@ export interface TestExample {
 }
 
 /**
- * A shorthand/alternate representation test case.
+ * A coercion (scalar-to-object) representation test case.
  */
-export interface AlternateTest {
+export interface CoercionTest {
   /** Human-readable test name/title */
   title: string;
   /** Scalar type name in target language */
@@ -748,8 +752,8 @@ export interface BaseTestContext {
   package?: string;
   /** Test examples from @sample decorators */
   examples: TestExample[];
-  /** Shorthand alternate representation tests */
-  alternates: AlternateTest[];
+  /** Coercion (scalar-to-object) representation tests */
+  coercions: CoercionTest[];
   /** Factory methods declared via @factory (for auto-generated factory tests) */
   factories: FactoryEntry[];
 }

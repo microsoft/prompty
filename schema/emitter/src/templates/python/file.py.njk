@@ -46,7 +46,7 @@ class {{ node.typeName.name }}{% if node.base %}({{ node.base.name }}){% endif %
 {%- endfor %}
     """
 
-    _shorthand_property: ClassVar[Optional[str]] = {% if classCtx.shorthandProperty %}"{{ classCtx.shorthandProperty }}"{% else %}None{% endif %}
+    _shorthand_property: ClassVar[Optional[str]] = {% if classCtx.coercionProperty %}"{{ classCtx.coercionProperty }}"{% else %}None{% endif %}
 {% for prop in node.properties %}
     {{ prop.name | snakeCase }}: {{ py.pythonType(prop, typeMapper) }}{{ py.defaultValue(prop, typeMapper) }}
 {%- endfor %}

@@ -189,11 +189,11 @@ function buildClassContext(node: TypeNode): PythonClassContext {
   return {
     node,
     typeMapper: pythonTypeMapper,
-    alternates: prepareAlternates(node),
+    coercions: prepareCoercions(node),
     polymorphicTypes: node.retrievePolymorphicTypes(),
     imports: getUniqueImportTypes(node),
     collectionTypes: getCollectionTypes(node),
-    shorthandProperty: getShorthandProperty(node),
+    coercionProperty: getCoercionProperty(node),
     factoryNameMap,
   };
 }
@@ -247,15 +247,15 @@ function buildLoadContextContext(packageName?: string): PythonLoadContextContext
 }
 
 /**
- * Prepare alternate representations for template rendering.
- * Converts alternates to Python-specific format with JSON stringification.
+ * Prepare coercion representations for template rendering.
+ * Converts coercions to Python-specific format with JSON stringification.
  */
-function prepareAlternates(node: TypeNode): Array<{ scalar: string; alternate: string }> {
-  if (!node.alternates || node.alternates.length === 0) {
+function prepareCoercions(node: TypeNode): Array<{ scalar: string; alternate: string }> {
+  if (!node.coercions || node.coercions.length === 0) {
     return [];
   }
 
-  return node.alternates.map(alt => ({
+  return node.coercions.map(alt => ({
     scalar: pythonTypeMapper[alt.scalar],
     alternate: JSON.stringify(alt.expansion, null, '')
       .replaceAll('\n', '')
@@ -264,16 +264,16 @@ function prepareAlternates(node: TypeNode): Array<{ scalar: string; alternate: s
 }
 
 /**
- * Get the shorthand property name from alternates.
- * The shorthand property is the one that receives "{value}" in the expansion.
+ * Get the coercion property name from coercions.
+ * The coercion property is the one that receives "{value}" in the expansion.
  */
-function getShorthandProperty(node: TypeNode): string | null {
-  if (!node.alternates || node.alternates.length === 0) {
+function getCoercionProperty(node: TypeNode): string | null {
+  if (!node.coercions || node.coercions.length === 0) {
     return null;
   }
 
   // Look for a property that has "{value}" as its expansion value
-  for (const alt of node.alternates) {
+  for (const alt of node.coercions) {
     for (const [key, value] of Object.entries(alt.expansion)) {
       if (value === "{value}") {
         return key;
