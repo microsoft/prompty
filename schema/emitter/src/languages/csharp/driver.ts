@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
-import { enumerateTypes, PropertyNode, TypeNode } from "../../ir/ast.js";
+import { enumerateTypes, TypeNode } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import * as nunjucks from "nunjucks";
 import { getCombinations, scalarValue } from "../../ir/utilities.js";
@@ -9,58 +9,10 @@ import path from "path";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
-import { resolveFactoryExpr, resolveCoerceExpr, TypeRegistry, collectExprTypeRefs } from "../../ir/expansion.js";
-import { ExprVisitor } from "../../ir/visitor.js";
+import { TypeRegistry } from "../../ir/expansion.js";
 import { CSharpExprVisitor } from "./visitor.js";
 import { lowerType, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { emitCSharpClass } from "./emitter.js";
-
-const csharpTypeMapper: Record<string, string> = {
-  "string": "string",
-  "number": "float",
-  "array": "[]",
-  "object": "object",
-  "boolean": "bool",
-  "int64": "long",
-  "int32": "int",
-  "float64": "double",
-  "float32": "float",
-  "integer": "int",
-  "dictionary": "IDictionary<string, object>",
-};
-
-// Maps C# types to Convert.ToXXX method suffixes
-const convertMethodMapper: Record<string, string> = {
-  "bool": "Boolean",
-  "int": "Int32",
-  "long": "Int64",
-  "float": "Single",
-  "double": "Double",
-};
-
-const jsonConverterMapper: Record<string, string> = {
-  "string": "GetString",
-  // this is smarter about numbers
-  "number": "GetScalarValue",
-  "unknown": "GetScalarValue",
-  "boolean": "GetBoolean",
-  "int64": "GetInt64",
-  "int32": "GetInt32",
-  "float64": "GetDouble",
-  "float32": "GetSingle",
-  "integer": "GetInt32",
-};
-
-const numberTypes = [
-  "float32",
-  "float64",
-  "number",
-  "int32",
-  "int64",
-  "numeric",
-  "integer",
-  "float",
-]
 
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   // set up template environment
@@ -72,7 +24,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
     const isFloat = value.toString().includes('.');
     return isFloat;
   });
-  const classTemplate = env.getTemplate('file.cs.njk', true);
   const utilsTemplate = env.getTemplate('utils.cs.njk', true);
   const testTemplate = env.getTemplate('test.cs.njk', true);
   const contextTemplate = env.getTemplate('context.cs.njk', true);
@@ -100,11 +51,12 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 
   await emitCsharpFile(context, node, utils, "Utils.cs", emitTarget["output-dir"]);
 
+  // Build Declaration IR once (loop-invariant)
+  const polyNames = collectPolymorphicTypeNames(allTypes[0], registry);
+  const allTypeDecls = nodes.map(nd => lowerType(nd, registry, polyNames));
+  const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
+
   for (const n of nodes) {
-    // Build Declaration IR and emit via the new emitter
-    const polyNames = collectPolymorphicTypeNames(allTypes[0], registry);
-    const allTypeDecls = nodes.map(nd => lowerType(nd, registry, polyNames));
-    const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
     const typeDecl = lowerType(n, registry, polyNames);
     const classCode = emitCSharpClass(typeDecl, csharpNamespace, visitor, allTypeDecls, findTypeDecl);
     await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, emitTarget["output-dir"]);
@@ -127,103 +79,7 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
 };
 
 
-const renderCSharp = (nodes: TypeNode[], node: TypeNode, classTemplate: nunjucks.Template, namespace: string, registry: TypeRegistry, visitor: ExprVisitor): string => {
-  const polymorphicTypes = node.retrievePolymorphicTypes();
-  const findType = (typeName: string): TypeNode | undefined => {
-    return nodes.find(n => n.typeName.name === typeName);
-  }
-  const coercions = generateCoercions(node).filter(alt => alt.scalar !== "float" && alt.scalar !== "int");
-  const numericCoercions = generateCoercions(node).filter(alt => alt.scalar === "float" || alt.scalar === "int");
-
-  // Separate int and float coercions for proper long/double mapping
-  const intCoercion = numericCoercions.find(alt => alt.scalar === "int") || null;
-  const floatCoercion = numericCoercions.find(alt => alt.scalar === "float") || null;
-
-  // Determine coercion property (first property in first coercion expansion)
-  let coercionProperty: string | null = null;
-  if (node.coercions && node.coercions.length > 0) {
-    const firstAlt = node.coercions[0];
-    if (firstAlt.expansion) {
-      const keys = Object.keys(firstAlt.expansion);
-      // Find the key that uses {value}
-      for (const key of keys) {
-        if (firstAlt.expansion[key] === "{value}") {
-          coercionProperty = key;
-          break;
-        }
-      }
-    }
-  }
-
-  // Resolve factories via expression IR
-  const renderedFactories = (node.factories || []).map(f => ({
-    name: f.name,
-    methodName: renderCsharpFactoryMethodName(f.name, node),
-    params: f.params,
-    body: visitor.visitExpr(resolveFactoryExpr(f.sets, f.params, node, registry)),
-  }));
-
-  // Collection types with their primary property for coercion
-  // Filter out dictionary collections since they don't have Load methods
-  const collectionTypes = node.properties.filter(p => p.isCollection && !p.isScalar && !p.isDict).map(p => {
-    const itemType = findType(p.typeName.name);
-    let primaryProp: string | null = null;
-    let hasNameProperty = false;
-
-    if (itemType) {
-      // Check if item type has a 'name' property (supports object format)
-      hasNameProperty = itemType.properties.some(prop => prop.name === "name");
-
-      if (itemType.coercions && itemType.coercions.length > 0) {
-        const firstAlt = itemType.coercions[0];
-        if (firstAlt.expansion) {
-          for (const key of Object.keys(firstAlt.expansion)) {
-            if (firstAlt.expansion[key] === "{value}") {
-              primaryProp = key;
-              break;
-            }
-          }
-        }
-      }
-    }
-    return {
-      prop: p,
-      type: primaryProp ? [primaryProp] : [],
-      hasNameProperty: hasNameProperty,
-    };
-  });
-
-  const csharp = classTemplate.render({
-    node: node,
-    renderPropertyName: renderPropertyName,
-    renderName: renderName,
-    renderType: renderType,
-    renderSimpleType: renderSimpleType,
-    renderDefault: renderDefault,
-    renderSetInstance: renderSetInstance,
-    renderSummary: renderSummary,
-    renderPropertyModifier: renderPropertyModifier(findType, node),
-    renderNullCoalescing: renderNullCoalescing,
-    renderLoadProperty: renderLoadProperty(findType),
-    renderSaveProperty: renderSaveProperty,
-    renderCsharpFactoryParamType: renderCsharpFactoryParamType,
-    renderCsharpFactoryFieldValue: renderCsharpFactoryFieldValue,
-    renderCsharpFactoryMethodName: (factoryName: string) => renderCsharpFactoryMethodName(factoryName, node),
-    renderCsharpHelperReturnType: renderCsharpHelperReturnType,
-    converterMapper: (s: string) => jsonConverterMapper[s] || `Get${s.charAt(0).toUpperCase() + s.slice(1)}`,
-    polymorphicTypes: polymorphicTypes,
-    collectionTypes: collectionTypes,
-    coercions: coercions,
-    numericCoercions: numericCoercions,
-    intCoercion: intCoercion,
-    floatCoercion: floatCoercion,
-    coercionProperty: coercionProperty,
-    namespace: namespace,
-    renderedFactories: renderedFactories,
-  });
-
-  return csharp;
-}
+// --- Test-rendering helpers (used by renderTests, still Nunjucks-based until Phase 5) ---
 
 const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace: string): string => {
   const samples = node.properties.filter(p => p.samples && p.samples.length > 0).map(p => {
@@ -304,10 +160,6 @@ const renderTests = (node: TypeNode, testTemplate: nunjucks.Template, namespace:
   return test;
 };
 
-const renderPropertyName = (prop: PropertyNode): string => {
-  return renderName(prop.name);
-};
-
 const renderName = (name: string): string => {
   // convert snake_case to PascalCase
   const pascal = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -339,26 +191,6 @@ const renderCsharpFactoryMethodName = (factoryName: string, node: TypeNode): str
   return methodName;
 };
 
-const renderCsharpFactoryFieldValue = (prop: { name: string; isOptional?: boolean }, setValue: unknown): string => {
-  if (setValue === true) return "true";
-  if (setValue === false) return "false";
-  if (typeof setValue === "number") return String(setValue);
-  if (typeof setValue === "string") return `"${setValue}"`;
-  return "null";
-};
-
-const renderCsharpHelperReturnType = (typeStr: string): string => {
-  switch (typeStr) {
-    case "string": return "string";
-    case "boolean": return "bool";
-    case "integer": case "int32": return "int";
-    case "int64": return "long";
-    case "float": case "float32": return "float";
-    case "float64": return "double";
-    default: return typeStr;
-  }
-};
-
 const renderCsharpFactoryTestValue = (typeStr: string): string => {
   switch (typeStr) {
     case "string": return '"test"';
@@ -370,224 +202,6 @@ const renderCsharpFactoryTestValue = (typeStr: string): string => {
     case "unknown": return '"test"';
     default: return '"test"';
   }
-};
-
-/**
- * Renders the property modifier for a given property (e.g. override, virtual or even nothing)
- * @param node TypeNode
- * @returns function that takes a PropertyNode and returns the property modifier string
- */
-const renderPropertyModifier = (findType: (typeName: string) => TypeNode | undefined, node: TypeNode) => (prop: PropertyNode): string => {
-  // has children and children have the same property name - need to make virtual
-  if (node.childTypes.length > 0 && node.childTypes.some(ct => ct.properties.some(p => p.name === prop.name))) {
-    // if the property is required and is a complex type, make it virtual to allow for mocking
-    return "virtual ";
-  }
-  // has a parent and parent has the same property name - need to override
-  if (node.base && findType(node.base.name)?.properties.some(p => p.name === prop.name)) {
-    return "override ";
-  }
-  return "";
-};
-
-const recursiveExpand = (obj: any): any => {
-  if (obj && typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      return obj.map(item => recursiveExpand(item));
-    } else {
-      const expanded: any = {};
-      for (const key in obj) {
-        expanded[key] = recursiveExpand(obj[key]);
-      }
-      return expanded;
-    }
-  }
-  return obj;
-};
-
-const generateCoercions = (node: TypeNode): { scalar: string; expansion: { property: string, value: string }[] }[] => {
-  if (node.coercions && node.coercions.length > 0) {
-    const coercions: { scalar: string; expansion: { property: string, value: string }[] }[] = [];
-    for (const alt of node.coercions) {
-      const scalar = csharpTypeMapper[alt.scalar] || "object";
-
-      // Process each coercion
-      const expansion: { property: string, value: string }[] = [];
-      for (const key in alt.expansion) {
-        const value = alt.expansion[key];
-        // check if value is a string
-        if (value === "{value}") {
-          expansion.push({ property: renderName(key), value: `${scalar}Value` });
-        } else {
-          if (typeof value === 'string') {
-            expansion.push({ property: renderName(key), value: `"${value}"` });
-          } else {
-            expansion.push({ property: renderName(key), value: `${value}` });
-          }
-        }
-      }
-      coercions.push({
-        scalar: scalar,
-        expansion: expansion,
-      });
-    }
-    return coercions;
-  } else {
-    return [];
-  }
-};
-
-const isNonNullableValueType = (typeName: string): boolean => {
-  return ["int", "float", "double", "bool"].includes(typeName);
-};
-
-const renderType = (prop: PropertyNode, removeOptional: boolean = false): string => {
-  return `${renderSimpleType(prop)}${prop.isOptional && !removeOptional ? "?" : ""}`;
-};
-
-const renderSimpleType = (prop: PropertyNode): string => {
-  let type = prop.isScalar ? csharpTypeMapper[prop.typeName.name] || "object" : prop.typeName.name;
-  if (prop.isDict) {
-    type = `IDictionary<string, object>`;
-  }
-  type = prop.isCollection ? `IList<${type}>` : type;
-  return type;
-};
-
-const renderDefault = (prop: PropertyNode): string => {
-  if (!prop.isOptional) {
-    if (prop.isCollection) {
-      return " = [];";
-    } else if (prop.isScalar) {
-      return renderDefaultType(prop.typeName.name, prop.defaultValue);
-    } else {
-      //if (!prop.type?.isAbstract) {
-      //  return " = new " + prop.typeName.name + "();";
-      //}
-      return "";
-    }
-  } else {
-    return "";
-  }
-};
-
-const renderDefaultType = (typeName: string, defaultValue: string | number | boolean | null = null): string => {
-  if (typeName === "string") {
-    if (defaultValue && defaultValue === "*") {
-      return " = string.Empty;";
-    }
-    return defaultValue ? " = \"" + defaultValue + "\";" : " = string.Empty;";
-  }
-  if (typeName === "boolean") {
-    return defaultValue ? " = " + defaultValue + ";" : " = false;";
-  }
-  if (typeName === "number") {
-    return defaultValue ? " = " + defaultValue + ";" : " = 0;";
-  }
-  if (typeName === "object") {
-    return " = new " + typeName + "();";
-  }
-  if (typeName === "dictionary") {
-    return " = new Dictionary<string, object>();";
-  }
-  return "";
-};
-
-const renderSetInstance = (prop: PropertyNode, variable: string, dictArg: string): string => {
-  const propertyName = renderPropertyName(prop);
-  const propertyType = renderSimpleType(prop);
-  const setter = `${variable}.${propertyName}`;
-  if (prop.isScalar) {
-    if (isNonNullableValueType(propertyType)) {
-      return `${setter} = (${propertyType})${prop.name}Value;`;
-    } else {
-      return `${setter} = ${prop.name}Value as ${propertyType}${renderNullCoalescing(prop)};`;
-    }
-  } else {
-    if (prop.isCollection) {
-      return `${setter} = Load${propertyName}(${prop.name}Value);`;
-    } else {
-      return `${setter} = ${prop.typeName.name}.Load(${prop.name}Value.ToParamDictionary());`;
-    }
-  }
-}
-
-/**
- * Renders the property loading code for the Load() method
- */
-const renderLoadProperty = (findType: (typeName: string) => TypeNode | undefined) => (prop: PropertyNode): string => {
-  const propertyName = renderPropertyName(prop);
-  const propertyType = renderSimpleType(prop);
-
-  if (prop.isScalar) {
-    if (prop.isDict) {
-      if (prop.isCollection) {
-        // Dictionary collection - convert each item to proper dictionary type
-        return `instance.${propertyName} = (${prop.name}Value as IEnumerable<object>)?.Select(x => x.GetDictionary()).Cast<IDictionary<string, object>>().ToList() ?? [];`;
-      }
-      return `instance.${propertyName} = ${prop.name}Value.GetDictionary()!;`;
-    }
-    const csharpType = csharpTypeMapper[prop.typeName.name] || "object";
-
-    // Handle scalar collections (e.g., IList<string>)
-    if (prop.isCollection) {
-      if (csharpType === "string") {
-        return `instance.${propertyName} = (${prop.name}Value as IEnumerable<object>)?.Select(x => x?.ToString()!).ToList() ?? [];`;
-      } else if (isNonNullableValueType(csharpType)) {
-        const convertMethod = convertMethodMapper[csharpType] || "ToString";
-        return `instance.${propertyName} = (${prop.name}Value as IEnumerable<object>)?.Select(x => Convert.To${convertMethod}(x)).ToList() ?? [];`;
-      } else {
-        return `instance.${propertyName} = (${prop.name}Value as IEnumerable<object>)?.ToList() ?? [];`;
-      }
-    }
-
-    if (isNonNullableValueType(csharpType)) {
-      const convertMethod = convertMethodMapper[csharpType] || "ToString";
-      return `instance.${propertyName} = Convert.To${convertMethod}(${prop.name}Value);`;
-    } else if (csharpType === "string") {
-      return `instance.${propertyName} = ${prop.name}Value?.ToString()!;`;
-    } else {
-      return `instance.${propertyName} = ${prop.name}Value;`;
-    }
-  } else if (prop.isCollection) {
-    if (prop.isDict) {
-      // Dictionary collection - convert each item to proper dictionary type
-      return `instance.${propertyName} = (${prop.name}Value as IEnumerable<object>)?.Select(x => x.GetDictionary()).Cast<IDictionary<string, object>>().ToList() ?? [];`;
-    }
-    return `instance.${propertyName} = Load${propertyName}(${prop.name}Value, context);`;
-  } else {
-    return `instance.${propertyName} = ${prop.typeName.name}.Load(${prop.name}Value.GetDictionary(${prop.typeName.name}.ShorthandProperty), context);`;
-  }
-};
-
-/**
- * Renders the property saving code for the Save() method
- */
-const renderSaveProperty = (prop: PropertyNode): string => {
-  const propertyName = renderPropertyName(prop);
-
-  if (prop.isScalar || prop.isDict) {
-    return `result["${prop.name}"] = obj.${propertyName};`;
-  } else if (prop.isCollection) {
-    return `result["${prop.name}"] = Save${propertyName}(obj.${propertyName}, context);`;
-  } else {
-    return `result["${prop.name}"] = obj.${propertyName}?.Save(context);`;
-  }
-};
-
-const renderSummary = (prop: PropertyNode): string => {
-  return "/// <summary>\n    /// " + prop.description + "\n    /// </summary>";
-};
-
-const renderNullCoalescing = (prop: PropertyNode): string => {
-  if (!prop.isOptional && !isNumber(prop)) {
-    return " ?? throw new ArgumentException(\"Properties must contain a property named: " + prop.name + "\")";
-  }
-  return "";
-};
-
-const isNumber = (prop: PropertyNode): boolean => {
-  return numberTypes.includes(prop.typeName.name);
 };
 
 const emitCsharpFile = async (context: EmitContext<PromptyEmitterOptions>, type: TypeNode, python: string, filename: string, outputDir?: string) => {
