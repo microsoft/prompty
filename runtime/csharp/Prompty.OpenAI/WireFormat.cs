@@ -128,6 +128,8 @@ public static class WireFormat
 
     /// <summary>
     /// Build ChatCompletionOptions from agent's ModelOptions.
+    /// Note: ModelOptions.ToWire("openai") is available for raw HTTP providers,
+    /// but this method uses the strongly-typed OpenAI SDK ChatCompletionOptions object.
     /// </summary>
     public static ChatCompletionOptions BuildOptions(Core.Prompty agent)
     {

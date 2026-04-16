@@ -105,11 +105,18 @@ public class AnthropicExecutor : IExecutor
         if (stream)
             body["stream"] = true;
 
+        // Apply model options via generated wire mapping
         var opts = agent.Model?.Options;
-        if (opts?.Temperature is not null) body["temperature"] = opts.Temperature;
-        if (opts?.TopP is not null) body["top_p"] = opts.TopP;
-        if (opts?.TopK is not null) body["top_k"] = opts.TopK;
-        if (opts?.StopSequences is not null) body["stop_sequences"] = opts.StopSequences;
+        if (opts is not null)
+        {
+            var wireOpts = opts.ToWire("anthropic");
+            // max_tokens is handled separately above with DefaultMaxTokens fallback
+            wireOpts.Remove("max_tokens");
+            foreach (var (key, value) in wireOpts)
+            {
+                body[key] = value;
+            }
+        }
 
         var tools = ToolsToWire(agent);
         if (tools is not null) body["tools"] = tools;

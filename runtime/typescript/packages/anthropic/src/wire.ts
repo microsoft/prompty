@@ -130,12 +130,18 @@ export function buildChatArgs(
     }
   }
 
+  const opts = buildOptions(agent);
+
   const args: Record<string, unknown> = {
     model,
     messages: conversationMessages,
-    max_tokens: agent.model?.options?.maxOutputTokens ?? DEFAULT_MAX_TOKENS,
-    ...buildOptions(agent),
+    ...opts,
   };
+
+  // Anthropic requires max_tokens — use default if toWire didn't emit it
+  if (!("max_tokens" in args)) {
+    args.max_tokens = DEFAULT_MAX_TOKENS;
+  }
 
   // System prompt as separate parameter
   if (systemParts.length > 0) {
@@ -176,12 +182,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result: Record<string, unknown> = {};
-
-  if (opts.temperature !== undefined) result.temperature = opts.temperature;
-  if (opts.topP !== undefined) result.top_p = opts.topP;
-  if (opts.topK !== undefined) result.top_k = opts.topK;
-  if (opts.stopSequences !== undefined) result.stop_sequences = opts.stopSequences;
+  const result = opts.toWire("anthropic");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
