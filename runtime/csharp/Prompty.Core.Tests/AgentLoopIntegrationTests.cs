@@ -22,7 +22,7 @@ file class PassthroughRenderer : IRenderer
 /// </summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }
@@ -35,7 +35,7 @@ file class PassthroughParser : IParser
 /// </summary>
 file class MultiMessageParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
     {
         var filler = new string('z', 300);
         return Task.FromResult(new List<Message>
@@ -71,7 +71,7 @@ file class MockExecutor : IExecutor
         return Task.FromResult(_responses.Dequeue());
     }
 
-    public Task<List<Message>> FormatToolMessagesAsync(
+    public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
         List<string> toolResults,
@@ -95,7 +95,7 @@ file class MockExecutor : IExecutor
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
-        return Task.FromResult(msgs);
+        return msgs;
     }
 }
 

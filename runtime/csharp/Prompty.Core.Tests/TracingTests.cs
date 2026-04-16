@@ -571,7 +571,7 @@ public class TracingTests : IDisposable
 
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+        public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
             => Task.FromResult<List<Message>>([new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 
@@ -580,12 +580,12 @@ public class TracingTests : IDisposable
         public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
             => Task.FromResult(response);
 
-        public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
         {
             var msgs = new List<Message> { new() { Role = Roles.Assistant, Parts = [] } };
             for (var i = 0; i < toolCalls.Count; i++)
                 msgs.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }] });
-            return Task.FromResult(msgs);
+            return msgs;
         }
     }
 

@@ -323,7 +323,7 @@ public class PipelineTests : IDisposable
     public async Task ParseAsync_UsesParserKind()
     {
         var agent = CreateAgent();
-        var messages = await Pipeline.ParseAsync(agent, "system:\nHello");
+        var messages = await Pipeline.ParseAsync(agent, "system:\nHello", null);
         Assert.Single(messages); // MockParser returns 1 message
     }
 
@@ -595,7 +595,7 @@ internal class MockRenderer : IRenderer
 
 internal class MockParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>([new Message { Role = Roles.System, Parts = [new TextPart { Value = rendered }] }]);
 }
 
@@ -604,7 +604,7 @@ internal class MockExecutor : IExecutor
     public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
         => Task.FromResult<object>("mock-response");
 
-    public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
@@ -612,7 +612,7 @@ internal class MockExecutor : IExecutor
         };
         for (var i = 0; i < toolCalls.Count; i++)
             messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
-        return Task.FromResult(messages);
+        return messages;
     }
 }
 
@@ -639,7 +639,7 @@ internal class ToolCallingExecutor : IExecutor
         return Task.FromResult<object>("final_response");
     }
 
-    public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
@@ -647,7 +647,7 @@ internal class ToolCallingExecutor : IExecutor
         };
         for (var i = 0; i < toolCalls.Count; i++)
             messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
-        return Task.FromResult(messages);
+        return messages;
     }
 }
 

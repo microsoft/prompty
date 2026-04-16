@@ -37,7 +37,7 @@ file class ThrowingMockExecutor : IExecutor
         return Task.FromResult(_responses.Dequeue()!);
     }
 
-    public Task<List<Message>> FormatToolMessagesAsync(
+    public List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
         List<string> toolResults,
@@ -59,7 +59,7 @@ file class ThrowingMockExecutor : IExecutor
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
-        return Task.FromResult(msgs);
+        return msgs;
     }
 }
 
@@ -73,7 +73,7 @@ file class PassthroughRenderer : IRenderer
 /// <summary>A passthrough parser for resilience tests.</summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }
