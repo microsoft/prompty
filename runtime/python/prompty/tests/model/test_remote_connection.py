@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import RemoteConnection
-
 
 def test_load_json_remoteconnection():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_remoteconnection():
     assert instance.kind == "remote"
     assert instance.name == "my-reference-connection"
     assert instance.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    
 
 def test_load_yaml_remoteconnection():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_remoteconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

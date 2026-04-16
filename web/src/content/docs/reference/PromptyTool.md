@@ -29,7 +29,6 @@ classDiagram
     }
     Tool <|-- PromptyTool
     class PromptyTool {
-      
         +string kind
         +string path
         +string mode
@@ -50,4 +49,4 @@ mode: single
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for prompty tools |
 | path | string | Path to the child .prompty file, relative to the parent |
-| mode | string | Execution mode: &#39;single&#39; for one LLM call, &#39;agentic&#39; for full agent loop |
+| mode | string | Execution mode: 'single' for one LLM call, 'agentic' for full agent loop |

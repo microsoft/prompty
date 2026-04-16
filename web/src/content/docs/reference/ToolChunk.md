@@ -23,7 +23,6 @@ classDiagram
     }
     StreamChunk <|-- ToolChunk
     class ToolChunk {
-      
         +string kind
         +ToolCall toolCall
     }

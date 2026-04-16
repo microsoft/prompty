@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import McpTool
-
 
 def test_load_json_mcptool():
     json_data = r'''
@@ -31,7 +27,6 @@ def test_load_json_mcptool():
     assert instance.kind == "mcp"
     assert instance.server_name == "My MCP Server"
     assert instance.server_description == "This tool allows access to MCP services."
-    
 
 def test_load_yaml_mcptool():
     yaml_data = r'''
@@ -133,5 +128,4 @@ def test_to_yaml_mcptool():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

@@ -35,6 +35,7 @@ func TestObjectPropertyLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ObjectProperty: %v", err)
 	}
+
 	_ = instance // No scalar properties to validate
 }
 
@@ -58,6 +59,7 @@ properties:
 	if err != nil {
 		t.Fatalf("Failed to load ObjectProperty: %v", err)
 	}
+
 	_ = instance // No scalar properties to validate
 }
 
@@ -85,6 +87,7 @@ func TestObjectPropertyRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ObjectProperty: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -92,6 +95,7 @@ func TestObjectPropertyRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ObjectProperty: %v", err)
 	}
+
 	_ = reloaded // No scalar properties to validate
 }
 
@@ -119,6 +123,7 @@ func TestObjectPropertyToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ObjectProperty: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -154,6 +159,7 @@ func TestObjectPropertyToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ObjectProperty: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

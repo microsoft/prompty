@@ -23,7 +23,6 @@ classDiagram
     }
     ContentPart <|-- TextPart
     class TextPart {
-      
         +string kind
         +string value
     }

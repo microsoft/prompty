@@ -9,7 +9,7 @@ import {
 } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
 
-import { buildBaseTestContext, goTestOptions } from "../../legacy/test-context.js";
+import { buildBaseTestContext, goTestOptions } from "../../testing/test-context.js";
 import { toSnakeCase } from "../../ir/utilities.js";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { GoExprVisitor } from "./visitor.js";

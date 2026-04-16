@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Binding
-
 
 def test_load_json_binding():
     json_data = r'''
@@ -19,7 +15,6 @@ def test_load_json_binding():
     assert instance is not None
     assert instance.name == "my-tool"
     assert instance.input == "input-variable"
-    
 
 def test_load_yaml_binding():
     yaml_data = r'''
@@ -79,10 +74,8 @@ def test_to_yaml_binding():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_binding_from_str():
     instance = Binding.load("example")
     assert instance is not None
     assert instance.input == "example"
-
 

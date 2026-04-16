@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130

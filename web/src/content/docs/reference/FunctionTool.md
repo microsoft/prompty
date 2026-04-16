@@ -26,7 +26,6 @@ classDiagram
     }
     Tool <|-- FunctionTool
     class FunctionTool {
-      
         +string kind
         +Property[] parameters
         +boolean strict

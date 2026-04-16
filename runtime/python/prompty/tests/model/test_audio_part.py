@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import AudioPart
-
 
 def test_load_json_audiopart():
     json_data = r'''
@@ -19,7 +15,6 @@ def test_load_json_audiopart():
     assert instance is not None
     assert instance.source == "https://example.com/audio.wav"
     assert instance.media_type == "audio/wav"
-    
 
 def test_load_yaml_audiopart():
     yaml_data = r'''
@@ -78,5 +73,4 @@ def test_to_yaml_audiopart():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

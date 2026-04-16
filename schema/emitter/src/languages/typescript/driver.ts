@@ -8,7 +8,7 @@ import { emitTypeScriptFile as emitTypeScriptFileDecl } from "./emitter.js";
 import { emitTypeScriptContext, emitTypeScriptIndex, emitEslintConfig } from "./scaffolding.js";
 import { emitTypeScriptTest } from "./test-emitter.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
-import { buildBaseTestContext, typescriptTestOptions } from "../../legacy/test-context.js";
+import { buildBaseTestContext, typescriptTestOptions } from "../../testing/test-context.js";
 import { toKebabCase } from "../../ir/utilities.js";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";

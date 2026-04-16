@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import FoundryConnection
-
 
 def test_load_json_foundryconnection():
     json_data = r'''
@@ -23,7 +19,6 @@ def test_load_json_foundryconnection():
     assert instance.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert instance.name == "my-openai-connection"
     assert instance.connection_type == "model"
-    
 
 def test_load_yaml_foundryconnection():
     yaml_data = r'''
@@ -94,5 +89,4 @@ def test_to_yaml_foundryconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

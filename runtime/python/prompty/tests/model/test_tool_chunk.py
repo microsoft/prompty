@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ToolChunk
-
 
 def test_load_json_toolchunk():
     json_data = r'''
@@ -20,7 +16,6 @@ def test_load_json_toolchunk():
     data = json.loads(json_data, strict=False)
     instance = ToolChunk.load(data)
     assert instance is not None
-    
 
 def test_load_yaml_toolchunk():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_toolchunk():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

@@ -4,7 +4,7 @@ description: "Documentation for the ContentPart type."
 slug: "reference/contentpart"
 ---
 
-A part of a message&#39;s content. Content parts are discriminated on the `kind`
+A part of a message's content. Content parts are discriminated on the `kind`
 field and represent the different modalities that can appear in a message.
 
 ## Class Diagram

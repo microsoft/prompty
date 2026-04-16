@@ -2,9 +2,7 @@ import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import { enumerateTypes, PropertyNode, TypeName, TypeNode } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
-import * as nunjucks from "nunjucks";
 import * as YAML from 'yaml';
-import path from "path";
 
 function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   return objects.reduce((acc, obj) => {
@@ -22,14 +20,171 @@ function deepMerge<T extends Record<string, any>>(...objects: T[]): T {
   }, {} as T);
 }
 
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
+function emitIndexMarkdown(
+  types: TypeNode[],
+  rootObject: string,
+  childTypes: { source: string; target: string }[],
+  compositionTypes: { source: string; target: string }[],
+): string {
+  let out = `---
+title: "AgentSchema"
+description: "Overview of declarative agent types in AgentSchema."
+slug: "reference/index"
+sidebar:
+  order: 1
+---
+
+The following diagram illustrates the classes and their relationships for declarative agents.
+The root [object](${rootObject.toLowerCase()}/) represents the main entry point for the system.
+
+\`\`\`mermaid
+---
+title: ${rootObject} and Related Types
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram`;
+  for (const type of types) {
+    out += `\n    class ${type.typeName.name} {`;
+    if (type.isAbstract) {
+      out += `\n      <<abstract>>`;
+    }
+    for (const prop of type.properties) {
+      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    out += `\n    }`;
+  }
+  for (const child of childTypes) {
+    out += `\n    ${child.source} <|-- ${child.target}`;
+  }
+  for (const comp of compositionTypes) {
+    out += `\n    ${comp.source} *-- ${comp.target}`;
+  }
+  out += `\n\`\`\`\n`;
+  return out;
+}
+
+function emitFileMarkdown(
+  node: TypeNode,
+  yml: string | undefined,
+  md: string | undefined,
+  compositionTypes: TypeNode[],
+  alternateCtors: { title: string; description: string; scalar: string; simple: string; expanded: string }[],
+  parent: TypeNode | undefined,
+): string {
+  let out = `---
+title: "${node.typeName.name}"
+description: "Documentation for the ${node.typeName.name} type."
+slug: "reference/${node.typeName.name.toLowerCase()}"
+---
+
+${node.description}
+
+## Class Diagram
+
+\`\`\`mermaid
+---
+title: ${node.typeName.name}
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram`;
+
+  if (parent) {
+    out += `\n    class ${parent.typeName.name} {`;
+    for (const prop of parent.properties) {
+      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    out += `\n    }`;
+    out += `\n    ${parent.typeName.name} <|-- ${node.typeName.name}`;
+  }
+
+  out += `\n    class ${node.typeName.name} {`;
+  if (node.isAbstract) {
+    out += `\n      <<abstract>>`;
+  }
+  for (const prop of node.properties) {
+    out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+  }
+  out += `\n    }`;
+
+  for (const type of node.childTypes) {
+    out += `\n    class ${type.typeName.name} {`;
+    for (const prop of type.properties) {
+      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    out += `\n    }`;
+    out += `\n    ${node.typeName.name} <|-- ${type.typeName.name}`;
+  }
+
+  for (const type of compositionTypes) {
+    out += `\n    class ${type.typeName.name} {`;
+    for (const prop of type.properties) {
+      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    out += `\n    }`;
+    out += `\n    ${node.typeName.name} *-- ${type.typeName.name}`;
+  }
+
+  out += `\n\`\`\``;
+
+  if (md) {
+    out += `\n\n## Markdown Example\n\n\`\`\`markdown\n${md.trim()}\n\`\`\``;
+  }
+
+  if (yml) {
+    out += `\n\n## Yaml Example\n\n\`\`\`yaml\n${yml.trim()}\n\`\`\``;
+  }
+
+  if (node.properties.length > 0) {
+    out += `\n\n## Properties\n\n| Name | Type | Description |\n| ---- | ---- | ----------- |`;
+    for (const prop of node.properties) {
+      out += `\n| ${prop.name} | ${renderType(prop)} | ${prop.description.trim()}${renderChildTypes(prop)} |`;
+    }
+  }
+
+  if (node.childTypes.length > 0) {
+    out += `\n\n## Child Types\n\nThe following types extend \`${node.typeName.name}\`:\n`;
+    for (const type of node.childTypes) {
+      out += `\n- [${type.typeName.name}](../${type.typeName.name.toLowerCase()}/)`;
+    }
+  }
+
+  if (compositionTypes.length > 0) {
+    out += `\n\n## Composed Types\n\nThe following types are composed within \`${node.typeName.name}\`:\n`;
+    for (const type of compositionTypes) {
+      out += `\n- [${type.typeName.name}](../${type.typeName.name.toLowerCase()}/)`;
+    }
+  }
+
+  if (alternateCtors.length > 0) {
+    out += `\n\n## Alternate Constructions\n\nThe following alternate constructions are available for \`${node.typeName.name}\`.\nThese allow for simplified creation of instances using a single property.`;
+    for (const ctor of alternateCtors) {
+      out += `\n\n### ${ctor.scalar}`;
+      if (ctor.title) {
+        out += ` ${ctor.title}`;
+      }
+      out += `\n`;
+      if (ctor.description) {
+        out += `\n${ctor.description}\n`;
+      }
+      out += `\nThe following simplified representation can be used:\n\n\`\`\`yaml\n${ctor.simple.trim()}\n\`\`\`\n\nThis is equivalent to the full representation:\n\n\`\`\`yaml\n${ctor.expanded.trim()}\n\`\`\``;
+    }
+  }
+
+  out += `\n`;
+  return out;
+}
+
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, _templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
 
   const rootObject = context.options["root-alias"] || "AgentDefinition";
-  // set up template environment
-  const templatePath = path.resolve(templateDir, 'markdown');
-  const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(templatePath));
-  const template = env.getTemplate('file.md.njk', true);
-  const readme = env.getTemplate('index.md.njk', true);
 
   const nodes = filterNodes(Array.from(enumerateTypes(node)), options);
 
@@ -45,13 +200,7 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
     });
   }).flat();
 
-  const readmeContent = readme.render({
-    types: nodes,
-    rootObject: rootObject,
-    childTypes: childTypes,
-    compositionTypes: compositionTypes
-  });
-
+  const readmeContent = emitIndexMarkdown(nodes, rootObject, childTypes, compositionTypes);
   await emitMarkdownFile(context, "index", readmeContent, emitTarget["output-dir"]);
 
   const findNodeByName = (name: TypeName): TypeNode | undefined => {
@@ -71,16 +220,14 @@ export const generateMarkdown = async (context: EmitContext<PromptyEmitterOption
         md = `---\n${YAML.stringify(s, { indent: 2 })}---\n${instructions}`;
       }
     }
-    const markdown = template.render({
-      node: node,
-      yml: yml,
-      md: md,
-      renderType: renderType,
-      renderChildTypes: renderChildTypes,
-      compositionTypes: getCompositionTypes(node),
-      alternateCtors: generateCoercions(node),
-      parent: node.base ? findNodeByName(node.base) : undefined,
-    });
+    const markdown = emitFileMarkdown(
+      node,
+      yml,
+      md,
+      getCompositionTypes(node),
+      generateCoercions(node),
+      node.base ? findNodeByName(node.base) : undefined,
+    );
 
     await emitMarkdownFile(context, node.typeName.name, markdown, emitTarget["output-dir"]);
   }

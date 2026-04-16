@@ -25,7 +25,6 @@ classDiagram
     }
     Connection <|-- AnonymousConnection
     class AnonymousConnection {
-      
         +string kind
         +string endpoint
     }
@@ -42,5 +41,5 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens) |
+| kind | string | The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens) |
 | endpoint | string | The endpoint for authenticating with the AI service |

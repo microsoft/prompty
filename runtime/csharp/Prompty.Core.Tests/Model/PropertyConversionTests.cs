@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -187,6 +186,7 @@ enumValues:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
     [Fact]
     public void LoadJsonFromBoolean()
     {
@@ -207,11 +207,13 @@ enumValues:
         var data = "false";
         var instance = Property.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("boolean", instance.Kind);
         Assert.NotNull(instance.Example);
         Assert.IsType<bool>(instance.Example);
         Assert.False((bool)instance.Example);
     }
+
     [Fact]
     public void LoadJsonFromFloat32()
     {
@@ -232,11 +234,13 @@ enumValues:
         var data = "3.14";
         var instance = Property.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("float", instance.Kind);
         Assert.NotNull(instance.Example);
         Assert.True(instance.Example is float || instance.Example is double || instance.Example is int || instance.Example is long);
         Assert.Equal(3.14, Convert.ToDouble(instance.Example), 5);
     }
+
     [Fact]
     public void LoadJsonFromInteger()
     {
@@ -255,9 +259,11 @@ enumValues:
         var data = "4";
         var instance = Property.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("integer", instance.Kind);
         Assert.Equal(4, instance.Example);
     }
+
     [Fact]
     public void LoadJsonFromString()
     {
@@ -276,8 +282,8 @@ enumValues:
         var data = "\"example\"";
         var instance = Property.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("string", instance.Kind);
         Assert.Equal("example", instance.Example);
     }
-
 }

@@ -23,7 +23,6 @@ classDiagram
     }
     ContentPart <|-- ImagePart
     class ImagePart {
-      
         +string kind
         +string source
         +string detail
@@ -45,5 +44,5 @@ mediaType: image/png
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for image content |
 | source | string | URL or base64-encoded image data |
-| detail | string | Detail level hint for the model (e.g., &#39;auto&#39;, &#39;low&#39;, &#39;high&#39;) |
-| mediaType | string | MIME type of the image (e.g., &#39;image/png&#39;) |
+| detail | string | Detail level hint for the model (e.g., 'auto', 'low', 'high') |
+| mediaType | string | MIME type of the image (e.g., 'image/png') |

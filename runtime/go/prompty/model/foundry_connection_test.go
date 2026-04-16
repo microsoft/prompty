@@ -31,6 +31,7 @@ func TestFoundryConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FoundryConnection: %v", err)
 	}
+
 	if instance.Kind != "foundry" {
 		t.Errorf(`Expected Kind to be "foundry", got %v`, instance.Kind)
 	}
@@ -64,6 +65,7 @@ connectionType: model
 	if err != nil {
 		t.Fatalf("Failed to load FoundryConnection: %v", err)
 	}
+
 	if instance.Kind != "foundry" {
 		t.Errorf(`Expected Kind to be "foundry", got %v`, instance.Kind)
 	}
@@ -98,6 +100,7 @@ func TestFoundryConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FoundryConnection: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -105,6 +108,7 @@ func TestFoundryConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload FoundryConnection: %v", err)
 	}
+
 	if reloaded.Kind != "foundry" {
 		t.Errorf(`Expected Kind to be "foundry", got %v`, reloaded.Kind)
 	}
@@ -139,6 +143,7 @@ func TestFoundryConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FoundryConnection: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -170,6 +175,7 @@ func TestFoundryConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FoundryConnection: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

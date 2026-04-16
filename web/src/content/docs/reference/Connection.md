@@ -79,8 +79,8 @@ usageDescription: This will allow the agent to respond to an email on your behal
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens) |
-| authenticationMode | string | The authority level for the connection, indicating under whose authority the connection is made (e.g., &#39;user&#39;, &#39;agent&#39;, &#39;system&#39;) |
+| kind | string | The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens) |
+| authenticationMode | string | The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system') |
 | usageDescription | string | The usage description for the connection, providing context on how this connection will be used |
 
 ## Child Types

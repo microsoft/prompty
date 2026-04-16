@@ -18,7 +18,7 @@ import { ExprVisitor, renderObjectLiteral } from "../../ir/visitor.js";
 import { PythonExprVisitor } from "./visitor.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import { toSnakeCase } from "../../ir/utilities.js";
-import { buildBaseTestContext, pythonTestOptions } from "../../legacy/test-context.js";
+import { buildBaseTestContext, pythonTestOptions } from "../../testing/test-context.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { emitPythonFile as emitPythonFileDecl } from "./emitter.js";
 import { emitPythonContext, emitPythonInit } from "./scaffolding.js";

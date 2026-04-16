@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -140,6 +139,7 @@ neverRequireApprovalTools:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
     [Fact]
     public void LoadJsonFromString()
     {
@@ -157,7 +157,7 @@ neverRequireApprovalTools:
         var data = "\"never\"";
         var instance = McpApprovalMode.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("never", instance.Kind);
     }
-
 }

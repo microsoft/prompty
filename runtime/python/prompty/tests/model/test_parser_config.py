@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ParserConfig
-
 
 def test_load_json_parserconfig():
     json_data = r'''
@@ -20,7 +16,6 @@ def test_load_json_parserconfig():
     instance = ParserConfig.load(data)
     assert instance is not None
     assert instance.kind == "prompty"
-    
 
 def test_load_yaml_parserconfig():
     yaml_data = r'''
@@ -85,10 +80,8 @@ def test_to_yaml_parserconfig():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_parserconfig_from_str():
     instance = ParserConfig.load("example")
     assert instance is not None
     assert instance.kind == "example"
-
 

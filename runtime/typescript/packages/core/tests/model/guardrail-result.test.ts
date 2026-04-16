@@ -21,9 +21,7 @@ describe("GuardrailResult", () => {
       const json = `{\n  "allowed": true,\n  "reason": "Content is safe"\n}`;
       const instance = GuardrailResult.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.allowed).toEqual(true);
-
       expect(instance.reason).toEqual("Content is safe");
     });
 
@@ -32,9 +30,7 @@ describe("GuardrailResult", () => {
       const instance = GuardrailResult.fromJson(json);
       const output = instance.toJson();
       const reloaded = GuardrailResult.fromJson(output);
-
       expect(reloaded.allowed).toEqual(instance.allowed);
-
       expect(reloaded.reason).toEqual(instance.reason);
     });
   });
@@ -44,9 +40,7 @@ describe("GuardrailResult", () => {
       const yaml = `allowed: true\nreason: Content is safe\n`;
       const instance = GuardrailResult.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.allowed).toEqual(true);
-
       expect(instance.reason).toEqual("Content is safe");
     });
 
@@ -55,9 +49,7 @@ describe("GuardrailResult", () => {
       const instance = GuardrailResult.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = GuardrailResult.fromYaml(output);
-
       expect(reloaded.allowed).toEqual(instance.allowed);
-
       expect(reloaded.reason).toEqual(instance.reason);
     });
   });
@@ -69,14 +61,12 @@ describe("GuardrailResult", () => {
       expect(instance).toBeInstanceOf(GuardrailResult);
       expect(instance.allowed).toBe(true);
     });
-
     it("should create instance via deny() factory", () => {
       const instance = GuardrailResult.deny("test");
       expect(instance).toBeDefined();
       expect(instance).toBeInstanceOf(GuardrailResult);
       expect(instance.allowed).toBe(false);
     });
-
     it("should create instance via allow() factory", () => {
       const instance = GuardrailResult.allow();
       expect(instance).toBeDefined();

@@ -23,7 +23,6 @@ classDiagram
     }
     ContentPart <|-- FilePart
     class FilePart {
-      
         +string kind
         +string source
         +string mediaType
@@ -43,4 +42,4 @@ mediaType: application/pdf
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for file content |
 | source | string | URL or base64-encoded file data |
-| mediaType | string | MIME type of the file (e.g., &#39;application/pdf&#39;) |
+| mediaType | string | MIME type of the file (e.g., 'application/pdf') |

@@ -40,6 +40,7 @@ func TestMcpToolLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpTool: %v", err)
 	}
+
 	if instance.Kind != "mcp" {
 		t.Errorf(`Expected Kind to be "mcp", got %v`, instance.Kind)
 	}
@@ -76,6 +77,7 @@ allowedTools:
 	if err != nil {
 		t.Fatalf("Failed to load McpTool: %v", err)
 	}
+
 	if instance.Kind != "mcp" {
 		t.Errorf(`Expected Kind to be "mcp", got %v`, instance.Kind)
 	}
@@ -116,6 +118,7 @@ func TestMcpToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpTool: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -123,6 +126,7 @@ func TestMcpToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload McpTool: %v", err)
 	}
+
 	if reloaded.Kind != "mcp" {
 		t.Errorf(`Expected Kind to be "mcp", got %v`, reloaded.Kind)
 	}
@@ -163,6 +167,7 @@ func TestMcpToolToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpTool: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -203,6 +208,7 @@ func TestMcpToolToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpTool: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

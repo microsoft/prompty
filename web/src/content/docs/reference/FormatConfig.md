@@ -19,7 +19,6 @@ config:
 ---
 classDiagram
     class FormatConfig {
-      
         +string kind
         +boolean strict
         +dictionary options
@@ -50,7 +49,7 @@ These allow for simplified creation of instances using a single property.
 
 ### string format
 
-Simple construction with just a &quot;kind&quot; string
+Simple construction with just a "kind" string
 
 The following simplified representation can be used:
 

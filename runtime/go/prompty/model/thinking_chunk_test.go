@@ -28,6 +28,7 @@ func TestThinkingChunkLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ThinkingChunk: %v", err)
 	}
+
 	if instance.Value != "Let me consider..." {
 		t.Errorf(`Expected Value to be "Let me consider...", got %v`, instance.Value)
 	}
@@ -49,6 +50,7 @@ value: Let me consider...
 	if err != nil {
 		t.Fatalf("Failed to load ThinkingChunk: %v", err)
 	}
+
 	if instance.Value != "Let me consider..." {
 		t.Errorf(`Expected Value to be "Let me consider...", got %v`, instance.Value)
 	}
@@ -71,6 +73,7 @@ func TestThinkingChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ThinkingChunk: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -78,6 +81,7 @@ func TestThinkingChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ThinkingChunk: %v", err)
 	}
+
 	if reloaded.Value != "Let me consider..." {
 		t.Errorf(`Expected Value to be "Let me consider...", got %v`, reloaded.Value)
 	}
@@ -100,6 +104,7 @@ func TestThinkingChunkToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ThinkingChunk: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -128,6 +133,7 @@ func TestThinkingChunkToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ThinkingChunk: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

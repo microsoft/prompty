@@ -30,7 +30,6 @@ classDiagram
     }
     Tool <|-- CustomTool
     class CustomTool {
-      
         +string kind
         +Connection connection
         +dictionary options

@@ -21,7 +21,6 @@ describe("ThinkingChunk", () => {
       const json = `{\n  "value": "Let me consider..."\n}`;
       const instance = ThinkingChunk.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Let me consider...");
     });
 
@@ -30,7 +29,6 @@ describe("ThinkingChunk", () => {
       const instance = ThinkingChunk.fromJson(json);
       const output = instance.toJson();
       const reloaded = ThinkingChunk.fromJson(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });
@@ -40,7 +38,6 @@ describe("ThinkingChunk", () => {
       const yaml = `value: Let me consider...\n`;
       const instance = ThinkingChunk.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Let me consider...");
     });
 
@@ -49,7 +46,6 @@ describe("ThinkingChunk", () => {
       const instance = ThinkingChunk.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ThinkingChunk.fromYaml(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });

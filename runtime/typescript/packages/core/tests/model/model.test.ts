@@ -21,11 +21,8 @@ describe("Model", () => {
       const json = `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "key": "{your-api-key}"\n  },\n  "options": {\n    "type": "chat",\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`;
       const instance = Model.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("gpt-35-turbo");
-
       expect(instance.provider).toEqual("foundry");
-
       expect(instance.apiType).toEqual("chat");
     });
 
@@ -34,11 +31,8 @@ describe("Model", () => {
       const instance = Model.fromJson(json);
       const output = instance.toJson();
       const reloaded = Model.fromJson(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.provider).toEqual(instance.provider);
-
       expect(reloaded.apiType).toEqual(instance.apiType);
     });
   });
@@ -48,11 +42,8 @@ describe("Model", () => {
       const yaml = `id: gpt-35-turbo\nprovider: foundry\napiType: chat\nconnection:\n  kind: key\n  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n  key: "{your-api-key}"\noptions:\n  type: chat\n  temperature: 0.7\n  maxOutputTokens: 1000\n`;
       const instance = Model.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("gpt-35-turbo");
-
       expect(instance.provider).toEqual("foundry");
-
       expect(instance.apiType).toEqual("chat");
     });
 
@@ -61,11 +52,8 @@ describe("Model", () => {
       const instance = Model.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Model.fromYaml(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.provider).toEqual(instance.provider);
-
       expect(reloaded.apiType).toEqual(instance.apiType);
     });
   });
@@ -76,7 +64,6 @@ describe("Model", () => {
       const json = JSON.stringify(value);
       const instance = Model.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("example");
     });
   });

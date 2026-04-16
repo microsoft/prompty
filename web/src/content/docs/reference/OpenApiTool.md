@@ -26,7 +26,6 @@ classDiagram
     }
     Tool <|-- OpenApiTool
     class OpenApiTool {
-      
         +string kind
         +Connection connection
         +string specification

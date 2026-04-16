@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ApiKeyConnection
-
 
 def test_load_json_apikeyconnection():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_apikeyconnection():
     assert instance.kind == "key"
     assert instance.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
     assert instance.api_key == "your-api-key"
-    
 
 def test_load_yaml_apikeyconnection():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_apikeyconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

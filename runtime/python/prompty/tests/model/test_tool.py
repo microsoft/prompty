@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Tool
-
 
 def test_load_json_tool():
     json_data = r'''
@@ -24,7 +20,6 @@ def test_load_json_tool():
     assert instance.name == "my-tool"
     assert instance.kind == "function"
     assert instance.description == "A description of the tool"
-    
 
 def test_load_yaml_tool():
     yaml_data = r'''
@@ -100,5 +95,4 @@ def test_to_yaml_tool():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

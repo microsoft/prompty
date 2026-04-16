@@ -11,7 +11,7 @@ import {
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { RustExprVisitor } from "./visitor.js";
-import { buildBaseTestContext, rustTestOptions } from "../../legacy/test-context.js";
+import { buildBaseTestContext, rustTestOptions } from "../../testing/test-context.js";
 import { toSnakeCase } from "../../ir/utilities.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { emitRustFile as emitRustFileDecl } from "./emitter.js";

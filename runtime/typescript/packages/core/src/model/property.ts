@@ -111,10 +111,7 @@ export class Property {
     return instance;
   }
 
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Property {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Property {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -210,10 +207,7 @@ export class ArrayProperty extends Property {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ArrayProperty {
+  static load(data: Record<string, unknown>, context?: LoadContext): ArrayProperty {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -224,10 +218,7 @@ export class ArrayProperty extends Property {
       instance.kind = String(data["kind"]);
     }
     if (data["items"] !== undefined && data["items"] !== null) {
-      instance.items = Property.load(
-        data["items"] as Record<string, unknown>,
-        context,
-      );
+      instance.items = Property.load(data["items"] as Record<string, unknown>, context);
     }
 
     if (context) {
@@ -296,10 +287,7 @@ export class ObjectProperty extends Property {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ObjectProperty {
+  static load(data: Record<string, unknown>, context?: LoadContext): ObjectProperty {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -310,10 +298,7 @@ export class ObjectProperty extends Property {
       instance.kind = String(data["kind"]);
     }
     if (data["properties"] !== undefined && data["properties"] !== null) {
-      instance.properties = ObjectProperty.loadProperties(
-        data["properties"] as unknown[],
-        context,
-      );
+      instance.properties = ObjectProperty.loadProperties(data["properties"] as unknown[], context);
     }
 
     if (context) {
@@ -322,10 +307,7 @@ export class ObjectProperty extends Property {
     return instance;
   }
 
-  static loadProperties(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Property[] {
+  static loadProperties(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -333,26 +315,21 @@ export class ObjectProperty extends Property {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, kind: v });
+          result.push({ name: k, "kind": v });
         }
       }
       data = result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
   }
 
-  static saveProperties(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveProperties(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -372,10 +349,7 @@ export class ObjectProperty extends Property {
       result["kind"] = obj.kind;
     }
     if (obj.properties !== undefined && obj.properties !== null) {
-      result["properties"] = ObjectProperty.saveProperties(
-        obj.properties,
-        context,
-      );
+      result["properties"] = ObjectProperty.saveProperties(obj.properties, context);
     }
     return result;
   }
@@ -403,3 +377,4 @@ export class ObjectProperty extends Property {
 
   //#endregion
 }
+

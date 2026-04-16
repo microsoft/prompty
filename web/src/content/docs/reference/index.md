@@ -20,7 +20,6 @@ config:
 ---
 classDiagram
     class Property {
-      
         +string name
         +string kind
         +string description
@@ -30,12 +29,10 @@ classDiagram
         +unknown[] enumValues
     }
     class ObjectProperty {
-      
         +string kind
         +Property[] properties
     }
     class ArrayProperty {
-      
         +string kind
         +Property items
     }
@@ -46,37 +43,31 @@ classDiagram
         +string usageDescription
     }
     class ReferenceConnection {
-      
         +string kind
         +string name
         +string target
     }
     class RemoteConnection {
-      
         +string kind
         +string name
         +string endpoint
     }
     class ApiKeyConnection {
-      
         +string kind
         +string endpoint
         +string apiKey
     }
     class AnonymousConnection {
-      
         +string kind
         +string endpoint
     }
     class FoundryConnection {
-      
         +string kind
         +string endpoint
         +string name
         +string connectionType
     }
     class OAuthConnection {
-      
         +string kind
         +string endpoint
         +string clientId
@@ -85,7 +76,6 @@ classDiagram
         +string[] scopes
     }
     class ModelOptions {
-      
         +float32 frequencyPenalty
         +int32 maxOutputTokens
         +float32 presencePenalty
@@ -98,7 +88,6 @@ classDiagram
         +dictionary additionalProperties
     }
     class Model {
-      
         +string id
         +string provider
         +string apiType
@@ -106,7 +95,6 @@ classDiagram
         +ModelOptions options
     }
     class Binding {
-      
         +string name
         +string input
     }
@@ -118,25 +106,21 @@ classDiagram
         +Binding[] bindings
     }
     class FunctionTool {
-      
         +string kind
         +Property[] parameters
         +boolean strict
     }
     class CustomTool {
-      
         +string kind
         +Connection connection
         +dictionary options
     }
     class McpApprovalMode {
-      
         +string kind
         +string[] alwaysRequireApprovalTools
         +string[] neverRequireApprovalTools
     }
     class McpTool {
-      
         +string kind
         +Connection connection
         +string serverName
@@ -145,35 +129,29 @@ classDiagram
         +string[] allowedTools
     }
     class OpenApiTool {
-      
         +string kind
         +Connection connection
         +string specification
     }
     class PromptyTool {
-      
         +string kind
         +string path
         +string mode
     }
     class FormatConfig {
-      
         +string kind
         +boolean strict
         +dictionary options
     }
     class ParserConfig {
-      
         +string kind
         +dictionary options
     }
     class Template {
-      
         +FormatConfig format
         +ParserConfig parser
     }
     class Prompty {
-      
         +string name
         +string displayName
         +string description
@@ -190,47 +168,39 @@ classDiagram
         +string kind
     }
     class TextPart {
-      
         +string kind
         +string value
     }
     class ImagePart {
-      
         +string kind
         +string source
         +string detail
         +string mediaType
     }
     class FilePart {
-      
         +string kind
         +string source
         +string mediaType
     }
     class AudioPart {
-      
         +string kind
         +string source
         +string mediaType
     }
     class Message {
-      
         +string role
         +ContentPart[] parts
         +dictionary metadata
     }
     class ToolCall {
-      
         +string id
         +string name
         +string arguments
     }
     class ToolResult {
-      
         +ContentPart[] parts
     }
     class GuardrailResult {
-      
         +boolean allowed
         +string reason
         +unknown rewrite
@@ -240,27 +210,22 @@ classDiagram
         +string kind
     }
     class TextChunk {
-      
         +string kind
         +string value
     }
     class ThinkingChunk {
-      
         +string kind
         +string value
     }
     class ToolChunk {
-      
         +string kind
         +ToolCall toolCall
     }
     class ErrorChunk {
-      
         +string kind
         +string message
     }
     class ModelInfo {
-      
         +string id
         +string displayName
         +string ownedBy

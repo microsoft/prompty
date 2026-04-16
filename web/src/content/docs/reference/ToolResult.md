@@ -23,7 +23,6 @@ config:
 ---
 classDiagram
     class ToolResult {
-      
         +ContentPart[] parts
     }
     class ContentPart {

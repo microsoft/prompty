@@ -20,7 +20,6 @@ config:
 ---
 classDiagram
     class ToolCall {
-      
         +string id
         +string name
         +string arguments

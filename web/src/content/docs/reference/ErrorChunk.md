@@ -23,7 +23,6 @@ classDiagram
     }
     StreamChunk <|-- ErrorChunk
     class ErrorChunk {
-      
         +string kind
         +string message
     }

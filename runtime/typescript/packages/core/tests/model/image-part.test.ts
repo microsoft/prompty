@@ -21,11 +21,8 @@ describe("ImagePart", () => {
       const json = `{\n  "source": "https://example.com/image.png",\n  "detail": "auto",\n  "mediaType": "image/png"\n}`;
       const instance = ImagePart.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/image.png");
-
       expect(instance.detail).toEqual("auto");
-
       expect(instance.mediaType).toEqual("image/png");
     });
 
@@ -34,11 +31,8 @@ describe("ImagePart", () => {
       const instance = ImagePart.fromJson(json);
       const output = instance.toJson();
       const reloaded = ImagePart.fromJson(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.detail).toEqual(instance.detail);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });
@@ -48,11 +42,8 @@ describe("ImagePart", () => {
       const yaml = `source: "https://example.com/image.png"\ndetail: auto\nmediaType: image/png\n`;
       const instance = ImagePart.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/image.png");
-
       expect(instance.detail).toEqual("auto");
-
       expect(instance.mediaType).toEqual("image/png");
     });
 
@@ -61,11 +52,8 @@ describe("ImagePart", () => {
       const instance = ImagePart.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ImagePart.fromYaml(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.detail).toEqual(instance.detail);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });

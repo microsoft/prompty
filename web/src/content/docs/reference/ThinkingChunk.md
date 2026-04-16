@@ -23,7 +23,6 @@ classDiagram
     }
     StreamChunk <|-- ThinkingChunk
     class ThinkingChunk {
-      
         +string kind
         +string value
     }

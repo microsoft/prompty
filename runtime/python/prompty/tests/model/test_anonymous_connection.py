@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import AnonymousConnection
-
 
 def test_load_json_anonymousconnection():
     json_data = r'''
@@ -19,7 +15,6 @@ def test_load_json_anonymousconnection():
     assert instance is not None
     assert instance.kind == "anonymous"
     assert instance.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    
 
 def test_load_yaml_anonymousconnection():
     yaml_data = r'''
@@ -78,5 +73,4 @@ def test_to_yaml_anonymousconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

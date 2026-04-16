@@ -21,9 +21,7 @@ describe("FormatConfig", () => {
       const json = `{\n  "kind": "mustache",\n  "strict": true,\n  "options": {\n    "key": "value"\n  }\n}`;
       const instance = FormatConfig.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("mustache");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -32,9 +30,7 @@ describe("FormatConfig", () => {
       const instance = FormatConfig.fromJson(json);
       const output = instance.toJson();
       const reloaded = FormatConfig.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
   });
@@ -44,9 +40,7 @@ describe("FormatConfig", () => {
       const yaml = `kind: mustache\nstrict: true\noptions:\n  key: value\n`;
       const instance = FormatConfig.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("mustache");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -55,9 +49,7 @@ describe("FormatConfig", () => {
       const instance = FormatConfig.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FormatConfig.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
   });
@@ -68,7 +60,6 @@ describe("FormatConfig", () => {
       const json = JSON.stringify(value);
       const instance = FormatConfig.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("example");
     });
   });

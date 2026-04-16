@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ModelOptions
-
 
 def test_load_json_modeloptions():
     json_data = r'''
@@ -38,9 +34,7 @@ def test_load_json_modeloptions():
     assert instance.temperature == 0.7
     assert instance.top_k == 40
     assert instance.top_p == 0.9
-    
     assert instance.allow_multiple_tool_calls
-    
 
 def test_load_yaml_modeloptions():
     yaml_data = r'''
@@ -165,5 +159,4 @@ def test_to_yaml_modeloptions():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

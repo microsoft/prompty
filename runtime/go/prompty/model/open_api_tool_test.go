@@ -32,6 +32,7 @@ func TestOpenApiToolLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OpenApiTool: %v", err)
 	}
+
 	if instance.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
 	}
@@ -59,6 +60,7 @@ specification: ./openapi.json
 	if err != nil {
 		t.Fatalf("Failed to load OpenApiTool: %v", err)
 	}
+
 	if instance.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
 	}
@@ -88,6 +90,7 @@ func TestOpenApiToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OpenApiTool: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -95,6 +98,7 @@ func TestOpenApiToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload OpenApiTool: %v", err)
 	}
+
 	if reloaded.Kind != "openapi" {
 		t.Errorf(`Expected Kind to be "openapi", got %v`, reloaded.Kind)
 	}
@@ -124,6 +128,7 @@ func TestOpenApiToolToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OpenApiTool: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -156,6 +161,7 @@ func TestOpenApiToolToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OpenApiTool: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import CustomTool
-
 
 def test_load_json_customtool():
     json_data = r'''
@@ -22,7 +18,6 @@ def test_load_json_customtool():
     data = json.loads(json_data, strict=False)
     instance = CustomTool.load(data)
     assert instance is not None
-    
 
 def test_load_yaml_customtool():
     yaml_data = r'''
@@ -95,5 +90,4 @@ def test_to_yaml_customtool():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

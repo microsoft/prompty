@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import GuardrailResult
-
 
 def test_load_json_guardrailresult():
     json_data = r'''
@@ -17,10 +13,8 @@ def test_load_json_guardrailresult():
     data = json.loads(json_data, strict=False)
     instance = GuardrailResult.load(data)
     assert instance is not None
-    
     assert instance.allowed
     assert instance.reason == "Content is safe"
-    
 
 def test_load_yaml_guardrailresult():
     yaml_data = r'''
@@ -80,16 +74,12 @@ def test_to_yaml_guardrailresult():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
-
-
 def test_factory_rewrite_guardrailresult():
     """Test that rewrite() factory creates a valid instance."""
     instance = GuardrailResult.create_rewrite("test")
     assert instance is not None
     assert isinstance(instance, GuardrailResult)
     assert instance.allowed
-
 
 def test_factory_deny_guardrailresult():
     """Test that deny() factory creates a valid instance."""
@@ -98,12 +88,10 @@ def test_factory_deny_guardrailresult():
     assert isinstance(instance, GuardrailResult)
     assert not instance.allowed
 
-
 def test_factory_allow_guardrailresult():
     """Test that allow() factory creates a valid instance."""
     instance = GuardrailResult.allow()
     assert instance is not None
     assert isinstance(instance, GuardrailResult)
     assert instance.allowed
-
 

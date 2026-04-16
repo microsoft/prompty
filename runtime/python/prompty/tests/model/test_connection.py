@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Connection
-
 
 def test_load_json_connection():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_connection():
     assert instance.kind == "reference"
     assert instance.authentication_mode == "system"
     assert instance.usage_description == "This will allow the agent to respond to an email on your behalf"
-    
 
 def test_load_yaml_connection():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_connection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

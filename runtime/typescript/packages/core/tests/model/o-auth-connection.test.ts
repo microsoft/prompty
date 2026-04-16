@@ -21,15 +21,10 @@ describe("OAuthConnection", () => {
       const json = `{\n  "kind": "oauth",\n  "endpoint": "https://api.example.com",\n  "clientId": "your-client-id",\n  "clientSecret": "your-client-secret",\n  "tokenUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",\n  "scopes": [\n    "https://cognitiveservices.azure.com/.default"\n  ]\n}`;
       const instance = OAuthConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("oauth");
-
       expect(instance.endpoint).toEqual("https://api.example.com");
-
       expect(instance.clientId).toEqual("your-client-id");
-
       expect(instance.clientSecret).toEqual("your-client-secret");
-
       expect(instance.tokenUrl).toEqual(
         "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       );
@@ -40,15 +35,10 @@ describe("OAuthConnection", () => {
       const instance = OAuthConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = OAuthConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.clientId).toEqual(instance.clientId);
-
       expect(reloaded.clientSecret).toEqual(instance.clientSecret);
-
       expect(reloaded.tokenUrl).toEqual(instance.tokenUrl);
     });
   });
@@ -58,15 +48,10 @@ describe("OAuthConnection", () => {
       const yaml = `kind: oauth\nendpoint: "https://api.example.com"\nclientId: your-client-id\nclientSecret: your-client-secret\ntokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"\nscopes:\n  - "https://cognitiveservices.azure.com/.default"\n`;
       const instance = OAuthConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("oauth");
-
       expect(instance.endpoint).toEqual("https://api.example.com");
-
       expect(instance.clientId).toEqual("your-client-id");
-
       expect(instance.clientSecret).toEqual("your-client-secret");
-
       expect(instance.tokenUrl).toEqual(
         "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       );
@@ -77,15 +62,10 @@ describe("OAuthConnection", () => {
       const instance = OAuthConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = OAuthConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.clientId).toEqual(instance.clientId);
-
       expect(reloaded.clientSecret).toEqual(instance.clientSecret);
-
       expect(reloaded.tokenUrl).toEqual(instance.tokenUrl);
     });
   });

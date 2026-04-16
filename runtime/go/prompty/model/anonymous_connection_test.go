@@ -29,6 +29,7 @@ func TestAnonymousConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AnonymousConnection: %v", err)
 	}
+
 	if instance.Kind != "anonymous" {
 		t.Errorf(`Expected Kind to be "anonymous", got %v`, instance.Kind)
 	}
@@ -54,6 +55,7 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 	if err != nil {
 		t.Fatalf("Failed to load AnonymousConnection: %v", err)
 	}
+
 	if instance.Kind != "anonymous" {
 		t.Errorf(`Expected Kind to be "anonymous", got %v`, instance.Kind)
 	}
@@ -80,6 +82,7 @@ func TestAnonymousConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AnonymousConnection: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -87,6 +90,7 @@ func TestAnonymousConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload AnonymousConnection: %v", err)
 	}
+
 	if reloaded.Kind != "anonymous" {
 		t.Errorf(`Expected Kind to be "anonymous", got %v`, reloaded.Kind)
 	}
@@ -113,6 +117,7 @@ func TestAnonymousConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AnonymousConnection: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -142,6 +147,7 @@ func TestAnonymousConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AnonymousConnection: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

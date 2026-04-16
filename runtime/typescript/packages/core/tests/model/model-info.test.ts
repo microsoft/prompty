@@ -21,13 +21,9 @@ describe("ModelInfo", () => {
       const json = `{\n  "id": "gpt-4o",\n  "displayName": "GPT-4o",\n  "ownedBy": "openai",\n  "contextWindow": 128000,\n  "inputModalities": [\n    "text",\n    "image"\n  ],\n  "outputModalities": [\n    "text"\n  ],\n  "additionalProperties": {\n    "supportsStreaming": true\n  }\n}`;
       const instance = ModelInfo.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("gpt-4o");
-
       expect(instance.displayName).toEqual("GPT-4o");
-
       expect(instance.ownedBy).toEqual("openai");
-
       expect(instance.contextWindow).toEqual(128000);
     });
 
@@ -36,13 +32,9 @@ describe("ModelInfo", () => {
       const instance = ModelInfo.fromJson(json);
       const output = instance.toJson();
       const reloaded = ModelInfo.fromJson(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.displayName).toEqual(instance.displayName);
-
       expect(reloaded.ownedBy).toEqual(instance.ownedBy);
-
       expect(reloaded.contextWindow).toEqual(instance.contextWindow);
     });
   });
@@ -52,13 +44,9 @@ describe("ModelInfo", () => {
       const yaml = `id: gpt-4o\ndisplayName: GPT-4o\nownedBy: openai\ncontextWindow: 128000\ninputModalities:\n  - text\n  - image\noutputModalities:\n  - text\nadditionalProperties:\n  supportsStreaming: true\n`;
       const instance = ModelInfo.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("gpt-4o");
-
       expect(instance.displayName).toEqual("GPT-4o");
-
       expect(instance.ownedBy).toEqual("openai");
-
       expect(instance.contextWindow).toEqual(128000);
     });
 
@@ -67,13 +55,9 @@ describe("ModelInfo", () => {
       const instance = ModelInfo.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ModelInfo.fromYaml(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.displayName).toEqual(instance.displayName);
-
       expect(reloaded.ownedBy).toEqual(instance.ownedBy);
-
       expect(reloaded.contextWindow).toEqual(instance.contextWindow);
     });
   });

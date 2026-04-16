@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import OAuthConnection
-
 
 def test_load_json_oauthconnection():
     json_data = r'''
@@ -28,7 +24,6 @@ def test_load_json_oauthconnection():
     assert instance.client_id == "your-client-id"
     assert instance.client_secret == "your-client-secret"
     assert instance.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-    
 
 def test_load_yaml_oauthconnection():
     yaml_data = r'''
@@ -116,5 +111,4 @@ def test_to_yaml_oauthconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

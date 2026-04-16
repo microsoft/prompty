@@ -27,7 +27,6 @@ classDiagram
     }
     Connection <|-- OAuthConnection
     class OAuthConnection {
-      
         +string kind
         +string endpoint
         +string clientId

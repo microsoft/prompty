@@ -32,6 +32,7 @@ func TestFormatConfigLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig: %v", err)
 	}
+
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -56,6 +57,7 @@ options:
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig: %v", err)
 	}
+
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -82,6 +84,7 @@ func TestFormatConfigRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig: %v", err)
 	}
+
 	// Polymorphic roundtrip testing requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Roundtrip test skipped for polymorphic base types - test child types directly
@@ -108,6 +111,7 @@ func TestFormatConfigToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig: %v", err)
 	}
+
 	// Polymorphic ToJSON requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToJSON test skipped for polymorphic base types - test child types directly
@@ -134,6 +138,7 @@ func TestFormatConfigToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig: %v", err)
 	}
+
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
@@ -146,6 +151,7 @@ func TestFormatConfigFromFormat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FormatConfig from string: %v", err)
 	}
+
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly

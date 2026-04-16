@@ -21,7 +21,6 @@ config:
 ---
 classDiagram
     class GuardrailResult {
-      
         +boolean allowed
         +string reason
         +unknown rewrite

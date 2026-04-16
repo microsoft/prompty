@@ -21,9 +21,7 @@ describe("AudioPart", () => {
       const json = `{\n  "source": "https://example.com/audio.wav",\n  "mediaType": "audio/wav"\n}`;
       const instance = AudioPart.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/audio.wav");
-
       expect(instance.mediaType).toEqual("audio/wav");
     });
 
@@ -32,9 +30,7 @@ describe("AudioPart", () => {
       const instance = AudioPart.fromJson(json);
       const output = instance.toJson();
       const reloaded = AudioPart.fromJson(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });
@@ -44,9 +40,7 @@ describe("AudioPart", () => {
       const yaml = `source: "https://example.com/audio.wav"\nmediaType: audio/wav\n`;
       const instance = AudioPart.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/audio.wav");
-
       expect(instance.mediaType).toEqual("audio/wav");
     });
 
@@ -55,9 +49,7 @@ describe("AudioPart", () => {
       const instance = AudioPart.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = AudioPart.fromYaml(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });

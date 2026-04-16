@@ -21,11 +21,8 @@ describe("ToolCall", () => {
       const json = `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`;
       const instance = ToolCall.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("call_abc123");
-
       expect(instance.name).toEqual("get_weather");
-
       expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
@@ -34,11 +31,8 @@ describe("ToolCall", () => {
       const instance = ToolCall.fromJson(json);
       const output = instance.toJson();
       const reloaded = ToolCall.fromJson(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.arguments).toEqual(instance.arguments);
     });
   });
@@ -48,11 +42,8 @@ describe("ToolCall", () => {
       const yaml = `id: call_abc123\nname: get_weather\narguments: "{\\"city\\": \\"Paris\\"}"\n`;
       const instance = ToolCall.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.id).toEqual("call_abc123");
-
       expect(instance.name).toEqual("get_weather");
-
       expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
@@ -61,11 +52,8 @@ describe("ToolCall", () => {
       const instance = ToolCall.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ToolCall.fromYaml(output);
-
       expect(reloaded.id).toEqual(instance.id);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.arguments).toEqual(instance.arguments);
     });
   });

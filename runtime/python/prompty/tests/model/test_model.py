@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Model
-
 
 def test_load_json_model():
     json_data = r'''
@@ -31,7 +27,6 @@ def test_load_json_model():
     assert instance.id == "gpt-35-turbo"
     assert instance.provider == "foundry"
     assert instance.api_type == "chat"
-    
 
 def test_load_yaml_model():
     yaml_data = r'''
@@ -135,10 +130,8 @@ def test_to_yaml_model():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_model_from_str():
     instance = Model.load("example")
     assert instance is not None
     assert instance.id == "example"
-
 

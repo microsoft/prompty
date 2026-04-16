@@ -21,7 +21,6 @@ describe("TextPart", () => {
       const json = `{\n  "value": "Hello, world!"\n}`;
       const instance = TextPart.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Hello, world!");
     });
 
@@ -30,7 +29,6 @@ describe("TextPart", () => {
       const instance = TextPart.fromJson(json);
       const output = instance.toJson();
       const reloaded = TextPart.fromJson(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });
@@ -40,7 +38,6 @@ describe("TextPart", () => {
       const yaml = `value: Hello, world!\n`;
       const instance = TextPart.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Hello, world!");
     });
 
@@ -49,7 +46,6 @@ describe("TextPart", () => {
       const instance = TextPart.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = TextPart.fromYaml(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });

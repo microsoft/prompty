@@ -21,7 +21,6 @@ describe("Message", () => {
       const json = `{\n  "role": "user",\n  "parts": [\n    {\n      "kind": "text",\n      "value": "Hello!"\n    }\n  ],\n  "metadata": {\n    "source": "user-input"\n  }\n}`;
       const instance = Message.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.role).toEqual("user");
     });
 
@@ -30,7 +29,6 @@ describe("Message", () => {
       const instance = Message.fromJson(json);
       const output = instance.toJson();
       const reloaded = Message.fromJson(output);
-
       expect(reloaded.role).toEqual(instance.role);
     });
   });
@@ -40,7 +38,6 @@ describe("Message", () => {
       const yaml = `role: user\nparts:\n  - kind: text\n    value: Hello!\nmetadata:\n  source: user-input\n`;
       const instance = Message.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.role).toEqual("user");
     });
 
@@ -49,7 +46,6 @@ describe("Message", () => {
       const instance = Message.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Message.fromYaml(output);
-
       expect(reloaded.role).toEqual(instance.role);
     });
   });
@@ -61,14 +57,12 @@ describe("Message", () => {
       expect(instance).toBeInstanceOf(Message);
       expect(instance.role).toBe("assistant");
     });
-
     it("should create instance via system() factory", () => {
       const instance = Message.system("test");
       expect(instance).toBeDefined();
       expect(instance).toBeInstanceOf(Message);
       expect(instance.role).toBe("system");
     });
-
     it("should create instance via user() factory", () => {
       const instance = Message.user("test");
       expect(instance).toBeDefined();

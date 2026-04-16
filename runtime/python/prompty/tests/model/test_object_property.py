@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ObjectProperty
-
 
 def test_load_json_objectproperty():
     json_data = r'''
@@ -23,7 +19,6 @@ def test_load_json_objectproperty():
     data = json.loads(json_data, strict=False)
     instance = ObjectProperty.load(data)
     assert instance is not None
-    
 
 def test_load_yaml_objectproperty():
     yaml_data = r'''
@@ -99,5 +94,4 @@ def test_to_yaml_objectproperty():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

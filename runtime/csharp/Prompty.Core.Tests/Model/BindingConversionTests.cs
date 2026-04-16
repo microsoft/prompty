@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -120,6 +119,7 @@ input: input-variable
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
     [Fact]
     public void LoadJsonFromString()
     {
@@ -137,7 +137,7 @@ input: input-variable
         var data = "\"example\"";
         var instance = Binding.FromYaml(data);
         Assert.NotNull(instance);
+
         Assert.Equal("example", instance.Input);
     }
-
 }

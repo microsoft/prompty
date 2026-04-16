@@ -25,7 +25,6 @@ classDiagram
     }
     Connection <|-- RemoteConnection
     class RemoteConnection {
-      
         +string kind
         +string name
         +string endpoint
@@ -44,6 +43,6 @@ endpoint: https://{your-custom-endpoint}.openai.azure.com/
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens) |
+| kind | string | The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens) |
 | name | string | The name of the connection |
 | endpoint | string | The endpoint URL for the AI service |

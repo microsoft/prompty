@@ -33,6 +33,7 @@ func TestToolResultLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
+
 	_ = instance // No scalar properties to validate
 }
 
@@ -54,6 +55,7 @@ parts:
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
+
 	_ = instance // No scalar properties to validate
 }
 
@@ -79,6 +81,7 @@ func TestToolResultRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -86,6 +89,7 @@ func TestToolResultRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ToolResult: %v", err)
 	}
+
 	_ = reloaded // No scalar properties to validate
 }
 
@@ -111,6 +115,7 @@ func TestToolResultToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -144,6 +149,7 @@ func TestToolResultToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

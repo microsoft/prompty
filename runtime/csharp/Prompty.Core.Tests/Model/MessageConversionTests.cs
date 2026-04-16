@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -176,5 +175,4 @@ metadata:
         Assert.NotNull(instance);
         Assert.Equal("user", instance.Role);
     }
-
 }

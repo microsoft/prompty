@@ -21,9 +21,7 @@ describe("FunctionTool", () => {
       const json = `{\n  "kind": "function",\n  "parameters": {\n    "firstName": {\n      "kind": "string",\n      "default": "Jane"\n    },\n    "lastName": {\n      "kind": "string",\n      "default": "Doe"\n    },\n    "question": {\n      "kind": "string",\n      "default": "What is the meaning of life?"\n    }\n  },\n  "strict": true\n}`;
       const instance = FunctionTool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -32,19 +30,14 @@ describe("FunctionTool", () => {
       const instance = FunctionTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = FunctionTool.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
-
     it("should load from JSON - example 2", () => {
       const json = `{\n  "kind": "function",\n  "parameters": [\n    {\n      "name": "firstName",\n      "kind": "string",\n      "default": "Jane"\n    },\n    {\n      "name": "lastName",\n      "kind": "string",\n      "default": "Doe"\n    },\n    {\n      "name": "question",\n      "kind": "string",\n      "default": "What is the meaning of life?"\n    }\n  ],\n  "strict": true\n}`;
       const instance = FunctionTool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -53,9 +46,7 @@ describe("FunctionTool", () => {
       const instance = FunctionTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = FunctionTool.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
   });
@@ -65,9 +56,7 @@ describe("FunctionTool", () => {
       const yaml = `kind: function\nparameters:\n  firstName:\n    kind: string\n    default: Jane\n  lastName:\n    kind: string\n    default: Doe\n  question:\n    kind: string\n    default: What is the meaning of life?\nstrict: true\n`;
       const instance = FunctionTool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -76,19 +65,14 @@ describe("FunctionTool", () => {
       const instance = FunctionTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FunctionTool.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
-
     it("should load from YAML - example 2", () => {
       const yaml = `kind: function\nparameters:\n  - name: firstName\n    kind: string\n    default: Jane\n  - name: lastName\n    kind: string\n    default: Doe\n  - name: question\n    kind: string\n    default: What is the meaning of life?\nstrict: true\n`;
       const instance = FunctionTool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.strict).toEqual(true);
     });
 
@@ -97,9 +81,7 @@ describe("FunctionTool", () => {
       const instance = FunctionTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FunctionTool.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.strict).toEqual(instance.strict);
     });
   });

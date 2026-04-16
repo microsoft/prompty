@@ -30,6 +30,7 @@ func TestRemoteConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load RemoteConnection: %v", err)
 	}
+
 	if instance.Kind != "remote" {
 		t.Errorf(`Expected Kind to be "remote", got %v`, instance.Kind)
 	}
@@ -59,6 +60,7 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 	if err != nil {
 		t.Fatalf("Failed to load RemoteConnection: %v", err)
 	}
+
 	if instance.Kind != "remote" {
 		t.Errorf(`Expected Kind to be "remote", got %v`, instance.Kind)
 	}
@@ -89,6 +91,7 @@ func TestRemoteConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load RemoteConnection: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -96,6 +99,7 @@ func TestRemoteConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload RemoteConnection: %v", err)
 	}
+
 	if reloaded.Kind != "remote" {
 		t.Errorf(`Expected Kind to be "remote", got %v`, reloaded.Kind)
 	}
@@ -126,6 +130,7 @@ func TestRemoteConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load RemoteConnection: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -156,6 +161,7 @@ func TestRemoteConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load RemoteConnection: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

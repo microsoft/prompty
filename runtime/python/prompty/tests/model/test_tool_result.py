@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ToolResult
-
 
 def test_load_json_toolresult():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_toolresult():
     data = json.loads(json_data, strict=False)
     instance = ToolResult.load(data)
     assert instance is not None
-    
 
 def test_load_yaml_toolresult():
     yaml_data = r'''
@@ -90,13 +85,9 @@ def test_to_yaml_toolresult():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
-
-
 def test_factory_text_toolresult():
     """Test that text() factory creates a valid instance."""
     instance = ToolResult.text("test")
     assert instance is not None
     assert isinstance(instance, ToolResult)
-
 

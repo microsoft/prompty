@@ -20,7 +20,6 @@ config:
 ---
 classDiagram
     class Message {
-      
         +string role
         +ContentPart[] parts
         +dictionary metadata

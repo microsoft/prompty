@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Property
-
 
 def test_load_json_property():
     json_data = r'''
@@ -29,11 +25,9 @@ def test_load_json_property():
     assert instance.name == "my-input"
     assert instance.kind == "string"
     assert instance.description == "A description of the input property"
-    
     assert instance.required
     assert instance.default == "default value"
     assert instance.example == "example value"
-    
 
 def test_load_yaml_property():
     yaml_data = r'''
@@ -136,26 +130,27 @@ def test_to_yaml_property():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_property_from_bool():
     instance = Property.load(False)
     assert instance is not None
     assert instance.kind == "boolean"
     assert not instance.example
+
 def test_load_property_from_float():
     instance = Property.load(3.14)
     assert instance is not None
     assert instance.kind == "float"
     assert instance.example == 3.14
+
 def test_load_property_from_integer():
     instance = Property.load(4)
     assert instance is not None
     assert instance.kind == "integer"
     assert instance.example == 4
+
 def test_load_property_from_str():
     instance = Property.load("example")
     assert instance is not None
     assert instance.kind == "string"
     assert instance.example == "example"
-
 

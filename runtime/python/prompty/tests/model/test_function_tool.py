@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import FunctionTool
-
 
 def test_load_json_functiontool():
     json_data = r'''
@@ -32,9 +28,7 @@ def test_load_json_functiontool():
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-    
     assert instance.strict
-    
 
 def test_load_yaml_functiontool():
     yaml_data = r'''
@@ -174,9 +168,7 @@ def test_load_json_functiontool_1():
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-    
     assert instance.strict
-    
 
 def test_load_yaml_functiontool_1():
     yaml_data = r'''
@@ -296,5 +288,4 @@ def test_to_yaml_functiontool_1():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ToolCall
-
 
 def test_load_json_toolcall():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_toolcall():
     assert instance.id == "call_abc123"
     assert instance.name == "get_weather"
     assert instance.arguments == "{\"city\": \"Paris\"}"
-    
 
 def test_load_yaml_toolcall():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_toolcall():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

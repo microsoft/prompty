@@ -21,9 +21,7 @@ describe("Binding", () => {
       const json = `{\n  "name": "my-tool",\n  "input": "input-variable"\n}`;
       const instance = Binding.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-tool");
-
       expect(instance.input).toEqual("input-variable");
     });
 
@@ -32,9 +30,7 @@ describe("Binding", () => {
       const instance = Binding.fromJson(json);
       const output = instance.toJson();
       const reloaded = Binding.fromJson(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.input).toEqual(instance.input);
     });
   });
@@ -44,9 +40,7 @@ describe("Binding", () => {
       const yaml = `name: my-tool\ninput: input-variable\n`;
       const instance = Binding.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-tool");
-
       expect(instance.input).toEqual("input-variable");
     });
 
@@ -55,9 +49,7 @@ describe("Binding", () => {
       const instance = Binding.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Binding.fromYaml(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.input).toEqual(instance.input);
     });
   });
@@ -68,7 +60,6 @@ describe("Binding", () => {
       const json = JSON.stringify(value);
       const instance = Binding.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.input).toEqual("example");
     });
   });

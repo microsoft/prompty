@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import Prompty
-
 
 def test_load_json_prompty():
     json_data = r'''
@@ -92,7 +88,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty():
     yaml_data = r'''
@@ -505,7 +500,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_1():
     yaml_data = r'''
@@ -917,7 +911,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_2():
     yaml_data = r'''
@@ -1334,7 +1327,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_3():
     yaml_data = r'''
@@ -1751,7 +1743,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_4():
     yaml_data = r'''
@@ -2176,7 +2167,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_5():
     yaml_data = r'''
@@ -2600,7 +2590,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_6():
     yaml_data = r'''
@@ -3029,7 +3018,6 @@ You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}"""
-    
 
 def test_load_yaml_prompty_7():
     yaml_data = r'''
@@ -3366,5 +3354,4 @@ def test_to_yaml_prompty_7():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

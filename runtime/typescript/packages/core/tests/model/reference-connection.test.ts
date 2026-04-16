@@ -21,11 +21,8 @@ describe("ReferenceConnection", () => {
       const json = `{\n  "kind": "reference",\n  "name": "my-reference-connection",\n  "target": "my-target-resource"\n}`;
       const instance = ReferenceConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("reference");
-
       expect(instance.name).toEqual("my-reference-connection");
-
       expect(instance.target).toEqual("my-target-resource");
     });
 
@@ -34,11 +31,8 @@ describe("ReferenceConnection", () => {
       const instance = ReferenceConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = ReferenceConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.target).toEqual(instance.target);
     });
   });
@@ -48,11 +42,8 @@ describe("ReferenceConnection", () => {
       const yaml = `kind: reference\nname: my-reference-connection\ntarget: my-target-resource\n`;
       const instance = ReferenceConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("reference");
-
       expect(instance.name).toEqual("my-reference-connection");
-
       expect(instance.target).toEqual("my-target-resource");
     });
 
@@ -61,11 +52,8 @@ describe("ReferenceConnection", () => {
       const instance = ReferenceConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ReferenceConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.target).toEqual(instance.target);
     });
   });

@@ -30,7 +30,7 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
-    "dist/**/*.njk",
+
     "dist/**/*.json",
     "lib/**/*.tsp",
     "src/lib/*.tsp",
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
-    "@types/nunjucks": "^3.2.6",
+
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@typespec/compiler": "latest",
@@ -54,7 +54,7 @@
     "typescript-eslint": "^8.54.0"
   },
   "scripts": {
-    "build": "tsc && cp -r ./src/templates ./dist/src",
+    "build": "tsc",
     "watch": "tsc --watch",
     "generate": "tsp compile ./lib/model/main.tsp --config ./tspconfig.yaml && markdownlint \"../docs/src/**/*.md\" -f -c ./markdown.json",
     "test": "node --test",
@@ -66,7 +66,7 @@
   "private": false,
   "packageManager": "npm@11.5.1+sha512.232e6f5d9e799bcb486920b3e9ba907fdf96e576cf7e8c9446c8162e33a416096a1d37a9e910d9a918f6b1f606791c99bc6bb61ee2569b496ec74af13d0dbd95",
   "dependencies": {
-    "nunjucks": "^3.2.4",
+
     "xml-formatter": "^3.6.7",
     "yaml": "^2.8.1"
   }

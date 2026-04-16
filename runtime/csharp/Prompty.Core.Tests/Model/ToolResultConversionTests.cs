@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -134,5 +133,4 @@ parts:
         var instance = ToolResult.Text("test");
         Assert.NotNull(instance);
     }
-
 }

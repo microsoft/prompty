@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import OpenApiTool
-
 
 def test_load_json_openapitool():
     json_data = r'''
@@ -22,7 +18,6 @@ def test_load_json_openapitool():
     assert instance is not None
     assert instance.kind == "openapi"
     assert instance.specification == "./openapi.json"
-    
 
 def test_load_yaml_openapitool():
     yaml_data = r'''
@@ -92,5 +87,4 @@ def test_to_yaml_openapitool():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

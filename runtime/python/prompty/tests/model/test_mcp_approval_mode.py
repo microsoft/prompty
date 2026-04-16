@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import McpApprovalMode
-
 
 def test_load_json_mcpapprovalmode():
     json_data = r'''
@@ -23,7 +19,6 @@ def test_load_json_mcpapprovalmode():
     instance = McpApprovalMode.load(data)
     assert instance is not None
     assert instance.kind == "never"
-    
 
 def test_load_yaml_mcpapprovalmode():
     yaml_data = r'''
@@ -99,10 +94,8 @@ def test_to_yaml_mcpapprovalmode():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_mcpapprovalmode_from_str():
     instance = McpApprovalMode.load("never")
     assert instance is not None
     assert instance.kind == "never"
-
 

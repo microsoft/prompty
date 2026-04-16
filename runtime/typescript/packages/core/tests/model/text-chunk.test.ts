@@ -21,7 +21,6 @@ describe("TextChunk", () => {
       const json = `{\n  "value": "Hello"\n}`;
       const instance = TextChunk.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Hello");
     });
 
@@ -30,7 +29,6 @@ describe("TextChunk", () => {
       const instance = TextChunk.fromJson(json);
       const output = instance.toJson();
       const reloaded = TextChunk.fromJson(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });
@@ -40,7 +38,6 @@ describe("TextChunk", () => {
       const yaml = `value: Hello\n`;
       const instance = TextChunk.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.value).toEqual("Hello");
     });
 
@@ -49,7 +46,6 @@ describe("TextChunk", () => {
       const instance = TextChunk.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = TextChunk.fromYaml(output);
-
       expect(reloaded.value).toEqual(instance.value);
     });
   });

@@ -21,9 +21,7 @@ describe("FilePart", () => {
       const json = `{\n  "source": "https://example.com/document.pdf",\n  "mediaType": "application/pdf"\n}`;
       const instance = FilePart.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/document.pdf");
-
       expect(instance.mediaType).toEqual("application/pdf");
     });
 
@@ -32,9 +30,7 @@ describe("FilePart", () => {
       const instance = FilePart.fromJson(json);
       const output = instance.toJson();
       const reloaded = FilePart.fromJson(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });
@@ -44,9 +40,7 @@ describe("FilePart", () => {
       const yaml = `source: "https://example.com/document.pdf"\nmediaType: application/pdf\n`;
       const instance = FilePart.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.source).toEqual("https://example.com/document.pdf");
-
       expect(instance.mediaType).toEqual("application/pdf");
     });
 
@@ -55,9 +49,7 @@ describe("FilePart", () => {
       const instance = FilePart.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FilePart.fromYaml(output);
-
       expect(reloaded.source).toEqual(instance.source);
-
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
   });

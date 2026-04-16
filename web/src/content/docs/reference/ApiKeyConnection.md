@@ -25,7 +25,6 @@ classDiagram
     }
     Connection <|-- ApiKeyConnection
     class ApiKeyConnection {
-      
         +string kind
         +string endpoint
         +string apiKey
@@ -44,6 +43,6 @@ apiKey: your-api-key
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens) |
+| kind | string | The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens) |
 | endpoint | string | The endpoint URL for the AI service |
 | apiKey | string | The API key for authenticating with the AI service |

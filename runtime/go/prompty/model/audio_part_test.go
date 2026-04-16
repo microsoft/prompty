@@ -29,6 +29,7 @@ func TestAudioPartLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AudioPart: %v", err)
 	}
+
 	if instance.Source != "https://example.com/audio.wav" {
 		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, instance.Source)
 	}
@@ -54,6 +55,7 @@ mediaType: audio/wav
 	if err != nil {
 		t.Fatalf("Failed to load AudioPart: %v", err)
 	}
+
 	if instance.Source != "https://example.com/audio.wav" {
 		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, instance.Source)
 	}
@@ -80,6 +82,7 @@ func TestAudioPartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AudioPart: %v", err)
 	}
+
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -87,6 +90,7 @@ func TestAudioPartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload AudioPart: %v", err)
 	}
+
 	if reloaded.Source != "https://example.com/audio.wav" {
 		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, reloaded.Source)
 	}
@@ -113,6 +117,7 @@ func TestAudioPartToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AudioPart: %v", err)
 	}
+
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -142,6 +147,7 @@ func TestAudioPartToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load AudioPart: %v", err)
 	}
+
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

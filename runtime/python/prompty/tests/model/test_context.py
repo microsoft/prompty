@@ -1,5 +1,3 @@
-
-
 # Prompty LoadContext
 from prompty.model._context import LoadContext, SaveContext
 

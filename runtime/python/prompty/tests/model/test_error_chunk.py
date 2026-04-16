@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ErrorChunk
-
 
 def test_load_json_errorchunk():
     json_data = r'''
@@ -17,7 +13,6 @@ def test_load_json_errorchunk():
     instance = ErrorChunk.load(data)
     assert instance is not None
     assert instance.message == "Rate limit exceeded"
-    
 
 def test_load_yaml_errorchunk():
     yaml_data = r'''
@@ -70,5 +65,4 @@ def test_to_yaml_errorchunk():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

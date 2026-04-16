@@ -21,9 +21,7 @@ describe("OpenApiTool", () => {
       const json = `{\n  "kind": "openapi",\n  "connection": {\n    "kind": "reference"\n  },\n  "specification": "./openapi.json"\n}`;
       const instance = OpenApiTool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("openapi");
-
       expect(instance.specification).toEqual("./openapi.json");
     });
 
@@ -32,9 +30,7 @@ describe("OpenApiTool", () => {
       const instance = OpenApiTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = OpenApiTool.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.specification).toEqual(instance.specification);
     });
   });
@@ -44,9 +40,7 @@ describe("OpenApiTool", () => {
       const yaml = `kind: openapi\nconnection:\n  kind: reference\nspecification: ./openapi.json\n`;
       const instance = OpenApiTool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("openapi");
-
       expect(instance.specification).toEqual("./openapi.json");
     });
 
@@ -55,9 +49,7 @@ describe("OpenApiTool", () => {
       const instance = OpenApiTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = OpenApiTool.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.specification).toEqual(instance.specification);
     });
   });

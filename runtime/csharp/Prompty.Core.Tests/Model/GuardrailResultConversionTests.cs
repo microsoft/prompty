@@ -1,4 +1,3 @@
-
 using Xunit;
 
 #pragma warning disable IDE0130
@@ -144,5 +143,4 @@ reason: Content is safe
         Assert.NotNull(instance);
         Assert.True(instance.Allowed);
     }
-
 }

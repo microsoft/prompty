@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import TextPart
-
 
 def test_load_json_textpart():
     json_data = r'''
@@ -17,7 +13,6 @@ def test_load_json_textpart():
     instance = TextPart.load(data)
     assert instance is not None
     assert instance.value == "Hello, world!"
-    
 
 def test_load_yaml_textpart():
     yaml_data = r'''
@@ -70,5 +65,4 @@ def test_to_yaml_textpart():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

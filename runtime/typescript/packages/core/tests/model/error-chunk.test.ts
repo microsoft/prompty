@@ -21,7 +21,6 @@ describe("ErrorChunk", () => {
       const json = `{\n  "message": "Rate limit exceeded"\n}`;
       const instance = ErrorChunk.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.message).toEqual("Rate limit exceeded");
     });
 
@@ -30,7 +29,6 @@ describe("ErrorChunk", () => {
       const instance = ErrorChunk.fromJson(json);
       const output = instance.toJson();
       const reloaded = ErrorChunk.fromJson(output);
-
       expect(reloaded.message).toEqual(instance.message);
     });
   });
@@ -40,7 +38,6 @@ describe("ErrorChunk", () => {
       const yaml = `message: Rate limit exceeded\n`;
       const instance = ErrorChunk.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.message).toEqual("Rate limit exceeded");
     });
 
@@ -49,7 +46,6 @@ describe("ErrorChunk", () => {
       const instance = ErrorChunk.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ErrorChunk.fromYaml(output);
-
       expect(reloaded.message).toEqual(instance.message);
     });
   });

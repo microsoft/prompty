@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ReferenceConnection
-
 
 def test_load_json_referenceconnection():
     json_data = r'''
@@ -21,7 +17,6 @@ def test_load_json_referenceconnection():
     assert instance.kind == "reference"
     assert instance.name == "my-reference-connection"
     assert instance.target == "my-target-resource"
-    
 
 def test_load_yaml_referenceconnection():
     yaml_data = r'''
@@ -86,5 +81,4 @@ def test_to_yaml_referenceconnection():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

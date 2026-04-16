@@ -23,7 +23,6 @@ classDiagram
     }
     ContentPart <|-- AudioPart
     class AudioPart {
-      
         +string kind
         +string source
         +string mediaType
@@ -43,4 +42,4 @@ mediaType: audio/wav
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for audio content |
 | source | string | URL or base64-encoded audio data |
-| mediaType | string | MIME type of the audio (e.g., &#39;audio/wav&#39;) |
+| mediaType | string | MIME type of the audio (e.g., 'audio/wav') |

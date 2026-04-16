@@ -30,16 +30,10 @@ export class Template {
     const instance = new Template();
 
     if (data["format"] !== undefined && data["format"] !== null) {
-      instance.format = FormatConfig.load(
-        data["format"] as Record<string, unknown>,
-        context,
-      );
+      instance.format = FormatConfig.load(data["format"] as Record<string, unknown>, context);
     }
     if (data["parser"] !== undefined && data["parser"] !== null) {
-      instance.parser = ParserConfig.load(
-        data["parser"] as Record<string, unknown>,
-        context,
-      );
+      instance.parser = ParserConfig.load(data["parser"] as Record<string, unknown>, context);
     }
 
     if (context) {
@@ -96,3 +90,4 @@ export class Template {
 
   //#endregion
 }
+

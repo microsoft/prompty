@@ -8,7 +8,7 @@ Information about a model available from a provider. Used by provider-level
 model discovery to report which models are available and their capabilities.
 
 Not all providers return all fields — implementations SHOULD populate as
-many fields as the provider&#39;s API supports and MAY enrich sparse results
+many fields as the provider's API supports and MAY enrich sparse results
 from a built-in lookup table of known models.
 
 ## Class Diagram
@@ -24,7 +24,6 @@ config:
 ---
 classDiagram
     class ModelInfo {
-      
         +string id
         +string displayName
         +string ownedBy
@@ -55,10 +54,10 @@ additionalProperties:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| id | string | The model identifier (e.g., &#39;gpt-4o&#39;, &#39;claude-3-opus&#39;) |
+| id | string | The model identifier (e.g., 'gpt-4o', 'claude-3-opus') |
 | displayName | string | Human-readable display name |
 | ownedBy | string | The organization or entity that owns the model |
 | contextWindow | int32 | Maximum context window size in tokens |
-| inputModalities | string[] | Input modalities the model accepts (e.g., &#39;text&#39;, &#39;image&#39;, &#39;audio&#39;) |
-| outputModalities | string[] | Output modalities the model can produce (e.g., &#39;text&#39;, &#39;audio&#39;) |
+| inputModalities | string[] | Input modalities the model accepts (e.g., 'text', 'image', 'audio') |
+| outputModalities | string[] | Output modalities the model can produce (e.g., 'text', 'audio') |
 | additionalProperties | dictionary | Additional provider-specific properties |

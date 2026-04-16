@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import ModelInfo
-
 
 def test_load_json_modelinfo():
     json_data = r'''
@@ -33,7 +29,6 @@ def test_load_json_modelinfo():
     assert instance.display_name == "GPT-4o"
     assert instance.owned_by == "openai"
     assert instance.context_window == 128000
-    
 
 def test_load_yaml_modelinfo():
     yaml_data = r'''
@@ -141,5 +136,4 @@ def test_to_yaml_modelinfo():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

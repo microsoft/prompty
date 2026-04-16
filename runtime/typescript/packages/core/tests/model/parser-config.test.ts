@@ -21,7 +21,6 @@ describe("ParserConfig", () => {
       const json = `{\n  "kind": "prompty",\n  "options": {\n    "key": "value"\n  }\n}`;
       const instance = ParserConfig.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("prompty");
     });
 
@@ -30,7 +29,6 @@ describe("ParserConfig", () => {
       const instance = ParserConfig.fromJson(json);
       const output = instance.toJson();
       const reloaded = ParserConfig.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
@@ -40,7 +38,6 @@ describe("ParserConfig", () => {
       const yaml = `kind: prompty\noptions:\n  key: value\n`;
       const instance = ParserConfig.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("prompty");
     });
 
@@ -49,7 +46,6 @@ describe("ParserConfig", () => {
       const instance = ParserConfig.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ParserConfig.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
@@ -60,7 +56,6 @@ describe("ParserConfig", () => {
       const json = JSON.stringify(value);
       const instance = ParserConfig.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("example");
     });
   });

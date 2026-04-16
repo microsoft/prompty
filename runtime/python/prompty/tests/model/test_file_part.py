@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import FilePart
-
 
 def test_load_json_filepart():
     json_data = r'''
@@ -19,7 +15,6 @@ def test_load_json_filepart():
     assert instance is not None
     assert instance.source == "https://example.com/document.pdf"
     assert instance.media_type == "application/pdf"
-    
 
 def test_load_yaml_filepart():
     yaml_data = r'''
@@ -78,5 +73,4 @@ def test_to_yaml_filepart():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
 

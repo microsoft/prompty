@@ -1,11 +1,7 @@
-
-
 import json
-
 import yaml
 
 from prompty.model import FormatConfig
-
 
 def test_load_json_formatconfig():
     json_data = r'''
@@ -21,9 +17,7 @@ def test_load_json_formatconfig():
     instance = FormatConfig.load(data)
     assert instance is not None
     assert instance.kind == "mustache"
-    
     assert instance.strict
-    
 
 def test_load_yaml_formatconfig():
     yaml_data = r'''
@@ -94,10 +88,8 @@ def test_to_yaml_formatconfig():
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
-
 def test_load_formatconfig_from_str():
     instance = FormatConfig.load("example")
     assert instance is not None
     assert instance.kind == "example"
-
 
