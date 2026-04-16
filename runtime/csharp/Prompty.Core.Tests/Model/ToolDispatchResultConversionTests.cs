@@ -1,0 +1,158 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class ToolDispatchResultConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+toolCallId: call_abc123
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var instance = ToolDispatchResult.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("call_abc123", instance.ToolCallId);
+        Assert.Equal("get_weather", instance.Name);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "toolCallId": "call_abc123",
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var instance = ToolDispatchResult.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("call_abc123", instance.ToolCallId);
+        Assert.Equal("get_weather", instance.Name);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "toolCallId": "call_abc123",
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var original = ToolDispatchResult.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = ToolDispatchResult.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
+        Assert.Equal("get_weather", reloaded.Name);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+toolCallId: call_abc123
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var original = ToolDispatchResult.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = ToolDispatchResult.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
+        Assert.Equal("get_weather", reloaded.Name);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "toolCallId": "call_abc123",
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var instance = ToolDispatchResult.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+toolCallId: call_abc123
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var instance = ToolDispatchResult.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

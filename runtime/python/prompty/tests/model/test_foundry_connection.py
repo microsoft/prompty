@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import FoundryConnection
-
 
 def test_load_json_foundryconnection():
     json_data = r'''

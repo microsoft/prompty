@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import ErrorChunk
-
 
 def test_load_json_errorchunk():
     json_data = r'''

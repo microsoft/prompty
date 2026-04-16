@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// A tool that references another .prompty file to be invoked as a tool.
-/// 
-/// In `single` mode, the child prompty is executed with a single LLM call.
-/// 
-/// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
-/// </summary>
+    /// <summary>
+    /// A tool that references another .prompty file to be invoked as a tool.
+    /// 
+    /// In `single` mode, the child prompty is executed with a single LLM call.
+    /// 
+    /// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+    /// </summary>
 public partial class PromptyTool : Tool
 {
     /// <summary>

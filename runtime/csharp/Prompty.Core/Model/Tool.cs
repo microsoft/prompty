@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Represents a tool that can be used in prompts.
-/// </summary>
+    /// <summary>
+    /// Represents a tool that can be used in prompts.
+    /// </summary>
 public abstract partial class Tool
 {
     /// <summary>

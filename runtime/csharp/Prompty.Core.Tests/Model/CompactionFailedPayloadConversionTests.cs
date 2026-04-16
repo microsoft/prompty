@@ -1,0 +1,112 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class CompactionFailedPayloadConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+message: Summarization prompt exceeded context window
+
+""";
+
+        var instance = CompactionFailedPayload.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("Summarization prompt exceeded context window", instance.Message);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "message": "Summarization prompt exceeded context window"
+}
+""";
+
+        var instance = CompactionFailedPayload.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("Summarization prompt exceeded context window", instance.Message);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "message": "Summarization prompt exceeded context window"
+}
+""";
+
+        var original = CompactionFailedPayload.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = CompactionFailedPayload.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("Summarization prompt exceeded context window", reloaded.Message);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+message: Summarization prompt exceeded context window
+
+""";
+
+        var original = CompactionFailedPayload.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = CompactionFailedPayload.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("Summarization prompt exceeded context window", reloaded.Message);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "message": "Summarization prompt exceeded context window"
+}
+""";
+
+        var instance = CompactionFailedPayload.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+message: Summarization prompt exceeded context window
+
+""";
+
+        var instance = CompactionFailedPayload.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

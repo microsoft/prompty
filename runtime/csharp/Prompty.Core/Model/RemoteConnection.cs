@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Connection configuration for AI services using named connections.
-/// </summary>
+    /// <summary>
+    /// Connection configuration for AI services using named connections.
+    /// </summary>
 public partial class RemoteConnection : Connection
 {
     /// <summary>

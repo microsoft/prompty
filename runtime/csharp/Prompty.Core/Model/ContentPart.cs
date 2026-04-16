@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// A part of a message's content. Content parts are discriminated on the `kind`
-/// 
-/// field and represent the different modalities that can appear in a message.
-/// </summary>
+    /// <summary>
+    /// A part of a message's content. Content parts are discriminated on the `kind`
+    /// 
+    /// field and represent the different modalities that can appear in a message.
+    /// </summary>
 public abstract partial class ContentPart
 {
     /// <summary>

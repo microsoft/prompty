@@ -1,0 +1,112 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class TokenEventPayloadConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+token: Hello
+
+""";
+
+        var instance = TokenEventPayload.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("Hello", instance.Token);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "token": "Hello"
+}
+""";
+
+        var instance = TokenEventPayload.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("Hello", instance.Token);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "token": "Hello"
+}
+""";
+
+        var original = TokenEventPayload.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = TokenEventPayload.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("Hello", reloaded.Token);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+token: Hello
+
+""";
+
+        var original = TokenEventPayload.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = TokenEventPayload.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("Hello", reloaded.Token);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "token": "Hello"
+}
+""";
+
+        var instance = TokenEventPayload.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+token: Hello
+
+""";
+
+        var instance = TokenEventPayload.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

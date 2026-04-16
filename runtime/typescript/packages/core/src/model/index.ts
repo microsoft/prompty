@@ -40,9 +40,21 @@ export {
   AudioPart,
 } from "./content-part";
 export { Message } from "./message";
-export { ToolCall } from "./tool-call";
+export { ToolContext } from "./tool-context";
 export { ToolResult } from "./tool-result";
+export { ToolDispatchResult } from "./tool-dispatch-result";
+export { ToolCall } from "./tool-call";
 export { GuardrailResult } from "./guardrail-result";
+export { TokenEventPayload } from "./token-event-payload";
+export { ThinkingEventPayload } from "./thinking-event-payload";
+export { ToolCallStartPayload } from "./tool-call-start-payload";
+export { ToolResultPayload } from "./tool-result-payload";
+export { StatusEventPayload } from "./status-event-payload";
+export { MessagesUpdatedPayload } from "./messages-updated-payload";
+export { DoneEventPayload } from "./done-event-payload";
+export { ErrorEventPayload } from "./error-event-payload";
+export { CompactionCompletePayload } from "./compaction-complete-payload";
+export { CompactionFailedPayload } from "./compaction-failed-payload";
 
 export {
   StreamChunk,
@@ -52,3 +64,6 @@ export {
   ErrorChunk,
 } from "./stream-chunk";
 export { ModelInfo } from "./model-info";
+export { CompactionConfig } from "./compaction-config";
+export { TurnOptions } from "./turn-options";
+export { TokenUsage } from "./token-usage";

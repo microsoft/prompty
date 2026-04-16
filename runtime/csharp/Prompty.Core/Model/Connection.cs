@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Connection configuration for AI agents.
-/// 
-/// `provider`, `kind`, and `endpoint` are required properties here,
-/// 
-/// but this section can accept additional via options.
-/// </summary>
+    /// <summary>
+    /// Connection configuration for AI agents.
+    /// 
+    /// `provider`, `kind`, and `endpoint` are required properties here,
+    /// 
+    /// but this section can accept additional via options.
+    /// </summary>
 public abstract partial class Connection
 {
     /// <summary>

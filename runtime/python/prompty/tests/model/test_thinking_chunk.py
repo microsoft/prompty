@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import ThinkingChunk
-
 
 def test_load_json_thinkingchunk():
     json_data = r'''

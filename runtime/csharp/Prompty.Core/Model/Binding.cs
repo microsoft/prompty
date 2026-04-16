@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Represents a binding between an input property and a tool parameter.
-/// </summary>
+    /// <summary>
+    /// Represents a binding between an input property and a tool parameter.
+    /// </summary>
 public partial class Binding
 {
     /// <summary>

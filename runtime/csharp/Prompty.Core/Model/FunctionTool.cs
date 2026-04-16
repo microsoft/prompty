@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Represents a local function tool.
-/// </summary>
+    /// <summary>
+    /// Represents a local function tool.
+    /// </summary>
 public partial class FunctionTool : Tool
 {
     /// <summary>

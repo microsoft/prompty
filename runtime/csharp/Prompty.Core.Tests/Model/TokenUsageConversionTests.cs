@@ -1,0 +1,132 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class TokenUsageConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+promptTokens: 150
+completionTokens: 42
+totalTokens: 192
+
+""";
+
+        var instance = TokenUsage.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal(150, instance.PromptTokens);
+        Assert.Equal(42, instance.CompletionTokens);
+        Assert.Equal(192, instance.TotalTokens);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "promptTokens": 150,
+  "completionTokens": 42,
+  "totalTokens": 192
+}
+""";
+
+        var instance = TokenUsage.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal(150, instance.PromptTokens);
+        Assert.Equal(42, instance.CompletionTokens);
+        Assert.Equal(192, instance.TotalTokens);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "promptTokens": 150,
+  "completionTokens": 42,
+  "totalTokens": 192
+}
+""";
+
+        var original = TokenUsage.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = TokenUsage.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal(150, reloaded.PromptTokens);
+        Assert.Equal(42, reloaded.CompletionTokens);
+        Assert.Equal(192, reloaded.TotalTokens);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+promptTokens: 150
+completionTokens: 42
+totalTokens: 192
+
+""";
+
+        var original = TokenUsage.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = TokenUsage.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal(150, reloaded.PromptTokens);
+        Assert.Equal(42, reloaded.CompletionTokens);
+        Assert.Equal(192, reloaded.TotalTokens);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "promptTokens": 150,
+  "completionTokens": 42,
+  "totalTokens": 192
+}
+""";
+
+        var instance = TokenUsage.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+promptTokens: 150
+completionTokens: 42
+totalTokens: 192
+
+""";
+
+        var instance = TokenUsage.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

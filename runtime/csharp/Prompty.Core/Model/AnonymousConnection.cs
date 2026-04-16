@@ -6,8 +6,8 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// </summary>
+    /// <summary>
+    /// </summary>
 public partial class AnonymousConnection : Connection
 {
     /// <summary>

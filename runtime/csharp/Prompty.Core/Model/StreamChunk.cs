@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// A chunk of data from a streaming LLM response. Stream chunks are
-/// 
-/// discriminated on the `kind` field.
-/// </summary>
+    /// <summary>
+    /// A chunk of data from a streaming LLM response. Stream chunks are
+    /// 
+    /// discriminated on the `kind` field.
+    /// </summary>
 public abstract partial class StreamChunk
 {
     /// <summary>
