@@ -27,6 +27,7 @@
  *         - load_from_value()
  *         - kind_str() (polymorphic only)
  *         - to_value(), to_json(), to_yaml()
+ *         - to_wire() (when wire mappings exist)
  *         - Collection helpers
  *         - Factory methods
  *         - Method stubs (as trait)
@@ -45,6 +46,7 @@ import {
   CoercionDecl,
   PropertyCategory,
   MethodStubDecl,
+  WireDecl,
 } from "../../ir/declarations.js";
 import { ExprVisitor } from "../../ir/visitor.js";
 import { toSnakeCase } from "../../ir/utilities.js";
@@ -317,7 +319,12 @@ function emitStruct(
   if (type.description) {
     emitDocComment(type.description, "", lines);
   }
-  lines.push("#[derive(Debug, Clone, Default)]");
+  if (type.wire) {
+    lines.push("#[derive(Debug, Clone, Default, serde::Serialize)]");
+    lines.push('#[serde(rename_all = "camelCase")]');
+  } else {
+    lines.push("#[derive(Debug, Clone, Default)]");
+  }
   lines.push(`pub struct ${type.typeName.name} {`);
 
   for (const field of type.fields) {
@@ -381,6 +388,11 @@ function emitImpl(
   // to_json() / to_yaml()
   emitToJson(name, lines);
   emitToYaml(name, lines);
+
+  // to_wire() (only when wire mappings exist)
+  if (type.wire) {
+    emitToWireMethod(type, lines);
+  }
 
   // Dict accessor helpers (only for dict-category fields, not scalar value types)
   for (const field of type.fields) {
@@ -824,6 +836,54 @@ function emitToYaml(name: string, lines: string[]): void {
   lines.push(`    pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {`);
   lines.push("        serde_yaml::to_string(&self.to_value(ctx))");
   lines.push("    }");
+}
+
+// ============================================================================
+// to_wire — provider-specific wire format conversion
+// ============================================================================
+
+/**
+ * Emit a `to_wire(&self, provider: &str) -> serde_json::Value` method that
+ * serializes the struct via `serde_json::to_value`, then remaps field names
+ * according to provider-specific wire mappings.
+ *
+ * Only emitted when `type.wire` is non-null.
+ */
+function emitToWireMethod(type: TypeDecl, lines: string[]): void {
+  const wire = type.wire!;
+  const name = type.typeName.name;
+
+  lines.push("");
+  lines.push(`    /// Convert to provider-specific wire format.`);
+  lines.push(`    pub fn to_wire(&self, provider: &str) -> serde_json::Value {`);
+  lines.push(`        let data = serde_json::to_value(self).unwrap_or_default();`);
+  lines.push(`        let mut result = serde_json::Map::new();`);
+
+  // Build the wire_map HashMap literal
+  lines.push(
+    `        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> = std::collections::HashMap::from([`,
+  );
+  for (const mapping of wire.mappings) {
+    const entries = Object.entries(mapping.wireNames);
+    const inner = entries.map(([provider, wireName]) => `("${provider}", "${wireName}")`).join(", ");
+    lines.push(`            ("${mapping.fieldName}", std::collections::HashMap::from([${inner}])),`);
+  }
+  lines.push(`        ]);`);
+
+  // Iterate over serialized keys and remap
+  lines.push(`        if let serde_json::Value::Object(map) = data {`);
+  lines.push(`            for (key, value) in map {`);
+  lines.push(`                if let Some(mapping) = wire_map.get(key.as_str()) {`);
+  lines.push(`                    if let Some(wire_name) = mapping.get(provider) {`);
+  lines.push(`                        result.insert(wire_name.to_string(), value);`);
+  lines.push(`                        continue;`);
+  lines.push(`                    }`);
+  lines.push(`                }`);
+  lines.push(`                result.insert(key, value);`);
+  lines.push(`            }`);
+  lines.push(`        }`);
+  lines.push(`        serde_json::Value::Object(result)`);
+  lines.push(`    }`);
 }
 
 // ============================================================================

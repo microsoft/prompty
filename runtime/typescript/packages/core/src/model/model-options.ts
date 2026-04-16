@@ -174,6 +174,29 @@ export class ModelOptions {
     return result;
   }
 
+  toWire(provider: string): Record<string, unknown> {
+    const data = this.save();
+    const result: Record<string, unknown> = {};
+    const wireMap: Record<string, Record<string, string>> = {
+      frequencyPenalty: { openai: "frequency_penalty" },
+      maxOutputTokens: {
+        openai: "max_completion_tokens",
+        anthropic: "max_tokens",
+      },
+      presencePenalty: { openai: "presence_penalty" },
+      topK: { openai: "top_k", anthropic: "top_k" },
+      topP: { openai: "top_p", anthropic: "top_p" },
+      stopSequences: { openai: "stop", anthropic: "stop_sequences" },
+      allowMultipleToolCalls: { openai: "parallel_tool_calls" },
+    };
+    for (const [key, value] of Object.entries(data)) {
+      const mapping = wireMap[key];
+      const wireName = mapping?.[provider] ?? key;
+      result[wireName] = value;
+    }
+    return result;
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));

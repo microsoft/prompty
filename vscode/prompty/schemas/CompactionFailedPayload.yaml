@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompactionFailedPayload.yaml
+type: object
+properties:
+  message:
+    type: string
+    description: Explanation of why compaction failed
+required:
+  - message
+description: Payload for "compaction_failed" events — compaction could not be completed.

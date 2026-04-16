@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ArrayProperty
+
 
 def test_load_json_arrayproperty():
     json_data = r'''

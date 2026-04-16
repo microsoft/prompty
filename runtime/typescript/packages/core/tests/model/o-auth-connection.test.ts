@@ -25,9 +25,7 @@ describe("OAuthConnection", () => {
       expect(instance.endpoint).toEqual("https://api.example.com");
       expect(instance.clientId).toEqual("your-client-id");
       expect(instance.clientSecret).toEqual("your-client-secret");
-      expect(instance.tokenUrl).toEqual(
-        "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-      );
+      expect(instance.tokenUrl).toEqual("https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -52,9 +50,7 @@ describe("OAuthConnection", () => {
       expect(instance.endpoint).toEqual("https://api.example.com");
       expect(instance.clientId).toEqual("your-client-id");
       expect(instance.clientSecret).toEqual("your-client-secret");
-      expect(instance.tokenUrl).toEqual(
-        "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-      );
+      expect(instance.tokenUrl).toEqual("https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token");
     });
 
     it("should round-trip YAML - example 1", () => {

@@ -57,4 +57,5 @@ describe("Tool", () => {
       expect(reloaded.description).toEqual(instance.description);
     });
   });
+
 });

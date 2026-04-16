@@ -137,6 +137,31 @@ class ModelOptions:
             result = context.process_dict(result)
         return result
 
+    def to_wire(self, provider: str) -> dict[str, Any]:
+        """Convert to provider-specific wire format.
+        Args:
+            provider (str): The provider to convert to (e.g., "openai", "anthropic").
+        Returns:
+            dict[str, Any]: The wire-format dictionary with provider-specific field names.
+
+        """
+        data = self.save()
+        result: dict[str, Any] = {}
+        wire_map: dict[str, dict[str, str]] = {
+            "frequencyPenalty": {"openai": "frequency_penalty"},
+            "maxOutputTokens": {"openai": "max_completion_tokens", "anthropic": "max_tokens"},
+            "presencePenalty": {"openai": "presence_penalty"},
+            "topK": {"openai": "top_k", "anthropic": "top_k"},
+            "topP": {"openai": "top_p", "anthropic": "top_p"},
+            "stopSequences": {"openai": "stop", "anthropic": "stop_sequences"},
+            "allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
+        }
+        for key, value in data.items():
+            mapping = wire_map.get(key, {})
+            wire_name = mapping.get(provider, key)
+            result[wire_name] = value
+        return result
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ModelOptions instance to a YAML string.
         Args:

@@ -30,6 +30,7 @@ import {
   PropertyCategory,
   FactoryDecl,
   MethodStubDecl,
+  WireDecl,
 } from "../../ir/declarations.js";
 import { ExprVisitor, toPascalCase } from "../../ir/visitor.js";
 
@@ -131,6 +132,11 @@ function emitTypeBlock(
 
   // Save method
   emitSaveMethod(type, lines, polymorphicTypeNames);
+
+  // ToWire method (only when wire mappings exist)
+  if (type.wire) {
+    emitToWireMethod(type, lines);
+  }
 
   // ToJSON method
   emitToJSON(typeName, lines);
@@ -745,6 +751,42 @@ function emitSaveDict(
   } else {
     lines.push(`\tresult["${assign.targetName}"] = obj.${fieldName}`);
   }
+}
+
+// ============================================================================
+// ToWire method (provider-specific wire format)
+// ============================================================================
+
+function emitToWireMethod(type: TypeDecl, lines: string[]): void {
+  const typeName = type.typeName.name;
+  const wire = type.wire as WireDecl;
+
+  lines.push(`// ToWire converts to provider-specific wire format.`);
+  lines.push(`func (obj *${typeName}) ToWire(provider string) map[string]interface{} {`);
+  lines.push(`\tdata := obj.Save(nil)`);
+  lines.push(`\tresult := make(map[string]interface{})`);
+  lines.push(`\twireMap := map[string]map[string]string{`);
+
+  for (const mapping of wire.mappings) {
+    const entries = Object.entries(mapping.wireNames)
+      .map(([provider, wireName]) => `"${provider}": "${wireName}"`)
+      .join(", ");
+    lines.push(`\t\t"${mapping.fieldName}": {${entries}},`);
+  }
+
+  lines.push(`\t}`);
+  lines.push(`\tfor key, value := range data {`);
+  lines.push(`\t\tif mapping, ok := wireMap[key]; ok {`);
+  lines.push(`\t\t\tif wireName, ok := mapping[provider]; ok {`);
+  lines.push(`\t\t\t\tresult[wireName] = value`);
+  lines.push(`\t\t\t\tcontinue`);
+  lines.push(`\t\t\t}`);
+  lines.push(`\t\t}`);
+  lines.push(`\t\tresult[key] = value`);
+  lines.push(`\t}`);
+  lines.push(`\treturn result`);
+  lines.push(`}`);
+  lines.push(``);
 }
 
 // ============================================================================

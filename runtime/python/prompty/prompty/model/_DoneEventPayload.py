@@ -7,8 +7,8 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._Message import Message
 from ._context import LoadContext, SaveContext
+from ._Message import Message
 
 
 @dataclass

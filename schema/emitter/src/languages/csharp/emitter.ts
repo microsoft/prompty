@@ -596,6 +596,11 @@ function emitSaveRegion(
   // Main Save method
   emitSaveMethod(type, allTypes, lines);
 
+  // ToWire method (only when wire mappings exist)
+  if (type.wire) {
+    emitToWireMethod(type, lines);
+  }
+
   // Collection save helpers
   for (const helper of type.collectionHelpers) {
     emitCollectionSaveHelper(helper, lines);
@@ -658,6 +663,46 @@ function emitSaveMethod(type: TypeDecl, allTypes: TypeDecl[], lines: string[]): 
   }
 
   lines.push("");
+  lines.push("        return result;");
+  lines.push("    }");
+  lines.push("");
+}
+
+function emitToWireMethod(type: TypeDecl, lines: string[]): void {
+  const wire = type.wire!;
+
+  lines.push("    /// <summary>");
+  lines.push(`    /// Convert this instance to a provider-specific wire-format dictionary.`);
+  lines.push("    /// </summary>");
+  lines.push('    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>');
+  lines.push("    /// <returns>A dictionary with provider-specific field names.</returns>");
+  lines.push("    public Dictionary<string, object?> ToWire(string provider)");
+  lines.push("    {");
+  lines.push("        var data = Save();");
+  lines.push("        var result = new Dictionary<string, object?>();");
+  lines.push("        var wireMap = new Dictionary<string, Dictionary<string, string>>");
+  lines.push("        {");
+
+  for (const mapping of wire.mappings) {
+    const entries = Object.entries(mapping.wireNames);
+    const inner = entries
+      .map(([provider, wireName]) => `["${provider}"] = "${wireName}"`)
+      .join(", ");
+    lines.push(
+      `            ["${mapping.fieldName}"] = new Dictionary<string, string> { ${inner} },`,
+    );
+  }
+
+  lines.push("        };");
+  lines.push("        foreach (var (key, value) in data)");
+  lines.push("        {");
+  lines.push(
+    "            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))",
+  );
+  lines.push("                result[wireName] = value;");
+  lines.push("            else");
+  lines.push("                result[key] = value;");
+  lines.push("        }");
   lines.push("        return result;");
   lines.push("    }");
   lines.push("");

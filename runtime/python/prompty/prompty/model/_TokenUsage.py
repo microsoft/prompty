@@ -4,7 +4,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
@@ -88,6 +88,27 @@ class TokenUsage:
 
         if context is not None:
             result = context.process_dict(result)
+        return result
+
+    def to_wire(self, provider: str) -> dict[str, Any]:
+        """Convert to provider-specific wire format.
+        Args:
+            provider (str): The provider to convert to (e.g., "openai", "anthropic").
+        Returns:
+            dict[str, Any]: The wire-format dictionary with provider-specific field names.
+
+        """
+        data = self.save()
+        result: dict[str, Any] = {}
+        wire_map: dict[str, dict[str, str]] = {
+            "promptTokens": {"openai": "prompt_tokens", "anthropic": "input_tokens"},
+            "completionTokens": {"openai": "completion_tokens", "anthropic": "output_tokens"},
+            "totalTokens": {"openai": "total_tokens"},
+        }
+        for key, value in data.items():
+            mapping = wire_map.get(key, {})
+            wire_name = mapping.get(provider, key)
+            result[wire_name] = value
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

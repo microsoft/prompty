@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// An audio content part. The source may be a URL or base64-encoded data.
-    /// </summary>
+/// <summary>
+/// An audio content part. The source may be a URL or base64-encoded data.
+/// </summary>
 public partial class AudioPart : ContentPart
 {
     /// <summary>

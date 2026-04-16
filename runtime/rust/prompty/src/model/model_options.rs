@@ -5,7 +5,8 @@
 use super::context::{LoadContext, SaveContext};
 
 /// Options for configuring the behavior of the AI model.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ModelOptions {
     /// The frequency penalty to apply to the model's output
     pub frequency_penalty: Option<f32>,
@@ -113,6 +114,33 @@ impl ModelOptions {
     /// Serialize ModelOptions to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+
+    /// Convert to provider-specific wire format.
+    pub fn to_wire(&self, provider: &str) -> serde_json::Value {
+        let data = serde_json::to_value(self).unwrap_or_default();
+        let mut result = serde_json::Map::new();
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> = std::collections::HashMap::from([
+            ("frequencyPenalty", std::collections::HashMap::from([("openai", "frequency_penalty")])),
+            ("maxOutputTokens", std::collections::HashMap::from([("openai", "max_completion_tokens"), ("anthropic", "max_tokens")])),
+            ("presencePenalty", std::collections::HashMap::from([("openai", "presence_penalty")])),
+            ("topK", std::collections::HashMap::from([("openai", "top_k"), ("anthropic", "top_k")])),
+            ("topP", std::collections::HashMap::from([("openai", "top_p"), ("anthropic", "top_p")])),
+            ("stopSequences", std::collections::HashMap::from([("openai", "stop"), ("anthropic", "stop_sequences")])),
+            ("allowMultipleToolCalls", std::collections::HashMap::from([("openai", "parallel_tool_calls")])),
+        ]);
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                if let Some(mapping) = wire_map.get(key.as_str()) {
+                    if let Some(wire_name) = mapping.get(provider) {
+                        result.insert(wire_name.to_string(), value);
+                        continue;
+                    }
+                }
+                result.insert(key, value);
+            }
+        }
+        serde_json::Value::Object(result)
     }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.

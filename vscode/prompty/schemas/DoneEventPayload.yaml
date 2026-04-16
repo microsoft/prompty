@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DoneEventPayload.yaml
+type: object
+properties:
+  response:
+    type: string
+    description: The final text response from the LLM
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    description: The final conversation state including all messages
+required:
+  - response
+  - messages
+description: Payload for "done" events — the agent loop completed successfully.

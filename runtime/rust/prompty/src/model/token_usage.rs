@@ -5,7 +5,8 @@
 use super::context::{LoadContext, SaveContext};
 
 /// Tracks token consumption for a single LLM call. Provider-specific field names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`) are mapped via `knownAs` augments in the wire directory.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenUsage {
     /// Number of tokens in the prompt/input sent to the model
     pub prompt_tokens: Option<i32>,
@@ -71,5 +72,28 @@ impl TokenUsage {
     /// Serialize TokenUsage to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+
+    /// Convert to provider-specific wire format.
+    pub fn to_wire(&self, provider: &str) -> serde_json::Value {
+        let data = serde_json::to_value(self).unwrap_or_default();
+        let mut result = serde_json::Map::new();
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> = std::collections::HashMap::from([
+            ("promptTokens", std::collections::HashMap::from([("openai", "prompt_tokens"), ("anthropic", "input_tokens")])),
+            ("completionTokens", std::collections::HashMap::from([("openai", "completion_tokens"), ("anthropic", "output_tokens")])),
+            ("totalTokens", std::collections::HashMap::from([("openai", "total_tokens")])),
+        ]);
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                if let Some(mapping) = wire_map.get(key.as_str()) {
+                    if let Some(wire_name) = mapping.get(provider) {
+                        result.insert(wire_name.to_string(), value);
+                        continue;
+                    }
+                }
+                result.insert(key, value);
+            }
+        }
+        serde_json::Value::Object(result)
     }
 }

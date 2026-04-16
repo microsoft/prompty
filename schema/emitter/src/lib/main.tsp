@@ -64,28 +64,35 @@ extern dec method(
 );
 
 /**
- * Maps a property's wire name for a specific target system. Used in provider
+ * Maps a property's wire name for a specific provider. Used in provider
  * wire.tsp files via augment syntax (`@@`) to declare how core property names
  * map to provider-specific API parameter names.
  *
- * @example
- * ```typespec
- * @@knownAs(ModelOptions.maxOutputTokens, "max_completion_tokens")
- * ```
- */
-extern dec knownAs(target: ModelProperty, name: valueof string);
-
-/**
- * Declares a per-target required default value for a property. Used in provider
- * wire.tsp files via augment syntax (`@@`) when a provider requires a value that
- * the core schema treats as optional.
+ * @param provider The target provider identifier (e.g., "openai", "anthropic")
+ * @param name The wire field name used by that provider's API
  *
  * @example
  * ```typespec
- * @@defaultFor(ModelOptions.maxOutputTokens, 4096)
+ * @@knownAs(ModelOptions.maxOutputTokens, "openai", "max_completion_tokens")
+ * @@knownAs(ModelOptions.maxOutputTokens, "anthropic", "max_tokens")
  * ```
  */
-extern dec defaultFor(target: ModelProperty, defaultValue: valueof unknown);
+extern dec knownAs(target: ModelProperty, provider: valueof string, name: valueof string);
+
+/**
+ * Declares a per-provider required default value for a property. Used in provider
+ * wire.tsp files via augment syntax (`@@`) when a provider requires a value that
+ * the core schema treats as optional.
+ *
+ * @param provider The target provider identifier (e.g., "openai", "anthropic")
+ * @param defaultValue The default value for that provider
+ *
+ * @example
+ * ```typespec
+ * @@defaultFor(ModelOptions.maxOutputTokens, "openai", 4096)
+ * ```
+ */
+extern dec defaultFor(target: ModelProperty, provider: valueof string, defaultValue: valueof unknown);
 
 /**
  * Marks the target model as a protocol interface. Protocol interfaces define

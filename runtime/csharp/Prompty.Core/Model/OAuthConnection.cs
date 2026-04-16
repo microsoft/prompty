@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Connection configuration using OAuth 2.0 client credentials.
-    /// 
-    /// Useful for tools and services that require OAuth authentication,
-    /// 
-    /// such as MCP servers, OpenAPI endpoints, or other REST APIs.
-    /// </summary>
+/// <summary>
+/// Connection configuration using OAuth 2.0 client credentials.
+/// 
+/// Useful for tools and services that require OAuth authentication,
+/// 
+/// such as MCP servers, OpenAPI endpoints, or other REST APIs.
+/// </summary>
 public partial class OAuthConnection : Connection
 {
     /// <summary>

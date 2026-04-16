@@ -136,6 +136,31 @@ public partial class TokenUsage
         return result;
     }
 
+    /// <summary>
+    /// Convert this instance to a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <returns>A dictionary with provider-specific field names.</returns>
+    public Dictionary<string, object?> ToWire(string provider)
+    {
+        var data = Save();
+        var result = new Dictionary<string, object?>();
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["promptTokens"] = new Dictionary<string, string> { ["openai"] = "prompt_tokens", ["anthropic"] = "input_tokens" },
+            ["completionTokens"] = new Dictionary<string, string> { ["openai"] = "completion_tokens", ["anthropic"] = "output_tokens" },
+            ["totalTokens"] = new Dictionary<string, string> { ["openai"] = "total_tokens" },
+        };
+        foreach (var (key, value) in data)
+        {
+            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
+                result[wireName] = value;
+            else
+                result[key] = value;
+        }
+        return result;
+    }
+
 
     /// <summary>
     /// Convert the TokenUsage instance to a YAML string.

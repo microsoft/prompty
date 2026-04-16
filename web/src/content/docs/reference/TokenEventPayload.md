@@ -1,0 +1,36 @@
+---
+title: "TokenEventPayload"
+description: "Documentation for the TokenEventPayload type."
+slug: "reference/tokeneventpayload"
+---
+
+Payload for "token" events — a single text token streamed from the LLM.
+
+## Class Diagram
+
+```mermaid
+---
+title: TokenEventPayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class TokenEventPayload {
+        +string token
+    }
+```
+
+## Yaml Example
+
+```yaml
+token: Hello
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token | string | The streamed token text |

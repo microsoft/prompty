@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Represents an array property.
-    /// 
-    /// This extends the base Property model to represent an array of items.
-    /// </summary>
+/// <summary>
+/// Represents an array property.
+/// 
+/// This extends the base Property model to represent an array of items.
+/// </summary>
 public partial class ArrayProperty : Property
 {
     /// <summary>

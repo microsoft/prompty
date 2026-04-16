@@ -8,8 +8,8 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._ToolCall import ToolCall
 from ._context import LoadContext, SaveContext
+from ._ToolCall import ToolCall
 
 
 @dataclass

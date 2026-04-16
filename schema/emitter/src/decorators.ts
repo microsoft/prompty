@@ -191,23 +191,30 @@ export function $method(context: DecoratorContext, target: Model, name: string, 
 // ============================================================================
 
 export interface KnownAsEntry {
-  /** Wire field name for the target system */
+  /** Provider identifier (e.g., "openai", "anthropic") */
+  provider: string;
+  /** Wire field name for that provider */
   name: string;
 }
 
-export function $knownAs(context: DecoratorContext, target: ModelProperty, name: string) {
+export function $knownAs(context: DecoratorContext, target: ModelProperty, provider: string, name: string) {
+  const providerValue = typeof provider === 'object' && provider !== null && 'value' in provider ? (provider as StringValue).value : provider as string;
   const nameValue = typeof name === 'object' && name !== null && 'value' in name ? (name as StringValue).value : name as string;
 
-  const entry: KnownAsEntry = { name: nameValue };
+  const entry: KnownAsEntry = { provider: providerValue, name: nameValue };
   appendStateValue<KnownAsEntry>(context, StateKeys.knownAs, target, entry);
 }
 
 export interface DefaultForEntry {
-  /** Default value for the target system */
+  /** Provider identifier (e.g., "openai", "anthropic") */
+  provider: string;
+  /** Default value for that provider */
   defaultValue: any;
 }
 
-export function $defaultFor(context: DecoratorContext, target: ModelProperty, defaultValue: ObjectValue | object | string | number | boolean) {
+export function $defaultFor(context: DecoratorContext, target: ModelProperty, provider: string, defaultValue: ObjectValue | object | string | number | boolean) {
+  const providerValue = typeof provider === 'object' && provider !== null && 'value' in provider ? (provider as StringValue).value : provider as string;
+
   let val: any;
   if (defaultValue && typeof defaultValue === 'object' && 'type' in defaultValue && (defaultValue as ObjectValue).type) {
     const serialized = serializeValueAsJson(context.program, defaultValue as ObjectValue, (defaultValue as ObjectValue).type);
@@ -225,7 +232,7 @@ export function $defaultFor(context: DecoratorContext, target: ModelProperty, de
     val = defaultValue;
   }
 
-  const entry: DefaultForEntry = { defaultValue: val };
+  const entry: DefaultForEntry = { provider: providerValue, defaultValue: val };
   appendStateValue<DefaultForEntry>(context, StateKeys.defaultFor, target, entry);
 }
 

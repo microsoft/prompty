@@ -41,6 +41,7 @@ import {
   FactoryDecl,
   CoercionDecl,
   PropertyCategory,
+  WireDecl,
 } from "../../ir/declarations.js";
 import { ExprVisitor } from "../../ir/visitor.js";
 import { toKebabCase } from "../../ir/utilities.js";
@@ -193,6 +194,11 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
 
   // save() instance method
   emitSaveMethod(type, lines);
+
+  // toWire() method (only if wire mappings exist)
+  if (type.wire !== null) {
+    emitToWireMethod(type, lines);
+  }
 
   // toYaml / toJson
   emitToYaml(name, lines);
@@ -743,6 +749,36 @@ function emitSaveAssignment(a: SaveAssignment): string {
     case "complex":
       return `result["${a.targetName}"] = obj.${a.fieldName}.save(context);`;
   }
+}
+
+// ============================================================================
+// toWire() method
+// ============================================================================
+
+function emitToWireMethod(type: TypeDecl, lines: string[]): void {
+  const wire = type.wire!;
+
+  lines.push("  toWire(provider: string): Record<string, unknown> {");
+  lines.push("    const data = this.save();");
+  lines.push("    const result: Record<string, unknown> = {};");
+  lines.push("    const wireMap: Record<string, Record<string, string>> = {");
+
+  for (const mapping of wire.mappings) {
+    const entries = Object.entries(mapping.wireNames)
+      .map(([prov, wireName]) => `"${prov}": "${wireName}"`)
+      .join(", ");
+    lines.push(`      "${mapping.fieldName}": { ${entries} },`);
+  }
+
+  lines.push("    };");
+  lines.push("    for (const [key, value] of Object.entries(data)) {");
+  lines.push("      const mapping = wireMap[key];");
+  lines.push("      const wireName = mapping?.[provider] ?? key;");
+  lines.push("      result[wireName] = value;");
+  lines.push("    }");
+  lines.push("    return result;");
+  lines.push("  }");
+  lines.push("");
 }
 
 // ============================================================================

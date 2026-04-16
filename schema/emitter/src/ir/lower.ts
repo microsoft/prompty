@@ -41,6 +41,8 @@ import {
   FactoryDecl,
   MethodStubDecl,
   ImportRef,
+  WireDecl,
+  WireFieldMapping,
 } from "./declarations.js";
 
 // ============================================================================
@@ -143,6 +145,7 @@ export function lowerType(
     collectionHelpers,
     polymorphicDispatch,
     methods: lowerMethods(node),
+    wire: lowerWire(node, fields),
   };
 }
 
@@ -194,6 +197,10 @@ function lowerField(
   prop: PropertyNode,
   polymorphicTypeNames: Set<string>,
 ): FieldDecl {
+  const knownAs: Record<string, string> = {};
+  for (const entry of prop.knownAs) {
+    knownAs[entry.provider] = entry.name;
+  }
   return {
     name: prop.name,
     typeName: prop.typeName,
@@ -202,6 +209,7 @@ function lowerField(
     defaultValue: prop.defaultValue,
     allowedValues: prop.allowedValues,
     description: prop.description,
+    knownAs,
   };
 }
 
@@ -385,6 +393,41 @@ function lowerMethods(node: TypeNode): MethodStubDecl[] {
     returns: m.returns,
     description: m.description,
   }));
+}
+
+// ============================================================================
+// Wire conversion lowering
+// ============================================================================
+
+/**
+ * Lower wire conversion data from knownAs mappings on fields.
+ * Returns null if no field has wire mappings.
+ */
+function lowerWire(node: TypeNode, fields: FieldDecl[]): WireDecl | null {
+  const providerSet = new Set<string>();
+  const mappings: WireFieldMapping[] = [];
+
+  for (const field of fields) {
+    if (Object.keys(field.knownAs).length > 0) {
+      for (const provider of Object.keys(field.knownAs)) {
+        providerSet.add(provider);
+      }
+      mappings.push({
+        fieldName: field.name,
+        category: field.category,
+        isOptional: field.isOptional,
+        parentTypeName: node.typeName.name,
+        wireNames: field.knownAs,
+      });
+    }
+  }
+
+  if (mappings.length === 0) return null;
+
+  return {
+    providers: Array.from(providerSet).sort(),
+    mappings,
+  };
 }
 
 // ============================================================================

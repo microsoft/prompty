@@ -11,7 +11,7 @@ import {
   getNamespaceFullName,
   getDiscriminator,
 } from "@typespec/compiler";
-import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, MethodEntry } from "../decorators.js";
+import { getStateScalar, getStateValue, SampleEntry, FactoryEntry, MethodEntry, KnownAsEntry, DefaultForEntry } from "../decorators.js";
 import { StateKeys } from "../lib.js";
 
 
@@ -128,6 +128,8 @@ export class PropertyNode {
   public description: string;
 
   public samples: SampleEntry[] = [];
+  public knownAs: KnownAsEntry[] = [];
+  public defaultFor: DefaultForEntry[] = [];
 
   public isScalar: boolean = false;
   public isOptional: boolean = false;
@@ -153,6 +155,8 @@ export class PropertyNode {
       typeName: this.typeName,
       description: this.description,
       samples: this.samples,
+      knownAs: this.knownAs,
+      defaultFor: this.defaultFor,
 
       isScalar: this.isScalar,
       isOptional: this.isOptional,
@@ -254,6 +258,9 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
       const prop = resolveProperty(program, value, visited, rootNamespace, rootAlias);
       // samples
       prop.samples = getStateValue<SampleEntry>(program, StateKeys.samples, value);
+      // wire mappings
+      prop.knownAs = getStateValue<KnownAsEntry>(program, StateKeys.knownAs, value);
+      prop.defaultFor = getStateValue<DefaultForEntry>(program, StateKeys.defaultFor, value);
 
       properties.push(prop);
     }

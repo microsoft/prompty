@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// An error chunk from the LLM response stream.
-    /// </summary>
+/// <summary>
+/// An error chunk from the LLM response stream.
+/// </summary>
 public partial class ErrorChunk : StreamChunk
 {
     /// <summary>

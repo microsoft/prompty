@@ -81,6 +81,25 @@ export class TokenUsage {
     return result;
   }
 
+  toWire(provider: string): Record<string, unknown> {
+    const data = this.save();
+    const result: Record<string, unknown> = {};
+    const wireMap: Record<string, Record<string, string>> = {
+      promptTokens: { openai: "prompt_tokens", anthropic: "input_tokens" },
+      completionTokens: {
+        openai: "completion_tokens",
+        anthropic: "output_tokens",
+      },
+      totalTokens: { openai: "total_tokens" },
+    };
+    for (const [key, value] of Object.entries(data)) {
+      const mapping = wireMap[key];
+      const wireName = mapping?.[provider] ?? key;
+      result[wireName] = value;
+    }
+    return result;
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));

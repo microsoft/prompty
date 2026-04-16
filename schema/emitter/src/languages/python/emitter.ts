@@ -35,6 +35,7 @@ import {
   FactoryDecl,
   CoercionDecl,
   PropertyCategory,
+  WireFieldMapping,
 } from "../../ir/declarations.js";
 import { ExprVisitor } from "../../ir/visitor.js";
 import { toSnakeCase } from "../../ir/utilities.js";
@@ -179,6 +180,11 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
   // save() method
   lines.push("");
   emitSaveMethod(type, lines);
+
+  // to_wire() method (only when wire mappings exist)
+  if (type.wire) {
+    emitToWireMethod(type, lines);
+  }
 
   // to_yaml() method
   emitToYaml(name, lines);
@@ -627,6 +633,43 @@ function emitSaveAssignment(a: SaveAssignment): string {
     case "complex":
       return `result["${a.targetName}"] = obj.${snake}.save(context)`;
   }
+}
+
+// ============================================================================
+// to_wire() method
+// ============================================================================
+
+function emitToWireMethod(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
+  const wire = type.wire!;
+
+  lines.push(`    def to_wire(self, provider: str) -> dict[str, Any]:`);
+  lines.push(`        """Convert to provider-specific wire format.`);
+  lines.push("        Args:");
+  lines.push("            provider (str): The provider to convert to (e.g., \"openai\", \"anthropic\").");
+  lines.push("        Returns:");
+  lines.push("            dict[str, Any]: The wire-format dictionary with provider-specific field names.");
+  lines.push("");
+  lines.push(`        """`);
+  lines.push("        data = self.save()");
+  lines.push("        result: dict[str, Any] = {}");
+
+  // Build the wire_map literal from the IR mappings
+  lines.push("        wire_map: dict[str, dict[str, str]] = {");
+  for (const mapping of wire.mappings) {
+    const entries = Object.entries(mapping.wireNames)
+      .map(([provider, wireName]) => `"${provider}": "${wireName}"`)
+      .join(", ");
+    lines.push(`            "${mapping.fieldName}": {${entries}},`);
+  }
+  lines.push("        }");
+
+  lines.push("        for key, value in data.items():");
+  lines.push("            mapping = wire_map.get(key, {})");
+  lines.push("            wire_name = mapping.get(provider, key)");
+  lines.push("            result[wire_name] = value");
+  lines.push("        return result");
+  lines.push("");
 }
 
 // ============================================================================

@@ -109,6 +109,8 @@ export interface TypeDecl {
   polymorphicDispatch: PolymorphicDispatchDecl | null;
   /** Method stubs to be implemented in extension modules */
   methods: MethodStubDecl[];
+  /** Wire conversion specification (generated when any field has knownAs mappings) */
+  wire: WireDecl | null;
 }
 
 // ============================================================================
@@ -134,6 +136,8 @@ export interface FieldDecl {
   allowedValues: string[];
   /** Human-readable description for docstrings */
   description: string;
+  /** Wire name mappings per provider (e.g., { openai: "max_completion_tokens" }) */
+  knownAs: Record<string, string>;
 }
 
 // ============================================================================
@@ -330,4 +334,36 @@ export interface MethodStubDecl {
   returns: string;
   /** Human-readable description */
   description: string;
+}
+
+// ============================================================================
+// WireDecl — provider-specific wire format conversion
+// ============================================================================
+
+/**
+ * Specification for the toWire(provider) method.
+ * Generated when at least one field on a type has knownAs mappings.
+ * Maps camelCase field names to provider-specific wire names.
+ */
+export interface WireDecl {
+  /** All known provider identifiers (e.g., ["openai", "anthropic"]) */
+  providers: string[];
+  /** Per-field wire name mappings */
+  mappings: WireFieldMapping[];
+}
+
+/**
+ * A single field's wire name mappings across providers.
+ */
+export interface WireFieldMapping {
+  /** Original field name (camelCase) */
+  fieldName: string;
+  /** Category of the field (for serialization) */
+  category: PropertyCategory;
+  /** Whether the field is optional */
+  isOptional: boolean;
+  /** Parent type name (for collection helpers) */
+  parentTypeName: string;
+  /** Provider → wire field name map */
+  wireNames: Record<string, string>;
 }

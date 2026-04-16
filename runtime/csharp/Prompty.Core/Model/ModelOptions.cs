@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Options for configuring the behavior of the AI model.
-    /// </summary>
+/// <summary>
+/// Options for configuring the behavior of the AI model.
+/// </summary>
 public partial class ModelOptions
 {
     /// <summary>
@@ -241,6 +241,35 @@ public partial class ModelOptions
             result = context.ProcessDict(result);
         }
 
+        return result;
+    }
+
+    /// <summary>
+    /// Convert this instance to a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <returns>A dictionary with provider-specific field names.</returns>
+    public Dictionary<string, object?> ToWire(string provider)
+    {
+        var data = Save();
+        var result = new Dictionary<string, object?>();
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
+            ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["anthropic"] = "max_tokens" },
+            ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },
+            ["topP"] = new Dictionary<string, string> { ["openai"] = "top_p", ["anthropic"] = "top_p" },
+            ["stopSequences"] = new Dictionary<string, string> { ["openai"] = "stop", ["anthropic"] = "stop_sequences" },
+            ["allowMultipleToolCalls"] = new Dictionary<string, string> { ["openai"] = "parallel_tool_calls" },
+        };
+        foreach (var (key, value) in data)
+        {
+            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
+                result[wireName] = value;
+            else
+                result[key] = value;
+        }
         return result;
     }
 

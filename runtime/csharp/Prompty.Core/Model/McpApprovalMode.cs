@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// The approval mode for MCP server tools.
-    /// 
-    /// When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
-    /// 
-    /// to control per-tool approval. For "always" and "never", those fields are ignored.
-    /// </summary>
+/// <summary>
+/// The approval mode for MCP server tools.
+/// 
+/// When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
+/// 
+/// to control per-tool approval. For "always" and "never", those fields are ignored.
+/// </summary>
 public partial class McpApprovalMode
 {
     /// <summary>

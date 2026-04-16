@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// The result of a guardrail evaluation. Guardrails are safety checks that
-    /// 
-    /// run at specific phases of the agent loop and can allow, deny, or rewrite
-    /// 
-    /// content.
-    /// </summary>
+/// <summary>
+/// The result of a guardrail evaluation. Guardrails are safety checks that
+/// 
+/// run at specific phases of the agent loop and can allow, deny, or rewrite
+/// 
+/// content.
+/// </summary>
 public partial class GuardrailResult
 {
     /// <summary>

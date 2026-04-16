@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: GuardrailError.yaml
+type: object
+properties:
+  reason:
+    type: string
+    description: Explanation of why the guardrail denied the content
+required:
+  - reason
+description: |-
+  Data carried by a GuardrailError — raised when an input or output
+  guardrail denies content. The reason field explains the denial
+  for logging, UI display, or programmatic handling.

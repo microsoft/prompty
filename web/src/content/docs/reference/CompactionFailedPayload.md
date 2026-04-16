@@ -1,0 +1,36 @@
+---
+title: "CompactionFailedPayload"
+description: "Documentation for the CompactionFailedPayload type."
+slug: "reference/compactionfailedpayload"
+---
+
+Payload for "compaction_failed" events — compaction could not be completed.
+
+## Class Diagram
+
+```mermaid
+---
+title: CompactionFailedPayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class CompactionFailedPayload {
+        +string message
+    }
+```
+
+## Yaml Example
+
+```yaml
+message: Summarization prompt exceeded context window
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | string | Explanation of why compaction failed |

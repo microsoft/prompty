@@ -7,8 +7,8 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._ToolResult import ToolResult
 from ._context import LoadContext, SaveContext
+from ._ToolResult import ToolResult
 
 
 @dataclass

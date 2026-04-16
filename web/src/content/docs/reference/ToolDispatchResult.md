@@ -1,0 +1,57 @@
+---
+title: "ToolDispatchResult"
+description: "Documentation for the ToolDispatchResult type."
+slug: "reference/tooldispatchresult"
+---
+
+The result of dispatching a single tool call. Pairs the tool call
+identifier with the tool's name and result for correlation in the
+agent loop's message assembly.
+
+## Class Diagram
+
+```mermaid
+---
+title: ToolDispatchResult
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ToolDispatchResult {
+        +string toolCallId
+        +string name
+        +ToolResult result
+    }
+    class ToolResult {
+        +ContentPart[] parts
+    }
+    ToolDispatchResult *-- ToolResult
+```
+
+## Yaml Example
+
+```yaml
+toolCallId: call_abc123
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| toolCallId | string | The tool call ID from the LLM response, used to correlate results |
+| name | string | The name of the tool that was called |
+| result | [ToolResult](../toolresult/) | The result produced by the tool handler |
+
+## Composed Types
+
+The following types are composed within `ToolDispatchResult`:
+
+- [ToolResult](../toolresult/)

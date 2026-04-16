@@ -87,6 +87,27 @@ func (obj *TokenUsage) Save(ctx *SaveContext) map[string]interface{} {
 	return result
 }
 
+// ToWire converts to provider-specific wire format.
+func (obj *TokenUsage) ToWire(provider string) map[string]interface{} {
+	data := obj.Save(nil)
+	result := make(map[string]interface{})
+	wireMap := map[string]map[string]string{
+		"promptTokens":     {"openai": "prompt_tokens", "anthropic": "input_tokens"},
+		"completionTokens": {"openai": "completion_tokens", "anthropic": "output_tokens"},
+		"totalTokens":      {"openai": "total_tokens"},
+	}
+	for key, value := range data {
+		if mapping, ok := wireMap[key]; ok {
+			if wireName, ok := mapping[provider]; ok {
+				result[wireName] = value
+				continue
+			}
+		}
+		result[key] = value
+	}
+	return result
+}
+
 // ToJSON serializes TokenUsage to JSON string
 func (obj *TokenUsage) ToJSON() (string, error) {
 	ctx := NewSaveContext()

@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolContext.yaml
+type: object
+properties:
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    description: The current conversation messages at the point of tool invocation
+  metadata:
+    $ref: RecordUnknown.yaml
+    description: Optional metadata for tool-specific context (e.g., user session info)
+required:
+  - messages
+description: |-
+  Context passed to tool handlers during agent loop execution. Provides
+  access to the agent configuration, current conversation state, and
+  arbitrary metadata for tool implementations that need broader context.

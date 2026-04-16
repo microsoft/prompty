@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolResultPayload.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: The name of the tool that produced the result
+  result:
+    $ref: ToolResult.yaml
+    description: The tool's result
+required:
+  - name
+  - result
+description: Payload for "tool_result" events — a tool has returned its result.

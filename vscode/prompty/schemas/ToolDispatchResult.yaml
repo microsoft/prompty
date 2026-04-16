@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolDispatchResult.yaml
+type: object
+properties:
+  toolCallId:
+    type: string
+    description: The tool call ID from the LLM response, used to correlate results
+  name:
+    type: string
+    description: The name of the tool that was called
+  result:
+    $ref: ToolResult.yaml
+    description: The result produced by the tool handler
+required:
+  - toolCallId
+  - name
+  - result
+description: |-
+  The result of dispatching a single tool call. Pairs the tool call
+  identifier with the tool's name and result for correlation in the
+  agent loop's message assembly.

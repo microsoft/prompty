@@ -192,18 +192,61 @@ classDiagram
         +ContentPart[] parts
         +dictionary metadata
     }
+    class ToolContext {
+        +Message[] messages
+        +dictionary metadata
+    }
+    class ToolResult {
+        +ContentPart[] parts
+    }
+    class ToolDispatchResult {
+        +string toolCallId
+        +string name
+        +ToolResult result
+    }
     class ToolCall {
         +string id
         +string name
         +string arguments
     }
-    class ToolResult {
-        +ContentPart[] parts
-    }
     class GuardrailResult {
         +boolean allowed
         +string reason
         +unknown rewrite
+    }
+    class TokenEventPayload {
+        +string token
+    }
+    class ThinkingEventPayload {
+        +string token
+    }
+    class ToolCallStartPayload {
+        +string name
+        +string arguments
+    }
+    class ToolResultPayload {
+        +string name
+        +ToolResult result
+    }
+    class StatusEventPayload {
+        +string message
+    }
+    class MessagesUpdatedPayload {
+        +Message[] messages
+    }
+    class DoneEventPayload {
+        +string response
+        +Message[] messages
+    }
+    class ErrorEventPayload {
+        +string message
+    }
+    class CompactionCompletePayload {
+        +int32 removed
+        +int32 remaining
+    }
+    class CompactionFailedPayload {
+        +string message
     }
     class StreamChunk {
       <<abstract>>
@@ -233,6 +276,25 @@ classDiagram
         +string[] inputModalities
         +string[] outputModalities
         +dictionary additionalProperties
+    }
+    class CompactionConfig {
+        +string strategy
+        +int32 budget
+        +dictionary options
+    }
+    class TurnOptions {
+        +int32 maxIterations
+        +int32 maxLlmRetries
+        +int32 contextBudget
+        +boolean parallelToolCalls
+        +boolean raw
+        +int32 turn
+        +CompactionConfig compaction
+    }
+    class TokenUsage {
+        +int32 promptTokens
+        +int32 completionTokens
+        +int32 totalTokens
     }
     Property <|-- ArrayProperty
     Property <|-- ObjectProperty
@@ -273,6 +335,12 @@ classDiagram
     Prompty *-- Tool
     Prompty *-- Template
     Message *-- ContentPart
+    ToolContext *-- Message
     ToolResult *-- ContentPart
+    ToolDispatchResult *-- ToolResult
+    ToolResultPayload *-- ToolResult
+    MessagesUpdatedPayload *-- Message
+    DoneEventPayload *-- Message
     ToolChunk *-- ToolCall
+    TurnOptions *-- CompactionConfig
 ```

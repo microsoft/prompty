@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ExecuteError.yaml
+type: object
+properties:
+  message:
+    type: string
+    description: Human-readable error description including retry count and underlying cause
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    description: The full conversation state at the time of failure, enabling the caller to retry with the accumulated messages
+required:
+  - message
+  - messages
+description: |-
+  Data carried by an ExecuteError — raised when the LLM call fails
+  after exhausting all retry attempts. Implementations wrap this in
+  the language-appropriate exception type while preserving the
+  accumulated conversation state for recovery or debugging.

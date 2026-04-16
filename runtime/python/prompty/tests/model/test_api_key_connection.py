@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ApiKeyConnection
+
 
 def test_load_json_apikeyconnection():
     json_data = r'''

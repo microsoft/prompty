@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Connection configuration for AI services using API keys.
-    /// </summary>
+/// <summary>
+/// Connection configuration for AI services using API keys.
+/// </summary>
 public partial class ApiKeyConnection : Connection
 {
     /// <summary>

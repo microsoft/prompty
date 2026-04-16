@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// A tool call requested by the LLM. Contains the function name and serialized
-    /// 
-    /// arguments that should be dispatched to the appropriate tool handler.
-    /// </summary>
+/// <summary>
+/// A tool call requested by the LLM. Contains the function name and serialized
+/// 
+/// arguments that should be dispatched to the appropriate tool handler.
+/// </summary>
 public partial class ToolCall
 {
     /// <summary>
