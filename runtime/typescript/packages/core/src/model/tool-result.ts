@@ -106,7 +106,18 @@ export class ToolResult {
     return new ToolResult({ parts: [new TextPart({ value: value })] });
   }
 
+}
 
-  // @method text(): string — Concatenate all TextPart values joined by newline
+/**
+ * Helper contract for `ToolResult`.
+ *
+ * Runtime implementations must provide these methods on every ToolResult
+ * instance (either on the generated class or on a wrapper type). The
+ * TypeScript compiler enforces conformance wherever a value is typed as
+ * `ToolResultHelpers`.
+ */
+export interface ToolResultHelpers {
+  /** Concatenate all TextPart values joined by newline */
+  text(): string;
 }
 

@@ -130,8 +130,20 @@ export class Message {
     return new Message({ role: "user", parts: [new TextPart({ value: text })] });
   }
 
+}
 
-  // @method toTextContent(): unknown — Return plain string if all parts are text, else a list of content part dicts for wire serialization
-  // @method text(): string — Concatenate all TextPart values joined by newline
+/**
+ * Helper contract for `Message`.
+ *
+ * Runtime implementations must provide these methods on every Message
+ * instance (either on the generated class or on a wrapper type). The
+ * TypeScript compiler enforces conformance wherever a value is typed as
+ * `MessageHelpers`.
+ */
+export interface MessageHelpers {
+  /** Return plain string if all parts are text, else a list of content part dicts for wire serialization */
+  toTextContent(): unknown;
+  /** Concatenate all TextPart values joined by newline */
+  text(): string;
 }
 

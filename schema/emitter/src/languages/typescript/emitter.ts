@@ -235,14 +235,44 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
     }
   }
 
-  // Method stubs
-  if (type.methods.length > 0) {
-    lines.push("");
-    for (const m of type.methods) {
-      lines.push(`  // @method ${m.name}(): ${returnType(m.returns)} — ${m.description}`);
-    }
-  }
+  // Method stubs — emitted as a sibling interface below the class
 
+  lines.push("}");
+
+  // Emit MessageHelpers-style interface after the class
+  if (type.methods.length > 0) {
+    emitMethodHelpersInterface(type, lines);
+  }
+}
+
+/**
+ * Emit a TypeScript interface named `<TypeName>Helpers` declaring the
+ * `@method` contract for a concrete type. The generated class does NOT
+ * implement this interface on its own — runtime code must provide an
+ * implementation. The type checker verifies conformance via structural typing.
+ */
+function emitMethodHelpersInterface(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
+  lines.push("");
+  lines.push(`/**`);
+  lines.push(` * Helper contract for \`${name}\`.`);
+  lines.push(` *`);
+  lines.push(` * Runtime implementations must provide these methods on every ${name}`);
+  lines.push(` * instance (either on the generated class or on a wrapper type). The`);
+  lines.push(` * TypeScript compiler enforces conformance wherever a value is typed as`);
+  lines.push(` * \`${name}Helpers\`.`);
+  lines.push(` */`);
+  lines.push(`export interface ${name}Helpers {`);
+  for (const m of type.methods) {
+    if (m.description) {
+      lines.push(`  /** ${m.description} */`);
+    }
+    const params = Object.entries(m.params)
+      .map(([pName, pType]) => `${pName}: ${returnType(pType)}`)
+      .join(", ");
+    const ret = returnType(m.returns);
+    lines.push(`  ${m.name}(${params}): ${ret};`);
+  }
   lines.push("}");
 }
 
