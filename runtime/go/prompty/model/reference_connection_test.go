@@ -30,7 +30,6 @@ func TestReferenceConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ReferenceConnection: %v", err)
 	}
-
 	if instance.Kind != "reference" {
 		t.Errorf(`Expected Kind to be "reference", got %v`, instance.Kind)
 	}
@@ -60,7 +59,6 @@ target: my-target-resource
 	if err != nil {
 		t.Fatalf("Failed to load ReferenceConnection: %v", err)
 	}
-
 	if instance.Kind != "reference" {
 		t.Errorf(`Expected Kind to be "reference", got %v`, instance.Kind)
 	}
@@ -91,7 +89,6 @@ func TestReferenceConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ReferenceConnection: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -99,7 +96,6 @@ func TestReferenceConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ReferenceConnection: %v", err)
 	}
-
 	if reloaded.Kind != "reference" {
 		t.Errorf(`Expected Kind to be "reference", got %v`, reloaded.Kind)
 	}
@@ -130,7 +126,6 @@ func TestReferenceConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ReferenceConnection: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestReferenceConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ReferenceConnection: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

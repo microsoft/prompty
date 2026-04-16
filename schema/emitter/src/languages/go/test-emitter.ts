@@ -301,8 +301,6 @@ function emitToJSONTest(
   emitJsonUnmarshal(lines);
   lines.push("");
   emitLoadCall(lines, typeName, pkg, "ctx", "data", "instance");
-  lines.push("");
-
   if (isAbstract) {
     lines.push("// Polymorphic ToJSON requires type-specific handling");
     lines.push("_ = instance // Load succeeded, exact type depends on discriminator");
@@ -338,8 +336,6 @@ function emitToYAMLTest(
   emitJsonUnmarshal(lines);
   lines.push("");
   emitLoadCall(lines, typeName, pkg, "ctx", "data", "instance");
-  lines.push("");
-
   if (isAbstract) {
     lines.push("// Polymorphic ToYAML requires type-specific handling");
     lines.push("_ = instance // Load succeeded, exact type depends on discriminator");
@@ -380,8 +376,6 @@ function emitCoercionTest(
   lines.push(`if err != nil {`);
   lines.push(`t.Fatalf("Failed to load ${typeName} from ${alt.scalarType}: %v", err)`);
   lines.push(`}`);
-  lines.push("");
-
   if (isAbstract) {
     lines.push("// Polymorphic alternate loading requires type-specific handling");
     lines.push("_ = instance // Load succeeded, exact type depends on discriminator");

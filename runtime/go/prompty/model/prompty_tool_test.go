@@ -30,7 +30,6 @@ func TestPromptyToolLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PromptyTool: %v", err)
 	}
-
 	if instance.Kind != "prompty" {
 		t.Errorf(`Expected Kind to be "prompty", got %v`, instance.Kind)
 	}
@@ -60,7 +59,6 @@ mode: single
 	if err != nil {
 		t.Fatalf("Failed to load PromptyTool: %v", err)
 	}
-
 	if instance.Kind != "prompty" {
 		t.Errorf(`Expected Kind to be "prompty", got %v`, instance.Kind)
 	}
@@ -91,7 +89,6 @@ func TestPromptyToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PromptyTool: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -99,7 +96,6 @@ func TestPromptyToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload PromptyTool: %v", err)
 	}
-
 	if reloaded.Kind != "prompty" {
 		t.Errorf(`Expected Kind to be "prompty", got %v`, reloaded.Kind)
 	}
@@ -130,7 +126,6 @@ func TestPromptyToolToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PromptyTool: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestPromptyToolToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PromptyTool: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

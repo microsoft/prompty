@@ -30,7 +30,6 @@ func TestImagePartLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ImagePart: %v", err)
 	}
-
 	if instance.Source != "https://example.com/image.png" {
 		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, instance.Source)
 	}
@@ -60,7 +59,6 @@ mediaType: image/png
 	if err != nil {
 		t.Fatalf("Failed to load ImagePart: %v", err)
 	}
-
 	if instance.Source != "https://example.com/image.png" {
 		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, instance.Source)
 	}
@@ -91,7 +89,6 @@ func TestImagePartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ImagePart: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -99,7 +96,6 @@ func TestImagePartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ImagePart: %v", err)
 	}
-
 	if reloaded.Source != "https://example.com/image.png" {
 		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, reloaded.Source)
 	}
@@ -130,7 +126,6 @@ func TestImagePartToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ImagePart: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestImagePartToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ImagePart: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

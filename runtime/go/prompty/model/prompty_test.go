@@ -90,7 +90,6 @@ func TestPromptyLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -184,7 +183,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -278,7 +276,6 @@ func TestPromptyRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -286,7 +283,6 @@ func TestPromptyRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -380,7 +376,6 @@ func TestPromptyToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -471,7 +466,6 @@ func TestPromptyToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -561,7 +555,6 @@ func TestPromptyLoadJSON1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -655,7 +648,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -748,7 +740,6 @@ func TestPromptyRoundtrip1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -756,7 +747,6 @@ func TestPromptyRoundtrip1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -849,7 +839,6 @@ func TestPromptyToJSON1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -939,7 +928,6 @@ func TestPromptyToYAML1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -1031,7 +1019,6 @@ func TestPromptyLoadJSON2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -1125,7 +1112,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -1220,7 +1206,6 @@ func TestPromptyRoundtrip2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -1228,7 +1213,6 @@ func TestPromptyRoundtrip2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -1323,7 +1307,6 @@ func TestPromptyToJSON2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -1415,7 +1398,6 @@ func TestPromptyToYAML2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -1506,7 +1488,6 @@ func TestPromptyLoadJSON3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -1600,7 +1581,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -1694,7 +1674,6 @@ func TestPromptyRoundtrip3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -1702,7 +1681,6 @@ func TestPromptyRoundtrip3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -1796,7 +1774,6 @@ func TestPromptyToJSON3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -1887,7 +1864,6 @@ func TestPromptyToYAML3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -1981,7 +1957,6 @@ func TestPromptyLoadJSON4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -2075,7 +2050,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -2172,7 +2146,6 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -2180,7 +2153,6 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -2277,7 +2249,6 @@ func TestPromptyToJSON4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -2371,7 +2342,6 @@ func TestPromptyToYAML4(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -2464,7 +2434,6 @@ func TestPromptyLoadJSON5(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -2558,7 +2527,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -2654,7 +2622,6 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -2662,7 +2629,6 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -2758,7 +2724,6 @@ func TestPromptyToJSON5(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -2851,7 +2816,6 @@ func TestPromptyToYAML5(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -2946,7 +2910,6 @@ func TestPromptyLoadJSON6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -3040,7 +3003,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -3138,7 +3100,6 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -3146,7 +3107,6 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -3244,7 +3204,6 @@ func TestPromptyToJSON6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -3339,7 +3298,6 @@ func TestPromptyToYAML6(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -3433,7 +3391,6 @@ func TestPromptyLoadJSON7(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -3527,7 +3484,6 @@ instructions: "system:
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
 	}
@@ -3624,7 +3580,6 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -3632,7 +3587,6 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Prompty: %v", err)
 	}
-
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
 	}
@@ -3729,7 +3683,6 @@ func TestPromptyToJSON7(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -3823,7 +3776,6 @@ func TestPromptyToYAML7(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Prompty: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

@@ -59,10 +59,16 @@ export class Model {
       instance.apiType = String(data["apiType"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
+      instance.connection = Connection.load(
+        data["connection"] as Record<string, unknown>,
+        context,
+      );
     }
     if (data["options"] !== undefined && data["options"] !== null) {
-      instance.options = ModelOptions.load(data["options"] as Record<string, unknown>, context);
+      instance.options = ModelOptions.load(
+        data["options"] as Record<string, unknown>,
+        context,
+      );
     }
 
     if (context) {
@@ -128,4 +134,3 @@ export class Model {
 
   //#endregion
 }
-

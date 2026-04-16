@@ -40,7 +40,6 @@ func TestModelLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Model: %v", err)
 	}
-
 	if instance.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
 	}
@@ -78,7 +77,6 @@ options:
 	if err != nil {
 		t.Fatalf("Failed to load Model: %v", err)
 	}
-
 	if instance.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
 	}
@@ -119,7 +117,6 @@ func TestModelRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Model: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -127,7 +124,6 @@ func TestModelRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Model: %v", err)
 	}
-
 	if reloaded.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, reloaded.Id)
 	}
@@ -168,7 +164,6 @@ func TestModelToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Model: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -209,7 +204,6 @@ func TestModelToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Model: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -228,7 +222,6 @@ func TestModelFromModel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Model from string: %v", err)
 	}
-
 	if instance.Id != "example" {
 		t.Errorf(`Expected Id to be "example", got %v`, instance.Id)
 	}

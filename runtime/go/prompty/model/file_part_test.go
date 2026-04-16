@@ -29,7 +29,6 @@ func TestFilePartLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FilePart: %v", err)
 	}
-
 	if instance.Source != "https://example.com/document.pdf" {
 		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, instance.Source)
 	}
@@ -55,7 +54,6 @@ mediaType: application/pdf
 	if err != nil {
 		t.Fatalf("Failed to load FilePart: %v", err)
 	}
-
 	if instance.Source != "https://example.com/document.pdf" {
 		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, instance.Source)
 	}
@@ -82,7 +80,6 @@ func TestFilePartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FilePart: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -90,7 +87,6 @@ func TestFilePartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload FilePart: %v", err)
 	}
-
 	if reloaded.Source != "https://example.com/document.pdf" {
 		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, reloaded.Source)
 	}
@@ -117,7 +113,6 @@ func TestFilePartToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FilePart: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -147,7 +142,6 @@ func TestFilePartToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FilePart: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

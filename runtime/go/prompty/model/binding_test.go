@@ -29,7 +29,6 @@ func TestBindingLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Binding: %v", err)
 	}
-
 	if instance.Name != "my-tool" {
 		t.Errorf(`Expected Name to be "my-tool", got %v`, instance.Name)
 	}
@@ -55,7 +54,6 @@ input: input-variable
 	if err != nil {
 		t.Fatalf("Failed to load Binding: %v", err)
 	}
-
 	if instance.Name != "my-tool" {
 		t.Errorf(`Expected Name to be "my-tool", got %v`, instance.Name)
 	}
@@ -82,7 +80,6 @@ func TestBindingRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Binding: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -90,7 +87,6 @@ func TestBindingRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload Binding: %v", err)
 	}
-
 	if reloaded.Name != "my-tool" {
 		t.Errorf(`Expected Name to be "my-tool", got %v`, reloaded.Name)
 	}
@@ -117,7 +113,6 @@ func TestBindingToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Binding: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -147,7 +142,6 @@ func TestBindingToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Binding: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -166,7 +160,6 @@ func TestBindingFromString(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Binding from string: %v", err)
 	}
-
 	if instance.Input != "example" {
 		t.Errorf(`Expected Input to be "example", got %v`, instance.Input)
 	}

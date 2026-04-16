@@ -35,7 +35,6 @@ func TestOAuthConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OAuthConnection: %v", err)
 	}
-
 	if instance.Kind != "oauth" {
 		t.Errorf(`Expected Kind to be "oauth", got %v`, instance.Kind)
 	}
@@ -75,7 +74,6 @@ scopes:
 	if err != nil {
 		t.Fatalf("Failed to load OAuthConnection: %v", err)
 	}
-
 	if instance.Kind != "oauth" {
 		t.Errorf(`Expected Kind to be "oauth", got %v`, instance.Kind)
 	}
@@ -117,7 +115,6 @@ func TestOAuthConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OAuthConnection: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -125,7 +122,6 @@ func TestOAuthConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload OAuthConnection: %v", err)
 	}
-
 	if reloaded.Kind != "oauth" {
 		t.Errorf(`Expected Kind to be "oauth", got %v`, reloaded.Kind)
 	}
@@ -167,7 +163,6 @@ func TestOAuthConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OAuthConnection: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -203,7 +198,6 @@ func TestOAuthConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load OAuthConnection: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

@@ -28,7 +28,6 @@ func TestTextChunkLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextChunk: %v", err)
 	}
-
 	if instance.Value != "Hello" {
 		t.Errorf(`Expected Value to be "Hello", got %v`, instance.Value)
 	}
@@ -50,7 +49,6 @@ value: Hello
 	if err != nil {
 		t.Fatalf("Failed to load TextChunk: %v", err)
 	}
-
 	if instance.Value != "Hello" {
 		t.Errorf(`Expected Value to be "Hello", got %v`, instance.Value)
 	}
@@ -73,7 +71,6 @@ func TestTextChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextChunk: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -81,7 +78,6 @@ func TestTextChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload TextChunk: %v", err)
 	}
-
 	if reloaded.Value != "Hello" {
 		t.Errorf(`Expected Value to be "Hello", got %v`, reloaded.Value)
 	}
@@ -104,7 +100,6 @@ func TestTextChunkToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextChunk: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -133,7 +128,6 @@ func TestTextChunkToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextChunk: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

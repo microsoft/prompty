@@ -30,7 +30,6 @@ func TestToolCallLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolCall: %v", err)
 	}
-
 	if instance.Id != "call_abc123" {
 		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
 	}
@@ -60,7 +59,6 @@ arguments: "{\"city\": \"Paris\"}"
 	if err != nil {
 		t.Fatalf("Failed to load ToolCall: %v", err)
 	}
-
 	if instance.Id != "call_abc123" {
 		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
 	}
@@ -91,7 +89,6 @@ func TestToolCallRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolCall: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -99,7 +96,6 @@ func TestToolCallRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ToolCall: %v", err)
 	}
-
 	if reloaded.Id != "call_abc123" {
 		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
 	}
@@ -130,7 +126,6 @@ func TestToolCallToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolCall: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestToolCallToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolCall: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

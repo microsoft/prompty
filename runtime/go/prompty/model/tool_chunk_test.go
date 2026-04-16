@@ -32,7 +32,6 @@ func TestToolChunkLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
-
 	_ = instance // No scalar properties to validate
 }
 
@@ -55,7 +54,6 @@ toolCall:
 	if err != nil {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
-
 	_ = instance // No scalar properties to validate
 }
 
@@ -80,7 +78,6 @@ func TestToolChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -88,7 +85,6 @@ func TestToolChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ToolChunk: %v", err)
 	}
-
 	_ = reloaded // No scalar properties to validate
 }
 
@@ -113,7 +109,6 @@ func TestToolChunkToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -146,7 +141,6 @@ func TestToolChunkToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

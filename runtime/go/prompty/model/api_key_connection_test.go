@@ -30,7 +30,6 @@ func TestApiKeyConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ApiKeyConnection: %v", err)
 	}
-
 	if instance.Kind != "key" {
 		t.Errorf(`Expected Kind to be "key", got %v`, instance.Kind)
 	}
@@ -60,7 +59,6 @@ apiKey: your-api-key
 	if err != nil {
 		t.Fatalf("Failed to load ApiKeyConnection: %v", err)
 	}
-
 	if instance.Kind != "key" {
 		t.Errorf(`Expected Kind to be "key", got %v`, instance.Kind)
 	}
@@ -91,7 +89,6 @@ func TestApiKeyConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ApiKeyConnection: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -99,7 +96,6 @@ func TestApiKeyConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ApiKeyConnection: %v", err)
 	}
-
 	if reloaded.Kind != "key" {
 		t.Errorf(`Expected Kind to be "key", got %v`, reloaded.Kind)
 	}
@@ -130,7 +126,6 @@ func TestApiKeyConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ApiKeyConnection: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestApiKeyConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ApiKeyConnection: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

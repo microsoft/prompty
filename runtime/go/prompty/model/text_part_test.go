@@ -28,7 +28,6 @@ func TestTextPartLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextPart: %v", err)
 	}
-
 	if instance.Value != "Hello, world!" {
 		t.Errorf(`Expected Value to be "Hello, world!", got %v`, instance.Value)
 	}
@@ -50,7 +49,6 @@ value: Hello, world!
 	if err != nil {
 		t.Fatalf("Failed to load TextPart: %v", err)
 	}
-
 	if instance.Value != "Hello, world!" {
 		t.Errorf(`Expected Value to be "Hello, world!", got %v`, instance.Value)
 	}
@@ -73,7 +71,6 @@ func TestTextPartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextPart: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -81,7 +78,6 @@ func TestTextPartRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload TextPart: %v", err)
 	}
-
 	if reloaded.Value != "Hello, world!" {
 		t.Errorf(`Expected Value to be "Hello, world!", got %v`, reloaded.Value)
 	}
@@ -104,7 +100,6 @@ func TestTextPartToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextPart: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -133,7 +128,6 @@ func TestTextPartToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load TextPart: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

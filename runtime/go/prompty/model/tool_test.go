@@ -33,7 +33,6 @@ func TestToolLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Tool: %v", err)
 	}
-
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -59,7 +58,6 @@ bindings:
 	if err != nil {
 		t.Fatalf("Failed to load Tool: %v", err)
 	}
-
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -87,7 +85,6 @@ func TestToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Tool: %v", err)
 	}
-
 	// Polymorphic roundtrip testing requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Roundtrip test skipped for polymorphic base types - test child types directly
@@ -115,7 +112,6 @@ func TestToolToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Tool: %v", err)
 	}
-
 	// Polymorphic ToJSON requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToJSON test skipped for polymorphic base types - test child types directly
@@ -143,7 +139,6 @@ func TestToolToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Tool: %v", err)
 	}
-
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly

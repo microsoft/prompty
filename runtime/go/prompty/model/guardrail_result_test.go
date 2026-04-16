@@ -29,7 +29,6 @@ func TestGuardrailResultLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load GuardrailResult: %v", err)
 	}
-
 	if instance.Allowed != true {
 		t.Errorf(`Expected Allowed to be true, got %v`, instance.Allowed)
 	}
@@ -55,7 +54,6 @@ reason: Content is safe
 	if err != nil {
 		t.Fatalf("Failed to load GuardrailResult: %v", err)
 	}
-
 	if instance.Allowed != true {
 		t.Errorf(`Expected Allowed to be true, got %v`, instance.Allowed)
 	}
@@ -82,7 +80,6 @@ func TestGuardrailResultRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load GuardrailResult: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -90,7 +87,6 @@ func TestGuardrailResultRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload GuardrailResult: %v", err)
 	}
-
 	if reloaded.Allowed != true {
 		t.Errorf(`Expected Allowed to be true, got %v`, reloaded.Allowed)
 	}
@@ -117,7 +113,6 @@ func TestGuardrailResultToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load GuardrailResult: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -147,7 +142,6 @@ func TestGuardrailResultToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load GuardrailResult: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

@@ -43,7 +43,6 @@ func TestFunctionToolLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	if instance.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
 	}
@@ -79,7 +78,6 @@ strict: true
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	if instance.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
 	}
@@ -120,7 +118,6 @@ func TestFunctionToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -128,7 +125,6 @@ func TestFunctionToolRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload FunctionTool: %v", err)
 	}
-
 	if reloaded.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
 	}
@@ -169,7 +165,6 @@ func TestFunctionToolToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -213,7 +208,6 @@ func TestFunctionToolToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -260,7 +254,6 @@ func TestFunctionToolLoadJSON1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	if instance.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
 	}
@@ -296,7 +289,6 @@ strict: true
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	if instance.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
 	}
@@ -340,7 +332,6 @@ func TestFunctionToolRoundtrip1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -348,7 +339,6 @@ func TestFunctionToolRoundtrip1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload FunctionTool: %v", err)
 	}
-
 	if reloaded.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
 	}
@@ -392,7 +382,6 @@ func TestFunctionToolToJSON1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -439,7 +428,6 @@ func TestFunctionToolToYAML1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FunctionTool: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

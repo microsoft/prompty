@@ -28,7 +28,6 @@ func TestErrorChunkLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ErrorChunk: %v", err)
 	}
-
 	if instance.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
 	}
@@ -50,7 +49,6 @@ message: Rate limit exceeded
 	if err != nil {
 		t.Fatalf("Failed to load ErrorChunk: %v", err)
 	}
-
 	if instance.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
 	}
@@ -73,7 +71,6 @@ func TestErrorChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ErrorChunk: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -81,7 +78,6 @@ func TestErrorChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ErrorChunk: %v", err)
 	}
-
 	if reloaded.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
 	}
@@ -104,7 +100,6 @@ func TestErrorChunkToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ErrorChunk: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -133,7 +128,6 @@ func TestErrorChunkToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ErrorChunk: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

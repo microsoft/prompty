@@ -3,11 +3,7 @@
 
 export { LoadContext, SaveContext } from "./context";
 
-export {
-  Property,
-  ArrayProperty,
-  ObjectProperty,
-} from "./property";
+export { Property, ArrayProperty, ObjectProperty } from "./property";
 
 export {
   Connection,

@@ -43,7 +43,6 @@ func TestModelOptionsLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ModelOptions: %v", err)
 	}
-
 	if instance.FrequencyPenalty == nil || *instance.FrequencyPenalty != 0.5 {
 		t.Errorf(`Expected FrequencyPenalty to be 0.5, got %v`, instance.FrequencyPenalty)
 	}
@@ -99,7 +98,6 @@ additionalProperties:
 	if err != nil {
 		t.Fatalf("Failed to load ModelOptions: %v", err)
 	}
-
 	if instance.FrequencyPenalty == nil || *instance.FrequencyPenalty != 0.5 {
 		t.Errorf(`Expected FrequencyPenalty to be 0.5, got %v`, instance.FrequencyPenalty)
 	}
@@ -158,7 +156,6 @@ func TestModelOptionsRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ModelOptions: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -166,7 +163,6 @@ func TestModelOptionsRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ModelOptions: %v", err)
 	}
-
 	if reloaded.FrequencyPenalty == nil || *reloaded.FrequencyPenalty != 0.5 {
 		t.Errorf(`Expected FrequencyPenalty to be 0.5, got %v`, reloaded.FrequencyPenalty)
 	}
@@ -225,7 +221,6 @@ func TestModelOptionsToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ModelOptions: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -269,7 +264,6 @@ func TestModelOptionsToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ModelOptions: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)

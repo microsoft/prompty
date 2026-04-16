@@ -30,7 +30,6 @@ func TestConnectionLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Connection: %v", err)
 	}
-
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -54,7 +53,6 @@ usageDescription: This will allow the agent to respond to an email on your behal
 	if err != nil {
 		t.Fatalf("Failed to load Connection: %v", err)
 	}
-
 	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
@@ -79,7 +77,6 @@ func TestConnectionRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Connection: %v", err)
 	}
-
 	// Polymorphic roundtrip testing requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Roundtrip test skipped for polymorphic base types - test child types directly
@@ -104,7 +101,6 @@ func TestConnectionToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Connection: %v", err)
 	}
-
 	// Polymorphic ToJSON requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToJSON test skipped for polymorphic base types - test child types directly
@@ -129,7 +125,6 @@ func TestConnectionToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load Connection: %v", err)
 	}
-
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly

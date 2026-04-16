@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import GuardrailResult
+
 
 def test_load_json_guardrailresult():
     json_data = r'''

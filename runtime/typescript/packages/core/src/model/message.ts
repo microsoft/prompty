@@ -44,7 +44,10 @@ export class Message {
     return instance;
   }
 
-  static loadParts(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ContentPart[] {
+  static loadParts(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ContentPart[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -52,21 +55,26 @@ export class Message {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, "kind": v });
+          result.push({ name: k, kind: v });
         }
       }
       data = result;
     }
-    return data.map(item => ContentPart.load(item as Record<string, unknown>, context));
+    return data.map((item) =>
+      ContentPart.load(item as Record<string, unknown>, context),
+    );
   }
 
-  static saveParts(items: ContentPart[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParts(
+    items: ContentPart[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -121,18 +129,25 @@ export class Message {
   //#endregion
 
   static assistant(text: string): Message {
-    return new Message({ role: "assistant", parts: [new TextPart({ value: text })] });
+    return new Message({
+      role: "assistant",
+      parts: [new TextPart({ value: text })],
+    });
   }
 
   static system(text: string): Message {
-    return new Message({ role: "system", parts: [new TextPart({ value: text })] });
+    return new Message({
+      role: "system",
+      parts: [new TextPart({ value: text })],
+    });
   }
 
   static user(text: string): Message {
-    return new Message({ role: "user", parts: [new TextPart({ value: text })] });
+    return new Message({
+      role: "user",
+      parts: [new TextPart({ value: text })],
+    });
   }
-
 
   // @method text(): string — Concatenate all TextPart values joined by newline
 }
-

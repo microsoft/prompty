@@ -34,7 +34,6 @@ func TestMcpApprovalModeLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode: %v", err)
 	}
-
 	if instance.Kind != "never" {
 		t.Errorf(`Expected Kind to be "never", got %v`, instance.Kind)
 	}
@@ -60,7 +59,6 @@ neverRequireApprovalTools:
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode: %v", err)
 	}
-
 	if instance.Kind != "never" {
 		t.Errorf(`Expected Kind to be "never", got %v`, instance.Kind)
 	}
@@ -89,7 +87,6 @@ func TestMcpApprovalModeRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode: %v", err)
 	}
-
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
@@ -97,7 +94,6 @@ func TestMcpApprovalModeRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload McpApprovalMode: %v", err)
 	}
-
 	if reloaded.Kind != "never" {
 		t.Errorf(`Expected Kind to be "never", got %v`, reloaded.Kind)
 	}
@@ -126,7 +122,6 @@ func TestMcpApprovalModeToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode: %v", err)
 	}
-
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
 		t.Fatalf("Failed to convert to JSON: %v", err)
@@ -161,7 +156,6 @@ func TestMcpApprovalModeToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode: %v", err)
 	}
-
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
 		t.Fatalf("Failed to convert to YAML: %v", err)
@@ -180,7 +174,6 @@ func TestMcpApprovalModeFromKind(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load McpApprovalMode from string: %v", err)
 	}
-
 	if instance.Kind != "never" {
 		t.Errorf(`Expected Kind to be "never", got %v`, instance.Kind)
 	}
