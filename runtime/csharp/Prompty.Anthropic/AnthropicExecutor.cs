@@ -307,7 +307,7 @@ public class AnthropicExecutor : IExecutor
     /// 1. Assistant message preserves ALL content blocks (text + tool_use)
     /// 2. Tool results are batched into a single "user" message with tool_result blocks
     /// </summary>
-    public List<Message> FormatToolMessages(
+    public Task<List<Message>> FormatToolMessagesAsync(
         object rawResponse,
         List<ToolCall> toolCalls,
         List<string> toolResults,
@@ -360,6 +360,6 @@ public class AnthropicExecutor : IExecutor
             Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });
 
-        return messages;
+        return Task.FromResult(messages);
     }
 }

@@ -37,7 +37,7 @@ file class ThrowingMockExecutor : IExecutor
         return Task.FromResult(_responses.Dequeue()!);
     }
 
-    public List<Message> FormatToolMessages(
+    public Task<List<Message>> FormatToolMessagesAsync(
         object rawResponse,
         List<ToolCall> toolCalls,
         List<string> toolResults,
@@ -59,7 +59,7 @@ file class ThrowingMockExecutor : IExecutor
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
-        return msgs;
+        return Task.FromResult(msgs);
     }
 }
 

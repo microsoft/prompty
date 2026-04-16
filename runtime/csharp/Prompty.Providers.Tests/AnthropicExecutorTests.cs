@@ -113,7 +113,7 @@ public class AnthropicExecutorTests
         };
         var toolResults = new List<string> { "72°F", "3:00 PM" };
 
-        var messages = executor.FormatToolMessages("raw", toolCalls, toolResults, "Let me check.");
+        var messages = executor.FormatToolMessagesAsync("raw", toolCalls, toolResults, "Let me check.").Result;
 
         // Should be 2 messages: assistant + single user message (NOT 3)
         Assert.Equal(2, messages.Count);
@@ -149,7 +149,7 @@ public class AnthropicExecutorTests
         };
         var toolResults = new List<string> { "result" };
 
-        var messages = executor.FormatToolMessages("raw", toolCalls, toolResults);
+        var messages = executor.FormatToolMessagesAsync("raw", toolCalls, toolResults).Result;
 
         var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
         Assert.Single(content); // Only tool_use, no text block

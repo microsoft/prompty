@@ -477,7 +477,7 @@ public static class Pipeline
                     }
 
                     // Delegate message formatting to the executor (provider-specific)
-                    var toolMessages = executor.FormatToolMessages(
+                    var toolMessages = await executor.FormatToolMessagesAsync(
                         response2, toolResult.ToolCalls, toolResults, toolResult.Content);
                     messages.AddRange(toolMessages);
 

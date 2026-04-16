@@ -126,7 +126,7 @@ public class OpenAIExecutorTests
         };
         var toolResults = new List<string> { "72°F", "3:00 PM" };
 
-        var messages = executor.FormatToolMessages("raw", toolCalls, toolResults, "Let me check.");
+        var messages = executor.FormatToolMessagesAsync("raw", toolCalls, toolResults, "Let me check.").Result;
 
         // Should be 3 messages: 1 assistant + 2 individual tool messages
         Assert.Equal(3, messages.Count);

@@ -272,8 +272,8 @@ public class AgentLoopTests : IDisposable
         public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
             => Task.FromResult(response);
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
-            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
+        public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => Task.FromResult(DefaultFormatToolMessages(toolCalls, toolResults, textContent));
     }
 
     /// <summary>Processor that returns the value as-is (identity).</summary>
@@ -303,8 +303,8 @@ public class AgentLoopTests : IDisposable
             return Task.FromResult(responses[_index++]);
         }
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
-            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
+        public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => Task.FromResult(DefaultFormatToolMessages(toolCalls, toolResults, textContent));
     }
 
     /// <summary>Executor that always returns a tool call — for testing max iterations.</summary>
@@ -318,8 +318,8 @@ public class AgentLoopTests : IDisposable
             });
         }
 
-        public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
-            => DefaultFormatToolMessages(toolCalls, toolResults, textContent);
+        public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+            => Task.FromResult(DefaultFormatToolMessages(toolCalls, toolResults, textContent));
     }
 
     /// <summary>Default OpenAI-style format for mock executors.</summary>

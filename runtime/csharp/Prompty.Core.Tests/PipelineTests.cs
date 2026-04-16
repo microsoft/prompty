@@ -604,7 +604,7 @@ internal class MockExecutor : IExecutor
     public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
         => Task.FromResult<object>("mock-response");
 
-    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
@@ -612,7 +612,7 @@ internal class MockExecutor : IExecutor
         };
         for (var i = 0; i < toolCalls.Count; i++)
             messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
-        return messages;
+        return Task.FromResult(messages);
     }
 }
 
@@ -639,7 +639,7 @@ internal class ToolCallingExecutor : IExecutor
         return Task.FromResult<object>("final_response");
     }
 
-    public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
+    public Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
     {
         var messages = new List<Message>
         {
@@ -647,7 +647,7 @@ internal class ToolCallingExecutor : IExecutor
         };
         for (var i = 0; i < toolCalls.Count; i++)
             messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
-        return messages;
+        return Task.FromResult(messages);
     }
 }
 
