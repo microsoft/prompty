@@ -9,13 +9,14 @@ import {
 } from "../../ir/ast.js";
 import { GeneratorOptions, filterNodes } from "../../emitter.js";
 
-import { createTemplateEngine } from "../../legacy/template-engine.js";
 import { buildBaseTestContext, goTestOptions } from "../../legacy/test-context.js";
 import { toSnakeCase } from "../../ir/utilities.js";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { GoExprVisitor } from "./visitor.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { emitGoFileContent } from "./emitter.js";
+import { emitGoContext } from "./scaffolding.js";
+import { emitGoTest } from "./test-emitter.js";
 
 
 /**
@@ -39,24 +40,16 @@ export const goTypeMapper: Record<string, string> = {
 };
 
 
-interface GoContextContext {
-  header: string;
-  packageName: string;
-}
-
 /**
  * Main entry point for Go code generation.
  */
 export const generateGo = async (
   context: EmitContext<PromptyEmitterOptions>,
-  templateDir: string,
+  _templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
   options?: GeneratorOptions
 ): Promise<void> => {
-  // Create template engine with Go templates + shared macros
-  const engine = createTemplateEngine(templateDir, 'go');
-
   const allTypes = Array.from(enumerateTypes(node));
   const nodes = filterNodes(allTypes, options);
 
@@ -76,12 +69,11 @@ export const generateGo = async (
     }
   }
 
-  // Render context file (LoadContext/SaveContext utilities)
-  const contextContext = buildContextContext(packageName);
-  const contextContent = engine.render('context.go.njk', contextContext);
+  // Emit context file (LoadContext/SaveContext utilities)
+  const contextContent = emitGoContext({ header: "Prompty Context", packageName });
   await emitGoFile(context, 'context.go', contextContent, emitTarget["output-dir"]);
 
-  // Render each base type and its children as a single file
+  // Emit each base type and its children as a single file
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
@@ -91,11 +83,11 @@ export const generateGo = async (
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
     }
 
-    // Render test file for each type
+    // Emit test file for each type
     if (emitTarget["test-dir"]) {
       const importPath = emitTarget["import-path"] || packageName;
       const testContext = { ...buildTestContext(n, packageName), importPath };
-      const testContent = engine.render('test.go.njk', testContext);
+      const testContent = emitGoTest(testContext);
       const testFileName = toSnakeCase(n.typeName.name) + '_test.go';
       await emitGoFile(context, testFileName, testContent, emitTarget["test-dir"]);
     }
@@ -148,16 +140,6 @@ function formatGoFiles(outputDir: string, testDir?: string): void {
  */
 function buildTestContext(node: TypeNode, packageName: string): BaseTestContext {
   return buildBaseTestContext(node, packageName, goTestOptions);
-}
-
-/**
- * Build context for rendering the context.go file.
- */
-function buildContextContext(packageName: string): GoContextContext {
-  return {
-    header: "Prompty Context",
-    packageName,
-  };
 }
 
 /**
