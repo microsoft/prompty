@@ -130,20 +130,11 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
     if opts is None:
         return {}
 
-    result: dict[str, Any] = {}
-
-    if opts.temperature is not None:
-        result["temperature"] = opts.temperature
-    if opts.topP is not None:
-        result["top_p"] = opts.topP
-    if opts.topK is not None:
-        result["top_k"] = opts.topK
-    if opts.stopSequences:
-        result["stop_sequences"] = opts.stopSequences
+    result = opts.to_wire("anthropic")
 
     # Pass through additionalProperties
-    if opts.additionalProperties:
-        for k, v in opts.additionalProperties.items():
+    if opts.additional_properties:
+        for k, v in opts.additional_properties.items():
             if k not in result and k != "max_tokens":
                 result[k] = v
 
@@ -289,15 +280,14 @@ def _build_chat_args(agent: Prompty, messages: list[Message]) -> dict[str, Any]:
         else:
             conversation.append(_message_to_wire(msg))
 
-    max_tokens = DEFAULT_MAX_TOKENS
-    if agent.model.options and agent.model.options.maxOutputTokens is not None:
-        max_tokens = agent.model.options.maxOutputTokens
+    opts = _build_options(agent)
+    if "max_tokens" not in opts:
+        opts["max_tokens"] = DEFAULT_MAX_TOKENS
 
     args: dict[str, Any] = {
         "model": model,
         "messages": conversation,
-        "max_tokens": max_tokens,
-        **_build_options(agent),
+        **opts,
     }
 
     if system_parts:

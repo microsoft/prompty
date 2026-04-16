@@ -270,30 +270,15 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
 
 def _build_options(agent: Prompty) -> dict[str, Any]:
     """Extract model options into kwargs for the chat completions API call."""
-    opts: dict[str, Any] = {}
     if agent.model.options is None:
-        return opts
+        return {}
 
     mo = agent.model.options
-
-    if mo.temperature is not None:
-        opts["temperature"] = mo.temperature
-    if mo.maxOutputTokens is not None:
-        opts["max_completion_tokens"] = mo.maxOutputTokens
-    if mo.topP is not None:
-        opts["top_p"] = mo.topP
-    if mo.frequencyPenalty is not None:
-        opts["frequency_penalty"] = mo.frequencyPenalty
-    if mo.presencePenalty is not None:
-        opts["presence_penalty"] = mo.presencePenalty
-    if mo.seed is not None:
-        opts["seed"] = mo.seed
-    if mo.stopSequences:
-        opts["stop"] = mo.stopSequences
+    opts = mo.to_wire("openai")
 
     # Pass through additional properties
-    if mo.additionalProperties:
-        for k, v in mo.additionalProperties.items():
+    if mo.additional_properties:
+        for k, v in mo.additional_properties.items():
             if k not in opts:
                 opts[k] = v
 
@@ -307,22 +292,15 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 
 def _build_responses_options(agent: Prompty) -> dict[str, Any]:
     """Extract model options for the Responses API (different param names)."""
-    opts: dict[str, Any] = {}
     if agent.model.options is None:
-        return opts
+        return {}
 
     mo = agent.model.options
-
-    if mo.temperature is not None:
-        opts["temperature"] = mo.temperature
-    if mo.maxOutputTokens is not None:
-        opts["max_output_tokens"] = mo.maxOutputTokens
-    if mo.topP is not None:
-        opts["top_p"] = mo.topP
+    opts = mo.to_wire("responses")
 
     # Pass through additional properties
-    if mo.additionalProperties:
-        for k, v in mo.additionalProperties.items():
+    if mo.additional_properties:
+        for k, v in mo.additional_properties.items():
             if k not in opts:
                 opts[k] = v
 
