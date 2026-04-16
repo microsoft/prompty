@@ -221,7 +221,9 @@ fn apply_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
     let wire = opts.to_wire("openai");
     if let Value::Object(map) = wire {
         for (k, v) in map {
-            args.insert(k, fix_f32_value(v));
+            if !v.is_null() {
+                args.insert(k, fix_f32_value(v));
+            }
         }
     }
 
@@ -509,7 +511,9 @@ fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOpt
     let wire = opts.to_wire("responses");
     if let Value::Object(map) = wire {
         for (k, v) in map {
-            args.insert(k, fix_f32_value(v));
+            if !v.is_null() {
+                args.insert(k, fix_f32_value(v));
+            }
         }
     }
 

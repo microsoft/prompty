@@ -215,6 +215,9 @@ fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
         let wire = opts.to_wire("anthropic");
         if let Value::Object(map) = wire {
             for (k, v) in map {
+                if v.is_null() {
+                    continue;
+                }
                 if k == "max_tokens" {
                     max_tokens = v.as_i64().unwrap_or(DEFAULT_MAX_TOKENS);
                 } else {
