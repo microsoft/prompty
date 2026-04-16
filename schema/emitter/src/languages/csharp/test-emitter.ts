@@ -166,7 +166,7 @@ export function emitCSharpTest(ctx: CSharpTestContext): string {
       // Build the C# data literal
       let dataLine: string;
       if (alt.scalar === 'string') {
-        dataLine = `        var data = "${alt.value.toString().replace(/"/g, '\\"')}";`;
+        dataLine = `        var data = "${alt.value.toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"')}";`;
       } else {
         let dataValue: string;
         if (alt.value.toString() === "True") dataValue = "true";

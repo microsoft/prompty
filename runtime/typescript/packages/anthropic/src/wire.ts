@@ -80,7 +80,10 @@ function partToWire(part: ContentPart): Record<string, unknown> {
       if (part.source.startsWith("data:")) {
         // Data URL — extract base64 payload and MIME type
         const [header, data] = part.source.split(",", 2);
-        const mediaType = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
+        // Extract MIME type between "data:" and ";" without regex backtracking
+        const mimeStart = header?.indexOf("data:") === 0 ? 5 : 0;
+        const mimeEnd = header?.indexOf(";", mimeStart) ?? -1;
+        const mediaType = mimeEnd > mimeStart ? header!.slice(mimeStart, mimeEnd) : "image/png";
         return {
           type: "image",
           source: {

@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
@@ -112,9 +112,9 @@ function formatGoFiles(outputDir: string, testDir?: string): void {
   const dirs = [outputDir, ...(testDir ? [testDir] : [])];
 
   for (const dir of dirs) {
-    // Run gofmt
+    // Run gofmt — use execFileSync to avoid shell injection
     try {
-      execSync(`gofmt -w "${dir}"`, {
+      execFileSync("gofmt", ["-w", dir], {
         stdio: 'pipe',
         encoding: 'utf-8'
       });
@@ -124,7 +124,7 @@ function formatGoFiles(outputDir: string, testDir?: string): void {
 
     // Run goimports if available
     try {
-      execSync(`goimports -w "${dir}"`, {
+      execFileSync("goimports", ["-w", dir], {
         stdio: 'pipe',
         encoding: 'utf-8'
       });

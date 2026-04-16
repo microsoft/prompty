@@ -1,6 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from "fs";
 import * as YAML from "yaml";
 
@@ -149,8 +149,8 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
   writeFileSync(tempConfigPath, YAML.stringify(tspConfig));
 
   try {
-    // Run tsp compile
-    execSync(`tsp compile "${modelPath}" --config "${tempConfigPath}"`, {
+    // Run tsp compile — use execFileSync to avoid shell injection
+    execFileSync("tsp", ["compile", modelPath, "--config", tempConfigPath], {
       stdio: "inherit",
       cwd: outputDir,
     });

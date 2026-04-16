@@ -11,7 +11,7 @@ import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { buildBaseTestContext, typescriptTestOptions } from "../../testing/test-context.js";
 import { toKebabCase } from "../../ir/utilities.js";
 import { resolve, dirname } from "path";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync } from "fs";
 
 /**
@@ -111,9 +111,10 @@ function formatTypeScriptFiles(outputDir: string, testDir?: string): void {
   const dirs = [outputDir, ...(testDir ? [testDir] : [])];
 
   for (const dir of dirs) {
-    // Run prettier
+    const globPattern = `${dir}/**/*.ts`;
+    // Run prettier — use execFileSync to avoid shell injection from paths
     try {
-      execSync(`npx prettier --write "${dir}/**/*.ts"`, {
+      execFileSync("npx", ["prettier", "--write", globPattern], {
         cwd: projectRoot,
         stdio: "pipe",
         encoding: "utf-8",
@@ -124,7 +125,7 @@ function formatTypeScriptFiles(outputDir: string, testDir?: string): void {
 
     // Run eslint fix
     try {
-      execSync(`npx eslint --fix "${dir}/**/*.ts"`, {
+      execFileSync("npx", ["eslint", "--fix", globPattern], {
         cwd: projectRoot,
         stdio: "pipe",
         encoding: "utf-8",

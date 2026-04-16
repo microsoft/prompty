@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
@@ -142,9 +142,9 @@ function formatPythonFiles(outputDir: string, testDir?: string): void {
   const dirs = [outputDir, ...(testDir ? [testDir] : [])];
 
   for (const dir of dirs) {
-    // Run ruff check with auto-fix
+    // Run ruff check with auto-fix — use execFileSync to avoid shell injection
     try {
-      execSync(`uv run ruff check --fix "${dir}"`, {
+      execFileSync("uv", ["run", "ruff", "check", "--fix", dir], {
         cwd: projectRoot,
         stdio: 'pipe',
         encoding: 'utf-8'
@@ -155,7 +155,7 @@ function formatPythonFiles(outputDir: string, testDir?: string): void {
 
     // Run black formatter
     try {
-      execSync(`uv run black "${dir}"`, {
+      execFileSync("uv", ["run", "black", dir], {
         cwd: projectRoot,
         stdio: 'pipe',
         encoding: 'utf-8'

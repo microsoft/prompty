@@ -5,7 +5,7 @@ import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import { getCombinations, scalarValue } from "../../ir/utilities.js";
 import * as YAML from "yaml";
 import { resolve, dirname } from "path";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { CSharpExprVisitor } from "./visitor.js";
@@ -220,7 +220,7 @@ function formatCSharpFiles(outputDir: string, testDir?: string): void {
     formatted.add(projectRoot);
 
     try {
-      execSync(`dotnet format "${projectRoot}"`, {
+      execFileSync("dotnet", ["format", projectRoot], {
         cwd: dirname(projectRoot),
         stdio: 'pipe',
         encoding: 'utf-8'

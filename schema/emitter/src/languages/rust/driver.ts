@@ -1,5 +1,5 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
@@ -137,7 +137,7 @@ function formatRustFiles(outputDir: string): void {
   const cargoToml = resolve(outputDir, '../Cargo.toml');
   if (existsSync(cargoToml)) {
     try {
-      execSync(`cargo fmt --manifest-path "${cargoToml}"`, {
+      execFileSync("cargo", ["fmt", "--manifest-path", cargoToml], {
         stdio: 'pipe',
         encoding: 'utf-8'
       });
