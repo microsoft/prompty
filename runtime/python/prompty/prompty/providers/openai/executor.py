@@ -204,8 +204,8 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
 
     if prop.description:
         schema["description"] = prop.description
-    if prop.enumValues:
-        schema["enum"] = prop.enumValues
+    if prop.enum_values:
+        schema["enum"] = prop.enum_values
 
     # Array items — default to string if unspecified
     if prop.kind == "array":
@@ -715,7 +715,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -731,7 +731,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -793,8 +793,8 @@ class OpenAIExecutor(_BaseExecutor):
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection
         if conn and isinstance(conn, ApiKeyConnection):
-            if conn.apiKey:
-                kwargs["api_key"] = conn.apiKey
+            if conn.api_key:
+                kwargs["api_key"] = conn.api_key
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
         elif conn:
