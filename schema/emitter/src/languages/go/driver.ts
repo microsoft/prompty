@@ -45,7 +45,6 @@ export const goTypeMapper: Record<string, string> = {
  */
 export const generateGo = async (
   context: EmitContext<PromptyEmitterOptions>,
-  _templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
   options?: GeneratorOptions

@@ -182,7 +182,7 @@ classDiagram`;
   return out;
 }
 
-export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, _templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
+export const generateMarkdown = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
 
   const rootObject = context.options["root-alias"] || "AgentDefinition";
 

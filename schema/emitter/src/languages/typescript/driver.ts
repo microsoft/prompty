@@ -19,7 +19,6 @@ import { existsSync } from "fs";
  */
 export const generateTypeScript = async (
   context: EmitContext<PromptyEmitterOptions>,
-  _templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
   options?: GeneratorOptions

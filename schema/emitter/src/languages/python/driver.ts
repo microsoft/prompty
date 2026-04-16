@@ -51,7 +51,6 @@ export const pythonTypeMapper: Record<string, string> = {
  */
 export const generatePython = async (
   context: EmitContext<PromptyEmitterOptions>,
-  templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
   options?: GeneratorOptions

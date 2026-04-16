@@ -46,7 +46,6 @@ interface RustLibContext {
  */
 export const generateRust = async (
   context: EmitContext<PromptyEmitterOptions>,
-  templateDir: string,
   node: TypeNode,
   emitTarget: EmitTarget,
   options?: GeneratorOptions

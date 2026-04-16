@@ -14,7 +14,7 @@ import { emitCSharpClass } from "./emitter.js";
 import { emitCSharpContext, emitCSharpUtils } from "./scaffolding.js";
 import { emitCSharpTest } from "./test-emitter.js";
 
-export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, _templateDir: string, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
+export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   const allTypes = Array.from(enumerateTypes(node));
   const nodes = filterNodes(allTypes, options);
 

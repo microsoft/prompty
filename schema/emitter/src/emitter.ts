@@ -1,9 +1,5 @@
-import { fileURLToPath } from 'url';
-import path, { dirname } from 'path';
-import { existsSync, unlinkSync, readdirSync } from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import path from 'path';
+import { existsSync, unlinkSync } from 'fs';
 
 import { EmitContext, emitFile, resolvePath, Namespace } from "@typespec/compiler";
 import { resolveModel, TypeNode, enumerateTypes } from "./ir/ast.js";
@@ -56,7 +52,6 @@ export function filterNodes(nodes: TypeNode[], options?: GeneratorOptions): Type
 // Generator function type for code emitters
 type GeneratorFn = (
   context: EmitContext<PromptyEmitterOptions>,
-  templateDir: string,
   model: TypeNode,
   target: EmitTarget,
   options?: GeneratorOptions
@@ -77,7 +72,6 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
 
   const options = {
     emitterOutputDir: context.emitterOutputDir,
-    templateDir: path.resolve(__dirname, 'templates'),
     ...context.options,
   }
 
@@ -177,7 +171,7 @@ export async function $onEmit(context: EmitContext<PromptyEmitterOptions>) {
     const generatorName = target.type.toLowerCase().trim();
     const generator = generators[generatorName];
     if (generator) {
-      await generator(context, options.templateDir, model, target, generatorOptions);
+      await generator(context, model, target, generatorOptions);
     }
   }
 
