@@ -14,7 +14,7 @@ from ._Message import Message
 @dataclass
 class MessagesUpdatedPayload:
     """Payload for "messages_updated" events — the conversation state has changed.
-    
+
     Attributes
     ----------
     messages : list[Message]
@@ -38,7 +38,7 @@ class MessagesUpdatedPayload:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for MessagesUpdatedPayload: {data}")
 
@@ -46,12 +46,12 @@ class MessagesUpdatedPayload:
         instance = MessagesUpdatedPayload()
 
         if data is not None and "messages" in data:
-            instance.messages = MessagesUpdatedPayload.load_messages(data["messages"], context)
+            instance.messages = MessagesUpdatedPayload.load_messages(
+                data["messages"], context
+            )
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -69,7 +69,9 @@ class MessagesUpdatedPayload:
         return [Message.load(item, context) for item in data]
 
     @staticmethod
-    def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_messages(
+        items: list[Message], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -88,11 +90,12 @@ class MessagesUpdatedPayload:
         if context is not None:
             obj = context.process_object(obj)
 
-
         result: dict[str, Any] = {}
 
         if obj.messages is not None:
-            result["messages"] = MessagesUpdatedPayload.save_messages(obj.messages, context)
+            result["messages"] = MessagesUpdatedPayload.save_messages(
+                obj.messages, context
+            )
 
         if context is not None:
             result = context.process_dict(result)
@@ -122,5 +125,3 @@ class MessagesUpdatedPayload:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

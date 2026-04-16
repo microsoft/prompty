@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Options for configuring the behavior of the AI model.
-    /// </summary>
+/// <summary>
+/// Options for configuring the behavior of the AI model.
+/// </summary>
 public partial class ModelOptions
 {
     /// <summary>

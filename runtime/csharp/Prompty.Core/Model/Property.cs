@@ -6,17 +6,17 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Represents a single property.
-    /// 
-    /// - This model defines the structure of properties that can be used in prompts,
-    /// 
-    /// including their type, description, whether they are required, and other attributes.
-    /// 
-    /// - It allows for the definition of dynamic inputs that can be filled with data
-    /// 
-    /// and processed to generate prompts for AI models.
-    /// </summary>
+/// <summary>
+/// Represents a single property.
+/// 
+/// - This model defines the structure of properties that can be used in prompts,
+/// 
+/// including their type, description, whether they are required, and other attributes.
+/// 
+/// - It allows for the definition of dynamic inputs that can be filled with data
+/// 
+/// and processed to generate prompts for AI models.
+/// </summary>
 public partial class Property
 {
     /// <summary>

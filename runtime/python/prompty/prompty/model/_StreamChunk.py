@@ -16,7 +16,7 @@ from ._ToolCall import ToolCall
 class StreamChunk(ABC):
     """A chunk of data from a streaming LLM response. Stream chunks are
     discriminated on the `kind` field.
-    
+
     Attributes
     ----------
     kind : str
@@ -40,22 +40,18 @@ class StreamChunk(ABC):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for StreamChunk: {data}")
 
         # load polymorphic StreamChunk instance
         instance = StreamChunk.load_kind(data, context)
 
-
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
-
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "StreamChunk":
@@ -72,11 +68,12 @@ class StreamChunk(ABC):
                 return ErrorChunk.load(data, context)
 
             else:
-                raise ValueError(f"Unknown StreamChunk discriminator value: {discriminator_value}")
+                raise ValueError(
+                    f"Unknown StreamChunk discriminator value: {discriminator_value}"
+                )
         else:
 
             raise ValueError("Missing StreamChunk discriminator property: 'kind'")
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the StreamChunk instance to a dictionary.
@@ -89,7 +86,6 @@ class StreamChunk(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -126,12 +122,10 @@ class StreamChunk(ABC):
         return context.to_json(self.save(context), indent)
 
 
-
-
 @dataclass
 class TextChunk(StreamChunk):
     """A text content chunk from the LLM response stream.
-    
+
     Attributes
     ----------
     kind : str
@@ -158,7 +152,7 @@ class TextChunk(StreamChunk):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TextChunk: {data}")
 
@@ -173,8 +167,6 @@ class TextChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TextChunk instance to a dictionary.
         Args:
@@ -187,10 +179,8 @@ class TextChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -224,12 +214,10 @@ class TextChunk(StreamChunk):
         return context.to_json(self.save(context), indent)
 
 
-
-
 @dataclass
 class ThinkingChunk(StreamChunk):
     """A thinking/reasoning content chunk from the LLM response stream.
-    
+
     Attributes
     ----------
     kind : str
@@ -256,7 +244,7 @@ class ThinkingChunk(StreamChunk):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ThinkingChunk: {data}")
 
@@ -271,8 +259,6 @@ class ThinkingChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ThinkingChunk instance to a dictionary.
         Args:
@@ -285,10 +271,8 @@ class ThinkingChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -322,12 +306,10 @@ class ThinkingChunk(StreamChunk):
         return context.to_json(self.save(context), indent)
 
 
-
-
 @dataclass
 class ToolChunk(StreamChunk):
     """A tool call chunk from the LLM response stream.
-    
+
     Attributes
     ----------
     kind : str
@@ -354,7 +336,7 @@ class ToolChunk(StreamChunk):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolChunk: {data}")
 
@@ -369,8 +351,6 @@ class ToolChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolChunk instance to a dictionary.
         Args:
@@ -383,10 +363,8 @@ class ToolChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -420,12 +398,10 @@ class ToolChunk(StreamChunk):
         return context.to_json(self.save(context), indent)
 
 
-
-
 @dataclass
 class ErrorChunk(StreamChunk):
     """An error chunk from the LLM response stream.
-    
+
     Attributes
     ----------
     kind : str
@@ -452,7 +428,7 @@ class ErrorChunk(StreamChunk):
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ErrorChunk: {data}")
 
@@ -467,8 +443,6 @@ class ErrorChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ErrorChunk instance to a dictionary.
         Args:
@@ -481,10 +455,8 @@ class ErrorChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -516,5 +488,3 @@ class ErrorChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

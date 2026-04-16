@@ -15,7 +15,7 @@ from ._context import LoadContext, SaveContext
 class Message:
     """A message in a conversation. Messages have a role and a list of content parts
     representing the different modalities of the message content.
-    
+
     Attributes
     ----------
     role : str
@@ -45,7 +45,7 @@ class Message:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Message: {data}")
 
@@ -61,8 +61,6 @@ class Message:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
@@ -80,7 +78,9 @@ class Message:
         return [ContentPart.load(item, context) for item in data]
 
     @staticmethod
-    def save_parts(items: list[ContentPart], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_parts(
+        items: list[ContentPart], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -98,7 +98,6 @@ class Message:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -138,7 +137,6 @@ class Message:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
-
     @classmethod
     def assistant(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
@@ -159,4 +157,3 @@ class Message:
     # =========================================================================
     # The following helpers should be implemented as standalone functions:
     # - text(instance) -> str: Concatenate all TextPart values joined by newline
-

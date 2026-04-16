@@ -103,7 +103,7 @@ public class AnthropicExecutorTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void FormatToolMessages_BatchesToolResultsIntoSingleUserMessage()
+    public async Task FormatToolMessages_BatchesToolResultsIntoSingleUserMessage()
     {
         var executor = new Anthropic.AnthropicExecutor();
         var toolCalls = new List<ToolCall>
@@ -113,7 +113,7 @@ public class AnthropicExecutorTests
         };
         var toolResults = new List<string> { "72°F", "3:00 PM" };
 
-        var messages = executor.FormatToolMessagesAsync("raw", toolCalls, toolResults, "Let me check.").Result;
+        var messages = await executor.FormatToolMessagesAsync("raw", toolCalls, toolResults, "Let me check.");
 
         // Should be 2 messages: assistant + single user message (NOT 3)
         Assert.Equal(2, messages.Count);
@@ -140,7 +140,7 @@ public class AnthropicExecutorTests
     }
 
     [Fact]
-    public void FormatToolMessages_NoTextContent_OmitsTextBlock()
+    public async Task FormatToolMessages_NoTextContent_OmitsTextBlock()
     {
         var executor = new Anthropic.AnthropicExecutor();
         var toolCalls = new List<ToolCall>
@@ -149,7 +149,7 @@ public class AnthropicExecutorTests
         };
         var toolResults = new List<string> { "result" };
 
-        var messages = executor.FormatToolMessagesAsync("raw", toolCalls, toolResults).Result;
+        var messages = await executor.FormatToolMessagesAsync("raw", toolCalls, toolResults);
 
         var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
         Assert.Single(content); // Only tool_use, no text block

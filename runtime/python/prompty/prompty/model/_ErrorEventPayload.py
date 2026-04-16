@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class ErrorEventPayload:
     """Payload for "error" events — an error occurred during the loop.
-    
+
     Attributes
     ----------
     message : str
@@ -37,7 +37,7 @@ class ErrorEventPayload:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ErrorEventPayload: {data}")
 
@@ -50,8 +50,6 @@ class ErrorEventPayload:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ErrorEventPayload instance to a dictionary.
         Args:
@@ -63,7 +61,6 @@ class ErrorEventPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -98,5 +95,3 @@ class ErrorEventPayload:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

@@ -10,8 +10,7 @@ from ._Prompty import Prompty
 
 
 class Processor(Protocol):
-    """Extracts a clean, typed result from a raw LLM provider response.
-    """
+    """Extracts a clean, typed result from a raw LLM provider response."""
 
     def process(self, agent: Prompty, response: Any) -> Any:
         """Extract a clean result from a raw LLM response"""
@@ -20,4 +19,3 @@ class Processor(Protocol):
     async def process_async(self, agent: Prompty, response: Any) -> Any:
         """Extract a clean result from a raw LLM response (async variant)"""
         ...
-

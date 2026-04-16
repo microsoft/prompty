@@ -6,7 +6,7 @@ from prompty.model import McpTool
 
 
 def test_load_json_mcptool():
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "mcp",
       "connection": {
@@ -22,7 +22,7 @@ def test_load_json_mcptool():
         "operation2"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = McpTool.load(data)
     assert instance is not None
@@ -30,8 +30,9 @@ def test_load_json_mcptool():
     assert instance.server_name == "My MCP Server"
     assert instance.server_description == "This tool allows access to MCP services."
 
+
 def test_load_yaml_mcptool():
-    yaml_data = r'''
+    yaml_data = r"""
     kind: mcp
     connection:
       kind: reference
@@ -43,7 +44,7 @@ def test_load_yaml_mcptool():
       - operation1
       - operation2
     
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = McpTool.load(data)
     assert instance is not None
@@ -51,9 +52,10 @@ def test_load_yaml_mcptool():
     assert instance.server_name == "My MCP Server"
     assert instance.server_description == "This tool allows access to MCP services."
 
+
 def test_roundtrip_json_mcptool():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "mcp",
       "connection": {
@@ -69,7 +71,7 @@ def test_roundtrip_json_mcptool():
         "operation2"
       ]
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = McpTool.load(original_data)
     saved_data = instance.save()
@@ -79,9 +81,10 @@ def test_roundtrip_json_mcptool():
     assert reloaded.server_name == "My MCP Server"
     assert reloaded.server_description == "This tool allows access to MCP services."
 
+
 def test_to_json_mcptool():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "mcp",
       "connection": {
@@ -97,7 +100,7 @@ def test_to_json_mcptool():
         "operation2"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = McpTool.load(data)
     json_output = instance.to_json()
@@ -105,9 +108,10 @@ def test_to_json_mcptool():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_mcptool():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "mcp",
       "connection": {
@@ -123,11 +127,10 @@ def test_to_yaml_mcptool():
         "operation2"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = McpTool.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-

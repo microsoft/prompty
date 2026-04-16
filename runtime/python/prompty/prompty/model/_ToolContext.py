@@ -16,7 +16,7 @@ class ToolContext:
     """Context passed to tool handlers during agent loop execution. Provides
     access to the agent configuration, current conversation state, and
     arbitrary metadata for tool implementations that need broader context.
-    
+
     Attributes
     ----------
     messages : list[Message]
@@ -43,7 +43,7 @@ class ToolContext:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolContext: {data}")
 
@@ -57,8 +57,6 @@ class ToolContext:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -76,7 +74,9 @@ class ToolContext:
         return [Message.load(item, context) for item in data]
 
     @staticmethod
-    def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_messages(
+        items: list[Message], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -94,7 +94,6 @@ class ToolContext:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -131,5 +130,3 @@ class ToolContext:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

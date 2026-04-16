@@ -15,7 +15,7 @@ class McpApprovalMode:
     """The approval mode for MCP server tools.
     When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
     to control per-tool approval. For "always" and "never", those fields are ignored.
-    
+
     Attributes
     ----------
     kind : str
@@ -45,7 +45,7 @@ class McpApprovalMode:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         # handle alternate representations
         if isinstance(data, str):
             instance = McpApprovalMode()
@@ -53,7 +53,7 @@ class McpApprovalMode:
             if context is not None:
                 instance = context.process_output(instance)
             return instance
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpApprovalMode: {data}")
 
@@ -70,8 +70,6 @@ class McpApprovalMode:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the McpApprovalMode instance to a dictionary.
         Args:
@@ -83,7 +81,6 @@ class McpApprovalMode:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -122,5 +119,3 @@ class McpApprovalMode:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

@@ -14,7 +14,7 @@ from ._context import LoadContext, SaveContext
 class ToolCall:
     """A tool call requested by the LLM. Contains the function name and serialized
     arguments that should be dispatched to the appropriate tool handler.
-    
+
     Attributes
     ----------
     id : str
@@ -44,7 +44,7 @@ class ToolCall:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolCall: {data}")
 
@@ -61,8 +61,6 @@ class ToolCall:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolCall instance to a dictionary.
         Args:
@@ -74,7 +72,6 @@ class ToolCall:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -113,5 +110,3 @@ class ToolCall:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

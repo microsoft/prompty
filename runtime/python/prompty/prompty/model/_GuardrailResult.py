@@ -15,7 +15,7 @@ class GuardrailResult:
     """The result of a guardrail evaluation. Guardrails are safety checks that
     run at specific phases of the agent loop and can allow, deny, or rewrite
     content.
-    
+
     Attributes
     ----------
     allowed : bool
@@ -45,7 +45,7 @@ class GuardrailResult:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for GuardrailResult: {data}")
 
@@ -62,8 +62,6 @@ class GuardrailResult:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the GuardrailResult instance to a dictionary.
         Args:
@@ -75,7 +73,6 @@ class GuardrailResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -115,7 +112,6 @@ class GuardrailResult:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
-
     @classmethod
     def create_rewrite(cls, rewrite: Any) -> "GuardrailResult":
         """Create a GuardrailResult with preset field values."""
@@ -130,5 +126,3 @@ class GuardrailResult:
     def allow(cls) -> "GuardrailResult":
         """Create a GuardrailResult with preset field values."""
         return GuardrailResult(allowed=True)
-
-

@@ -15,7 +15,7 @@ class CompactionConfig:
     """Configuration for context window compaction. When the message history
     exceeds the context budget, the compaction strategy is applied to
     reduce the message list while preserving essential information.
-    
+
     Attributes
     ----------
     strategy : Optional[str]
@@ -45,7 +45,7 @@ class CompactionConfig:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for CompactionConfig: {data}")
 
@@ -62,8 +62,6 @@ class CompactionConfig:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the CompactionConfig instance to a dictionary.
         Args:
@@ -75,7 +73,6 @@ class CompactionConfig:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -114,5 +111,3 @@ class CompactionConfig:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

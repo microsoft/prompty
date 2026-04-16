@@ -6,17 +6,17 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// A Prompty is a markdown file format for LLM prompts. The frontmatter defines
-    /// 
-    /// structured metadata including model configuration, input/output schemas, tools,
-    /// 
-    /// and template settings. The markdown body becomes the instructions.
-    /// 
-    /// This is the single root type for the Prompty schema — there is no abstract base
-    /// 
-    /// class or kind discriminator. A .prompty file always produces a Prompty instance.
-    /// </summary>
+/// <summary>
+/// A Prompty is a markdown file format for LLM prompts. The frontmatter defines
+/// 
+/// structured metadata including model configuration, input/output schemas, tools,
+/// 
+/// and template settings. The markdown body becomes the instructions.
+/// 
+/// This is the single root type for the Prompty schema — there is no abstract base
+/// 
+/// class or kind discriminator. A .prompty file always produces a Prompty instance.
+/// </summary>
 public partial class Prompty
 {
     /// <summary>

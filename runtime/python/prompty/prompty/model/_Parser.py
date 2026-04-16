@@ -11,8 +11,7 @@ from ._Prompty import Prompty
 
 
 class Parser(Protocol):
-    """Parses rendered prompt text into an array of structured messages with role markers.
-    """
+    """Parses rendered prompt text into an array of structured messages with role markers."""
 
     def parse(self, agent: Prompty, rendered: str) -> list[Message]:
         """Parse rendered text into a structured message array"""
@@ -21,4 +20,3 @@ class Parser(Protocol):
     async def parse_async(self, agent: Prompty, rendered: str) -> list[Message]:
         """Parse rendered text into a structured message array (async variant)"""
         ...
-

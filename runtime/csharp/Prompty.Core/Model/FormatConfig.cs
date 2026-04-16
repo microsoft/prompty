@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Template format definition
-    /// </summary>
+/// <summary>
+/// Template format definition
+/// </summary>
 public partial class FormatConfig
 {
     /// <summary>

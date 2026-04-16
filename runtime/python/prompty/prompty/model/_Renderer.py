@@ -10,14 +10,14 @@ from ._Prompty import Prompty
 
 
 class Renderer(Protocol):
-    """Renders a template string with input values to produce the final prompt text.
-    """
+    """Renders a template string with input values to produce the final prompt text."""
 
     def render(self, agent: Prompty, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values"""
         ...
 
-    async def render_async(self, agent: Prompty, template: str, inputs: dict[str, Any]) -> str:
+    async def render_async(
+        self, agent: Prompty, template: str, inputs: dict[str, Any]
+    ) -> str:
         """Render the template string with input values (async variant)"""
         ...
-
