@@ -5,7 +5,7 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol, runtime_checkable
 
 from ._ContentPart import ContentPart, TextPart
 from ._context import LoadContext, SaveContext
@@ -129,8 +129,17 @@ class ToolResult:
         """Create a ToolResult with preset field values."""
         return ToolResult(parts=[TextPart(value=value)])
 
-    # =========================================================================
-    # Helpers — implement these in an extension module
-    # =========================================================================
-    # The following helpers should be implemented as standalone functions:
-    # - text(instance) -> str: Concatenate all TextPart values joined by newline
+
+@runtime_checkable
+class ToolResultHelpers(Protocol):
+    """Helper contract for ToolResult.
+
+    Runtime implementations must provide these methods on every ToolResult
+    instance (either by attaching them to the generated class or by wrapping it).
+    The type checker can verify conformance by annotating against this Protocol
+    or by calling isinstance(instance, ToolResultHelpers) at runtime.
+    """
+
+    def text(self) -> str:
+        """Concatenate all TextPart values joined by newline"""
+        ...

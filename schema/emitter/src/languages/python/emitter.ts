@@ -100,6 +100,7 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   const localImports: string[] = [];
   const hasProtocol = decl.types.some(t => t.isProtocol);
   const hasNonProtocol = decl.types.some(t => !t.isProtocol);
+  const hasMethodHelpers = decl.types.some(t => !t.isProtocol && t.methods.length > 0);
 
   if (decl.containsAbstract) {
     stdlibImports.push("from abc import ABC");
@@ -109,7 +110,7 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   }
   const typingImports = ["Any"];
   if (hasNonProtocol) typingImports.push("ClassVar");
-  if (hasProtocol) typingImports.push("Protocol", "runtime_checkable");
+  if (hasProtocol || hasMethodHelpers) typingImports.push("Protocol", "runtime_checkable");
   typingImports.sort();
   stdlibImports.push(`from typing import ${typingImports.join(", ")}`);
 
@@ -218,18 +219,47 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
     }
   }
 
-  // Method stubs
-  if (type.methods.length > 0) {
-    lines.push("    # =========================================================================");
-    lines.push("    # Helpers — implement these in an extension module");
-    lines.push("    # =========================================================================");
-    lines.push("    # The following helpers should be implemented as standalone functions:");
-    for (const m of type.methods) {
-      lines.push(`    # - ${m.name}(instance) -> ${returnType(m.returns)}: ${m.description}`);
-    }
-  }
-
   lines.push("");
+
+  // Method stubs — emit as a sibling Protocol class outside the dataclass
+  if (type.methods.length > 0) {
+    emitMethodHelpersProtocol(type, lines);
+  }
+}
+
+/**
+ * Emit a typing.Protocol class named `<TypeName>Helpers` that declares the
+ * `@method` contract for a concrete type. The generated dataclass does NOT
+ * satisfy this Protocol on its own — runtime code must provide an
+ * implementation (either by attaching methods to the class or by providing
+ * a wrapper type). Using `@runtime_checkable` allows isinstance() checks.
+ */
+function emitMethodHelpersProtocol(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
+  lines.push("");
+  lines.push("");
+  lines.push("@runtime_checkable");
+  lines.push(`class ${name}Helpers(Protocol):`);
+  lines.push(`    """Helper contract for ${name}.`);
+  lines.push("");
+  lines.push(`    Runtime implementations must provide these methods on every ${name}`);
+  lines.push("    instance (either by attaching them to the generated class or by wrapping it).");
+  lines.push("    The type checker can verify conformance by annotating against this Protocol");
+  lines.push(`    or by calling isinstance(instance, ${name}Helpers) at runtime.`);
+  lines.push(`    """`);
+  for (const m of type.methods) {
+    const params = Object.entries(m.params)
+      .map(([pName, pType]) => `${toSnakeCase(pName)}: ${protocolType(pType)}`)
+      .join(", ");
+    const paramList = params ? `, ${params}` : "";
+    const ret = protocolType(m.returns);
+    lines.push("");
+    lines.push(`    def ${toSnakeCase(m.name)}(self${paramList}) -> ${ret}:`);
+    if (m.description) {
+      lines.push(`        """${m.description}"""`);
+    }
+    lines.push("        ...");
+  }
 }
 
 // ============================================================================

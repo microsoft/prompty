@@ -5,7 +5,7 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol, runtime_checkable
 
 from ._ContentPart import ContentPart, TextPart
 from ._context import LoadContext, SaveContext
@@ -150,9 +150,21 @@ class Message:
         """Create a Message with preset field values."""
         return Message(role="user", parts=[TextPart(value=text)])
 
-    # =========================================================================
-    # Helpers — implement these in an extension module
-    # =========================================================================
-    # The following helpers should be implemented as standalone functions:
-    # - toTextContent(instance) -> unknown: Return plain string if all parts are text, else a list of content part dicts for wire serialization
-    # - text(instance) -> str: Concatenate all TextPart values joined by newline
+
+@runtime_checkable
+class MessageHelpers(Protocol):
+    """Helper contract for Message.
+
+    Runtime implementations must provide these methods on every Message
+    instance (either by attaching them to the generated class or by wrapping it).
+    The type checker can verify conformance by annotating against this Protocol
+    or by calling isinstance(instance, MessageHelpers) at runtime.
+    """
+
+    def to_text_content(self) -> Any:
+        """Return plain string if all parts are text, else a list of content part dicts for wire serialization"""
+        ...
+
+    def text(self) -> str:
+        """Concatenate all TextPart values joined by newline"""
+        ...
