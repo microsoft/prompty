@@ -178,7 +178,23 @@ function emitCSharpInterface(type: TypeDecl, namespace: string, lines: string[])
       .map(([pName, pType]) => `${protocolCSharpType(pType)} ${pName}`)
       .join(", ");
     const ret = protocolCSharpType(method.returns);
-    lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params});`);
+
+    if (method.sync) {
+      // Synchronous method
+      if (method.optional) {
+        // Return type already includes nullability — provide default body
+        lines.push(`        ${ret} ${toPascalCase(method.name)}(${params}) => default;`);
+      } else {
+        lines.push(`        ${ret} ${toPascalCase(method.name)}(${params});`);
+      }
+    } else {
+      // Async method
+      if (method.optional) {
+        lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params}) => Task.FromResult<${ret}>(default);`);
+      } else {
+        lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params});`);
+      }
+    }
   }
 
   lines.push("    }");

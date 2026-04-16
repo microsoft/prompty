@@ -12,6 +12,10 @@ use super::prompty::Prompty;
 /// Parses rendered prompt text into an array of structured messages with role markers.
 #[async_trait::async_trait]
 pub trait Parser: Send + Sync {
+    /// Pre-process a template before rendering, returning modified template and context
+    fn pre_render(&self, template: &String) -> Option<serde_json::Value> {
+        None
+    }
     /// Parse rendered text into a structured message array
-    async fn parse(&self, agent: &Prompty, rendered: &String) -> Result<Vec<Message>, Box<dyn std::error::Error + Send + Sync>>;
+    async fn parse(&self, agent: &Prompty, rendered: &String, context: &Option<serde_json::Value>) -> Result<Vec<Message>, Box<dyn std::error::Error + Send + Sync>>;
 }

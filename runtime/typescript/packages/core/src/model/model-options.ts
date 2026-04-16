@@ -52,32 +52,20 @@ export class ModelOptions {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelOptions {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelOptions {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
     const instance = new ModelOptions();
 
-    if (
-      data["frequencyPenalty"] !== undefined &&
-      data["frequencyPenalty"] !== null
-    ) {
+    if (data["frequencyPenalty"] !== undefined && data["frequencyPenalty"] !== null) {
       instance.frequencyPenalty = Number(data["frequencyPenalty"]);
     }
-    if (
-      data["maxOutputTokens"] !== undefined &&
-      data["maxOutputTokens"] !== null
-    ) {
+    if (data["maxOutputTokens"] !== undefined && data["maxOutputTokens"] !== null) {
       instance.maxOutputTokens = Number(data["maxOutputTokens"]);
     }
-    if (
-      data["presencePenalty"] !== undefined &&
-      data["presencePenalty"] !== null
-    ) {
+    if (data["presencePenalty"] !== undefined && data["presencePenalty"] !== null) {
       instance.presencePenalty = Number(data["presencePenalty"]);
     }
     if (data["seed"] !== undefined && data["seed"] !== null) {
@@ -93,24 +81,13 @@ export class ModelOptions {
       instance.topP = Number(data["topP"]);
     }
     if (data["stopSequences"] !== undefined && data["stopSequences"] !== null) {
-      instance.stopSequences = (data["stopSequences"] as unknown[]).map((v) =>
-        String(v),
-      );
+      instance.stopSequences = (data["stopSequences"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["allowMultipleToolCalls"] !== undefined &&
-      data["allowMultipleToolCalls"] !== null
-    ) {
+    if (data["allowMultipleToolCalls"] !== undefined && data["allowMultipleToolCalls"] !== null) {
       instance.allowMultipleToolCalls = Boolean(data["allowMultipleToolCalls"]);
     }
-    if (
-      data["additionalProperties"] !== undefined &&
-      data["additionalProperties"] !== null
-    ) {
-      instance.additionalProperties = data["additionalProperties"] as Record<
-        string,
-        unknown
-      >;
+    if (data["additionalProperties"] !== undefined && data["additionalProperties"] !== null) {
+      instance.additionalProperties = data["additionalProperties"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -155,16 +132,10 @@ export class ModelOptions {
     if (obj.stopSequences !== undefined && obj.stopSequences !== null) {
       result["stopSequences"] = obj.stopSequences;
     }
-    if (
-      obj.allowMultipleToolCalls !== undefined &&
-      obj.allowMultipleToolCalls !== null
-    ) {
+    if (obj.allowMultipleToolCalls !== undefined && obj.allowMultipleToolCalls !== null) {
       result["allowMultipleToolCalls"] = obj.allowMultipleToolCalls;
     }
-    if (
-      obj.additionalProperties !== undefined &&
-      obj.additionalProperties !== null
-    ) {
+    if (obj.additionalProperties !== undefined && obj.additionalProperties !== null) {
       result["additionalProperties"] = obj.additionalProperties;
     }
 
@@ -178,23 +149,15 @@ export class ModelOptions {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      frequencyPenalty: { openai: "frequency_penalty" },
-      maxOutputTokens: {
-        openai: "max_completion_tokens",
-        responses: "max_output_tokens",
-        anthropic: "max_tokens",
-      },
-      presencePenalty: { openai: "presence_penalty" },
-      seed: { openai: "seed" },
-      temperature: {
-        openai: "temperature",
-        responses: "temperature",
-        anthropic: "temperature",
-      },
-      topK: { openai: "top_k", anthropic: "top_k" },
-      topP: { openai: "top_p", responses: "top_p", anthropic: "top_p" },
-      stopSequences: { openai: "stop", anthropic: "stop_sequences" },
-      allowMultipleToolCalls: { openai: "parallel_tool_calls" },
+      "frequencyPenalty": { "openai": "frequency_penalty" },
+      "maxOutputTokens": { "openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens" },
+      "presencePenalty": { "openai": "presence_penalty" },
+      "seed": { "openai": "seed" },
+      "temperature": { "openai": "temperature", "responses": "temperature", "anthropic": "temperature" },
+      "topK": { "openai": "top_k", "anthropic": "top_k" },
+      "topP": { "openai": "top_p", "responses": "top_p", "anthropic": "top_p" },
+      "stopSequences": { "openai": "stop", "anthropic": "stop_sequences" },
+      "allowMultipleToolCalls": { "openai": "parallel_tool_calls" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];
@@ -228,3 +191,4 @@ export class ModelOptions {
 
   //#endregion
 }
+

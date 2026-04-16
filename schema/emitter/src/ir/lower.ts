@@ -394,6 +394,8 @@ function lowerMethods(node: TypeNode): MethodStubDecl[] {
     returns: m.returns,
     description: m.description,
     params: m.params || {},
+    optional: m.optional ?? false,
+    sync: m.sync ?? false,
   }));
 }
 

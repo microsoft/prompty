@@ -14,10 +14,7 @@ export class TokenEventPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TokenEventPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): TokenEventPayload {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -79,3 +76,4 @@ export class TokenEventPayload {
 
   //#endregion
 }
+

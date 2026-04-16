@@ -4,13 +4,14 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from ._Message import Message
 from ._Prompty import Prompty
 from ._ToolCall import ToolCall
 
 
+@runtime_checkable
 class Executor(Protocol):
     """Calls an LLM provider with messages and returns the raw provider response."""
 
@@ -23,21 +24,7 @@ class Executor(Protocol):
         ...
 
     def format_tool_messages(
-        self,
-        raw_response: Any,
-        tool_calls: list[ToolCall],
-        tool_results: list[str],
-        text_content: str | None,
+        self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
     ) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
-        ...
-
-    async def format_tool_messages_async(
-        self,
-        raw_response: Any,
-        tool_calls: list[ToolCall],
-        tool_results: list[str],
-        text_content: str | None,
-    ) -> list[Message]:
-        """Format tool call results into messages for the next iteration (async variant)"""
         ...

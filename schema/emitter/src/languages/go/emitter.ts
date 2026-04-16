@@ -1050,7 +1050,17 @@ function emitProtocolInterface(type: TypeDecl, lines: string[]): void {
       .map(([pName, pType]) => `${pName} ${protocolGoType(pType)}`)
       .join(", ");
     const ret = protocolGoType(method.returns);
-    lines.push(`\t${toPascalCase(method.name)}(${params}) (${ret}, error)`);
+
+    if (method.sync) {
+      // Sync method — return type without error for optional
+      if (method.optional) {
+        lines.push(`\t${toPascalCase(method.name)}(${params}) ${ret}`);
+      } else {
+        lines.push(`\t${toPascalCase(method.name)}(${params}) (${ret}, error)`);
+      }
+    } else {
+      lines.push(`\t${toPascalCase(method.name)}(${params}) (${ret}, error)`);
+    }
   }
 
   lines.push("}");

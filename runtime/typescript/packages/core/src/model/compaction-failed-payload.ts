@@ -14,10 +14,7 @@ export class CompactionFailedPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): CompactionFailedPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): CompactionFailedPayload {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -66,28 +63,17 @@ export class CompactionFailedPayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): CompactionFailedPayload {
+  static fromJson(json: string, context?: LoadContext): CompactionFailedPayload {
     const data = JSON.parse(json);
-    return CompactionFailedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return CompactionFailedPayload.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): CompactionFailedPayload {
+  static fromYaml(yaml: string, context?: LoadContext): CompactionFailedPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return CompactionFailedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return CompactionFailedPayload.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

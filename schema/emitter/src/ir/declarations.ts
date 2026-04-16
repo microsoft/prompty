@@ -339,6 +339,10 @@ export interface MethodStubDecl {
   description: string;
   /** Method parameters as ordered map of name → type string */
   params: Record<string, string>;
+  /** Whether this method is optional (has a default implementation) */
+  optional: boolean;
+  /** Whether this method is synchronous (not wrapped in async/Promise/Task) */
+  sync: boolean;
 }
 
 // ============================================================================

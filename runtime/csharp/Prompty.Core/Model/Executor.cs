@@ -16,5 +16,5 @@ public interface IExecutor
     /// <summary>
     /// Format tool call results into messages for the next iteration
     /// </summary>
-    Task<List<Message>> FormatToolMessagesAsync(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent);
+    List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent);
 }

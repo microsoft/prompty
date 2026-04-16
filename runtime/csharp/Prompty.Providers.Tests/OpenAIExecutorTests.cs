@@ -116,7 +116,7 @@ public class OpenAIExecutorTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public async Task FormatToolMessages_CreatesIndividualToolMessages()
+    public void FormatToolMessages_CreatesIndividualToolMessages()
     {
         var executor = new OpenAI.OpenAIExecutor();
         var toolCalls = new List<ToolCall>
@@ -126,7 +126,7 @@ public class OpenAIExecutorTests
         };
         var toolResults = new List<string> { "72°F", "3:00 PM" };
 
-        var messages = await executor.FormatToolMessagesAsync("raw", toolCalls, toolResults, "Let me check.");
+        var messages = executor.FormatToolMessages("raw", toolCalls, toolResults, "Let me check.");
 
         // Should be 3 messages: 1 assistant + 2 individual tool messages
         Assert.Equal(3, messages.Count);

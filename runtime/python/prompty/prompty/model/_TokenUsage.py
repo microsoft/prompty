@@ -99,10 +99,7 @@ class TokenUsage:
         result: dict[str, Any] = {}
         wire_map: dict[str, dict[str, str]] = {
             "promptTokens": {"openai": "prompt_tokens", "anthropic": "input_tokens"},
-            "completionTokens": {
-                "openai": "completion_tokens",
-                "anthropic": "output_tokens",
-            },
+            "completionTokens": {"openai": "completion_tokens", "anthropic": "output_tokens"},
             "totalTokens": {"openai": "total_tokens"},
         }
         for key, value in data.items():

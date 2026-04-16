@@ -10,10 +10,6 @@ export interface Executor {
   /** Call an LLM provider with messages and return the raw response */
   execute(agent: Prompty, messages: Message[]): Promise<unknown>;
   /** Format tool call results into messages for the next iteration */
-  formatToolMessages(
-    rawResponse: unknown,
-    toolCalls: ToolCall[],
-    toolResults: string[],
-    textContent: string | null,
-  ): Promise<Message[]>;
+  formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string | null): Message[];
 }
+

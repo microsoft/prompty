@@ -33,7 +33,7 @@ function makeType(name: string, props: PropertyNode[] = [], opts?: {
   factories?: Array<{ name: string; sets: Record<string, any>; params: Record<string, string> }>;
   coercions?: Array<{ scalar: string; expansion: Record<string, any> }>;
   isAbstract?: boolean;
-  methods?: Array<{ name: string; returns: string; description: string; params?: Record<string, string> }>;
+  methods?: Array<{ name: string; returns: string; description: string; params?: Record<string, string>; optional?: boolean; sync?: boolean }>;
 }): TypeNode {
   const node = new TypeNode({} as Model, `Test ${name}`);
   node.typeName = { namespace: opts?.namespace ?? "Test", name };
@@ -44,7 +44,7 @@ function makeType(name: string, props: PropertyNode[] = [], opts?: {
   node.coercions = opts?.coercions ?? [];
   node.isAbstract = opts?.isAbstract ?? false;
   node.base = opts?.base ?? null;
-  node.methods = (opts?.methods ?? []).map(m => ({ ...m, params: m.params ?? {} }));
+  node.methods = (opts?.methods ?? []).map(m => ({ ...m, params: m.params ?? {}, optional: m.optional ?? false, sync: m.sync ?? false }));
   return node;
 }
 
@@ -137,7 +137,7 @@ const connectionType = makeType("Connection", [
 const output = makeType("Output", [
   makeProp("value", "string", { isScalar: true }),
 ], {
-  methods: [{ name: "text", returns: "string", description: "Get the text value" }],
+  methods: [{ name: "text", returns: "string", description: "Get the text value", optional: false, sync: false }],
 });
 
 // Type with dict, optional complex, and polymorphic ref

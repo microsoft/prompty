@@ -14,10 +14,7 @@ export class ErrorEventPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ErrorEventPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): ErrorEventPayload {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -79,3 +76,4 @@ export class ErrorEventPayload {
 
   //#endregion
 }
+

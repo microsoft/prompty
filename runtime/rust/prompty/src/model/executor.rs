@@ -17,5 +17,5 @@ pub trait Executor: Send + Sync {
     /// Call an LLM provider with messages and return the raw response
     async fn execute(&self, agent: &Prompty, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>;
     /// Format tool call results into messages for the next iteration
-    async fn format_tool_messages(&self, raw_response: &serde_json::Value, tool_calls: &Vec<ToolCall>, tool_results: &Vec<String>, text_content: &Option<String>) -> Result<Vec<Message>, Box<dyn std::error::Error + Send + Sync>>;
+    fn format_tool_messages(&self, raw_response: &serde_json::Value, tool_calls: &Vec<ToolCall>, tool_results: &Vec<String>, text_content: &Option<String>) -> Vec<Message>;
 }

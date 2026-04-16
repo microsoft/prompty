@@ -172,6 +172,9 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
     const defaultVal = tsDefaultValue(field);
     if (field.isOptional) {
       lines.push(`  ${field.name}?: ${annotation}${defaultVal};`);
+    } else if (defaultVal === "" && field.category.kind === "complex") {
+      // Required complex types without defaults need definite assignment assertion
+      lines.push(`  ${field.name}!: ${annotation};`);
     } else {
       lines.push(`  ${field.name}: ${annotation}${defaultVal};`);
     }
@@ -266,7 +269,14 @@ function emitProtocolInterface(type: TypeDecl, lines: string[]): void {
     const params = Object.entries(method.params)
       .map(([pName, pType]) => `${pName}: ${returnType(pType)}`)
       .join(", ");
-    lines.push(`  ${method.name}(${params}): Promise<${returnType(method.returns)}>;`);
+    const ret = returnType(method.returns);
+    const optMark = method.optional ? "?" : "";
+
+    if (method.sync) {
+      lines.push(`  ${method.name}${optMark}(${params}): ${ret};`);
+    } else {
+      lines.push(`  ${method.name}${optMark}(${params}): Promise<${ret}>;`);
+    }
   }
 
   lines.push("}");

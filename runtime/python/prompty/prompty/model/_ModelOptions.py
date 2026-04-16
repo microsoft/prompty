@@ -153,11 +153,7 @@ class ModelOptions:
             },
             "presencePenalty": {"openai": "presence_penalty"},
             "seed": {"openai": "seed"},
-            "temperature": {
-                "openai": "temperature",
-                "responses": "temperature",
-                "anthropic": "temperature",
-            },
+            "temperature": {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
             "topK": {"openai": "top_k", "anthropic": "top_k"},
             "topP": {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
             "stopSequences": {"openai": "stop", "anthropic": "stop_sequences"},

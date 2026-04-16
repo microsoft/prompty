@@ -299,7 +299,7 @@ export class CustomTool extends Tool {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "*";
-  connection: Connection;
+  connection!: Connection;
   options: Record<string, unknown> = {};
 
   constructor(init?: Partial<CustomTool>) {
@@ -389,10 +389,10 @@ export class McpTool extends Tool {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "mcp";
-  connection: Connection;
+  connection!: Connection;
   serverName: string = "";
   serverDescription?: string | undefined;
-  approvalMode: McpApprovalMode;
+  approvalMode!: McpApprovalMode;
   allowedTools?: string[] = [];
 
   constructor(init?: Partial<McpTool>) {
@@ -509,7 +509,7 @@ export class OpenApiTool extends Tool {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "openapi";
-  connection: Connection;
+  connection!: Connection;
   specification: string = "";
 
   constructor(init?: Partial<OpenApiTool>) {

@@ -9,7 +9,7 @@ export class ToolDispatchResult {
 
   toolCallId: string = "";
   name: string = "";
-  result: ToolResult;
+  result!: ToolResult;
 
   constructor(init?: Partial<ToolDispatchResult>) {
     this.toolCallId = init?.toolCallId ?? "";
@@ -21,10 +21,7 @@ export class ToolDispatchResult {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ToolDispatchResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ToolDispatchResult {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -38,10 +35,7 @@ export class ToolDispatchResult {
       instance.name = String(data["name"]);
     }
     if (data["result"] !== undefined && data["result"] !== null) {
-      instance.result = ToolResult.load(
-        data["result"] as Record<string, unknown>,
-        context,
-      );
+      instance.result = ToolResult.load(data["result"] as Record<string, unknown>, context);
     }
 
     if (context) {
@@ -101,3 +95,4 @@ export class ToolDispatchResult {
 
   //#endregion
 }
+

@@ -1112,7 +1112,28 @@ function emitProtocolTrait(type: TypeDecl, lines: string[]): void {
       .map(([pName, pType]) => `${toSnakeCase(pName)}: &${protocolRustType(pType)}`)
       .join(", ");
     const ret = protocolRustType(method.returns);
-    lines.push(`    async fn ${toSnakeCase(method.name)}(&self, ${params}) -> Result<${ret}, Box<dyn std::error::Error + Send + Sync>>;`);
+
+    if (method.sync) {
+      // Synchronous method
+      if (method.optional) {
+        // Return type already includes nullability from ? suffix — don't double-wrap
+        lines.push(`    fn ${toSnakeCase(method.name)}(&self, ${params}) -> ${ret} {`);
+        lines.push("        None");
+        lines.push("    }");
+      } else {
+        lines.push(`    fn ${toSnakeCase(method.name)}(&self, ${params}) -> ${ret};`);
+      }
+    } else {
+      // Async method
+      if (method.optional) {
+        // Return type already includes nullability from ? suffix — don't double-wrap
+        lines.push(`    async fn ${toSnakeCase(method.name)}(&self, ${params}) -> Result<${ret}, Box<dyn std::error::Error + Send + Sync>> {`);
+        lines.push("        Ok(None)");
+        lines.push("    }");
+      } else {
+        lines.push(`    async fn ${toSnakeCase(method.name)}(&self, ${params}) -> Result<${ret}, Box<dyn std::error::Error + Send + Sync>>;`);
+      }
+    }
   }
 
   lines.push("}");

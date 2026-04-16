@@ -57,30 +57,14 @@ export class ModelInfo {
     if (data["contextWindow"] !== undefined && data["contextWindow"] !== null) {
       instance.contextWindow = Number(data["contextWindow"]);
     }
-    if (
-      data["inputModalities"] !== undefined &&
-      data["inputModalities"] !== null
-    ) {
-      instance.inputModalities = (data["inputModalities"] as unknown[]).map(
-        (v) => String(v),
-      );
+    if (data["inputModalities"] !== undefined && data["inputModalities"] !== null) {
+      instance.inputModalities = (data["inputModalities"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["outputModalities"] !== undefined &&
-      data["outputModalities"] !== null
-    ) {
-      instance.outputModalities = (data["outputModalities"] as unknown[]).map(
-        (v) => String(v),
-      );
+    if (data["outputModalities"] !== undefined && data["outputModalities"] !== null) {
+      instance.outputModalities = (data["outputModalities"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["additionalProperties"] !== undefined &&
-      data["additionalProperties"] !== null
-    ) {
-      instance.additionalProperties = data["additionalProperties"] as Record<
-        string,
-        unknown
-      >;
+    if (data["additionalProperties"] !== undefined && data["additionalProperties"] !== null) {
+      instance.additionalProperties = data["additionalProperties"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -119,10 +103,7 @@ export class ModelInfo {
     if (obj.outputModalities !== undefined && obj.outputModalities !== null) {
       result["outputModalities"] = obj.outputModalities;
     }
-    if (
-      obj.additionalProperties !== undefined &&
-      obj.additionalProperties !== null
-    ) {
+    if (obj.additionalProperties !== undefined && obj.additionalProperties !== null) {
       result["additionalProperties"] = obj.additionalProperties;
     }
 
@@ -155,3 +136,4 @@ export class ModelInfo {
 
   //#endregion
 }
+

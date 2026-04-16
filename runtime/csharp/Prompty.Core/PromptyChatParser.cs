@@ -71,7 +71,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     // IParser
     // -----------------------------------------------------------------------
 
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
     {
         var messages = Parse(rendered);
         return Task.FromResult(messages);

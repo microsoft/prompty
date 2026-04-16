@@ -15,10 +15,7 @@ export abstract class StreamChunk {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): StreamChunk {
+  static load(data: Record<string, unknown>, context?: LoadContext): StreamChunk {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -36,10 +33,7 @@ export abstract class StreamChunk {
     return instance;
   }
 
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): StreamChunk {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): StreamChunk {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -53,9 +47,7 @@ export abstract class StreamChunk {
         case "error":
           return ErrorChunk.load(data, context);
         default:
-          throw new Error(
-            `Unknown StreamChunk discriminator value: ${discriminator}`,
-          );
+          throw new Error(`Unknown StreamChunk discriminator value: ${discriminator}`);
       }
     }
     throw new Error("Missing StreamChunk discriminator property: 'kind'");
@@ -201,10 +193,7 @@ export class ThinkingChunk extends StreamChunk {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ThinkingChunk {
+  static load(data: Record<string, unknown>, context?: LoadContext): ThinkingChunk {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -274,7 +263,7 @@ export class ToolChunk extends StreamChunk {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "tool";
-  toolCall: ToolCall;
+  toolCall!: ToolCall;
 
   constructor(init?: Partial<ToolChunk>) {
     super(init);
@@ -297,10 +286,7 @@ export class ToolChunk extends StreamChunk {
       instance.kind = String(data["kind"]);
     }
     if (data["toolCall"] !== undefined && data["toolCall"] !== null) {
-      instance.toolCall = ToolCall.load(
-        data["toolCall"] as Record<string, unknown>,
-        context,
-      );
+      instance.toolCall = ToolCall.load(data["toolCall"] as Record<string, unknown>, context);
     }
 
     if (context) {
@@ -369,10 +355,7 @@ export class ErrorChunk extends StreamChunk {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ErrorChunk {
+  static load(data: Record<string, unknown>, context?: LoadContext): ErrorChunk {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -437,3 +420,4 @@ export class ErrorChunk extends StreamChunk {
 
   //#endregion
 }
+

@@ -148,6 +148,10 @@ export interface MethodEntry {
   description: string;
   /** Method parameters as an ordered map of name → type string */
   params: Record<string, string>;
+  /** Whether this method is optional (has a default implementation) */
+  optional: boolean;
+  /** Whether this method is synchronous (not wrapped in async/Promise/Task) */
+  sync: boolean;
 }
 
 function deserializeValue(value: unknown): any {
@@ -174,17 +178,21 @@ export function $factory(context: DecoratorContext, target: Model, name: string,
   appendStateValue<FactoryEntry>(context, StateKeys.factories, target, entry);
 }
 
-export function $method(context: DecoratorContext, target: Model, name: string, returns: string, description?: string, params?: object) {
+export function $method(context: DecoratorContext, target: Model, name: string, returns: string, description?: string, params?: object, optional?: boolean, sync?: boolean) {
   const nameValue = typeof name === 'object' && name !== null && 'value' in name ? (name as StringValue).value : name as string;
   const returnsValue = typeof returns === 'object' && returns !== null && 'value' in returns ? (returns as StringValue).value : returns as string;
   const descValue = typeof description === 'object' && description !== null && 'value' in description ? (description as StringValue).value : description as string | undefined;
   const paramsValue = params ? deserializeValue(params) as Record<string, string> : {};
+  const optionalValue = typeof optional === 'object' && optional !== null && 'value' in optional ? (optional as { value: boolean }).value : optional ?? false;
+  const syncValue = typeof sync === 'object' && sync !== null && 'value' in sync ? (sync as { value: boolean }).value : sync ?? false;
 
   const entry: MethodEntry = {
     name: nameValue,
     returns: returnsValue,
     description: descValue ?? "",
     params: paramsValue,
+    optional: optionalValue,
+    sync: syncValue,
   };
 
   appendStateValue<MethodEntry>(context, StateKeys.methods, target, entry);

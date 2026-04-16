@@ -76,14 +76,14 @@ public static class Pipeline
     /// <summary>
     /// Parse rendered text into a list of Messages.
     /// </summary>
-    public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
     {
         return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.ParseAsync", async (emit) =>
         {
             emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name });
             var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
             var parser = InvokerRegistry.GetParser(parserKind);
-            return await parser.ParseAsync(agent, rendered);
+            return await parser.ParseAsync(agent, rendered, null);
         });
     }
 
@@ -151,7 +151,7 @@ public static class Pipeline
                 rendered = await RenderAsync(agent, validatedInputs);
             }
 
-            var messages = await parser.ParseAsync(agent, rendered);
+            var messages = await parser.ParseAsync(agent, rendered, parserContext);
             messages = ExpandThreadMarkers(messages, validatedInputs);
             return messages;
         });
@@ -477,7 +477,7 @@ public static class Pipeline
                     }
 
                     // Delegate message formatting to the executor (provider-specific)
-                    var toolMessages = await executor.FormatToolMessagesAsync(
+                    var toolMessages = executor.FormatToolMessages(
                         response2, toolResult.ToolCalls, toolResults, toolResult.Content);
                     messages.AddRange(toolMessages);
 

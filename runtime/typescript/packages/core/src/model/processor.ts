@@ -8,3 +8,4 @@ export interface Processor {
   /** Extract a clean result from a raw LLM response */
   process(agent: Prompty, response: unknown): Promise<unknown>;
 }
+

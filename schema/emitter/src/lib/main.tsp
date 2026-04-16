@@ -66,7 +66,9 @@ extern dec method(
   name: valueof string,
   returns: valueof string,
   description?: valueof string,
-  params?: valueof unknown
+  params?: valueof unknown,
+  optional?: valueof boolean,
+  sync?: valueof boolean
 );
 
 /**

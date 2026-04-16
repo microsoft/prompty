@@ -109,7 +109,7 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   }
   const typingImports = ["Any"];
   if (hasNonProtocol) typingImports.push("ClassVar");
-  if (hasProtocol) typingImports.push("Protocol");
+  if (hasProtocol) typingImports.push("Protocol", "runtime_checkable");
   typingImports.sort();
   stdlibImports.push(`from typing import ${typingImports.join(", ")}`);
 
@@ -264,6 +264,7 @@ function protocolType(typeStr: string): string {
 function emitProtocolClass(type: TypeDecl, lines: string[]): void {
   const name = type.typeName.name;
 
+  lines.push("@runtime_checkable");
   lines.push(`class ${name}(Protocol):`);
 
   // Docstring
@@ -287,23 +288,44 @@ function emitProtocolClass(type: TypeDecl, lines: string[]): void {
       .join(", ");
     const ret = protocolType(method.returns);
 
+    // Sync method
     lines.push("");
     if (method.description) {
       lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}:`);
       lines.push(`        """${method.description}"""`);
-      lines.push("        ...");
+      if (method.optional) {
+        lines.push("        return None");
+      } else {
+        lines.push("        ...");
+      }
     } else {
-      lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}: ...`);
+      if (method.optional) {
+        lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}:`);
+        lines.push("        return None");
+      } else {
+        lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}: ...`);
+      }
     }
 
-    // Async variant
-    lines.push("");
-    if (method.description) {
-      lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}:`);
-      lines.push(`        """${method.description} (async variant)"""`);
-      lines.push("        ...");
-    } else {
-      lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}: ...`);
+    // Async variant (skip for sync-only methods)
+    if (!method.sync) {
+      lines.push("");
+      if (method.description) {
+        lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}:`);
+        lines.push(`        """${method.description} (async variant)"""`);
+        if (method.optional) {
+          lines.push("        return None");
+        } else {
+          lines.push("        ...");
+        }
+      } else {
+        if (method.optional) {
+          lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}:`);
+          lines.push("        return None");
+        } else {
+          lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}: ...`);
+        }
+      }
     }
   }
 

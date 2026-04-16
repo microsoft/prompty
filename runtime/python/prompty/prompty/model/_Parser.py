@@ -4,19 +4,24 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from typing import Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from ._Message import Message
 from ._Prompty import Prompty
 
 
+@runtime_checkable
 class Parser(Protocol):
     """Parses rendered prompt text into an array of structured messages with role markers."""
 
-    def parse(self, agent: Prompty, rendered: str) -> list[Message]:
+    def pre_render(self, template: str) -> Any | None:
+        """Pre-process a template before rendering, returning modified template and context"""
+        return None
+
+    def parse(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array"""
         ...
 
-    async def parse_async(self, agent: Prompty, rendered: str) -> list[Message]:
+    async def parse_async(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array (async variant)"""
         ...

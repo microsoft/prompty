@@ -4,11 +4,12 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from ._Prompty import Prompty
 
 
+@runtime_checkable
 class Processor(Protocol):
     """Extracts a clean, typed result from a raw LLM provider response."""
 

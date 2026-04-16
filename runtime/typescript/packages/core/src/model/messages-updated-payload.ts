@@ -15,10 +15,7 @@ export class MessagesUpdatedPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): MessagesUpdatedPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): MessagesUpdatedPayload {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -26,10 +23,7 @@ export class MessagesUpdatedPayload {
     const instance = new MessagesUpdatedPayload();
 
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = MessagesUpdatedPayload.loadMessages(
-        data["messages"] as unknown[],
-        context,
-      );
+      instance.messages = MessagesUpdatedPayload.loadMessages(data["messages"] as unknown[], context);
     }
 
     if (context) {
@@ -38,10 +32,7 @@ export class MessagesUpdatedPayload {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -49,26 +40,21 @@ export class MessagesUpdatedPayload {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, role: v });
+          result.push({ name: k, "role": v });
         }
       }
       data = result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -84,10 +70,7 @@ export class MessagesUpdatedPayload {
     const result: Record<string, unknown> = {};
 
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = MessagesUpdatedPayload.saveMessages(
-        obj.messages,
-        context,
-      );
+      result["messages"] = MessagesUpdatedPayload.saveMessages(obj.messages, context);
     }
 
     if (context) {
@@ -108,20 +91,15 @@ export class MessagesUpdatedPayload {
 
   static fromJson(json: string, context?: LoadContext): MessagesUpdatedPayload {
     const data = JSON.parse(json);
-    return MessagesUpdatedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return MessagesUpdatedPayload.load(data as Record<string, unknown>, context);
   }
 
   static fromYaml(yaml: string, context?: LoadContext): MessagesUpdatedPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return MessagesUpdatedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return MessagesUpdatedPayload.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

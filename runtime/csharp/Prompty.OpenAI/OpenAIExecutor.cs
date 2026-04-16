@@ -171,7 +171,7 @@ public class OpenAIExecutor : IExecutor
     // -----------------------------------------------------------------------
 
     /// <inheritdoc />
-    public virtual Task<List<Message>> FormatToolMessagesAsync(
+    public virtual List<Message> FormatToolMessages(
         object rawResponse,
         List<ToolCall> toolCalls,
         List<string> toolResults,
@@ -212,7 +212,7 @@ public class OpenAIExecutor : IExecutor
                 });
             }
 
-            return Task.FromResult(messages);
+            return messages;
         }
 
         // --- Chat Completions: Assistant message with tool_calls metadata ---
@@ -242,6 +242,6 @@ public class OpenAIExecutor : IExecutor
             });
         }
 
-        return Task.FromResult(messages);
+        return messages;
     }
 }

@@ -4,11 +4,12 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from ._Prompty import Prompty
 
 
+@runtime_checkable
 class Renderer(Protocol):
     """Renders a template string with input values to produce the final prompt text."""
 

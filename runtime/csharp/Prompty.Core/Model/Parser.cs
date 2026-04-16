@@ -10,7 +10,11 @@ namespace Prompty.Core;
 public interface IParser
 {
     /// <summary>
+    /// Pre-process a template before rendering, returning modified template and context
+    /// </summary>
+    object? PreRender(string template) => default;
+    /// <summary>
     /// Parse rendered text into a structured message array
     /// </summary>
-    Task<List<Message>> ParseAsync(Prompty agent, string rendered);
+    Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context);
 }
