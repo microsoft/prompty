@@ -7,6 +7,8 @@ package prompty
 type Executor interface {
 	// Execute — Call an LLM provider with messages and return the raw response
 	Execute(agent Prompty, messages []Message) (interface{}, error)
+	// ExecuteStream — Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.
+	ExecuteStream(agent Prompty, messages []Message) (interface{}, error)
 	// FormatToolMessages — Format tool call results into messages for the next iteration
 	FormatToolMessages(rawResponse interface{}, toolCalls []ToolCall, toolResults []string, textContent *string) ([]Message, error)
 }

@@ -17,6 +17,7 @@ mod tool_context_test;
 mod tool_result_test;
 mod tool_dispatch_result_test;
 mod tool_call_test;
+mod thread_marker_test;
 mod guardrail_result_test;
 mod token_event_payload_test;
 mod thinking_event_payload_test;

@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ThreadMarker.yaml
+type: object
+properties:
+  name:
+    type: string
+    default: thread
+    description: The input property name (e.g. 'conversation')
+  kind:
+    type: string
+    default: thread
+    description: The rich kind ('thread', 'image', 'file', 'audio')
+required:
+  - name
+  - kind
+description: |-
+  Positional marker for conversation history insertion during template rendering.
+
+  During `prepare()`, nonce strings in rendered text are replaced with
+  ThreadMarker objects. The pipeline then replaces them with actual
+  conversation messages from the inputs.

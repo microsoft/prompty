@@ -1126,9 +1126,9 @@ function emitProtocolTrait(type: TypeDecl, lines: string[]): void {
     } else {
       // Async method
       if (method.optional) {
-        // Return type already includes nullability from ? suffix — don't double-wrap
+        // Default implementation returns an error — providers override with real streaming
         lines.push(`    async fn ${toSnakeCase(method.name)}(&self, ${params}) -> Result<${ret}, Box<dyn std::error::Error + Send + Sync>> {`);
-        lines.push("        Ok(None)");
+        lines.push(`        Err("not supported".into())`);
         lines.push("    }");
       } else {
         lines.push(`    async fn ${toSnakeCase(method.name)}(&self, ${params}) -> Result<${ret}, Box<dyn std::error::Error + Send + Sync>>;`);

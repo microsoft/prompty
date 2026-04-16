@@ -23,10 +23,12 @@ properties:
     description: The content parts of the message
   metadata:
     $ref: RecordUnknown.yaml
+    default: {}
     description: Optional metadata associated with the message
 required:
   - role
   - parts
+  - metadata
 description: |-
   A message in a conversation. Messages have a role and a list of content parts
   representing the different modalities of the message content.

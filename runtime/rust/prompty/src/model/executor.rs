@@ -16,6 +16,10 @@ use super::tool_call::ToolCall;
 pub trait Executor: Send + Sync {
     /// Call an LLM provider with messages and return the raw response
     async fn execute(&self, agent: &Prompty, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>;
+    /// Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.
+    async fn execute_stream(&self, agent: &Prompty, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
+        Err("not supported".into())
+    }
     /// Format tool call results into messages for the next iteration
     fn format_tool_messages(&self, raw_response: &serde_json::Value, tool_calls: &Vec<ToolCall>, tool_results: &Vec<String>, text_content: &Option<String>) -> Vec<Message>;
 }

@@ -48,6 +48,7 @@ export { ToolContext } from "./tool-context";
 export { ToolResult } from "./tool-result";
 export { ToolDispatchResult } from "./tool-dispatch-result";
 export { ToolCall } from "./tool-call";
+export { ThreadMarker } from "./thread-marker";
 export { GuardrailResult } from "./guardrail-result";
 export { TokenEventPayload } from "./token-event-payload";
 export { ThinkingEventPayload } from "./thinking-event-payload";

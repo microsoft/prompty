@@ -9,14 +9,12 @@ export class Message {
 
   role: string = "user";
   parts: ContentPart[] = [];
-  metadata?: Record<string, unknown> | undefined;
+  metadata: Record<string, unknown> = {};
 
   constructor(init?: Partial<Message>) {
     this.role = init?.role ?? "user";
     this.parts = init?.parts ?? [];
-    if (init?.metadata !== undefined) {
-      this.metadata = init.metadata;
-    }
+    this.metadata = init?.metadata ?? {};
   }
 
   //#region Load Methods
@@ -133,6 +131,7 @@ export class Message {
   }
 
 
+  // @method toTextContent(): unknown — Return plain string if all parts are text, else a list of content part dicts for wire serialization
   // @method text(): string — Concatenate all TextPart values joined by newline
 }
 

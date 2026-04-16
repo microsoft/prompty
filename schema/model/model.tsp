@@ -89,6 +89,8 @@ model Model {
   connection?: Connection;
 
   @doc("Additional options for the model")
-  @sample(#{ options: #{ type: "chat", temperature: 0.7, maxOutputTokens: 1000 } })
+  @sample(#{
+    options: #{ type: "chat", temperature: 0.7, maxOutputTokens: 1000 },
+  })
   options?: ModelOptions;
 }

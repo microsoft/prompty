@@ -43,6 +43,30 @@ impl Prompty {
 // ---------------------------------------------------------------------------
 
 impl MessageHelpers for Message {
+    fn to_text_content(&self) -> serde_json::Value {
+        // If all parts are text, return a single joined string.
+        // Otherwise return an array of content part dicts for wire serialization.
+        let all_text = self.parts.iter().all(|p| matches!(&p.kind, ContentPartKind::TextPart { .. }));
+        if all_text {
+            let text = self
+                .parts
+                .iter()
+                .filter_map(|p| match &p.kind {
+                    ContentPartKind::TextPart { value } => Some(value.as_str()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            serde_json::Value::String(text)
+        } else {
+            use crate::model::context::SaveContext;
+            let ctx = SaveContext::default();
+            serde_json::Value::Array(
+                self.parts.iter().map(|p| p.to_value(&ctx)).collect(),
+            )
+        }
+    }
+
     fn text(&self) -> String {
         self.parts
             .iter()

@@ -55,6 +55,7 @@ from ._StreamChunk import (
 )
 from ._Template import Template
 from ._ThinkingEventPayload import ThinkingEventPayload
+from ._ThreadMarker import ThreadMarker
 from ._TokenEventPayload import TokenEventPayload
 from ._TokenUsage import TokenUsage
 from ._Tool import (
@@ -110,6 +111,7 @@ __all__ = [
     "ToolResult",
     "ToolDispatchResult",
     "ToolCall",
+    "ThreadMarker",
     "GuardrailResult",
     "TokenEventPayload",
     "ThinkingEventPayload",

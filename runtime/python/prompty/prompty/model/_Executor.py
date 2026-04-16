@@ -23,6 +23,14 @@ class Executor(Protocol):
         """Call an LLM provider with messages and return the raw response (async variant)"""
         ...
 
+    def execute_stream(self, agent: Prompty, messages: list[Message]) -> Any:
+        """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support."""
+        return None
+
+    async def execute_stream_async(self, agent: Prompty, messages: list[Message]) -> Any:
+        """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
+        return None
+
     def format_tool_messages(
         self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
     ) -> list[Message]:

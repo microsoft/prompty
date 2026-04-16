@@ -33,8 +33,4 @@ public static class RichKinds
 /// <summary>
 /// Placeholder inserted by renderers to mark where thread/rich content should be expanded.
 /// </summary>
-public class ThreadMarker
-{
-    public string Name { get; set; } = "thread";
-    public string Kind { get; set; } = "thread";
-}
+public partial class ThreadMarker { }

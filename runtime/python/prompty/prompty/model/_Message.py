@@ -22,7 +22,7 @@ class Message:
         The role of the message sender
     parts : list[ContentPart]
         The content parts of the message
-    metadata : Optional[dict[str, Any]]
+    metadata : dict[str, Any]
         Optional metadata associated with the message
     """
 
@@ -30,7 +30,7 @@ class Message:
 
     role: str = field(default="user")
     parts: list[ContentPart] = field(default_factory=list)
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Message":
@@ -154,4 +154,5 @@ class Message:
     # Helpers — implement these in an extension module
     # =========================================================================
     # The following helpers should be implemented as standalone functions:
+    # - toTextContent(instance) -> unknown: Return plain string if all parts are text, else a list of content part dicts for wire serialization
     # - text(instance) -> str: Concatenate all TextPart values joined by newline

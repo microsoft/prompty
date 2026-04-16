@@ -4,8 +4,10 @@
   "description": "TypeSpec models and code generation for Prompty",
   "scripts": {
     "build:emitter": "cd emitter && npm run build",
+    "format:tsp": "npx tsp format \"model/**/*.tsp\"",
+    "format:tsp:check": "npx tsp format \"model/**/*.tsp\" --check",
     "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml",
-    "build": "npm run build:emitter && npm run generate"
+    "build": "npm run build:emitter && npm run format:tsp && npm run generate"
   },
   "dependencies": {
     "prompty-emitter": "file:./emitter",

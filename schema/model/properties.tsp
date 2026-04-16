@@ -96,7 +96,6 @@ model ObjectProperty extends Property {
   properties: Properties = #[];
 }
 
-
 alias Properties = Record<Property> | Named<
   Property,
   "Name of the property",

@@ -209,6 +209,10 @@ classDiagram
         +string name
         +string arguments
     }
+    class ThreadMarker {
+        +string name
+        +string kind
+    }
     class GuardrailResult {
         +boolean allowed
         +string reason

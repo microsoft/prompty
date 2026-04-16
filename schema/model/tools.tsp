@@ -141,6 +141,8 @@ model ToolDispatchResult {
   name: string;
 
   @doc("The result produced by the tool handler")
-  @sample(#{ result: #{ parts: #[#{ kind: "text", value: "72°F and sunny" }] } })
+  @sample(#{
+    result: #{ parts: #[#{ kind: "text", value: "72°F and sunny" }] },
+  })
   result: ToolResult;
 }

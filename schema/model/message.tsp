@@ -91,10 +91,27 @@ model AudioPart extends ContentPart {
  * A message in a conversation. Messages have a role and a list of content parts
  * representing the different modalities of the message content.
  */
-@factory("user", #{ role: "user", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
-@factory("system", #{ role: "system", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
-@factory("assistant", #{ role: "assistant", parts: #[#{ kind: "text", value: "{text}" }] }, #{ text: "string" })
+@factory(
+  "user",
+  #{ role: "user", parts: #[#{ kind: "text", value: "{text}" }] },
+  #{ text: "string" }
+)
+@factory(
+  "system",
+  #{ role: "system", parts: #[#{ kind: "text", value: "{text}" }] },
+  #{ text: "string" }
+)
+@factory(
+  "assistant",
+  #{ role: "assistant", parts: #[#{ kind: "text", value: "{text}" }] },
+  #{ text: "string" }
+)
 @method("text", "string", "Concatenate all TextPart values joined by newline")
+@method(
+  "toTextContent",
+  "unknown",
+  "Return plain string if all parts are text, else a list of content part dicts for wire serialization"
+)
 model Message {
   @doc("The role of the message sender")
   @sample(#{ role: "user" })
@@ -106,7 +123,7 @@ model Message {
 
   @doc("Optional metadata associated with the message")
   @sample(#{ metadata: #{ source: "user-input" } })
-  metadata?: Record<unknown>;
+  metadata: Record<unknown> = #{};
 }
 
 /**
@@ -134,10 +151,31 @@ model ToolCall {
  * Implementations MUST support conversion from a plain string to a ToolResult
  * containing a single TextPart for backward compatibility.
  */
-@factory("text", #{ parts: #[#{ kind: "text", value: "{value}" }] }, #{ value: "string" })
+@factory(
+  "text",
+  #{ parts: #[#{ kind: "text", value: "{value}" }] },
+  #{ value: "string" }
+)
 @method("text", "string", "Concatenate all TextPart values joined by newline")
 model ToolResult {
   @doc("The content parts of the tool result")
   @sample(#{ parts: #[#{ kind: "text", value: "72°F and sunny" }] })
   parts: ContentPart[];
+}
+
+/**
+ * Positional marker for conversation history insertion during template rendering.
+ *
+ * During `prepare()`, nonce strings in rendered text are replaced with
+ * ThreadMarker objects. The pipeline then replaces them with actual
+ * conversation messages from the inputs.
+ */
+model ThreadMarker {
+  @doc("The input property name (e.g. 'conversation')")
+  @sample(#{ name: "thread" })
+  name: string = "thread";
+
+  @doc("The rich kind ('thread', 'image', 'file', 'audio')")
+  @sample(#{ kind: "thread" })
+  kind: string = "thread";
 }

@@ -14,7 +14,7 @@ import (
 type Message struct {
 	Role     string                 `json:"role" yaml:"role"`
 	Parts    []interface{}          `json:"parts" yaml:"parts"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadMessage creates a Message from a map[string]interface{}
@@ -67,9 +67,7 @@ func (obj *Message) Save(ctx *SaveContext) map[string]interface{} {
 		}
 		result["parts"] = arr
 	}
-	if obj.Metadata != nil {
-		result["metadata"] = obj.Metadata
-	}
+	result["metadata"] = obj.Metadata
 
 	return result
 }
@@ -134,6 +132,8 @@ func NewUserMessage(text string) Message {
 // MessageHelpers defines helper methods for Message.
 // Implement these in a separate file (e.g., message_helpers.go).
 type MessageHelpers interface {
+	// ToTextContent — Return plain string if all parts are text, else a list of content part dicts for wire serialization
+	ToTextContent() interface{}
 	// Text — Concatenate all TextPart values joined by newline
 	Text() string
 }

@@ -55,6 +55,13 @@ model Parser {}
   #{ agent: "Prompty", messages: "Message[]" }
 );
 @@method(Executor,
+  "executeStream",
+  "unknown",
+  "Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.",
+  #{ agent: "Prompty", messages: "Message[]" },
+  true
+);
+@@method(Executor,
   "formatToolMessages",
   "Message[]",
   "Format tool call results into messages for the next iteration",
@@ -77,6 +84,13 @@ model Executor {}
   "unknown",
   "Extract a clean result from a raw LLM response",
   #{ agent: "Prompty", response: "unknown" }
+);
+@@method(Processor,
+  "processStream",
+  "unknown",
+  "Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support.",
+  #{ stream: "unknown" },
+  true
 );
 
 /** Extracts a clean, typed result from a raw LLM provider response. */

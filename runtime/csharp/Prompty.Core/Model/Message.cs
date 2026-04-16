@@ -40,7 +40,7 @@ public partial class Message
     /// <summary>
     /// Optional metadata associated with the message
     /// </summary>
-    public IDictionary<string, object>? Metadata { get; set; }
+    public IDictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
 
 
 
@@ -168,10 +168,7 @@ public partial class Message
         result["parts"] = SaveParts(obj.Parts, context);
 
 
-        if (obj.Metadata is not null)
-        {
-            result["metadata"] = obj.Metadata;
-        }
+        result["metadata"] = obj.Metadata;
 
 
         if (context is not null)
@@ -282,6 +279,7 @@ public partial class Message
     #region Helpers — implement these in a partial class extension
 
     // The following helpers should be implemented in a separate partial class file:
+    // - toTextContent(): unknown — Return plain string if all parts are text, else a list of content part dicts for wire serialization
     // - text(): string — Concatenate all TextPart values joined by newline
 
     #endregion
