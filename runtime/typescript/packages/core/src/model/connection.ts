@@ -22,7 +22,10 @@ export abstract class Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): Connection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Connection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -33,10 +36,16 @@ export abstract class Connection {
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-    if (data["authenticationMode"] !== undefined && data["authenticationMode"] !== null) {
+    if (
+      data["authenticationMode"] !== undefined &&
+      data["authenticationMode"] !== null
+    ) {
       instance.authenticationMode = String(data["authenticationMode"]);
     }
-    if (data["usageDescription"] !== undefined && data["usageDescription"] !== null) {
+    if (
+      data["usageDescription"] !== undefined &&
+      data["usageDescription"] !== null
+    ) {
       instance.usageDescription = String(data["usageDescription"]);
     }
 
@@ -46,7 +55,10 @@ export abstract class Connection {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Connection {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Connection {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -64,7 +76,9 @@ export abstract class Connection {
         case "oauth":
           return OAuthConnection.load(data, context);
         default:
-          throw new Error(`Unknown Connection discriminator value: ${discriminator}`);
+          throw new Error(
+            `Unknown Connection discriminator value: ${discriminator}`,
+          );
       }
     }
     throw new Error("Missing Connection discriminator property: 'kind'");
@@ -85,7 +99,10 @@ export abstract class Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-    if (obj.authenticationMode !== undefined && obj.authenticationMode !== null) {
+    if (
+      obj.authenticationMode !== undefined &&
+      obj.authenticationMode !== null
+    ) {
       result["authenticationMode"] = obj.authenticationMode;
     }
     if (obj.usageDescription !== undefined && obj.usageDescription !== null) {
@@ -140,7 +157,10 @@ export class ReferenceConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ReferenceConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ReferenceConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -228,7 +248,10 @@ export class RemoteConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): RemoteConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): RemoteConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -316,7 +339,10 @@ export class ApiKeyConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ApiKeyConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ApiKeyConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -402,7 +428,10 @@ export class AnonymousConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnonymousConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnonymousConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -490,7 +519,10 @@ export class FoundryConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FoundryConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FoundryConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -506,7 +538,10 @@ export class FoundryConnection extends Connection {
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-    if (data["connectionType"] !== undefined && data["connectionType"] !== null) {
+    if (
+      data["connectionType"] !== undefined &&
+      data["connectionType"] !== null
+    ) {
       instance.connectionType = String(data["connectionType"]);
     }
 
@@ -592,7 +627,10 @@ export class OAuthConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): OAuthConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OAuthConnection {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -615,7 +653,7 @@ export class OAuthConnection extends Connection {
       instance.tokenUrl = String(data["tokenUrl"]);
     }
     if (data["scopes"] !== undefined && data["scopes"] !== null) {
-      instance.scopes = (data["scopes"] as unknown[]).map(v => String(v));
+      instance.scopes = (data["scopes"] as unknown[]).map((v) => String(v));
     }
 
     if (context) {
@@ -681,4 +719,3 @@ export class OAuthConnection extends Connection {
 
   //#endregion
 }
-

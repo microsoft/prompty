@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ParserConfig
+
 
 def test_load_json_parserconfig():
     json_data = r'''

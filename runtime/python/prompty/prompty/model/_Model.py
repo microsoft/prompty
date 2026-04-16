@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from ._Connection import Connection
-from ._ModelOptions import ModelOptions
 from ._context import LoadContext, SaveContext
+from ._ModelOptions import ModelOptions
 
 
 @dataclass
