@@ -22,9 +22,7 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("key");
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
       expect(instance.apiKey).toEqual("your-api-key");
     });
 
@@ -45,9 +43,7 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("key");
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
       expect(instance.apiKey).toEqual("your-api-key");
     });
 

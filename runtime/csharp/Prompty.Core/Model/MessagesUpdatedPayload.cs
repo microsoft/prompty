@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "messages_updated" events — the conversation state has changed.
-/// </summary>
+    /// <summary>
+    /// Payload for "messages_updated" events — the conversation state has changed.
+    /// </summary>
 public partial class MessagesUpdatedPayload
 {
     /// <summary>

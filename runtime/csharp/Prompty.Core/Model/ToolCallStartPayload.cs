@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "tool_call_start" events — the LLM has requested a tool call.
-/// </summary>
+    /// <summary>
+    /// Payload for "tool_call_start" events — the LLM has requested a tool call.
+    /// </summary>
 public partial class ToolCallStartPayload
 {
     /// <summary>

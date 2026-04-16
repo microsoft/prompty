@@ -6,17 +6,17 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Represents a generic server tool that runs on a server
-/// 
-/// This tool kind is designed for operations that require server-side execution
-/// 
-/// It may include features such as authentication, data storage, and long-running processes
-/// 
-/// This tool kind is ideal for tasks that involve complex computations or access to secure resources
-/// 
-/// Server tools can be used to offload heavy processing from client applications
-/// </summary>
+    /// <summary>
+    /// Represents a generic server tool that runs on a server
+    /// 
+    /// This tool kind is designed for operations that require server-side execution
+    /// 
+    /// It may include features such as authentication, data storage, and long-running processes
+    /// 
+    /// This tool kind is ideal for tasks that involve complex computations or access to secure resources
+    /// 
+    /// Server tools can be used to offload heavy processing from client applications
+    /// </summary>
 public partial class CustomTool : Tool
 {
     /// <summary>

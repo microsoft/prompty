@@ -92,8 +92,8 @@ export const generateRust = async (
       moduleNames.push(toSnakeCase(n.typeName.name));
     }
 
-    // Render test file — skip children of polymorphic hierarchies (they're enum variants now)
-    if (emitTarget["test-dir"] && !childToParent.has(n.typeName.name)) {
+    // Render test file — skip children of polymorphic hierarchies (they're enum variants now) and protocols
+    if (emitTarget["test-dir"] && !childToParent.has(n.typeName.name) && !n.isProtocol) {
       const importPath = emitTarget["import-path"] || "crate";
       const testContext = buildTestContext(n);
       const isPolymorphicBase = !!(n.discriminator && n.childTypes.length > 0);

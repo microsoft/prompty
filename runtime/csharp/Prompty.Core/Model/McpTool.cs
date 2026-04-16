@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// The MCP Server tool.
-/// </summary>
+    /// <summary>
+    /// The MCP Server tool.
+    /// </summary>
 public partial class McpTool : Tool
 {
     /// <summary>

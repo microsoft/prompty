@@ -198,10 +198,12 @@ func (obj *ModelOptions) ToWire(provider string) map[string]interface{} {
 	result := make(map[string]interface{})
 	wireMap := map[string]map[string]string{
 		"frequencyPenalty":       {"openai": "frequency_penalty"},
-		"maxOutputTokens":        {"openai": "max_completion_tokens", "anthropic": "max_tokens"},
+		"maxOutputTokens":        {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
 		"presencePenalty":        {"openai": "presence_penalty"},
+		"seed":                   {"openai": "seed"},
+		"temperature":            {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
 		"topK":                   {"openai": "top_k", "anthropic": "top_k"},
-		"topP":                   {"openai": "top_p", "anthropic": "top_p"},
+		"topP":                   {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
 		"stopSequences":          {"openai": "stop", "anthropic": "stop_sequences"},
 		"allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
 	}
@@ -209,10 +211,8 @@ func (obj *ModelOptions) ToWire(provider string) map[string]interface{} {
 		if mapping, ok := wireMap[key]; ok {
 			if wireName, ok := mapping[provider]; ok {
 				result[wireName] = value
-				continue
 			}
 		}
-		result[key] = value
 	}
 	return result
 }

@@ -181,18 +181,26 @@ export class ModelOptions {
       frequencyPenalty: { openai: "frequency_penalty" },
       maxOutputTokens: {
         openai: "max_completion_tokens",
+        responses: "max_output_tokens",
         anthropic: "max_tokens",
       },
       presencePenalty: { openai: "presence_penalty" },
+      seed: { openai: "seed" },
+      temperature: {
+        openai: "temperature",
+        responses: "temperature",
+        anthropic: "temperature",
+      },
       topK: { openai: "top_k", anthropic: "top_k" },
-      topP: { openai: "top_p", anthropic: "top_p" },
+      topP: { openai: "top_p", responses: "top_p", anthropic: "top_p" },
       stopSequences: { openai: "stop", anthropic: "stop_sequences" },
       allowMultipleToolCalls: { openai: "parallel_tool_calls" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];
-      const wireName = mapping?.[provider] ?? key;
-      result[wireName] = value;
+      if (mapping?.[provider]) {
+        result[mapping[provider]] = value;
+      }
     }
     return result;
   }

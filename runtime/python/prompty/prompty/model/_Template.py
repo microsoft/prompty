@@ -7,9 +7,9 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._FormatConfig import FormatConfig
 from ._ParserConfig import ParserConfig
+from ._context import LoadContext, SaveContext
 
 
 @dataclass

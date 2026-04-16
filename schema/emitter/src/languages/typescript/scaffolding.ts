@@ -182,16 +182,18 @@ export function emitTypeScriptIndex(baseTypes: TypeNode[], _types: TypeNode[]): 
   lines.push('export { LoadContext, SaveContext } from "./context";');
 
   for (const type of baseTypes) {
+    // Protocol types are interfaces (type-only) — use `export type` for isolatedModules compat
+    const exportKeyword = type.isProtocol ? "export type" : "export";
     if (type.childTypes.length > 0) {
       const exports = [type.typeName.name, ...type.childTypes.map((c) => c.typeName.name)];
       lines.push("");
-      lines.push("export {");
+      lines.push(`${exportKeyword} {`);
       for (const name of exports) {
         lines.push(`  ${name},`);
       }
       lines.push(`} from "./${toKebabCase(type.typeName.name)}";`);
     } else {
-      lines.push(`export { ${type.typeName.name} } from "./${toKebabCase(type.typeName.name)}";`);
+      lines.push(`${exportKeyword} { ${type.typeName.name} } from "./${toKebabCase(type.typeName.name)}";`);
     }
   }
   lines.push("");

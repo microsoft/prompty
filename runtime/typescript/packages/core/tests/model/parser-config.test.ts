@@ -61,7 +61,6 @@ describe("ParserConfig", () => {
   });
 
   describe("load and save", () => {
-
     it("should save to dictionary", () => {
       const instance = new ParserConfig();
       const data = instance.save();

@@ -105,8 +105,8 @@ export const generatePython = async (
       await emitPythonFile(context, `_${n.typeName.name}.py`, fileContent, emitTarget["output-dir"]);
     }
 
-    // Render test file for each type
-    if (emitTarget["test-dir"]) {
+    // Render test file for each type (skip protocols — they have no data to test)
+    if (emitTarget["test-dir"] && !n.isProtocol) {
       const testContext = buildTestContext(n, importPath);
       const testContent = emitPythonTest(testContext);
       await emitPythonFile(context, `test_${toSnakeCase(n.typeName.name)}.py`, testContent, emitTarget["test-dir"]);

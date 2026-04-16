@@ -149,17 +149,19 @@ class ModelOptions:
         result: dict[str, Any] = {}
         wire_map: dict[str, dict[str, str]] = {
             "frequencyPenalty": {"openai": "frequency_penalty"},
-            "maxOutputTokens": {"openai": "max_completion_tokens", "anthropic": "max_tokens"},
+            "maxOutputTokens": {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
             "presencePenalty": {"openai": "presence_penalty"},
+            "seed": {"openai": "seed"},
+            "temperature": {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
             "topK": {"openai": "top_k", "anthropic": "top_k"},
-            "topP": {"openai": "top_p", "anthropic": "top_p"},
+            "topP": {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
             "stopSequences": {"openai": "stop", "anthropic": "stop_sequences"},
             "allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
         }
         for key, value in data.items():
-            mapping = wire_map.get(key, {})
-            wire_name = mapping.get(provider, key)
-            result[wire_name] = value
+            mapping = wire_map.get(key)
+            if mapping is not None and provider in mapping:
+                result[mapping[provider]] = value
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

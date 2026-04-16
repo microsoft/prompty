@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "error" events — an error occurred during the loop.
-/// </summary>
+    /// <summary>
+    /// Payload for "error" events — an error occurred during the loop.
+    /// </summary>
 public partial class ErrorEventPayload
 {
     /// <summary>

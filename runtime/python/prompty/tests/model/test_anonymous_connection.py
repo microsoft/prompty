@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import AnonymousConnection
-
 
 def test_load_json_anonymousconnection():
     json_data = r'''

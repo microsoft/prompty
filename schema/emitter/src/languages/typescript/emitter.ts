@@ -98,6 +98,7 @@ function paramType(typeStr: string): string {
 }
 
 function returnType(typeStr: string): string {
+  if (typeStr === "Record<unknown>") return "Record<string, unknown>";
   return TYPE_MAP[typeStr] || typeStr;
 }
 
@@ -117,8 +118,11 @@ export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespa
   lines.push("");
 
   // 2. Imports
-  // Always import LoadContext + SaveContext
-  lines.push(`import { LoadContext, SaveContext } from "./context";`);
+  // Protocol-only files don't need LoadContext/SaveContext
+  const hasNonProtocol = decl.types.some(t => !t.isProtocol);
+  if (hasNonProtocol) {
+    lines.push(`import { LoadContext, SaveContext } from "./context";`);
+  }
 
   for (const imp of decl.imports) {
     const kebab = toKebabCase(imp.module);
@@ -141,6 +145,12 @@ export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespa
 
 function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
   const name = type.typeName.name;
+
+  // Protocol types → emit as interface with method signatures
+  if (type.isProtocol) {
+    emitProtocolInterface(type, lines);
+    return;
+  }
 
   // Class definition
   const abstractPrefix = type.isAbstract ? "abstract " : "";
@@ -230,8 +240,33 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
 }
 
 // ============================================================================
-// Type annotations
+// Protocol interface emission
 // ============================================================================
+
+/**
+ * Emit a TypeScript interface for a protocol type.
+ * Protocols have methods but no data fields, load/save, or serialization.
+ */
+function emitProtocolInterface(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
+
+  if (type.description) {
+    lines.push(`/** ${type.description} */`);
+  }
+  lines.push(`export interface ${name} {`);
+
+  for (const method of type.methods) {
+    if (method.description) {
+      lines.push(`  /** ${method.description} */`);
+    }
+    const params = Object.entries(method.params)
+      .map(([pName, pType]) => `${pName}: ${returnType(pType)}`)
+      .join(", ");
+    lines.push(`  ${method.name}(${params}): Promise<${returnType(method.returns)}>;`);
+  }
+
+  lines.push("}");
+}
 
 function tsTypeAnnotation(f: FieldDecl): string {
   const cat = f.category;
@@ -773,8 +808,9 @@ function emitToWireMethod(type: TypeDecl, lines: string[]): void {
   lines.push("    };");
   lines.push("    for (const [key, value] of Object.entries(data)) {");
   lines.push("      const mapping = wireMap[key];");
-  lines.push("      const wireName = mapping?.[provider] ?? key;");
-  lines.push("      result[wireName] = value;");
+  lines.push("      if (mapping?.[provider]) {");
+  lines.push("        result[mapping[provider]] = value;");
+  lines.push("      }");
   lines.push("    }");
   lines.push("    return result;");
   lines.push("  }");

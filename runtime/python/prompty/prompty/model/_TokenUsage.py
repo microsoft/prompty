@@ -106,9 +106,9 @@ class TokenUsage:
             "totalTokens": {"openai": "total_tokens"},
         }
         for key, value in data.items():
-            mapping = wire_map.get(key, {})
-            wire_name = mapping.get(provider, key)
-            result[wire_name] = value
+            mapping = wire_map.get(key)
+            if mapping is not None and provider in mapping:
+                result[mapping[provider]] = value
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

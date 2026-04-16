@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Options for configuring the behavior of the AI model.
-/// </summary>
+    /// <summary>
+    /// Options for configuring the behavior of the AI model.
+    /// </summary>
 public partial class ModelOptions
 {
     /// <summary>
@@ -256,10 +256,12 @@ public partial class ModelOptions
         var wireMap = new Dictionary<string, Dictionary<string, string>>
         {
             ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
-            ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["anthropic"] = "max_tokens" },
+            ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["responses"] = "max_output_tokens", ["anthropic"] = "max_tokens" },
             ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["seed"] = new Dictionary<string, string> { ["openai"] = "seed" },
+            ["temperature"] = new Dictionary<string, string> { ["openai"] = "temperature", ["responses"] = "temperature", ["anthropic"] = "temperature" },
             ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },
-            ["topP"] = new Dictionary<string, string> { ["openai"] = "top_p", ["anthropic"] = "top_p" },
+            ["topP"] = new Dictionary<string, string> { ["openai"] = "top_p", ["responses"] = "top_p", ["anthropic"] = "top_p" },
             ["stopSequences"] = new Dictionary<string, string> { ["openai"] = "stop", ["anthropic"] = "stop_sequences" },
             ["allowMultipleToolCalls"] = new Dictionary<string, string> { ["openai"] = "parallel_tool_calls" },
         };
@@ -267,8 +269,6 @@ public partial class ModelOptions
         {
             if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
                 result[wireName] = value;
-            else
-                result[key] = value;
         }
         return result;
     }

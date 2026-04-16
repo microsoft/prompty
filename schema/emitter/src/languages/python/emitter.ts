@@ -98,15 +98,25 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   // Collect all import lines, then sort them
   const stdlibImports: string[] = [];
   const localImports: string[] = [];
+  const hasProtocol = decl.types.some(t => t.isProtocol);
+  const hasNonProtocol = decl.types.some(t => !t.isProtocol);
 
   if (decl.containsAbstract) {
     stdlibImports.push("from abc import ABC");
   }
-  stdlibImports.push("from dataclasses import dataclass, field");
-  stdlibImports.push("from typing import Any, ClassVar");
+  if (hasNonProtocol) {
+    stdlibImports.push("from dataclasses import dataclass, field");
+  }
+  const typingImports = ["Any"];
+  if (hasNonProtocol) typingImports.push("ClassVar");
+  if (hasProtocol) typingImports.push("Protocol");
+  typingImports.sort();
+  stdlibImports.push(`from typing import ${typingImports.join(", ")}`);
 
   // Context import + local type imports — sorted alphabetically
-  localImports.push("from ._context import LoadContext, SaveContext");
+  if (hasNonProtocol) {
+    localImports.push("from ._context import LoadContext, SaveContext");
+  }
   for (const imp of decl.imports) {
     localImports.push(`from ._${imp.module} import ${imp.names.join(", ")}`);
   }
@@ -136,6 +146,12 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
 
 function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
   const name = type.typeName.name;
+
+  // Protocol types → emit as Protocol class with method signatures
+  if (type.isProtocol) {
+    emitProtocolClass(type, lines);
+    return;
+  }
 
   // Class definition
   lines.push("@dataclass");
@@ -210,6 +226,79 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
     lines.push("    # The following helpers should be implemented as standalone functions:");
     for (const m of type.methods) {
       lines.push(`    # - ${m.name}(instance) -> ${returnType(m.returns)}: ${m.description}`);
+    }
+  }
+
+  lines.push("");
+}
+
+// ============================================================================
+// Protocol class emission
+// ============================================================================
+
+/** Map a protocol type string to a Python type annotation. */
+function protocolType(typeStr: string): string {
+  // Handle array types
+  if (typeStr.endsWith("[]")) {
+    const inner = typeStr.slice(0, -2);
+    return `list[${protocolType(inner)}]`;
+  }
+  // Handle Record/dict types
+  if (typeStr === "Record<unknown>" || typeStr === "dictionary") return "dict[str, Any]";
+  if (typeStr === "unknown" || typeStr === "any") return "Any";
+  // Scalar types
+  const mapped = TYPE_MAP[typeStr];
+  if (mapped) return mapped;
+  return typeStr;
+}
+
+/**
+ * Emit a Python Protocol class for a protocol type.
+ * Uses typing.Protocol for structural subtyping.
+ */
+function emitProtocolClass(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
+
+  lines.push(`class ${name}(Protocol):`);
+
+  // Docstring
+  if (type.description) {
+    const descLines = type.description.split("\n");
+    lines.push(`    """${descLines[0]}`);
+    for (let i = 1; i < descLines.length; i++) {
+      lines.push(`    ${descLines[i]}`);
+    }
+    lines.push(`    """`);
+  }
+
+  if (type.methods.length === 0) {
+    lines.push("    ...");
+    return;
+  }
+
+  for (const method of type.methods) {
+    const params = Object.entries(method.params)
+      .map(([pName, pType]) => `${toSnakeCase(pName)}: ${protocolType(pType)}`)
+      .join(", ");
+    const ret = protocolType(method.returns);
+
+    lines.push("");
+    if (method.description) {
+      lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}:`);
+      lines.push(`        """${method.description}"""`);
+      lines.push("        ...");
+    } else {
+      lines.push(`    def ${toSnakeCase(method.name)}(self, ${params}) -> ${ret}: ...`);
+    }
+
+    // Async variant
+    lines.push("");
+    if (method.description) {
+      lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}:`);
+      lines.push(`        """${method.description} (async variant)"""`);
+      lines.push("        ...");
+    } else {
+      lines.push(`    async def ${toSnakeCase(method.name)}_async(self, ${params}) -> ${ret}: ...`);
     }
   }
 
@@ -665,9 +754,9 @@ function emitToWireMethod(type: TypeDecl, lines: string[]): void {
   lines.push("        }");
 
   lines.push("        for key, value in data.items():");
-  lines.push("            mapping = wire_map.get(key, {})");
-  lines.push("            wire_name = mapping.get(provider, key)");
-  lines.push("            result[wire_name] = value");
+  lines.push("            mapping = wire_map.get(key)");
+  lines.push("            if mapping is not None and provider in mapping:");
+  lines.push("                result[mapping[provider]] = value");
   lines.push("        return result");
   lines.push("");
 }

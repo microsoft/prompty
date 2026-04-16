@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Template parser definition
-/// </summary>
+    /// <summary>
+    /// Template parser definition
+    /// </summary>
 public partial class ParserConfig
 {
     /// <summary>

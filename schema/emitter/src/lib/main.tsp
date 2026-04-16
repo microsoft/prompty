@@ -51,16 +51,22 @@ extern dec factory(
  * This enforces that every runtime implements the method (compile/test failure
  * if missing) while allowing language-idiomatic implementations.
  *
+ * The optional `params` parameter specifies method parameters (name → type string).
+ * When used on `@protocol` models, params drive the generated interface method
+ * signatures.
+ *
  * @example
  * ```typespec
  * @@method("text", "string", "Concatenate all TextPart values joined by newline")
+ * @@method("render", "string", "Render template with inputs", #{ agent: "Prompty", template: "string", inputs: "Record<unknown>" })
  * ```
  */
 extern dec method(
   target: Model,
   name: valueof string,
   returns: valueof string,
-  description?: valueof string
+  description?: valueof string,
+  params?: valueof unknown
 );
 
 /**

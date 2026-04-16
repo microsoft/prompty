@@ -82,8 +82,8 @@ export const generateGo = async (
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
     }
 
-    // Emit test file for each type
-    if (emitTarget["test-dir"]) {
+    // Emit test file for each type (skip protocols — they have no data to test)
+    if (emitTarget["test-dir"] && !n.isProtocol) {
       const importPath = emitTarget["import-path"] || packageName;
       const testContext = { ...buildTestContext(n, packageName), importPath };
       const testContent = emitGoTest(testContext);

@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "tool_result" events — a tool has returned its result.
-/// </summary>
+    /// <summary>
+    /// Payload for "tool_result" events — a tool has returned its result.
+    /// </summary>
 public partial class ToolResultPayload
 {
     /// <summary>

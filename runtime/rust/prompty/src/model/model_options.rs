@@ -122,10 +122,12 @@ impl ModelOptions {
         let mut result = serde_json::Map::new();
         let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> = std::collections::HashMap::from([
             ("frequencyPenalty", std::collections::HashMap::from([("openai", "frequency_penalty")])),
-            ("maxOutputTokens", std::collections::HashMap::from([("openai", "max_completion_tokens"), ("anthropic", "max_tokens")])),
+            ("maxOutputTokens", std::collections::HashMap::from([("openai", "max_completion_tokens"), ("responses", "max_output_tokens"), ("anthropic", "max_tokens")])),
             ("presencePenalty", std::collections::HashMap::from([("openai", "presence_penalty")])),
+            ("seed", std::collections::HashMap::from([("openai", "seed")])),
+            ("temperature", std::collections::HashMap::from([("openai", "temperature"), ("responses", "temperature"), ("anthropic", "temperature")])),
             ("topK", std::collections::HashMap::from([("openai", "top_k"), ("anthropic", "top_k")])),
-            ("topP", std::collections::HashMap::from([("openai", "top_p"), ("anthropic", "top_p")])),
+            ("topP", std::collections::HashMap::from([("openai", "top_p"), ("responses", "top_p"), ("anthropic", "top_p")])),
             ("stopSequences", std::collections::HashMap::from([("openai", "stop"), ("anthropic", "stop_sequences")])),
             ("allowMultipleToolCalls", std::collections::HashMap::from([("openai", "parallel_tool_calls")])),
         ]);
@@ -134,10 +136,8 @@ impl ModelOptions {
                 if let Some(mapping) = wire_map.get(key.as_str()) {
                     if let Some(wire_name) = mapping.get(provider) {
                         result.insert(wire_name.to_string(), value);
-                        continue;
                     }
                 }
-                result.insert(key, value);
             }
         }
         serde_json::Value::Object(result)

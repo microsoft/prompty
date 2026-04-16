@@ -146,6 +146,8 @@ export interface MethodEntry {
   returns: string;
   /** Human-readable description of what the method does */
   description: string;
+  /** Method parameters as an ordered map of name → type string */
+  params: Record<string, string>;
 }
 
 function deserializeValue(value: unknown): any {
@@ -172,15 +174,17 @@ export function $factory(context: DecoratorContext, target: Model, name: string,
   appendStateValue<FactoryEntry>(context, StateKeys.factories, target, entry);
 }
 
-export function $method(context: DecoratorContext, target: Model, name: string, returns: string, description?: string) {
+export function $method(context: DecoratorContext, target: Model, name: string, returns: string, description?: string, params?: object) {
   const nameValue = typeof name === 'object' && name !== null && 'value' in name ? (name as StringValue).value : name as string;
   const returnsValue = typeof returns === 'object' && returns !== null && 'value' in returns ? (returns as StringValue).value : returns as string;
   const descValue = typeof description === 'object' && description !== null && 'value' in description ? (description as StringValue).value : description as string | undefined;
+  const paramsValue = params ? deserializeValue(params) as Record<string, string> : {};
 
   const entry: MethodEntry = {
     name: nameValue,
     returns: returnsValue,
     description: descValue ?? "",
+    params: paramsValue,
   };
 
   appendStateValue<MethodEntry>(context, StateKeys.methods, target, entry);

@@ -136,6 +136,7 @@ export function lowerType(
     typeName: node.typeName,
     base: node.base,
     isAbstract: node.isAbstract,
+    isProtocol: node.isProtocol,
     description: node.description,
     fields,
     coercionProperty,
@@ -392,6 +393,7 @@ function lowerMethods(node: TypeNode): MethodStubDecl[] {
     name: m.name,
     returns: m.returns,
     description: m.description,
+    params: m.params || {},
   }));
 }
 
@@ -495,9 +497,40 @@ function resolveImports(
         addImport(ref.name);
       }
     }
+
+    // Protocol method type references (param types and return types)
+    for (const method of type.methods) {
+      for (const typeName of extractMethodTypeRefs(method)) {
+        addImport(typeName);
+      }
+    }
   }
 
   return Array.from(importMap.entries())
     .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
     .sort((a, b) => a.module.localeCompare(b.module));
+}
+
+/**
+ * Extract type names referenced in method parameter types and return type.
+ * Handles formats like "Prompty", "Message[]", "Record<unknown>", "string", "unknown".
+ */
+function extractMethodTypeRefs(method: MethodStubDecl): string[] {
+  const SCALARS = new Set(["string", "int32", "float32", "float64", "boolean", "unknown"]);
+  const refs: string[] = [];
+
+  const extract = (typeStr: string) => {
+    // Strip array suffix: "Message[]" → "Message"
+    const base = typeStr.replace(/\[\]$/, "");
+    // Skip scalars, Record<>, and generic types
+    if (SCALARS.has(base) || base.startsWith("Record<")) return;
+    refs.push(base);
+  };
+
+  extract(method.returns);
+  for (const pType of Object.values(method.params)) {
+    extract(pType);
+  }
+
+  return refs;
 }

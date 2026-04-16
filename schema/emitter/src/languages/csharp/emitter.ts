@@ -82,6 +82,11 @@ export function emitCSharpClass(
 ): string {
   const lines: string[] = [];
 
+  // Protocol types → emit as interface
+  if (type.isProtocol) {
+    return emitCSharpInterface(type, namespace, lines);
+  }
+
   // Header
   emitHeader(lines, namespace);
 
@@ -118,6 +123,60 @@ export function emitCSharpClass(
 
   // Close class
   lines.push("}");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+// ============================================================================
+// Protocol interface emission
+// ============================================================================
+
+/** Map a protocol type string to a C# type. */
+function protocolCSharpType(typeStr: string): string {
+  // Handle array types
+  if (typeStr.endsWith("[]")) {
+    const inner = typeStr.slice(0, -2);
+    return `List<${protocolCSharpType(inner)}>`;
+  }
+  if (typeStr === "Record<unknown>" || typeStr === "dictionary") return "IDictionary<string, object>";
+  if (typeStr === "unknown" || typeStr === "any") return "object";
+  return CSHARP_TYPE_MAP[typeStr] || typeStr;
+}
+
+/**
+ * Emit a C# interface for a protocol type.
+ */
+function emitCSharpInterface(type: TypeDecl, namespace: string, lines: string[]): string {
+  const name = type.typeName.name;
+
+  // Header (simplified — no YAML/JSON imports needed for interfaces)
+  lines.push("// Copyright (c) Microsoft. All rights reserved.");
+  lines.push("");
+  lines.push("#pragma warning disable IDE0130");
+  lines.push(`namespace ${namespace};`);
+  lines.push("#pragma warning restore IDE0130");
+  lines.push("");
+
+  // XML doc
+  if (type.description) {
+    emitXmlDocComment(type.description, "    ", lines);
+  }
+  lines.push(`    public interface I${name}`);
+  lines.push("    {");
+
+  for (const method of type.methods) {
+    if (method.description) {
+      emitXmlDocComment(method.description, "        ", lines);
+    }
+    const params = Object.entries(method.params)
+      .map(([pName, pType]) => `${protocolCSharpType(pType)} ${pName}`)
+      .join(", ");
+    const ret = protocolCSharpType(method.returns);
+    lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params});`);
+  }
+
+  lines.push("    }");
   lines.push("");
 
   return lines.join("\n");
@@ -700,8 +759,6 @@ function emitToWireMethod(type: TypeDecl, lines: string[]): void {
     "            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))",
   );
   lines.push("                result[wireName] = value;");
-  lines.push("            else");
-  lines.push("                result[key] = value;");
   lines.push("        }");
   lines.push("        return result;");
   lines.push("    }");

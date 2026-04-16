@@ -1,8 +1,7 @@
 # Prompty LoadContext
 import json
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable, Optional
 
 import yaml
 
@@ -16,10 +15,10 @@ class LoadContext:
     post-processing output data after instantiation.
     """
 
-    pre_process: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    pre_process: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
     """Optional callback to transform input data before parsing."""
 
-    post_process: Callable[[Any], Any] | None = None
+    post_process: Optional[Callable[[Any], Any]] = None
     """Optional callback to transform the result after instantiation."""
 
     def process_input(self, data: dict[str, Any]) -> dict[str, Any]:
@@ -60,10 +59,10 @@ class SaveContext:
     post-processing the dictionary after serialization.
     """
 
-    pre_save: Callable[[Any], Any] | None = None
+    pre_save: Optional[Callable[[Any], Any]] = None
     """Optional callback to transform the object before serialization."""
 
-    post_save: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    post_save: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
     """Optional callback to transform the dictionary after serialization."""
 
     collection_format: str = "object"

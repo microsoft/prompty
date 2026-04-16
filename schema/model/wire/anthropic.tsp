@@ -10,6 +10,8 @@ using Prompty;
 // ============================================================================
 
 // ModelOptions → Anthropic parameter names
+// Identity mappings included so strict toWire() knows which fields Anthropic supports
+@@knownAs(ModelOptions.temperature, "anthropic", "temperature");
 @@knownAs(ModelOptions.maxOutputTokens, "anthropic", "max_tokens");
 @@knownAs(ModelOptions.topK, "anthropic", "top_k");
 @@knownAs(ModelOptions.topP, "anthropic", "top_p");

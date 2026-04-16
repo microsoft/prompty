@@ -58,10 +58,11 @@ export const generateTypeScript = async (
     await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.ts`, code, emitTarget["output-dir"]);
   }
 
-  // Emit test files for all types
+  // Emit test files for all types (skip protocols — they have no data to test)
   if (emitTarget["test-dir"]) {
     const importPath = emitTarget["import-path"] || "../src/index";
     for (const n of nodes) {
+      if (n.isProtocol) continue;
       const testContext = buildTestContext(n);
       const testCode = emitTypeScriptTest({
         ...testContext,

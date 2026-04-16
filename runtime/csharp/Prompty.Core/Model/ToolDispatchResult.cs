@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// The result of dispatching a single tool call. Pairs the tool call
-/// 
-/// identifier with the tool's name and result for correlation in the
-/// 
-/// agent loop's message assembly.
-/// </summary>
+    /// <summary>
+    /// The result of dispatching a single tool call. Pairs the tool call
+    /// 
+    /// identifier with the tool's name and result for correlation in the
+    /// 
+    /// agent loop's message assembly.
+    /// </summary>
 public partial class ToolDispatchResult
 {
     /// <summary>

@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import CompactionConfig
-
 
 def test_load_json_compactionconfig():
     json_data = r'''

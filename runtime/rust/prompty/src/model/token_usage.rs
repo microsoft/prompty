@@ -88,10 +88,8 @@ impl TokenUsage {
                 if let Some(mapping) = wire_map.get(key.as_str()) {
                     if let Some(wire_name) = mapping.get(provider) {
                         result.insert(wire_name.to_string(), value);
-                        continue;
                     }
                 }
-                result.insert(key, value);
             }
         }
         serde_json::Value::Object(result)

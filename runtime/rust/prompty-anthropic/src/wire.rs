@@ -193,41 +193,48 @@ fn part_to_wire(part: &ContentPart) -> Value {
 // Options
 // ---------------------------------------------------------------------------
 
+/// Fix f32 precision artifacts in a JSON value.
+/// serde_json serializes f32 via f64, causing 0.1 → 0.10000000149011612.
+/// Round-trip through f32 display to get a clean decimal representation.
+fn fix_f32_value(v: Value) -> Value {
+    if v.is_f64() {
+        if let Some(f) = v.as_f64() {
+            let s = format!("{}", f as f32);
+            let clean: f64 = s.parse().unwrap_or(f);
+            return json!(clean);
+        }
+    }
+    v
+}
+
 /// Apply model options to the request body.
 fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
     if let Some(opts) = &agent.model.options {
-        if let Some(v) = opts.temperature {
-            body.insert("temperature".into(), f32_to_json(v));
+        let wire = opts.to_wire("anthropic");
+        if let Value::Object(map) = wire {
+            for (k, v) in map {
+                if k == "max_tokens" {
+                    max_tokens = v.as_i64().unwrap_or(DEFAULT_MAX_TOKENS);
+                } else {
+                    body.insert(k, fix_f32_value(v));
+                }
+            }
         }
-        if let Some(v) = opts.top_p {
-            body.insert("top_p".into(), f32_to_json(v));
-        }
-        if let Some(v) = opts.top_k {
-            body.insert("top_k".into(), json!(v));
-        }
-        if let Some(v) = opts.max_output_tokens {
-            max_tokens = v as i64;
-        }
-        if let Some(ref seqs) = opts.stop_sequences {
-            body.insert("stop_sequences".into(), json!(seqs));
-        }
-        if let Some(v) = opts.seed {
-            body.insert("seed".into(), json!(v));
+
+        // additionalProperties — merge any extra keys
+        if let Some(map) = opts.additional_properties.as_object() {
+            for (k, v) in map {
+                if !body.contains_key(k) {
+                    body.insert(k.clone(), v.clone());
+                }
+            }
         }
     }
 
     // max_tokens is always required for Anthropic
     body.insert("max_tokens".into(), json!(max_tokens));
-}
-
-/// Convert f32 to JSON Value without precision artifacts.
-/// f32 0.1 → "0.1" not "0.10000000149011612"
-fn f32_to_json(v: f32) -> Value {
-    let s = format!("{}", v);
-    let f: f64 = s.parse().unwrap_or(v as f64);
-    json!(f)
 }
 
 // ---------------------------------------------------------------------------

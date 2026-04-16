@@ -94,8 +94,9 @@ export class TokenUsage {
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];
-      const wireName = mapping?.[provider] ?? key;
-      result[wireName] = value;
+      if (mapping?.[provider]) {
+        result[mapping[provider]] = value;
+      }
     }
     return result;
   }

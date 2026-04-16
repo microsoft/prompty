@@ -23,9 +23,7 @@ describe("McpTool", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("mcp");
       expect(instance.serverName).toEqual("My MCP Server");
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -46,9 +44,7 @@ describe("McpTool", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("mcp");
       expect(instance.serverName).toEqual("My MCP Server");
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip YAML - example 1", () => {

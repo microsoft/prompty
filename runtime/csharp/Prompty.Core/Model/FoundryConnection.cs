@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Connection configuration for Microsoft Foundry projects.
-/// 
-/// Provides project-scoped access to models, tools, and services
-/// 
-/// via Entra ID (DefaultAzureCredential) authentication.
-/// </summary>
+    /// <summary>
+    /// Connection configuration for Microsoft Foundry projects.
+    /// 
+    /// Provides project-scoped access to models, tools, and services
+    /// 
+    /// via Entra ID (DefaultAzureCredential) authentication.
+    /// </summary>
 public partial class FoundryConnection : Connection
 {
     /// <summary>

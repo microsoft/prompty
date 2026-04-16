@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import TokenEventPayload
-
 
 def test_load_json_tokeneventpayload():
     json_data = r'''

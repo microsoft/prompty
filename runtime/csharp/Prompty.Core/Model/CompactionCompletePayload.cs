@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "compaction_complete" events — context compaction finished.
-/// </summary>
+    /// <summary>
+    /// Payload for "compaction_complete" events — context compaction finished.
+    /// </summary>
 public partial class CompactionCompletePayload
 {
     /// <summary>

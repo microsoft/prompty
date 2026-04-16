@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Tracks token consumption for a single LLM call. Provider-specific field
-/// 
-/// names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`)
-/// 
-/// are mapped via `knownAs` augments in the wire directory.
-/// </summary>
+    /// <summary>
+    /// Tracks token consumption for a single LLM call. Provider-specific field
+    /// 
+    /// names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`)
+    /// 
+    /// are mapped via `knownAs` augments in the wire directory.
+    /// </summary>
 public partial class TokenUsage
 {
     /// <summary>
@@ -155,8 +155,6 @@ public partial class TokenUsage
         {
             if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
                 result[wireName] = value;
-            else
-                result[key] = value;
         }
         return result;
     }

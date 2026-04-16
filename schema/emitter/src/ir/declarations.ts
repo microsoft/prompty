@@ -91,6 +91,8 @@ export interface TypeDecl {
   base: TypeName | null;
   /** Whether this type is abstract (Python: ABC, C#: abstract, TS: abstract) */
   isAbstract: boolean;
+  /** Whether this type is a protocol interface (Python: Protocol, TS: interface, Rust: trait, C#: interface, Go: interface) */
+  isProtocol: boolean;
   /** Human-readable description for docstrings/comments */
   description: string;
   /** All fields defined on this type */
@@ -326,6 +328,7 @@ export interface FactoryDecl {
 /**
  * A method stub to be implemented in an extension module.
  * Generated as comments/trait stubs pointing users to implement these.
+ * For protocol types, generates full interface method signatures.
  */
 export interface MethodStubDecl {
   /** Method name */
@@ -334,6 +337,8 @@ export interface MethodStubDecl {
   returns: string;
   /** Human-readable description */
   description: string;
+  /** Method parameters as ordered map of name → type string */
+  params: Record<string, string>;
 }
 
 // ============================================================================

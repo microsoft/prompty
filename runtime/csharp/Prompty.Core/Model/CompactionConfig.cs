@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Configuration for context window compaction. When the message history
-/// 
-/// exceeds the context budget, the compaction strategy is applied to
-/// 
-/// reduce the message list while preserving essential information.
-/// </summary>
+    /// <summary>
+    /// Configuration for context window compaction. When the message history
+    /// 
+    /// exceeds the context budget, the compaction strategy is applied to
+    /// 
+    /// reduce the message list while preserving essential information.
+    /// </summary>
 public partial class CompactionConfig
 {
     /// <summary>

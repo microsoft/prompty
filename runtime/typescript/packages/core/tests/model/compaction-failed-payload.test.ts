@@ -21,9 +21,7 @@ describe("CompactionFailedPayload", () => {
       const json = `{\n  "message": "Summarization prompt exceeded context window"\n}`;
       const instance = CompactionFailedPayload.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual(
-        "Summarization prompt exceeded context window",
-      );
+      expect(instance.message).toEqual("Summarization prompt exceeded context window");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -40,9 +38,7 @@ describe("CompactionFailedPayload", () => {
       const yaml = `message: Summarization prompt exceeded context window\n`;
       const instance = CompactionFailedPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual(
-        "Summarization prompt exceeded context window",
-      );
+      expect(instance.message).toEqual("Summarization prompt exceeded context window");
     });
 
     it("should round-trip YAML - example 1", () => {

@@ -6,17 +6,17 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Configuration for the agent loop's turn() function. Controls iteration
-/// 
-/// limits, retry policy, context management, and execution behavior.
-/// 
-/// Runtimes accept these as either a TurnOptions object or individual
-/// 
-/// keyword/named parameters — the TypeSpec model defines the canonical
-/// 
-/// field set.
-/// </summary>
+    /// <summary>
+    /// Configuration for the agent loop's turn() function. Controls iteration
+    /// 
+    /// limits, retry policy, context management, and execution behavior.
+    /// 
+    /// Runtimes accept these as either a TurnOptions object or individual
+    /// 
+    /// keyword/named parameters — the TypeSpec model defines the canonical
+    /// 
+    /// field set.
+    /// </summary>
 public partial class TurnOptions
 {
     /// <summary>

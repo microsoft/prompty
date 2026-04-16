@@ -296,6 +296,14 @@ classDiagram
         +int32 completionTokens
         +int32 totalTokens
     }
+    class Renderer {
+    }
+    class Parser {
+    }
+    class Executor {
+    }
+    class Processor {
+    }
     Property <|-- ArrayProperty
     Property <|-- ObjectProperty
     Connection <|-- ReferenceConnection

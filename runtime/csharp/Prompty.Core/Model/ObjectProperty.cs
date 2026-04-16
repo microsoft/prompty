@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Represents an object property.
-/// 
-/// This extends the base Property model to represent a structured object.
-/// </summary>
+    /// <summary>
+    /// Represents an object property.
+    /// 
+    /// This extends the base Property model to represent a structured object.
+    /// </summary>
 public partial class ObjectProperty : Property
 {
     /// <summary>

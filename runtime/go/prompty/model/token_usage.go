@@ -100,10 +100,8 @@ func (obj *TokenUsage) ToWire(provider string) map[string]interface{} {
 		if mapping, ok := wireMap[key]; ok {
 			if wireName, ok := mapping[provider]; ok {
 				result[wireName] = value
-				continue
 			}
 		}
-		result[key] = value
 	}
 	return result
 }

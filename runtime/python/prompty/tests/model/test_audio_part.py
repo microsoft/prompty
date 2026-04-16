@@ -1,9 +1,7 @@
 import json
-
 import yaml
 
 from prompty.model import AudioPart
-
 
 def test_load_json_audiopart():
     json_data = r'''

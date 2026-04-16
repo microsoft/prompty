@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-/// <summary>
-/// Payload for "status" events — informational messages about loop progress.
-/// </summary>
+    /// <summary>
+    /// Payload for "status" events — informational messages about loop progress.
+    /// </summary>
 public partial class StatusEventPayload
 {
     /// <summary>
