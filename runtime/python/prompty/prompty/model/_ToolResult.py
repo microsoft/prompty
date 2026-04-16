@@ -71,9 +71,7 @@ class ToolResult:
         return [ContentPart.load(item, context) for item in data]
 
     @staticmethod
-    def save_parts(
-        items: list[ContentPart], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_parts(items: list[ContentPart], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 

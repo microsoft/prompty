@@ -18,10 +18,7 @@ def test_load_json_foundryconnection():
     instance = FoundryConnection.load(data)
     assert instance is not None
     assert instance.kind == "foundry"
-    assert (
-        instance.endpoint
-        == "https://myresource.services.ai.azure.com/api/projects/myproject"
-    )
+    assert instance.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert instance.name == "my-openai-connection"
     assert instance.connection_type == "model"
 
@@ -38,10 +35,7 @@ def test_load_yaml_foundryconnection():
     instance = FoundryConnection.load(data)
     assert instance is not None
     assert instance.kind == "foundry"
-    assert (
-        instance.endpoint
-        == "https://myresource.services.ai.azure.com/api/projects/myproject"
-    )
+    assert instance.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert instance.name == "my-openai-connection"
     assert instance.connection_type == "model"
 
@@ -62,10 +56,7 @@ def test_roundtrip_json_foundryconnection():
     reloaded = FoundryConnection.load(saved_data)
     assert reloaded is not None
     assert reloaded.kind == "foundry"
-    assert (
-        reloaded.endpoint
-        == "https://myresource.services.ai.azure.com/api/projects/myproject"
-    )
+    assert reloaded.endpoint == "https://myresource.services.ai.azure.com/api/projects/myproject"
     assert reloaded.name == "my-openai-connection"
     assert reloaded.connection_type == "model"
 

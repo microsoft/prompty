@@ -28,9 +28,7 @@ class CompactionCompletePayload:
     remaining: int = field(default=0)
 
     @staticmethod
-    def load(
-        data: Any, context: LoadContext | None = None
-    ) -> "CompactionCompletePayload":
+    def load(data: Any, context: LoadContext | None = None) -> "CompactionCompletePayload":
         """Load a CompactionCompletePayload instance.
         Args:
             data (Any): The data to load the instance from.

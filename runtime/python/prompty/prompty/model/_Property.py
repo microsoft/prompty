@@ -325,17 +325,13 @@ class ObjectProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "properties" in data:
-            instance.properties = ObjectProperty.load_properties(
-                data["properties"], context
-            )
+            instance.properties = ObjectProperty.load_properties(data["properties"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
-    def load_properties(
-        data: dict | list, context: LoadContext | None
-    ) -> list[Property]:
+    def load_properties(data: dict | list, context: LoadContext | None) -> list[Property]:
         if isinstance(data, dict):
             # convert simple named properties to list of Property
             result = []
@@ -350,9 +346,7 @@ class ObjectProperty(Property):
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_properties(
-        items: list[Property], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_properties(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -377,9 +371,7 @@ class ObjectProperty(Property):
         if obj.kind is not None:
             result["kind"] = obj.kind
         if obj.properties is not None:
-            result["properties"] = ObjectProperty.save_properties(
-                obj.properties, context
-            )
+            result["properties"] = ObjectProperty.save_properties(obj.properties, context)
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

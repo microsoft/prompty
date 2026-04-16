@@ -16,8 +16,6 @@ class Renderer(Protocol):
         """Render the template string with input values"""
         ...
 
-    async def render_async(
-        self, agent: Prompty, template: str, inputs: dict[str, Any]
-    ) -> str:
+    async def render_async(self, agent: Prompty, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values (async variant)"""
         ...

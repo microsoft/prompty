@@ -68,11 +68,8 @@ class StreamChunk(ABC):
                 return ErrorChunk.load(data, context)
 
             else:
-                raise ValueError(
-                    f"Unknown StreamChunk discriminator value: {discriminator_value}"
-                )
+                raise ValueError(f"Unknown StreamChunk discriminator value: {discriminator_value}")
         else:
-
             raise ValueError("Missing StreamChunk discriminator property: 'kind'")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

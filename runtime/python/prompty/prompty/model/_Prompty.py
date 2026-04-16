@@ -120,9 +120,7 @@ class Prompty:
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_inputs(
-        items: list[Property], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -138,11 +136,7 @@ class Prompty:
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if (
-                        shorthand_prop
-                        and len(item_data) == 1
-                        and shorthand_prop in item_data
-                    ):
+                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data
@@ -169,9 +163,7 @@ class Prompty:
         return [Property.load(item, context) for item in data]
 
     @staticmethod
-    def save_outputs(
-        items: list[Property], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_outputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -194,9 +186,7 @@ class Prompty:
         return [Tool.load(item, context) for item in data]
 
     @staticmethod
-    def save_tools(
-        items: list[Tool], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tools(items: list[Tool], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -212,11 +202,7 @@ class Prompty:
                 # Check if we can use shorthand (only primary property set)
                 if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
-                    if (
-                        shorthand_prop
-                        and len(item_data) == 1
-                        and shorthand_prop in item_data
-                    ):
+                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
                         continue
                 result[name] = item_data

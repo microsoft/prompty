@@ -25,10 +25,7 @@ def test_load_json_oauthconnection():
     assert instance.endpoint == "https://api.example.com"
     assert instance.client_id == "your-client-id"
     assert instance.client_secret == "your-client-secret"
-    assert (
-        instance.token_url
-        == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-    )
+    assert instance.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
 
 def test_load_yaml_oauthconnection():
@@ -49,10 +46,7 @@ def test_load_yaml_oauthconnection():
     assert instance.endpoint == "https://api.example.com"
     assert instance.client_id == "your-client-id"
     assert instance.client_secret == "your-client-secret"
-    assert (
-        instance.token_url
-        == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-    )
+    assert instance.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
 
 def test_roundtrip_json_oauthconnection():
@@ -78,10 +72,7 @@ def test_roundtrip_json_oauthconnection():
     assert reloaded.endpoint == "https://api.example.com"
     assert reloaded.client_id == "your-client-id"
     assert reloaded.client_secret == "your-client-secret"
-    assert (
-        reloaded.token_url
-        == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-    )
+    assert reloaded.token_url == "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
 
 def test_to_json_oauthconnection():

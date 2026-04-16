@@ -128,8 +128,9 @@ export const generatePython = async (
 };
 
 /**
- * Format Python files using ruff and black formatters.
+ * Format Python files using ruff linter and formatter.
  * Runs formatters via uv from the Python project root (where pyproject.toml is located).
+ * CI enforces `ruff check` and `ruff format --check`, so both must pass.
  */
 function formatPythonFiles(outputDir: string, testDir?: string): void {
   // Find the Python project root by looking for pyproject.toml
@@ -142,7 +143,7 @@ function formatPythonFiles(outputDir: string, testDir?: string): void {
   const dirs = [outputDir, ...(testDir ? [testDir] : [])];
 
   for (const dir of dirs) {
-    // Run ruff check with auto-fix — use execFileSync to avoid shell injection
+    // Run ruff check with auto-fix (linting)
     try {
       execFileSync("uv", ["run", "ruff", "check", "--fix", dir], {
         cwd: projectRoot,
@@ -150,18 +151,18 @@ function formatPythonFiles(outputDir: string, testDir?: string): void {
         encoding: 'utf-8'
       });
     } catch (error) {
-      console.warn(`Warning: ruff formatting failed for ${dir}. You may need to install ruff or run it manually.`);
+      console.warn(`Warning: ruff check failed for ${dir}. You may need to install ruff or run it manually.`);
     }
 
-    // Run black formatter
+    // Run ruff format (formatting — matches CI's `ruff format --check`)
     try {
-      execFileSync("uv", ["run", "black", dir], {
+      execFileSync("uv", ["run", "ruff", "format", dir], {
         cwd: projectRoot,
         stdio: 'pipe',
         encoding: 'utf-8'
       });
     } catch (error) {
-      console.warn(`Warning: black formatting failed for ${dir}. You may need to install black or run it manually.`);
+      console.warn(`Warning: ruff format failed for ${dir}. You may need to install ruff or run it manually.`);
     }
   }
 }

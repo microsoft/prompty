@@ -25,9 +25,7 @@ class CompactionFailedPayload:
     message: str = field(default="")
 
     @staticmethod
-    def load(
-        data: Any, context: LoadContext | None = None
-    ) -> "CompactionFailedPayload":
+    def load(data: Any, context: LoadContext | None = None) -> "CompactionFailedPayload":
         """Load a CompactionFailedPayload instance.
         Args:
             data (Any): The data to load the instance from.

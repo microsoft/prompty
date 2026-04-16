@@ -67,11 +67,8 @@ class ContentPart(ABC):
                 return AudioPart.load(data, context)
 
             else:
-                raise ValueError(
-                    f"Unknown ContentPart discriminator value: {discriminator_value}"
-                )
+                raise ValueError(f"Unknown ContentPart discriminator value: {discriminator_value}")
         else:
-
             raise ValueError("Missing ContentPart discriminator property: 'kind'")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
