@@ -94,3 +94,18 @@ func GuardrailResultFromYAML(yamlStr string) (GuardrailResult, error) {
 	ctx := NewLoadContext()
 	return LoadGuardrailResult(data, ctx)
 }
+
+// NewRewriteGuardrailResult creates a GuardrailResult with preset field values.
+func NewRewriteGuardrailResult(rewrite interface{}) GuardrailResult {
+	return GuardrailResult{Allowed: true, Rewrite: ptrOf(rewrite)}
+}
+
+// NewDenyGuardrailResult creates a GuardrailResult with preset field values.
+func NewDenyGuardrailResult(reason string) GuardrailResult {
+	return GuardrailResult{Allowed: false, Reason: ptrOf(reason)}
+}
+
+// NewAllowGuardrailResult creates a GuardrailResult with preset field values.
+func NewAllowGuardrailResult() GuardrailResult {
+	return GuardrailResult{Allowed: true}
+}

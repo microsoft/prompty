@@ -54,6 +54,12 @@ export function emitGoContext(ctx: GoContextContext): string {
   lines.push("\treturn &SaveContext{}");
   lines.push("}");
   lines.push("");
+  lines.push("// ptrOf returns a pointer to the given value. Used by factory functions");
+  lines.push("// to set optional (pointer) fields in struct literals.");
+  lines.push("func ptrOf[T any](v T) *T {");
+  lines.push("\treturn &v");
+  lines.push("}");
+  lines.push("");
 
   return lines.join("\n");
 }

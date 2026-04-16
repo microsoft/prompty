@@ -115,3 +115,25 @@ func MessageFromYAML(yamlStr string) (Message, error) {
 	ctx := NewLoadContext()
 	return LoadMessage(data, ctx)
 }
+
+// NewAssistantMessage creates a Message with preset field values.
+func NewAssistantMessage(text string) Message {
+	return Message{Role: "assistant", Parts: []interface{}{TextPart{Kind: "text", Value: text}}}
+}
+
+// NewSystemMessage creates a Message with preset field values.
+func NewSystemMessage(text string) Message {
+	return Message{Role: "system", Parts: []interface{}{TextPart{Kind: "text", Value: text}}}
+}
+
+// NewUserMessage creates a Message with preset field values.
+func NewUserMessage(text string) Message {
+	return Message{Role: "user", Parts: []interface{}{TextPart{Kind: "text", Value: text}}}
+}
+
+// MessageHelpers defines helper methods for Message.
+// Implement these in a separate file (e.g., message_helpers.go).
+type MessageHelpers interface {
+	// Text — Concatenate all TextPart values joined by newline
+	Text() string
+}

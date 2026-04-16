@@ -104,3 +104,15 @@ func ToolResultFromYAML(yamlStr string) (ToolResult, error) {
 	ctx := NewLoadContext()
 	return LoadToolResult(data, ctx)
 }
+
+// NewTextToolResult creates a ToolResult with preset field values.
+func NewTextToolResult(value string) ToolResult {
+	return ToolResult{Parts: []interface{}{TextPart{Kind: "text", Value: value}}}
+}
+
+// ToolResultHelpers defines helper methods for ToolResult.
+// Implement these in a separate file (e.g., toolresult_helpers.go).
+type ToolResultHelpers interface {
+	// Text — Concatenate all TextPart values joined by newline
+	Text() string
+}

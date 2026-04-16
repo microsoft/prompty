@@ -873,8 +873,8 @@ describe("Integration: nested factory — ToolResult.text(val)", () => {
       toolResult,
       registry,
     );
-    const code = new GoExprVisitor().visitExpr(expr);
-    assert.equal(code, "ToolResult{ Parts: []ContentPart{TextPart{ Value: val }} }");
+    const code = new GoExprVisitor(registry).visitExpr(expr);
+    assert.equal(code, 'ToolResult{ Parts: []interface{}{TextPart{ Kind: "text", Value: val }} }');
   });
 });
 
@@ -931,11 +931,11 @@ describe("Integration: Message.user(text) nested factory", () => {
       typescript: 'new Message({ role: "user", parts: [new TextPart({ value: text })] })',
       python: 'Message(role="user", parts=[TextPart(value=text)])',
       csharp: 'new Message { Role = "user", Parts = new List<ContentPart> { new TextPart { Value = text } } }',
-      go: 'Message{ Role: "user", Parts: []ContentPart{TextPart{ Value: text }} }',
+      go: 'Message{ Role: "user", Parts: []interface{}{TextPart{ Kind: "text", Value: text }} }',
     };
 
     for (const [lang, expectedCode] of Object.entries(expected)) {
-      const code = getVisitor(lang).visitExpr(expr);
+      const code = getVisitor(lang, registry).visitExpr(expr);
       assert.equal(code, expectedCode, `${lang} output mismatch`);
     }
   });

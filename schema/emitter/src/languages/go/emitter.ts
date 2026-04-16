@@ -28,6 +28,8 @@ import {
   CoercionDecl,
   CoercionAssignment,
   PropertyCategory,
+  FactoryDecl,
+  MethodStubDecl,
 } from "../../ir/declarations.js";
 import { ExprVisitor, toPascalCase } from "../../ir/visitor.js";
 
@@ -82,7 +84,7 @@ export function emitGoFileContent(
 
   // Emit each type in the hierarchy
   for (const type of types) {
-    emitTypeBlock(type, lines, polymorphicTypeNames);
+    emitTypeBlock(type, lines, visitor, polymorphicTypeNames);
   }
 
   return lines.join("\n");
@@ -112,6 +114,7 @@ function emitHeader(lines: string[], packageName: string): void {
 function emitTypeBlock(
   type: TypeDecl,
   lines: string[],
+  visitor: ExprVisitor,
   polymorphicTypeNames: Set<string>,
 ): void {
   const typeName = type.typeName.name;
@@ -140,6 +143,18 @@ function emitTypeBlock(
 
   // FromYAML function
   emitFromYAML(typeName, isPolymorphicBase, lines);
+
+  // Factory functions
+  if (type.factories.length > 0) {
+    for (const factory of type.factories) {
+      emitFactoryFunction(typeName, factory, visitor, lines);
+    }
+  }
+
+  // Method stubs
+  if (type.methods.length > 0) {
+    emitMethodStubs(typeName, type.methods, lines);
+  }
 }
 
 // ============================================================================
@@ -853,4 +868,85 @@ function getStructTag(fieldName: string, isOptional: boolean): string {
   const jsonTag = isOptional ? `${fieldName},omitempty` : fieldName;
   const yamlTag = isOptional ? `${fieldName},omitempty` : fieldName;
   return `\`json:"${jsonTag}" yaml:"${yamlTag}"\``;
+}
+
+// ============================================================================
+// Factory functions
+// ============================================================================
+
+/** Emit a package-level factory function that creates a pre-populated struct. */
+function emitFactoryFunction(
+  typeName: string,
+  factory: FactoryDecl,
+  visitor: ExprVisitor,
+  lines: string[],
+): void {
+  const funcName = getGoFactoryName(factory.name, typeName);
+  const params = Object.entries(factory.params)
+    .map(([pName, pType]) => `${pName} ${goFactoryParamType(pType)}`)
+    .join(", ");
+
+  lines.push(`// ${funcName} creates a ${typeName} with preset field values.`);
+  lines.push(`func ${funcName}(${params}) ${typeName} {`);
+  lines.push(`\treturn ${visitor.visitExpr(factory.body)}`);
+  lines.push("}");
+  lines.push("");
+}
+
+/** Map factory name to an exported Go function name, prefixed with the type for disambiguation. */
+function getGoFactoryName(factoryName: string, typeName: string): string {
+  // Go factories are package-level functions, so prefix with type name to avoid collisions.
+  // e.g., Message.user → NewUserMessage, GuardrailResult.allow → NewAllowGuardrailResult
+  const capitalizedFactory = factoryName.charAt(0).toUpperCase() + factoryName.slice(1);
+  return `New${capitalizedFactory}${typeName}`;
+}
+
+/** Map IR type strings to Go parameter types. */
+function goFactoryParamType(typeStr: string): string {
+  switch (typeStr) {
+    case "string":
+      return "string";
+    case "boolean":
+      return "bool";
+    case "int32":
+      return "int32";
+    case "int64":
+    case "integer":
+      return "int64";
+    case "float32":
+      return "float32";
+    case "float64":
+    case "float":
+      return "float64";
+    case "unknown":
+    case "any":
+      return "interface{}";
+    default:
+      return typeStr;
+  }
+}
+
+// ============================================================================
+// Method stubs
+// ============================================================================
+
+/** Emit Go interface + comment stubs for @method-decorated helpers. */
+function emitMethodStubs(typeName: string, methods: MethodStubDecl[], lines: string[]): void {
+  // Emit an interface that the user implements in a separate file.
+  const interfaceName = `${typeName}Helpers`;
+  lines.push(`// ${interfaceName} defines helper methods for ${typeName}.`);
+  lines.push(`// Implement these in a separate file (e.g., ${typeName.toLowerCase()}_helpers.go).`);
+  lines.push(`type ${interfaceName} interface {`);
+  for (const method of methods) {
+    if (method.description) {
+      lines.push(`\t// ${toPascalCase(method.name)} — ${method.description}`);
+    }
+    lines.push(`\t${toPascalCase(method.name)}() ${goMethodReturnType(method.returns)}`);
+  }
+  lines.push("}");
+  lines.push("");
+}
+
+function goMethodReturnType(returns: string): string {
+  return GO_TYPE_MAP[returns] || returns;
 }
