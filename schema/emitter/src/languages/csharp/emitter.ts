@@ -139,8 +139,13 @@ function protocolCSharpType(typeStr: string): string {
     const inner = typeStr.slice(0, -2);
     return `List<${protocolCSharpType(inner)}>`;
   }
-  if (typeStr === "Record<unknown>" || typeStr === "dictionary") return "IDictionary<string, object>";
+  if (typeStr === "Record<unknown>" || typeStr === "dictionary") return "Dictionary<string, object?>";
   if (typeStr === "unknown" || typeStr === "any") return "object";
+  // Handle nullable types (e.g., "string?")
+  if (typeStr.endsWith("?")) {
+    const inner = typeStr.slice(0, -1);
+    return `${protocolCSharpType(inner)}?`;
+  }
   return CSHARP_TYPE_MAP[typeStr] || typeStr;
 }
 

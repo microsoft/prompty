@@ -10,9 +10,9 @@ from typing import Any, ClassVar
 
 from ._Binding import Binding
 from ._Connection import Connection
+from ._context import LoadContext, SaveContext
 from ._McpApprovalMode import McpApprovalMode
 from ._Property import Property
-from ._context import LoadContext, SaveContext
 
 
 @dataclass

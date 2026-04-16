@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import McpApprovalMode
+
 
 def test_load_json_mcpapprovalmode():
     json_data = r'''

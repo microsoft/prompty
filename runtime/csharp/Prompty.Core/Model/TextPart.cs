@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// A text content part.
-    /// </summary>
+/// <summary>
+/// A text content part.
+/// </summary>
 public partial class TextPart : ContentPart
 {
     /// <summary>

@@ -7,11 +7,11 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
+from ._context import LoadContext, SaveContext
 from ._Model import Model
 from ._Property import Property
 from ._Template import Template
 from ._Tool import Tool
-from ._context import LoadContext, SaveContext
 
 
 @dataclass

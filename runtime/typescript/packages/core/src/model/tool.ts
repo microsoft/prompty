@@ -46,10 +46,7 @@ export abstract class Tool {
       instance.description = String(data["description"]);
     }
     if (data["bindings"] !== undefined && data["bindings"] !== null) {
-      instance.bindings = Tool.loadBindings(
-        data["bindings"] as unknown[],
-        context,
-      );
+      instance.bindings = Tool.loadBindings(data["bindings"] as unknown[], context);
     }
 
     if (context) {
@@ -58,10 +55,7 @@ export abstract class Tool {
     return instance;
   }
 
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Tool {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Tool {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -81,10 +75,7 @@ export abstract class Tool {
     throw new Error("Missing Tool discriminator property: 'kind'");
   }
 
-  static loadBindings(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Binding[] {
+  static loadBindings(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Binding[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -92,26 +83,21 @@ export abstract class Tool {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, input: v });
+          result.push({ name: k, "input": v });
         }
       }
       data = result;
     }
-    return data.map((item) =>
-      Binding.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Binding.load(item as Record<string, unknown>, context));
   }
 
-  static saveBindings(
-    items: Binding[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveBindings(items: Binding[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
+      return items.map(item => item.save(context));
     }
 
     // Object format: use name as key
@@ -122,14 +108,8 @@ export abstract class Tool {
       delete itemData["name"];
       if (name) {
         // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof Binding)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
+        const shorthand = (item.constructor as typeof Binding).shorthandProperty;
+        if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
           result[name] = itemData[shorthand];
           continue;
         }
@@ -218,10 +198,7 @@ export class FunctionTool extends Tool {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): FunctionTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): FunctionTool {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -232,10 +209,7 @@ export class FunctionTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["parameters"] !== undefined && data["parameters"] !== null) {
-      instance.parameters = FunctionTool.loadParameters(
-        data["parameters"] as unknown[],
-        context,
-      );
+      instance.parameters = FunctionTool.loadParameters(data["parameters"] as unknown[], context);
     }
     if (data["strict"] !== undefined && data["strict"] !== null) {
       instance.strict = Boolean(data["strict"]);
@@ -247,10 +221,7 @@ export class FunctionTool extends Tool {
     return instance;
   }
 
-  static loadParameters(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Property[] {
+  static loadParameters(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -258,26 +229,21 @@ export class FunctionTool extends Tool {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, kind: v });
+          result.push({ name: k, "kind": v });
         }
       }
       data = result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
   }
 
-  static saveParameters(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParameters(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -297,10 +263,7 @@ export class FunctionTool extends Tool {
       result["kind"] = obj.kind;
     }
     if (obj.parameters !== undefined && obj.parameters !== null) {
-      result["parameters"] = FunctionTool.saveParameters(
-        obj.parameters,
-        context,
-      );
+      result["parameters"] = FunctionTool.saveParameters(obj.parameters, context);
     }
     if (obj.strict !== undefined && obj.strict !== null) {
       result["strict"] = obj.strict;
@@ -350,10 +313,7 @@ export class CustomTool extends Tool {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): CustomTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): CustomTool {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -364,10 +324,7 @@ export class CustomTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = data["options"] as Record<string, unknown>;
@@ -469,30 +426,19 @@ export class McpTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
     if (data["serverName"] !== undefined && data["serverName"] !== null) {
       instance.serverName = String(data["serverName"]);
     }
-    if (
-      data["serverDescription"] !== undefined &&
-      data["serverDescription"] !== null
-    ) {
+    if (data["serverDescription"] !== undefined && data["serverDescription"] !== null) {
       instance.serverDescription = String(data["serverDescription"]);
     }
     if (data["approvalMode"] !== undefined && data["approvalMode"] !== null) {
-      instance.approvalMode = McpApprovalMode.load(
-        data["approvalMode"] as Record<string, unknown>,
-        context,
-      );
+      instance.approvalMode = McpApprovalMode.load(data["approvalMode"] as Record<string, unknown>, context);
     }
     if (data["allowedTools"] !== undefined && data["allowedTools"] !== null) {
-      instance.allowedTools = (data["allowedTools"] as unknown[]).map((v) =>
-        String(v),
-      );
+      instance.allowedTools = (data["allowedTools"] as unknown[]).map(v => String(v));
     }
 
     if (context) {
@@ -577,10 +523,7 @@ export class OpenApiTool extends Tool {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): OpenApiTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): OpenApiTool {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -591,10 +534,7 @@ export class OpenApiTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);
     }
     if (data["specification"] !== undefined && data["specification"] !== null) {
       instance.specification = String(data["specification"]);
@@ -671,10 +611,7 @@ export class PromptyTool extends Tool {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): PromptyTool {
+  static load(data: Record<string, unknown>, context?: LoadContext): PromptyTool {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -745,3 +682,4 @@ export class PromptyTool extends Tool {
 
   //#endregion
 }
+

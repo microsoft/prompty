@@ -6,13 +6,13 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Context passed to tool handlers during agent loop execution. Provides
-    /// 
-    /// access to the agent configuration, current conversation state, and
-    /// 
-    /// arbitrary metadata for tool implementations that need broader context.
-    /// </summary>
+/// <summary>
+/// Context passed to tool handlers during agent loop execution. Provides
+/// 
+/// access to the agent configuration, current conversation state, and
+/// 
+/// arbitrary metadata for tool implementations that need broader context.
+/// </summary>
 public partial class ToolContext
 {
     /// <summary>

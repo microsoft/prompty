@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ImagePart
+
 
 def test_load_json_imagepart():
     json_data = r'''

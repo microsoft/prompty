@@ -238,6 +238,11 @@ function emitType(type: TypeDecl, lines: string[], visitor: ExprVisitor): void {
 
 /** Map a protocol type string to a Python type annotation. */
 function protocolType(typeStr: string): string {
+  // Handle nullable types
+  if (typeStr.endsWith("?")) {
+    const inner = typeStr.slice(0, -1);
+    return `${protocolType(inner)} | None`;
+  }
   // Handle array types
   if (typeStr.endsWith("[]")) {
     const inner = typeStr.slice(0, -2);

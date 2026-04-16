@@ -8,5 +8,5 @@ type Executor interface {
 	// Execute — Call an LLM provider with messages and return the raw response
 	Execute(agent Prompty, messages []Message) (interface{}, error)
 	// FormatToolMessages — Format tool call results into messages for the next iteration
-	FormatToolMessages(rawResponse interface{}, toolCalls []ToolCall, toolResults []string, textContent string) ([]Message, error)
+	FormatToolMessages(rawResponse interface{}, toolCalls []ToolCall, toolResults []string, textContent *string) ([]Message, error)
 }

@@ -98,6 +98,10 @@ function paramType(typeStr: string): string {
 }
 
 function returnType(typeStr: string): string {
+  if (typeStr.endsWith("?")) {
+    const inner = typeStr.slice(0, -1);
+    return `${returnType(inner)} | null`;
+  }
   if (typeStr === "Record<unknown>") return "Record<string, unknown>";
   return TYPE_MAP[typeStr] || typeStr;
 }

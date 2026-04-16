@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Payload for "token" events — a single text token streamed from the LLM.
-    /// </summary>
+/// <summary>
+/// Payload for "token" events — a single text token streamed from the LLM.
+/// </summary>
 public partial class TokenEventPayload
 {
     /// <summary>

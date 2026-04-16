@@ -23,11 +23,11 @@ class Executor(Protocol):
         """Call an LLM provider with messages and return the raw response (async variant)"""
         ...
 
-    def format_tool_messages(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str) -> list[Message]:
+    def format_tool_messages(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
         ...
 
-    async def format_tool_messages_async(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str) -> list[Message]:
+    async def format_tool_messages_async(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None) -> list[Message]:
         """Format tool call results into messages for the next iteration (async variant)"""
         ...
 

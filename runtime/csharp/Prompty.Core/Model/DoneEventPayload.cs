@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Payload for "done" events — the agent loop completed successfully.
-    /// </summary>
+/// <summary>
+/// Payload for "done" events — the agent loop completed successfully.
+/// </summary>
 public partial class DoneEventPayload
 {
     /// <summary>

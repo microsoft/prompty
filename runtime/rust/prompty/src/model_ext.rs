@@ -3,7 +3,7 @@
 //! The TypeSpec emitter generates the model structs in `model/`. This module
 //! adds convenience accessors used by the pipeline and other hand-written code.
 
-use crate::model::{Property, Prompty, Tool};
+use crate::model::{ContentPartKind, Message, MessageHelpers, Property, Prompty, Tool, ToolResult, ToolResultHelpers};
 
 // ---------------------------------------------------------------------------
 // Prompty helpers
@@ -35,5 +35,39 @@ impl Prompty {
         } else {
             Some(&self.tools)
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MessageHelpers — concatenate TextPart values
+// ---------------------------------------------------------------------------
+
+impl MessageHelpers for Message {
+    fn text(&self) -> String {
+        self.parts
+            .iter()
+            .filter_map(|p| match &p.kind {
+                ContentPartKind::TextPart { value } => Some(value.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ToolResultHelpers — concatenate TextPart values
+// ---------------------------------------------------------------------------
+
+impl ToolResultHelpers for ToolResult {
+    fn text(&self) -> String {
+        self.parts
+            .iter()
+            .filter_map(|p| match &p.kind {
+                ContentPartKind::TextPart { value } => Some(value.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }

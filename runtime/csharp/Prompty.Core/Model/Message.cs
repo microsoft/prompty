@@ -6,11 +6,11 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// A message in a conversation. Messages have a role and a list of content parts
-    /// 
-    /// representing the different modalities of the message content.
-    /// </summary>
+/// <summary>
+/// A message in a conversation. Messages have a role and a list of content parts
+/// 
+/// representing the different modalities of the message content.
+/// </summary>
 public partial class Message
 {
     /// <summary>

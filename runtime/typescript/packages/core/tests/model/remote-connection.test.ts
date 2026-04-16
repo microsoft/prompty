@@ -23,9 +23,7 @@ describe("RemoteConnection", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("remote");
       expect(instance.name).toEqual("my-reference-connection");
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -46,9 +44,7 @@ describe("RemoteConnection", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("remote");
       expect(instance.name).toEqual("my-reference-connection");
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip YAML - example 1", () => {

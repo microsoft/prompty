@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ToolResult
+
 
 def test_load_json_toolresult():
     json_data = r'''

@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ToolChunk
+
 
 def test_load_json_toolchunk():
     json_data = r'''

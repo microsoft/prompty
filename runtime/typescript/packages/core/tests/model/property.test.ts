@@ -23,9 +23,7 @@ describe("Property", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("my-input");
       expect(instance.kind).toEqual("string");
-      expect(instance.description).toEqual(
-        "A description of the input property",
-      );
+      expect(instance.description).toEqual("A description of the input property");
       expect(instance.required).toEqual(true);
       expect(instance.default).toEqual("default value");
       expect(instance.example).toEqual("example value");
@@ -52,9 +50,7 @@ describe("Property", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("my-input");
       expect(instance.kind).toEqual("string");
-      expect(instance.description).toEqual(
-        "A description of the input property",
-      );
+      expect(instance.description).toEqual("A description of the input property");
       expect(instance.required).toEqual(true);
       expect(instance.default).toEqual("default value");
       expect(instance.example).toEqual("example value");
@@ -110,6 +106,7 @@ describe("Property", () => {
   });
 
   describe("load and save", () => {
+
     it("should save to dictionary", () => {
       const instance = new Property();
       const data = instance.save();

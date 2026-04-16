@@ -40,9 +40,6 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
 
   for (const n of nodes) {
-    // Skip protocol types in C# — hand-written interfaces in Interfaces.cs have
-    // evolved with different signatures. Migration is a follow-up task.
-    if (n.isProtocol) continue;
     const typeDecl = lowerType(n, registry, polyNames);
     const classCode = emitCSharpClass(typeDecl, csharpNamespace, visitor, allTypeDecls, findTypeDecl);
     await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, emitTarget["output-dir"]);

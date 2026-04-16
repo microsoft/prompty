@@ -23,12 +23,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -47,12 +43,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 2", () => {
@@ -71,12 +63,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 3", () => {
@@ -95,12 +83,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 4", () => {
@@ -119,12 +103,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 5", () => {
@@ -143,12 +123,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 6", () => {
@@ -167,12 +143,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 7", () => {
@@ -191,12 +163,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip JSON - example 8", () => {
@@ -218,12 +186,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -242,12 +206,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 2", () => {
@@ -266,12 +226,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 3", () => {
@@ -290,12 +246,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 4", () => {
@@ -314,12 +266,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 5", () => {
@@ -338,12 +286,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 6", () => {
@@ -362,12 +306,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 7", () => {
@@ -386,12 +326,8 @@ describe("Prompty", () => {
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("basic-prompt");
       expect(instance.displayName).toEqual("Basic Prompt");
-      expect(instance.description).toEqual(
-        "A basic prompt that uses the GPT-3 chat API to answer questions",
-      );
-      expect(instance.instructions).toEqual(
-        "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}",
-      );
+      expect(instance.description).toEqual("A basic prompt that uses the GPT-3 chat API to answer questions");
+      expect(instance.instructions).toEqual("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
     });
 
     it("should round-trip YAML - example 8", () => {

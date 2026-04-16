@@ -6,15 +6,15 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// The result of a tool execution. Contains a list of content parts, enabling
-    /// 
-    /// rich tool results (text, images, files, audio) rather than just strings.
-    /// 
-    /// Implementations MUST support conversion from a plain string to a ToolResult
-    /// 
-    /// containing a single TextPart for backward compatibility.
-    /// </summary>
+/// <summary>
+/// The result of a tool execution. Contains a list of content parts, enabling
+/// 
+/// rich tool results (text, images, files, audio) rather than just strings.
+/// 
+/// Implementations MUST support conversion from a plain string to a ToolResult
+/// 
+/// containing a single TextPart for backward compatibility.
+/// </summary>
 public partial class ToolResult
 {
     /// <summary>

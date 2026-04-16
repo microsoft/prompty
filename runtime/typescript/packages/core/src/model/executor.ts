@@ -14,6 +14,6 @@ export interface Executor {
     rawResponse: unknown,
     toolCalls: ToolCall[],
     toolResults: string[],
-    textContent: string,
+    textContent: string | null,
   ): Promise<Message[]>;
 }

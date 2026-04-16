@@ -1016,6 +1016,11 @@ function goMethodReturnType(returns: string): string {
 
 /** Map a protocol type string to a Go type. */
 function protocolGoType(typeStr: string): string {
+  // Handle nullable types
+  if (typeStr.endsWith("?")) {
+    const inner = typeStr.slice(0, -1);
+    return `*${protocolGoType(inner)}`;
+  }
   // Handle array types
   if (typeStr.endsWith("[]")) {
     const inner = typeStr.slice(0, -2);

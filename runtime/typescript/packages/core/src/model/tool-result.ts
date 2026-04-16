@@ -15,10 +15,7 @@ export class ToolResult {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ToolResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ToolResult {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -26,10 +23,7 @@ export class ToolResult {
     const instance = new ToolResult();
 
     if (data["parts"] !== undefined && data["parts"] !== null) {
-      instance.parts = ToolResult.loadParts(
-        data["parts"] as unknown[],
-        context,
-      );
+      instance.parts = ToolResult.loadParts(data["parts"] as unknown[], context);
     }
 
     if (context) {
@@ -38,10 +32,7 @@ export class ToolResult {
     return instance;
   }
 
-  static loadParts(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ContentPart[] {
+  static loadParts(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ContentPart[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -49,26 +40,21 @@ export class ToolResult {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, kind: v });
+          result.push({ name: k, "kind": v });
         }
       }
       data = result;
     }
-    return data.map((item) =>
-      ContentPart.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ContentPart.load(item as Record<string, unknown>, context));
   }
 
-  static saveParts(
-    items: ContentPart[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParts(items: ContentPart[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -120,5 +106,7 @@ export class ToolResult {
     return new ToolResult({ parts: [new TextPart({ value: value })] });
   }
 
+
   // @method text(): string — Concatenate all TextPart values joined by newline
 }
+

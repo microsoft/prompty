@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// Payload for "thinking" events — reasoning/chain-of-thought tokens.
-    /// </summary>
+/// <summary>
+/// Payload for "thinking" events — reasoning/chain-of-thought tokens.
+/// </summary>
 public partial class ThinkingEventPayload
 {
     /// <summary>

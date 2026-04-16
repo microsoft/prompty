@@ -32,7 +32,7 @@ model Parser {}
 
 @@protocol(Executor);
 @@method(Executor, "execute", "unknown", "Call an LLM provider with messages and return the raw response", #{ agent: "Prompty", messages: "Message[]" });
-@@method(Executor, "formatToolMessages", "Message[]", "Format tool call results into messages for the next iteration", #{ rawResponse: "unknown", toolCalls: "ToolCall[]", toolResults: "string[]", textContent: "string" });
+@@method(Executor, "formatToolMessages", "Message[]", "Format tool call results into messages for the next iteration", #{ rawResponse: "unknown", toolCalls: "ToolCall[]", toolResults: "string[]", textContent: "string?" });
 
 /** Calls an LLM provider with messages and returns the raw provider response. */
 model Executor {}

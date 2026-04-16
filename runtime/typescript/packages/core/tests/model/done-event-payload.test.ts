@@ -21,7 +21,9 @@ describe("DoneEventPayload", () => {
       const json = `{\n  "response": "The weather in Paris is 72°F and sunny."\n}`;
       const instance = DoneEventPayload.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.response).toEqual("The weather in Paris is 72°F and sunny.");
+      expect(instance.response).toEqual(
+        "The weather in Paris is 72°F and sunny.",
+      );
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -38,7 +40,9 @@ describe("DoneEventPayload", () => {
       const yaml = `response: The weather in Paris is 72°F and sunny.\n`;
       const instance = DoneEventPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.response).toEqual("The weather in Paris is 72°F and sunny.");
+      expect(instance.response).toEqual(
+        "The weather in Paris is 72°F and sunny.",
+      );
     });
 
     it("should round-trip YAML - example 1", () => {

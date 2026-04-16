@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import McpTool
+
 
 def test_load_json_mcptool():
     json_data = r'''

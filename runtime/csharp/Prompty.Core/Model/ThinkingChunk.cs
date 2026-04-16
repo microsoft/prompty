@@ -6,9 +6,9 @@ using YamlDotNet.Serialization;
 namespace Prompty.Core;
 #pragma warning restore IDE0130
 
-    /// <summary>
-    /// A thinking/reasoning content chunk from the LLM response stream.
-    /// </summary>
+/// <summary>
+/// A thinking/reasoning content chunk from the LLM response stream.
+/// </summary>
 public partial class ThinkingChunk : StreamChunk
 {
     /// <summary>

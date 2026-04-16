@@ -1,0 +1,16 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Renders a template string with input values to produce the final prompt text.
+/// </summary>
+public interface IRenderer
+{
+    /// <summary>
+    /// Render the template string with input values
+    /// </summary>
+    Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs);
+}
