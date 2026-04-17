@@ -211,7 +211,7 @@ describe("LLM Call Retry (§9.10)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -300,7 +300,7 @@ describe("LLM Call Retry (§9.10)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -424,7 +424,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },
@@ -499,7 +499,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       },

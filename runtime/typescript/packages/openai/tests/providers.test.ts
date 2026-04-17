@@ -25,7 +25,10 @@ describe("messageToWire", () => {
   });
 
   it("includes metadata as top-level keys", () => {
-    const msg = new Message({ role: "tool", parts: [text("result")], metadata: {\r\n      tool_call_id: "call_123",\r\n      name: "get_weather",\r\n    } });
+    const msg = new Message({ role: "tool", parts: [text("result")], metadata: {
+      tool_call_id: "call_123",
+      name: "get_weather",
+    } });
     const wire = messageToWire(msg);
     expect(wire.tool_call_id).toBe("call_123");
     expect(wire.name).toBe("get_weather");

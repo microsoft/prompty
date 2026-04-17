@@ -229,7 +229,7 @@ describe("turn() with bindings", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       }
@@ -299,7 +299,7 @@ describe("turn() with bindings", () => {
         }));
         messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
         }
         return messages;
       }

@@ -107,7 +107,7 @@ export class AnthropicExecutor implements Executor {
       });
     }
     messages.push(
-      new Message("assistant", textContent ? [text(textContent)] : [], { content: rawContent }),
+      new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { content: rawContent } }),
     );
 
     // Single user message with batched tool_result blocks
@@ -116,7 +116,7 @@ export class AnthropicExecutor implements Executor {
       tool_use_id: tc.id,
       content: toolResults[i],
     }));
-    messages.push(new Message("user", [], { tool_results: toolResultBlocks }));
+    messages.push(new Message({ role: "user", parts: [], metadata: { tool_results: toolResultBlocks } }));
 
     return messages;
   }

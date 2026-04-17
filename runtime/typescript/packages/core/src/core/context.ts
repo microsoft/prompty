@@ -132,7 +132,7 @@ export function trimToContextWindow(
   if (droppedCount > 0) {
     const summaryText = summarizeDropped(dropped);
     if (summaryText) {
-      messages.push(new Message("user", [{ kind: "text", value: summaryText }]));
+      messages.push(new Message({ role: "user", parts: [{ kind: "text", value: summaryText }] }));
     }
   }
 
