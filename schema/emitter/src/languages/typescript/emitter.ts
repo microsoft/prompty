@@ -112,8 +112,13 @@ function returnType(typeStr: string): string {
 
 /**
  * Emit a complete TypeScript file from a FileDecl.
+ *
+ * @param decl - The file declaration to emit
+ * @param visitor - Expression visitor for rendering expressions
+ * @param namespace - Optional namespace override
+ * @param group - Semantic group folder this file lives in (e.g. "connection"). Empty string = root.
  */
-export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespace?: string): string {
+export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespace?: string, group: string = ""): string {
   const lines: string[] = [];
 
   // 1. Header
@@ -125,12 +130,23 @@ export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespa
   // Protocol-only files don't need LoadContext/SaveContext
   const hasNonProtocol = decl.types.some(t => !t.isProtocol);
   if (hasNonProtocol) {
-    lines.push(`import { LoadContext, SaveContext } from "./context";`);
+    // Context file is always at the model root — go up one level when inside a group subfolder
+    const contextPath = group ? "../context" : "./context";
+    lines.push(`import { LoadContext, SaveContext } from "${contextPath}";`);
   }
 
   for (const imp of decl.imports) {
     const kebab = toKebabCase(imp.module);
-    lines.push(`import { ${imp.names.join(", ")} } from "./${kebab}";`);
+    if (imp.group === group) {
+      // Same group (or both root): relative sibling
+      lines.push(`import { ${imp.names.join(", ")} } from "./${kebab}";`);
+    } else if (imp.group) {
+      // Different non-empty group: go up to model root, then into the group subfolder
+      lines.push(`import { ${imp.names.join(", ")} } from "../${imp.group}/${kebab}";`);
+    } else {
+      // Root-level module: go up one level from group subfolder
+      lines.push(`import { ${imp.names.join(", ")} } from "../${kebab}";`);
+    }
   }
   lines.push("");
 

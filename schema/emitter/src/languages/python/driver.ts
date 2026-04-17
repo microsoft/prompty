@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execFileSync } from "child_process";
-import { existsSync } from "fs";
+import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
 import { dirname, resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
@@ -21,7 +21,7 @@ import { toSnakeCase } from "../../ir/utilities.js";
 import { buildBaseTestContext, pythonTestOptions } from "../../testing/test-context.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { emitPythonFile as emitPythonFileDecl } from "./emitter.js";
-import { emitPythonContext, emitPythonInit } from "./scaffolding.js";
+import { emitPythonContext, emitPythonInit, emitPythonGroupInit } from "./scaffolding.js";
 import { emitPythonTest, emitPythonTestContext } from "./test-emitter.js";
 
 /**
@@ -46,6 +46,23 @@ export const pythonTypeMapper: Record<string, string> = {
 };
 
 /**
+ * Remove stale flat type files from `relDir` that now live in group subdirectories.
+ * Called at the start of generation so old flat-emission leftovers don't linger
+ * after a migration from flat → grouped output layout.
+ */
+function cleanupFlatTypeFiles(relDir: string | undefined, isTypeFile: (name: string) => boolean): void {
+  if (!relDir) return;
+  const absDir = resolve(process.cwd(), relDir);
+  if (!existsSync(absDir)) return;
+  for (const name of readdirSync(absDir)) {
+    const absPath = resolve(absDir, name);
+    if (statSync(absPath).isFile() && isTypeFile(name)) {
+      try { unlinkSync(absPath); } catch { /* ignore — file may be locked */ }
+    }
+  }
+}
+
+/**
  * Main entry point for Python code generation.
  * Prepares data contexts and delegates rendering to inline emitter functions.
  */
@@ -68,6 +85,10 @@ export const generatePython = async (
   // Import path for test files — defaults to packageName, can be overridden via import-path config
   const importPath = emitTarget["import-path"] || packageName;
 
+  // Remove stale flat type files from root output dir (they now live in group subdirs)
+  cleanupFlatTypeFiles(emitTarget["output-dir"], name => /^_.+\.py$/.test(name) && name !== "_context.py");
+  cleanupFlatTypeFiles(emitTarget["test-dir"], name => /^test_.+\.py$/.test(name) && name !== "test_context.py");
+
   // Emit py.typed marker for PEP 561 compliance
   await emitPythonFile(context, 'py.typed', '', emitTarget["output-dir"]);
 
@@ -83,7 +104,7 @@ export const generatePython = async (
     await emitPythonFile(context, 'test_context.py', testContextContent, emitTarget["test-dir"]);
   }
 
-  // Render init file
+  // Render init file — group-aware, imports from {group} subpackages
   const initContext = buildInitContext(nodes);
   const initContent = emitPythonInit(initContext.baseTypes, initContext.types);
   await emitPythonFile(context, '__init__.py', initContent, emitTarget["output-dir"]);
@@ -96,21 +117,41 @@ export const generatePython = async (
     }
   }
 
-  // Render each base type and its children as a single file
+  // Group nodes by their semantic group folder
+  const groupMap = new Map<string, TypeNode[]>();
+  for (const n of nodes) {
+    if (!n.base) {
+      const g = n.group || "";
+      if (!groupMap.has(g)) groupMap.set(g, []);
+      groupMap.get(g)!.push(n);
+    }
+  }
+
+  // Render each base type and its children as a single file, into group subfolder
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
+      const group = n.group || "";
       const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
-      const fileContent = emitPythonFileDecl(fileDecl, visitor);
-      await emitPythonFile(context, `_${n.typeName.name}.py`, fileContent, emitTarget["output-dir"]);
+      const fileContent = emitPythonFileDecl(fileDecl, visitor, group);
+      const outDir = group ? `${emitTarget["output-dir"]}/${group}` : emitTarget["output-dir"];
+      await emitPythonFile(context, `_${n.typeName.name}.py`, fileContent, outDir);
     }
 
     // Render test file for each type (skip protocols — they have no data to test)
     if (emitTarget["test-dir"] && !n.isProtocol) {
+      const testDir = n.group ? `${emitTarget["test-dir"]}/${n.group}` : emitTarget["test-dir"];
       const testContext = buildTestContext(n, importPath);
       const testContent = emitPythonTest(testContext);
-      await emitPythonFile(context, `test_${toSnakeCase(n.typeName.name)}.py`, testContent, emitTarget["test-dir"]);
+      await emitPythonFile(context, `test_${toSnakeCase(n.typeName.name)}.py`, testContent, testDir);
     }
+  }
+
+  // Emit group-level __init__.py for each group
+  for (const [group, groupNodes] of groupMap) {
+    if (!group) continue; // Root-level types (if any) are covered by the root __init__.py
+    const groupInitContent = emitPythonGroupInit(group, groupNodes);
+    await emitPythonFile(context, '__init__.py', groupInitContent, `${emitTarget["output-dir"]}/${group}`);
   }
 
   // Format emitted files if format option is enabled (default: true)

@@ -4,118 +4,84 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 from ._context import LoadContext, SaveContext
-
-from ._Property import (
-  Property,
-  ArrayProperty,
-  ObjectProperty,
+from .agent import (
+    GuardrailResult,
+    Prompty,
 )
-
-from ._Connection import (
-  Connection,
-  ReferenceConnection,
-  RemoteConnection,
-  ApiKeyConnection,
-  AnonymousConnection,
-  OAuthConnection,
-  FoundryConnection,
+from .connection import (
+    AnonymousConnection,
+    ApiKeyConnection,
+    Connection,
+    FoundryConnection,
+    OAuthConnection,
+    ReferenceConnection,
+    RemoteConnection,
 )
-
-from ._ModelOptions import ModelOptions
-
-from ._Model import Model
-
-from ._Binding import Binding
-
-from ._Tool import (
-  Tool,
-  FunctionTool,
-  CustomTool,
-  McpTool,
-  OpenApiTool,
-  PromptyTool,
+from .conversation import (
+    AudioPart,
+    ContentPart,
+    FilePart,
+    ImagePart,
+    Message,
+    MessageHelpers,
+    TextPart,
+    ThreadMarker,
+    ToolCall,
+    ToolResult,
+    ToolResultHelpers,
 )
-
-from ._McpApprovalMode import McpApprovalMode
-
-from ._FormatConfig import FormatConfig
-
-from ._ParserConfig import ParserConfig
-
-from ._Template import Template
-
-from ._Prompty import Prompty
-
-from ._ContentPart import (
-  ContentPart,
-  TextPart,
-  ImagePart,
-  FilePart,
-  AudioPart,
+from .core import (
+    ArrayProperty,
+    ObjectProperty,
+    Property,
 )
-
-from ._Message import (
-  Message,
-  MessageHelpers,
+from .events import (
+    CompactionCompletePayload,
+    CompactionFailedPayload,
+    DoneEventPayload,
+    ErrorChunk,
+    ErrorEventPayload,
+    MessagesUpdatedPayload,
+    StatusEventPayload,
+    StreamChunk,
+    TextChunk,
+    ThinkingChunk,
+    ThinkingEventPayload,
+    TokenEventPayload,
+    ToolCallStartPayload,
+    ToolChunk,
+    ToolResultPayload,
 )
-
-from ._ToolContext import ToolContext
-
-from ._ToolResult import (
-  ToolResult,
-  ToolResultHelpers,
+from .model import (
+    Model,
+    ModelInfo,
+    ModelOptions,
+    TokenUsage,
 )
-
-from ._ToolDispatchResult import ToolDispatchResult
-
-from ._ToolCall import ToolCall
-
-from ._GuardrailResult import GuardrailResult
-
-from ._ThreadMarker import ThreadMarker
-
-from ._TokenUsage import TokenUsage
-
-from ._ModelInfo import ModelInfo
-
-from ._CompactionConfig import CompactionConfig
-
-from ._TurnOptions import TurnOptions
-
-from ._Renderer import Renderer
-
-from ._Parser import Parser
-
-from ._Executor import Executor
-
-from ._Processor import Processor
-
-from ._TokenEventPayload import TokenEventPayload
-
-from ._ThinkingEventPayload import ThinkingEventPayload
-
-from ._ToolCallStartPayload import ToolCallStartPayload
-
-from ._ToolResultPayload import ToolResultPayload
-
-from ._StatusEventPayload import StatusEventPayload
-
-from ._MessagesUpdatedPayload import MessagesUpdatedPayload
-
-from ._DoneEventPayload import DoneEventPayload
-
-from ._ErrorEventPayload import ErrorEventPayload
-
-from ._CompactionCompletePayload import CompactionCompletePayload
-
-from ._CompactionFailedPayload import CompactionFailedPayload
-
-from ._StreamChunk import (
-  StreamChunk,
-  TextChunk,
-  ThinkingChunk,
-  ToolChunk,
-  ErrorChunk,
+from .pipeline import (
+    CompactionConfig,
+    Executor,
+    Parser,
+    Processor,
+    Renderer,
+    TurnOptions,
+)
+from .template import (
+    FormatConfig,
+    ParserConfig,
+    Template,
+)
+from .tools import (
+    Binding,
+    CustomTool,
+    FunctionTool,
+    McpApprovalMode,
+    McpTool,
+    OpenApiTool,
+    PromptyTool,
+    Tool,
+    ToolContext,
+    ToolDispatchResult,
 )
 
 __all__ = [

@@ -169,6 +169,11 @@ const RUST_TYPE_MAP: Record<string, string> = {
 
 /**
  * Emit a complete Rust source file from a FileDecl.
+ *
+ * @param file - File declaration to emit
+ * @param visitor - Expression visitor
+ * @param polymorphicTypeNames - Set of type names that have polymorphic dispatch
+ * @param childToParent - Map from child variant name to parent type name
  */
 export function emitRustFile(
   file: FileDecl,
@@ -178,6 +183,7 @@ export function emitRustFile(
 ): string {
   const lines: string[] = [];
   const hasNonProtocol = file.types.some(t => !t.isProtocol);
+  const group = file.group || "";
 
   // Header
   lines.push("");
@@ -187,7 +193,10 @@ export function emitRustFile(
   lines.push("#![allow(unused_imports, dead_code)]");
   lines.push("");
   if (hasNonProtocol) {
-    lines.push("use super::context::{LoadContext, SaveContext};");
+    // Context is always at the model root.
+    // From inside a group subfolder, we need to go up two levels: group → model root.
+    const contextPath = group ? "super::super::context" : "super::context";
+    lines.push(`use ${contextPath}::{LoadContext, SaveContext};`);
   }
 
   // Imports — post-process for Rust specifics
@@ -211,10 +220,24 @@ export function emitRustFile(
     if (processedNames.length === 0) continue;
     lines.push("");
     const names = processedNames.sort().join(", ");
-    if (processedNames.length === 1) {
-      lines.push(`use super::${toSnakeCase(imp.module)}::${names};`);
+
+    // Build the Rust module path based on group relationship
+    let modPath: string;
+    if (imp.group === group) {
+      // Same group (or both root): sibling module via super
+      modPath = `super::${toSnakeCase(imp.module)}`;
+    } else if (imp.group) {
+      // Different non-empty group: go up to model root, then into the group
+      modPath = `super::super::${imp.group}::${toSnakeCase(imp.module)}`;
     } else {
-      lines.push(`use super::${toSnakeCase(imp.module)}::{${names}};`);
+      // Root-level module accessed from inside a group subfolder
+      modPath = `super::super::${toSnakeCase(imp.module)}`;
+    }
+
+    if (processedNames.length === 1) {
+      lines.push(`use ${modPath}::${names};`);
+    } else {
+      lines.push(`use ${modPath}::{${names}};`);
     }
   }
 

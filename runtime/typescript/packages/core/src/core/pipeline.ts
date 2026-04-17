@@ -31,7 +31,7 @@
  * @module
  */
 
-import { Prompty } from "../model/prompty.js";
+import { Prompty } from "../model/agent/prompty.js";
 import {
   type ToolCall,
   Message,

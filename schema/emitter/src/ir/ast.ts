@@ -58,6 +58,47 @@ export interface Coercion {
 }
 
 
+/**
+ * Walk up the AST parent chain from `node` to find the enclosing
+ * TypeSpecScriptNode (identified by presence of `file.path`), which
+ * carries the source file path. Returns `""` if not found.
+ *
+ * We use `any` because TypeSpec does not export `Node`, `SyntaxKind`,
+ * or `TypeSpecScriptNode` from its public API surface.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getNodeFilePath(node: any): string {
+  let current = node;
+  while (current) {
+    if (current?.file?.path) {
+      return current.file.path as string;
+    }
+    current = current.parent;
+  }
+  return "";
+}
+
+/**
+ * Extract the semantic group (subfolder) name from a TypeSpec source file path.
+ *
+ * The TSP model files are organised under `schema/model/{group}/{file}.tsp`.
+ * This function finds the first `/model/` segment and returns the folder name
+ * immediately after it (the group), or `""` if the file is at the model root.
+ *
+ * Examples:
+ *   ".../schema/model/connection/connection.tsp"  → "connection"
+ *   ".../schema/model/model/model.tsp"            → "model"
+ *   ".../schema/model/main.tsp"                   → ""
+ */
+function extractGroup(sourcePath: string): string {
+  const normalized = sourcePath.replace(/\\/g, "/");
+  const idx = normalized.indexOf("/model/");
+  if (idx < 0) return "";
+  const afterModel = normalized.slice(idx + "/model/".length);
+  const slash = afterModel.indexOf("/");
+  return slash >= 0 ? afterModel.slice(0, slash) : "";
+}
+
 export class TypeNode {
   public typeName: TypeName = {
     namespace: "",
@@ -73,6 +114,8 @@ export class TypeNode {
   public discriminator: string | undefined = undefined;
   public factories: FactoryEntry[] = [];
   public methods: MethodEntry[] = [];
+  /** Semantic group derived from the TSP source subfolder (e.g. "connection", "tools"). */
+  public group: string = "";
 
   constructor(public model: Model, description: string) {
     this.model = model;
@@ -235,6 +278,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, innerModel);
     node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, innerModel);
+    node.group = extractGroup(getNodeFilePath(innerModel.node));
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace, rootAlias);
@@ -248,6 +292,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, model);
     node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, model);
+    node.group = extractGroup(getNodeFilePath(model.node));
     visited.add(model.name);
   }
 

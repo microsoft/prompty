@@ -12,7 +12,7 @@
 
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
-import type { Prompty } from "../model/prompty.js";
+import type { Prompty } from "../model/agent/prompty.js";
 import {
   type TextPart,
   Message,

@@ -6,7 +6,7 @@ import { getCombinations, scalarValue } from "../../ir/utilities.js";
 import * as YAML from "yaml";
 import { resolve, dirname } from "path";
 import { execFileSync } from "child_process";
-import { existsSync, readdirSync } from "fs";
+import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { CSharpExprVisitor } from "./visitor.js";
 import { lowerType, collectPolymorphicTypeNames } from "../../ir/lower.js";
@@ -15,9 +15,31 @@ import { emitCSharpContext, emitCSharpUtils } from "./scaffolding.js";
 import { emitCSharpTest } from "./test-emitter.js";
 import { toPascalCase } from "../../ir/visitor.js";
 
+/**
+ * Remove stale flat type files from `relDir` that now live in group subdirectories.
+ */
+function cleanupFlatTypeFiles(relDir: string | undefined, isTypeFile: (name: string) => boolean): void {
+  if (!relDir) return;
+  const absDir = resolve(process.cwd(), relDir);
+  if (!existsSync(absDir)) return;
+  for (const name of readdirSync(absDir)) {
+    const absPath = resolve(absDir, name);
+    if (statSync(absPath).isFile() && isTypeFile(name)) {
+      try { unlinkSync(absPath); } catch { /* ignore — file may be locked */ }
+    }
+  }
+}
+
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   const allTypes = Array.from(enumerateTypes(node));
   const nodes = filterNodes(allTypes, options);
+
+  // Remove stale flat type files from root output dir (they now live in group subdirs)
+  const isCsTypeFile = (name: string) =>
+    name.endsWith(".cs") && name !== "Context.cs" && name !== "Utils.cs" &&
+    !name.endsWith("Helpers.cs") && !name.endsWith("Extensions.cs");
+  cleanupFlatTypeFiles(emitTarget["output-dir"], isCsTypeFile);
+  cleanupFlatTypeFiles(emitTarget["test-dir"], isCsTypeFile);
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
@@ -41,7 +63,18 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
 
   // Collect and emit unique enum types from all fields
+  // Map each enum to the group of the first type that uses it
   const emittedEnums = new Set<string>();
+  const enumGroup = new Map<string, string>(); // enumName → group
+  for (let i = 0; i < allTypeDecls.length; i++) {
+    const typeDecl = allTypeDecls[i];
+    const nodeGroup = nodes[i]?.group || "";
+    for (const field of typeDecl.fields) {
+      if (field.enumName && !emittedEnums.has(field.enumName)) {
+        enumGroup.set(field.enumName, nodeGroup);
+      }
+    }
+  }
   for (const typeDecl of allTypeDecls) {
     for (const field of typeDecl.fields) {
       if (field.enumName && !field.isOpenEnum && field.allowedValues.length > 0 && !emittedEnums.has(field.enumName)) {
@@ -51,7 +84,9 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
           csharpNamespace,
         );
         const csEnumName = field.enumName.charAt(0).toUpperCase() + field.enumName.slice(1);
-        await emitCsharpFile(context, nodes[0], enumCode, `${csEnumName}.cs`, emitTarget["output-dir"]);
+        const grp = enumGroup.get(field.enumName) || "";
+        const enumOutDir = grp ? `${emitTarget["output-dir"]}/${grp}` : emitTarget["output-dir"];
+        await emitCsharpFile(context, nodes[0], enumCode, `${csEnumName}.cs`, enumOutDir);
       }
     }
   }
@@ -59,9 +94,12 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   for (const n of nodes) {
     const typeDecl = lowerType(n, registry, polyNames);
     const classCode = emitCSharpClass(typeDecl, csharpNamespace, visitor, allTypeDecls, findTypeDecl);
-    await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, emitTarget["output-dir"]);
+    // Emit into group subfolder (C# uses namespaces, no re-export files needed)
+    const outDir = n.group ? `${emitTarget["output-dir"]}/${n.group}` : emitTarget["output-dir"];
+    await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, outDir);
     if (emitTarget["test-dir"] && !n.isProtocol) {
-      await emitCsharpFile(context, n, renderTests(n, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
+      const testDir = n.group ? `${emitTarget["test-dir"]}/${n.group}` : emitTarget["test-dir"];
+      await emitCsharpFile(context, n, renderTests(n, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, testDir);
     }
   }
 

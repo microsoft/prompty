@@ -90,6 +90,8 @@ export interface FileDecl {
   containsAbstract: boolean;
   /** String-literal enum types used by fields in this file */
   enums: EnumDef[];
+  /** Semantic group derived from TSP source subfolder (e.g. "connection", "tools"). Empty string for root-level files. */
+  group: string;
 }
 
 /**
@@ -100,6 +102,8 @@ export interface ImportRef {
   module: string;
   /** Symbols imported from that module (e.g., ["ContentPart", "TextPart"]) */
   names: string[];
+  /** Semantic group of the imported module (e.g. "connection"). Empty string for root-level modules. */
+  group: string;
 }
 
 // ============================================================================

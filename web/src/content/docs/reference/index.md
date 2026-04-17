@@ -61,12 +61,6 @@ classDiagram
         +string kind
         +string endpoint
     }
-    class FoundryConnection {
-        +string kind
-        +string endpoint
-        +string name
-        +string connectionType
-    }
     class OAuthConnection {
         +string kind
         +string endpoint
@@ -74,6 +68,12 @@ classDiagram
         +string clientSecret
         +string tokenUrl
         +string[] scopes
+    }
+    class FoundryConnection {
+        +string kind
+        +string endpoint
+        +string name
+        +string connectionType
     }
     class ModelOptions {
         +float32 frequencyPenalty
@@ -209,14 +209,50 @@ classDiagram
         +string name
         +string arguments
     }
-    class ThreadMarker {
-        +string name
-        +string kind
-    }
     class GuardrailResult {
         +boolean allowed
         +string reason
         +unknown rewrite
+    }
+    class ThreadMarker {
+        +string name
+        +string kind
+    }
+    class TokenUsage {
+        +int32 promptTokens
+        +int32 completionTokens
+        +int32 totalTokens
+    }
+    class ModelInfo {
+        +string id
+        +string displayName
+        +string ownedBy
+        +int32 contextWindow
+        +string[] inputModalities
+        +string[] outputModalities
+        +dictionary additionalProperties
+    }
+    class CompactionConfig {
+        +string strategy
+        +int32 budget
+        +dictionary options
+    }
+    class TurnOptions {
+        +int32 maxIterations
+        +int32 maxLlmRetries
+        +int32 contextBudget
+        +boolean parallelToolCalls
+        +boolean raw
+        +int32 turn
+        +CompactionConfig compaction
+    }
+    class Renderer {
+    }
+    class Parser {
+    }
+    class Executor {
+    }
+    class Processor {
     }
     class TokenEventPayload {
         +string token
@@ -272,50 +308,14 @@ classDiagram
         +string kind
         +string message
     }
-    class ModelInfo {
-        +string id
-        +string displayName
-        +string ownedBy
-        +int32 contextWindow
-        +string[] inputModalities
-        +string[] outputModalities
-        +dictionary additionalProperties
-    }
-    class CompactionConfig {
-        +string strategy
-        +int32 budget
-        +dictionary options
-    }
-    class TurnOptions {
-        +int32 maxIterations
-        +int32 maxLlmRetries
-        +int32 contextBudget
-        +boolean parallelToolCalls
-        +boolean raw
-        +int32 turn
-        +CompactionConfig compaction
-    }
-    class TokenUsage {
-        +int32 promptTokens
-        +int32 completionTokens
-        +int32 totalTokens
-    }
-    class Renderer {
-    }
-    class Parser {
-    }
-    class Executor {
-    }
-    class Processor {
-    }
     Property <|-- ArrayProperty
     Property <|-- ObjectProperty
     Connection <|-- ReferenceConnection
     Connection <|-- RemoteConnection
     Connection <|-- ApiKeyConnection
     Connection <|-- AnonymousConnection
-    Connection <|-- FoundryConnection
     Connection <|-- OAuthConnection
+    Connection <|-- FoundryConnection
     Tool <|-- FunctionTool
     Tool <|-- CustomTool
     Tool <|-- McpTool
@@ -350,9 +350,9 @@ classDiagram
     ToolContext *-- Message
     ToolResult *-- ContentPart
     ToolDispatchResult *-- ToolResult
+    TurnOptions *-- CompactionConfig
     ToolResultPayload *-- ToolResult
     MessagesUpdatedPayload *-- Message
     DoneEventPayload *-- Message
     ToolChunk *-- ToolCall
-    TurnOptions *-- CompactionConfig
 ```

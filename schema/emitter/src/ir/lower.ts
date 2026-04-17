@@ -87,6 +87,7 @@ export function lowerFile(
     imports,
     containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
     enums,
+    group: node.group,
   };
 }
 
@@ -565,7 +566,12 @@ function resolveImports(
   }
 
   return Array.from(importMap.entries())
-    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
+    .map(([module, names]) => {
+      // Look up the group of the module's root node in the registry
+      const modNode = registry.get(module);
+      const group = modNode?.group ?? "";
+      return { module, names: Array.from(names).sort(), group };
+    })
     .sort((a, b) => a.module.localeCompare(b.module));
 }
 

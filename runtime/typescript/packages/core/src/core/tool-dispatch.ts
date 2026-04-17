@@ -22,7 +22,7 @@
  */
 
 import { dirname, resolve } from "node:path";
-import type { Prompty } from "../model/prompty.js";
+import type { Prompty } from "../model/agent/prompty.js";
 
 // ---------------------------------------------------------------------------
 // ToolHandler interface

@@ -12,6 +12,7 @@ properties:
     description: Character budget for the compacted context. Overrides TurnOptions.contextBudget when set.
   options:
     $ref: RecordUnknown.yaml
+    default: {}
     description: Additional strategy-specific options
 description: |-
   Configuration for context window compaction. When the message history

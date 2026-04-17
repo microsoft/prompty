@@ -3,76 +3,49 @@
 
 export { LoadContext, SaveContext } from "./context";
 
-export {
-  Property,
-  ArrayProperty,
-  ObjectProperty,
-} from "./property";
+export { Prompty } from "./agent/prompty";
+export { GuardrailResult } from "./agent/guardrail-result";
 
-export {
-  Connection,
-  ReferenceConnection,
-  RemoteConnection,
-  ApiKeyConnection,
-  AnonymousConnection,
-  OAuthConnection,
-  FoundryConnection,
-} from "./connection";
-export { ModelOptions } from "./model-options";
-export { Model } from "./model";
-export { Binding } from "./binding";
+export { Connection, ReferenceConnection, RemoteConnection, ApiKeyConnection, AnonymousConnection, OAuthConnection, FoundryConnection } from "./connection/connection";
 
-export {
-  Tool,
-  FunctionTool,
-  CustomTool,
-  McpTool,
-  OpenApiTool,
-  PromptyTool,
-} from "./tool";
-export { McpApprovalMode } from "./mcp-approval-mode";
-export { FormatConfig } from "./format-config";
-export { ParserConfig } from "./parser-config";
-export { Template } from "./template";
-export { Prompty } from "./prompty";
+export { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "./conversation/content-part";
+export { Message } from "./conversation/message";
+export { ToolResult } from "./conversation/tool-result";
+export { ToolCall } from "./conversation/tool-call";
+export { ThreadMarker } from "./conversation/thread-marker";
 
-export {
-  ContentPart,
-  TextPart,
-  ImagePart,
-  FilePart,
-  AudioPart,
-} from "./content-part";
-export { Message } from "./message";
-export { ToolContext } from "./tool-context";
-export { ToolResult } from "./tool-result";
-export { ToolDispatchResult } from "./tool-dispatch-result";
-export { ToolCall } from "./tool-call";
-export { GuardrailResult } from "./guardrail-result";
-export { ThreadMarker } from "./thread-marker";
-export { TokenUsage } from "./token-usage";
-export { ModelInfo } from "./model-info";
-export { CompactionConfig } from "./compaction-config";
-export { TurnOptions } from "./turn-options";
-export type { Renderer } from "./renderer";
-export type { Parser } from "./parser";
-export type { Executor } from "./executor";
-export type { Processor } from "./processor";
-export { TokenEventPayload } from "./token-event-payload";
-export { ThinkingEventPayload } from "./thinking-event-payload";
-export { ToolCallStartPayload } from "./tool-call-start-payload";
-export { ToolResultPayload } from "./tool-result-payload";
-export { StatusEventPayload } from "./status-event-payload";
-export { MessagesUpdatedPayload } from "./messages-updated-payload";
-export { DoneEventPayload } from "./done-event-payload";
-export { ErrorEventPayload } from "./error-event-payload";
-export { CompactionCompletePayload } from "./compaction-complete-payload";
-export { CompactionFailedPayload } from "./compaction-failed-payload";
+export { Property, ArrayProperty, ObjectProperty } from "./core/property";
 
-export {
-  StreamChunk,
-  TextChunk,
-  ThinkingChunk,
-  ToolChunk,
-  ErrorChunk,
-} from "./stream-chunk";
+export { TokenEventPayload } from "./events/token-event-payload";
+export { ThinkingEventPayload } from "./events/thinking-event-payload";
+export { ToolCallStartPayload } from "./events/tool-call-start-payload";
+export { ToolResultPayload } from "./events/tool-result-payload";
+export { StatusEventPayload } from "./events/status-event-payload";
+export { MessagesUpdatedPayload } from "./events/messages-updated-payload";
+export { DoneEventPayload } from "./events/done-event-payload";
+export { ErrorEventPayload } from "./events/error-event-payload";
+export { CompactionCompletePayload } from "./events/compaction-complete-payload";
+export { CompactionFailedPayload } from "./events/compaction-failed-payload";
+export { StreamChunk, TextChunk, ThinkingChunk, ToolChunk, ErrorChunk } from "./events/stream-chunk";
+
+export { ModelOptions } from "./model/model-options";
+export { Model } from "./model/model";
+export { TokenUsage } from "./model/token-usage";
+export { ModelInfo } from "./model/model-info";
+
+export { CompactionConfig } from "./pipeline/compaction-config";
+export { TurnOptions } from "./pipeline/turn-options";
+export type { Renderer } from "./pipeline/renderer";
+export type { Parser } from "./pipeline/parser";
+export type { Executor } from "./pipeline/executor";
+export type { Processor } from "./pipeline/processor";
+
+export { FormatConfig } from "./template/format-config";
+export { ParserConfig } from "./template/parser-config";
+export { Template } from "./template/template";
+
+export { Binding } from "./tools/binding";
+export { Tool, FunctionTool, CustomTool, McpTool, OpenApiTool, PromptyTool } from "./tools/tool";
+export { McpApprovalMode } from "./tools/mcp-approval-mode";
+export { ToolContext } from "./tools/tool-context";
+export { ToolDispatchResult } from "./tools/tool-dispatch-result";
