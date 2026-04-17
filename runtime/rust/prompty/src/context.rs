@@ -3,7 +3,7 @@
 //! Matches TypeScript `core/context.ts`. Used by `turn()` to keep the
 //! conversation within the model's context window budget.
 
-use crate::types::{ContentPart, ContentPartKind, Message, Role};
+use crate::types::{ContentPartKind, Message, Role};
 
 // ---------------------------------------------------------------------------
 // Character estimation
