@@ -420,7 +420,7 @@ mod tests {
             "provider": "anthropic",
             "apiType": "chat"
         }));
-        let messages = vec![Message::text(prompty::Role::User, "Hello")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello")];
         let args = AnthropicExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "claude-3");
         assert!(args["messages"].is_array());
@@ -435,7 +435,7 @@ mod tests {
             "provider": "anthropic",
             "apiType": "embedding"
         }));
-        let messages = vec![Message::text(prompty::Role::User, "Hello")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello")];
         let result = AnthropicExecutor::build_args(&agent, &messages);
         assert!(result.is_err());
     }

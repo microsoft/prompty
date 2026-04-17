@@ -3,8 +3,8 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind};
-use prompty::types::{ContentPart, Message};
+use prompty::model::{MessageHelpers, ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind};
+use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 
 // ---------------------------------------------------------------------------
@@ -17,9 +17,11 @@ pub fn message_to_wire(msg: &Message) -> Value {
     obj.insert("role".to_string(), Value::String(msg.role.to_string()));
 
     // Copy metadata fields (tool_call_id, tool_calls, name, etc.)
-    for (k, v) in &msg.metadata {
-        if k != "role" && k != "content" {
-            obj.insert(k.clone(), v.clone());
+    if let Some(meta_map) = msg.metadata.as_object() {
+        for (k, v) in meta_map {
+            if k != "role" && k != "content" {
+                obj.insert(k.clone(), v.clone());
+            }
         }
     }
 
@@ -37,15 +39,15 @@ pub fn message_to_wire(msg: &Message) -> Value {
 }
 
 fn part_to_wire(part: &ContentPart) -> Value {
-    match part {
-        ContentPart::Text(tp) => json!({
+    match &part.kind {
+        ContentPartKind::TextPart { value, .. } => json!({
             "type": "text",
-            "text": tp.value,
+            "text": value,
         }),
-        ContentPart::Image(ip) => {
+        ContentPartKind::ImagePart { source, detail, .. } => {
             let mut img = Map::new();
-            img.insert("url".to_string(), Value::String(ip.source.clone()));
-            if let Some(ref detail) = ip.detail {
+            img.insert("url".to_string(), Value::String(source.clone()));
+            if let Some(detail) = detail {
                 img.insert("detail".to_string(), Value::String(detail.clone()));
             }
             json!({
@@ -53,23 +55,22 @@ fn part_to_wire(part: &ContentPart) -> Value {
                 "image_url": Value::Object(img),
             })
         }
-        ContentPart::Audio(ap) => {
-            let format = ap
-                .media_type
+        ContentPartKind::AudioPart { source, media_type, .. } => {
+            let format = media_type
                 .as_deref()
                 .map(mime_to_audio_format)
                 .unwrap_or_else(|| "wav".to_string());
             json!({
                 "type": "input_audio",
                 "input_audio": {
-                    "data": ap.source,
+                    "data": source,
                     "format": format,
                 },
             })
         }
-        ContentPart::File(fp) => json!({
+        ContentPartKind::FilePart { source, .. } => json!({
             "type": "file",
-            "file": { "url": fp.source },
+            "file": { "url": source },
         }),
     }
 }
@@ -639,16 +640,16 @@ pub fn format_tool_messages(
         })
         .collect();
 
-    let mut assistant = Message::text(prompty::Role::Assistant, "");
+    let mut assistant = Message::with_text(prompty::Role::Assistant, "");
     assistant
-        .metadata
+        .metadata_mut()
         .insert("tool_calls".to_string(), Value::Array(wire_calls));
     messages.push(assistant);
 
     // One tool result message per call
     for (tc, result) in tool_calls.iter().zip(results) {
         let mut msg = Message::tool_result(&tc.id, result);
-        msg.metadata
+        msg.metadata_mut()
             .insert("name".to_string(), Value::String(tc.name.clone()));
         messages.push(msg);
     }
@@ -663,11 +664,10 @@ pub fn format_tool_messages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prompty::types::{AudioPart, ImagePart, TextPart};
 
     #[test]
     fn test_message_to_wire_text() {
-        let msg = Message::text(prompty::Role::User, "Hello");
+        let msg = Message::with_text(prompty::Role::User, "Hello");
         let wire = message_to_wire(&msg);
         assert_eq!(wire["role"], "user");
         assert_eq!(wire["content"], "Hello");
@@ -678,16 +678,10 @@ mod tests {
         let msg = Message {
             role: prompty::Role::User,
             parts: vec![
-                ContentPart::Text(TextPart {
-                    value: "Describe".to_string(),
-                }),
-                ContentPart::Image(ImagePart {
-                    source: "https://img.png".to_string(),
-                    detail: None,
-                    media_type: None,
-                }),
+                ContentPart::text("Describe"),
+                ContentPart::image("https://img.png", None, None),
             ],
-            metadata: Map::new(),
+            ..Default::default()
         };
         let wire = message_to_wire(&msg);
         assert_eq!(wire["role"], "user");
@@ -702,11 +696,8 @@ mod tests {
     fn test_message_to_wire_audio() {
         let msg = Message {
             role: prompty::Role::User,
-            parts: vec![ContentPart::Audio(AudioPart {
-                source: "base64data".to_string(),
-                media_type: Some("audio/mpeg".to_string()),
-            })],
-            metadata: Map::new(),
+            parts: vec![ContentPart::audio("base64data", Some("audio/mpeg".to_string()))],
+            ..Default::default()
         };
         let wire = message_to_wire(&msg);
         let content = wire["content"].as_array().unwrap();
@@ -716,10 +707,10 @@ mod tests {
 
     #[test]
     fn test_message_to_wire_metadata() {
-        let mut msg = Message::text(prompty::Role::Tool, "result");
-        msg.metadata
+        let mut msg = Message::with_text(prompty::Role::Tool, "result");
+        msg.metadata_mut()
             .insert("tool_call_id".to_string(), json!("call_123"));
-        msg.metadata
+        msg.metadata_mut()
             .insert("name".to_string(), json!("get_weather"));
         let wire = message_to_wire(&msg);
         assert_eq!(wire["tool_call_id"], "call_123");
@@ -764,7 +755,7 @@ mod tests {
         let msgs = format_tool_messages(&tool_calls, &results);
         assert_eq!(msgs.len(), 2);
         assert_eq!(msgs[0].role.to_string(), "assistant");
-        assert!(msgs[0].metadata.contains_key("tool_calls"));
+        assert!(msgs[0].metadata.get("tool_calls").is_some());
         assert_eq!(msgs[1].role.to_string(), "tool");
         assert_eq!(msgs[1].text_content(), "72°F");
     }

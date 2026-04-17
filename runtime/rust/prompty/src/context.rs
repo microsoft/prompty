@@ -3,7 +3,7 @@
 //! Matches TypeScript `core/context.ts`. Used by `turn()` to keep the
 //! conversation within the model's context window budget.
 
-use crate::types::{ContentPart, Message, Role};
+use crate::types::{ContentPart, ContentPartKind, Message, Role};
 
 // ---------------------------------------------------------------------------
 // Character estimation
@@ -25,11 +25,9 @@ pub fn estimate_chars(messages: &[Message]) -> usize {
 
         // Content parts
         for part in &msg.parts {
-            match part {
-                ContentPart::Text(t) => total += t.value.len(),
-                ContentPart::Image(_) | ContentPart::File(_) | ContentPart::Audio(_) => {
-                    total += 200;
-                }
+            match &part.kind {
+                ContentPartKind::TextPart { value, .. } => total += value.len(),
+                _ => total += 200,
             }
         }
 
@@ -144,7 +142,7 @@ pub fn trim_to_context_window(
     let kept = &rest[drop_count..];
 
     let summary_text = summarize_dropped(dropped);
-    let summary_msg = Message::text(
+    let summary_msg = Message::with_text(
         Role::User,
         format!("[Context summary: {summary_text}\n... ({drop_count} messages omitted)]"),
     );
@@ -200,7 +198,7 @@ mod tests {
     use super::*;
 
     fn msg(role: Role, text: &str) -> Message {
-        Message::text(role, text)
+        Message::with_text(role, text)
     }
 
     #[test]
@@ -222,7 +220,7 @@ mod tests {
     #[test]
     fn test_estimate_chars_with_tool_calls() {
         let mut m = msg(Role::Assistant, "");
-        m.metadata.insert(
+        m.metadata_mut().insert(
             "tool_calls".into(),
             serde_json::json!([{"name": "get_weather", "arguments": "{\"city\":\"NY\"}"}]),
         );
@@ -340,7 +338,7 @@ mod tests {
     #[test]
     fn test_format_dropped_messages_with_tool_calls() {
         let mut m = msg(Role::Assistant, "");
-        m.metadata.insert(
+        m.metadata_mut().insert(
             "tool_calls".into(),
             serde_json::json!([{"name": "get_weather", "arguments": "{\"city\":\"NY\"}"}]),
         );

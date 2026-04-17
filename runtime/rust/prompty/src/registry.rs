@@ -326,7 +326,7 @@ mod tests {
             _rendered: &str,
             _context: Option<&serde_json::Value>,
         ) -> Result<Vec<crate::types::Message>, InvokerError> {
-            Ok(vec![crate::types::Message::text(
+            Ok(vec![crate::types::Message::with_text(
                 crate::types::Role::System,
                 "parsed",
             )])
@@ -514,7 +514,7 @@ mod tests {
         // Default impl: assistant message with tool_calls + tool result message
         assert_eq!(msgs.len(), 2);
         assert_eq!(msgs[0].role, crate::types::Role::Assistant);
-        assert!(msgs[0].metadata.contains_key("tool_calls"));
+        assert!(msgs[0].metadata.get("tool_calls").is_some());
         assert_eq!(msgs[1].role, crate::types::Role::Tool);
         assert_eq!(msgs[1].text_content(), "72°F sunny");
     }

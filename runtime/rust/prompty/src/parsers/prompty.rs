@@ -21,7 +21,7 @@ use regex::Regex;
 
 use crate::interfaces::{InvokerError, Parser};
 use crate::model::Prompty;
-use crate::types::{ContentPart, Message, Role, TextPart};
+use crate::types::{ContentPart, Message, Role};
 
 /// Boundary regex per spec §6.5: role marker on its own line.
 /// Matches role markers with optional attribute blocks like `system[nonce="abc"]:`.
@@ -197,8 +197,8 @@ fn build_message(
 
     Ok(Message {
         role,
-        parts: vec![ContentPart::Text(TextPart { value: content })],
-        metadata,
+        parts: vec![ContentPart::text(content)],
+        metadata: serde_json::Value::Object(metadata),
     })
 }
 

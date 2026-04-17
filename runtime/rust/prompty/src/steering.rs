@@ -58,7 +58,7 @@ impl Steering {
             .lock()
             .expect("steering lock poisoned")
             .drain(..)
-            .map(|text| Message::text(Role::User, &text))
+            .map(|text| Message::with_text(Role::User, &text))
             .collect()
     }
 

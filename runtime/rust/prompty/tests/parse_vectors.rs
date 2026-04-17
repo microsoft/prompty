@@ -7,7 +7,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use prompty::parsers::parse_chat;
-use prompty::types::{ContentPart, Message, Role};
+use prompty::types::{ContentPart, ContentPartKind, Message, Role};
 
 /// Path to the parse vectors JSON file.
 fn vectors_path() -> PathBuf {
@@ -35,8 +35,8 @@ fn load_parse_vectors() -> Vec<Value> {
 fn text_content(msg: &Message) -> String {
     msg.parts
         .iter()
-        .filter_map(|p| match p {
-            ContentPart::Text(t) => Some(t.value.as_str()),
+        .filter_map(|p| match &p.kind {
+            ContentPartKind::TextPart { value, .. } => Some(value.as_str()),
             _ => None,
         })
         .collect::<Vec<_>>()
@@ -63,7 +63,7 @@ fn manual_thread_expand(messages: &[Message], thread_inputs: &Value) -> Vec<Mess
             let after = text[full_match.end()..].trim_matches('\n');
 
             if !before.is_empty() {
-                result.push(Message::text(msg.role, before));
+                result.push(Message::with_text(msg.role, before));
             }
 
             if let Some(thread_msgs) = thread_inputs.get(input_name).and_then(Value::as_array) {
@@ -77,12 +77,12 @@ fn manual_thread_expand(messages: &[Message], thread_inputs: &Value) -> Vec<Mess
                         .filter(|c| c["kind"] == "text")
                         .filter_map(|c| c["value"].as_str())
                         .collect();
-                    result.push(Message::text(role, &text_val));
+                    result.push(Message::with_text(role, &text_val));
                 }
             }
 
             if !after.is_empty() {
-                result.push(Message::text(msg.role, after));
+                result.push(Message::with_text(msg.role, after));
             }
         } else {
             result.push(msg.clone());

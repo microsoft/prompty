@@ -13,8 +13,8 @@ use prompty::{Compaction, CompactionFn, TurnOptions};
 #[test]
 fn test_format_dropped_messages_basic() {
     let msgs = vec![
-        Message::text(Role::User, "Hello there"),
-        Message::text(Role::Assistant, "Hi! How can I help?"),
+        Message::with_text(Role::User, "Hello there"),
+        Message::with_text(Role::Assistant, "Hi! How can I help?"),
     ];
     let formatted = format_dropped_messages(&msgs);
     assert!(formatted.contains("[user]: Hello there"));
@@ -23,8 +23,8 @@ fn test_format_dropped_messages_basic() {
 
 #[test]
 fn test_format_dropped_messages_with_tool_calls() {
-    let mut m = Message::text(Role::Assistant, "");
-    m.metadata.insert(
+    let mut m = Message::with_text(Role::Assistant, "");
+    m.metadata_mut().insert(
         "tool_calls".into(),
         serde_json::json!([{"name": "get_weather", "arguments": "{\"city\":\"NY\"}"}]),
     );
@@ -46,8 +46,8 @@ fn test_format_dropped_messages_empty() {
 
 #[test]
 fn test_format_dropped_messages_multiple_tool_calls() {
-    let mut m = Message::text(Role::Assistant, "");
-    m.metadata.insert(
+    let mut m = Message::with_text(Role::Assistant, "");
+    m.metadata_mut().insert(
         "tool_calls".into(),
         serde_json::json!([
             {"name": "get_weather", "arguments": "{\"city\":\"NY\"}"},
@@ -66,11 +66,11 @@ fn test_format_dropped_messages_multiple_tool_calls() {
 #[test]
 fn test_trim_returns_dropped_messages() {
     let msgs = vec![
-        Message::text(Role::System, "sys"),
-        Message::text(Role::User, &"A".repeat(1000)),
-        Message::text(Role::User, &"B".repeat(1000)),
-        Message::text(Role::User, &"C".repeat(100)),
-        Message::text(Role::User, &"D".repeat(100)),
+        Message::with_text(Role::System, "sys"),
+        Message::with_text(Role::User, &"A".repeat(1000)),
+        Message::with_text(Role::User, &"B".repeat(1000)),
+        Message::with_text(Role::User, &"C".repeat(100)),
+        Message::with_text(Role::User, &"D".repeat(100)),
     ];
     let (dropped, trimmed) = trim_to_context_window(&msgs, 500);
     assert!(!dropped.is_empty(), "should have dropped messages");
@@ -84,8 +84,8 @@ fn test_trim_returns_dropped_messages() {
 #[test]
 fn test_trim_under_budget_returns_empty_dropped() {
     let msgs = vec![
-        Message::text(Role::System, "sys"),
-        Message::text(Role::User, "hi"),
+        Message::with_text(Role::System, "sys"),
+        Message::with_text(Role::User, "hi"),
     ];
     let (dropped, result) = trim_to_context_window(&msgs, 100_000);
     assert!(dropped.is_empty());
@@ -110,20 +110,20 @@ fn test_compaction_none_default() {
 async fn test_compaction_function_replaces_summary() {
     // Build messages that will exceed budget and be trimmed
     let mut messages = vec![
-        Message::text(Role::System, "sys"),
+        Message::with_text(Role::System, "sys"),
         // The summary message (simulating what trim_to_context_window produces)
-        Message::text(
+        Message::with_text(
             Role::User,
             "[Context summary: [user]: old content\n... (1 messages omitted)]",
         ),
-        Message::text(Role::User, "recent message"),
+        Message::with_text(Role::User, "recent message"),
     ];
 
     let compaction_fn: CompactionFn = Arc::new(|_dropped: &[Message]| {
         Box::pin(async { Ok("LLM-powered summary of the conversation".to_string()) })
     });
 
-    let dropped = vec![Message::text(Role::User, "old content that was dropped")];
+    let dropped = vec![Message::with_text(Role::User, "old content that was dropped")];
 
     let span = prompty::tracing::Tracer::start("test");
     prompty::pipeline::apply_compaction(
@@ -155,16 +155,16 @@ async fn test_compaction_function_replaces_summary() {
 async fn test_compaction_failure_preserves_default() {
     let original_summary = "[Context summary: [user]: old stuff\n... (1 messages omitted)]";
     let mut messages = vec![
-        Message::text(Role::System, "sys"),
-        Message::text(Role::User, original_summary),
-        Message::text(Role::User, "recent"),
+        Message::with_text(Role::System, "sys"),
+        Message::with_text(Role::User, original_summary),
+        Message::with_text(Role::User, "recent"),
     ];
 
     let compaction_fn: CompactionFn = Arc::new(|_dropped: &[Message]| {
         Box::pin(async { Err("model unavailable".to_string().into()) })
     });
 
-    let dropped = vec![Message::text(Role::User, "dropped content")];
+    let dropped = vec![Message::with_text(Role::User, "dropped content")];
 
     let span = prompty::tracing::Tracer::start("test");
     prompty::pipeline::apply_compaction(
@@ -188,16 +188,16 @@ async fn test_compaction_failure_preserves_default() {
 async fn test_compaction_empty_result_preserves_default() {
     let original_summary = "[Context summary: [user]: stuff\n... (1 messages omitted)]";
     let mut messages = vec![
-        Message::text(Role::System, "sys"),
-        Message::text(Role::User, original_summary),
-        Message::text(Role::User, "recent"),
+        Message::with_text(Role::System, "sys"),
+        Message::with_text(Role::User, original_summary),
+        Message::with_text(Role::User, "recent"),
     ];
 
     let compaction_fn: CompactionFn = Arc::new(|_dropped: &[Message]| {
         Box::pin(async { Ok("   ".to_string()) }) // whitespace-only
     });
 
-    let dropped = vec![Message::text(Role::User, "dropped")];
+    let dropped = vec![Message::with_text(Role::User, "dropped")];
 
     let span = prompty::tracing::Tracer::start("test");
     prompty::pipeline::apply_compaction(
@@ -229,17 +229,17 @@ async fn test_compaction_receives_dropped_messages() {
     });
 
     let mut messages = vec![
-        Message::text(Role::System, "sys"),
-        Message::text(
+        Message::with_text(Role::System, "sys"),
+        Message::with_text(
             Role::User,
             "[Context summary: old\n... (2 messages omitted)]",
         ),
-        Message::text(Role::User, "recent"),
+        Message::with_text(Role::User, "recent"),
     ];
 
     let dropped = vec![
-        Message::text(Role::User, "msg1"),
-        Message::text(Role::User, "msg2"),
+        Message::with_text(Role::User, "msg1"),
+        Message::with_text(Role::User, "msg2"),
     ];
 
     let span = prompty::tracing::Tracer::start("test");
