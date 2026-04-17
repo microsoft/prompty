@@ -11,7 +11,7 @@ namespace Prompty.Core;
 /// 
 /// representing the different modalities of the message content.
 /// </summary>
-public partial class Message
+public partial class Message : IMessageHelpers
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -275,12 +275,23 @@ public partial class Message
     }
 
     #endregion
+}
 
-    #region Helpers — implement these in a partial class extension
-
-    // The following helpers should be implemented in a separate partial class file:
-    // - toTextContent(): unknown — Return plain string if all parts are text, else a list of content part dicts for wire serialization
-    // - text(): string — Concatenate all TextPart values joined by newline
-
-    #endregion
+/// <summary>
+/// Helper contract for <see cref="Message"/>.
+///
+/// Runtime implementations must provide these members on Message (via a
+/// hand-written partial class). The C# compiler enforces conformance
+/// because Message declares : IMessageHelpers.
+/// </summary>
+public partial interface IMessageHelpers
+{
+    /// <summary>
+    /// Return plain string if all parts are text, else a list of content part dicts for wire serialization
+    /// </summary>
+    object ToTextContent();
+    /// <summary>
+    /// Concatenate all TextPart values joined by newline
+    /// </summary>
+    string Text { get; }
 }

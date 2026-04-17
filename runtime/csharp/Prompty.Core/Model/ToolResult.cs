@@ -15,7 +15,7 @@ namespace Prompty.Core;
 /// 
 /// containing a single TextPart for backward compatibility.
 /// </summary>
-public partial class ToolResult
+public partial class ToolResult : IToolResultHelpers
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -231,17 +231,25 @@ public partial class ToolResult
     /// <summary>
     /// Create a ToolResult with preset field values.
     /// </summary>
-    public static ToolResult Text(string value)
+    public static ToolResult CreateText(string value)
     {
         return new ToolResult { Parts = new List<ContentPart> { new TextPart { Value = value } } };
     }
 
     #endregion
+}
 
-    #region Helpers — implement these in a partial class extension
-
-    // The following helpers should be implemented in a separate partial class file:
-    // - text(): string — Concatenate all TextPart values joined by newline
-
-    #endregion
+/// <summary>
+/// Helper contract for <see cref="ToolResult"/>.
+///
+/// Runtime implementations must provide these members on ToolResult (via a
+/// hand-written partial class). The C# compiler enforces conformance
+/// because ToolResult declares : IToolResultHelpers.
+/// </summary>
+public partial interface IToolResultHelpers
+{
+    /// <summary>
+    /// Concatenate all TextPart values joined by newline
+    /// </summary>
+    string Text { get; }
 }

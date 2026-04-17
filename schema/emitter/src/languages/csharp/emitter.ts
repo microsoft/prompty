@@ -123,6 +123,12 @@ export function emitCSharpClass(
 
   // Close class
   lines.push("}");
+
+  // Emit I<Name>Helpers interface after the class
+  if (type.methods.length > 0) {
+    emitHelperInterface(type, lines);
+  }
+
   lines.push("");
 
   return lines.join("\n");
@@ -242,8 +248,11 @@ function emitXmlDocComment(description: string, indent: string, lines: string[])
 
 function emitClassDeclaration(type: TypeDecl, lines: string[]): void {
   const abstract_ = type.isAbstract ? "abstract " : "";
-  const base_ = type.base ? ` : ${type.base.name}` : "";
-  lines.push(`public ${abstract_}partial class ${type.typeName.name}${base_}`);
+  const bases: string[] = [];
+  if (type.base) bases.push(type.base.name);
+  if (type.methods.length > 0) bases.push(`I${type.typeName.name}Helpers`);
+  const baseSuffix = bases.length > 0 ? ` : ${bases.join(", ")}` : "";
+  lines.push(`public ${abstract_}partial class ${type.typeName.name}${baseSuffix}`);
   lines.push("{");
 }
 
@@ -1155,6 +1164,12 @@ function emitFactoryMethod(factory: FactoryDecl, type: TypeDecl, visitor: ExprVi
 function getCSharpFactoryMethodName(factoryName: string, type: TypeDecl): string {
   const methodName = factoryName.charAt(0).toUpperCase() + factoryName.slice(1);
   const propertyNames = type.fields.map(f => toPascalCase(f.name));
+  // Also consider @method stubs that emit as properties (zero-param, non-verb names)
+  for (const m of type.methods) {
+    if (!isMethodStyle(m.name) && !m.params?.length) {
+      propertyNames.push(toPascalCase(m.name));
+    }
+  }
   if (propertyNames.includes(methodName)) {
     return `Create${methodName}`;
   }
@@ -1175,17 +1190,78 @@ function getCSharpFactoryParamType(typeStr: string): string {
 }
 
 // ============================================================================
-// Helper stubs
+// Helper interface (contract for @method declarations)
 // ============================================================================
 
-function emitHelperRegion(type: TypeDecl, lines: string[]): void {
-  lines.push("");
-  lines.push("    #region Helpers — implement these in a partial class extension");
-  lines.push("");
-  lines.push("    // The following helpers should be implemented in a separate partial class file:");
-  for (const method of type.methods) {
-    lines.push(`    // - ${method.name}(): ${method.returns} — ${method.description}`);
+/**
+ * Verbs that indicate an action — zero-param @methods whose name starts with
+ * one of these get emitted as C# methods. Everything else becomes a read-only
+ * property. This preserves idiomatic C# naming (``message.Text`` is a property,
+ * ``message.ToTextContent()`` is a method).
+ */
+const METHOD_VERB_PREFIXES = [
+  "to", "get", "set", "fetch", "compute", "make", "build", "create",
+  "load", "save", "convert", "parse", "format", "render", "serialize",
+  "deserialize", "find", "calculate", "invoke", "execute", "run",
+];
+
+function isMethodStyle(name: string): boolean {
+  const lower = name.toLowerCase();
+  for (const prefix of METHOD_VERB_PREFIXES) {
+    if (lower === prefix) return true;
+    if (lower.startsWith(prefix) && name.length > prefix.length) {
+      const next = name[prefix.length];
+      if (next === next.toUpperCase() && next !== next.toLowerCase()) {
+        return true;
+      }
+    }
   }
+  return false;
+}
+
+/**
+ * Emit a C# interface ``I<TypeName>Helpers`` that declares the @method
+ * contract. The generated partial class declares ``: I<TypeName>Helpers``,
+ * so the C# compiler will error if a hand-written partial does not provide
+ * every contract member. Zero-param queries emit as properties, everything
+ * else as methods.
+ */
+function emitHelperInterface(type: TypeDecl, lines: string[]): void {
+  const name = type.typeName.name;
   lines.push("");
-  lines.push("    #endregion");
+  lines.push("/// <summary>");
+  lines.push(`/// Helper contract for <see cref="${name}"/>.`);
+  lines.push("///");
+  lines.push(`/// Runtime implementations must provide these members on ${name} (via a`);
+  lines.push(`/// hand-written partial class). The C# compiler enforces conformance`);
+  lines.push(`/// because ${name} declares : I${name}Helpers.`);
+  lines.push("/// </summary>");
+  lines.push(`public partial interface I${name}Helpers`);
+  lines.push("{");
+  for (const m of type.methods) {
+    const pascalName = toPascalCase(m.name);
+    const ret = protocolCSharpType(m.returns);
+    if (m.description) {
+      emitXmlDocComment(m.description, "    ", lines);
+    }
+    const paramEntries = Object.entries(m.params);
+    if (paramEntries.length === 0 && !isMethodStyle(m.name)) {
+      // Property-style: ``T Foo { get; }``
+      lines.push(`    ${ret} ${pascalName} { get; }`);
+    } else {
+      const params = paramEntries
+        .map(([pName, pType]) => `${protocolCSharpType(pType)} ${pName}`)
+        .join(", ");
+      lines.push(`    ${ret} ${pascalName}(${params});`);
+    }
+  }
+  lines.push("}");
+}
+
+function emitHelperRegion(type: TypeDecl, lines: string[]): void {
+  // Intentionally empty — the body of the partial class no longer contains
+  // comments about helpers. The contract is expressed via the sibling
+  // I<TypeName>Helpers interface emitted after the class.
+  void type;
+  void lines;
 }
